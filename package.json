@@ -4,9 +4,9 @@
   "private": true,
   "description": "Plataforma multi-tenant de lojas virtuais da Avila Ops — um código, N lojas",
   "scripts": {
-    "dev": "next dev -p 3070",
+    "dev": "next dev -p 3080",
     "build": "prisma generate && next build",
-    "start": "next start -p 3070",
+    "start": "next start -p 3080",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "prisma:migrate": "prisma migrate deploy",

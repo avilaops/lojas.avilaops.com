@@ -25,10 +25,24 @@ type Resultado = Record<string, string>;
 
 const CF = "https://api.cloudflare.com/client/v4";
 
+/**
+ * Token com escopo (Bearer) quando existir; senão e-mail + chave global. A chave
+ * global abre a conta inteira — é o que temos hoje no tokens.env, e a troca por
+ * token restrito está anotada como pendência de segurança.
+ */
+function cabecalhosCloudflare(): Record<string, string> {
+  if (process.env.CLOUDFLARE_TOKEN) return { authorization: `Bearer ${process.env.CLOUDFLARE_TOKEN}` };
+  return { "x-auth-email": process.env.CLOUDFLARE_EMAIL ?? "", "x-auth-key": process.env.CLOUDFLARE_API_GLOBAL_KEY ?? "" };
+}
+
+function cloudflareConfigurada(): boolean {
+  return Boolean(process.env.CLOUDFLARE_ACCOUNT_ID && (process.env.CLOUDFLARE_TOKEN || (process.env.CLOUDFLARE_EMAIL && process.env.CLOUDFLARE_API_GLOBAL_KEY)));
+}
+
 async function cf<T>(caminho: string, init?: RequestInit): Promise<T> {
   const r = await fetch(`${CF}${caminho}`, {
     ...init,
-    headers: { authorization: `Bearer ${process.env.CLOUDFLARE_TOKEN}`, "content-type": "application/json", ...(init?.headers ?? {}) },
+    headers: { ...cabecalhosCloudflare(), "content-type": "application/json", ...(init?.headers ?? {}) },
     signal: AbortSignal.timeout(15000),
   });
   const corpo = (await r.json()) as { success: boolean; result: T; errors?: Array<{ message: string }> };
@@ -65,7 +79,7 @@ async function gravarRegistros(zoneId: string, registros: Registro[]) {
 }
 
 async function passoDns(t: Tenant): Promise<string> {
-  if (!process.env.CLOUDFLARE_TOKEN || !process.env.CLOUDFLARE_ACCOUNT_ID) return "pendente: CLOUDFLARE_TOKEN ausente";
+  if (!cloudflareConfigurada()) return "pendente: credencial da Cloudflare ausente";
   if (!t.dominioPrincipal) return "pendente: loja sem domínio próprio";
   const ipv4 = process.env.LOJAS_IPV4;
   const ipv6 = process.env.LOJAS_IPV6;
@@ -110,7 +124,7 @@ async function passoMail(t: Tenant): Promise<string> {
   const dominio = await mail<DominioMail>("/domains", { domain: apex, clientRef: `loja:${t.slug}` });
 
   // Registros de e-mail entram na mesma zona do passo dns, quando ela existir.
-  if (dominio.dns_records?.length && process.env.CLOUDFLARE_TOKEN) {
+  if (dominio.dns_records?.length && cloudflareConfigurada()) {
     const zona = await garantirZona(apex);
     await gravarRegistros(
       zona.id,

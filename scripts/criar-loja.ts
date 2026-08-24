@@ -4,11 +4,11 @@
  *   npx tsx scripts/criar-loja.ts loja.json [produtos.json] [--provisionar]
  *
  * loja.json segue TenantEntradaSchema; produtos.json é ProdutoEntrada[].
- * Precisa de LOJAS_API_URL (padrão http://127.0.0.1:3070) e LOJAS_ADMIN_TOKEN.
+ * Precisa de LOJAS_API_URL (padrão http://127.0.0.1:3080) e LOJAS_ADMIN_TOKEN.
  */
 import { readFileSync } from "node:fs";
 
-const API = process.env.LOJAS_API_URL ?? "http://127.0.0.1:3070";
+const API = process.env.LOJAS_API_URL ?? "http://127.0.0.1:3080";
 const TOKEN = process.env.LOJAS_ADMIN_TOKEN;
 if (!TOKEN) throw new Error("LOJAS_ADMIN_TOKEN ausente");
 

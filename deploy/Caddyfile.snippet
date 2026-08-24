@@ -1,28 +1,28 @@
-# Trecho para o Caddy do host Hetzner.
+# Trecho aplicado no Caddy do Hetzner em 24/08/2026 (referência; o arquivo vivo é
+# /etc/caddy/Caddyfile no servidor).
 #
-# Duas entradas: o curinga da plataforma e os domínios próprios das lojas.
-# Domínio próprio novo NÃO exige mexer aqui: o on_demand_tls emite o
-# certificado na primeira visita, e a plataforma decide (pelo Host) se aquele
-# domínio pertence a alguma loja — /api/health?host= é o "ask" do Caddy.
+# 1) Opções globais — o "ask" do on_demand_tls passou a ser a plataforma, que
+#    repassa ao Comandeiro (3040) qualquer host que não seja loja:
+#
+#   {
+#     on_demand_tls {
+#       ask http://127.0.0.1:3080/api/dominio-permitido
+#     }
+#   }
+#
+# 2) Bloco das lojas. Sem certificado wildcard (o Caddy instalado não tem o
+#    módulo DNS da Cloudflare): cada <slug>.lojas.avilaops.com e cada domínio
+#    próprio ganha o seu certificado sob demanda na primeira visita.
 
-{
-  on_demand_tls {
-    ask http://127.0.0.1:3070/api/dominio-permitido
-  }
+lojas.avilaops.com, *.lojas.avilaops.com {
+	tls {
+		on_demand
+	}
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:3080
 }
 
-# Curinga: precisa de DNS-01 na Cloudflare (módulo caddy-dns/cloudflare).
-*.lojas.avilaops.com {
-  tls {
-    dns cloudflare {env.CLOUDFLARE_TOKEN}
-  }
-  reverse_proxy 127.0.0.1:3070
-}
-
-# Domínios próprios das lojas (qualquer um; certificado sob demanda).
-https:// {
-  tls {
-    on_demand
-  }
-  reverse_proxy 127.0.0.1:3070
-}
+# Domínios próprios das lojas caem no bloco https:// já existente (Comandeiro),
+# que faz reverse_proxy para 3040 — por isso o passo "dns" do provisionamento
+# ainda precisa de um bloco por domínio OU de trocar o destino do https:// para
+# um roteador. Pendência anotada em docs/produtos/LOJAS-AVILAOPS.md.

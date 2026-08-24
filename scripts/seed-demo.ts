@@ -1,7 +1,7 @@
 /**
  * Cria a loja "demo" com um catálogo de exemplo.
  *   npx tsx scripts/seed-demo.ts
- * Depois: http://demo.localhost:3070 (o Chrome resolve *.localhost sozinho)
+ * Depois: http://demo.localhost:3080 (o Chrome resolve *.localhost sozinho)
  * com LOJAS_BASE_DOMAIN=localhost no .env.
  */
 import { PrismaClient } from "@prisma/client";

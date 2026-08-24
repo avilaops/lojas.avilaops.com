@@ -57,30 +57,47 @@ npm install
 cp .env.example .env            # DATABASE_URL, LOJAS_SECRET, LOJAS_ADMIN_TOKEN, LOJAS_BASE_DOMAIN=localhost
 npx prisma migrate dev --name inicial
 npm run seed:demo               # cria demo.localhost
-npm run dev                     # http://demo.localhost:3070
+npm run dev                     # http://demo.localhost:3080
 ```
 
 Criar loja pela API:
 
 ```bash
-curl -X POST http://127.0.0.1:3070/api/admin/tenants?provisionar=1 \
+curl -X POST http://127.0.0.1:3080/api/admin/tenants?provisionar=1 \
   -H "authorization: Bearer $LOJAS_ADMIN_TOKEN" -H "content-type: application/json" \
   -d '{"slug":"vedashow","nome":"Vedashow","dominioPrincipal":"vedashow.com.br","whatsapp":"5516999990000","cepOrigem":"14075240","tema":{"corPrimaria":"#c62828"}}'
 ```
 
-## Deploy (Hetzner, Docker)
+## Deploy (Hetzner, Docker) — em produção desde 24/08/2026
 
-O build usa a raiz do monorepo como contexto por causa de `packages/checkout`:
+O servidor (CX23, 4 GB, disco Docker sempre perto de 95%) **não builda**: o
+build Next `standalone` é feito aqui no Windows e sobe pronto. Fluxo:
 
 ```bash
-# no servidor, dentro de /opt/avilaops (raiz do monorepo)
-cd lojas.avilaops.com && docker compose up -d --build
-docker compose exec lojas npx prisma migrate deploy
+# 1. build local (Prisma gera também o engine debian-openssl-3.0.x — ver schema.prisma)
+npx prisma generate && npx next build
+cd .next/standalone && rm -rf lojas.avilaops.com/.next/static   && cp -r ../static lojas.avilaops.com/.next/static   && cp -r ../../public lojas.avilaops.com/public; cp -r ../../prisma lojas.avilaops.com/prisma   && tar --force-local -czf "$TMP/lojas-standalone.tgz" .
+# 2. envia e reinicia
+scp -i ~/.ssh/hetzner_avilaops "$TMP/lojas-standalone.tgz" root@178.105.82.48:/opt/lojas/standalone.tgz
+ssh -i ~/.ssh/hetzner_avilaops root@178.105.82.48 'cd /opt/lojas && docker compose up -d --build && docker image prune -f'
+# 3. migração nova? (do próprio servidor, contra o Postgres do host)
+ssh ... 'cd /opt/lojas && tar xzf standalone.tgz ./lojas.avilaops.com/prisma && DATABASE_URL=$(grep ^DATABASE_URL= .env | cut -d= -f2- | sed s/host.docker.internal/127.0.0.1/) npx -y prisma@6 migrate deploy --schema lojas.avilaops.com/prisma/schema.prisma'
 ```
 
-Porta `127.0.0.1:3070`. Caddy: colar `deploy/Caddyfile.snippet` (curinga
-`*.lojas.avilaops.com` via DNS-01 Cloudflare + `on_demand_tls` para domínios
-próprios). DNS: `*.lojas.avilaops.com` → A do host, proxied.
+No servidor (`/opt/lojas`): `Dockerfile` de runtime (node:22-slim + `openssl`, cria o
+symlink `@prisma/client-<hash>` que o Turbopack referencia e que o Windows não
+gera), `docker-compose.yml` com `network_mode: bridge` (o Postgres do host escuta
+em 172.17.0.1), `.env` (segredos gerados no servidor, chmod 600). Container
+`lojas-avilaops`, porta `127.0.0.1:3080` (3070 é do Migdolus).
+
+**Caddy** (`/etc/caddy/Caddyfile`): o `ask` global do `on_demand_tls` aponta para
+`/api/dominio-permitido`, que repassa ao Comandeiro (3040) o que não for loja;
+bloco `lojas.avilaops.com, *.lojas.avilaops.com` com `tls { on_demand }` —
+não há certificado wildcard (Caddy sem módulo DNS da Cloudflare), cada loja ganha
+o seu na primeira visita. **DNS**: `lojas` e `*.lojas` → A 178.105.82.48,
+DNS-only (o `*.lojas` tem dois níveis e o Universal SSL da Cloudflare não cobre).
+
+Demo: https://demo.lojas.avilaops.com
 
 ## Modelo comercial (resumo — detalhe em `docs/PLANOS.md`)
 

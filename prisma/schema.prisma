@@ -5,7 +5,9 @@
 // É isso que faz criar uma loja custar um INSERT e não um deploy.
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  // Build local no Windows, execução no Hetzner (Debian, OpenSSL 3).
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {
