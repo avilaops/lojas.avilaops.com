@@ -167,7 +167,7 @@ export async function provisionarLoja(slug: string): Promise<Resultado> {
   });
   esquecerTenantEmCache(slug);
 
-  await emitir({ tipo: "loja.provisionada", slug, passos });
+  await emitir({ tipo: "loja.provisionada", slug, passos, nome: atualizado.nome, url: urlDaLoja(atualizado), emailContato: atualizado.emailContato, whatsapp: atualizado.whatsapp });
   passos.n8n = process.env.N8N_WEBHOOK_URL ? "ok: evento emitido" : "pendente: N8N_WEBHOOK_URL ausente";
   await prisma.tenant.update({ where: { id: atualizado.id }, data: { provisionamento: passos } });
 

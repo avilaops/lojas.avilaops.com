@@ -2,7 +2,12 @@ import type { PedidoStatus, Prisma, Tenant } from "@prisma/client";
 import { montarPedidoSeguro, type PayloadCheckout, type ResolucaoCatalogo } from "@avilaops/checkout/server";
 import { calcularTotais } from "@avilaops/checkout";
 import { prisma } from "./db";
-import { emitir } from "./eventos";
+import { emitir, type Lojista } from "./eventos";
+import { urlDaLoja } from "./tenant";
+
+function lojista(t: Tenant): Lojista {
+  return { lojaNome: t.nome, lojaUrl: urlDaLoja(t), lojistaWhatsapp: t.whatsapp, lojistaEmail: t.emailContato, emailRemetente: t.emailRemetente };
+}
 
 /**
  * Persistência do pedido. O total gravado é o recalculado pelo pacote — o
@@ -15,7 +20,7 @@ export async function registrarPedido(
   const { pedido } = await montarPedidoSeguro(dados.payload, dados.catalogo);
   const totais = calcularTotais({ itens: pedido.itens, frete: pedido.frete, desconto: pedido.desconto ?? 0 });
 
-  await prisma.pedido.upsert({
+  const gravado = await prisma.pedido.upsert({
     where: { referencia: pedido.referencia },
     update: { pagamentoId: dados.pagamentoId, pagamentoStatus: dados.status },
     create: {
@@ -45,10 +50,13 @@ export async function registrarPedido(
     tipo: "pedido.criado",
     slug: t.slug,
     referencia: pedido.referencia,
+    numero: gravado.numero,
     total: totais.total,
     meioPagamento: pedido.meioPagamento,
+    clienteNome: gravado.clienteNome,
     clienteEmail: pedido.cliente.email,
     clienteTelefone: pedido.cliente.telefone,
+    ...lojista(t),
   });
 }
 
@@ -60,7 +68,7 @@ const MAPA: Record<string, PedidoStatus | undefined> = {
 };
 
 export async function atualizarStatusPagamento(t: Tenant, pagamentoId: string, status: string) {
-  const pedido = await prisma.pedido.findFirst({ where: { tenantId: t.id, pagamentoId } });
+  const pedido = await prisma.pedido.findFirst({ where: { tenantId: t.id, pagamentoId }, include: { itens: true } });
   if (!pedido) return;
 
   const novo = MAPA[status];
@@ -72,8 +80,19 @@ export async function atualizarStatusPagamento(t: Tenant, pagamentoId: string, s
   });
 
   if (novo === "PAGO" && avancaDeAguardando) {
-    await emitir({ tipo: "pedido.pago", slug: t.slug, referencia: pedido.referencia, total: pedido.totalCentavos, clienteEmail: pedido.clienteEmail, clienteTelefone: pedido.clienteTelefone });
+    await emitir({
+      tipo: "pedido.pago",
+      slug: t.slug,
+      referencia: pedido.referencia,
+      numero: pedido.numero,
+      total: pedido.totalCentavos,
+      clienteNome: pedido.clienteNome,
+      clienteEmail: pedido.clienteEmail,
+      clienteTelefone: pedido.clienteTelefone,
+      itens: pedido.itens.map((i) => `${i.quantidade}x ${i.nome}`).join(", "),
+      ...lojista(t),
+    });
   } else if (status === "recusado") {
-    await emitir({ tipo: "pedido.recusado", slug: t.slug, referencia: pedido.referencia });
+    await emitir({ tipo: "pedido.recusado", slug: t.slug, referencia: pedido.referencia, clienteNome: pedido.clienteNome, clienteEmail: pedido.clienteEmail, clienteTelefone: pedido.clienteTelefone, ...lojista(t) });
   }
 }
