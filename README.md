@@ -46,8 +46,9 @@ padrão não é "ajuste" — é o plano Pro ou um projeto à parte.
 6. Confirmar o contrato server-side da CepCerto (hoje usa o endpoint do widget
    com `Origin` da plataforma; se eles exigirem o token de servidor, trocar em
    `cotarCepCerto`).
-7. Marcar pedido como enviado + rastreio pelo painel (endpoint `PATCH` de pedido
-   ainda não existe).
+7. ~~Marcar pedido como enviado + rastreio pelo painel~~ — feito em 24/08/2026
+   (`PATCH /api/admin/tenants/:slug/pedidos/:id` + botões Separar / Marcar
+   enviado / Marcar entregue no portal).
 
 ## Rodando local
 
