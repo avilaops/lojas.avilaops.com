@@ -1,0 +1,67 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { exigirTenant } from "@/lib/tenant";
+import { prisma } from "@/lib/db";
+import { formatarBRL } from "@/lib/catalogo";
+import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
+
+export const metadata: Metadata = { title: "Pedido", robots: { index: false } };
+
+const ROTULO: Record<string, string> = {
+  AGUARDANDO_PAGAMENTO: "Aguardando pagamento",
+  PAGO: "Pagamento confirmado",
+  EM_SEPARACAO: "Em separação",
+  ENVIADO: "Enviado",
+  ENTREGUE: "Entregue",
+  CANCELADO: "Cancelado",
+  ESTORNADO: "Estornado",
+};
+
+export default async function PedidoPage({ params }: { params: Promise<{ referencia: string }> }) {
+  const t = await exigirTenant();
+  const { referencia } = await params;
+  // A referência é longa e aleatória; funciona como o link "do seu pedido".
+  const pedido = await prisma.pedido.findFirst({ where: { tenantId: t.id, referencia }, include: { itens: true } });
+  if (!pedido) notFound();
+
+  return (
+    <div className="container-loja max-w-2xl py-10">
+      <p className="text-xs uppercase tracking-widest text-muted-foreground">Pedido #{pedido.numero}</p>
+      <h1 className="mt-1 text-2xl font-bold">{ROTULO[pedido.status] ?? pedido.status}</h1>
+      <p className="mt-1 text-sm text-muted-foreground">
+        {pedido.status === "PAGO"
+          ? `Obrigado, ${pedido.clienteNome.split(" ")[0]}! Enviamos a confirmação para ${pedido.clienteEmail}.`
+          : "Assim que o pagamento for confirmado, você recebe um e-mail."}
+      </p>
+
+      <ul className="mt-6 divide-y divide-border rounded-xl border border-border bg-card text-sm">
+        {pedido.itens.map((i) => (
+          <li key={i.id} className="flex justify-between p-3">
+            <span>{i.quantidade}x {i.nome}</span>
+            <span>{formatarBRL(i.precoUnitarioCentavos * i.quantidade)}</span>
+          </li>
+        ))}
+        <li className="flex justify-between p-3 text-muted-foreground">
+          <span>{pedido.freteNome}</span>
+          <span>{formatarBRL(pedido.freteCentavos)}</span>
+        </li>
+        <li className="flex justify-between p-3 font-bold">
+          <span>Total</span>
+          <span>{formatarBRL(pedido.totalCentavos)}</span>
+        </li>
+      </ul>
+
+      {pedido.rastreio && <p className="mt-4 text-sm">Rastreio: <strong>{pedido.rastreio}</strong></p>}
+
+      <div className="mt-6 flex flex-wrap gap-2">
+        <Link href="/produtos" className="btn-secundario">Continuar comprando</Link>
+        {t.whatsapp && (
+          <a className="btn-secundario" href={linkWhatsApp(t.whatsapp, `Olá! Sobre o pedido #${pedido.numero} (${pedido.referencia})`)} target="_blank" rel="noopener">
+            Falar sobre o pedido
+          </a>
+        )}
+      </div>
+    </div>
+  );
+}

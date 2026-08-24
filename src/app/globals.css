@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+/*
+ * Um layout, tokens por loja.
+ *
+ * Os valores de --primary, --background etc. são injetados pelo layout a partir
+ * de Tenant.tema (src/lib/tema.ts). Nenhuma cor de marca é escrita aqui.
+ */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --font-sans: var(--font-sans);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+}
+
+/* Padrões, sobrescritos pelo <style> do tema no layout. */
+:root {
+  --background: #ffffff;
+  --foreground: #18181b;
+  --card: #ffffff;
+  --card-foreground: #18181b;
+  --muted: #f6f6f7;
+  --muted-foreground: #71717a;
+  --border: #e4e4e7;
+  --input: #e4e4e7;
+  --ring: #2563eb;
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
+  --radius: 0.625rem;
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+.container-loja {
+  @apply mx-auto w-full max-w-6xl px-4 sm:px-6;
+}
+
+.btn-primario {
+  @apply inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-50;
+}
+
+.btn-secundario {
+  @apply inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-border bg-card px-5 text-sm font-semibold transition hover:bg-muted;
+}
+
+.prosa p + p {
+  margin-top: 0.75rem;
+}

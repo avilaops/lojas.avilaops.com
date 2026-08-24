@@ -1,0 +1,19 @@
+import type { MetadataRoute } from "next";
+import { tenantAtual, urlDaLoja } from "@/lib/tenant";
+import { listarCategorias, listarProdutos } from "@/lib/catalogo";
+
+export const dynamic = "force-dynamic";
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const t = await tenantAtual();
+  if (!t || t.status !== "ATIVA") return [];
+  const base = urlDaLoja(t);
+  const [categorias, produtos] = await Promise.all([listarCategorias(t.id), listarProdutos(t.id)]);
+  return [
+    { url: base, changeFrequency: "daily", priority: 1 },
+    { url: `${base}/produtos`, changeFrequency: "daily", priority: 0.9 },
+    ...categorias.map((c) => ({ url: `${base}/categoria/${c.slug}`, changeFrequency: "weekly" as const, priority: 0.7 })),
+    ...produtos.map((p) => ({ url: `${base}/produtos/${p.slug}`, lastModified: p.atualizadoEm, changeFrequency: "weekly" as const, priority: 0.8 })),
+    ...["sobre", "contato", "politicas/envio", "politicas/devolucao", "politicas/privacidade"].map((s) => ({ url: `${base}/${s}`, priority: 0.3 })),
+  ];
+}

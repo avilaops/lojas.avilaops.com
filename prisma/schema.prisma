@@ -1,0 +1,202 @@
+// Modelo multi-tenant.
+//
+// Regra única: TUDO que varia entre lojas é coluna de Tenant ou linha ligada
+// a um tenantId. Nada de configuração por loja em código, arquivo ou env.
+// É isso que faz criar uma loja custar um INSERT e não um deploy.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Plano {
+  SITE      // vitrine sem carrinho — R$ 79/mês
+  LOJA      // loja completa — R$ 119/mês (âncora)
+  LOJA_PRO  // + automações, relatórios, NF-e — R$ 349/mês
+}
+
+enum TenantStatus {
+  PROVISIONANDO
+  ATIVA
+  SUSPENSA   // inadimplente: a loja mostra aviso e some o checkout
+  CANCELADA  // sai do ar; dados ficam 90 dias
+}
+
+model Tenant {
+  id        String       @id @default(cuid())
+  /// Identificador estável: vira <slug>.lojas.avilaops.com e o nome do container de dados.
+  slug      String       @unique
+  nome      String
+  plano     Plano        @default(LOJA)
+  status    TenantStatus @default(PROVISIONANDO)
+
+  /// Hosts que resolvem para esta loja (domínio próprio, www, apex). O subdomínio
+  /// <slug>.LOJAS_BASE_DOMAIN resolve sempre, sem precisar estar aqui.
+  dominios  String[]     @default([])
+  /// Domínio principal, usado em links absolutos, sitemap e e-mail.
+  dominioPrincipal String?
+
+  // ── Identidade visual (só tokens; layout é um só) ─────────────────────
+  logoUrl     String?
+  tema        Json      @default("{}")   // TemaLoja em src/lib/tema.ts
+  slogan      String?
+  sobre       String?                    // texto da página "Sobre"
+
+  // ── Contato e operação ───────────────────────────────────────────────
+  whatsapp    String?                    // só dígitos, com DDI
+  telefone    String?
+  emailContato String?
+  instagram   String?
+  endereco    Json?                      // { logradouro, numero, bairro, cidade, uf, cep }
+  horario     String?
+
+  // ── Entrega ──────────────────────────────────────────────────────────
+  cepOrigem         String?
+  retiradaNaLoja    Boolean @default(true)
+  despachoDiasUteis Int     @default(1)
+  /// Caixa padrão (cm) e peso padrão (kg) para produto sem medida cadastrada.
+  caixaPadrao       Json    @default("{\"altura\":15,\"largura\":20,\"comprimento\":25}")
+  pesoPadraoKg      Float   @default(1)
+  /// Tabela própria por UF, usada quando a cotação por API não está disponível.
+  /// [{ "ufs": ["SP"], "preco": 1990, "prazoDiasUteis": 3, "nome": "Sedex" }]
+  tabelaFrete       Json    @default("[]")
+  freteGratisAcima  Int?                 // centavos
+
+  // ── Pagamento (tokens cifrados com LOJAS_SECRET) ──────────────────────
+  mpPublicKey        String?
+  mpAccessTokenEnc   String?
+  mpWebhookSecretEnc String?
+  meiosPagamento     String[] @default(["pix", "cartao", "boleto"])
+
+  // ── E-mail (mail.avilaops.com) ────────────────────────────────────────
+  emailRemetente String?   // pedidos@dominio — de onde saem as notificações
+
+  // ── Analytics ─────────────────────────────────────────────────────────
+  gtmId String?
+
+  /// Log dos passos de provisionamento: { dns: "ok"|"pendente"|"erro:...", mail: ..., n8n: ... }
+  provisionamento Json @default("{}")
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  categorias Categoria[]
+  produtos   Produto[]
+  pedidos    Pedido[]
+
+  @@index([status])
+}
+
+model Categoria {
+  id        String  @id @default(cuid())
+  tenantId  String
+  slug      String
+  nome      String
+  descricao String?
+  imagemUrl String?
+  ordem     Int     @default(0)
+
+  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  produtos Produto[]
+
+  @@unique([tenantId, slug])
+}
+
+model Produto {
+  id          String  @id @default(cuid())
+  tenantId    String
+  categoriaId String?
+  slug        String
+  nome        String
+  marca       String?
+  sku         String?
+  gtin        String?
+  /// Centavos. Nunca float — ver packages/checkout/src/core/types.ts.
+  precoCentavos     Int
+  precoDeCentavos   Int?     // "de R$ X por R$ Y"
+  descricaoCurta    String?
+  descricao         String?
+  imagens           String[] @default([])
+  destaque          Boolean  @default(false)
+  ativo             Boolean  @default(true)
+  disponibilidade   String   @default("in_stock") // in_stock | out_of_stock | backorder
+  estoque           Int?
+  /// Peso em kg e medidas em cm. Sem eles, o frete usa a caixa padrão do tenant.
+  pesoKg        Float?
+  alturaCm      Float?
+  larguraCm     Float?
+  comprimentoCm Float?
+  atributos     Json     @default("{}") // livre: { "volumeMl": 500, "cor": "azul" }
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  tenant    Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  categoria Categoria? @relation(fields: [categoriaId], references: [id], onDelete: SetNull)
+  itens     PedidoItem[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId, ativo, destaque])
+}
+
+enum PedidoStatus {
+  AGUARDANDO_PAGAMENTO
+  PAGO
+  EM_SEPARACAO
+  ENVIADO
+  ENTREGUE
+  CANCELADO
+  ESTORNADO
+}
+
+model Pedido {
+  id          String       @id @default(cuid())
+  tenantId    String
+  /// Referência pública e idempotente (a do checkout). É o que o cliente vê.
+  referencia  String       @unique
+  numero      Int          @default(autoincrement())
+  status      PedidoStatus @default(AGUARDANDO_PAGAMENTO)
+
+  clienteNome     String
+  clienteEmail    String
+  clienteTelefone String
+  clienteDocumento String
+  entrega         Json?      // EnderecoEntrega ou null (retirada)
+  freteNome       String
+  freteCentavos   Int
+  subtotalCentavos Int
+  descontoCentavos Int @default(0)
+  totalCentavos    Int
+
+  meioPagamento   String     // pix | cartao | boleto
+  gateway         String     @default("mercadopago")
+  pagamentoId     String?
+  pagamentoStatus String?
+  rastreio        String?
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  tenant Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  itens  PedidoItem[]
+
+  @@index([tenantId, status])
+  @@index([pagamentoId])
+}
+
+model PedidoItem {
+  id         String  @id @default(cuid())
+  pedidoId   String
+  produtoId  String?
+  nome       String
+  sku        String?
+  quantidade Int
+  precoUnitarioCentavos Int
+
+  pedido  Pedido   @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  produto Produto? @relation(fields: [produtoId], references: [id], onDelete: SetNull)
+}
