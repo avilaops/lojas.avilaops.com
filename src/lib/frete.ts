@@ -115,8 +115,10 @@ async function cotarTabela(t: Tenant, cep: string): Promise<OpcaoFrete[]> {
   if (!tabela.length) return [];
   const uf = await ufDoCep(cep);
   if (!uf) return [];
-  return tabela
-    .filter((f) => f.ufs.includes("*") || f.ufs.includes(uf))
+  // Faixa específica da UF vence a curinga "*": a curinga é o "resto do Brasil".
+  const especificas = tabela.filter((f) => f.ufs.includes(uf));
+  const aplicaveis = especificas.length ? especificas : tabela.filter((f) => f.ufs.includes("*"));
+  return aplicaveis
     .map((f, i) => ({
       id: `tabela:${i}`,
       nome: f.nome ?? "Entrega",
