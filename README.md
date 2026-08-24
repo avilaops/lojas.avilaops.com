@@ -28,23 +28,24 @@ padrão não é "ajuste" — é o plano Pro ou um projeto à parte.
 
 ## O que falta (ordem sugerida)
 
-1. **Tela de onboarding no `cliente.avilaops.com`** — `/dashboard/loja`: formulário
-   (nome, logo, cores, WhatsApp, endereço, planilha de produtos, domínio) que
-   chama `POST /api/admin/tenants?provisionar=1` e `PUT …/produtos`. Sem tela
-   não é entrega (regra da casa). O contrato está em `docs/ONBOARDING.md`.
-2. **Painel do lojista** no mesmo portal: produtos (CRUD), pedidos (marcar
-   enviado + rastreio), tema. Tudo já tem endpoint aqui.
-3. **Fluxo n8n** `lojas-onboarding`: recebe `loja.criada` → boas-vindas no
+1. ~~Tela de onboarding no `cliente.avilaops.com`~~ — feita em 24/08/2026:
+   `/dashboard/loja` (wizard de 4 passos + painel com produtos via CSV,
+   pedidos, tema, domínio e credenciais Mercado Pago). Ponte em
+   `cliente.avilaops.com/src/lib/lojas.ts`; precisa de `LOJAS_API_URL` e
+   `LOJAS_ADMIN_TOKEN` no `.env` do portal e da migração `20260824150000_loja_virtual`.
+2. **Fluxo n8n** `lojas-onboarding`: recebe `loja.criada` → boas-vindas no
    WhatsApp + e-mail com vídeo de treinamento → follow-up em 3 dias → cobra
    as 2 indicações. Recebe `pedido.pago` → avisa lojista no WhatsApp.
-4. **Upload de imagem** de produto (hoje é URL). Reaproveitar o removedor de
+3. **Upload de imagem** de produto (hoje é URL). Reaproveitar o removedor de
    fundo do catálogo para padronizar foto.
-5. **PayPal e Éfi** como adaptadores no `packages/checkout` (regra: sempre os três).
-6. **Cobrança da mensalidade** da loja (Mercado Pago recorrente, como no mail) e
+4. **PayPal e Éfi** como adaptadores no `packages/checkout` (regra: sempre os três).
+5. **Cobrança da mensalidade** da loja (Mercado Pago recorrente, como no mail) e
    suspensão automática → `status: SUSPENSA` some o checkout, mantém a vitrine.
-7. Confirmar o contrato server-side da CepCerto (hoje usa o endpoint do widget
+6. Confirmar o contrato server-side da CepCerto (hoje usa o endpoint do widget
    com `Origin` da plataforma; se eles exigirem o token de servidor, trocar em
    `cotarCepCerto`).
+7. Marcar pedido como enviado + rastreio pelo painel (endpoint `PATCH` de pedido
+   ainda não existe).
 
 ## Rodando local
 
