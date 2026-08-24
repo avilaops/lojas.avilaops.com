@@ -33,9 +33,11 @@ padrão não é "ajuste" — é o plano Pro ou um projeto à parte.
    pedidos, tema, domínio e credenciais Mercado Pago). Ponte em
    `cliente.avilaops.com/src/lib/lojas.ts`; precisa de `LOJAS_API_URL` e
    `LOJAS_ADMIN_TOKEN` no `.env` do portal e da migração `20260824150000_loja_virtual`.
-2. **Fluxo n8n** `lojas-onboarding`: recebe `loja.criada` → boas-vindas no
-   WhatsApp + e-mail com vídeo de treinamento → follow-up em 3 dias → cobra
-   as 2 indicações. Recebe `pedido.pago` → avisa lojista no WhatsApp.
+2. ~~Fluxo n8n `lojas-onboarding`~~ — criado em 24/08/2026 no n8n ("Lojas —
+   Onboarding e Pedidos"; fonte em `docs/n8n-lojas-onboarding.ts`). Falta no n8n:
+   preencher credenciais Twilio, "Lojas Webhook Auth" (header `authorization`,
+   valor `Bearer <N8N_WEBHOOK_TOKEN>`) e "Lojas Admin Token"; o número WhatsApp
+   do Twilio; publicar o fluxo e apontar `N8N_WEBHOOK_URL` para o webhook.
 3. **Upload de imagem** de produto (hoje é URL). Reaproveitar o removedor de
    fundo do catálogo para padronizar foto.
 4. **PayPal e Éfi** como adaptadores no `packages/checkout` (regra: sempre os três).
