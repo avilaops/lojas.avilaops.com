@@ -4,6 +4,7 @@ import { calcularTotais } from "@avilaops/checkout";
 import { prisma } from "./db";
 import { emitir } from "./eventos";
 import { baixarEstoqueDoPedido } from "./estoque";
+import { marcarConvertido } from "./carrinhos";
 import { urlDaLoja } from "./tenant";
 
 function lojista(t: Tenant) {
@@ -53,6 +54,7 @@ export async function registrarPedido(
   });
 
   if (dados.status === "aprovado") await baixarEstoqueDoPedido(salvo.id);
+  await marcarConvertido(pedido.referencia);
 
   await emitir({
     tipo: "pedido.criado",

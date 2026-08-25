@@ -130,6 +130,7 @@ export default function CheckoutClient({ loja }: { loja: TenantPublico }) {
         fretes={fretes}
         meiosPagamento={loja.meiosPagamento as MeioPagamento[]}
         aoInformarCep={aoInformarCep}
+        aoIdentificar={(cliente) => { void fetch("/api/checkout/contato", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ referencia, cliente, itens: ids }) }).catch(() => undefined); }}
         aoFinalizar={aoFinalizar}
         desconto={cupom?.desconto ?? 0}
         slotCartao={

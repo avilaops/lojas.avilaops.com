@@ -10,6 +10,7 @@ import GradeVariantes from "./GradeVariantes";
 import Cupons, { type CupomView } from "./Cupons";
 import EditarProduto from "./EditarProduto";
 import Categorias, { type CategoriaView } from "./Categorias";
+import AvaliacoesPainel, { type AvaliacaoPainelView } from "./AvaliacoesPainel";
 
 export interface LojaView {
   slug: string;
@@ -39,7 +40,7 @@ export interface PedidoView { id: string; numero: number; referencia: string; st
 
 const STATUS: Record<string, string> = { ATIVA: "No ar", PROVISIONANDO: "Configurando", SUSPENSA: "Suspensa", CANCELADA: "Cancelada" };
 const PEDIDO: Record<string, string> = { AGUARDANDO_PAGAMENTO: "Aguardando pagamento", PAGO: "Pago — separar", EM_SEPARACAO: "Em separação", ENVIADO: "Enviado", ENTREGUE: "Entregue", CANCELADO: "Cancelado", ESTORNADO: "Estornado" };
-const ABAS = ["Visão geral", "Marca", "Produtos", "Pedidos", "Cupons", "Entrega", "Recebimento", "Assinatura", "Conta"] as const;
+const ABAS = ["Visão geral", "Marca", "Produtos", "Pedidos", "Cupons", "Avaliações", "Entrega", "Recebimento", "Assinatura", "Conta"] as const;
 const ASSINATURA: Record<string, { rotulo: string; classe: string }> = {
   SEM_ASSINATURA: { rotulo: "Período de teste", classe: "bg-amber-100 text-amber-800" },
   PENDENTE: { rotulo: "Aguardando cartão", classe: "bg-amber-100 text-amber-800" },
@@ -48,7 +49,7 @@ const ASSINATURA: Record<string, { rotulo: string; classe: string }> = {
   CANCELADA: { rotulo: "Cancelada", classe: "bg-red-100 text-red-800" },
 };
 
-export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias }: { loja: LojaView; produtos: ProdutoView[]; pedidos: PedidoView[]; cupons: CupomView[]; categorias: CategoriaView[] }) {
+export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias, avaliacoes }: { loja: LojaView; produtos: ProdutoView[]; pedidos: PedidoView[]; cupons: CupomView[]; categorias: CategoriaView[]; avaliacoes: AvaliacaoPainelView[] }) {
   const [gradeDe, setGradeDe] = useState<ProdutoView | null>(null);
   const [editando, setEditando] = useState<ProdutoView | null>(null);
   const router = useRouter();
@@ -211,6 +212,8 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
       )}
 
       {aba === "Cupons" && <Cupons cupons={cupons} chamar={chamar} ocupado={ocupado} />}
+
+      {aba === "Avaliações" && <AvaliacoesPainel avaliacoes={avaliacoes} chamar={chamar} ocupado={ocupado} />}
 
       {aba === "Pedidos" && (
         <Secao titulo="Pedidos">

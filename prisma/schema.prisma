@@ -101,6 +101,8 @@ model Tenant {
   faturas         Fatura[]
   cobrancaEventos CobrancaEvento[]
   cupons          Cupom[]
+  checkoutsAbertos CheckoutAberto[]
+  avaliacoes      Avaliacao[]
 
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
@@ -163,6 +165,7 @@ model Produto {
   categoria Categoria? @relation(fields: [categoriaId], references: [id], onDelete: SetNull)
   itens     PedidoItem[]
   variantes Variante[]
+  avaliacoes Avaliacao[]
 
   @@unique([tenantId, slug])
   @@index([tenantId, ativo, destaque])
@@ -300,4 +303,43 @@ model PedidoItem {
   pedido   Pedido    @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
   produto  Produto?  @relation(fields: [produtoId], references: [id], onDelete: SetNull)
   variante Variante? @relation(fields: [varianteId], references: [id], onDelete: SetNull)
+}
+
+/// Checkout iniciado (a pessoa se identificou) mas ainda sem pedido. É a
+/// matéria-prima do carrinho abandonado. Vira CONVERTIDO quando o pedido nasce.
+model CheckoutAberto {
+  id              String    @id @default(cuid())
+  tenantId        String
+  referencia      String    @unique
+  clienteNome     String
+  clienteEmail    String
+  clienteTelefone String
+  itens           Json      // [{ id, nome, quantidade, precoUnitario }]
+  totalCentavos   Int
+  status          String    @default("ABERTO") // ABERTO | LEMBRADO | CONVERTIDO
+  lembradoEm      DateTime?
+  criadoEm        DateTime  @default(now())
+  atualizadoEm    DateTime  @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, status, criadoEm])
+}
+
+/// Avaliação de produto pelo comprador. Só aparece depois de aprovada no painel.
+model Avaliacao {
+  id        String   @id @default(cuid())
+  tenantId  String
+  produtoId String
+  nome      String
+  nota      Int      // 1–5
+  texto     String?
+  aprovada  Boolean  @default(false)
+  criadoEm  DateTime @default(now())
+
+  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  produto Produto @relation(fields: [produtoId], references: [id], onDelete: Cascade)
+
+  @@index([produtoId, aprovada])
+  @@index([tenantId, aprovada, criadoEm])
 }

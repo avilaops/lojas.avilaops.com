@@ -1,9 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { exigirTenant, lojaVende, urlDaLoja } from "@/lib/tenant";
-import { buscarProduto, formatarBRL } from "@/lib/catalogo";
+import { buscarProduto, formatarBRL, listarProdutos, resumoAvaliacoes } from "@/lib/catalogo";
 import AddToCartButton from "@/components/cart/AddToCartButton";
 import SeletorVariante from "@/components/SeletorVariante";
+import GaleriaProduto from "@/components/GaleriaProduto";
+import Avaliacoes from "@/components/Avaliacoes";
+import ProductCard from "@/components/ProductCard";
+import { prisma } from "@/lib/db";
 import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -23,6 +27,11 @@ export default async function ProdutoPage({ params }: Props) {
   if (!p) notFound();
   const vende = lojaVende(t);
   const disponivel = p.disponibilidade !== "out_of_stock";
+  const [avaliacoes, resumo, relacionados] = await Promise.all([
+    prisma.avaliacao.findMany({ where: { produtoId: p.id, aprovada: true }, orderBy: { criadoEm: "desc" }, take: 20 }),
+    resumoAvaliacoes(p.id),
+    listarProdutos(t.id, { categoriaSlug: p.categoria?.slug, excetoId: p.id, limite: 4 }),
+  ]);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -33,6 +42,7 @@ export default async function ProdutoPage({ params }: Props) {
     ...(p.gtin ? { gtin: p.gtin } : {}),
     image: p.imagens,
     description: p.descricaoCurta ?? p.descricao ?? undefined,
+    ...(resumo.media != null ? { aggregateRating: { "@type": "AggregateRating", ratingValue: resumo.media, reviewCount: resumo.total } } : {}),
     offers: {
       "@type": "Offer",
       url: `${urlDaLoja(t)}/produtos/${p.slug}`,
@@ -56,22 +66,7 @@ export default async function ProdutoPage({ params }: Props) {
       </nav>
 
       <div className="grid gap-8 md:grid-cols-2">
-        <div className="grid gap-2">
-          <div className="aspect-square overflow-hidden rounded-xl bg-muted">
-            {p.imagens[0] ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={p.imagens[0]} alt={p.nome} className="h-full w-full object-cover" />
-            ) : null}
-          </div>
-          {p.imagens.length > 1 && (
-            <div className="grid grid-cols-5 gap-2">
-              {p.imagens.slice(1, 6).map((img) => (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img key={img} src={img} alt="" className="aspect-square rounded-lg object-cover" />
-              ))}
-            </div>
-          )}
-        </div>
+        <GaleriaProduto imagens={p.imagens} alt={p.nome} />
 
         <div>
           {p.marca && <p className="text-xs uppercase tracking-wide text-muted-foreground">{p.marca}</p>}
@@ -123,6 +118,22 @@ export default async function ProdutoPage({ params }: Props) {
           )}
         </div>
       </div>
+
+      <Avaliacoes
+        produtoId={p.id}
+        avaliacoes={avaliacoes.map((a) => ({ id: a.id, nome: a.nome, nota: a.nota, texto: a.texto, criadoEm: a.criadoEm.toISOString() }))}
+        media={resumo.media}
+        total={resumo.total}
+      />
+
+      {relacionados.length > 0 && (
+        <section className="mt-12">
+          <h2 className="mb-4 text-base font-bold">Você também pode gostar</h2>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {relacionados.map((r) => <ProductCard key={r.id} produto={r} vende={vende} whatsapp={t.whatsapp} />)}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

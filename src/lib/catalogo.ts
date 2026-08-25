@@ -1,4 +1,4 @@
-import type { Produto, Categoria } from "@prisma/client";
+import type { Prisma, Produto, Categoria } from "@prisma/client";
 import type { ItemCarrinho } from "@avilaops/checkout";
 import { prisma } from "./db";
 
@@ -8,20 +8,53 @@ export async function listarCategorias(tenantId: string) {
   return prisma.categoria.findMany({ where: { tenantId }, orderBy: [{ ordem: "asc" }, { nome: "asc" }] });
 }
 
-export async function listarProdutos(tenantId: string, filtro?: { categoriaSlug?: string; busca?: string; destaque?: boolean }) {
+export type OrdemCatalogo = "relevancia" | "menor-preco" | "maior-preco" | "recentes" | "nome";
+
+export interface FiltroCatalogo {
+  categoriaSlug?: string;
+  busca?: string;
+  destaque?: boolean;
+  minCentavos?: number;
+  maxCentavos?: number;
+  ordem?: OrdemCatalogo;
+  /** Deixa de fora este id (ex.: "relacionados" na página do produto). */
+  excetoId?: string;
+  limite?: number;
+}
+
+const ORDENS: Record<OrdemCatalogo, Prisma.ProdutoOrderByWithRelationInput[]> = {
+  relevancia: [{ destaque: "desc" }, { nome: "asc" }],
+  "menor-preco": [{ precoCentavos: "asc" }],
+  "maior-preco": [{ precoCentavos: "desc" }],
+  recentes: [{ criadoEm: "desc" }],
+  nome: [{ nome: "asc" }],
+};
+
+export async function listarProdutos(tenantId: string, filtro?: FiltroCatalogo) {
   return prisma.produto.findMany({
     where: {
       tenantId,
       ativo: true,
       ...(filtro?.destaque ? { destaque: true } : {}),
       ...(filtro?.categoriaSlug ? { categoria: { slug: filtro.categoriaSlug } } : {}),
+      ...(filtro?.excetoId ? { id: { not: filtro.excetoId } } : {}),
+      ...(filtro?.minCentavos != null || filtro?.maxCentavos != null
+        ? { precoCentavos: { ...(filtro.minCentavos != null ? { gte: filtro.minCentavos } : {}), ...(filtro.maxCentavos != null ? { lte: filtro.maxCentavos } : {}) } }
+        : {}),
       ...(filtro?.busca
-        ? { OR: [{ nome: { contains: filtro.busca, mode: "insensitive" } }, { marca: { contains: filtro.busca, mode: "insensitive" } }, { sku: { contains: filtro.busca, mode: "insensitive" } }] }
+        ? { OR: [{ nome: { contains: filtro.busca, mode: "insensitive" } }, { marca: { contains: filtro.busca, mode: "insensitive" } }, { sku: { contains: filtro.busca, mode: "insensitive" } }, { descricaoCurta: { contains: filtro.busca, mode: "insensitive" } }] }
         : {}),
     },
     include: { categoria: true },
-    orderBy: [{ destaque: "desc" }, { nome: "asc" }],
+    orderBy: ORDENS[filtro?.ordem ?? "relevancia"],
+    ...(filtro?.limite ? { take: filtro.limite } : {}),
   });
+}
+
+/** Média e contagem das avaliações aprovadas de um produto. */
+export async function resumoAvaliacoes(produtoId: string) {
+  const r = await prisma.avaliacao.aggregate({ where: { produtoId, aprovada: true }, _avg: { nota: true }, _count: { _all: true } });
+  return { media: r._avg.nota ? Math.round(r._avg.nota * 10) / 10 : null, total: r._count._all };
 }
 
 export async function buscarProduto(tenantId: string, slug: string) {
