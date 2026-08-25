@@ -42,8 +42,15 @@ padrão não é "ajuste" — é o plano Pro ou um projeto à parte.
 3. ~~Upload de imagem~~ — feito 25/08/2026. Falta ligar o removedor de fundo
    (`/opt/removedor-de-fundo`) para padronizar a foto.
 4. **PayPal e Éfi** como adaptadores no `packages/checkout` (regra: sempre os três).
-5. **Cobrança da mensalidade** da loja (Mercado Pago recorrente, como no mail) e
-   suspensão automática → `status: SUSPENSA` some o checkout, mantém a vitrine.
+5. ~~Cobrança da mensalidade~~ — feita 25/08/2026: assinatura (preapproval) no
+   Mercado Pago da Avila Ops por plano (79/119/349), aba "Assinatura" no painel,
+   webhook idempotente em `/api/webhooks/mercadopago-assinatura` (tabelas `Fatura`
+   e `CobrancaEvento`), 14 dias de teste + `LOJAS_DIAS_TOLERANCIA`, suspensão
+   automática pela rotina diária do n8n (`POST /api/admin/cobranca/verificar`);
+   `SUSPENSA` some o checkout e mantém a vitrine; pagamento reativa na hora.
+   **Falta só preencher `MP_ACCESS_TOKEN`/`MP_WEBHOOK_SECRET` da conta Avila Ops
+   em `/opt/lojas/.env` e cadastrar o webhook no painel MP.** Setup R$ 497 é
+   marcado à parte: `POST /api/admin/tenants/:slug/setup`.
 6. Confirmar o contrato server-side da CepCerto (hoje usa o endpoint do widget
    com `Origin` da plataforma; se eles exigirem o token de servidor, trocar em
    `cotarCepCerto`).
