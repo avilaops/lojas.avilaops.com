@@ -4,13 +4,24 @@ Este documento é para quem vai criar a identidade visual de uma loja da
 plataforma (designer, ChatGPT, agência). Ele diz exatamente **o que dá para
 mudar**, em que formato, e como entregar para entrar no ar sem código.
 
-Regra da plataforma: **o layout é fixo; o que muda são tokens, textos e imagens.**
-Não existe CSS por loja, não existe HTML por loja. Isso é proposital — é o que
-mantém a loja rápida, barata e igual em todos os aparelhos.
+Regra da plataforma: **a estrutura é mantida pelo produto; a direção de marca vira dado.**
+Não existe CSS avulso por loja. Diagnóstico, tokens, textos, imagens e um dos quatro
+layouts são persistidos por tenant, mantendo a loja rápida e consistente em todos os aparelhos.
+
+## 0. Diagnóstico de marca
+
+O onboarding pergunta segmento, público, diferencial real, até três traços de
+personalidade, tom de voz, objetivo e direção fotográfica. `src/lib/identidade.ts`
+transforma essas respostas em uma direção reproduzível — sem depender de uma API
+externa — e salva o resultado em `Tenant.identidade`.
+
+A aba **Marca** permite refazer a direção e depois refinar tokens, logo e banner.
+Ao publicar, `loja.identidade-atualizada` cria no n8n uma tarefa de revisão visual
+no Todoist. A revisão deve conferir contraste, coerência e uso de fotos reais.
 
 ## 1. O que pode ser definido
 
-### Tokens (aba Aparência do painel, ou JSON abaixo)
+### Tokens (aba Marca do painel, ou JSON abaixo)
 
 | Campo | Valores | Observação |
 |---|---|---|
@@ -49,10 +60,10 @@ Limite: 5 MB por arquivo. PNG/JPG/WEBP/GIF/SVG. Tudo é servido de `https://loja
 
 ## 2. Como entregar
 
-**Opção A — pelo painel:** `https://lojas.avilaops.com/painel` → aba **Aparência**
+**Opção A — pelo painel:** `https://lojas.avilaops.com/painel` → aba **Marca**
 (cores, fonte, cantos, layout, slogan, logo, banner) e aba **Produtos** (fotos, categorias com imagem).
 
-**Opção B — JSON, colado na aba Aparência → "Colar identidade (JSON)":**
+**Opção B — JSON, colado na aba Marca → "Colar identidade (JSON)":**
 
 ```json
 {

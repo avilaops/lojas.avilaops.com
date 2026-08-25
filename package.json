@@ -9,6 +9,7 @@
     "start": "next start -p 3080",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
+    "test:identidade": "tsx --test src/lib/identidade.test.ts",
     "prisma:migrate": "prisma migrate deploy",
     "prisma:dev": "prisma migrate dev",
     "seed:demo": "tsx scripts/seed-demo.ts",

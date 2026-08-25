@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CheckoutScreen, MercadoPagoCardBrick } from "@avilaops/checkout/ui";
@@ -21,21 +21,17 @@ function novaReferencia(slug: string) {
 export default function CheckoutClient({ loja }: { loja: TenantPublico }) {
   const { itens, limpar, pronto, cupom } = useCart();
   const router = useRouter();
-  const [fretes, setFretes] = useState<OpcaoFrete[]>([]);
+  const [fretes, setFretes] = useState<OpcaoFrete[]>(() =>
+    loja.retiradaNaLoja ? [{ id: FRETE_RETIRADA_ID, nome: "Retirar na loja", preco: 0, prazoDiasUteis: loja.despachoDiasUteis }] : [],
+  );
   const [resultado, setResultado] = useState<ResultadoPagamento | null>(null);
-  const referencia = useRef<string>("");
-  if (!referencia.current) referencia.current = novaReferencia(loja.slug);
+  const [referencia] = useState(() => novaReferencia(loja.slug));
 
   const itensCheckout = useMemo<ItemCarrinho[]>(
     () => itens.map((i) => ({ id: i.id, nome: i.nome, quantidade: i.quantidade, precoUnitario: i.precoCentavos, imagem: i.imagem })),
     [itens],
   );
   const ids = useMemo(() => itens.map((i) => ({ id: i.id, quantidade: i.quantidade })), [itens]);
-
-  // Retirada aparece antes de qualquer CEP.
-  useEffect(() => {
-    if (loja.retiradaNaLoja) setFretes([{ id: FRETE_RETIRADA_ID, nome: "Retirar na loja", preco: 0, prazoDiasUteis: loja.despachoDiasUteis }]);
-  }, [loja.retiradaNaLoja, loja.despachoDiasUteis]);
 
   // Polling do PIX: quando cair, vai para a página do pedido.
   useEffect(() => {
@@ -45,11 +41,11 @@ export default function CheckoutClient({ loja }: { loja: TenantPublico }) {
       if (r?.status === "aprovado") {
         clearInterval(timer);
         limpar();
-        router.push(`/pedido/${referencia.current}`);
+        router.push(`/pedido/${referencia}`);
       }
     }, 4000);
     return () => clearInterval(timer);
-  }, [resultado, limpar, router]);
+  }, [resultado, limpar, referencia, router]);
 
   if (!pronto) return null;
   if (itens.length === 0 && !resultado) {
@@ -73,7 +69,7 @@ export default function CheckoutClient({ loja }: { loja: TenantPublico }) {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        referencia: referencia.current,
+        referencia,
         itens: ids,
         cupom: cupom?.codigo,
         cliente: dados.cliente,
@@ -89,7 +85,7 @@ export default function CheckoutClient({ loja }: { loja: TenantPublico }) {
     setResultado(res);
     if (res.status === "aprovado") {
       limpar();
-      router.push(`/pedido/${referencia.current}`);
+      router.push(`/pedido/${referencia}`);
     } else if (res.meioPagamento === "boleto") {
       limpar();
     }
@@ -109,7 +105,7 @@ export default function CheckoutClient({ loja }: { loja: TenantPublico }) {
         <button className="btn-secundario mt-2 w-full" onClick={() => navigator.clipboard?.writeText(resultado.pix!.copiaECola)}>
           Copiar código
         </button>
-        <p className="mt-4 text-xs text-muted-foreground">Pedido {referencia.current}</p>
+        <p className="mt-4 text-xs text-muted-foreground">Pedido {referencia}</p>
       </div>
     );
   }
@@ -121,7 +117,7 @@ export default function CheckoutClient({ loja }: { loja: TenantPublico }) {
         <p className="mt-1 text-sm text-muted-foreground">O pedido é confirmado após a compensação (até 3 dias úteis).</p>
         <a href={resultado.boleto.url} target="_blank" rel="noopener" className="btn-primario mt-6 w-full">Abrir boleto</a>
         {resultado.boleto.linhaDigitavel && <p className="mt-3 break-all text-xs">{resultado.boleto.linhaDigitavel}</p>}
-        <Link href={`/pedido/${referencia.current}`} className="btn-secundario mt-2 w-full">Ver pedido</Link>
+        <Link href={`/pedido/${referencia}`} className="btn-secundario mt-2 w-full">Ver pedido</Link>
       </div>
     );
   }

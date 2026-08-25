@@ -1,0 +1,10 @@
+{
+  "name": "Lojas Avila Ops",
+  "short_name": "Lojas",
+  "description": "Comércio digital com identidade, operação e futuro.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#050814",
+  "theme_color": "#2f6bff",
+  "icons": [{ "src": "/lojas-mark.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}

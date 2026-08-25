@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { lojistaAtual } from "@/lib/sessao";
-import { urlDaLoja, temaDo } from "@/lib/tenant";
+import { urlDaLoja, temaDo, identidadeDa } from "@/lib/tenant";
 import PainelLoja from "@/components/painel/PainelLoja";
 import { NOME_PLANO, PRECO_PLANO } from "@/lib/assinatura";
 
@@ -24,14 +24,14 @@ export default async function PainelPage({ searchParams }: { searchParams: Promi
   ]);
 
   return (
-    <div className="container-loja max-w-4xl py-10">
-      <header className="mb-8">
-        <h1 className="text-2xl font-bold">{loja.nome}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+    <div className="container-loja pl-workspace max-w-6xl py-10">
+      <header className="pl-panel-heading mb-8">
+        <div><span>Seu negócio digital</span><h1>{loja.nome}</h1></div>
+        <p>
           <a href={urlDaLoja(loja)} target="_blank" rel="noopener" className="underline">{urlDaLoja(loja).replace(/^https?:\/\//, "")}</a>
           {" · "}{contagem} produtos ativos · {pedidos.length} pedidos
         </p>
-        {nova && <p className="mt-3 rounded-lg bg-primary/10 p-3 text-sm">Sua loja está no ar. Próximos passos: cadastre produtos e configure o recebimento no Mercado Pago.</p>}
+        {nova && <p className="mt-3 rounded-lg bg-blue-50 p-3 text-sm text-blue-900">Sua loja está no ar. Agora envie logo, imagem principal e as fotos reais do catálogo para concluir a presença visual.</p>}
       </header>
       <PainelLoja
         loja={{
@@ -41,6 +41,7 @@ export default async function PainelPage({ searchParams }: { searchParams: Promi
           status: loja.status,
           plano: loja.plano,
           tema: temaDo(loja),
+          identidade: identidadeDa(loja),
           slogan: loja.slogan,
           logoUrl: loja.logoUrl,
           whatsapp: loja.whatsapp,

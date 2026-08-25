@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import "./globals.css";
 import "@avilaops/checkout/tokens.css";
 import "@avilaops/checkout/checkout.css";
-import { tenantAtual, tenantPublico, temaDo, urlDaLoja, enderecoDo } from "@/lib/tenant";
+import { tenantAtual, tenantPublico, temaDo, urlDaLoja, enderecoDo, identidadeDa } from "@/lib/tenant";
 import { listarCategorias } from "@/lib/catalogo";
 import { cssDoTema, fonteGoogleHref } from "@/lib/tema";
 import { CartProvider } from "@/components/cart/CartProvider";
@@ -16,7 +16,17 @@ import AvisoSuspensa from "@/components/AvisoSuspensa";
 
 export async function generateMetadata(): Promise<Metadata> {
   const h = await headers();
-  if (h.get("x-plataforma") === "1") return { title: "Lojas by Avila Ops" };
+  if (h.get("x-plataforma") === "1") {
+    return {
+      metadataBase: new URL("https://lojas.avilaops.com"),
+      title: { default: "Lojas Avila Ops", template: "%s · Lojas Avila Ops" },
+      description: "Comércio digital com identidade, operação e futuro.",
+      applicationName: "Lojas Avila Ops",
+      manifest: "/site.webmanifest",
+      icons: { icon: "/lojas-mark.svg", apple: "/lojas-mark.svg" },
+      robots: { index: true, follow: true },
+    };
+  }
   const t = await tenantAtual();
   if (!t) return { title: "Loja não encontrada", robots: { index: false } };
   return {
@@ -53,6 +63,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   }
 
   const tema = temaDo(t);
+  const identidade = identidadeDa(t);
   const fonte = fonteGoogleHref(tema);
   const categorias = await listarCategorias(t.id);
   const publico = tenantPublico(t);
@@ -65,6 +76,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     name: t.nome,
     url: urlDaLoja(t),
     ...(t.logoUrl ? { logo: t.logoUrl } : {}),
+    ...(identidade.diferencial ? { description: identidade.diferencial } : {}),
     ...(t.telefone ? { telephone: t.telefone } : {}),
     ...(endereco.cidade
       ? { address: { "@type": "PostalAddress", streetAddress: [endereco.logradouro, endereco.numero].filter(Boolean).join(", "), addressLocality: endereco.cidade, addressRegion: endereco.uf, postalCode: endereco.cep, addressCountry: "BR" } }
@@ -75,7 +87,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="pt-BR" data-ck-theme={tema.modo === "escuro" ? "dark" : "light"}>
       <head>
         {fonte && <link rel="stylesheet" href={fonte} />}
-        <style dangerouslySetInnerHTML={{ __html: cssDoTema(tema) }} />
+        <style dangerouslySetInnerHTML={{ __html: `${cssDoTema(tema)}:root{--brand-support:${identidade.corApoio}}` }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       </head>
       <body className="flex min-h-screen flex-col">

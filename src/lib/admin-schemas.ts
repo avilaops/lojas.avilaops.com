@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { TemaSchema } from "./tema";
+import { IdentidadeSchema } from "./identidade";
 
 /**
  * Contratos da API administrativa. É o que o formulário de onboarding do
@@ -28,6 +29,7 @@ export const TenantEntradaSchema = z.object({
   logoUrl: z.string().url().optional(),
   bannerUrl: z.string().url().nullable().optional(),
   tema: TemaSchema.partial().optional(),
+  identidade: IdentidadeSchema.partial().optional(),
   slogan: z.string().max(140).optional(),
   sobre: z.string().max(4000).optional(),
   whatsapp: digitos(12, 13).optional(),

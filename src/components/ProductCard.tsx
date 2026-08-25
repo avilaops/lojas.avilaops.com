@@ -8,17 +8,17 @@ export default function ProductCard({ produto, vende, whatsapp }: { produto: Pro
   const imagem = produto.imagens[0];
   const disponivel = produto.disponibilidade !== "out_of_stock";
   return (
-    <article className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
-      <Link href={`/produtos/${produto.slug}`} className="relative block aspect-square bg-muted">
+    <article className="cartao-produto group flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+      <Link href={`/produtos/${produto.slug}`} className="cartao-produto-imagem relative block aspect-square overflow-hidden bg-muted">
         {imagem ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={imagem} alt={produto.nome} loading="lazy" className="h-full w-full object-cover" />
+          <img src={imagem} alt={produto.nome} loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.035]" />
         ) : (
-          <div className="flex h-full items-center justify-center text-xs text-muted-foreground">sem foto</div>
+          <div className="produto-sem-foto flex h-full items-center justify-center text-xs text-muted-foreground">Imagem em preparação</div>
         )}
         {produto.destaque && <span className="absolute left-2 top-2 rounded-md bg-primary px-2 py-0.5 text-[11px] font-bold uppercase text-primary-foreground">Destaque</span>}
       </Link>
-      <div className="flex flex-1 flex-col gap-2 p-3">
+      <div className="flex flex-1 flex-col gap-2 p-4">
         {produto.marca && <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{produto.marca}</p>}
         <Link href={`/produtos/${produto.slug}`} className="line-clamp-2 text-sm font-semibold">
           {produto.nome}
@@ -27,7 +27,7 @@ export default function ProductCard({ produto, vende, whatsapp }: { produto: Pro
           {produto.precoDeCentavos && produto.precoDeCentavos > produto.precoCentavos && (
             <p className="text-xs text-muted-foreground line-through">{formatarBRL(produto.precoDeCentavos)}</p>
           )}
-          <p className="text-lg font-bold">{formatarBRL(produto.precoCentavos)}</p>
+          <p className="text-xl font-bold tracking-tight">{formatarBRL(produto.precoCentavos)}</p>
         </div>
         {vende && produto.opcoes.length > 0 ? (
           <Link href={`/produtos/${produto.slug}`} className="btn-secundario w-full">Ver opções</Link>

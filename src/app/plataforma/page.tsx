@@ -1,63 +1,253 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
+import {
+  ArrowRight,
+  BadgeCheck,
+  BarChart3,
+  Bot,
+  Check,
+  ChevronRight,
+  Cloud,
+  CreditCard,
+  Globe2,
+  Layers3,
+  MessageCircleMore,
+  PackageCheck,
+  Palette,
+  ShieldCheck,
+  Sparkles,
+  Store,
+  WandSparkles,
+  Zap,
+} from "lucide-react";
+import ModelosInterativos from "@/components/plataforma/ModelosInterativos";
 
 export const metadata: Metadata = {
-  title: "Loja virtual pronta em minutos — Lojas by Avila Ops",
-  description: "Loja com PIX, cartão e boleto, frete por CEP, e-mail profissional e automações de WhatsApp. Setup R$ 497, a partir de R$ 79/mês.",
+  title: "Lojas Avila Ops — sua loja pronta para vender",
+  description:
+    "Loja virtual com identidade própria, domínio, checkout, frete e automações. Tecnologia e operação reunidas para sua empresa vender melhor.",
+  alternates: { canonical: "https://lojas.avilaops.com" },
+  openGraph: {
+    title: "Lojas Avila Ops — sua loja pronta para vender",
+    description: "Uma presença digital sofisticada, com tecnologia que trabalha junto com você.",
+    url: "https://lojas.avilaops.com",
+    siteName: "Lojas Avila Ops",
+    locale: "pt_BR",
+    type: "website",
+    images: [{ url: "/plataforma/opengraph-image", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Lojas Avila Ops — sua loja pronta para vender",
+    description: "Design, vendas e automação em uma única operação.",
+    images: ["/plataforma/opengraph-image"],
+  },
 };
 
 const PLANOS = [
-  { nome: "Site", preco: 79, itens: ["Vitrine de produtos", "Pedido pelo WhatsApp", "Domínio, hospedagem, SSL", "1 e-mail profissional", "Painel + treinamento em vídeo"] },
-  { nome: "Loja", preco: 119, destaque: true, itens: ["Tudo do Site", "Carrinho e checkout na sua loja", "PIX na hora, cartão em até 12x, boleto", "Frete por CEP + retirada na loja", "Aviso de pedido pago no seu WhatsApp"] },
-  { nome: "Loja Pro", preco: 349, itens: ["Tudo da Loja", "Carrinho abandonado e pós-venda automáticos", "Cupons e reposição de estoque", "Relatórios semanais + 5 e-mails", "Emissão de NF-e"] },
-];
+  {
+    id: "SITE",
+    nome: "Essencial",
+    rotulo: "Para começar",
+    preco: 79,
+    descricao: "Uma presença profissional que transforma visitas em conversas.",
+    destaque: false,
+    itens: ["Vitrine responsiva", "Pedidos pelo WhatsApp", "Domínio, SSL e hospedagem", "1 e-mail profissional", "Painel e treinamento"],
+  },
+  {
+    id: "LOJA",
+    nome: "Negócio",
+    rotulo: "O plano inteligente",
+    preco: 119,
+    destaque: true,
+    descricao: "A operação completa para vender e receber sem depender de plataformas genéricas.",
+    itens: ["Tudo do Essencial", "Carrinho e checkout próprio", "PIX, cartão e boleto", "Frete por CEP e retirada", "Avisos de venda no WhatsApp"],
+  },
+  {
+    id: "LOJA_PRO",
+    nome: "Escala",
+    rotulo: "Para crescer",
+    preco: 349,
+    descricao: "Automação e inteligência para vender mais com menos trabalho manual.",
+    destaque: false,
+    itens: ["Tudo do Negócio", "Carrinho abandonado e pós-venda", "Cupons e alertas de estoque", "Relatório executivo semanal", "5 e-mails e apoio à NF-e"],
+  },
+] as const;
+
+const FAQ = [
+  ["Preciso entender de tecnologia?", "Não. Você informa os dados do negócio e acompanha tudo por um painel simples. Configuração, publicação e orientação fazem parte da jornada."],
+  ["Posso usar meu próprio domínio?", "Sim. Configuramos domínio, SSL e os registros de e-mail com o padrão operacional da Avila Ops."],
+  ["O dinheiro passa pela Avila Ops?", "Não. A conta de recebimento pertence à sua empresa. O Mercado Pago já está integrado; PayPal e Éfi são as próximas integrações previstas para completar as três opções da Avila Ops."],
+  ["Consigo trocar cores, fontes e layout?", "Sim. Você escolhe a direção visual e um dos layouts profissionais. O sistema mantém a experiência consistente no celular e no computador."],
+] as const;
+
+function MarcaLojas({ compacta = false }: { compacta?: boolean }) {
+  return (
+    <span className="pl-marca">
+      <span className="pl-marca-simbolo" aria-hidden="true"><span /></span>
+      <span className="pl-marca-texto">
+        <strong>Lojas</strong>
+        {!compacta && <small>por Avila Ops</small>}
+      </span>
+    </span>
+  );
+}
 
 export default function LandingPlataforma() {
   return (
-    <div className="container-loja py-12">
-      <section className="max-w-2xl">
-        <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Loja virtual padronizada</p>
-        <h1 className="mt-2 text-4xl font-bold leading-tight">Sua loja no ar em minutos, vendendo com PIX, cartão e boleto.</h1>
-        <p className="mt-4 text-muted-foreground">
-          Você preenche um formulário; a gente cuida de domínio, hospedagem, e-mail, pagamento e frete. O dinheiro cai direto na sua conta. Sem programador, sem mensalidade escondida.
-        </p>
-        <div className="mt-6 flex gap-3">
-          <Link href="/criar" className="btn-primario">Criar minha loja</Link>
-          <a href="https://demo.lojas.avilaops.com" target="_blank" rel="noopener" className="btn-secundario">Ver loja de exemplo</a>
-        </div>
-      </section>
+    <div className="pl-site">
+      <div className="pl-ambiente" aria-hidden="true" />
 
-      <section id="planos" className="mt-16">
-        <h2 className="text-2xl font-bold">Planos</h2>
-        <p className="mt-1 text-sm text-muted-foreground">Setup de R$ 1.307 por <strong>R$ 497</strong> (12x de R$ 49,70) com 2 indicações após a aprovação.</p>
-        <div className="mt-6 grid gap-4 md:grid-cols-3">
-          {PLANOS.map((p) => (
-            <div key={p.nome} className={`rounded-2xl border p-6 ${p.destaque ? "border-primary shadow-lg" : "border-border"}`}>
-              {p.destaque && <p className="text-[11px] font-bold uppercase tracking-widest text-primary">Mais escolhido</p>}
-              <h3 className="mt-1 text-xl font-bold">{p.nome}</h3>
-              <p className="mt-2 text-3xl font-bold">R$ {p.preco}<span className="text-sm font-normal text-muted-foreground">/mês</span></p>
-              <ul className="mt-4 space-y-1.5 text-sm">
-                {p.itens.map((i) => <li key={i}>✔ {i}</li>)}
-              </ul>
-              <Link href={`/criar?plano=${p.nome === "Site" ? "SITE" : p.nome === "Loja" ? "LOJA" : "LOJA_PRO"}`} className={`${p.destaque ? "btn-primario" : "btn-secundario"} mt-6 w-full`}>
-                Começar com {p.nome}
+      <section className="pl-hero">
+        <div className="pl-container pl-hero-grid">
+          <div className="pl-hero-copy">
+            <div className="pl-eyebrow"><Sparkles size={14} /> Comércio digital, com identidade</div>
+            <h1>Sua loja começa <span>bonita.</span><br />E cresce pronta.</h1>
+            <p>
+              Design sofisticado, checkout próprio e automações que trabalham nos bastidores.
+              Tudo o que sua empresa precisa para vender online — sem montar um quebra-cabeça de ferramentas.
+            </p>
+            <div className="pl-acoes">
+              <Link href="/criar" className="pl-botao pl-botao-primario">
+                Criar minha loja <ArrowRight size={17} />
               </Link>
+              <a href="https://demo.lojas.avilaops.com" target="_blank" rel="noopener" className="pl-botao pl-botao-secundario">
+                Explorar uma loja
+              </a>
             </div>
-          ))}
+            <div className="pl-provas" aria-label="Benefícios incluídos">
+              <span><BadgeCheck size={15} /> Domínio próprio</span>
+              <span><ShieldCheck size={15} /> SSL e LGPD</span>
+              <span><Zap size={15} /> Publicação rápida</span>
+            </div>
+          </div>
+
+          <div className="pl-hero-visual">
+            <div className="pl-orbita pl-orbita-a" aria-hidden="true" />
+            <div className="pl-orbita pl-orbita-b" aria-hidden="true" />
+            <Image
+              src="/media/lojas-hero-commerce.webp"
+              alt="Composição tridimensional de uma vitrine digital modular"
+              width={1536}
+              height={1024}
+              priority
+              sizes="(max-width: 900px) 100vw, 54vw"
+            />
+            <div className="pl-status pl-status-venda"><span><Check size={12} /></span><div><small>Nova venda</small><strong>Pagamento confirmado</strong></div></div>
+            <div className="pl-status pl-status-operacao"><Bot size={17} /><div><small>Automação ativa</small><strong>Pós-venda programado</strong></div></div>
+          </div>
         </div>
       </section>
 
-      <section className="mt-16 grid gap-6 md:grid-cols-3">
-        {[
-          ["Padrão que funciona", "Um layout testado, cores e fonte suas. Sem reinventar: é o que deixa o preço baixo e a loja rápida."],
-          ["Dinheiro na sua conta", "Pagamento pelo Mercado Pago da sua empresa. Nós não intermediamos o dinheiro."],
-          ["Automação de verdade", "Pedido pago avisa no seu WhatsApp; carrinho abandonado recebe lembrete; tudo sem você fazer nada."],
-        ].map(([t, d]) => (
-          <div key={t}>
-            <h3 className="font-bold">{t}</h3>
-            <p className="mt-1 text-sm text-muted-foreground">{d}</p>
+      <div className="pl-faixa">
+        <div className="pl-container">
+          <span>Uma operação, do primeiro clique ao pós-venda</span>
+          <div><Globe2 size={16} /> Domínio</div><i />
+          <div><Palette size={16} /> Identidade</div><i />
+          <div><CreditCard size={16} /> Pagamento</div><i />
+          <div><PackageCheck size={16} /> Entrega</div><i />
+          <div><MessageCircleMore size={16} /> Relacionamento</div>
+        </div>
+      </div>
+
+      <section id="recursos" className="pl-secao pl-jornada">
+        <div className="pl-container">
+          <header className="pl-secao-cabecalho">
+            <div><span className="pl-kicker">Da ideia à operação</span><h2>Você cuida do negócio.<br />A estrutura cuida do resto.</h2></div>
+            <p>Em vez de contratar cinco serviços e tentar fazê-los conversar, sua loja nasce como um sistema único, organizado para vender e evoluir.</p>
+          </header>
+
+          <div className="pl-linha-processo">
+            <article><span>01</span><div className="pl-processo-icone"><WandSparkles /></div><h3>Conte o que quer construir</h3><p>Nome, produtos, estilo e operação. O onboarding transforma suas respostas em uma loja pronta.</p><em>Diagnóstico de marca</em></article>
+            <article><span>02</span><div className="pl-processo-icone"><Layers3 /></div><h3>Receba uma presença completa</h3><p>Site, domínio, e-mail, catálogo e checkout com a mesma identidade em cada ponto de contato.</p><em>Publicação integrada</em></article>
+            <article><span>03</span><div className="pl-processo-icone"><Bot /></div><h3>Venda com processos automáticos</h3><p>n8n e WhatsApp conectam confirmação, recuperação, estoque e pós-venda à sua rotina.</p><em>Rotinas conectadas</em></article>
+            <article><span>04</span><div className="pl-processo-icone"><BarChart3 /></div><h3>Aprenda e cresça</h3><p>Dados da operação viram acompanhamento claro, novos serviços e decisões melhores.</p><em>Evolução contínua</em></article>
           </div>
-        ))}
+        </div>
+      </section>
+
+      <section id="modelos" className="pl-secao pl-modelos">
+        <div className="pl-container">
+          <header className="pl-secao-cabecalho">
+            <div><span className="pl-kicker">Layouts com direção de arte</span><h2>Não parece um template.<br />Parece a sua marca.</h2></div>
+            <p>Escolha uma composição criada para o seu tipo de catálogo. Cores, fontes, imagens e conteúdo assumem a personalidade do negócio.</p>
+          </header>
+          <ModelosInterativos />
+          <div className="pl-modelos-rodape">
+            <p><Palette size={18} /> <strong>Identidade flexível</strong><span>Paleta, tipografia, cantos, imagens e composição.</span></p>
+            <p><Zap size={18} /> <strong>Experiência consistente</strong><span>Rápida e responsiva em qualquer tamanho de tela.</span></p>
+            <p><Store size={18} /> <strong>Feita para comércio</strong><span>Do catálogo ao checkout, sem perder a personalidade.</span></p>
+          </div>
+        </div>
+      </section>
+
+      <section className="pl-secao pl-tecnologia">
+        <div className="pl-container pl-tecnologia-grid">
+          <div className="pl-tecnologia-copy">
+            <span className="pl-kicker">Tecnologia que não aparece. Resultado que aparece.</span>
+            <h2>Mais que uma página bonita.</h2>
+            <p>Construímos a camada visual e a operação como um produto único. Isso reduz dependências, preserva velocidade e deixa espaço para sua empresa crescer.</p>
+            <Link href="/criar" className="pl-link">Começar meu projeto <ArrowRight size={16} /></Link>
+          </div>
+          <div className="pl-matriz">
+            <article><Cloud /><span>Infraestrutura</span><strong>Cloudflare + servidor próprio</strong><small>DNS, SSL, proteção e disponibilidade.</small></article>
+            <article><Bot /><span>Automação</span><strong>n8n conectado à operação</strong><small>Eventos de venda viram ações sem trabalho repetitivo.</small></article>
+            <article><MessageCircleMore /><span>Relacionamento</span><strong>WhatsApp com contexto</strong><small>Avisos e jornadas conectados ao momento do cliente.</small></article>
+            <article><ShieldCheck /><span>Controle</span><strong>Dados e identidade próprios</strong><small>Sua marca na frente; integrações nos bastidores.</small></article>
+          </div>
+        </div>
+      </section>
+
+      <section id="planos" className="pl-secao pl-planos">
+        <div className="pl-container">
+          <header className="pl-planos-cabecalho">
+            <span className="pl-kicker">Planos claros, evolução contínua</span>
+            <h2>Comece certo. Cresça sem recomeçar.</h2>
+            <p>Implantação a partir de <strong>R$ 497</strong> (12x de R$ 49,70). Mercado Pago ativo; PayPal e Éfi em implantação.</p>
+          </header>
+          <div className="pl-planos-grid">
+            {PLANOS.map((plano) => (
+              <article key={plano.id} className={plano.destaque ? "pl-plano pl-plano-destaque" : "pl-plano"}>
+                <div className="pl-plano-topo">
+                  <span>{plano.rotulo}</span>
+                  {plano.destaque && <b><Sparkles size={12} /> Mais escolhido</b>}
+                </div>
+                <h3>{plano.nome}</h3>
+                <p>{plano.descricao}</p>
+                <div className="pl-preco"><small>R$</small><strong>{plano.preco}</strong><span>/mês</span></div>
+                <Link href={`/criar?plano=${plano.id}`} className={plano.destaque ? "pl-botao pl-botao-primario" : "pl-botao pl-botao-plano"}>
+                  Escolher {plano.nome} <ChevronRight size={16} />
+                </Link>
+                <ul>{plano.itens.map((item) => <li key={item}><Check size={15} /> {item}</li>)}</ul>
+              </article>
+            ))}
+          </div>
+          <p className="pl-planos-nota"><ShieldCheck size={15} /> Pagamentos pela conta da sua empresa. Mercado Pago está integrado; PayPal e Éfi permanecem identificados como próximos gateways, sem promessa de disponibilidade antecipada.</p>
+        </div>
+      </section>
+
+      <section className="pl-secao pl-faq">
+        <div className="pl-container pl-faq-grid">
+          <div><span className="pl-kicker">Dúvidas comuns</span><h2>Sem letras miúdas.<br />Sem complicação.</h2><p>Se sua operação tiver uma necessidade específica, desenhamos a melhor jornada antes de publicar.</p></div>
+          <div className="pl-faq-lista">
+            {FAQ.map(([pergunta, resposta], indice) => (
+              <details key={pergunta} open={indice === 0}><summary>{pergunta}<span>+</span></summary><p>{resposta}</p></details>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="pl-cta-final">
+        <div className="pl-container pl-cta-grid">
+          <div className="pl-cta-glow" aria-hidden="true" />
+          <div className="pl-cta-copy"><MarcaLojas /><h2>Sua próxima venda pode começar aqui.</h2><p>Crie a estrutura da sua loja agora e transforme sua presença digital em uma operação de verdade.</p><Link href="/criar" className="pl-botao pl-botao-claro">Criar minha loja <ArrowRight size={17} /></Link></div>
+          <div className="pl-cta-painel" aria-label="Resumo do lançamento">
+            <span>Seu lançamento</span><strong>Uma marca pronta para operar.</strong>
+            <div><p><b>05</b><small>etapas guiadas</small></p><p><b>04</b><small>layouts profissionais</small></p><p><b>01</b><small>operação integrada</small></p></div>
+            <em><Check size={14} /> Identidade, vitrine e automação no mesmo fluxo</em>
+          </div>
+        </div>
       </section>
     </div>
   );

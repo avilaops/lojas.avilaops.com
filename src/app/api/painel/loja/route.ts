@@ -2,6 +2,9 @@ import { TenantAtualizacaoSchema } from "@/lib/admin-schemas";
 import { atualizarTenant } from "@/lib/admin-tenants";
 import { provisionarLoja } from "@/lib/provisionar";
 import { lojistaAtual } from "@/lib/sessao";
+import { emitir } from "@/lib/eventos";
+import { lerIdentidade } from "@/lib/identidade";
+import { urlDaLoja } from "@/lib/tenant";
 
 /** PATCH — o lojista altera a própria loja (tema, contato, frete, gateway, domínio). */
 export async function PATCH(request: Request) {
@@ -13,6 +16,14 @@ export async function PATCH(request: Request) {
   if (!r.success) return Response.json({ erro: "Dados inválidos.", detalhes: r.error.flatten() }, { status: 422 });
 
   const t = await atualizarTenant(loja.slug, r.data);
+  if (r.data.identidade || r.data.tema || r.data.logoUrl !== undefined || r.data.bannerUrl !== undefined) {
+    const identidade = lerIdentidade(t.identidade);
+    await emitir({
+      tipo: "loja.identidade-atualizada", slug: t.slug, nome: t.nome, url: urlDaLoja(t),
+      personalidade: identidade.personalidade.join(", "), direcaoFotografica: identidade.direcaoFotografica,
+      emailContato: t.emailContato, whatsapp: t.whatsapp,
+    });
+  }
   return Response.json({ slug: t.slug, atualizadoEm: t.atualizadoEm });
 }
 

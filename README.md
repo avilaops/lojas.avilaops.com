@@ -30,9 +30,11 @@ padrão não é "ajuste" — é o plano Pro ou um projeto à parte.
 | Eventos para o n8n (loja criada, pedido criado/pago/recusado) | novo — `src/lib/eventos.ts` | pronto |
 | Certificado sob demanda para domínio próprio (Caddy `on_demand_tls`) | `deploy/Caddyfile.snippet` + `/api/dominio-permitido` | pronto |
 | **Variações** (até 3 opções, grade gerada por combinação, SKU/preço/estoque/foto por variação, seletor na página do produto com combinação esgotada desabilitada), **estoque** (produto simples ou por variação; baixa idempotente ao pagar; esgotado some do carrinho) e **cupons** (percentual, valor fixo, frete grátis; mínimo, limite de usos, validade; calculados no servidor; aplicados no carrinho) | `src/lib/cupons.ts`, `src/lib/estoque.ts`, `SeletorVariante.tsx`, `painel/GradeVariantes.tsx`, `painel/Cupons.tsx` | pronto (25/08/2026) |
-| **Quatro layouts de home** (Clássico, Vitrine, Editorial, Minimal) — composições fixas dos mesmos blocos, escolhidas no wizard e na aba Aparência; `Tenant.tema.layout` | `src/components/home/*`, `src/lib/tema.ts` (`LAYOUTS`) | pronto (25/08/2026) |
+| **Quatro layouts de home** (Clássico, Vitrine, Editorial, Minimal) — composições fixas dos mesmos blocos, escolhidas pelo diagnóstico e refinadas na aba Marca; `Tenant.tema.layout` | `src/components/home/*`, `src/lib/tema.ts` (`LAYOUTS`) | pronto (25/08/2026) |
 | **Catálogo completo no painel**: edição de produto (várias fotos com ordem, descrição longa, estoque, disponibilidade, ativo/destaque), categorias (criar/editar/ordenar/apagar, imagem) e banner da home | `painel/EditarProduto.tsx`, `painel/Categorias.tsx`, `api/painel/produtos` (GET/PATCH), `api/painel/categorias` | pronto (25/08/2026) |
-| **Plataforma autossuficiente** em `lojas.avilaops.com`: landing com planos, `/criar` (wizard 4 passos + senha), `/entrar`, `/painel` (produtos um a um ou CSV, pedidos com separar/enviar/entregar, aparência, entrega/tabela de frete, Mercado Pago, senha) | `src/proxy.ts` (reescreve o domínio-base para `src/app/plataforma`), `src/lib/sessao.ts` (scrypt + token HMAC em cookie), `src/app/api/painel/*` | pronto (25/08/2026) — substitui a tela que vivia no cliente.avilaops.com |
+| **Plataforma autossuficiente** em `lojas.avilaops.com`: landing com planos, `/criar` (estúdio de lançamento em 5 etapas), `/entrar`, `/painel` (marca, produtos, pedidos, entrega e operação) | `src/proxy.ts`, `src/lib/sessao.ts`, `src/app/api/painel/*` | publicado em produção (25/08/2026) — substitui a tela que vivia no cliente.avilaops.com |
+| **Identidade visual e descoberta**: landing premium responsiva, marca Lojas, imagem hero autoral, prévias dos layouts, favicon/manifesto, Open Graph, sitemap/robots por host e `llms.txt`/`llms-full.txt` para plataforma e tenants | `src/app/plataforma/*`, `public/`, `src/app/{sitemap,robots}.ts`, `src/app/llms*.txt` | pronto e validado localmente (25/08/2026) |
+| **Direção de marca por loja**: diagnóstico de público, diferencial, personalidade, voz, objetivo e fotografia; geração determinística de paleta/tipografia/layout; persistência no tenant e revisão via n8n/Todoist | `src/lib/identidade.ts`, `Tenant.identidade`, wizard e aba Marca | publicado em produção (25/08/2026) |
 
 ## O que falta (ordem sugerida)
 
@@ -41,11 +43,12 @@ padrão não é "ajuste" — é o plano Pro ou um projeto à parte.
    `/painel`). Recuperação de senha (`/recuperar` → evento `lojista.recuperar-senha`
    no n8n → e-mail) e upload de foto/logo (`/api/painel/imagens`, servido em
    `/uploads/<slug>/<arquivo>`, volume `/opt/lojas/uploads`) feitos em 25/08/2026.
-2. ~~Fluxo n8n `lojas-onboarding`~~ — criado em 24/08/2026 no n8n ("Lojas —
-   Onboarding e Pedidos"; fonte em `docs/n8n-lojas-onboarding.ts`). Falta no n8n:
-   preencher credenciais Twilio, "Lojas Webhook Auth" (header `authorization`,
-   valor `Bearer <N8N_WEBHOOK_TOKEN>`) e "Lojas Admin Token"; o número WhatsApp
-   do Twilio; publicar o fluxo e apontar `N8N_WEBHOOK_URL` para o webhook.
+2. ~~Fluxo n8n `lojas-onboarding`~~ — fonte em `docs/n8n-lojas-onboarding.ts`,
+   sincronizada em `/opt/lojas/n8n-workflows/`; webhook e token de produção
+   configurados e conectividade HTTP 200 verificada em 25/08/2026. A versão da
+   fonte trata `loja.identidade-atualizada` criando a revisão visual no Todoist.
+   Ao alterar a fonte, reimportar/publicar a versão na instância n8n e confirmar as credenciais
+   Twilio, Todoist e Lojas Admin Token no próprio n8n.
 3. ~~Upload de imagem~~ — feito 25/08/2026. Falta ligar o removedor de fundo
    (`/opt/removedor-de-fundo`) para padronizar a foto.
 4. **PayPal e Éfi** como adaptadores no `packages/checkout` (regra: sempre os três).

@@ -3,33 +3,33 @@ import ProductCard from "@/components/ProductCard";
 import type { DadosHome } from "./tipos";
 
 /** Texto de um lado, imagem do outro; categorias com foto; poucos destaques grandes; bloco "sobre". Para marca. */
-export default function Editorial({ t, categorias, vitrine, temDestaques, vende }: DadosHome) {
+export default function Editorial({ t, identidade, categorias, vitrine, temDestaques, vende }: DadosHome) {
   const imagem = t.bannerUrl ?? vitrine.find((p) => p.imagens[0])?.imagens[0];
   return (
-    <div className="container-loja py-10">
-      <section className="grid items-center gap-8 md:grid-cols-2">
+    <div className="home-editorial container-loja py-10 sm:py-16">
+      <section className="grid items-center gap-10 md:grid-cols-[.9fr_1.1fr] lg:gap-16">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-primary">{t.nome}</p>
-          <h1 className="mt-2 text-4xl font-bold leading-tight sm:text-5xl">{t.slogan ?? t.nome}</h1>
-          {t.sobre && <p className="mt-4 max-w-md text-muted-foreground line-clamp-4">{t.sobre}</p>}
+          <p className="home-selo text-primary">{identidade.palavrasChave[0] || "Curadoria"} · {t.nome}</p>
+          <h1 className="mt-4 text-5xl font-semibold leading-[.98] tracking-[-.055em] sm:text-7xl">{t.slogan ?? t.nome}</h1>
+          {(t.sobre || identidade.diferencial) && <p className="mt-4 max-w-md text-muted-foreground line-clamp-4">{t.sobre || identidade.diferencial}</p>}
           <div className="mt-6 flex flex-wrap gap-3">
             <Link href="/produtos" className="btn-primario">Ver coleção</Link>
             <Link href="/sobre" className="btn-secundario">Nossa história</Link>
           </div>
         </div>
-        <div className="aspect-[4/3] overflow-hidden rounded-3xl bg-muted">
+        <div className="imagem-editorial aspect-[4/5] overflow-hidden rounded-[calc(var(--radius)*3)] bg-muted md:aspect-[4/3]">
           {imagem ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={imagem} alt={t.nome} className="h-full w-full object-cover" />
           ) : (
-            <div className="flex h-full items-center justify-center bg-primary/10 text-sm text-muted-foreground">Envie um banner no painel</div>
+            <div className="placeholder-editorial flex h-full items-center justify-center bg-primary/10 text-sm text-muted-foreground">Sua imagem principal aparece aqui</div>
           )}
         </div>
       </section>
 
       {categorias.length > 0 && (
         <section className="mt-14">
-          <h2 className="mb-4 text-lg font-bold">Explore por categoria</h2>
+          <p className="home-selo text-primary">Curadoria</p><h2 className="mb-5 mt-2 text-2xl font-bold tracking-tight">Explore por categoria</h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {categorias.slice(0, 6).map((c) => (
               <Link key={c.id} href={`/categoria/${c.slug}`} className="group relative flex aspect-[16/9] items-end overflow-hidden rounded-2xl bg-muted p-4">

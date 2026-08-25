@@ -51,6 +51,7 @@ export function CartProvider({ slug, children }: { slug: string; children: React
   const [cupom, setCupom] = useState<CupomLocal | null>(null);
   const [pronto, setPronto] = useState(false);
 
+  /* eslint-disable react-hooks/set-state-in-effect -- hidrata o estado do carrinho a partir do armazenamento externo do navegador */
   useEffect(() => {
     try {
       const salvo = window.localStorage.getItem(chave);
@@ -62,6 +63,7 @@ export function CartProvider({ slug, children }: { slug: string; children: React
     }
     setPronto(true);
   }, [chave]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
     if (!pronto) return;

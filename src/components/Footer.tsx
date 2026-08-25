@@ -11,10 +11,10 @@ export default function Footer({ tenant, categorias }: { tenant: Tenant; categor
   const avila = process.env.AVILAOPS_URL ?? "https://avilaops.com";
   const endereco = enderecoCompleto(tenant);
   return (
-    <footer className="mt-16 border-t border-border bg-muted/40">
-      <div className="container-loja grid gap-8 py-10 text-sm md:grid-cols-4">
+    <footer className="rodape-loja mt-20 border-t border-border bg-muted/50">
+      <div className="container-loja grid gap-10 py-14 text-sm md:grid-cols-4">
         <div className="md:col-span-2">
-          <p className="text-base font-bold">{tenant.nome}</p>
+          <p className="text-xl font-bold tracking-tight">{tenant.nome}</p>
           {tenant.slogan && <p className="mt-1 text-muted-foreground">{tenant.slogan}</p>}
           {endereco && <p className="mt-3 text-muted-foreground">{endereco}</p>}
           {tenant.horario && <p className="text-muted-foreground">{tenant.horario}</p>}

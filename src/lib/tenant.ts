@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import type { Tenant } from "@prisma/client";
 import { prisma } from "./db";
 import { lerTema, type TemaLoja } from "./tema";
+import { lerIdentidade, type IdentidadeLoja } from "./identidade";
 
 /**
  * Resolução da loja pelo Host.
@@ -91,6 +92,10 @@ export function enderecoCompleto(t: Tenant): string {
 
 export function temaDo(t: Tenant): TemaLoja {
   return lerTema(t.tema);
+}
+
+export function identidadeDa(t: Tenant): IdentidadeLoja {
+  return lerIdentidade(t.identidade);
 }
 
 export function urlDaLoja(t: Tenant): string {

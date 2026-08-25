@@ -46,6 +46,7 @@ model Tenant {
   logoUrl     String?
   bannerUrl   String?                    // imagem de fundo do topo da home
   tema        Json      @default("{}")   // TemaLoja em src/lib/tema.ts
+  identidade  Json      @default("{}")   // diagnóstico, voz e direção fotográfica
   slogan      String?
   sobre       String?                    // texto da página "Sobre"
 

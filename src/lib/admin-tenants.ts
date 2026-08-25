@@ -6,9 +6,10 @@ import { esquecerTenantEmCache } from "./tenant";
 import type { ProdutoEntrada, TenantEntrada } from "./admin-schemas";
 
 function dadosDoTenant(entrada: Partial<TenantEntrada>): Prisma.TenantUpdateInput {
-  const { mercadoPago, tema, endereco, tabelaFrete, ...resto } = entrada;
+  const { mercadoPago, tema, identidade, endereco, tabelaFrete, ...resto } = entrada;
   const dados: Prisma.TenantUpdateInput = { ...resto };
   if (tema) dados.tema = tema;
+  if (identidade) dados.identidade = identidade;
   if (endereco) dados.endereco = endereco;
   if (tabelaFrete) dados.tabelaFrete = tabelaFrete;
   if (mercadoPago) {
@@ -40,6 +41,10 @@ export async function atualizarTenant(slug: string, entrada: Partial<TenantEntra
   if (resto.tema) {
     const atual = await prisma.tenant.findUniqueOrThrow({ where: { slug }, select: { tema: true } });
     dados.tema = { ...((atual.tema as Record<string, unknown>) ?? {}), ...resto.tema };
+  }
+  if (resto.identidade) {
+    const atual = await prisma.tenant.findUniqueOrThrow({ where: { slug }, select: { identidade: true } });
+    dados.identidade = { ...((atual.identidade as Record<string, unknown>) ?? {}), ...resto.identidade };
   }
   const t = await prisma.tenant.update({ where: { slug }, data: dados });
   esquecerTenantEmCache(slug);

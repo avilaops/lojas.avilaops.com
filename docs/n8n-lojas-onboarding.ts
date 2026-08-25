@@ -37,6 +37,8 @@ const normalizar = node({
           { id: 'clienteTelefone', name: 'clienteTelefone', value: expr('{{ $json.body?.clienteTelefone ?? "" }}'), type: 'string' },
           { id: 'itens', name: 'itens', value: expr('{{ $json.body?.itens ?? "" }}'), type: 'string' },
           { id: 'passosTexto', name: 'passosTexto', value: expr('{{ Object.entries($json.body?.passos ?? {}).map(function (par) { return par[0] + ": " + par[1]; }).join("\\n") }}'), type: 'string' },
+          { id: 'personalidade', name: 'personalidade', value: expr('{{ $json.body?.personalidade ?? "" }}'), type: 'string' },
+          { id: 'direcaoFotografica', name: 'direcaoFotografica', value: expr('{{ $json.body?.direcaoFotografica ?? "" }}'), type: 'string' },
           { id: 'temErro', name: 'temErro', value: expr('{{ Object.values($json.body?.passos ?? {}).some(function (v) { return String(v).startsWith("erro"); }) }}'), type: 'boolean' },
         ],
       },
@@ -55,6 +57,7 @@ const rotear = switchCase({
         values: [
           { outputKey: 'loja.criada', conditions: { options: { caseSensitive: false, leftValue: '', typeValidation: 'strict' }, conditions: [{ leftValue: expr('{{ $json.tipo }}'), operator: { type: 'string', operation: 'equals' }, rightValue: 'loja.criada' }], combinator: 'and' } },
           { outputKey: 'loja.provisionada', conditions: { options: { caseSensitive: false, leftValue: '', typeValidation: 'strict' }, conditions: [{ leftValue: expr('{{ $json.tipo }}'), operator: { type: 'string', operation: 'equals' }, rightValue: 'loja.provisionada' }], combinator: 'and' } },
+          { outputKey: 'loja.identidade-atualizada', conditions: { options: { caseSensitive: false, leftValue: '', typeValidation: 'strict' }, conditions: [{ leftValue: expr('{{ $json.tipo }}'), operator: { type: 'string', operation: 'equals' }, rightValue: 'loja.identidade-atualizada' }], combinator: 'and' } },
           { outputKey: 'pedido.criado', conditions: { options: { caseSensitive: false, leftValue: '', typeValidation: 'strict' }, conditions: [{ leftValue: expr('{{ $json.tipo }}'), operator: { type: 'string', operation: 'equals' }, rightValue: 'pedido.criado' }], combinator: 'and' } },
           { outputKey: 'pedido.pago', conditions: { options: { caseSensitive: false, leftValue: '', typeValidation: 'strict' }, conditions: [{ leftValue: expr('{{ $json.tipo }}'), operator: { type: 'string', operation: 'equals' }, rightValue: 'pedido.pago' }], combinator: 'and' } },
           { outputKey: 'pedido.recusado', conditions: { options: { caseSensitive: false, leftValue: '', typeValidation: 'strict' }, conditions: [{ leftValue: expr('{{ $json.tipo }}'), operator: { type: 'string', operation: 'equals' }, rightValue: 'pedido.recusado' }], combinator: 'and' } },
@@ -78,7 +81,7 @@ const zapBoasVindas = node({
       from: placeholder('Número WhatsApp do Twilio, ex.: whatsapp:+14155238886'),
       to: expr('+{{ $json.lojistaWhatsapp }}'),
       toWhatsapp: true,
-      message: expr('Olá! Sua loja *{{ $json.nome }}* já está no ar para você aprovar: {{ $json.url }}\n\nEntre no painel em https://cliente.avilaops.com/dashboard/loja para cadastrar produtos e trocar cores.\nQualquer dúvida, é só responder aqui. — Avila Ops'),
+      message: expr('Olá! Sua loja *{{ $json.nome }}* já está no ar para você aprovar: {{ $json.url }}\n\nEntre no estúdio em https://lojas.avilaops.com/painel para completar identidade, imagens e catálogo.\nQualquer dúvida, é só responder aqui. — Avila Ops'),
     },
     credentials: { twilioApi: newCredential('Twilio') },
   },
@@ -98,7 +101,7 @@ const emailTreinamento = node({
       toEmail: expr('{{ $("Normalizar Evento").item.json.lojistaEmail }}'),
       subject: expr('Sua loja {{ $("Normalizar Evento").item.json.nome }} está no ar — 3 vídeos de 1 minuto'),
       emailFormat: 'html',
-      html: expr('<p>Olá!</p><p>Sua loja <strong>{{ $("Normalizar Evento").item.json.nome }}</strong> já responde em <a href="{{ $("Normalizar Evento").item.json.url }}">{{ $("Normalizar Evento").item.json.url }}</a>.</p><p>Três vídeos curtos para você dominar o painel:</p><ol><li><a href="https://docs.avilaops.com/lojas/cadastrar-produtos">Cadastrar produtos pela planilha</a></li><li><a href="https://docs.avilaops.com/lojas/pedidos">Acompanhar e enviar pedidos</a></li><li><a href="https://docs.avilaops.com/lojas/aparencia">Trocar cores, logo e domínio</a></li></ol><p>Painel: <a href="https://cliente.avilaops.com/dashboard/loja">cliente.avilaops.com/dashboard/loja</a></p><p>— Avila Ops</p>'),
+      html: expr('<p>Olá!</p><p>Sua loja <strong>{{ $("Normalizar Evento").item.json.nome }}</strong> já responde em <a href="{{ $("Normalizar Evento").item.json.url }}">{{ $("Normalizar Evento").item.json.url }}</a>.</p><p>Três passos para concluir o lançamento:</p><ol><li>Revise a direção de marca</li><li>Envie logo e imagem principal</li><li>Complete as fotos reais do catálogo</li></ol><p>Estúdio: <a href="https://lojas.avilaops.com/painel">lojas.avilaops.com/painel</a></p><p>— Avila Ops</p>'),
     },
     credentials: { smtp: { id: 'u5TEBKNV9jVOaswT', name: 'SMTP account' } },
   },
@@ -289,7 +292,7 @@ const zapPedidoPago = node({
       from: placeholder('Número WhatsApp do Twilio, ex.: whatsapp:+14155238886'),
       to: expr('+{{ $json.lojistaWhatsapp }}'),
       toWhatsapp: true,
-      message: expr('💰 Pedido #{{ $json.numero }} pago — R$ {{ $json.totalReais }}\nCliente: {{ $json.clienteNome }} ({{ $json.clienteTelefone }})\nItens: {{ $json.itens }}\nSeparar e enviar pelo painel: https://cliente.avilaops.com/dashboard/loja'),
+      message: expr('💰 Pedido #{{ $json.numero }} pago — R$ {{ $json.totalReais }}\nCliente: {{ $json.clienteNome }} ({{ $json.clienteTelefone }})\nItens: {{ $json.itens }}\nSeparar e enviar pelo painel: https://lojas.avilaops.com/painel'),
     },
     credentials: { twilioApi: newCredential('Twilio') },
   },
@@ -337,8 +340,25 @@ const zapRecusado = node({
   output: [{ sid: 'SM128', status: 'queued' }],
 });
 
+const tarefaRevisarMarca = node({
+  type: 'n8n-nodes-base.todoist',
+  version: 2.2,
+  config: {
+    name: 'Todoist: Revisar Presença Visual',
+    executeOnce: true,
+    onError: 'continueRegularOutput',
+    parameters: {
+      resource: 'task', operation: 'create',
+      content: expr('Revisar identidade publicada: {{ $json.nome }}'),
+      options: { description: expr('Loja: {{ $json.url }}\nPersonalidade: {{ $json.personalidade }}\nDireção fotográfica: {{ $json.direcaoFotografica }}\n\nValidar logo, banner, contraste e fotos reais do catálogo.'), dueString: 'amanhã', dueLang: 'pt', priority: 3 },
+    },
+    credentials: { todoistApi: { id: 'C7xqqFDFDlihAQLG', name: 'Todoist account' } },
+  },
+  output: [{ id: '3', content: 'Revisar identidade publicada' }],
+});
+
 const notaFluxo = sticky(
-  '## Lojas — onboarding e pedidos\n\nRecebe os eventos de **lojas.avilaops.com** (`N8N_WEBHOOK_URL` = URL deste webhook, `N8N_WEBHOOK_TOKEN` = valor da credencial Header Auth, cabeçalho `authorization` com prefixo `Bearer `).\n\n- `loja.criada` → WhatsApp + e-mail de treinamento + tarefa "Aprovar loja" + pedido de 2 indicações em 3 dias\n- `loja.provisionada` → erro vira tarefa no Todoist; sucesso avisa o lojista\n- `pedido.criado` (PIX) → 30 min depois, se ainda não pagou, lembra o comprador\n- `pedido.pago` → avisa o lojista no WhatsApp e confirma ao comprador por e-mail\n- `pedido.recusado` → oferece PIX ao comprador',
+  '## Lojas — onboarding e pedidos\n\nRecebe os eventos de **lojas.avilaops.com** (`N8N_WEBHOOK_URL` = URL deste webhook, `N8N_WEBHOOK_TOKEN` = valor da credencial Header Auth, cabeçalho `authorization` com prefixo `Bearer `).\n\n- `loja.criada` → WhatsApp + e-mail de treinamento + tarefa "Aprovar loja" + pedido de 2 indicações em 3 dias\n- `loja.provisionada` → erro vira tarefa no Todoist; sucesso avisa o lojista\n- `loja.identidade-atualizada` → revisão visual em até 1 dia no Todoist\n- `pedido.criado` (PIX) → 30 min depois, se ainda não pagou, lembra o comprador\n- `pedido.pago` → avisa o lojista no WhatsApp e confirma ao comprador por e-mail\n- `pedido.recusado` → oferece PIX ao comprador',
   [receberEvento, normalizar, rotear],
   { color: 4 },
 );
@@ -351,7 +371,8 @@ export default workflow('lojas-onboarding', 'Lojas — Onboarding e Pedidos')
     rotear
       .onCase(0, zapBoasVindas.to(emailTreinamento.to(tarefaAprovar.to(esperar3Dias.to(zapIndicacoes)))))
       .onCase(1, provisionamentoComErro.onTrue(tarefaErro).onFalse(zapLojaNoAr))
-      .onCase(2, ehPix.onTrue(esperar30Min.to(consultarPedidos.to(aindaNaoPagou.onTrue(zapPixPendente)))))
-      .onCase(3, zapPedidoPago.to(emailConfirmacao))
-      .onCase(4, zapRecusado),
+      .onCase(2, tarefaRevisarMarca)
+      .onCase(3, ehPix.onTrue(esperar30Min.to(consultarPedidos.to(aindaNaoPagou.onTrue(zapPixPendente)))))
+      .onCase(4, zapPedidoPago.to(emailConfirmacao))
+      .onCase(5, zapRecusado),
   );

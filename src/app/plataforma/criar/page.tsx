@@ -9,10 +9,11 @@ export default async function CriarPage({ searchParams }: { searchParams: Promis
   if (await lojistaAtual()) redirect("/painel");
   const { plano } = await searchParams;
   return (
-    <div className="container-loja max-w-3xl py-10">
-      <header className="mb-8">
-        <h1 className="text-2xl font-bold">Criar minha loja</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Quatro passos. A loja fica no ar no final, no endereço provisório; o domínio próprio a gente configura depois.</p>
+    <div className="container-loja pl-workspace max-w-4xl py-10">
+      <header className="pl-workspace-heading mb-8">
+        <span>Estúdio de lançamento</span>
+        <h1>Construa uma loja com identidade própria.</h1>
+        <p>Em cinco etapas, transformamos a essência do negócio em direção visual, vitrine e presença digital. Sua loja entra no ar ao final.</p>
       </header>
       <CriarLoja planoInicial={plano === "SITE" || plano === "LOJA_PRO" ? plano : "LOJA"} />
     </div>

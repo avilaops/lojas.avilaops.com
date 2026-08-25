@@ -24,7 +24,10 @@ export default function Categorias({ categorias, chamar, ocupado }: { categorias
         <ul className="divide-y divide-border text-sm">
           {categorias.map((c, i) => (
             <li key={c.id} className="flex items-center gap-3 py-2">
-              {c.imagemUrl && /* eslint-disable-next-line @next/next/no-img-element */ <img src={c.imagemUrl} alt="" className="h-8 w-8 rounded object-cover" />}
+              {c.imagemUrl && (
+                // eslint-disable-next-line @next/next/no-img-element -- URL dinâmica enviada pelo lojista
+                <img src={c.imagemUrl} alt="" className="h-8 w-8 rounded object-cover" />
+              )}
               <span className="font-medium">{c.nome}</span>
               <span className="text-xs text-muted-foreground">{c.produtos} produto(s)</span>
               <span className="ml-auto flex gap-2 text-xs">

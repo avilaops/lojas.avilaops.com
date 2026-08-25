@@ -1,40 +1,60 @@
 import Link from "next/link";
+import { ArrowRight, Menu } from "lucide-react";
 import { lojistaAtual } from "@/lib/sessao";
+import "./plataforma.css";
 
-/**
- * Chrome da plataforma (lojas.avilaops.com): cabeçalho simples, sem carrinho.
- * As lojas têm o próprio layout; este é o da Avila Ops.
- */
+function MarcaLojas() {
+  return (
+    <span className="pl-marca">
+      <span className="pl-marca-simbolo" aria-hidden="true"><span /></span>
+      <span className="pl-marca-texto"><strong>Lojas</strong><small>por Avila Ops</small></span>
+    </span>
+  );
+}
+
 export default async function PlataformaLayout({ children }: { children: React.ReactNode }) {
   const lojista = await lojistaAtual();
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="border-b border-border">
-        <div className="container-loja flex h-14 items-center gap-4">
-          <Link href="/" className="font-bold">
-            Lojas <span className="text-muted-foreground">by Avila Ops</span>
-          </Link>
-          <nav className="ml-auto flex items-center gap-4 text-sm">
+    <div className="plataforma-shell">
+      <header className="pl-header">
+        <div className="pl-container pl-header-inner">
+          <Link href="/" aria-label="Lojas por Avila Ops"><MarcaLojas /></Link>
+          <nav className="pl-nav" aria-label="Navegação principal">
+            <Link href="/#recursos">Como funciona</Link>
+            <Link href="/#modelos">Layouts</Link>
+            <Link href="/#planos">Planos</Link>
+          </nav>
+          <div className="pl-header-acoes">
             {lojista ? (
               <>
-                <Link href="/painel" className="font-semibold">Painel · {lojista.nome}</Link>
-                <form action="/api/painel/sair" method="post">
-                  <button className="text-muted-foreground hover:text-foreground">Sair</button>
-                </form>
+                <Link href="/painel" className="pl-header-entrar">Painel · {lojista.nome}</Link>
+                <form action="/api/painel/sair" method="post"><button className="pl-header-sair">Sair</button></form>
               </>
             ) : (
               <>
-                <Link href="/#planos" className="text-muted-foreground hover:text-foreground">Planos</Link>
-                <Link href="/entrar" className="text-muted-foreground hover:text-foreground">Entrar</Link>
-                <Link href="/criar" className="btn-primario h-9 px-4">Criar minha loja</Link>
+                <Link href="/entrar" className="pl-header-entrar">Entrar</Link>
+                <Link href="/criar" className="pl-header-cta">Criar minha loja <ArrowRight size={14} /></Link>
               </>
             )}
-          </nav>
+          </div>
+          <details className="pl-menu-mobile">
+            <summary aria-label="Abrir menu"><Menu size={20} /></summary>
+            <nav>
+              <Link href="/#recursos">Como funciona</Link><Link href="/#modelos">Layouts</Link><Link href="/#planos">Planos</Link>
+              <Link href="/entrar">Entrar</Link><Link href="/criar">Criar minha loja</Link>
+            </nav>
+          </details>
         </div>
       </header>
-      <main className="flex-1">{children}</main>
-      <footer className="border-t border-border py-6 text-center text-xs text-muted-foreground">
-        © {new Date().getFullYear()} Avila Ops · <a href="https://avilaops.com" className="underline">avilaops.com</a>
+      <main>{children}</main>
+      <footer className="pl-footer">
+        <div className="pl-container pl-footer-grid">
+          <div><MarcaLojas /><p>Comércio digital com identidade, operação e futuro.</p></div>
+          <div><strong>Produto</strong><Link href="/#recursos">Como funciona</Link><Link href="/#modelos">Layouts</Link><Link href="/#planos">Planos</Link></div>
+          <div><strong>Acesso</strong><Link href="/entrar">Painel do lojista</Link><Link href="/criar">Criar loja</Link><a href="https://avilaops.com">Avila Ops</a></div>
+          <div><strong>Informações</strong><a href="/robots.txt">Robots</a><a href="/sitemap.xml">Sitemap</a><a href="/llms-full.txt">LLMs</a></div>
+        </div>
+        <div className="pl-container pl-footer-base"><span>© {new Date().getFullYear()} Avila Ops.</span><span>Feito no Brasil para negócios que querem crescer.</span></div>
       </footer>
     </div>
   );

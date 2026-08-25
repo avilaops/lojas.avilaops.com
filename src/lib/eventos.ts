@@ -19,6 +19,7 @@ export interface Lojista {
 export type EventoPlataforma =
   | { tipo: "loja.criada"; slug: string; nome: string; url: string; emailContato?: string | null; whatsapp?: string | null }
   | { tipo: "loja.provisionada"; slug: string; passos: Record<string, string>; nome: string; url: string; emailContato?: string | null; whatsapp?: string | null }
+  | { tipo: "loja.identidade-atualizada"; slug: string; nome: string; url: string; personalidade: string; direcaoFotografica: string; emailContato?: string | null; whatsapp?: string | null }
   | ({ tipo: "pedido.criado"; slug: string; referencia: string; numero?: number; total: number; meioPagamento: string; clienteNome: string; clienteEmail: string; clienteTelefone: string } & Lojista)
   | ({ tipo: "pedido.pago"; slug: string; referencia: string; numero?: number; total: number; clienteNome: string; clienteEmail: string; clienteTelefone: string; itens: string } & Lojista)
   | ({ tipo: "pedido.recusado"; slug: string; referencia: string; clienteNome: string; clienteEmail: string; clienteTelefone: string; motivo?: string } & Lojista)
