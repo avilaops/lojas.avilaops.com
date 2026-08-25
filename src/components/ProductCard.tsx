@@ -6,13 +6,14 @@ import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
 
 export default function ProductCard({ produto, vende, whatsapp }: { produto: Produto; vende: boolean; whatsapp: string | null }) {
   const imagem = produto.imagens[0];
+  const miniatura = imagem && /\/uploads\//.test(imagem) && !/\.svg$/i.test(imagem) ? `${imagem}?w=480` : imagem;
   const disponivel = produto.disponibilidade !== "out_of_stock";
   return (
     <article className="cartao-produto group flex flex-col overflow-hidden rounded-xl border border-border bg-card">
       <Link href={`/produtos/${produto.slug}`} className="cartao-produto-imagem relative block aspect-square overflow-hidden bg-muted">
         {imagem ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={imagem} alt={produto.nome} loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.035]" />
+          <img src={miniatura} alt={produto.nome} loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.035]" />
         ) : (
           <div className="produto-sem-foto flex h-full items-center justify-center text-xs text-muted-foreground">Imagem em preparação</div>
         )}

@@ -59,6 +59,30 @@ export function fonteGoogleHref(tema: TemaLoja): string | null {
  * lêem os mesmos valores, então tema da loja e tela de pagamento nunca
  * divergem.
  */
+/** Luminância relativa (WCAG) de uma cor hex. */
+function luminancia(hex: string): number {
+  const c = hex.replace("#", "");
+  const [r, g, b] = [0, 2, 4].map((i) => {
+    const v = parseInt(c.slice(i, i + 2), 16) / 255;
+    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+export function contraste(a: string, b: string): number {
+  const [la, lb] = [luminancia(a), luminancia(b)];
+  return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+}
+
+/**
+ * Texto sobre a cor primária: se o que veio não passa de 4.5:1 (AA), troca
+ * por branco ou preto — o que der mais contraste. Botão ilegível não sai.
+ */
+export function corTextoLegivel(fundo: string, preferida: string): string {
+  if (contraste(fundo, preferida) >= 4.5) return preferida;
+  return contraste(fundo, "#ffffff") >= contraste(fundo, "#111111") ? "#ffffff" : "#111111";
+}
+
 export function cssDoTema(tema: TemaLoja): string {
   const escuro = tema.modo === "escuro";
   const fundo = tema.corFundo ?? (escuro ? "#0b0b0c" : "#ffffff");
@@ -75,11 +99,11 @@ export function cssDoTema(tema: TemaLoja): string {
 --card:${superficie};--card-foreground:${texto};
 --muted:${suave};--muted-foreground:${textoSuave};
 --border:${borda};--input:${borda};--ring:${tema.corPrimaria};
---primary:${tema.corPrimaria};--primary-foreground:${tema.corPrimariaTexto};
+--primary:${tema.corPrimaria};--primary-foreground:${corTextoLegivel(tema.corPrimaria, tema.corPrimariaTexto)};
 --radius:${raio};--font-sans:${fonte};
 --ck-bg:${fundo};--ck-surface:${superficie};--ck-surface-muted:${suave};--ck-border:${borda};
 --ck-fg:${texto};--ck-fg-muted:${textoSuave};
---ck-accent:${tema.corPrimaria};--ck-accent-fg:${tema.corPrimariaTexto};
+--ck-accent:${tema.corPrimaria};--ck-accent-fg:${corTextoLegivel(tema.corPrimaria, tema.corPrimariaTexto)};
 --ck-radius:${raio};--ck-font:${fonte};
 color-scheme:${escuro ? "dark" : "light"};
 }`;

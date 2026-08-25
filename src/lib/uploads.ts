@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { randomBytes } from "node:crypto";
 import path from "node:path";
+import { otimizarAoEntrar } from "./imagens";
 
 /**
  * Fotos de produto e logo. Ficam em disco (volume /opt/lojas/uploads no
@@ -29,11 +30,13 @@ function tipoPelosBytes(b: Buffer): { ext: string; mime: string } | null {
 
 export async function salvarImagem(slug: string, arquivo: File): Promise<{ url: string; caminho: string }> {
   if (arquivo.size > LIMITE) throw new UploadInvalido("Imagem acima de 5 MB.");
-  const bytes = Buffer.from(await arquivo.arrayBuffer());
-  const tipo = tipoPelosBytes(bytes);
+  const original = Buffer.from(await arquivo.arrayBuffer());
+  const tipo = tipoPelosBytes(original);
   if (!tipo) throw new UploadInvalido("Envie PNG, JPG, WEBP, GIF ou SVG.");
+  // Raster entra otimizado (≤1600 px, WebP); SVG/GIF ficam como vieram.
+  const { bytes, ext } = await otimizarAoEntrar(original, tipo.ext);
   // SVG pode carregar script; serve-se com Content-Security-Policy (ver rota /uploads).
-  const nome = `${Date.now().toString(36)}-${randomBytes(4).toString("hex")}.${tipo.ext}`;
+  const nome = `${Date.now().toString(36)}-${randomBytes(4).toString("hex")}.${ext}`;
   const pasta = path.join(UPLOADS_DIR, slug);
   await mkdir(pasta, { recursive: true });
   await writeFile(path.join(pasta, nome), bytes);
