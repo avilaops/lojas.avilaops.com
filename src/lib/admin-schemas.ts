@@ -10,6 +10,13 @@ import { IdentidadeSchema } from "./identidade";
 
 const slug = z.string().regex(/^[a-z0-9](?:[a-z0-9-]{1,38}[a-z0-9])?$/, "slug: letras minúsculas, números e hífen");
 const digitos = (min: number, max: number) => z.string().transform((s) => s.replace(/\D/g, "")).pipe(z.string().min(min).max(max));
+const whatsappBrasil = z.string().transform((s, ctx) => {
+  const numeros = s.replace(/\D/g, "");
+  if (numeros.length === 10 || numeros.length === 11) return `55${numeros}`;
+  if (numeros.length === 12 || numeros.length === 13) return numeros;
+  ctx.addIssue({ code: "custom", message: "Informe um WhatsApp válido com DDD." });
+  return z.NEVER;
+});
 
 export const EnderecoSchema = z.object({
   logradouro: z.string().max(120).optional(),
@@ -32,7 +39,9 @@ export const TenantEntradaSchema = z.object({
   identidade: IdentidadeSchema.partial().optional(),
   slogan: z.string().max(140).optional(),
   sobre: z.string().max(4000).optional(),
-  whatsapp: digitos(12, 13).optional(),
+  // Aceita o formato brasileiro que o cliente conhece (DDD + número) e
+  // normaliza para DDI 55, sem rejeitar quem já informou o código do país.
+  whatsapp: whatsappBrasil.optional(),
   telefone: z.string().max(30).optional(),
   emailContato: z.string().email().optional(),
   instagram: z.string().url().optional(),

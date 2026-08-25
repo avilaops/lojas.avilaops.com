@@ -1,16 +1,27 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { cloneElement, isValidElement, useId, type ReactElement, type ReactNode } from "react";
 
 /** Campos do painel — uma aparência só para wizard e painel. */
 
-export function Campo({ label, ajuda, children }: { label: string; ajuda?: string; children: ReactNode }) {
+export function Campo({ label, ajuda, erro, obrigatorio, children }: { label: string; ajuda?: string; erro?: string; obrigatorio?: boolean; children: ReactNode }) {
+  const id = useId();
+  const rotuloId = `${id}-rotulo`;
+  const ajudaId = `${id}-ajuda`;
+  const controleDireto = isValidElement(children) && typeof children.type === "string" && ["input", "select", "textarea"].includes(children.type);
+  const propsAtuais = controleDireto ? (children as ReactElement<{ id?: string; "aria-describedby"?: string }>).props : null;
+  const controleId = propsAtuais?.id ?? id;
+  const conteudo = controleDireto
+    ? cloneElement(children as ReactElement<{ id?: string; "aria-describedby"?: string }>, { id: controleId, "aria-describedby": erro || ajuda ? ajudaId : propsAtuais?.["aria-describedby"] })
+    : children;
   return (
-    <label className="block">
-      <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</span>
-      <div className="mt-1">{children}</div>
-      {ajuda && <span className="mt-1 block text-xs text-muted-foreground">{ajuda}</span>}
-    </label>
+    <div className={`block ${erro ? "campo-invalido" : ""}`} {...(!controleDireto ? { role: "group", "aria-labelledby": rotuloId } : {})}>
+      {controleDireto
+        ? <label htmlFor={controleId} id={rotuloId} className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}{obrigatorio && <b aria-hidden="true"> *</b>}</label>
+        : <span id={rotuloId} className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}{obrigatorio && <b aria-hidden="true"> *</b>}</span>}
+      <div className="mt-1">{conteudo}</div>
+      {erro ? <span id={ajudaId} className="campo-erro" role="alert">{erro}</span> : ajuda && <span id={ajudaId} className="mt-1 block text-xs text-muted-foreground">{ajuda}</span>}
+    </div>
   );
 }
 

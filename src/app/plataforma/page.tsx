@@ -167,6 +167,23 @@ export default function LandingPlataforma() {
         </div>
       </section>
 
+      <section className="pl-secao pl-demo">
+        <div className="pl-container">
+          <header className="pl-secao-cabecalho">
+            <div><span className="pl-kicker">Demonstração real</span><h2>Veja uma marca nascer.<br />Sem configuração complicada.</h2></div>
+            <p>Este é o fluxo funcionando de verdade: o cliente descreve o negócio, recebe uma direção visual e revisa a estrutura antes de publicar.</p>
+          </header>
+          <div className="pl-demo-frame">
+            <div className="pl-demo-bar"><span><i /><i /><i /></span><strong>Estúdio de lançamento</strong><em>Fluxo real</em></div>
+            <video controls autoPlay muted loop playsInline preload="metadata" poster="/media/demo-criacao-loja-poster.png" aria-label="Demonstração do processo de criação de uma loja">
+              <source src="/media/demo-criacao-loja.webm" type="video/webm" />
+              Seu navegador não suporta vídeo. <Link href="/criar">Experimente o fluxo de criação</Link>.
+            </video>
+          </div>
+          <div className="pl-demo-legenda"><span><b>01</b> Informações claras</span><span><b>02</b> Direção visual imediata</span><span><b>03</b> Revisão antes de publicar</span></div>
+        </div>
+      </section>
+
       <section id="modelos" className="pl-secao pl-modelos">
         <div className="pl-container">
           <header className="pl-secao-cabecalho">

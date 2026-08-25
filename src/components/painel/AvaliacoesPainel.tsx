@@ -5,9 +5,10 @@ import { Estrelas } from "@/components/Avaliacoes";
 
 export interface AvaliacaoPainelView { id: string; produtoNome: string; nome: string; nota: number; texto: string | null; aprovada: boolean; criadoEm: string }
 
-export default function AvaliacoesPainel({ avaliacoes, chamar, ocupado }: { avaliacoes: AvaliacaoPainelView[]; chamar: (c: string, m: string, b?: unknown, s?: string) => Promise<unknown>; ocupado: boolean }) {
-  const pendentes = avaliacoes.filter((a) => !a.aprovada);
-  const Lista = ({ itens, titulo }: { itens: AvaliacaoPainelView[]; titulo: string }) => (
+type Chamar = (c: string, m: string, b?: unknown, s?: string) => Promise<unknown>;
+
+function Lista({ itens, titulo, chamar, ocupado }: { itens: AvaliacaoPainelView[]; titulo: string; chamar: Chamar; ocupado: boolean }) {
+  return (
     <Secao titulo={titulo}>
       {itens.length === 0 ? <p className="text-sm text-muted-foreground">Nada aqui.</p> : (
         <ul className="divide-y divide-border text-sm">
@@ -27,10 +28,14 @@ export default function AvaliacoesPainel({ avaliacoes, chamar, ocupado }: { aval
       )}
     </Secao>
   );
+}
+
+export default function AvaliacoesPainel({ avaliacoes, chamar, ocupado }: { avaliacoes: AvaliacaoPainelView[]; chamar: Chamar; ocupado: boolean }) {
+  const pendentes = avaliacoes.filter((a) => !a.aprovada);
   return (
     <>
-      <Lista itens={pendentes} titulo={`Aguardando aprovação (${pendentes.length})`} />
-      <Lista itens={avaliacoes.filter((a) => a.aprovada)} titulo="Publicadas" />
+      <Lista itens={pendentes} titulo={`Aguardando aprovação (${pendentes.length})`} chamar={chamar} ocupado={ocupado} />
+      <Lista itens={avaliacoes.filter((a) => a.aprovada)} titulo="Publicadas" chamar={chamar} ocupado={ocupado} />
     </>
   );
 }

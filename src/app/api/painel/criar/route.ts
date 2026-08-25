@@ -12,14 +12,57 @@ import { urlDaLoja } from "@/lib/tenant";
  * O slug nasce do nome; se já existir, ganha um sufixo.
  */
 const Entrada = TenantEntradaSchema.omit({ slug: true, mercadoPago: true }).extend({
-  emailContato: z.string().email(),
-  senha: z.string().min(8).max(200),
+  emailContato: z.string().email("Informe um e-mail válido."),
+  senha: z.string().min(8, "A senha precisa ter pelo menos 8 caracteres.").max(200),
   produtos: z.array(ProdutoEntradaSchema).max(2000).optional(),
 });
 
+const rotulos: Record<string, string> = {
+  nome: "Nome da loja",
+  emailContato: "E-mail",
+  whatsapp: "WhatsApp",
+  instagram: "Instagram",
+  dominioPrincipal: "Domínio próprio",
+  cepOrigem: "CEP",
+  "endereco.cep": "CEP",
+  "endereco.uf": "UF",
+  despachoDiasUteis: "Prazo de despacho",
+  senha: "Senha",
+  produtos: "Catálogo",
+};
+
+function detalhesDaValidacao(error: z.ZodError) {
+  return error.issues.map((issue) => {
+    const campo = issue.path.join(".");
+    const mensagensEspecificas: Record<string, string> = {
+      nome: "Informe o nome da loja com pelo menos 2 caracteres.",
+      emailContato: "Informe um e-mail válido.",
+      whatsapp: "Informe DDD + número, por exemplo: (16) 99999-0000.",
+      instagram: "Informe o link completo do Instagram, começando por https://.",
+      dominioPrincipal: "Informe somente o domínio, por exemplo: sualoja.com.br.",
+      cepOrigem: "Informe um CEP com 8 números.",
+      "endereco.cep": "Informe um CEP com 8 números.",
+      "endereco.uf": "Informe a UF com 2 letras, por exemplo: SP.",
+      despachoDiasUteis: "Informe um prazo entre 0 e 30 dias úteis.",
+      senha: "A senha precisa ter pelo menos 8 caracteres.",
+      produtos: "Revise os produtos da planilha e tente novamente.",
+    };
+    return {
+      campo,
+      rotulo: rotulos[campo] ?? rotulos[issue.path[0]?.toString()] ?? "Informação",
+      mensagem: mensagensEspecificas[campo] ?? (["Required", "Invalid input"].includes(issue.message) ? "Esta informação é obrigatória." : issue.message),
+    };
+  });
+}
+
 export async function POST(request: Request) {
   const r = Entrada.safeParse(await request.json().catch(() => null));
-  if (!r.success) return Response.json({ erro: "Dados inválidos.", detalhes: r.error.flatten() }, { status: 422 });
+  if (!r.success) {
+    return Response.json({
+      erro: "Algumas informações precisam ser corrigidas.",
+      campos: detalhesDaValidacao(r.error),
+    }, { status: 422 });
+  }
   const { senha, produtos, ...dados } = r.data;
 
   const email = dados.emailContato.toLowerCase();
