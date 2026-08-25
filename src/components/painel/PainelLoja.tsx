@@ -1,0 +1,254 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import type { TemaLoja } from "@/lib/tema";
+import { Campo, FONTES, Secao, brl, inputClasse, lerCsvProdutos } from "./campos";
+
+export interface LojaView {
+  slug: string;
+  nome: string;
+  url: string;
+  status: string;
+  plano: string;
+  tema: TemaLoja;
+  slogan: string | null;
+  logoUrl: string | null;
+  whatsapp: string | null;
+  emailContato: string | null;
+  dominioPrincipal: string | null;
+  mpPublicKey: string | null;
+  emailRemetente: string | null;
+  provisionamento: Record<string, string>;
+  freteGratisAcima: number | null;
+  retiradaNaLoja: boolean;
+  despachoDiasUteis: number;
+  tabelaFrete: Array<{ ufs: string[]; preco: number; prazoDiasUteis: number; nome?: string }>;
+}
+export interface ProdutoView { id: string; nome: string; sku: string | null; precoCentavos: number; ativo: boolean; destaque: boolean; categoria: string | null; imagem: string | null; disponibilidade: string }
+export interface PedidoView { id: string; numero: number; referencia: string; status: string; clienteNome: string; clienteTelefone: string; totalCentavos: number; meioPagamento: string; freteNome: string; rastreio: string | null; criadoEm: string; itens: Array<{ nome: string; quantidade: number }> }
+
+const STATUS: Record<string, string> = { ATIVA: "No ar", PROVISIONANDO: "Configurando", SUSPENSA: "Suspensa", CANCELADA: "Cancelada" };
+const PEDIDO: Record<string, string> = { AGUARDANDO_PAGAMENTO: "Aguardando pagamento", PAGO: "Pago — separar", EM_SEPARACAO: "Em separação", ENVIADO: "Enviado", ENTREGUE: "Entregue", CANCELADO: "Cancelado", ESTORNADO: "Estornado" };
+const ABAS = ["Produtos", "Pedidos", "Aparência", "Entrega", "Recebimento", "Conta"] as const;
+
+export default function PainelLoja({ loja, produtos, pedidos }: { loja: LojaView; produtos: ProdutoView[]; pedidos: PedidoView[] }) {
+  const router = useRouter();
+  const [aba, setAba] = useState<(typeof ABAS)[number]>(produtos.length ? "Pedidos" : "Produtos");
+  const [erro, setErro] = useState<string | null>(null);
+  const [ok, setOk] = useState<string | null>(null);
+  const [ocupado, setOcupado] = useState(false);
+
+  async function chamar(caminho: string, method: string, body?: unknown, sucesso = "Salvo.") {
+    setErro(null); setOk(null); setOcupado(true);
+    try {
+      const r = await fetch(caminho, { method, headers: body ? { "content-type": "application/json" } : undefined, body: body ? JSON.stringify(body) : undefined });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d?.erro ?? "Falha.");
+      setOk(sucesso); router.refresh(); return d;
+    } catch (e) { setErro(e instanceof Error ? e.message : "Falha inesperada."); } finally { setOcupado(false); }
+  }
+
+  // ── estado dos formulários ──
+  const [novo, setNovo] = useState({ nome: "", preco: "", precoDe: "", categoria: "", sku: "", descricaoCurta: "", imagem: "", destaque: false, pesoKg: "" });
+  const [csv, setCsv] = useState<{ nome: string; produtos: Array<Record<string, unknown>>; erros: string[] } | null>(null);
+  const [rastreio, setRastreio] = useState<Record<string, string>>({});
+  const [tema, setTema] = useState({ corPrimaria: loja.tema.corPrimaria, modo: loja.tema.modo, fonte: loja.tema.fonte, raio: loja.tema.raio });
+  const [contato, setContato] = useState({ slogan: loja.slogan ?? "", whatsapp: loja.whatsapp ?? "", emailContato: loja.emailContato ?? "", logoUrl: loja.logoUrl ?? "", dominioPrincipal: loja.dominioPrincipal ?? "" });
+  const [entrega, setEntrega] = useState({ retiradaNaLoja: loja.retiradaNaLoja, despachoDiasUteis: loja.despachoDiasUteis, freteGratisAcima: loja.freteGratisAcima != null ? String(loja.freteGratisAcima / 100).replace(".", ",") : "", tabela: loja.tabelaFrete.map((f) => ({ ufs: f.ufs.join(","), preco: String(f.preco / 100).replace(".", ","), prazo: String(f.prazoDiasUteis), nome: f.nome ?? "" })) });
+  const [mp, setMp] = useState({ publicKey: loja.mpPublicKey ?? "", accessToken: "", webhookSecret: "" });
+  const [senha, setSenha] = useState({ atual: "", nova: "" });
+
+  const centavos = (v: string) => Math.round(Number.parseFloat(v.replace(/[^\d,.-]/g, "").replace(",", ".")) * 100);
+
+  function salvarProduto() {
+    const preco = centavos(novo.preco);
+    if (!novo.nome.trim() || !Number.isFinite(preco)) return setErro("Nome e preço são obrigatórios.");
+    const precoDe = novo.precoDe ? centavos(novo.precoDe) : undefined;
+    chamar("/api/painel/produtos", "PUT", [{
+      nome: novo.nome, precoCentavos: preco, ...(precoDe && Number.isFinite(precoDe) ? { precoDeCentavos: precoDe } : {}),
+      categoria: novo.categoria || undefined, sku: novo.sku || undefined, descricaoCurta: novo.descricaoCurta || undefined,
+      imagens: novo.imagem ? [novo.imagem] : undefined, destaque: novo.destaque, ...(novo.pesoKg ? { pesoKg: Number.parseFloat(novo.pesoKg.replace(",", ".")) } : {}),
+    }], "Produto salvo.").then(() => setNovo({ nome: "", preco: "", precoDe: "", categoria: "", sku: "", descricaoCurta: "", imagem: "", destaque: false, pesoKg: "" }));
+  }
+
+  function avancar(p: PedidoView) {
+    if (p.status === "PAGO") return chamar("/api/painel/pedidos", "PATCH", { id: p.id, status: "EM_SEPARACAO" }, "Pedido em separação.");
+    if (p.status === "EM_SEPARACAO") return chamar("/api/painel/pedidos", "PATCH", { id: p.id, status: "ENVIADO", rastreio: rastreio[p.id] || null }, "Pedido enviado.");
+    if (p.status === "ENVIADO") return chamar("/api/painel/pedidos", "PATCH", { id: p.id, status: "ENTREGUE" }, "Pedido entregue.");
+  }
+
+  return (
+    <div className="grid gap-6">
+      <div className="flex flex-wrap items-center gap-3 text-sm">
+        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${loja.status === "ATIVA" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>{STATUS[loja.status] ?? loja.status}</span>
+        <span className="text-muted-foreground">Plano {loja.plano.replace("_", " ")}</span>
+        {loja.emailRemetente && <span className="text-muted-foreground">e-mail: {loja.emailRemetente}</span>}
+        <a href={loja.url} target="_blank" rel="noopener" className="ml-auto underline">Abrir loja</a>
+      </div>
+
+      <nav className="flex flex-wrap gap-1 border-b border-border text-sm">
+        {ABAS.map((a) => (
+          <button key={a} onClick={() => setAba(a)} className={`-mb-px border-b-2 px-3 py-2 ${aba === a ? "border-primary font-semibold" : "border-transparent text-muted-foreground"}`}>{a}</button>
+        ))}
+      </nav>
+
+      {erro && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{erro}</p>}
+      {ok && <p className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-700">{ok}</p>}
+
+      {aba === "Produtos" && (
+        <>
+          <Secao titulo="Novo produto" descricao="Cadastro rápido. Foto: cole o link da imagem (ou use a planilha).">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Campo label="Nome"><input className={inputClasse} value={novo.nome} onChange={(e) => setNovo({ ...novo, nome: e.target.value })} /></Campo>
+              <Campo label="Categoria"><input className={inputClasse} value={novo.categoria} onChange={(e) => setNovo({ ...novo, categoria: e.target.value })} placeholder="Ex.: Vedações" /></Campo>
+              <Campo label="Preço (R$)"><input className={inputClasse} value={novo.preco} onChange={(e) => setNovo({ ...novo, preco: e.target.value })} placeholder="59,90" inputMode="decimal" /></Campo>
+              <Campo label="Preço “de” (R$)" ajuda="Opcional, para mostrar desconto"><input className={inputClasse} value={novo.precoDe} onChange={(e) => setNovo({ ...novo, precoDe: e.target.value })} inputMode="decimal" /></Campo>
+              <Campo label="SKU / código"><input className={inputClasse} value={novo.sku} onChange={(e) => setNovo({ ...novo, sku: e.target.value })} /></Campo>
+              <Campo label="Peso (kg)" ajuda="Para o frete"><input className={inputClasse} value={novo.pesoKg} onChange={(e) => setNovo({ ...novo, pesoKg: e.target.value })} inputMode="decimal" /></Campo>
+              <Campo label="Foto (URL)"><input className={inputClasse} value={novo.imagem} onChange={(e) => setNovo({ ...novo, imagem: e.target.value })} placeholder="https://…/foto.jpg" /></Campo>
+              <Campo label="Descrição curta"><input className={inputClasse} value={novo.descricaoCurta} onChange={(e) => setNovo({ ...novo, descricaoCurta: e.target.value })} /></Campo>
+            </div>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={novo.destaque} onChange={(e) => setNovo({ ...novo, destaque: e.target.checked })} /> Destaque na página inicial</label>
+            <div><button className="btn-primario" disabled={ocupado} onClick={salvarProduto}>Salvar produto</button></div>
+          </Secao>
+
+          <Secao titulo="Importar planilha" descricao="Produto com o mesmo SKU é atualizado, não duplicado.">
+            <p className="text-xs text-muted-foreground">Colunas: <code>nome, preco, categoria, marca, sku, preco_de, descricao_curta, descricao, imagem, destaque, peso_kg</code></p>
+            <input type="file" accept=".csv,text/csv" className="text-sm" onChange={(e) => e.target.files?.[0]?.text().then((t) => setCsv({ nome: e.target.files![0].name, ...lerCsvProdutos(t) }))} />
+            {csv && (
+              <div className="rounded-lg border border-border p-3 text-sm">
+                <p><strong>{csv.nome}</strong>: {csv.produtos.length} produto(s).</p>
+                {csv.erros.length > 0 && <ul className="mt-1 list-disc pl-5 text-xs text-amber-700">{csv.erros.slice(0, 5).map((x) => <li key={x}>{x}</li>)}</ul>}
+                <button className="btn-primario mt-3" disabled={ocupado || !csv.produtos.length} onClick={() => chamar("/api/painel/produtos", "PUT", csv.produtos, "Produtos importados.").then(() => setCsv(null))}>Importar</button>
+              </div>
+            )}
+          </Secao>
+
+          <Secao titulo={`Catálogo (${produtos.length})`}>
+            {produtos.length === 0 ? <p className="text-sm text-muted-foreground">Nenhum produto ainda.</p> : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="text-left text-xs uppercase text-muted-foreground"><tr><th className="py-2">Produto</th><th>Categoria</th><th>SKU</th><th>Preço</th><th></th></tr></thead>
+                  <tbody>
+                    {produtos.map((p) => (
+                      <tr key={p.id} className={`border-t border-border ${p.ativo ? "" : "opacity-50"}`}>
+                        <td className="py-2">{p.destaque && "★ "}{p.nome}{!p.ativo && " (inativo)"}</td>
+                        <td>{p.categoria ?? "—"}</td><td>{p.sku ?? "—"}</td><td>{brl(p.precoCentavos)}</td>
+                        <td className="text-right">{p.ativo && <button className="text-xs text-muted-foreground underline" disabled={ocupado} onClick={() => chamar(`/api/painel/produtos?id=${p.id}`, "DELETE", undefined, "Produto desativado.")}>desativar</button>}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Secao>
+        </>
+      )}
+
+      {aba === "Pedidos" && (
+        <Secao titulo="Pedidos">
+          {pedidos.length === 0 ? <p className="text-sm text-muted-foreground">Nenhum pedido ainda.</p> : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="text-left text-xs uppercase text-muted-foreground"><tr><th className="py-2">#</th><th>Cliente</th><th>Itens</th><th>Total</th><th>Situação</th><th>Data</th><th></th></tr></thead>
+                <tbody>
+                  {pedidos.map((p) => (
+                    <tr key={p.id} className="border-t border-border align-top">
+                      <td className="py-2">{p.numero}</td>
+                      <td>{p.clienteNome}<br /><a className="text-xs underline" href={`https://wa.me/${p.clienteTelefone.replace(/\D/g, "")}`} target="_blank" rel="noopener">{p.clienteTelefone}</a></td>
+                      <td className="text-xs">{p.itens.map((i) => `${i.quantidade}x ${i.nome}`).join(", ")}<br /><span className="text-muted-foreground">{p.freteNome}</span></td>
+                      <td>{brl(p.totalCentavos)}</td>
+                      <td>{PEDIDO[p.status] ?? p.status}{p.rastreio && <><br /><span className="text-xs">rastreio {p.rastreio}</span></>}</td>
+                      <td className="text-xs">{new Date(p.criadoEm).toLocaleDateString("pt-BR")}</td>
+                      <td className="py-2">
+                        {p.status === "EM_SEPARACAO" && <input className={`${inputClasse} mb-1 h-9`} placeholder="Código de rastreio" value={rastreio[p.id] ?? ""} onChange={(e) => setRastreio({ ...rastreio, [p.id]: e.target.value })} />}
+                        {["PAGO", "EM_SEPARACAO", "ENVIADO"].includes(p.status) && (
+                          <button className="btn-secundario h-9 px-3 text-xs" disabled={ocupado} onClick={() => avancar(p)}>
+                            {p.status === "PAGO" ? "Separar" : p.status === "EM_SEPARACAO" ? "Marcar enviado" : "Marcar entregue"}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Secao>
+      )}
+
+      {aba === "Aparência" && (
+        <Secao titulo="Aparência e contato">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Campo label="Cor principal"><div className="flex gap-2"><input type="color" value={tema.corPrimaria} onChange={(e) => setTema({ ...tema, corPrimaria: e.target.value })} className="h-11 w-14 rounded-lg border border-border" /><input className={inputClasse} value={tema.corPrimaria} onChange={(e) => setTema({ ...tema, corPrimaria: e.target.value })} /></div></Campo>
+            <Campo label="Modo"><select className={inputClasse} value={tema.modo} onChange={(e) => setTema({ ...tema, modo: e.target.value as "claro" | "escuro" })}><option value="claro">Claro</option><option value="escuro">Escuro</option></select></Campo>
+            <Campo label="Fonte"><select className={inputClasse} value={tema.fonte} onChange={(e) => setTema({ ...tema, fonte: e.target.value as typeof tema.fonte })}>{FONTES.map((x) => <option key={x.valor} value={x.valor}>{x.rotulo}</option>)}</select></Campo>
+            <Campo label="Cantos"><select className={inputClasse} value={tema.raio} onChange={(e) => setTema({ ...tema, raio: e.target.value as typeof tema.raio })}><option value="reto">Retos</option><option value="suave">Suaves</option><option value="redondo">Redondos</option></select></Campo>
+            <Campo label="Slogan"><input className={inputClasse} value={contato.slogan} onChange={(e) => setContato({ ...contato, slogan: e.target.value })} /></Campo>
+            <Campo label="Logo (URL)"><input className={inputClasse} value={contato.logoUrl} onChange={(e) => setContato({ ...contato, logoUrl: e.target.value })} /></Campo>
+            <Campo label="WhatsApp"><input className={inputClasse} value={contato.whatsapp} onChange={(e) => setContato({ ...contato, whatsapp: e.target.value })} /></Campo>
+            <Campo label="E-mail de contato"><input className={inputClasse} value={contato.emailContato} onChange={(e) => setContato({ ...contato, emailContato: e.target.value })} /></Campo>
+            <Campo label="Domínio próprio" ajuda="Depois de salvar, clique em “Configurar DNS e e-mail”."><input className={inputClasse} value={contato.dominioPrincipal} onChange={(e) => setContato({ ...contato, dominioPrincipal: e.target.value })} placeholder="sualoja.com.br" /></Campo>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button className="btn-primario" disabled={ocupado} onClick={() => chamar("/api/painel/loja", "PATCH", { tema, ...Object.fromEntries(Object.entries(contato).filter(([, v]) => v !== "")) })}>Salvar</button>
+            <button className="btn-secundario" disabled={ocupado} onClick={() => chamar("/api/painel/loja", "POST", undefined, "Configuração reexecutada.")}>Configurar DNS e e-mail</button>
+          </div>
+          {Object.keys(loja.provisionamento).length > 0 && (
+            <ul className="text-xs text-muted-foreground">{Object.entries(loja.provisionamento).map(([k, v]) => <li key={k}><strong className="uppercase">{k}</strong>: {v}</li>)}</ul>
+          )}
+        </Secao>
+      )}
+
+      {aba === "Entrega" && (
+        <Secao titulo="Entrega e frete" descricao="Sem tabela, o cliente vê apenas retirada na loja (ou frete a combinar).">
+          <div className="grid gap-4 sm:grid-cols-3">
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={entrega.retiradaNaLoja} onChange={(e) => setEntrega({ ...entrega, retiradaNaLoja: e.target.checked })} /> Retirada na loja</label>
+            <Campo label="Despacho (dias úteis)"><input className={inputClasse} type="number" min={0} max={30} value={entrega.despachoDiasUteis} onChange={(e) => setEntrega({ ...entrega, despachoDiasUteis: Number(e.target.value) })} /></Campo>
+            <Campo label="Frete grátis acima de (R$)"><input className={inputClasse} value={entrega.freteGratisAcima} onChange={(e) => setEntrega({ ...entrega, freteGratisAcima: e.target.value })} placeholder="200,00" /></Campo>
+          </div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Tabela por estado (UF separadas por vírgula; * = resto do Brasil)</p>
+          {entrega.tabela.map((f, i) => (
+            <div key={i} className="grid gap-2 sm:grid-cols-[1fr_1fr_1fr_1fr_auto]">
+              <input className={inputClasse} placeholder="SP,MG" value={f.ufs} onChange={(e) => setEntrega({ ...entrega, tabela: entrega.tabela.map((x, j) => (j === i ? { ...x, ufs: e.target.value.toUpperCase() } : x)) })} />
+              <input className={inputClasse} placeholder="Preço R$" value={f.preco} onChange={(e) => setEntrega({ ...entrega, tabela: entrega.tabela.map((x, j) => (j === i ? { ...x, preco: e.target.value } : x)) })} />
+              <input className={inputClasse} placeholder="Prazo (dias)" value={f.prazo} onChange={(e) => setEntrega({ ...entrega, tabela: entrega.tabela.map((x, j) => (j === i ? { ...x, prazo: e.target.value } : x)) })} />
+              <input className={inputClasse} placeholder="Nome (Sedex…)" value={f.nome} onChange={(e) => setEntrega({ ...entrega, tabela: entrega.tabela.map((x, j) => (j === i ? { ...x, nome: e.target.value } : x)) })} />
+              <button className="btn-secundario" onClick={() => setEntrega({ ...entrega, tabela: entrega.tabela.filter((_, j) => j !== i) })}>×</button>
+            </div>
+          ))}
+          <div className="flex gap-2">
+            <button className="btn-secundario" onClick={() => setEntrega({ ...entrega, tabela: [...entrega.tabela, { ufs: "*", preco: "", prazo: "7", nome: "Entrega" }] })}>+ faixa</button>
+            <button className="btn-primario" disabled={ocupado} onClick={() => chamar("/api/painel/loja", "PATCH", {
+              retiradaNaLoja: entrega.retiradaNaLoja, despachoDiasUteis: entrega.despachoDiasUteis,
+              freteGratisAcima: entrega.freteGratisAcima ? centavos(entrega.freteGratisAcima) : null,
+              tabelaFrete: entrega.tabela.filter((f) => f.ufs && f.preco).map((f) => ({ ufs: f.ufs.split(",").map((u) => u.trim()).filter(Boolean), preco: centavos(f.preco), prazoDiasUteis: Number(f.prazo) || 7, nome: f.nome || undefined })),
+            })}>Salvar</button>
+          </div>
+        </Secao>
+      )}
+
+      {aba === "Recebimento" && (
+        <Secao titulo="Recebimento (Mercado Pago)" descricao="O dinheiro cai direto na sua conta. Crie as credenciais em Mercado Pago → Suas integrações → Credenciais de produção.">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Campo label="Public key"><input className={inputClasse} value={mp.publicKey} onChange={(e) => setMp({ ...mp, publicKey: e.target.value })} placeholder="APP_USR-…" /></Campo>
+            <Campo label="Access token" ajuda={loja.mpPublicKey ? "Já configurado. Preencha só para trocar." : undefined}><input className={inputClasse} type="password" value={mp.accessToken} onChange={(e) => setMp({ ...mp, accessToken: e.target.value })} placeholder="APP_USR-…" /></Campo>
+            <Campo label="Segredo do webhook" ajuda={`Cadastre no painel MP a URL: ${loja.url}/api/webhooks/mercadopago?loja=${loja.slug}`}><input className={inputClasse} type="password" value={mp.webhookSecret} onChange={(e) => setMp({ ...mp, webhookSecret: e.target.value })} /></Campo>
+          </div>
+          <div><button className="btn-primario" disabled={ocupado || !mp.publicKey || !mp.accessToken} onClick={() => chamar("/api/painel/loja", "PATCH", { mercadoPago: { publicKey: mp.publicKey, accessToken: mp.accessToken, webhookSecret: mp.webhookSecret || undefined } }, "Recebimento configurado.").then(() => setMp({ ...mp, accessToken: "", webhookSecret: "" }))}>Salvar credenciais</button></div>
+        </Secao>
+      )}
+
+      {aba === "Conta" && (
+        <Secao titulo="Senha do painel">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Campo label="Senha atual"><input className={inputClasse} type="password" value={senha.atual} onChange={(e) => setSenha({ ...senha, atual: e.target.value })} /></Campo>
+            <Campo label="Nova senha" ajuda="Mínimo 8 caracteres"><input className={inputClasse} type="password" value={senha.nova} onChange={(e) => setSenha({ ...senha, nova: e.target.value })} /></Campo>
+          </div>
+          <div><button className="btn-primario" disabled={ocupado || senha.nova.length < 8} onClick={() => chamar("/api/painel/senha", "POST", senha, "Senha alterada.").then(() => setSenha({ atual: "", nova: "" }))}>Trocar senha</button></div>
+        </Secao>
+      )}
+    </div>
+  );
+}

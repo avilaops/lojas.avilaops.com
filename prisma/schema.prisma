@@ -83,6 +83,10 @@ model Tenant {
   /// Log dos passos de provisionamento: { dns: "ok"|"pendente"|"erro:...", mail: ..., n8n: ... }
   provisionamento Json @default("{}")
 
+  // ── Acesso do lojista ao painel (lojas.avilaops.com/painel) ───────────
+  loginEmail String? @unique
+  senhaHash  String?   // scrypt, ver src/lib/sessao.ts
+
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 

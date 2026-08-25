@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import { headers } from "next/headers";
 import "./globals.css";
 import "@avilaops/checkout/tokens.css";
 import "@avilaops/checkout/checkout.css";
@@ -14,6 +15,8 @@ import LojaNaoEncontrada from "@/components/LojaNaoEncontrada";
 import AvisoSuspensa from "@/components/AvisoSuspensa";
 
 export async function generateMetadata(): Promise<Metadata> {
+  const h = await headers();
+  if (h.get("x-plataforma") === "1") return { title: "Lojas by Avila Ops" };
   const t = await tenantAtual();
   if (!t) return { title: "Loja não encontrada", robots: { index: false } };
   return {
@@ -26,6 +29,17 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Domínio-base (lojas.avilaops.com): é a plataforma, não uma loja. O proxy
+  // marca a requisição e reescreve para src/app/plataforma, que tem o próprio chrome.
+  const h = await headers();
+  if (h.get("x-plataforma") === "1") {
+    return (
+      <html lang="pt-BR">
+        <body>{children}</body>
+      </html>
+    );
+  }
+
   const t = await tenantAtual();
 
   if (!t || t.status === "CANCELADA") {

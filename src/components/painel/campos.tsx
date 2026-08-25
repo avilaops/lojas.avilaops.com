@@ -1,0 +1,95 @@
+"use client";
+
+import type { ReactNode } from "react";
+
+/** Campos do painel — uma aparência só para wizard e painel. */
+
+export function Campo({ label, ajuda, children }: { label: string; ajuda?: string; children: ReactNode }) {
+  return (
+    <label className="block">
+      <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</span>
+      <div className="mt-1">{children}</div>
+      {ajuda && <span className="mt-1 block text-xs text-muted-foreground">{ajuda}</span>}
+    </label>
+  );
+}
+
+export const inputClasse = "h-11 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-foreground";
+
+export function Secao({ titulo, descricao, children }: { titulo: string; descricao?: string; children: ReactNode }) {
+  return (
+    <section className="rounded-2xl border border-border bg-card p-6">
+      <h2 className="text-base font-semibold">{titulo}</h2>
+      {descricao && <p className="mt-1 text-sm text-muted-foreground">{descricao}</p>}
+      <div className="mt-4 grid gap-4">{children}</div>
+    </section>
+  );
+}
+
+export const FONTES = [
+  { valor: "sistema", rotulo: "Padrão do sistema" },
+  { valor: "inter", rotulo: "Inter (moderna)" },
+  { valor: "poppins", rotulo: "Poppins (amigável)" },
+  { valor: "montserrat", rotulo: "Montserrat (forte)" },
+  { valor: "playfair", rotulo: "Playfair (elegante)" },
+] as const;
+
+/**
+ * CSV → produtos. Cabeçalhos aceitos (qualquer ordem, com ou sem acento):
+ * nome, categoria, marca, sku, preco, preco_de, descricao_curta, descricao, imagem, destaque, peso_kg
+ * Preço em reais ("59,90" ou "59.90") vira centavos.
+ */
+export function lerCsvProdutos(texto: string) {
+  const linhas = texto.replace(/\r/g, "").split("\n").filter((l) => l.trim());
+  if (linhas.length < 2) return { produtos: [] as Array<Record<string, unknown>>, erros: ["Planilha vazia."] };
+  const sep = linhas[0].includes(";") ? ";" : ",";
+  const dividir = (l: string) => {
+    const out: string[] = [];
+    let atual = "";
+    let aspas = false;
+    for (const ch of l) {
+      if (ch === '"') aspas = !aspas;
+      else if (ch === sep && !aspas) {
+        out.push(atual);
+        atual = "";
+      } else atual += ch;
+    }
+    out.push(atual);
+    return out.map((c) => c.trim());
+  };
+  const norm = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "_");
+  const cab = dividir(linhas[0]).map(norm);
+  const idx = (n: string) => cab.indexOf(n);
+  const centavos = (v: string) => Math.round(Number.parseFloat(v.replace(/[^\d,.-]/g, "").replace(/\.(?=\d{3})/g, "").replace(",", ".")) * 100);
+
+  const produtos: Array<Record<string, unknown>> = [];
+  const erros: string[] = [];
+  linhas.slice(1).forEach((l, i) => {
+    const c = dividir(l);
+    const nome = c[idx("nome")] ?? "";
+    const preco = centavos(c[idx("preco")] ?? "");
+    if (!nome || !Number.isFinite(preco)) {
+      erros.push(`Linha ${i + 2}: nome ou preço ausente.`);
+      return;
+    }
+    const pega = (n: string) => (idx(n) >= 0 ? c[idx(n)] || undefined : undefined);
+    const precoDe = pega("preco_de") ? centavos(pega("preco_de")!) : undefined;
+    const peso = pega("peso_kg") ? Number.parseFloat(pega("peso_kg")!.replace(",", ".")) : undefined;
+    produtos.push({
+      nome,
+      precoCentavos: preco,
+      ...(precoDe !== undefined && Number.isFinite(precoDe) ? { precoDeCentavos: precoDe } : {}),
+      categoria: pega("categoria"),
+      marca: pega("marca"),
+      sku: pega("sku"),
+      descricaoCurta: pega("descricao_curta"),
+      descricao: pega("descricao"),
+      imagens: pega("imagem") ? [pega("imagem")!] : undefined,
+      destaque: /^(1|sim|s|true|x)$/i.test(pega("destaque") ?? ""),
+      ...(peso && Number.isFinite(peso) ? { pesoKg: peso } : {}),
+    });
+  });
+  return { produtos, erros };
+}
+
+export const brl = (c: number) => (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
