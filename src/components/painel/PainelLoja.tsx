@@ -74,6 +74,7 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
   const [entrega, setEntrega] = useState({ retiradaNaLoja: loja.retiradaNaLoja, despachoDiasUteis: loja.despachoDiasUteis, freteGratisAcima: loja.freteGratisAcima != null ? String(loja.freteGratisAcima / 100).replace(".", ",") : "", tabela: loja.tabelaFrete.map((f) => ({ ufs: f.ufs.join(","), preco: String(f.preco / 100).replace(".", ","), prazo: String(f.prazoDiasUteis), nome: f.nome ?? "" })) });
   const [mp, setMp] = useState({ publicKey: loja.mpPublicKey ?? "", accessToken: "", webhookSecret: "" });
   const [senha, setSenha] = useState({ atual: "", nova: "" });
+  const [jsonIdentidade, setJsonIdentidade] = useState("");
 
   const centavos = (v: string) => Math.round(Number.parseFloat(v.replace(/[^\d,.-]/g, "").replace(",", ".")) * 100);
 
@@ -246,6 +247,16 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
             <Campo label="E-mail de contato"><input className={inputClasse} value={contato.emailContato} onChange={(e) => setContato({ ...contato, emailContato: e.target.value })} /></Campo>
             <Campo label="Domínio próprio" ajuda="Depois de salvar, clique em “Configurar DNS e e-mail”."><input className={inputClasse} value={contato.dominioPrincipal} onChange={(e) => setContato({ ...contato, dominioPrincipal: e.target.value })} placeholder="sualoja.com.br" /></Campo>
           </div>
+          <Campo label="Colar identidade (JSON)" ajuda="Para quem monta a identidade fora daqui (designer, ChatGPT): cole o JSON do docs/IDENTIDADE-VISUAL.md. Só as chaves presentes mudam.">
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <textarea className={`${inputClasse} h-24 py-2 font-mono text-xs`} value={jsonIdentidade} onChange={(e) => setJsonIdentidade(e.target.value)} placeholder='{"tema":{"corPrimaria":"#c62828","layout":"editorial"},"slogan":"…"}' />
+              <button className="btn-secundario" disabled={ocupado || !jsonIdentidade.trim()} onClick={() => {
+                let corpo: unknown;
+                try { corpo = JSON.parse(jsonIdentidade); } catch { setErro("JSON inválido."); return; }
+                chamar("/api/painel/loja", "PATCH", corpo, "Identidade aplicada.").then((d) => { if (d) setJsonIdentidade(""); });
+              }}>Aplicar</button>
+            </div>
+          </Campo>
           <div className="flex flex-wrap gap-2">
             <button className="btn-primario" disabled={ocupado} onClick={() => chamar("/api/painel/loja", "PATCH", { tema, ...Object.fromEntries(Object.entries(contato).filter(([, v]) => v !== "")), bannerUrl: contato.bannerUrl || null })}>Salvar</button>
             <button className="btn-secundario" disabled={ocupado} onClick={() => chamar("/api/painel/loja", "POST", undefined, "Configuração reexecutada.")}>Configurar DNS e e-mail</button>
