@@ -31,15 +31,16 @@ padrão não é "ajuste" — é o plano Pro ou um projeto à parte.
 
 1. ~~Tela de onboarding~~ — o portal `cliente.avilaops.com` foi apagado do servidor
    em 24/08/2026; a tela agora vive na própria plataforma (`/criar`, `/entrar`,
-   `/painel`). Falta: **recuperação de senha por e-mail** (via mail.avilaops.com)
-   e **upload de foto** (hoje é URL).
+   `/painel`). Recuperação de senha (`/recuperar` → evento `lojista.recuperar-senha`
+   no n8n → e-mail) e upload de foto/logo (`/api/painel/imagens`, servido em
+   `/uploads/<slug>/<arquivo>`, volume `/opt/lojas/uploads`) feitos em 25/08/2026.
 2. ~~Fluxo n8n `lojas-onboarding`~~ — criado em 24/08/2026 no n8n ("Lojas —
    Onboarding e Pedidos"; fonte em `docs/n8n-lojas-onboarding.ts`). Falta no n8n:
    preencher credenciais Twilio, "Lojas Webhook Auth" (header `authorization`,
    valor `Bearer <N8N_WEBHOOK_TOKEN>`) e "Lojas Admin Token"; o número WhatsApp
    do Twilio; publicar o fluxo e apontar `N8N_WEBHOOK_URL` para o webhook.
-3. **Upload de imagem** de produto (hoje é URL). Reaproveitar o removedor de
-   fundo do catálogo para padronizar foto.
+3. ~~Upload de imagem~~ — feito 25/08/2026. Falta ligar o removedor de fundo
+   (`/opt/removedor-de-fundo`) para padronizar a foto.
 4. **PayPal e Éfi** como adaptadores no `packages/checkout` (regra: sempre os três).
 5. **Cobrança da mensalidade** da loja (Mercado Pago recorrente, como no mail) e
    suspensão automática → `status: SUSPENSA` some o checkout, mantém a vitrine.
@@ -91,7 +92,11 @@ em 172.17.0.1), `.env` (segredos gerados no servidor, chmod 600). Container
 `lojas-avilaops`, porta `127.0.0.1:3080` (3070 é do Migdolus).
 
 **Caddy** (`/etc/caddy/Caddyfile`): o `ask` global do `on_demand_tls` aponta para
-`/api/dominio-permitido`, que repassa ao Comandeiro (3040) o que não for loja;
+`/api/dominio-permitido`, que repassa ao Comandeiro (3040) o que não for loja.
+**Domínios próprios** das lojas entram por `import /etc/caddy/lojas.d/*.caddy`:
+o timer `lojas-caddy-sync` (a cada 2 min) roda `/opt/lojas/caddy-sync.sh`, que lê
+`GET /api/admin/dominios` e regenera o bloco + `systemctl reload caddy` só quando
+mudou (fontes em `deploy/`). Sem isso o domínio cairia no `https://` do Comandeiro;
 bloco `lojas.avilaops.com, *.lojas.avilaops.com` com `tls { on_demand }` —
 não há certificado wildcard (Caddy sem módulo DNS da Cloudflare), cada loja ganha
 o seu na primeira visita. **DNS**: `lojas` e `*.lojas` → A 178.105.82.48,
