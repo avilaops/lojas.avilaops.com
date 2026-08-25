@@ -26,6 +26,7 @@ export const TenantEntradaSchema = z.object({
   dominioPrincipal: z.string().min(4).max(253).toLowerCase().optional(),
   dominios: z.array(z.string().min(4).max(253).toLowerCase()).optional(),
   logoUrl: z.string().url().optional(),
+  bannerUrl: z.string().url().nullable().optional(),
   tema: TemaSchema.partial().optional(),
   slogan: z.string().max(140).optional(),
   sobre: z.string().max(4000).optional(),

@@ -44,6 +44,7 @@ model Tenant {
 
   // ── Identidade visual (só tokens; layout é um só) ─────────────────────
   logoUrl     String?
+  bannerUrl   String?                    // imagem de fundo do topo da home
   tema        Json      @default("{}")   // TemaLoja em src/lib/tema.ts
   slogan      String?
   sobre       String?                    // texto da página "Sobre"

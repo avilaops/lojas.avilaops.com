@@ -7,6 +7,8 @@ import { Campo, FONTES, Secao, brl, inputClasse, lerCsvProdutos } from "./campos
 import EnviarImagem from "./EnviarImagem";
 import GradeVariantes from "./GradeVariantes";
 import Cupons, { type CupomView } from "./Cupons";
+import EditarProduto from "./EditarProduto";
+import Categorias, { type CategoriaView } from "./Categorias";
 
 export interface LojaView {
   slug: string;
@@ -20,6 +22,7 @@ export interface LojaView {
   whatsapp: string | null;
   emailContato: string | null;
   dominioPrincipal: string | null;
+  bannerUrl: string | null;
   mpPublicKey: string | null;
   emailRemetente: string | null;
   provisionamento: Record<string, string>;
@@ -43,8 +46,9 @@ const ASSINATURA: Record<string, { rotulo: string; classe: string }> = {
   CANCELADA: { rotulo: "Cancelada", classe: "bg-red-100 text-red-800" },
 };
 
-export default function PainelLoja({ loja, produtos, pedidos, cupons }: { loja: LojaView; produtos: ProdutoView[]; pedidos: PedidoView[]; cupons: CupomView[] }) {
+export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias }: { loja: LojaView; produtos: ProdutoView[]; pedidos: PedidoView[]; cupons: CupomView[]; categorias: CategoriaView[] }) {
   const [gradeDe, setGradeDe] = useState<ProdutoView | null>(null);
+  const [editando, setEditando] = useState<ProdutoView | null>(null);
   const router = useRouter();
   const [aba, setAba] = useState<(typeof ABAS)[number]>(produtos.length ? "Pedidos" : "Produtos");
   const [erro, setErro] = useState<string | null>(null);
@@ -66,7 +70,7 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons }: { loja: 
   const [csv, setCsv] = useState<{ nome: string; produtos: Array<Record<string, unknown>>; erros: string[] } | null>(null);
   const [rastreio, setRastreio] = useState<Record<string, string>>({});
   const [tema, setTema] = useState({ corPrimaria: loja.tema.corPrimaria, modo: loja.tema.modo, fonte: loja.tema.fonte, raio: loja.tema.raio });
-  const [contato, setContato] = useState({ slogan: loja.slogan ?? "", whatsapp: loja.whatsapp ?? "", emailContato: loja.emailContato ?? "", logoUrl: loja.logoUrl ?? "", dominioPrincipal: loja.dominioPrincipal ?? "" });
+  const [contato, setContato] = useState({ slogan: loja.slogan ?? "", whatsapp: loja.whatsapp ?? "", emailContato: loja.emailContato ?? "", logoUrl: loja.logoUrl ?? "", bannerUrl: loja.bannerUrl ?? "", dominioPrincipal: loja.dominioPrincipal ?? "" });
   const [entrega, setEntrega] = useState({ retiradaNaLoja: loja.retiradaNaLoja, despachoDiasUteis: loja.despachoDiasUteis, freteGratisAcima: loja.freteGratisAcima != null ? String(loja.freteGratisAcima / 100).replace(".", ",") : "", tabela: loja.tabelaFrete.map((f) => ({ ufs: f.ufs.join(","), preco: String(f.preco / 100).replace(".", ","), prazo: String(f.prazoDiasUteis), nome: f.nome ?? "" })) });
   const [mp, setMp] = useState({ publicKey: loja.mpPublicKey ?? "", accessToken: "", webhookSecret: "" });
   const [senha, setSenha] = useState({ atual: "", nova: "" });
@@ -110,6 +114,7 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons }: { loja: 
 
       {aba === "Produtos" && (
         <>
+          {editando && <EditarProduto produtoId={editando.id} aoFechar={() => setEditando(null)} aoSalvar={(m) => { setOk(m); setEditando(null); router.refresh(); }} />}
           {gradeDe && <GradeVariantes produtoId={gradeDe.id} produtoNome={gradeDe.nome} aoFechar={() => setGradeDe(null)} aoSalvar={(m) => { setOk(m); setGradeDe(null); router.refresh(); }} />}
           <Secao titulo="Novo produto" descricao="Cadastro rápido. Foto: cole o link da imagem (ou use a planilha).">
             <div className="grid gap-4 sm:grid-cols-2">
@@ -144,7 +149,9 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons }: { loja: 
             )}
           </Secao>
 
-          <Secao titulo={`Catálogo (${produtos.length})`}>
+          <Categorias categorias={categorias} chamar={chamar} ocupado={ocupado} />
+
+          <Secao titulo={`Catálogo (${produtos.length})`} descricao="Clique no nome para editar (fotos, descrição, estoque, preço).">
             {produtos.length === 0 ? <p className="text-sm text-muted-foreground">Nenhum produto ainda.</p> : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -152,7 +159,7 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons }: { loja: 
                   <tbody>
                     {produtos.map((p) => (
                       <tr key={p.id} className={`border-t border-border ${p.ativo ? "" : "opacity-50"}`}>
-                        <td className="py-2">{p.destaque && "★ "}{p.nome}{!p.ativo && " (inativo)"}</td>
+                        <td className="py-2"><button className="text-left hover:underline" onClick={() => { setEditando(p); window.scrollTo({ top: 0, behavior: "smooth" }); }}>{p.destaque && "★ "}{p.nome}{!p.ativo && " (inativo)"}</button></td>
                         <td>{p.categoria ?? "—"}</td><td>{p.sku ?? "—"}</td><td>{brl(p.precoCentavos)}</td>
                         <td>{p.opcoes.length ? `${p.variantes} variações` : p.estoque == null ? "∞" : p.estoque === 0 ? <span className="text-red-700">esgotado</span> : p.estoque}</td>
                         <td className="whitespace-nowrap text-right text-xs">
@@ -211,6 +218,12 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons }: { loja: 
             <Campo label="Fonte"><select className={inputClasse} value={tema.fonte} onChange={(e) => setTema({ ...tema, fonte: e.target.value as typeof tema.fonte })}>{FONTES.map((x) => <option key={x.valor} value={x.valor}>{x.rotulo}</option>)}</select></Campo>
             <Campo label="Cantos"><select className={inputClasse} value={tema.raio} onChange={(e) => setTema({ ...tema, raio: e.target.value as typeof tema.raio })}><option value="reto">Retos</option><option value="suave">Suaves</option><option value="redondo">Redondos</option></select></Campo>
             <Campo label="Slogan"><input className={inputClasse} value={contato.slogan} onChange={(e) => setContato({ ...contato, slogan: e.target.value })} /></Campo>
+            <Campo label="Banner da página inicial" ajuda="Imagem larga (ex.: 1600×600). Fica atrás do slogan.">
+              <div className="flex items-center gap-2">
+                <input className={inputClasse} value={contato.bannerUrl} onChange={(e) => setContato({ ...contato, bannerUrl: e.target.value })} placeholder="URL ou envie um arquivo" />
+                <EnviarImagem aoEnviar={(url) => setContato((c) => ({ ...c, bannerUrl: url }))} rotulo="Enviar banner" />
+              </div>
+            </Campo>
             <Campo label="Logo">
               <div className="flex items-center gap-2">
                 <input className={inputClasse} value={contato.logoUrl} onChange={(e) => setContato({ ...contato, logoUrl: e.target.value })} placeholder="URL ou envie um arquivo" />
@@ -222,7 +235,7 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons }: { loja: 
             <Campo label="Domínio próprio" ajuda="Depois de salvar, clique em “Configurar DNS e e-mail”."><input className={inputClasse} value={contato.dominioPrincipal} onChange={(e) => setContato({ ...contato, dominioPrincipal: e.target.value })} placeholder="sualoja.com.br" /></Campo>
           </div>
           <div className="flex flex-wrap gap-2">
-            <button className="btn-primario" disabled={ocupado} onClick={() => chamar("/api/painel/loja", "PATCH", { tema, ...Object.fromEntries(Object.entries(contato).filter(([, v]) => v !== "")) })}>Salvar</button>
+            <button className="btn-primario" disabled={ocupado} onClick={() => chamar("/api/painel/loja", "PATCH", { tema, ...Object.fromEntries(Object.entries(contato).filter(([, v]) => v !== "")), bannerUrl: contato.bannerUrl || null })}>Salvar</button>
             <button className="btn-secundario" disabled={ocupado} onClick={() => chamar("/api/painel/loja", "POST", undefined, "Configuração reexecutada.")}>Configurar DNS e e-mail</button>
           </div>
           {Object.keys(loja.provisionamento).length > 0 && (

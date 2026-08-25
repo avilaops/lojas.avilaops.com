@@ -11,7 +11,7 @@ export default async function Home() {
 
   return (
     <div className="container-loja py-8">
-      <section className="rounded-2xl bg-primary px-6 py-12 text-primary-foreground sm:px-10 sm:py-16">
+      <section className="relative overflow-hidden rounded-2xl bg-primary px-6 py-12 text-primary-foreground sm:px-10 sm:py-16" style={t.bannerUrl ? { backgroundImage: `linear-gradient(rgba(0,0,0,.45), rgba(0,0,0,.45)), url(${t.bannerUrl})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}>
         <h1 className="max-w-2xl text-3xl font-bold sm:text-4xl">{t.slogan ?? t.nome}</h1>
         {t.sobre && <p className="mt-3 max-w-xl text-sm opacity-90 line-clamp-3">{t.sobre}</p>}
         <div className="mt-6 flex flex-wrap gap-3">

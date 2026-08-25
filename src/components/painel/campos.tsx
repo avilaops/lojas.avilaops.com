@@ -57,7 +57,7 @@ export function lerCsvProdutos(texto: string) {
     out.push(atual);
     return out.map((c) => c.trim());
   };
-  const norm = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "_");
+  const norm = (s: string) => s.normalize("NFD").replace(/\p{M}+/gu, "").toLowerCase().replace(/[^a-z0-9]+/g, "_");
   const cab = dividir(linhas[0]).map(norm);
   const idx = (n: string) => cab.indexOf(n);
   const centavos = (v: string) => Math.round(Number.parseFloat(v.replace(/[^\d,.-]/g, "").replace(/\.(?=\d{3})/g, "").replace(",", ".")) * 100);
