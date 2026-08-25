@@ -6,6 +6,10 @@ app (`c2tiapps.com/sites/013/…`) com N clientes. Isto é o nosso, mais barato 
 operar (Hetzner + Docker) e com mais coisa dentro (PIX transparente, frete por
 CEP, e-mail próprio, automações n8n).
 
+**Posicionamento (25/08/2026):** concorrer com Nuvemshop e Shopify no pequeno
+lojista brasileiro — mais barato, PIX nativo, WhatsApp e automação de fábrica,
+dinheiro na conta do lojista. Não é um produto para um cliente só.
+
 **Regra do produto:** o que varia entre lojas é *dado*, nunca *código*. Layout
 único; tema por tokens; políticas padronizadas; checkout único. Pedido fora do
 padrão não é "ajuste" — é o plano Pro ou um projeto à parte.
@@ -25,6 +29,7 @@ padrão não é "ajuste" — é o plano Pro ou um projeto à parte.
 | Provisionamento: zona + DNS na Cloudflare, domínio + caixa no `mail.avilaops.com`, evento n8n | novo — `src/lib/provisionar.ts` | pronto, sem teste em produção |
 | Eventos para o n8n (loja criada, pedido criado/pago/recusado) | novo — `src/lib/eventos.ts` | pronto |
 | Certificado sob demanda para domínio próprio (Caddy `on_demand_tls`) | `deploy/Caddyfile.snippet` + `/api/dominio-permitido` | pronto |
+| **Variações** (até 3 opções, grade gerada por combinação, SKU/preço/estoque/foto por variação, seletor na página do produto com combinação esgotada desabilitada), **estoque** (produto simples ou por variação; baixa idempotente ao pagar; esgotado some do carrinho) e **cupons** (percentual, valor fixo, frete grátis; mínimo, limite de usos, validade; calculados no servidor; aplicados no carrinho) | `src/lib/cupons.ts`, `src/lib/estoque.ts`, `SeletorVariante.tsx`, `painel/GradeVariantes.tsx`, `painel/Cupons.tsx` | pronto (25/08/2026) |
 | **Plataforma autossuficiente** em `lojas.avilaops.com`: landing com planos, `/criar` (wizard 4 passos + senha), `/entrar`, `/painel` (produtos um a um ou CSV, pedidos com separar/enviar/entregar, aparência, entrega/tabela de frete, Mercado Pago, senha) | `src/proxy.ts` (reescreve o domínio-base para `src/app/plataforma`), `src/lib/sessao.ts` (scrypt + token HMAC em cookie), `src/app/api/painel/*` | pronto (25/08/2026) — substitui a tela que vivia no cliente.avilaops.com |
 
 ## O que falta (ordem sugerida)
