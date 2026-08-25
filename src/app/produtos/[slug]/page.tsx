@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { exigirTenant, lojaVende, urlDaLoja } from "@/lib/tenant";
 import { buscarProduto, formatarBRL } from "@/lib/catalogo";
 import AddToCartButton from "@/components/cart/AddToCartButton";
+import SeletorVariante from "@/components/SeletorVariante";
 import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -77,15 +78,27 @@ export default async function ProdutoPage({ params }: Props) {
           <h1 className="mt-1 text-2xl font-bold">{p.nome}</h1>
           {p.descricaoCurta && <p className="mt-2 text-sm text-muted-foreground">{p.descricaoCurta}</p>}
 
+          {p.opcoes.length > 0 ? (
+            <div className="mt-5 max-w-sm">
+              {p.precoDeCentavos && p.precoDeCentavos > p.precoCentavos && <p className="text-sm text-muted-foreground line-through">{formatarBRL(p.precoDeCentavos)}</p>}
+              <SeletorVariante
+                produto={{ id: p.id, slug: p.slug, nome: p.nome, precoCentavos: p.precoCentavos, imagem: p.imagens[0] }}
+                opcoes={p.opcoes}
+                variantes={p.variantes.map((v) => ({ id: v.id, nome: v.nome, valores: v.valores as Record<string, string>, precoCentavos: v.precoCentavos, estoque: v.estoque, imagem: v.imagem }))}
+                vende={vende}
+              />
+            </div>
+          ) : (
           <div className="mt-5">
             {p.precoDeCentavos && p.precoDeCentavos > p.precoCentavos && <p className="text-sm text-muted-foreground line-through">{formatarBRL(p.precoDeCentavos)}</p>}
             <p className="text-3xl font-bold">{formatarBRL(p.precoCentavos)}</p>
             {vende && t.meiosPagamento.includes("pix") && <p className="text-xs text-muted-foreground">no PIX, cartão ou boleto</p>}
           </div>
+          )}
 
           <div className="mt-6 max-w-sm">
-            {vende ? (
-              <AddToCartButton item={{ id: p.id, slug: p.slug, nome: p.nome, precoCentavos: p.precoCentavos, imagem: p.imagens[0] }} disponivel={disponivel} irParaCarrinho />
+            {p.opcoes.length > 0 ? null : vende ? (
+              <AddToCartButton item={{ id: p.id, slug: p.slug, nome: p.nome, precoCentavos: p.precoCentavos, imagem: p.imagens[0] }} disponivel={disponivel && (p.estoque == null || p.estoque > 0)} irParaCarrinho />
             ) : t.whatsapp ? (
               <a className="btn-primario w-full" href={linkWhatsApp(t.whatsapp, `Olá! Tenho interesse em: ${p.nome}`)} target="_blank" rel="noopener">
                 Pedir pelo WhatsApp

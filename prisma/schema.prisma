@@ -98,6 +98,7 @@ model Tenant {
 
   faturas         Fatura[]
   cobrancaEventos CobrancaEvento[]
+  cupons          Cupom[]
 
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
@@ -149,6 +150,9 @@ model Produto {
   larguraCm     Float?
   comprimentoCm Float?
   atributos     Json     @default("{}") // livre: { "volumeMl": 500, "cor": "azul" }
+  /// Nomes das opções de variação, na ordem de exibição: ["Tamanho", "Cor"].
+  /// Vazio = produto simples (estoque no próprio produto).
+  opcoes        String[] @default([])
 
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
@@ -156,6 +160,7 @@ model Produto {
   tenant    Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   categoria Categoria? @relation(fields: [categoriaId], references: [id], onDelete: SetNull)
   itens     PedidoItem[]
+  variantes Variante[]
 
   @@unique([tenantId, slug])
   @@index([tenantId, ativo, destaque])
@@ -188,6 +193,9 @@ model Pedido {
   freteCentavos   Int
   subtotalCentavos Int
   descontoCentavos Int @default(0)
+  cupomCodigo      String?
+  /// Estoque já baixado para este pedido (evita baixar duas vezes no webhook).
+  estoqueBaixado   Boolean @default(false)
   totalCentavos    Int
 
   meioPagamento   String     // pix | cartao | boleto
@@ -204,6 +212,47 @@ model Pedido {
 
   @@index([tenantId, status])
   @@index([pagamentoId])
+}
+
+/// Variação de um produto (P/Azul, 500ml…). O que o carrinho envia é
+/// `<produtoId>:<varianteId>`; preço nulo herda o do produto.
+model Variante {
+  id            String  @id @default(cuid())
+  produtoId     String
+  /// Valores na ordem de Produto.opcoes: { "Tamanho": "P", "Cor": "Azul" }
+  valores       Json
+  nome          String            // "P / Azul" — derivado, para exibir e para o pedido
+  sku           String?
+  precoCentavos Int?
+  estoque       Int?              // null = não controla
+  pesoKg        Float?
+  imagem        String?
+  ativo         Boolean @default(true)
+  ordem         Int     @default(0)
+
+  produto Produto      @relation(fields: [produtoId], references: [id], onDelete: Cascade)
+  itens   PedidoItem[]
+
+  @@index([produtoId, ativo])
+}
+
+/// Cupom de desconto da loja.
+model Cupom {
+  id             String    @id @default(cuid())
+  tenantId       String
+  codigo         String                     // maiúsculo, sem espaço
+  tipo           String                     // PERCENTUAL | FIXO | FRETE_GRATIS
+  valor          Int       @default(0)      // % (0–100) ou centavos
+  minimoCentavos Int       @default(0)
+  usosMax        Int?
+  usos           Int       @default(0)
+  validoAte      DateTime?
+  ativo          Boolean   @default(true)
+  criadoEm       DateTime  @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, codigo])
 }
 
 /// Uma cobrança mensal da assinatura (authorized_payment do Mercado Pago).
@@ -243,7 +292,10 @@ model PedidoItem {
   sku        String?
   quantidade Int
   precoUnitarioCentavos Int
+  varianteId   String?
+  varianteNome String?
 
-  pedido  Pedido   @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
-  produto Produto? @relation(fields: [produtoId], references: [id], onDelete: SetNull)
+  pedido   Pedido    @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  produto  Produto?  @relation(fields: [produtoId], references: [id], onDelete: SetNull)
+  variante Variante? @relation(fields: [varianteId], references: [id], onDelete: SetNull)
 }

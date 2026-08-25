@@ -22,10 +22,14 @@ export interface ItemLocal {
   quantidade: number;
 }
 
+export interface CupomLocal { codigo: string; tipo: string; desconto: number }
+
 interface CartValue {
   itens: ItemLocal[];
   quantidade: number;
   subtotal: number;
+  cupom: CupomLocal | null;
+  aplicarCupom: (c: CupomLocal | null) => void;
   adicionar: (item: Omit<ItemLocal, "quantidade">, quantidade?: number) => void;
   alterar: (id: string, quantidade: number) => void;
   remover: (id: string) => void;
@@ -44,12 +48,15 @@ export function useCart() {
 export function CartProvider({ slug, children }: { slug: string; children: React.ReactNode }) {
   const chave = `loja:${slug}:carrinho`;
   const [itens, setItens] = useState<ItemLocal[]>([]);
+  const [cupom, setCupom] = useState<CupomLocal | null>(null);
   const [pronto, setPronto] = useState(false);
 
   useEffect(() => {
     try {
       const salvo = window.localStorage.getItem(chave);
       if (salvo) setItens(JSON.parse(salvo));
+      const c = window.localStorage.getItem(`${chave}:cupom`);
+      if (c) setCupom(JSON.parse(c));
     } catch {
       /* storage bloqueado: carrinho vale a sessão */
     }
@@ -60,10 +67,14 @@ export function CartProvider({ slug, children }: { slug: string; children: React
     if (!pronto) return;
     try {
       window.localStorage.setItem(chave, JSON.stringify(itens));
+      if (cupom) window.localStorage.setItem(`${chave}:cupom`, JSON.stringify(cupom));
+      else window.localStorage.removeItem(`${chave}:cupom`);
     } catch {
       /* idem */
     }
-  }, [itens, chave, pronto]);
+  }, [itens, cupom, chave, pronto]);
+
+  const aplicarCupom = useCallback((c: CupomLocal | null) => setCupom(c), []);
 
   const adicionar = useCallback<CartValue["adicionar"]>((item, quantidade = 1) => {
     setItens((atual) => {
@@ -80,20 +91,25 @@ export function CartProvider({ slug, children }: { slug: string; children: React
   }, []);
 
   const remover = useCallback((id: string) => setItens((a) => a.filter((x) => x.id !== id)), []);
-  const limpar = useCallback(() => setItens([]), []);
+  const limpar = useCallback(() => {
+    setItens([]);
+    setCupom(null);
+  }, []);
 
   const value = useMemo<CartValue>(
     () => ({
       itens,
       quantidade: itens.reduce((s, i) => s + i.quantidade, 0),
       subtotal: itens.reduce((s, i) => s + i.precoCentavos * i.quantidade, 0),
+      cupom,
+      aplicarCupom,
       adicionar,
       alterar,
       remover,
       limpar,
       pronto,
     }),
-    [itens, adicionar, alterar, remover, limpar, pronto],
+    [itens, cupom, aplicarCupom, adicionar, alterar, remover, limpar, pronto],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

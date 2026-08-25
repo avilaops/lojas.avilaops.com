@@ -2,14 +2,15 @@ import { criarRotaPagamento, type ResolucaoCatalogo } from "@avilaops/checkout/s
 import { lojaVende, tenantAtual } from "@/lib/tenant";
 import { resolverItensDoCatalogo } from "@/lib/catalogo";
 import { cotarFrete } from "@/lib/frete";
+import { buscarCupomValido, descontoDoCupom, normalizarCodigo } from "@/lib/cupons";
 import { GatewayNaoConfigurado, providerDaLoja } from "@/lib/gateway";
 import { registrarPedido } from "@/lib/pedidos";
 
 /**
  * Cobrança. O @avilaops/checkout faz o trabalho pesado (recalcular o total
  * pelo catálogo, cobrar no gateway); aqui só se escolhe A LOJA da requisição
- * — o handler do pacote é criado por requisição porque provider e catálogo
- * são do tenant, não da instância.
+ * — o handler do pacote é criado por requisição porque provider, catálogo e
+ * cupom são do pedido, não da instância.
  */
 export async function POST(request: Request) {
   const t = await tenantAtual();
@@ -24,21 +25,39 @@ export async function POST(request: Request) {
     throw erro;
   }
 
+  // Lemos o corpo uma vez (cupom + persistência); o pacote recebe uma cópia.
+  const copia = request.clone();
+  const payload = (await request.json().catch(() => ({}))) as { cupom?: string };
+  const codigoCupom = payload.cupom ? normalizarCodigo(String(payload.cupom)) : null;
+
+  // O cupom é resolvido uma vez por requisição: frete grátis e desconto lêem o mesmo.
+  let cupomResolvido: Awaited<ReturnType<typeof buscarCupomValido>> | null = null;
+  async function cupom(itens: Parameters<typeof descontoDoCupom>[1]) {
+    if (!codigoCupom) return null;
+    if (!cupomResolvido) {
+      const subtotal = itens.reduce((s, i) => s + i.precoUnitario * i.quantidade, 0);
+      cupomResolvido = await buscarCupomValido(t!.id, codigoCupom, subtotal);
+    }
+    return "cupom" in cupomResolvido ? cupomResolvido.cupom : null;
+  }
+
   const catalogo: ResolucaoCatalogo = {
     resolverItens: (ids) => resolverItensDoCatalogo(t.id, ids),
-    resolverFretes: ({ itens, cep }) => cotarFrete(t, cep, itens),
+    resolverFretes: async ({ itens, cep }) => cotarFrete(t, cep, itens, { freteGratisCupom: (await cupom(itens))?.tipo === "FRETE_GRATIS" }),
+    resolverDesconto: async ({ itens }) => {
+      const c = await cupom(itens);
+      return c ? descontoDoCupom(c, itens) : 0;
+    },
   };
 
-  // O payload já foi lido pelo pacote; para persistir o pedido com os dados do
-  // cliente precisamos dele também — clonamos a requisição antes.
-  const copia = request.clone();
   const handler = criarRotaPagamento({
     provider,
     catalogo,
     aoCriarPagamento: async ({ referencia, pagamentoId, status, total }) => {
-      const payload = await copia.json();
-      await registrarPedido(t, { referencia, pagamentoId, status, total, payload, catalogo });
+      const corpo = await copia.clone().json();
+      const c = await cupom([]);
+      await registrarPedido(t, { referencia, pagamentoId, status, total, payload: corpo, catalogo, cupomCodigo: c ? c.codigo : null });
     },
   });
-  return handler(request);
+  return handler(copia);
 }

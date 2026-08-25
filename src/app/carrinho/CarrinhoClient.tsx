@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { useCart } from "@/components/cart/CartProvider";
 import { formatarBRL } from "@/lib/catalogo";
@@ -8,7 +9,26 @@ import type { TenantPublico } from "@/lib/tenant";
 import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
 
 export default function CarrinhoClient({ loja, vende }: { loja: TenantPublico; vende: boolean }) {
-  const { itens, subtotal, alterar, remover, pronto } = useCart();
+  const { itens, subtotal, alterar, remover, pronto, cupom, aplicarCupom } = useCart();
+  const [codigo, setCodigo] = useState("");
+  const [erroCupom, setErroCupom] = useState<string | null>(null);
+  const [aplicando, setAplicando] = useState(false);
+
+  async function aplicar() {
+    setErroCupom(null);
+    setAplicando(true);
+    try {
+      const r = await fetch("/api/cupom", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ codigo, itens: itens.map((i) => ({ id: i.id, quantidade: i.quantidade })) }) });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d?.erro ?? "Cupom inválido.");
+      aplicarCupom({ codigo: d.codigo, tipo: d.tipo, desconto: d.desconto });
+      setCodigo("");
+    } catch (e) {
+      setErroCupom(e instanceof Error ? e.message : "Cupom inválido.");
+    } finally {
+      setAplicando(false);
+    }
+  }
 
   if (!pronto) return <div className="container-loja py-12 text-sm text-muted-foreground">Carregando…</div>;
 
@@ -65,6 +85,19 @@ export default function CarrinhoClient({ loja, vende }: { loja: TenantPublico; v
           <span>Subtotal</span>
           <span className="font-bold">{formatarBRL(subtotal)}</span>
         </div>
+        {cupom && (
+          <div className="mt-1 flex justify-between text-sm text-emerald-700">
+            <span>Cupom {cupom.codigo}{cupom.tipo === "FRETE_GRATIS" ? " · frete grátis" : ""}</span>
+            <span>{cupom.desconto > 0 ? `− ${formatarBRL(cupom.desconto)}` : ""}<button className="ml-2 text-xs underline" onClick={() => aplicarCupom(null)}>remover</button></span>
+          </div>
+        )}
+        {!cupom && vende && (
+          <div className="mt-3 flex gap-2">
+            <input className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm uppercase" placeholder="Cupom" value={codigo} onChange={(e) => setCodigo(e.target.value)} />
+            <button className="btn-secundario h-10 px-3 text-xs" disabled={aplicando || !codigo.trim()} onClick={aplicar}>Aplicar</button>
+          </div>
+        )}
+        {erroCupom && <p className="mt-1 text-xs text-red-700">{erroCupom}</p>}
         <p className="mt-1 text-xs text-muted-foreground">Frete calculado no próximo passo.</p>
         {vende ? (
           <Link href="/checkout" className="btn-primario mt-4 w-full">

@@ -25,7 +25,7 @@ export async function listarProdutos(tenantId: string, filtro?: { categoriaSlug?
 }
 
 export async function buscarProduto(tenantId: string, slug: string) {
-  return prisma.produto.findFirst({ where: { tenantId, slug, ativo: true }, include: { categoria: true } });
+  return prisma.produto.findFirst({ where: { tenantId, slug, ativo: true }, include: { categoria: true, variantes: { where: { ativo: true }, orderBy: { ordem: "asc" } } } });
 }
 
 /**
@@ -39,13 +39,34 @@ export async function resolverItensDoCatalogo(
   tenantId: string,
   pedidos: Array<{ id: string; quantidade: number }>,
 ): Promise<ItemCarrinho[]> {
-  const ids = pedidos.map((p) => p.id);
-  const produtos = await prisma.produto.findMany({ where: { tenantId, id: { in: ids }, ativo: true, disponibilidade: { not: "out_of_stock" } } });
+  // O id do carrinho é `<produtoId>` ou `<produtoId>:<varianteId>`.
+  const pares = pedidos.map((p) => ({ ...p, produtoId: p.id.split(":")[0], varianteId: p.id.split(":")[1] ?? null }));
+  const produtos = await prisma.produto.findMany({
+    where: { tenantId, id: { in: pares.map((p) => p.produtoId) }, ativo: true, disponibilidade: { not: "out_of_stock" } },
+    include: { variantes: { where: { ativo: true } } },
+  });
   const porId = new Map(produtos.map((p) => [p.id, p]));
   const itens: ItemCarrinho[] = [];
-  for (const p of pedidos) {
-    const prod = porId.get(p.id);
+  for (const p of pares) {
+    const prod = porId.get(p.produtoId);
     if (!prod) continue;
+    if (prod.opcoes.length > 0) {
+      // Produto com variações só entra com uma variação válida e com estoque.
+      const v = prod.variantes.find((x) => x.id === p.varianteId);
+      if (!v) continue;
+      if (v.estoque != null && v.estoque < p.quantidade) continue;
+      itens.push({
+        id: `${prod.id}:${v.id}`,
+        nome: `${prod.nome} — ${v.nome}`,
+        quantidade: p.quantidade,
+        precoUnitario: v.precoCentavos ?? prod.precoCentavos,
+        imagem: v.imagem ?? prod.imagens[0],
+        sku: v.sku ?? prod.sku ?? undefined,
+        pesoGramas: (v.pesoKg ?? prod.pesoKg) != null ? Math.round((v.pesoKg ?? prod.pesoKg)! * 1000) : undefined,
+      });
+      continue;
+    }
+    if (prod.estoque != null && prod.estoque < p.quantidade) continue;
     itens.push({
       id: prod.id,
       nome: prod.nome,

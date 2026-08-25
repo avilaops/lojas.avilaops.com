@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import type { TemaLoja } from "@/lib/tema";
 import { Campo, FONTES, Secao, brl, inputClasse, lerCsvProdutos } from "./campos";
 import EnviarImagem from "./EnviarImagem";
+import GradeVariantes from "./GradeVariantes";
+import Cupons, { type CupomView } from "./Cupons";
 
 export interface LojaView {
   slug: string;
@@ -27,12 +29,12 @@ export interface LojaView {
   tabelaFrete: Array<{ ufs: string[]; preco: number; prazoDiasUteis: number; nome?: string }>;
   assinatura: { status: string; precoCentavos: number; planoNome: string; ultimoPagamentoEm: string | null; setupPagoEm: string | null; criadoEm: string; faturas: Array<{ id: string; centavos: number; status: string; pagaEm: string | null; criadoEm: string }> };
 }
-export interface ProdutoView { id: string; nome: string; sku: string | null; precoCentavos: number; ativo: boolean; destaque: boolean; categoria: string | null; imagem: string | null; disponibilidade: string }
+export interface ProdutoView { id: string; nome: string; sku: string | null; precoCentavos: number; ativo: boolean; destaque: boolean; categoria: string | null; imagem: string | null; disponibilidade: string; estoque: number | null; opcoes: string[]; variantes: number }
 export interface PedidoView { id: string; numero: number; referencia: string; status: string; clienteNome: string; clienteTelefone: string; totalCentavos: number; meioPagamento: string; freteNome: string; rastreio: string | null; criadoEm: string; itens: Array<{ nome: string; quantidade: number }> }
 
 const STATUS: Record<string, string> = { ATIVA: "No ar", PROVISIONANDO: "Configurando", SUSPENSA: "Suspensa", CANCELADA: "Cancelada" };
 const PEDIDO: Record<string, string> = { AGUARDANDO_PAGAMENTO: "Aguardando pagamento", PAGO: "Pago — separar", EM_SEPARACAO: "Em separação", ENVIADO: "Enviado", ENTREGUE: "Entregue", CANCELADO: "Cancelado", ESTORNADO: "Estornado" };
-const ABAS = ["Produtos", "Pedidos", "Aparência", "Entrega", "Recebimento", "Assinatura", "Conta"] as const;
+const ABAS = ["Produtos", "Pedidos", "Cupons", "Aparência", "Entrega", "Recebimento", "Assinatura", "Conta"] as const;
 const ASSINATURA: Record<string, { rotulo: string; classe: string }> = {
   SEM_ASSINATURA: { rotulo: "Período de teste", classe: "bg-amber-100 text-amber-800" },
   PENDENTE: { rotulo: "Aguardando cartão", classe: "bg-amber-100 text-amber-800" },
@@ -41,7 +43,8 @@ const ASSINATURA: Record<string, { rotulo: string; classe: string }> = {
   CANCELADA: { rotulo: "Cancelada", classe: "bg-red-100 text-red-800" },
 };
 
-export default function PainelLoja({ loja, produtos, pedidos }: { loja: LojaView; produtos: ProdutoView[]; pedidos: PedidoView[] }) {
+export default function PainelLoja({ loja, produtos, pedidos, cupons }: { loja: LojaView; produtos: ProdutoView[]; pedidos: PedidoView[]; cupons: CupomView[] }) {
+  const [gradeDe, setGradeDe] = useState<ProdutoView | null>(null);
   const router = useRouter();
   const [aba, setAba] = useState<(typeof ABAS)[number]>(produtos.length ? "Pedidos" : "Produtos");
   const [erro, setErro] = useState<string | null>(null);
@@ -59,7 +62,7 @@ export default function PainelLoja({ loja, produtos, pedidos }: { loja: LojaView
   }
 
   // ── estado dos formulários ──
-  const [novo, setNovo] = useState({ nome: "", preco: "", precoDe: "", categoria: "", sku: "", descricaoCurta: "", imagem: "", destaque: false, pesoKg: "" });
+  const [novo, setNovo] = useState({ nome: "", preco: "", precoDe: "", categoria: "", sku: "", descricaoCurta: "", imagem: "", destaque: false, pesoKg: "", estoque: "" });
   const [csv, setCsv] = useState<{ nome: string; produtos: Array<Record<string, unknown>>; erros: string[] } | null>(null);
   const [rastreio, setRastreio] = useState<Record<string, string>>({});
   const [tema, setTema] = useState({ corPrimaria: loja.tema.corPrimaria, modo: loja.tema.modo, fonte: loja.tema.fonte, raio: loja.tema.raio });
@@ -77,8 +80,8 @@ export default function PainelLoja({ loja, produtos, pedidos }: { loja: LojaView
     chamar("/api/painel/produtos", "PUT", [{
       nome: novo.nome, precoCentavos: preco, ...(precoDe && Number.isFinite(precoDe) ? { precoDeCentavos: precoDe } : {}),
       categoria: novo.categoria || undefined, sku: novo.sku || undefined, descricaoCurta: novo.descricaoCurta || undefined,
-      imagens: novo.imagem ? [novo.imagem] : undefined, destaque: novo.destaque, ...(novo.pesoKg ? { pesoKg: Number.parseFloat(novo.pesoKg.replace(",", ".")) } : {}),
-    }], "Produto salvo.").then(() => setNovo({ nome: "", preco: "", precoDe: "", categoria: "", sku: "", descricaoCurta: "", imagem: "", destaque: false, pesoKg: "" }));
+      imagens: novo.imagem ? [novo.imagem] : undefined, destaque: novo.destaque, ...(novo.pesoKg ? { pesoKg: Number.parseFloat(novo.pesoKg.replace(",", ".")) } : {}), ...(novo.estoque.trim() ? { estoque: Number(novo.estoque) } : {}),
+    }], "Produto salvo.").then(() => setNovo({ nome: "", preco: "", precoDe: "", categoria: "", sku: "", descricaoCurta: "", imagem: "", destaque: false, pesoKg: "", estoque: "" }));
   }
 
   function avancar(p: PedidoView) {
@@ -107,6 +110,7 @@ export default function PainelLoja({ loja, produtos, pedidos }: { loja: LojaView
 
       {aba === "Produtos" && (
         <>
+          {gradeDe && <GradeVariantes produtoId={gradeDe.id} produtoNome={gradeDe.nome} aoFechar={() => setGradeDe(null)} aoSalvar={(m) => { setOk(m); setGradeDe(null); router.refresh(); }} />}
           <Secao titulo="Novo produto" descricao="Cadastro rápido. Foto: cole o link da imagem (ou use a planilha).">
             <div className="grid gap-4 sm:grid-cols-2">
               <Campo label="Nome"><input className={inputClasse} value={novo.nome} onChange={(e) => setNovo({ ...novo, nome: e.target.value })} /></Campo>
@@ -115,6 +119,7 @@ export default function PainelLoja({ loja, produtos, pedidos }: { loja: LojaView
               <Campo label="Preço “de” (R$)" ajuda="Opcional, para mostrar desconto"><input className={inputClasse} value={novo.precoDe} onChange={(e) => setNovo({ ...novo, precoDe: e.target.value })} inputMode="decimal" /></Campo>
               <Campo label="SKU / código"><input className={inputClasse} value={novo.sku} onChange={(e) => setNovo({ ...novo, sku: e.target.value })} /></Campo>
               <Campo label="Peso (kg)" ajuda="Para o frete"><input className={inputClasse} value={novo.pesoKg} onChange={(e) => setNovo({ ...novo, pesoKg: e.target.value })} inputMode="decimal" /></Campo>
+              <Campo label="Estoque" ajuda="Vazio = não controla. Com variações, o estoque é por variação."><input className={inputClasse} value={novo.estoque} onChange={(e) => setNovo({ ...novo, estoque: e.target.value })} inputMode="numeric" /></Campo>
               <Campo label="Foto">
                 <div className="flex items-center gap-2">
                   <input className={inputClasse} value={novo.imagem} onChange={(e) => setNovo({ ...novo, imagem: e.target.value })} placeholder="https://…/foto.jpg ou envie um arquivo" />
@@ -143,13 +148,17 @@ export default function PainelLoja({ loja, produtos, pedidos }: { loja: LojaView
             {produtos.length === 0 ? <p className="text-sm text-muted-foreground">Nenhum produto ainda.</p> : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead className="text-left text-xs uppercase text-muted-foreground"><tr><th className="py-2">Produto</th><th>Categoria</th><th>SKU</th><th>Preço</th><th></th></tr></thead>
+                  <thead className="text-left text-xs uppercase text-muted-foreground"><tr><th className="py-2">Produto</th><th>Categoria</th><th>SKU</th><th>Preço</th><th>Estoque</th><th></th></tr></thead>
                   <tbody>
                     {produtos.map((p) => (
                       <tr key={p.id} className={`border-t border-border ${p.ativo ? "" : "opacity-50"}`}>
                         <td className="py-2">{p.destaque && "★ "}{p.nome}{!p.ativo && " (inativo)"}</td>
                         <td>{p.categoria ?? "—"}</td><td>{p.sku ?? "—"}</td><td>{brl(p.precoCentavos)}</td>
-                        <td className="text-right">{p.ativo && <button className="text-xs text-muted-foreground underline" disabled={ocupado} onClick={() => chamar(`/api/painel/produtos?id=${p.id}`, "DELETE", undefined, "Produto desativado.")}>desativar</button>}</td>
+                        <td>{p.opcoes.length ? `${p.variantes} variações` : p.estoque == null ? "∞" : p.estoque === 0 ? <span className="text-red-700">esgotado</span> : p.estoque}</td>
+                        <td className="whitespace-nowrap text-right text-xs">
+                          {p.ativo && <button className="mr-2 underline" onClick={() => setGradeDe(p)}>{p.opcoes.length ? "grade" : "variações"}</button>}
+                          {p.ativo && <button className="text-muted-foreground underline" disabled={ocupado} onClick={() => chamar(`/api/painel/produtos?id=${p.id}`, "DELETE", undefined, "Produto desativado.")}>desativar</button>}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -159,6 +168,8 @@ export default function PainelLoja({ loja, produtos, pedidos }: { loja: LojaView
           </Secao>
         </>
       )}
+
+      {aba === "Cupons" && <Cupons cupons={cupons} chamar={chamar} ocupado={ocupado} />}
 
       {aba === "Pedidos" && (
         <Secao titulo="Pedidos">

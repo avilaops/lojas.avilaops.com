@@ -29,8 +29,10 @@ export default function ProductCard({ produto, vende, whatsapp }: { produto: Pro
           )}
           <p className="text-lg font-bold">{formatarBRL(produto.precoCentavos)}</p>
         </div>
-        {vende ? (
-          <AddToCartButton item={{ id: produto.id, slug: produto.slug, nome: produto.nome, precoCentavos: produto.precoCentavos, imagem }} disponivel={disponivel} />
+        {vende && produto.opcoes.length > 0 ? (
+          <Link href={`/produtos/${produto.slug}`} className="btn-secundario w-full">Ver opções</Link>
+        ) : vende ? (
+          <AddToCartButton item={{ id: produto.id, slug: produto.slug, nome: produto.nome, precoCentavos: produto.precoCentavos, imagem }} disponivel={disponivel && (produto.estoque == null || produto.estoque > 0)} />
         ) : whatsapp ? (
           <a className="btn-primario w-full" href={linkWhatsApp(whatsapp, `Olá! Tenho interesse em: ${produto.nome}`)} target="_blank" rel="noopener">
             Pedir pelo WhatsApp

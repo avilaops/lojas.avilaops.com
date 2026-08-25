@@ -2,11 +2,12 @@ import type { PedidoStatus, Prisma, Tenant } from "@prisma/client";
 import { montarPedidoSeguro, type PayloadCheckout, type ResolucaoCatalogo } from "@avilaops/checkout/server";
 import { calcularTotais } from "@avilaops/checkout";
 import { prisma } from "./db";
-import { emitir, type Lojista } from "./eventos";
+import { emitir } from "./eventos";
+import { baixarEstoqueDoPedido } from "./estoque";
 import { urlDaLoja } from "./tenant";
 
-function lojista(t: Tenant): Lojista {
-  return { lojaNome: t.nome, lojaUrl: urlDaLoja(t), lojistaWhatsapp: t.whatsapp, lojistaEmail: t.emailContato, emailRemetente: t.emailRemetente };
+function lojista(t: Tenant) {
+  return { lojaNome: t.nome, lojaUrl: urlDaLoja(t), lojistaWhatsapp: t.whatsapp, lojistaEmail: t.loginEmail ?? t.emailContato, emailRemetente: t.emailRemetente };
 }
 
 /**
@@ -15,12 +16,12 @@ function lojista(t: Tenant): Lojista {
  */
 export async function registrarPedido(
   t: Tenant,
-  dados: { referencia: string; pagamentoId: string; status: string; total: number; payload: PayloadCheckout; catalogo: ResolucaoCatalogo },
+  dados: { referencia: string; pagamentoId: string; status: string; total: number; payload: PayloadCheckout; catalogo: ResolucaoCatalogo; cupomCodigo?: string | null },
 ) {
   const { pedido } = await montarPedidoSeguro(dados.payload, dados.catalogo);
   const totais = calcularTotais({ itens: pedido.itens, frete: pedido.frete, desconto: pedido.desconto ?? 0 });
 
-  const gravado = await prisma.pedido.upsert({
+  const salvo = await prisma.pedido.upsert({
     where: { referencia: pedido.referencia },
     update: { pagamentoId: dados.pagamentoId, pagamentoStatus: dados.status },
     create: {
@@ -36,24 +37,31 @@ export async function registrarPedido(
       subtotalCentavos: totais.subtotal,
       descontoCentavos: totais.desconto,
       totalCentavos: totais.total,
+      cupomCodigo: dados.cupomCodigo ?? null,
       meioPagamento: pedido.meioPagamento,
       pagamentoId: dados.pagamentoId,
       pagamentoStatus: dados.status,
       status: dados.status === "aprovado" ? "PAGO" : "AGUARDANDO_PAGAMENTO",
       itens: {
-        create: pedido.itens.map((i) => ({ produtoId: i.id, nome: i.nome, sku: i.sku, quantidade: i.quantidade, precoUnitarioCentavos: i.precoUnitario })),
+        create: pedido.itens.map((i) => {
+          const [produtoId, varianteId] = i.id.split(":");
+          const [, varianteNome] = varianteId ? i.nome.split(" — ") : [null, null];
+          return { produtoId, varianteId: varianteId ?? null, varianteNome: varianteNome ?? null, nome: i.nome, sku: i.sku, quantidade: i.quantidade, precoUnitarioCentavos: i.precoUnitario };
+        }),
       },
     },
   });
+
+  if (dados.status === "aprovado") await baixarEstoqueDoPedido(salvo.id);
 
   await emitir({
     tipo: "pedido.criado",
     slug: t.slug,
     referencia: pedido.referencia,
-    numero: gravado.numero,
+    numero: salvo.numero,
     total: totais.total,
     meioPagamento: pedido.meioPagamento,
-    clienteNome: gravado.clienteNome,
+    clienteNome: `${pedido.cliente.nome} ${pedido.cliente.sobrenome}`.trim(),
     clienteEmail: pedido.cliente.email,
     clienteTelefone: pedido.cliente.telefone,
     ...lojista(t),
@@ -80,17 +88,11 @@ export async function atualizarStatusPagamento(t: Tenant, pagamentoId: string, s
   });
 
   if (novo === "PAGO" && avancaDeAguardando) {
+    await baixarEstoqueDoPedido(pedido.id);
     await emitir({
-      tipo: "pedido.pago",
-      slug: t.slug,
-      referencia: pedido.referencia,
-      numero: pedido.numero,
-      total: pedido.totalCentavos,
-      clienteNome: pedido.clienteNome,
-      clienteEmail: pedido.clienteEmail,
-      clienteTelefone: pedido.clienteTelefone,
-      itens: pedido.itens.map((i) => `${i.quantidade}x ${i.nome}`).join(", "),
-      ...lojista(t),
+      tipo: "pedido.pago", slug: t.slug, referencia: pedido.referencia, numero: pedido.numero, total: pedido.totalCentavos,
+      clienteNome: pedido.clienteNome, clienteEmail: pedido.clienteEmail, clienteTelefone: pedido.clienteTelefone,
+      itens: pedido.itens.map((i) => `${i.quantidade}x ${i.nome}`).join(", "), ...lojista(t),
     });
   } else if (status === "recusado") {
     await emitir({ tipo: "pedido.recusado", slug: t.slug, referencia: pedido.referencia, clienteNome: pedido.clienteNome, clienteEmail: pedido.clienteEmail, clienteTelefone: pedido.clienteTelefone, ...lojista(t) });

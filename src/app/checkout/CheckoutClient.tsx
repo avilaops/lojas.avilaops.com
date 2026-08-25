@@ -19,7 +19,7 @@ function novaReferencia(slug: string) {
 }
 
 export default function CheckoutClient({ loja }: { loja: TenantPublico }) {
-  const { itens, limpar, pronto } = useCart();
+  const { itens, limpar, pronto, cupom } = useCart();
   const router = useRouter();
   const [fretes, setFretes] = useState<OpcaoFrete[]>([]);
   const [resultado, setResultado] = useState<ResultadoPagamento | null>(null);
@@ -62,7 +62,7 @@ export default function CheckoutClient({ loja }: { loja: TenantPublico }) {
   }
 
   async function aoInformarCep(cep: string) {
-    const r = await fetch("/api/frete", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ cep, itens: ids }) });
+    const r = await fetch("/api/frete", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ cep, itens: ids, cupom: cupom?.codigo }) });
     const opcoes = (await r.json()) as OpcaoFrete[];
     setFretes(opcoes);
     return opcoes;
@@ -75,6 +75,7 @@ export default function CheckoutClient({ loja }: { loja: TenantPublico }) {
       body: JSON.stringify({
         referencia: referencia.current,
         itens: ids,
+        cupom: cupom?.codigo,
         cliente: dados.cliente,
         entrega: dados.entrega,
         freteId: dados.freteId,
@@ -134,6 +135,7 @@ export default function CheckoutClient({ loja }: { loja: TenantPublico }) {
         meiosPagamento={loja.meiosPagamento as MeioPagamento[]}
         aoInformarCep={aoInformarCep}
         aoFinalizar={aoFinalizar}
+        desconto={cupom?.desconto ?? 0}
         slotCartao={
           loja.mpPublicKey
             ? ({ totalEmCentavos, emailCliente, aoTokenizar }) => (

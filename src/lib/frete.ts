@@ -132,15 +132,15 @@ function retirada(t: Tenant): OpcaoFrete[] {
   return [{ id: FRETE_RETIRADA_ID, nome: "Retirar na loja", preco: 0, prazoDiasUteis: t.despachoDiasUteis }];
 }
 
-export async function cotarFrete(t: Tenant, cepBruto: string | null, itens: ItemCarrinho[]): Promise<OpcaoFrete[]> {
+export async function cotarFrete(t: Tenant, cepBruto: string | null, itens: ItemCarrinho[], opcoesExtra: { freteGratisCupom?: boolean } = {}): Promise<OpcaoFrete[]> {
   const cep = (cepBruto ?? "").replace(/\D/g, "");
   if (cep.length !== 8) return retirada(t);
 
   let opcoes = (await cotarCepCerto(t, cep, itens)) ?? (await cotarTabela(t, cep));
 
-  if (t.freteGratisAcima != null) {
+  if (t.freteGratisAcima != null || opcoesExtra.freteGratisCupom) {
     const subtotal = itens.reduce((s, i) => s + i.precoUnitario * i.quantidade, 0);
-    if (subtotal >= t.freteGratisAcima && opcoes.length) {
+    if ((opcoesExtra.freteGratisCupom || (t.freteGratisAcima != null && subtotal >= t.freteGratisAcima)) && opcoes.length) {
       const maisBarata = opcoes[0];
       opcoes = [{ ...maisBarata, id: `gratis:${maisBarata.id}`, nome: `${maisBarata.nome} · grátis`, preco: 0 }, ...opcoes.slice(1)];
     }

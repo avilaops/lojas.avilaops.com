@@ -14,11 +14,12 @@ export default async function PainelPage({ searchParams }: { searchParams: Promi
   if (!loja) redirect("/entrar");
   const { nova } = await searchParams;
 
-  const [produtos, pedidos, contagem, faturas] = await Promise.all([
-    prisma.produto.findMany({ where: { tenantId: loja.id }, include: { categoria: true }, orderBy: [{ ativo: "desc" }, { nome: "asc" }], take: 500 }),
+  const [produtos, pedidos, contagem, faturas, cupons] = await Promise.all([
+    prisma.produto.findMany({ where: { tenantId: loja.id }, include: { categoria: true, _count: { select: { variantes: { where: { ativo: true } } } } }, orderBy: [{ ativo: "desc" }, { nome: "asc" }], take: 500 }),
     prisma.pedido.findMany({ where: { tenantId: loja.id }, include: { itens: true }, orderBy: { criadoEm: "desc" }, take: 200 }),
     prisma.produto.count({ where: { tenantId: loja.id, ativo: true } }),
     prisma.fatura.findMany({ where: { tenantId: loja.id }, orderBy: { criadoEm: "desc" }, take: 24 }),
+    prisma.cupom.findMany({ where: { tenantId: loja.id }, orderBy: { criadoEm: "desc" } }),
   ]);
 
   return (
@@ -61,7 +62,8 @@ export default async function PainelPage({ searchParams }: { searchParams: Promi
             faturas: faturas.map((f) => ({ id: f.id, centavos: f.centavos, status: f.status, pagaEm: f.pagaEm?.toISOString() ?? null, criadoEm: f.criadoEm.toISOString() })),
           },
         }}
-        produtos={produtos.map((p) => ({ id: p.id, nome: p.nome, sku: p.sku, precoCentavos: p.precoCentavos, ativo: p.ativo, destaque: p.destaque, categoria: p.categoria?.nome ?? null, imagem: p.imagens[0] ?? null, disponibilidade: p.disponibilidade }))}
+        produtos={produtos.map((p) => ({ id: p.id, nome: p.nome, sku: p.sku, precoCentavos: p.precoCentavos, ativo: p.ativo, destaque: p.destaque, categoria: p.categoria?.nome ?? null, imagem: p.imagens[0] ?? null, disponibilidade: p.disponibilidade, estoque: p.estoque, opcoes: p.opcoes, variantes: p._count.variantes }))}
+        cupons={cupons.map((c) => ({ id: c.id, codigo: c.codigo, tipo: c.tipo, valor: c.valor, minimoCentavos: c.minimoCentavos, usosMax: c.usosMax, usos: c.usos, validoAte: c.validoAte?.toISOString() ?? null, ativo: c.ativo }))}
         pedidos={pedidos.map((p) => ({ id: p.id, numero: p.numero, referencia: p.referencia, status: p.status, clienteNome: p.clienteNome, clienteTelefone: p.clienteTelefone, totalCentavos: p.totalCentavos, meioPagamento: p.meioPagamento, freteNome: p.freteNome, rastreio: p.rastreio, criadoEm: p.criadoEm.toISOString(), itens: p.itens.map((i) => ({ nome: i.nome, quantidade: i.quantidade })) }))}
       />
     </div>
