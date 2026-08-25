@@ -25,14 +25,14 @@ padrão não é "ajuste" — é o plano Pro ou um projeto à parte.
 | Provisionamento: zona + DNS na Cloudflare, domínio + caixa no `mail.avilaops.com`, evento n8n | novo — `src/lib/provisionar.ts` | pronto, sem teste em produção |
 | Eventos para o n8n (loja criada, pedido criado/pago/recusado) | novo — `src/lib/eventos.ts` | pronto |
 | Certificado sob demanda para domínio próprio (Caddy `on_demand_tls`) | `deploy/Caddyfile.snippet` + `/api/dominio-permitido` | pronto |
+| **Plataforma autossuficiente** em `lojas.avilaops.com`: landing com planos, `/criar` (wizard 4 passos + senha), `/entrar`, `/painel` (produtos um a um ou CSV, pedidos com separar/enviar/entregar, aparência, entrega/tabela de frete, Mercado Pago, senha) | `src/proxy.ts` (reescreve o domínio-base para `src/app/plataforma`), `src/lib/sessao.ts` (scrypt + token HMAC em cookie), `src/app/api/painel/*` | pronto (25/08/2026) — substitui a tela que vivia no cliente.avilaops.com |
 
 ## O que falta (ordem sugerida)
 
-1. ~~Tela de onboarding no `cliente.avilaops.com`~~ — feita em 24/08/2026:
-   `/dashboard/loja` (wizard de 4 passos + painel com produtos via CSV,
-   pedidos, tema, domínio e credenciais Mercado Pago). Ponte em
-   `cliente.avilaops.com/src/lib/lojas.ts`; precisa de `LOJAS_API_URL` e
-   `LOJAS_ADMIN_TOKEN` no `.env` do portal e da migração `20260824150000_loja_virtual`.
+1. ~~Tela de onboarding~~ — o portal `cliente.avilaops.com` foi apagado do servidor
+   em 24/08/2026; a tela agora vive na própria plataforma (`/criar`, `/entrar`,
+   `/painel`). Falta: **recuperação de senha por e-mail** (via mail.avilaops.com)
+   e **upload de foto** (hoje é URL).
 2. ~~Fluxo n8n `lojas-onboarding`~~ — criado em 24/08/2026 no n8n ("Lojas —
    Onboarding e Pedidos"; fonte em `docs/n8n-lojas-onboarding.ts`). Falta no n8n:
    preencher credenciais Twilio, "Lojas Webhook Auth" (header `authorization`,
