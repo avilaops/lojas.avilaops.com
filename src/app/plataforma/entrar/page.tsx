@@ -16,7 +16,7 @@ export default async function EntrarPage() {
         <EntrarForm />
       </div>
       <p className="mt-6 text-sm text-muted-foreground">
-        Ainda não tem loja? <Link href="/criar" className="underline">Criar agora</Link>
+        <Link href="/recuperar" className="underline">Esqueci a senha</Link> · Ainda não tem loja? <Link href="/criar" className="underline">Criar agora</Link>
       </p>
     </div>
   );

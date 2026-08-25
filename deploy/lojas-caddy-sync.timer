@@ -1,0 +1,10 @@
+[Unit]
+Description=Sincroniza domínios das lojas com o Caddy a cada 2 minutos
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=2min
+AccuracySec=30s
+
+[Install]
+WantedBy=timers.target

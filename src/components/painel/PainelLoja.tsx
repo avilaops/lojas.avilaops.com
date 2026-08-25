@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { TemaLoja } from "@/lib/tema";
 import { Campo, FONTES, Secao, brl, inputClasse, lerCsvProdutos } from "./campos";
+import EnviarImagem from "./EnviarImagem";
 
 export interface LojaView {
   slug: string;
@@ -106,7 +107,12 @@ export default function PainelLoja({ loja, produtos, pedidos }: { loja: LojaView
               <Campo label="Preço “de” (R$)" ajuda="Opcional, para mostrar desconto"><input className={inputClasse} value={novo.precoDe} onChange={(e) => setNovo({ ...novo, precoDe: e.target.value })} inputMode="decimal" /></Campo>
               <Campo label="SKU / código"><input className={inputClasse} value={novo.sku} onChange={(e) => setNovo({ ...novo, sku: e.target.value })} /></Campo>
               <Campo label="Peso (kg)" ajuda="Para o frete"><input className={inputClasse} value={novo.pesoKg} onChange={(e) => setNovo({ ...novo, pesoKg: e.target.value })} inputMode="decimal" /></Campo>
-              <Campo label="Foto (URL)"><input className={inputClasse} value={novo.imagem} onChange={(e) => setNovo({ ...novo, imagem: e.target.value })} placeholder="https://…/foto.jpg" /></Campo>
+              <Campo label="Foto">
+                <div className="flex items-center gap-2">
+                  <input className={inputClasse} value={novo.imagem} onChange={(e) => setNovo({ ...novo, imagem: e.target.value })} placeholder="https://…/foto.jpg ou envie um arquivo" />
+                  <EnviarImagem aoEnviar={(url) => setNovo((n) => ({ ...n, imagem: url }))} rotulo="Enviar foto" />
+                </div>
+              </Campo>
               <Campo label="Descrição curta"><input className={inputClasse} value={novo.descricaoCurta} onChange={(e) => setNovo({ ...novo, descricaoCurta: e.target.value })} /></Campo>
             </div>
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={novo.destaque} onChange={(e) => setNovo({ ...novo, destaque: e.target.checked })} /> Destaque na página inicial</label>
@@ -186,7 +192,12 @@ export default function PainelLoja({ loja, produtos, pedidos }: { loja: LojaView
             <Campo label="Fonte"><select className={inputClasse} value={tema.fonte} onChange={(e) => setTema({ ...tema, fonte: e.target.value as typeof tema.fonte })}>{FONTES.map((x) => <option key={x.valor} value={x.valor}>{x.rotulo}</option>)}</select></Campo>
             <Campo label="Cantos"><select className={inputClasse} value={tema.raio} onChange={(e) => setTema({ ...tema, raio: e.target.value as typeof tema.raio })}><option value="reto">Retos</option><option value="suave">Suaves</option><option value="redondo">Redondos</option></select></Campo>
             <Campo label="Slogan"><input className={inputClasse} value={contato.slogan} onChange={(e) => setContato({ ...contato, slogan: e.target.value })} /></Campo>
-            <Campo label="Logo (URL)"><input className={inputClasse} value={contato.logoUrl} onChange={(e) => setContato({ ...contato, logoUrl: e.target.value })} /></Campo>
+            <Campo label="Logo">
+              <div className="flex items-center gap-2">
+                <input className={inputClasse} value={contato.logoUrl} onChange={(e) => setContato({ ...contato, logoUrl: e.target.value })} placeholder="URL ou envie um arquivo" />
+                <EnviarImagem aoEnviar={(url) => setContato((c) => ({ ...c, logoUrl: url }))} rotulo="Enviar logo" />
+              </div>
+            </Campo>
             <Campo label="WhatsApp"><input className={inputClasse} value={contato.whatsapp} onChange={(e) => setContato({ ...contato, whatsapp: e.target.value })} /></Campo>
             <Campo label="E-mail de contato"><input className={inputClasse} value={contato.emailContato} onChange={(e) => setContato({ ...contato, emailContato: e.target.value })} /></Campo>
             <Campo label="Domínio próprio" ajuda="Depois de salvar, clique em “Configurar DNS e e-mail”."><input className={inputClasse} value={contato.dominioPrincipal} onChange={(e) => setContato({ ...contato, dominioPrincipal: e.target.value })} placeholder="sualoja.com.br" /></Campo>
