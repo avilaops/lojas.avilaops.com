@@ -16,7 +16,20 @@ export const TemaSchema = z.object({
   modo: z.enum(["claro", "escuro"]).default("claro"),
   fonte: z.enum(["sistema", "inter", "poppins", "montserrat", "playfair"]).default("sistema"),
   raio: z.enum(["reto", "suave", "redondo"]).default("suave"),
+  /**
+   * Layout da página inicial. São quatro composições fixas dos mesmos blocos
+   * (banner, categorias, destaques, sobre) — o lojista escolhe uma, não
+   * desenha. É o limite entre "personalizar" e "customizar".
+   */
+  layout: z.enum(["classico", "vitrine", "editorial", "minimal"]).default("classico"),
 });
+
+export const LAYOUTS: Array<{ valor: TemaLoja["layout"]; rotulo: string; descricao: string }> = [
+  { valor: "classico", rotulo: "Clássico", descricao: "Faixa colorida com slogan, categorias em cartões, destaques em 4 colunas." },
+  { valor: "vitrine", rotulo: "Vitrine", descricao: "Banner grande de ponta a ponta, categorias em chips, grade cheia de produtos. Bom para muita foto." },
+  { valor: "editorial", rotulo: "Editorial", descricao: "Texto de um lado, imagem do outro; categorias com foto; poucos destaques, grandes; bloco “sobre”. Bom para marca." },
+  { valor: "minimal", rotulo: "Minimal", descricao: "Sem banner: slogan centralizado e produtos em 3 colunas. Bom para catálogo enxuto." },
+];
 
 export type TemaLoja = z.infer<typeof TemaSchema>;
 

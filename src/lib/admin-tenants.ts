@@ -35,7 +35,13 @@ export async function criarTenant(entrada: TenantEntrada) {
 export async function atualizarTenant(slug: string, entrada: Partial<TenantEntrada> & { status?: "PROVISIONANDO" | "ATIVA" | "SUSPENSA" | "CANCELADA" }) {
   const { slug: _ignorado, ...resto } = entrada;
   void _ignorado;
-  const t = await prisma.tenant.update({ where: { slug }, data: dadosDoTenant(resto) });
+  // Tema é JSON: um PATCH parcial ({ tema: { layout } }) não pode apagar a cor.
+  const dados = dadosDoTenant(resto);
+  if (resto.tema) {
+    const atual = await prisma.tenant.findUniqueOrThrow({ where: { slug }, select: { tema: true } });
+    dados.tema = { ...((atual.tema as Record<string, unknown>) ?? {}), ...resto.tema };
+  }
+  const t = await prisma.tenant.update({ where: { slug }, data: dados });
   esquecerTenantEmCache(slug);
   return t;
 }

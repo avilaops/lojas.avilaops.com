@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Campo, FONTES, Secao, inputClasse, lerCsvProdutos } from "./campos";
+import { LAYOUTS } from "@/lib/tema";
 
 /**
  * Wizard de criação da loja em 4 passos. Tudo que o cliente responde vira
@@ -27,6 +28,7 @@ export default function CriarLoja({ planoInicial }: { planoInicial: "SITE" | "LO
     modo: "claro" as "claro" | "escuro",
     fonte: "sistema" as (typeof FONTES)[number]["valor"],
     raio: "suave" as "reto" | "suave" | "redondo",
+    layout: "classico" as "classico" | "vitrine" | "editorial" | "minimal",
     logoUrl: "",
     cep: "",
     logradouro: "",
@@ -69,7 +71,7 @@ export default function CriarLoja({ planoInicial }: { planoInicial: "SITE" | "LO
           senha: f.senha,
           plano: f.plano,
           logoUrl: f.logoUrl || undefined,
-          tema: { corPrimaria: f.corPrimaria, modo: f.modo, fonte: f.fonte, raio: f.raio },
+          tema: { corPrimaria: f.corPrimaria, modo: f.modo, fonte: f.fonte, raio: f.raio, layout: f.layout },
           endereco: { cep: f.cep || undefined, logradouro: f.logradouro || undefined, numero: f.numero || undefined, bairro: f.bairro || undefined, cidade: f.cidade || undefined, uf: f.uf || undefined },
           cepOrigem: f.cep || undefined,
           horario: f.horario || undefined,
@@ -143,6 +145,16 @@ export default function CriarLoja({ planoInicial }: { planoInicial: "SITE" | "LO
               <select className={inputClasse} value={f.raio} onChange={(e) => set("raio", e.target.value)}><option value="reto">Retos</option><option value="suave">Suaves</option><option value="redondo">Redondos</option></select>
             </Campo>
           </div>
+          <Campo label="Layout da página inicial">
+            <div className="grid gap-2 sm:grid-cols-2">
+              {LAYOUTS.map((l) => (
+                <button key={l.valor} type="button" onClick={() => set("layout", l.valor)} className={`rounded-xl border p-3 text-left text-sm ${f.layout === l.valor ? "border-primary" : "border-border"}`}>
+                  <span className="block font-semibold">{l.rotulo}</span>
+                  <span className="text-xs text-muted-foreground">{l.descricao}</span>
+                </button>
+              ))}
+            </div>
+          </Campo>
           <Campo label="Logo (URL)" ajuda="Link de uma imagem PNG/SVG. Sem logo, usamos o nome da loja. Dá para enviar arquivo depois, no painel."><input className={inputClasse} value={f.logoUrl} onChange={(e) => set("logoUrl", e.target.value)} placeholder="https://…/logo.png" /></Campo>
           <div className="rounded-xl border border-border p-4" style={{ background: f.modo === "escuro" ? "#0b0b0c" : "#fff", color: f.modo === "escuro" ? "#fafafa" : "#18181b", borderRadius: f.raio === "reto" ? 0 : f.raio === "redondo" ? 20 : 10 }}>
             <p className="text-sm font-bold">{f.nome || "Sua loja"}</p>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import type { TemaLoja } from "@/lib/tema";
+import { LAYOUTS, type TemaLoja } from "@/lib/tema";
 import { Campo, FONTES, Secao, brl, inputClasse, lerCsvProdutos } from "./campos";
 import EnviarImagem from "./EnviarImagem";
 import GradeVariantes from "./GradeVariantes";
@@ -69,7 +69,7 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
   const [novo, setNovo] = useState({ nome: "", preco: "", precoDe: "", categoria: "", sku: "", descricaoCurta: "", imagem: "", destaque: false, pesoKg: "", estoque: "" });
   const [csv, setCsv] = useState<{ nome: string; produtos: Array<Record<string, unknown>>; erros: string[] } | null>(null);
   const [rastreio, setRastreio] = useState<Record<string, string>>({});
-  const [tema, setTema] = useState({ corPrimaria: loja.tema.corPrimaria, modo: loja.tema.modo, fonte: loja.tema.fonte, raio: loja.tema.raio });
+  const [tema, setTema] = useState({ corPrimaria: loja.tema.corPrimaria, modo: loja.tema.modo, fonte: loja.tema.fonte, raio: loja.tema.raio, layout: loja.tema.layout });
   const [contato, setContato] = useState({ slogan: loja.slogan ?? "", whatsapp: loja.whatsapp ?? "", emailContato: loja.emailContato ?? "", logoUrl: loja.logoUrl ?? "", bannerUrl: loja.bannerUrl ?? "", dominioPrincipal: loja.dominioPrincipal ?? "" });
   const [entrega, setEntrega] = useState({ retiradaNaLoja: loja.retiradaNaLoja, despachoDiasUteis: loja.despachoDiasUteis, freteGratisAcima: loja.freteGratisAcima != null ? String(loja.freteGratisAcima / 100).replace(".", ",") : "", tabela: loja.tabelaFrete.map((f) => ({ ufs: f.ufs.join(","), preco: String(f.preco / 100).replace(".", ","), prazo: String(f.prazoDiasUteis), nome: f.nome ?? "" })) });
   const [mp, setMp] = useState({ publicKey: loja.mpPublicKey ?? "", accessToken: "", webhookSecret: "" });
@@ -217,6 +217,18 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
             <Campo label="Modo"><select className={inputClasse} value={tema.modo} onChange={(e) => setTema({ ...tema, modo: e.target.value as "claro" | "escuro" })}><option value="claro">Claro</option><option value="escuro">Escuro</option></select></Campo>
             <Campo label="Fonte"><select className={inputClasse} value={tema.fonte} onChange={(e) => setTema({ ...tema, fonte: e.target.value as typeof tema.fonte })}>{FONTES.map((x) => <option key={x.valor} value={x.valor}>{x.rotulo}</option>)}</select></Campo>
             <Campo label="Cantos"><select className={inputClasse} value={tema.raio} onChange={(e) => setTema({ ...tema, raio: e.target.value as typeof tema.raio })}><option value="reto">Retos</option><option value="suave">Suaves</option><option value="redondo">Redondos</option></select></Campo>
+          </div>
+          <Campo label="Layout da página inicial" ajuda="Quatro composições prontas dos mesmos blocos. Troque e veja na loja na hora.">
+            <div className="grid gap-2 sm:grid-cols-2">
+              {LAYOUTS.map((l) => (
+                <button key={l.valor} type="button" onClick={() => setTema({ ...tema, layout: l.valor })} className={`rounded-xl border p-3 text-left text-sm ${tema.layout === l.valor ? "border-primary" : "border-border"}`}>
+                  <span className="block font-semibold">{l.rotulo}</span>
+                  <span className="text-xs text-muted-foreground">{l.descricao}</span>
+                </button>
+              ))}
+            </div>
+          </Campo>
+          <div className="grid gap-4 sm:grid-cols-2">
             <Campo label="Slogan"><input className={inputClasse} value={contato.slogan} onChange={(e) => setContato({ ...contato, slogan: e.target.value })} /></Campo>
             <Campo label="Banner da página inicial" ajuda="Imagem larga (ex.: 1600×600). Fica atrás do slogan.">
               <div className="flex items-center gap-2">
