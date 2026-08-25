@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { lojistaAtual } from "@/lib/sessao";
 import { urlDaLoja, temaDo } from "@/lib/tenant";
 import PainelLoja from "@/components/painel/PainelLoja";
+import { NOME_PLANO, PRECO_PLANO } from "@/lib/assinatura";
 
 export const metadata: Metadata = { title: "Painel — Lojas by Avila Ops", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -13,10 +14,11 @@ export default async function PainelPage({ searchParams }: { searchParams: Promi
   if (!loja) redirect("/entrar");
   const { nova } = await searchParams;
 
-  const [produtos, pedidos, contagem] = await Promise.all([
+  const [produtos, pedidos, contagem, faturas] = await Promise.all([
     prisma.produto.findMany({ where: { tenantId: loja.id }, include: { categoria: true }, orderBy: [{ ativo: "desc" }, { nome: "asc" }], take: 500 }),
     prisma.pedido.findMany({ where: { tenantId: loja.id }, include: { itens: true }, orderBy: { criadoEm: "desc" }, take: 200 }),
     prisma.produto.count({ where: { tenantId: loja.id, ativo: true } }),
+    prisma.fatura.findMany({ where: { tenantId: loja.id }, orderBy: { criadoEm: "desc" }, take: 24 }),
   ]);
 
   return (
@@ -49,6 +51,15 @@ export default async function PainelPage({ searchParams }: { searchParams: Promi
           retiradaNaLoja: loja.retiradaNaLoja,
           despachoDiasUteis: loja.despachoDiasUteis,
           tabelaFrete: (loja.tabelaFrete as Array<{ ufs: string[]; preco: number; prazoDiasUteis: number; nome?: string }>) ?? [],
+          assinatura: {
+            status: loja.assinaturaStatus,
+            precoCentavos: PRECO_PLANO[loja.plano],
+            planoNome: NOME_PLANO[loja.plano],
+            ultimoPagamentoEm: loja.ultimoPagamentoEm?.toISOString() ?? null,
+            setupPagoEm: loja.setupPagoEm?.toISOString() ?? null,
+            criadoEm: loja.criadoEm.toISOString(),
+            faturas: faturas.map((f) => ({ id: f.id, centavos: f.centavos, status: f.status, pagaEm: f.pagaEm?.toISOString() ?? null, criadoEm: f.criadoEm.toISOString() })),
+          },
         }}
         produtos={produtos.map((p) => ({ id: p.id, nome: p.nome, sku: p.sku, precoCentavos: p.precoCentavos, ativo: p.ativo, destaque: p.destaque, categoria: p.categoria?.nome ?? null, imagem: p.imagens[0] ?? null, disponibilidade: p.disponibilidade }))}
         pedidos={pedidos.map((p) => ({ id: p.id, numero: p.numero, referencia: p.referencia, status: p.status, clienteNome: p.clienteNome, clienteTelefone: p.clienteTelefone, totalCentavos: p.totalCentavos, meioPagamento: p.meioPagamento, freteNome: p.freteNome, rastreio: p.rastreio, criadoEm: p.criadoEm.toISOString(), itens: p.itens.map((i) => ({ nome: i.nome, quantidade: i.quantidade })) }))}

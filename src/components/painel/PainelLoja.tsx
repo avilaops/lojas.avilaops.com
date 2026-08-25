@@ -25,13 +25,21 @@ export interface LojaView {
   retiradaNaLoja: boolean;
   despachoDiasUteis: number;
   tabelaFrete: Array<{ ufs: string[]; preco: number; prazoDiasUteis: number; nome?: string }>;
+  assinatura: { status: string; precoCentavos: number; planoNome: string; ultimoPagamentoEm: string | null; setupPagoEm: string | null; criadoEm: string; faturas: Array<{ id: string; centavos: number; status: string; pagaEm: string | null; criadoEm: string }> };
 }
 export interface ProdutoView { id: string; nome: string; sku: string | null; precoCentavos: number; ativo: boolean; destaque: boolean; categoria: string | null; imagem: string | null; disponibilidade: string }
 export interface PedidoView { id: string; numero: number; referencia: string; status: string; clienteNome: string; clienteTelefone: string; totalCentavos: number; meioPagamento: string; freteNome: string; rastreio: string | null; criadoEm: string; itens: Array<{ nome: string; quantidade: number }> }
 
 const STATUS: Record<string, string> = { ATIVA: "No ar", PROVISIONANDO: "Configurando", SUSPENSA: "Suspensa", CANCELADA: "Cancelada" };
 const PEDIDO: Record<string, string> = { AGUARDANDO_PAGAMENTO: "Aguardando pagamento", PAGO: "Pago — separar", EM_SEPARACAO: "Em separação", ENVIADO: "Enviado", ENTREGUE: "Entregue", CANCELADO: "Cancelado", ESTORNADO: "Estornado" };
-const ABAS = ["Produtos", "Pedidos", "Aparência", "Entrega", "Recebimento", "Conta"] as const;
+const ABAS = ["Produtos", "Pedidos", "Aparência", "Entrega", "Recebimento", "Assinatura", "Conta"] as const;
+const ASSINATURA: Record<string, { rotulo: string; classe: string }> = {
+  SEM_ASSINATURA: { rotulo: "Período de teste", classe: "bg-amber-100 text-amber-800" },
+  PENDENTE: { rotulo: "Aguardando cartão", classe: "bg-amber-100 text-amber-800" },
+  AUTORIZADA: { rotulo: "Ativa", classe: "bg-emerald-100 text-emerald-800" },
+  PAUSADA: { rotulo: "Pausada", classe: "bg-red-100 text-red-800" },
+  CANCELADA: { rotulo: "Cancelada", classe: "bg-red-100 text-red-800" },
+};
 
 export default function PainelLoja({ loja, produtos, pedidos }: { loja: LojaView; produtos: ProdutoView[]; pedidos: PedidoView[] }) {
   const router = useRouter();
@@ -248,6 +256,41 @@ export default function PainelLoja({ loja, produtos, pedidos }: { loja: LojaView
             <Campo label="Segredo do webhook" ajuda={`Cadastre no painel MP a URL: ${loja.url}/api/webhooks/mercadopago?loja=${loja.slug}`}><input className={inputClasse} type="password" value={mp.webhookSecret} onChange={(e) => setMp({ ...mp, webhookSecret: e.target.value })} /></Campo>
           </div>
           <div><button className="btn-primario" disabled={ocupado || !mp.publicKey || !mp.accessToken} onClick={() => chamar("/api/painel/loja", "PATCH", { mercadoPago: { publicKey: mp.publicKey, accessToken: mp.accessToken, webhookSecret: mp.webhookSecret || undefined } }, "Recebimento configurado.").then(() => setMp({ ...mp, accessToken: "", webhookSecret: "" }))}>Salvar credenciais</button></div>
+        </Secao>
+      )}
+
+      {aba === "Assinatura" && (
+        <Secao titulo={`Plano ${loja.assinatura.planoNome} — ${brl(loja.assinatura.precoCentavos)}/mês`} descricao="Cobrança mensal no cartão, pelo Mercado Pago da Avila Ops. O setup de R$ 497 é combinado à parte, no fechamento.">
+          <div className="flex flex-wrap items-center gap-3 text-sm">
+            <span className={`rounded-full px-3 py-1 text-xs font-semibold ${(ASSINATURA[loja.assinatura.status] ?? ASSINATURA.SEM_ASSINATURA).classe}`}>{(ASSINATURA[loja.assinatura.status] ?? ASSINATURA.SEM_ASSINATURA).rotulo}</span>
+            {loja.assinatura.ultimoPagamentoEm && <span className="text-muted-foreground">último pagamento {new Date(loja.assinatura.ultimoPagamentoEm).toLocaleDateString("pt-BR")}</span>}
+            <span className="text-muted-foreground">setup: {loja.assinatura.setupPagoEm ? "pago" : "a combinar"}</span>
+          </div>
+          {loja.assinatura.status === "SEM_ASSINATURA" && (
+            <p className="text-sm text-muted-foreground">
+              Sua loja está no período de teste de 14 dias (desde {new Date(loja.assinatura.criadoEm).toLocaleDateString("pt-BR")}). Ative a cobrança para não interromper as vendas.
+            </p>
+          )}
+          <div className="flex flex-wrap gap-2">
+            {loja.assinatura.status !== "AUTORIZADA" && (
+              <button className="btn-primario" disabled={ocupado} onClick={() => chamar("/api/painel/assinatura", "POST", undefined, "Assinatura criada.").then((d) => { if (d?.initPoint) window.location.href = d.initPoint; })}>
+                {loja.assinatura.status === "PENDENTE" ? "Cadastrar cartão" : "Ativar cobrança mensal"}
+              </button>
+            )}
+            {["AUTORIZADA", "PENDENTE", "PAUSADA"].includes(loja.assinatura.status) && (
+              <button className="btn-secundario" disabled={ocupado} onClick={() => confirm("Cancelar a assinatura? A loja sai do ar ao fim do período pago.") && chamar("/api/painel/assinatura", "DELETE", undefined, "Assinatura cancelada.")}>Cancelar assinatura</button>
+            )}
+          </div>
+          {loja.assinatura.faturas.length > 0 && (
+            <table className="w-full text-sm">
+              <thead className="text-left text-xs uppercase text-muted-foreground"><tr><th className="py-2">Data</th><th>Valor</th><th>Situação</th></tr></thead>
+              <tbody>
+                {loja.assinatura.faturas.map((f) => (
+                  <tr key={f.id} className="border-t border-border"><td className="py-2">{new Date(f.pagaEm ?? f.criadoEm).toLocaleDateString("pt-BR")}</td><td>{brl(f.centavos)}</td><td>{f.status === "approved" ? "Paga" : f.status}</td></tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </Secao>
       )}
 

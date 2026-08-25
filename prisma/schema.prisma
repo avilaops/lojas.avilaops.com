@@ -87,6 +87,18 @@ model Tenant {
   loginEmail String? @unique
   senhaHash  String?   // scrypt, ver src/lib/sessao.ts
 
+  // ── Mensalidade (assinatura no Mercado Pago da Avila Ops) ─────────────
+  assinaturaId        String?  @unique   // preapproval_id
+  assinaturaStatus    String   @default("SEM_ASSINATURA") // SEM_ASSINATURA | PENDENTE | AUTORIZADA | PAUSADA | CANCELADA
+  assinaturaInitPoint String?            // link para cadastrar o cartão, enquanto PENDENTE
+  ultimoPagamentoEm   DateTime?
+  tentativasFalhas    Int      @default(0)
+  suspensaEm          DateTime?
+  setupPagoEm         DateTime?          // R$ 497 — cobrado à parte, marcado pela Avila Ops
+
+  faturas         Fatura[]
+  cobrancaEventos CobrancaEvento[]
+
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
@@ -192,6 +204,35 @@ model Pedido {
 
   @@index([tenantId, status])
   @@index([pagamentoId])
+}
+
+/// Uma cobrança mensal da assinatura (authorized_payment do Mercado Pago).
+model Fatura {
+  id         String   @id @default(cuid())
+  tenantId   String
+  externalId String   @unique   // id do authorized_payment
+  centavos   Int
+  status     String              // approved | rejected | pending | …
+  detalhe    String?
+  pagaEm     DateTime?
+  criadoEm   DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, criadoEm])
+}
+
+/// Notificação do Mercado Pago já vista — idempotência do webhook.
+model CobrancaEvento {
+  id             String    @id @default(cuid())
+  notificacaoId  String    @unique   // "<topic>:<data.id>"
+  tenantId       String?
+  topico         String
+  processadoEm   DateTime?
+  erro           String?
+  criadoEm       DateTime  @default(now())
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: SetNull)
 }
 
 model PedidoItem {
