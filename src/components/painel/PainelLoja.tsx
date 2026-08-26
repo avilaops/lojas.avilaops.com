@@ -57,7 +57,7 @@ const ASSINATURA: Record<string, { rotulo: string; classe: string }> = {
   CANCELADA: { rotulo: "Cancelada", classe: "bg-red-100 text-red-800" },
 };
 
-export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias, avaliacoes, vendas, catalogo }: { loja: LojaView; produtos: ProdutoView[]; pedidos: PedidoView[]; cupons: CupomView[]; categorias: CategoriaView[]; avaliacoes: AvaliacaoPainelView[]; vendas: ResumoVendas; catalogo: DiagnosticoFeed }) {
+export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias, avaliacoes, vendas, catalogo, espera }: { loja: LojaView; produtos: ProdutoView[]; pedidos: PedidoView[]; cupons: CupomView[]; categorias: CategoriaView[]; avaliacoes: AvaliacaoPainelView[]; vendas: ResumoVendas; catalogo: DiagnosticoFeed; espera: Array<{ produto: string; pessoas: number }> }) {
   const [gradeDe, setGradeDe] = useState<ProdutoView | null>(null);
   const [editando, setEditando] = useState<ProdutoView | null>(null);
   const router = useRouter();
@@ -140,7 +140,7 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
 
       {aba === "Visão geral" && (
         <div className="painel-overview">
-          <Vendas r={vendas} irPara={setAba} />
+          <Vendas r={vendas} espera={espera} irPara={setAba} />
           <section className="painel-hero">
             <div><span>Estúdio da sua loja</span><h2>Sua marca está {loja.status === "ATIVA" ? "no ar" : "em preparação"}.</h2><p>Cuide primeiro do que o cliente percebe: identidade clara, catálogo visual e uma experiência consistente.</p></div>
             <a href={loja.url} target="_blank" rel="noopener" className="btn-primario">Ver loja publicada ↗</a>

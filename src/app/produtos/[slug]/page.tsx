@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { exigirTenant, lojaVende, urlDaLoja } from "@/lib/tenant";
 import { buscarProduto, formatarBRL, listarProdutos, resumoAvaliacoes } from "@/lib/catalogo";
+import AvisoEstoque from "@/components/AvisoEstoque";
 import AddToCartButton from "@/components/cart/AddToCartButton";
 import SeletorVariante from "@/components/SeletorVariante";
 import GaleriaProduto from "@/components/GaleriaProduto";
@@ -104,8 +105,10 @@ export default async function ProdutoPage({ params }: Props) {
           )}
 
           <div className="mt-6 max-w-sm">
-            {p.opcoes.length > 0 ? null : vende ? (
-              <AddToCartButton item={{ id: p.id, slug: p.slug, nome: p.nome, precoCentavos: p.precoCentavos, imagem: p.imagens[0] }} disponivel={disponivel && (p.estoque == null || p.estoque > 0)} irParaCarrinho />
+            {p.opcoes.length > 0 ? null : !disponivel || (p.estoque != null && p.estoque <= 0) ? (
+              <AvisoEstoque produtoId={p.id} />
+            ) : vende ? (
+              <AddToCartButton item={{ id: p.id, slug: p.slug, nome: p.nome, precoCentavos: p.precoCentavos, imagem: p.imagens[0] }} disponivel irParaCarrinho />
             ) : t.whatsapp ? (
               <a className="btn-primario w-full" href={linkWhatsApp(t.whatsapp, `Olá! Tenho interesse em: ${p.nome}`)} target="_blank" rel="noopener">
                 Pedir pelo WhatsApp

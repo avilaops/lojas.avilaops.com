@@ -11,7 +11,7 @@ import type { ResumoVendas } from "@/lib/relatorio";
  * O gráfico é SVG na mão de propósito; biblioteca de gráfico custaria mais
  * kilobyte do que a loja inteira.
  */
-export default function Vendas({ r, irPara }: { r: ResumoVendas; irPara: (aba: "Pedidos" | "Produtos") => void }) {
+export default function Vendas({ r, espera, irPara }: { r: ResumoVendas; espera: Array<{ produto: string; pessoas: number }>; irPara: (aba: "Pedidos" | "Produtos") => void }) {
   const maximo = Math.max(...r.serie.map((d) => d.centavos), 1);
   const vendeu = r.pedidos > 0;
 
@@ -61,6 +61,21 @@ export default function Vendas({ r, irPara }: { r: ResumoVendas; irPara: (aba: "
         </>
       ) : (
         <p className="painel-vazio">Nenhuma venda paga nos últimos 30 dias. Quando o primeiro pedido cair, o resumo aparece aqui.</p>
+      )}
+
+      {espera.length > 0 && (
+        <div className="painel-espera">
+          <p><b>Gente esperando produto que acabou.</b> Repor isto é venda quase certa — quem entrou na fila já quis comprar.</p>
+          <ul>
+            {espera.map((e) => (
+              <li key={e.produto}>
+                <span>{e.produto}</span>
+                <small>{e.pessoas} pessoa{e.pessoas > 1 ? "s" : ""}</small>
+              </li>
+            ))}
+          </ul>
+          <button className="btn-secundario" onClick={() => irPara("Produtos")}>Repor estoque</button>
+        </div>
       )}
 
       {(r.aSeparar > 0 || r.carrinhosAbertos > 0) && (

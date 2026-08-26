@@ -124,6 +124,7 @@ model Tenant {
   compradores     Comprador[]
   checkoutsAbertos CheckoutAberto[]
   avaliacoes      Avaliacao[]
+  avisosEstoque   AvisoEstoque[]
 
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
@@ -190,6 +191,7 @@ model Produto {
 
   @@unique([tenantId, slug])
   @@index([tenantId, ativo, destaque])
+  avisosEstoque AvisoEstoque[]
 }
 
 enum PedidoStatus {
@@ -405,4 +407,23 @@ model EnderecoComprador {
   comprador Comprador @relation(fields: [compradorId], references: [id], onDelete: Cascade)
 
   @@index([compradorId])
+}
+
+/// Quem pediu para ser avisado quando um produto voltar ao estoque. A rotina
+/// horária do n8n emite `loja.voltou-ao-estoque` e marca `avisadoEm` — cada
+/// pessoa é avisada uma vez por produto.
+model AvisoEstoque {
+  id        String    @id @default(cuid())
+  tenantId  String
+  produtoId String
+  email     String
+  telefone  String?
+  criadoEm  DateTime  @default(now())
+  avisadoEm DateTime?
+
+  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  produto Produto @relation(fields: [produtoId], references: [id], onDelete: Cascade)
+
+  @@unique([produtoId, email])
+  @@index([tenantId, avisadoEm])
 }
