@@ -12,6 +12,8 @@ import EditarProduto from "./EditarProduto";
 import Categorias, { type CategoriaView } from "./Categorias";
 import AvaliacoesPainel, { type AvaliacaoPainelView } from "./AvaliacoesPainel";
 import Buscadores from "./Buscadores";
+import Vendas from "./Vendas";
+import type { ResumoVendas } from "@/lib/relatorio";
 import Anuncios, { type PixelsView } from "./Anuncios";
 
 export interface LojaView {
@@ -54,7 +56,7 @@ const ASSINATURA: Record<string, { rotulo: string; classe: string }> = {
   CANCELADA: { rotulo: "Cancelada", classe: "bg-red-100 text-red-800" },
 };
 
-export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias, avaliacoes }: { loja: LojaView; produtos: ProdutoView[]; pedidos: PedidoView[]; cupons: CupomView[]; categorias: CategoriaView[]; avaliacoes: AvaliacaoPainelView[] }) {
+export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias, avaliacoes, vendas }: { loja: LojaView; produtos: ProdutoView[]; pedidos: PedidoView[]; cupons: CupomView[]; categorias: CategoriaView[]; avaliacoes: AvaliacaoPainelView[]; vendas: ResumoVendas }) {
   const [gradeDe, setGradeDe] = useState<ProdutoView | null>(null);
   const [editando, setEditando] = useState<ProdutoView | null>(null);
   const router = useRouter();
@@ -137,6 +139,7 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
 
       {aba === "Visão geral" && (
         <div className="painel-overview">
+          <Vendas r={vendas} irPara={setAba} />
           <section className="painel-hero">
             <div><span>Estúdio da sua loja</span><h2>Sua marca está {loja.status === "ATIVA" ? "no ar" : "em preparação"}.</h2><p>Cuide primeiro do que o cliente percebe: identidade clara, catálogo visual e uma experiência consistente.</p></div>
             <a href={loja.url} target="_blank" rel="noopener" className="btn-primario">Ver loja publicada ↗</a>

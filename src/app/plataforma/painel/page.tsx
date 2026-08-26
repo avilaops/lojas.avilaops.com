@@ -5,6 +5,7 @@ import { lojistaAtual } from "@/lib/sessao";
 import { urlDaLoja, temaDo, identidadeDa } from "@/lib/tenant";
 import PainelLoja from "@/components/painel/PainelLoja";
 import { NOME_PLANO, PRECO_PLANO } from "@/lib/assinatura";
+import { resumoDeVendas } from "@/lib/relatorio";
 
 export const metadata: Metadata = { title: "Painel — Lojas by Avila Ops", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -14,7 +15,7 @@ export default async function PainelPage({ searchParams }: { searchParams: Promi
   if (!loja) redirect("/entrar");
   const { nova } = await searchParams;
 
-  const [produtos, pedidos, contagem, faturas, cupons, categorias, avaliacoes] = await Promise.all([
+  const [produtos, pedidos, contagem, faturas, cupons, categorias, avaliacoes, vendas] = await Promise.all([
     prisma.produto.findMany({ where: { tenantId: loja.id }, include: { categoria: true, _count: { select: { variantes: { where: { ativo: true } } } } }, orderBy: [{ ativo: "desc" }, { nome: "asc" }], take: 500 }),
     prisma.pedido.findMany({ where: { tenantId: loja.id }, include: { itens: true }, orderBy: { criadoEm: "desc" }, take: 200 }),
     prisma.produto.count({ where: { tenantId: loja.id, ativo: true } }),
@@ -22,6 +23,7 @@ export default async function PainelPage({ searchParams }: { searchParams: Promi
     prisma.cupom.findMany({ where: { tenantId: loja.id }, orderBy: { criadoEm: "desc" } }),
     prisma.categoria.findMany({ where: { tenantId: loja.id }, orderBy: [{ ordem: "asc" }, { nome: "asc" }], include: { _count: { select: { produtos: true } } } }),
     prisma.avaliacao.findMany({ where: { tenantId: loja.id }, orderBy: { criadoEm: "desc" }, take: 200, include: { produto: { select: { nome: true } } } }),
+    resumoDeVendas(loja.id),
   ]);
 
   return (
@@ -71,6 +73,7 @@ export default async function PainelPage({ searchParams }: { searchParams: Promi
         }}
         produtos={produtos.map((p) => ({ id: p.id, nome: p.nome, sku: p.sku, precoCentavos: p.precoCentavos, ativo: p.ativo, destaque: p.destaque, categoria: p.categoria?.nome ?? null, imagem: p.imagens[0] ?? null, disponibilidade: p.disponibilidade, estoque: p.estoque, opcoes: p.opcoes, variantes: p._count.variantes }))}
         categorias={categorias.map((c) => ({ id: c.id, nome: c.nome, slug: c.slug, descricao: c.descricao, imagemUrl: c.imagemUrl, ordem: c.ordem, produtos: c._count.produtos }))}
+        vendas={vendas}
         avaliacoes={avaliacoes.map((a) => ({ id: a.id, produtoNome: a.produto.nome, nome: a.nome, nota: a.nota, texto: a.texto, aprovada: a.aprovada, criadoEm: a.criadoEm.toISOString() }))}
         cupons={cupons.map((c) => ({ id: c.id, codigo: c.codigo, tipo: c.tipo, valor: c.valor, minimoCentavos: c.minimoCentavos, usosMax: c.usosMax, usos: c.usos, validoAte: c.validoAte?.toISOString() ?? null, ativo: c.ativo }))}
         pedidos={pedidos.map((p) => ({ id: p.id, numero: p.numero, referencia: p.referencia, status: p.status, clienteNome: p.clienteNome, clienteTelefone: p.clienteTelefone, totalCentavos: p.totalCentavos, meioPagamento: p.meioPagamento, freteNome: p.freteNome, rastreio: p.rastreio, criadoEm: p.criadoEm.toISOString(), itens: p.itens.map((i) => ({ nome: i.nome, quantidade: i.quantidade })) }))}

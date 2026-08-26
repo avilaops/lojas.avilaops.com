@@ -128,3 +128,25 @@ body {
   .aviso-cookies-acoes { flex: 0 0 auto; }
   .aviso-cookies-acoes button { flex: 0 0 auto; padding-inline: 1.25rem; }
 }
+
+/* Resumo de vendas do painel — 30 dias, sem seletor de período. */
+.painel-vendas { display: grid; gap: 1rem; border: 1px solid var(--border); border-radius: 1rem; background: var(--card); padding: 1.25rem 1.5rem; }
+.painel-vendas > header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.5rem; }
+.painel-vendas header small, .painel-vendas-numeros small { display: block; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted-foreground); }
+.painel-vendas header strong { font-size: 1.875rem; font-weight: 700; letter-spacing: -0.02em; }
+.variacao-sobe, .variacao-desce { font-size: 0.8125rem; font-weight: 600; }
+.variacao-sobe { color: #047857; }
+.variacao-desce { color: #b91c1c; }
+.painel-vendas-numeros { display: grid; gap: 0.75rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.painel-vendas-numeros strong { font-size: 1.125rem; font-weight: 600; }
+.painel-grafico { display: flex; align-items: flex-end; gap: 2px; height: 5rem; }
+.painel-grafico span { flex: 1; border-radius: 2px 2px 0 0; background: var(--primary, currentColor); opacity: 0.75; }
+.painel-grafico-legenda { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--muted-foreground); }
+.painel-top { display: grid; gap: 0.5rem; font-size: 0.875rem; }
+.painel-top li { display: flex; align-items: center; gap: 0.625rem; }
+.painel-top b { display: grid; place-items: center; width: 1.5rem; height: 1.5rem; border-radius: 999px; background: var(--muted); font-size: 0.75rem; }
+.painel-top span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.painel-top small { color: var(--muted-foreground); white-space: nowrap; }
+.painel-vazio { font-size: 0.875rem; color: var(--muted-foreground); }
+.painel-acoes-hoje { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; border-top: 1px solid var(--border); padding-top: 1rem; font-size: 0.8125rem; color: var(--muted-foreground); }
+@media (min-width: 640px) { .painel-vendas-numeros { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
