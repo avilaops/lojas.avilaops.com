@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
   const p = await buscarProduto(t.id, slug);
   if (!p) return { title: "Produto" };
-  return { title: p.nome, description: p.descricaoCurta ?? undefined, openGraph: { images: p.imagens.slice(0, 1) } };
+  return { title: p.nome, description: p.descricaoCurta ?? undefined, alternates: { canonical: `/produtos/${p.slug}` }, openGraph: { images: p.imagens.slice(0, 1) } };
 }
 
 export default async function ProdutoPage({ params }: Props) {
@@ -56,6 +56,16 @@ export default async function ProdutoPage({ params }: Props) {
   return (
     <div className="container-loja py-8">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Início", item: urlDaLoja(t) },
+          { "@type": "ListItem", position: 2, name: "Produtos", item: `${urlDaLoja(t)}/produtos` },
+          ...(p.categoria ? [{ "@type": "ListItem", position: 3, name: p.categoria.nome, item: `${urlDaLoja(t)}/categoria/${p.categoria.slug}` }] : []),
+          { "@type": "ListItem", position: p.categoria ? 4 : 3, name: p.nome, item: `${urlDaLoja(t)}/produtos/${p.slug}` },
+        ],
+      }) }} />
       <nav className="mb-4 text-xs text-muted-foreground">
         <Link href="/">Início</Link> / <Link href="/produtos">Produtos</Link>
         {p.categoria && (

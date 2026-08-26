@@ -35,6 +35,10 @@ export async function generateMetadata(): Promise<Metadata> {
     description: t.slogan ?? `Loja virtual ${t.nome}`,
     robots: t.status === "ATIVA" ? undefined : { index: false, follow: false },
     openGraph: { siteName: t.nome, locale: "pt_BR", type: "website" },
+    // Verificação do Search Console / Bing Webmaster, quando o lojista colar o código.
+    ...(t.verificacaoGoogle || t.verificacaoBing
+      ? { verification: { ...(t.verificacaoGoogle ? { google: t.verificacaoGoogle } : {}), ...(t.verificacaoBing ? { other: { "msvalidate.01": t.verificacaoBing } } : {}) } }
+      : {}),
   };
 }
 

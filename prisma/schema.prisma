@@ -82,8 +82,13 @@ model Tenant {
   // ── E-mail (mail.avilaops.com) ────────────────────────────────────────
   emailRemetente String?   // pedidos@dominio — de onde saem as notificações
 
-  // ── Analytics ─────────────────────────────────────────────────────────
+  // ── Analytics e buscadores ────────────────────────────────────────────
   gtmId String?
+  /// Conteúdo da meta de verificação (só o valor, não a tag inteira).
+  verificacaoGoogle String?
+  verificacaoBing   String?
+  /// Último aviso enviado ao IndexNow — mostrado no painel.
+  indexadoEm        DateTime?
 
   /// Log dos passos de provisionamento: { dns: "ok"|"pendente"|"erro:...", mail: ..., n8n: ... }
   provisionamento Json @default("{}")
