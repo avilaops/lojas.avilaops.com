@@ -47,6 +47,8 @@ export default async function PainelPage({ searchParams }: { searchParams: Promi
           logoUrl: loja.logoUrl,
           whatsapp: loja.whatsapp,
           emailContato: loja.emailContato,
+          razaoSocial: loja.razaoSocial,
+          cnpj: loja.cnpj,
           dominioPrincipal: loja.dominioPrincipal,
           bannerUrl: loja.bannerUrl,
           mpPublicKey: loja.mpPublicKey,

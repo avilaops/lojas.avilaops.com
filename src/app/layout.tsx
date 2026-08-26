@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Pixels from "@/components/Pixels";
+import Consentimento from "@/components/Consentimento";
+import { pixelsDo, temRastreio } from "@/lib/pixels";
 import { headers } from "next/headers";
 import "./globals.css";
 import "@avilaops/checkout/tokens.css";
@@ -71,6 +73,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const fonte = fonteGoogleHref(tema);
   const categorias = await listarCategorias(t.id);
   const publico = tenantPublico(t);
+  const pixels = pixelsDo(t);
   const endereco = enderecoDo(t);
 
   const jsonLd = {
@@ -95,13 +98,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       </head>
       <body className="flex min-h-screen flex-col">
-        <Pixels p={{ gtmId: t.gtmId, metaPixelId: t.metaPixelId, ga4Id: t.ga4Id, googleAdsId: t.googleAdsId, tiktokPixelId: t.tiktokPixelId }} />
+        <Pixels p={pixels} />
         <CartProvider slug={t.slug}>
           {t.status === "SUSPENSA" && <AvisoSuspensa />}
           <Header loja={publico} logoUrl={t.logoUrl} categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} />
           <main className="flex-1">{children}</main>
           <Footer tenant={t} categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} />
           {t.whatsapp && <WhatsAppFlutuante numero={t.whatsapp} nome={t.nome} />}
+          <Consentimento ativo={temRastreio(pixels)} />
         </CartProvider>
       </body>
     </html>

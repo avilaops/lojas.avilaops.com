@@ -1,6 +1,9 @@
 import Link from "next/link";
 import type { Tenant } from "@prisma/client";
 import { enderecoCompleto } from "@/lib/tenant";
+import { PreferenciasCookies } from "@/components/Consentimento";
+import { pixelsDo, temRastreio } from "@/lib/pixels";
+import { mascararDocumento } from "@avilaops/checkout";
 
 /**
  * Rodapé. O "Loja por Avila Ops" não é opcional nem negociável por desconto
@@ -9,8 +12,17 @@ import { enderecoCompleto } from "@/lib/tenant";
  */
 export default function Footer({ tenant, categorias }: { tenant: Tenant; categorias: Array<{ slug: string; nome: string }> }) {
   const avila = process.env.AVILAOPS_URL ?? "https://avilaops.com";
-  // Loja só online não expõe onde fica o estoque: endereço é opt-in.
+  // Loja só online não expõe onde fica o estoque no bloco de visita: endereço
+  // é opt-in ali. Na linha de identificação abaixo ele aparece sempre, porque
+  // o Decreto 7.962/2013 exige endereço físico de quem vende pela internet.
   const endereco = tenant.enderecoPublico ? enderecoCompleto(tenant) : "";
+  const enderecoLegal = enderecoCompleto(tenant);
+  const identificacao = [
+    tenant.razaoSocial ?? tenant.nome,
+    tenant.cnpj ? `CNPJ ${mascararDocumento(tenant.cnpj)}` : "",
+    enderecoLegal,
+    tenant.emailContato ?? "",
+  ].filter(Boolean);
   return (
     <footer className="rodape-loja mt-20 border-t border-border bg-muted/50">
       <div className="container-loja grid gap-10 py-14 text-sm md:grid-cols-4">
@@ -49,7 +61,15 @@ export default function Footer({ tenant, categorias }: { tenant: Tenant; categor
       </div>
       <div className="border-t border-border">
         <div className="container-loja flex flex-col items-center justify-between gap-2 py-4 text-xs text-muted-foreground sm:flex-row">
-          <span>© {new Date().getFullYear()} {tenant.nome}. Pagamento seguro · dados protegidos (LGPD).</span>
+          <span>
+            © {new Date().getFullYear()} {identificacao.join(" · ")}
+            {temRastreio(pixelsDo(tenant)) && (
+              <>
+                {" · "}
+                <PreferenciasCookies />
+              </>
+            )}
+          </span>
           <a href={avila} target="_blank" rel="noopener" className="font-semibold hover:text-foreground">
             Loja por Avila Ops
           </a>

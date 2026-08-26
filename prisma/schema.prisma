@@ -55,6 +55,12 @@ model Tenant {
   telefone    String?
   emailContato String?
   instagram   String?
+  /// Identificação do fornecedor — Decreto 7.962/2013, art. 2º. Toda loja na
+  /// internet tem que exibir razão social, CNPJ e endereço em destaque; aqui
+  /// isso é campo do tenant e vai para o rodapé sozinho, sem depender de o
+  /// lojista lembrar de escrever numa página solta.
+  razaoSocial String?
+  cnpj        String?                    // 14 dígitos, sem máscara
   endereco    Json?                      // { logradouro, numero, bairro, cidade, uf, cep }
   /// Exibir o endereço no site (rodapé, contato, JSON-LD). Falso por padrão:
   /// loja só online não expõe onde fica o estoque.

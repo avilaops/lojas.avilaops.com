@@ -99,3 +99,32 @@ body {
 .prosa p + p {
   margin-top: 0.75rem;
 }
+
+/* Aviso de cookies — some assim que o comprador responde, não volta a atrapalhar. */
+.aviso-cookies {
+  position: fixed;
+  inset-inline: 0.75rem;
+  bottom: 0.75rem;
+  z-index: 60;
+  margin-inline: auto;
+  max-width: 46rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: var(--card);
+  padding: 1rem 1.25rem;
+  box-shadow: 0 18px 40px -18px rgb(0 0 0 / 0.45);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+.aviso-cookies a { text-decoration: underline; }
+.aviso-cookies-acoes { display: flex; gap: 0.5rem; }
+.aviso-cookies-acoes button { flex: 1; height: 2.5rem; font-size: 0.8125rem; }
+@media (min-width: 640px) {
+  .aviso-cookies { flex-direction: row; align-items: center; justify-content: space-between; gap: 1.5rem; }
+  .aviso-cookies-acoes { flex: 0 0 auto; }
+  .aviso-cookies-acoes button { flex: 0 0 auto; padding-inline: 1.25rem; }
+}

@@ -26,6 +26,8 @@ export interface LojaView {
   logoUrl: string | null;
   whatsapp: string | null;
   emailContato: string | null;
+  razaoSocial: string | null;
+  cnpj: string | null;
   dominioPrincipal: string | null;
   bannerUrl: string | null;
   mpPublicKey: string | null;
@@ -77,6 +79,7 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
   const [rastreio, setRastreio] = useState<Record<string, string>>({});
   const [tema, setTema] = useState({ corPrimaria: loja.tema.corPrimaria, modo: loja.tema.modo, fonte: loja.tema.fonte, raio: loja.tema.raio, layout: loja.tema.layout });
   const [identidade, setIdentidade] = useState(loja.identidade);
+  const [empresa, setEmpresa] = useState({ razaoSocial: loja.razaoSocial ?? "", cnpj: loja.cnpj ?? "" });
   const [contato, setContato] = useState({ slogan: loja.slogan ?? "", whatsapp: loja.whatsapp ?? "", emailContato: loja.emailContato ?? "", logoUrl: loja.logoUrl ?? "", bannerUrl: loja.bannerUrl ?? "", dominioPrincipal: loja.dominioPrincipal ?? "" });
   const [entrega, setEntrega] = useState({ retiradaNaLoja: loja.retiradaNaLoja, despachoDiasUteis: loja.despachoDiasUteis, freteGratisAcima: loja.freteGratisAcima != null ? String(loja.freteGratisAcima / 100).replace(".", ",") : "", tabela: loja.tabelaFrete.map((f) => ({ ufs: f.ufs.join(","), preco: String(f.preco / 100).replace(".", ","), prazo: String(f.prazoDiasUteis), nome: f.nome ?? "" })) });
   const [mp, setMp] = useState({ publicKey: loja.mpPublicKey ?? "", accessToken: "", webhookSecret: "" });
@@ -406,6 +409,19 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
       )}
 
       {aba === "Conta" && (
+        <>
+        <Secao titulo="Dados da empresa" descricao="Quem vende pela internet é obrigado a exibir razão social, CNPJ e endereço (Decreto 7.962/2013). Preenchendo aqui, isso aparece sozinho no rodapé de todas as páginas e nas políticas da loja.">
+          {(!loja.razaoSocial || !loja.cnpj) && (
+            <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
+              Sua loja ainda não exibe a identificação da empresa. Sem ela, o cliente que reclamar no Procon tem razão de cara — e o Google Ads costuma reprovar o anúncio.
+            </p>
+          )}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Campo label="Razão social" ajuda="O nome que está no cartão CNPJ, não o nome fantasia."><input className={inputClasse} value={empresa.razaoSocial} onChange={(e) => setEmpresa({ ...empresa, razaoSocial: e.target.value })} placeholder="Vedashow Comércio de Vedações Ltda" /></Campo>
+            <Campo label="CNPJ"><input className={inputClasse} value={empresa.cnpj} onChange={(e) => setEmpresa({ ...empresa, cnpj: e.target.value })} placeholder="00.000.000/0001-00" inputMode="numeric" /></Campo>
+          </div>
+          <div><button className="btn-primario" disabled={ocupado} onClick={() => chamar("/api/painel/loja", "PATCH", { razaoSocial: empresa.razaoSocial.trim() || null, cnpj: empresa.cnpj.trim() || null }, "Dados da empresa salvos.")}>Salvar</button></div>
+        </Secao>
         <Secao titulo="Senha do painel">
           <div className="grid gap-4 sm:grid-cols-2">
             <Campo label="Senha atual"><input className={inputClasse} type="password" value={senha.atual} onChange={(e) => setSenha({ ...senha, atual: e.target.value })} /></Campo>
@@ -413,6 +429,7 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
           </div>
           <div><button className="btn-primario" disabled={ocupado || senha.nova.length < 8} onClick={() => chamar("/api/painel/senha", "POST", senha, "Senha alterada.").then(() => setSenha({ atual: "", nova: "" }))}>Trocar senha</button></div>
         </Secao>
+        </>
       )}
     </div>
   );

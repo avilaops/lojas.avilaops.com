@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import { exigirTenant, enderecoDo } from "@/lib/tenant";
+import { exigirTenant, enderecoDo, enderecoCompleto } from "@/lib/tenant";
+import { mascararDocumento } from "@avilaops/checkout";
 
 /**
  * Políticas padronizadas. Texto único da plataforma, preenchido com os dados
@@ -25,6 +26,7 @@ export default async function Politica({ params }: { params: Promise<{ tipo: str
   const e = enderecoDo(t);
   const cidade = e.cidade ? `${e.cidade}${e.uf ? "/" + e.uf : ""}` : "nossa loja";
   const contato = t.emailContato ?? (t.whatsapp ? "WhatsApp da loja" : "nossos canais de atendimento");
+  const empresa = t.razaoSocial ?? t.nome;
 
   const conteudo: Record<Tipo, { titulo: string; paragrafos: string[] }> = {
     envio: {
@@ -46,7 +48,7 @@ export default async function Politica({ params }: { params: Promise<{ tipo: str
     privacidade: {
       titulo: "Política de privacidade",
       paragrafos: [
-        `A ${t.nome} coleta apenas os dados necessários para processar o pedido: nome, CPF/CNPJ, e-mail, telefone e endereço de entrega. Eles são usados para emitir a cobrança, entregar o produto e prestar atendimento, nos termos da Lei 13.709/2018 (LGPD).`,
+        `A ${empresa}${t.cnpj ? `, CNPJ ${mascararDocumento(t.cnpj)}` : ""}, é a controladora dos seus dados e coleta apenas os necessários para processar o pedido: nome, CPF/CNPJ, e-mail, telefone e endereço de entrega. Eles são usados para emitir a cobrança, entregar o produto e prestar atendimento, nos termos da Lei 13.709/2018 (LGPD).`,
         "Dados de cartão não passam por nossos servidores: são tokenizados pelo provedor de pagamento no seu navegador.",
         `Você pode solicitar acesso, correção ou exclusão dos seus dados a qualquer momento pelo ${contato}. Os dados de pedidos são mantidos pelo prazo exigido pela legislação fiscal.`,
         "Esta loja usa cookies estritamente necessários para o funcionamento do carrinho e, quando configurado, ferramentas de medição de audiência.",
@@ -62,6 +64,17 @@ export default async function Politica({ params }: { params: Promise<{ tipo: str
         {c.paragrafos.map((p, i) => (
           <p key={i}>{p}</p>
         ))}
+      </div>
+      {/* Identificação do fornecedor — Decreto 7.962/2013, art. 2º, I a III. */}
+      <div className="mt-8 rounded-xl border border-border bg-muted/40 p-4 text-xs text-muted-foreground">
+        <p className="font-semibold text-foreground">Quem vende</p>
+        <p className="mt-1">
+          {empresa}
+          {t.cnpj && ` · CNPJ ${mascararDocumento(t.cnpj)}`}
+        </p>
+        {enderecoCompleto(t) && <p>{enderecoCompleto(t)}</p>}
+        {t.emailContato && <p>{t.emailContato}</p>}
+        {t.telefone && <p>{t.telefone}</p>}
       </div>
     </div>
   );

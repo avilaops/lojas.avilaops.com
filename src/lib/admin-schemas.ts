@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { validarCnpj } from "@avilaops/checkout";
 import { TemaSchema } from "./tema";
 import { IdentidadeSchema } from "./identidade";
 
@@ -44,6 +45,15 @@ export const TenantEntradaSchema = z.object({
   whatsapp: whatsappBrasil.optional(),
   telefone: z.string().max(30).optional(),
   emailContato: z.string().email().optional(),
+  // Identificação do fornecedor (Decreto 7.962/2013). Guardado sem máscara; o
+  // dígito verificador é conferido aqui para o rodapé nunca exibir CNPJ falso.
+  razaoSocial: z.string().trim().min(2).max(120).nullable().optional(),
+  cnpj: z
+    .string()
+    .transform((v) => v.replace(/\D/g, ""))
+    .refine(validarCnpj, "CNPJ inválido")
+    .nullable()
+    .optional(),
   instagram: z.string().url().optional(),
   endereco: EnderecoSchema.optional(),
   horario: z.string().max(140).optional(),
