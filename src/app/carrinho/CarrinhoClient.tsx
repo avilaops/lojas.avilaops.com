@@ -7,6 +7,7 @@ import { useCart } from "@/components/cart/CartProvider";
 import { formatarBRL } from "@/lib/catalogo";
 import type { TenantPublico } from "@/lib/tenant";
 import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
+import Sugestoes from "@/components/cart/Sugestoes";
 
 export default function CarrinhoClient({ loja, vende }: { loja: TenantPublico; vende: boolean }) {
   const { itens, subtotal, alterar, remover, pronto, cupom, aplicarCupom } = useCart();
@@ -45,6 +46,12 @@ export default function CarrinhoClient({ loja, vende }: { loja: TenantPublico; v
 
   const resumo = itens.map((i) => `${i.quantidade}x ${i.nome}`).join("\n");
 
+  // Barra de frete grátis: mostra o quanto falta em vez de só anunciar o valor
+  // na vitrine. O cupom de frete grátis já resolve sozinho, então some.
+  const alvoFrete = loja.freteGratisAcima;
+  const freteGratisPorCupom = cupom?.tipo === "FRETE_GRATIS";
+  const faltamParaFrete = alvoFrete != null ? alvoFrete - subtotal : null;
+
   return (
     <div className="container-loja grid gap-8 py-8 md:grid-cols-[1fr_320px]">
       <div>
@@ -78,6 +85,7 @@ export default function CarrinhoClient({ loja, vende }: { loja: TenantPublico; v
             </li>
           ))}
         </ul>
+        <Sugestoes />
       </div>
 
       <aside className="h-fit rounded-xl border border-border bg-card p-4">
@@ -98,7 +106,17 @@ export default function CarrinhoClient({ loja, vende }: { loja: TenantPublico; v
           </div>
         )}
         {erroCupom && <p className="mt-1 text-xs text-red-700">{erroCupom}</p>}
-        <p className="mt-1 text-xs text-muted-foreground">Frete calculado no próximo passo.</p>
+        {alvoFrete != null && !freteGratisPorCupom && (
+          <div className="mt-3">
+            <p className="text-xs font-medium">
+              {faltamParaFrete! > 0 ? <>Faltam <b>{formatarBRL(faltamParaFrete!)}</b> para o frete grátis</> : <span className="text-emerald-700">Você garantiu o frete grátis</span>}
+            </p>
+            <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted">
+              <div className="h-full rounded-full bg-emerald-600 transition-all" style={{ width: `${Math.min((subtotal / alvoFrete) * 100, 100)}%` }} />
+            </div>
+          </div>
+        )}
+        <p className="mt-2 text-xs text-muted-foreground">Frete calculado no próximo passo.</p>
         {vende ? (
           <Link href="/checkout" className="btn-primario mt-4 w-full">
             Finalizar compra
