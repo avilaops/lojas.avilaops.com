@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { ProdutoEntradaSchema } from "@/lib/admin-schemas";
 import { importarProdutos } from "@/lib/admin-tenants";
 import { lojistaAtual } from "@/lib/sessao";
+import { avisarBuscadores, caminhosDoProduto } from "@/lib/indexnow";
 import { slugificar } from "@/lib/catalogo";
 import type { Prisma } from "@prisma/client";
 
@@ -12,7 +13,11 @@ export async function PUT(request: Request) {
   if (!loja) return Response.json({ erro: "Sessão expirada." }, { status: 401 });
   const r = z.array(ProdutoEntradaSchema).min(1).max(2000).safeParse(await request.json().catch(() => null));
   if (!r.success) return Response.json({ erro: "Dados inválidos.", detalhes: r.error.flatten() }, { status: 422 });
-  return Response.json(await importarProdutos(loja.id, r.data));
+  const resultado = await importarProdutos(loja.id, r.data);
+  // Indexação garantida: produto novo ou alterado é avisado aos buscadores.
+  const recentes = await prisma.produto.findMany({ where: { tenantId: loja.id, ativo: true }, include: { categoria: true }, orderBy: { atualizadoEm: "desc" }, take: 50 });
+  void avisarBuscadores(loja, recentes.flatMap((p) => caminhosDoProduto(p.slug, p.categoria?.slug)));
+  return Response.json(resultado);
 }
 
 /** DELETE ?id= — desativa (não apaga: pedidos antigos apontam para ele). */
@@ -61,5 +66,6 @@ export async function PATCH(request: Request) {
     where: { id },
     data: { ...campos, ...(slug ? { slug: slugificar(slug) } : {}), ...(categoriaId !== undefined ? { categoriaId } : {}), ...(atributos ? { atributos: atributos as Prisma.InputJsonValue } : {}) },
   });
+  void avisarBuscadores(loja, caminhosDoProduto(atualizado.slug, categoria ?? undefined));
   return Response.json({ id: atualizado.id, slug: atualizado.slug });
 }

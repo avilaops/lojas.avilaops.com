@@ -16,6 +16,7 @@
     "loja:criar": "tsx scripts/criar-loja.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.120.0",
     "@avilaops/checkout": "file:../packages/checkout",
     "@prisma/client": "^6",
     "lucide-react": "^0.477.0",

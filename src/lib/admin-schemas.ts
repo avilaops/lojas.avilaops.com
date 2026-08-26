@@ -49,6 +49,7 @@ export const TenantEntradaSchema = z.object({
   horario: z.string().max(140).optional(),
   cepOrigem: digitos(8, 8).optional(),
   retiradaNaLoja: z.boolean().optional(),
+  enderecoPublico: z.boolean().optional(),
   despachoDiasUteis: z.number().int().min(0).max(30).optional(),
   pesoPadraoKg: z.number().positive().max(100).optional(),
   tabelaFrete: z

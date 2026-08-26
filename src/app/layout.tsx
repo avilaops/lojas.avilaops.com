@@ -78,7 +78,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     ...(t.logoUrl ? { logo: t.logoUrl } : {}),
     ...(identidade.diferencial ? { description: identidade.diferencial } : {}),
     ...(t.telefone ? { telephone: t.telefone } : {}),
-    ...(endereco.cidade
+    ...(t.enderecoPublico && endereco.cidade
       ? { address: { "@type": "PostalAddress", streetAddress: [endereco.logradouro, endereco.numero].filter(Boolean).join(", "), addressLocality: endereco.cidade, addressRegion: endereco.uf, postalCode: endereco.cep, addressCountry: "BR" } }
       : {}),
   };

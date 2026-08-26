@@ -4,7 +4,7 @@ import { cloneElement, isValidElement, useId, type ReactElement, type ReactNode 
 
 /** Campos do painel — uma aparência só para wizard e painel. */
 
-export function Campo({ label, ajuda, erro, obrigatorio, children }: { label: string; ajuda?: string; erro?: string; obrigatorio?: boolean; children: ReactNode }) {
+export function Campo({ label, ajuda, erro, obrigatorio, acao, children }: { label: string; ajuda?: string; erro?: string; obrigatorio?: boolean; acao?: ReactNode; children: ReactNode }) {
   const id = useId();
   const rotuloId = `${id}-rotulo`;
   const ajudaId = `${id}-ajuda`;
@@ -16,9 +16,12 @@ export function Campo({ label, ajuda, erro, obrigatorio, children }: { label: st
     : children;
   return (
     <div className={`block ${erro ? "campo-invalido" : ""}`} {...(!controleDireto ? { role: "group", "aria-labelledby": rotuloId } : {})}>
-      {controleDireto
-        ? <label htmlFor={controleId} id={rotuloId} className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}{obrigatorio && <b aria-hidden="true"> *</b>}</label>
-        : <span id={rotuloId} className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}{obrigatorio && <b aria-hidden="true"> *</b>}</span>}
+      <span className="flex flex-wrap items-center justify-between gap-2">
+        {controleDireto
+          ? <label htmlFor={controleId} id={rotuloId} className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}{obrigatorio && <b aria-hidden="true"> *</b>}</label>
+          : <span id={rotuloId} className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}{obrigatorio && <b aria-hidden="true"> *</b>}</span>}
+        {acao}
+      </span>
       <div className="mt-1">{conteudo}</div>
       {erro ? <span id={ajudaId} className="campo-erro" role="alert">{erro}</span> : ajuda && <span id={ajudaId} className="mt-1 block text-xs text-muted-foreground">{ajuda}</span>}
     </div>

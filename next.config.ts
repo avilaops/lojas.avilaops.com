@@ -8,7 +8,12 @@ import type { NextConfig } from "next";
  * servido dinamicamente: o `Host` da requisição decide qual loja renderizar.
  * Criar uma loja nova é uma linha no banco, não um build.
  */
+// Version skew: quando um deploy acontece com a aba aberta, os IDs de chunk e
+// de Server Action mudam. O deploymentId faz o Next devolver 404 previsível
+// nesses casos (em vez de erro silencioso) e o cliente recarrega — ver
+// ErroDeVersao em src/app/layout.tsx.
 const nextConfig: NextConfig = {
+  deploymentId: process.env.LOJAS_DEPLOY_ID || undefined,
   output: "standalone",
   // packages/checkout fica fora desta pasta; a raiz do bundler é o monorepo.
   turbopack: { root: path.join(__dirname, "..") },

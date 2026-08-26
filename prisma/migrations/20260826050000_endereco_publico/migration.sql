@@ -1,0 +1,1 @@
+ALTER TABLE "Tenant" ADD COLUMN "enderecoPublico" BOOLEAN NOT NULL DEFAULT false;

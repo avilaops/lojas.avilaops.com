@@ -85,3 +85,39 @@ export const PERSONALIDADES = [
   ["sofisticada", "Sofisticada"], ["acolhedora", "Acolhedora"], ["ousada", "Ousada"],
   ["minimalista", "Minimalista"], ["artesanal", "Artesanal"], ["tecnologica", "Tecnológica"],
 ] as const;
+
+const PUBLICO_POR_SEGMENTO: Partial<Record<IdentidadeLoja["segmento"], string>> = {
+  moda: "Pessoas que querem se vestir bem sem complicação, valorizam caimento, tecido honesto e troca fácil.",
+  beleza: "Quem cuida da pele e do cabelo com constância e prefere produto que funciona a promessa de milagre.",
+  casa: "Famílias montando ou renovando a casa, que procuram peças bonitas, resistentes e com preço justo.",
+  alimentos: "Quem valoriza sabor de verdade, procedência clara e entrega no tempo certo.",
+  saude: "Pessoas que levam a saúde a sério e querem orientação junto com o produto.",
+  tecnologia: "Quem pesquisa antes de comprar, compara especificação e quer suporte de gente que entende.",
+  automotivo: "Motoristas e oficinas que precisam da peça certa, na hora certa, sem erro de aplicação.",
+  agro: "Produtores e revendas que dependem do equipamento funcionando e não podem esperar.",
+  servicos: "Clientes que preferem resolver com quem responde rápido e cumpre o combinado.",
+  outro: "Pessoas que valorizam atendimento próximo, preço justo e entrega no prazo.",
+};
+
+const DIFERENCIAL_POR_PERSONALIDADE: Record<IdentidadeLoja["personalidade"][number], string> = {
+  sofisticada: "Curadoria feita com critério: cada item é escolhido pelo acabamento e pela durabilidade, não pelo volume.",
+  acolhedora: "Atendimento de gente: você fala com quem conhece o produto, tira dúvida antes de comprar e depois da entrega.",
+  ousada: "Novidade primeiro: a gente traz o que ainda não está em todo lugar e explica por que vale a pena.",
+  minimalista: "Catálogo enxuto e honesto: menos opções, todas testadas, para você decidir rápido e sem arrependimento.",
+  artesanal: "Feito com cuidado e em pequena escala, com quem produz por perto e material que dá para rastrear.",
+  tecnologica: "Especialização técnica: a gente indica a aplicação certa e resolve o problema, não só vende a peça.",
+};
+
+/**
+ * Rascunho local das duas respostas de essência. Serve de fallback quando não
+ * há chave de LLM e de ponto de partida quando há — o lojista sempre edita.
+ */
+export function sugerirEssencia(nome: string, segmento?: string, personalidade?: string[]): { publico: string; diferencial: string } {
+  const seg = (SegmentoSchema.safeParse(segmento).success ? segmento : "outro") as IdentidadeLoja["segmento"];
+  const p = personalidade?.find((x) => PersonalidadeSchema.safeParse(x).success) as IdentidadeLoja["personalidade"][number] | undefined;
+  const marca = nome.trim() || "a loja";
+  return {
+    publico: (PUBLICO_POR_SEGMENTO[seg] ?? PUBLICO_POR_SEGMENTO.outro!).slice(0, 240),
+    diferencial: `${DIFERENCIAL_POR_PERSONALIDADE[p ?? "acolhedora"]} É assim que ${marca} trabalha.`.slice(0, 300),
+  };
+}

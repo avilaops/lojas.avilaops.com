@@ -56,6 +56,9 @@ model Tenant {
   emailContato String?
   instagram   String?
   endereco    Json?                      // { logradouro, numero, bairro, cidade, uf, cep }
+  /// Exibir o endereço no site (rodapé, contato, JSON-LD). Falso por padrão:
+  /// loja só online não expõe onde fica o estoque.
+  enderecoPublico Boolean @default(false)
   horario     String?
 
   // ── Entrega ──────────────────────────────────────────────────────────

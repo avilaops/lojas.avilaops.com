@@ -9,7 +9,8 @@ import { enderecoCompleto } from "@/lib/tenant";
  */
 export default function Footer({ tenant, categorias }: { tenant: Tenant; categorias: Array<{ slug: string; nome: string }> }) {
   const avila = process.env.AVILAOPS_URL ?? "https://avilaops.com";
-  const endereco = enderecoCompleto(tenant);
+  // Loja só online não expõe onde fica o estoque: endereço é opt-in.
+  const endereco = tenant.enderecoPublico ? enderecoCompleto(tenant) : "";
   return (
     <footer className="rodape-loja mt-20 border-t border-border bg-muted/50">
       <div className="container-loja grid gap-10 py-14 text-sm md:grid-cols-4">

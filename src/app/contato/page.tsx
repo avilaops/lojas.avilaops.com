@@ -6,7 +6,7 @@ export const metadata: Metadata = { title: "Contato" };
 
 export default async function Contato() {
   const t = await exigirTenant();
-  const endereco = enderecoCompleto(t);
+  const endereco = t.enderecoPublico ? enderecoCompleto(t) : "";
   return (
     <div className="container-loja max-w-2xl py-10">
       <h1 className="text-2xl font-bold">Contato</h1>

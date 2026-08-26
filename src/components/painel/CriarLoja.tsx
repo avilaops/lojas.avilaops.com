@@ -44,7 +44,8 @@ export default function CriarLoja({ planoInicial }: { planoInicial: "SITE" | "LO
     personalidade: ["sofisticada"] as Personalidade[], tomDeVoz: "direto" as DiagnosticoMarca["tomDeVoz"],
     objetivo: "vender" as DiagnosticoMarca["objetivo"], estiloFotografico: "produto" as DiagnosticoMarca["estiloFotografico"],
     cep: "", logradouro: "", numero: "", bairro: "", cidade: "", uf: "", horario: "",
-    retiradaNaLoja: true, despachoDiasUteis: 1 as number | string, dominioPrincipal: "", senha: "", senha2: "",
+    retiradaNaLoja: false,
+    enderecoPublico: false, despachoDiasUteis: 1 as number | string, dominioPrincipal: "", senha: "", senha2: "",
   });
   const [csv, setCsv] = useState<{ nome: string; produtos: Array<Record<string, unknown>>; erros: string[] } | null>(null);
 
@@ -63,6 +64,38 @@ export default function CriarLoja({ planoInicial }: { planoInicial: "SITE" | "LO
 
   function limparAviso() { setErro(null); setDetalhesErro([]); }
   function propriedadesCampo(campo: CampoId) { return { "aria-invalid": Boolean(errosCampos[campo]) } as const; }
+
+  const [sugerindo, setSugerindo] = useState(false);
+  const [origemSugestao, setOrigemSugestao] = useState<string | null>(null);
+
+  /**
+   * Preenche as duas respostas de essência. O servidor usa IA quando há chave
+   * configurada e cai num rascunho local quando não há — nos dois casos o texto
+   * entra como sugestão editável, nunca como verdade sobre o negócio.
+   */
+  async function sugerirEssenciaIA() {
+    if (!f.nome.trim()) return;
+    setSugerindo(true);
+    try {
+      const r = await fetch("/api/painel/sugerir-essencia", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ nome: f.nome, segmento: f.segmento, personalidade: f.personalidade, contexto: [f.publico, f.diferencial].filter(Boolean).join(" | ") || undefined }),
+      });
+      const d = await r.json();
+      if (!r.ok) return;
+      setF((a) => ({ ...a, publico: d.publico ?? a.publico, diferencial: d.diferencial ?? a.diferencial }));
+      setOrigemSugestao(d.origem === "ia" ? "Rascunho criado com IA — ajuste com suas palavras." : "Rascunho automático — ajuste com suas palavras.");
+    } finally {
+      setSugerindo(false);
+    }
+  }
+
+  const botaoSugerir = (
+    <button type="button" className="text-[11px] font-semibold uppercase tracking-wide text-primary underline-offset-2 hover:underline disabled:opacity-50" disabled={sugerindo || !f.nome.trim()} onClick={sugerirEssenciaIA}>
+      {sugerindo ? "escrevendo…" : "✦ preencher com IA"}
+    </button>
+  );
 
   function alternarPersonalidade(valor: Personalidade) {
     setF((atual) => {
@@ -147,7 +180,7 @@ export default function CriarLoja({ planoInicial }: { planoInicial: "SITE" | "LO
         nome: f.nome, slogan: f.slogan || direcao.identidade.assinatura, whatsapp: f.whatsapp || undefined, instagram: f.instagram || undefined,
         emailContato: f.emailContato, senha: f.senha, plano: f.plano, identidade: direcao.identidade, tema: direcao.tema,
         endereco: { cep: f.cep || undefined, logradouro: f.logradouro || undefined, numero: f.numero || undefined, bairro: f.bairro || undefined, cidade: f.cidade || undefined, uf: f.uf || undefined },
-        cepOrigem: f.cep || undefined, horario: f.horario || undefined, retiradaNaLoja: f.retiradaNaLoja, despachoDiasUteis: Number(f.despachoDiasUteis),
+        cepOrigem: f.cep || undefined, horario: f.horario || undefined, retiradaNaLoja: f.retiradaNaLoja, enderecoPublico: f.enderecoPublico, despachoDiasUteis: Number(f.despachoDiasUteis),
         dominioPrincipal: f.dominioPrincipal || undefined, produtos: csv?.produtos ?? [],
       }) });
       const d = await r.json();
@@ -165,14 +198,24 @@ export default function CriarLoja({ planoInicial }: { planoInicial: "SITE" | "LO
           setDetalhesErro(camposApi.map((item) => `${item.rotulo ?? "Informação"}: ${item.mensagem ?? "revise o valor informado"}`));
           setErro(d?.erro ?? "Algumas informações precisam ser corrigidas.");
         } else {
+          if (r.status === 409) {
+            setErro(`${d?.erro ?? "Já existe uma loja com este e-mail."} Vamos te levar para a entrada.`);
+            setTimeout(() => window.location.assign("/entrar"), 2500);
+            return;
+          }
           setErro(d?.erro ?? "Não foi possível criar a loja.");
           setDetalhesErro([]);
         }
         return;
       }
-      router.push("/painel?nova=1");
-      router.refresh();
+      // Navegação dura: imune a version skew (um deploy com a aba aberta troca os
+      // IDs de chunk/Server Action e derrubaria um router.push).
+      window.location.assign("/painel?nova=1");
     } catch {
+      // A loja pode ter sido criada mesmo com a resposta se perdendo no caminho.
+      // Antes de acusar erro (e induzir a pessoa a tentar de novo), perguntamos.
+      const sessao = await fetch("/api/painel/sessao").then((x) => x.json()).catch(() => null);
+      if (sessao?.logado) return window.location.assign("/painel?nova=1");
       setErro("Não conseguimos falar com o servidor agora. Seus dados continuam nesta tela; tente novamente em instantes.");
       setDetalhesErro([]);
     } finally { setOcupado(false); }
@@ -199,8 +242,9 @@ export default function CriarLoja({ planoInicial }: { planoInicial: "SITE" | "LO
     </Secao>}
 
     {passo === 1 && <Secao titulo="Defina a essência" descricao="Não precisa escrever como publicitário. Responda com suas palavras e nós transformamos isso em direção de marca.">
-      <Campo label="Quem você quer conquistar?" obrigatorio erro={errosCampos.publico} ajuda={`${f.publico.length}/240 · Ex.: pessoas que valorizam praticidade, qualidade e bom atendimento.`}><textarea {...propriedadesCampo("publico")} className={`${inputClasse} h-24 py-3`} value={f.publico} maxLength={240} onChange={(e) => set("publico",e.target.value)} placeholder="Quem costuma comprar de você e o que essa pessoa valoriza?" /></Campo>
-      <Campo label="Por que escolher sua marca?" obrigatorio erro={errosCampos.diferencial} ajuda={`${f.diferencial.length}/300 · Pode ser atendimento, curadoria, prazo, qualidade ou especialização.`}><textarea {...propriedadesCampo("diferencial")} className={`${inputClasse} h-24 py-3`} value={f.diferencial} maxLength={300} onChange={(e) => set("diferencial",e.target.value)} placeholder="O que você faz melhor ou de um jeito diferente?" /></Campo>
+      <Campo label="Quem você quer conquistar?" acao={botaoSugerir} obrigatorio erro={errosCampos.publico} ajuda={`${f.publico.length}/240 · Ex.: pessoas que valorizam praticidade, qualidade e bom atendimento.`}><textarea {...propriedadesCampo("publico")} className={`${inputClasse} h-24 py-3`} value={f.publico} maxLength={240} onChange={(e) => set("publico",e.target.value)} placeholder="Quem costuma comprar de você e o que essa pessoa valoriza?" /></Campo>
+      <Campo label="Por que escolher sua marca?" acao={botaoSugerir} obrigatorio erro={errosCampos.diferencial} ajuda={`${f.diferencial.length}/300 · Pode ser atendimento, curadoria, prazo, qualidade ou especialização.`}><textarea {...propriedadesCampo("diferencial")} className={`${inputClasse} h-24 py-3`} value={f.diferencial} maxLength={300} onChange={(e) => set("diferencial",e.target.value)} placeholder="O que você faz melhor ou de um jeito diferente?" /></Campo>
+      {origemSugestao && <p className="rounded-lg bg-primary/10 p-3 text-xs">{origemSugestao}</p>}
       <Campo label="Personalidade" ajuda="Escolha até três. A primeira selecionada define a direção principal."><div className="brand-choice-grid three">{PERSONALIDADES.map(([v,n]) => <button type="button" key={v} aria-label={n} onClick={() => alternarPersonalidade(v)} className={f.personalidade.includes(v) ? "selecionado" : ""} aria-pressed={f.personalidade.includes(v)}><strong>{n}</strong></button>)}</div></Campo>
       <Campo label="Tom de voz"><div className="brand-choice-grid two">{VOZES.map(([v,n,d]) => <button type="button" key={v} onClick={() => set("tomDeVoz",v)} className={f.tomDeVoz === v ? "selecionado" : ""} aria-pressed={f.tomDeVoz === v}><strong>{n}</strong><small>{d}</small></button>)}</div></Campo>
       <div className="grid gap-4 sm:grid-cols-2"><Campo label="Objetivo principal"><select className={inputClasse} value={f.objetivo} onChange={(e) => set("objetivo",e.target.value)}><option value="vender">Vender agora</option><option value="posicionar">Fortalecer a marca</option><option value="captar">Gerar contatos</option><option value="lancar">Lançar novidade</option></select></Campo><Campo label="Estilo das fotos"><select className={inputClasse} value={f.estiloFotografico} onChange={(e) => set("estiloFotografico",e.target.value)}>{FOTOS.map(([v,n]) => <option value={v} key={v}>{n}</option>)}</select></Campo></div>
@@ -215,10 +259,11 @@ export default function CriarLoja({ planoInicial }: { planoInicial: "SITE" | "LO
 
     {passo === 3 && <Secao titulo="Operação e presença" descricao="Tudo nesta etapa é opcional agora. Use apenas o que fizer sentido para retirada, entrega ou presença local.">
       <div className="brand-optional-note"><span>Você pode completar depois</span><p>Se deixar o endereço vazio, a loja será publicada normalmente com um endereço provisório.</p></div>
-      <div className="grid gap-4 sm:grid-cols-3"><Campo label="CEP" erro={errosCampos.cep} ajuda="Ao sair do campo, buscamos o endereço."><input {...propriedadesCampo("cep")} className={inputClasse} value={f.cep} onChange={(e) => set("cep",e.target.value)} onBlur={(e) => buscarCep(e.target.value)} inputMode="numeric" placeholder="00000-000" autoComplete="postal-code" /></Campo><Campo label="Cidade"><input className={inputClasse} value={f.cidade} onChange={(e) => set("cidade",e.target.value)} autoComplete="address-level2" /></Campo><Campo label="UF" erro={errosCampos.uf}><input {...propriedadesCampo("uf")} className={inputClasse} value={f.uf} maxLength={2} onChange={(e) => set("uf",e.target.value.toUpperCase())} placeholder="SP" autoComplete="address-level1" /></Campo></div>
+      <div className="grid gap-4 sm:grid-cols-3"><Campo label="CEP de origem" erro={errosCampos.cep} ajuda="Opcional, usado só para calcular o frete. Ao sair do campo, buscamos o endereço."><input {...propriedadesCampo("cep")} className={inputClasse} value={f.cep} onChange={(e) => set("cep",e.target.value)} onBlur={(e) => buscarCep(e.target.value)} inputMode="numeric" placeholder="00000-000" autoComplete="postal-code" /></Campo><Campo label="Cidade"><input className={inputClasse} value={f.cidade} onChange={(e) => set("cidade",e.target.value)} autoComplete="address-level2" /></Campo><Campo label="UF" erro={errosCampos.uf}><input {...propriedadesCampo("uf")} className={inputClasse} value={f.uf} maxLength={2} onChange={(e) => set("uf",e.target.value.toUpperCase())} placeholder="SP" autoComplete="address-level1" /></Campo></div>
       <div className="grid gap-4 sm:grid-cols-[2fr_1fr_1fr]"><Campo label="Rua"><input className={inputClasse} value={f.logradouro} onChange={(e) => set("logradouro",e.target.value)} autoComplete="street-address" /></Campo><Campo label="Número"><input className={inputClasse} value={f.numero} onChange={(e) => set("numero",e.target.value)} /></Campo><Campo label="Bairro"><input className={inputClasse} value={f.bairro} onChange={(e) => set("bairro",e.target.value)} /></Campo></div>
       <Campo label="Horário de atendimento" ajuda="Como aparecerá para o cliente."><input className={inputClasse} value={f.horario} maxLength={140} onChange={(e) => set("horario",e.target.value)} placeholder="Segunda a sexta, das 8h às 18h" /></Campo>
-      <div className="grid gap-4 sm:grid-cols-2"><label className="brand-checkbox"><input type="checkbox" checked={f.retiradaNaLoja} onChange={(e) => set("retiradaNaLoja",e.target.checked)} /><span><strong>Permitir retirada na loja</strong><small>Mostra esta opção ao cliente quando houver endereço.</small></span></label><Campo label="Despacho em dias úteis" erro={errosCampos.despachoDiasUteis} ajuda="Quanto tempo você precisa para preparar o pedido."><input {...propriedadesCampo("despachoDiasUteis")} className={inputClasse} type="number" min={0} max={30} value={f.despachoDiasUteis} onChange={(e) => set("despachoDiasUteis",e.target.value)} /></Campo></div>
+      <div className="grid gap-4 sm:grid-cols-2"><label className="brand-checkbox"><input type="checkbox" checked={f.retiradaNaLoja} onChange={(e) => { set("retiradaNaLoja", e.target.checked); if (e.target.checked) set("enderecoPublico", true); }} /><span><strong>Permitir retirada na loja</strong><small>Só marque se você atende no balcão — exige mostrar o endereço.</small></span></label>
+        <label className="brand-checkbox"><input type="checkbox" checked={f.enderecoPublico} onChange={(e) => set("enderecoPublico", e.target.checked)} /><span><strong>Exibir endereço no site</strong><small>Desligado por padrão. Loja só online não precisa mostrar onde fica o estoque.</small></span></label><Campo label="Despacho em dias úteis" erro={errosCampos.despachoDiasUteis} ajuda="Quanto tempo você precisa para preparar o pedido."><input {...propriedadesCampo("despachoDiasUteis")} className={inputClasse} type="number" min={0} max={30} value={f.despachoDiasUteis} onChange={(e) => set("despachoDiasUteis",e.target.value)} /></Campo></div>
       <Campo label="Domínio próprio" erro={errosCampos.dominioPrincipal} ajuda="Opcional. Não use https://. O endereço provisório funciona imediatamente."><input {...propriedadesCampo("dominioPrincipal")} className={inputClasse} value={f.dominioPrincipal} onChange={(e) => set("dominioPrincipal",e.target.value.toLowerCase())} placeholder="sualoja.com.br" autoCapitalize="none" /></Campo>
     </Secao>}
 
