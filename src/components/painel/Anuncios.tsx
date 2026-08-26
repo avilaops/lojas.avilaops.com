@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { DiagnosticoFeed } from "@/lib/catalogo";
 import { Campo, Secao, inputClasse } from "./campos";
 
 export interface PixelsView {
@@ -17,7 +18,8 @@ export interface PixelsView {
  * e-commerce sozinha. Sem id, nenhum script é carregado — loja que não anuncia
  * não carrega peso nem cookie de rastreio.
  */
-export default function Anuncios({ pixels, chamar, ocupado }: { pixels: PixelsView; chamar: (c: string, m: string, b?: unknown, s?: string) => Promise<unknown>; ocupado: boolean }) {
+export default function Anuncios({ pixels, catalogo, feedUrl, chamar, ocupado }: { pixels: PixelsView; catalogo: DiagnosticoFeed; feedUrl: string; chamar: (c: string, m: string, b?: unknown, s?: string) => Promise<unknown>; ocupado: boolean }) {
+  const [copiado, setCopiado] = useState(false);
   const [f, setF] = useState({
     metaPixelId: pixels.metaPixelId ?? "",
     ga4Id: pixels.ga4Id ?? "",
@@ -75,6 +77,47 @@ export default function Anuncios({ pixels, chamar, ocupado }: { pixels: PixelsVi
           </tbody>
         </table>
         <p className="text-xs text-muted-foreground">Valores em BRL, com id, nome e quantidade de cada item. A compra é contada uma vez só, mesmo que a pessoa recarregue a página do pedido.</p>
+      </Secao>
+
+      <Secao titulo="Catálogo para anúncios" descricao="Um endereço só, aceito pelo Google Merchant Center, pelo Meta Commerce Manager (Facebook e Instagram) e pelo TikTok. Cadastre uma vez: ele se atualiza sozinho a cada 15 minutos.">
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <input className={`${inputClasse} font-mono text-xs`} value={feedUrl} readOnly onFocus={(e) => e.currentTarget.select()} />
+          <button
+            className="btn-secundario"
+            onClick={() => {
+              navigator.clipboard?.writeText(feedUrl).then(() => {
+                setCopiado(true);
+                setTimeout(() => setCopiado(false), 2000);
+              });
+            }}
+          >
+            {copiado ? "Copiado" : "Copiar"}
+          </button>
+        </div>
+
+        <p className="text-sm">
+          <b>{catalogo.prontos}</b> de <b>{catalogo.total}</b> produtos ativos entram no catálogo.
+          {catalogo.prontos < catalogo.total && " Os demais são recusados por falta de informação obrigatória."}
+        </p>
+
+        {catalogo.problemas.length > 0 && (
+          <ul className="grid gap-1 text-sm">
+            {catalogo.problemas.map((p) => (
+              <li key={p.nome} className="flex flex-wrap items-baseline gap-x-2 border-t border-border py-1.5">
+                <span className="flex-1 truncate">{p.nome}</span>
+                {p.bloqueios.map((b) => (
+                  <span key={b} className="rounded bg-red-100 px-1.5 py-0.5 text-xs text-red-800">falta {b}</span>
+                ))}
+                {p.avisos.map((a) => (
+                  <span key={a} className="rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-900">sem {a}</span>
+                ))}
+              </li>
+            ))}
+          </ul>
+        )}
+        <p className="text-xs text-muted-foreground">
+          Vermelho barra o produto no catálogo. Amarelo não barra, mas anúncio sem marca e sem código de barras aparece menos e disputa preço com quem tem.
+        </p>
       </Secao>
     </>
   );

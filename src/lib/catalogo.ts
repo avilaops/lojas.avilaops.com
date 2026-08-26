@@ -126,3 +126,51 @@ export function slugificar(texto: string): string {
     .replace(/^-+|-+$/g, "")
     .slice(0, 80);
 }
+
+export interface ProblemaDeFeed {
+  nome: string;
+  /** O que impede o produto de entrar no catálogo de anúncios. */
+  bloqueios: string[];
+  /** O que não impede, mas faz o anúncio render menos. */
+  avisos: string[];
+}
+
+export interface DiagnosticoFeed {
+  total: number;
+  prontos: number;
+  problemas: ProblemaDeFeed[];
+}
+
+/**
+ * O mesmo feed serve Google Merchant, Meta Commerce Manager e TikTok — os três
+ * leem RSS 2.0 com namespace `g:`. O que costuma dar errado não é o formato, é
+ * produto sem foto ou sem descrição, que a plataforma reprova em silêncio.
+ * Aqui o lojista vê a lista antes de subir o catálogo.
+ */
+export async function diagnosticoDoFeed(tenantId: string): Promise<DiagnosticoFeed> {
+  const produtos = await prisma.produto.findMany({
+    where: { tenantId, ativo: true },
+    select: { nome: true, imagens: true, descricao: true, descricaoCurta: true, precoCentavos: true, marca: true, gtin: true, categoriaId: true },
+    orderBy: { nome: "asc" },
+    take: 1000,
+  });
+
+  const problemas: ProblemaDeFeed[] = [];
+  let prontos = 0;
+  for (const p of produtos) {
+    const bloqueios: string[] = [];
+    const avisos: string[] = [];
+    if (!p.imagens.length) bloqueios.push("foto");
+    if (!(p.descricaoCurta ?? p.descricao)) bloqueios.push("descrição");
+    if (p.precoCentavos <= 0) bloqueios.push("preço");
+    if (!p.marca) avisos.push("marca");
+    if (!p.categoriaId) avisos.push("categoria");
+    if (!p.gtin) avisos.push("código de barras");
+    if (!bloqueios.length) prontos++;
+    if (bloqueios.length || avisos.length) problemas.push({ nome: p.nome, bloqueios, avisos });
+  }
+
+  // Quem trava o catálogo aparece primeiro; a lista é para agir, não para ler inteira.
+  problemas.sort((a, b) => b.bloqueios.length - a.bloqueios.length);
+  return { total: produtos.length, prontos, problemas: problemas.slice(0, 12) };
+}

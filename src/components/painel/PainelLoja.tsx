@@ -14,6 +14,7 @@ import AvaliacoesPainel, { type AvaliacaoPainelView } from "./AvaliacoesPainel";
 import Buscadores from "./Buscadores";
 import Vendas from "./Vendas";
 import type { ResumoVendas } from "@/lib/relatorio";
+import type { DiagnosticoFeed } from "@/lib/catalogo";
 import Anuncios, { type PixelsView } from "./Anuncios";
 
 export interface LojaView {
@@ -56,7 +57,7 @@ const ASSINATURA: Record<string, { rotulo: string; classe: string }> = {
   CANCELADA: { rotulo: "Cancelada", classe: "bg-red-100 text-red-800" },
 };
 
-export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias, avaliacoes, vendas }: { loja: LojaView; produtos: ProdutoView[]; pedidos: PedidoView[]; cupons: CupomView[]; categorias: CategoriaView[]; avaliacoes: AvaliacaoPainelView[]; vendas: ResumoVendas }) {
+export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias, avaliacoes, vendas, catalogo }: { loja: LojaView; produtos: ProdutoView[]; pedidos: PedidoView[]; cupons: CupomView[]; categorias: CategoriaView[]; avaliacoes: AvaliacaoPainelView[]; vendas: ResumoVendas; catalogo: DiagnosticoFeed }) {
   const [gradeDe, setGradeDe] = useState<ProdutoView | null>(null);
   const [editando, setEditando] = useState<ProdutoView | null>(null);
   const router = useRouter();
@@ -226,7 +227,7 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
 
       {aba === "Buscadores" && <Buscadores chamar={chamar} ocupado={ocupado} />}
 
-      {aba === "Anúncios" && <Anuncios pixels={loja.pixels} chamar={chamar} ocupado={ocupado} />}
+      {aba === "Anúncios" && <Anuncios pixels={loja.pixels} catalogo={catalogo} feedUrl={`${loja.url}/feed/merchant.xml`} chamar={chamar} ocupado={ocupado} />}
 
       {aba === "Pedidos" && (
         <Secao titulo="Pedidos">
