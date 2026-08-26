@@ -1,0 +1,11 @@
+# Imagem de runtime: build Next (standalone) feito na máquina do Nicolas, chega
+# pronto em standalone.tgz. A base (node+openssl+sharp) é a imagem lojas-base,
+# construída uma vez com Dockerfile.base — deploy não baixa nem instala nada.
+FROM lojas-base
+ENV NODE_ENV=production PORT=3080 HOSTNAME=0.0.0.0 PRISMA_QUERY_ENGINE_LIBRARY=/app/lojas.avilaops.com/node_modules/.prisma/client/libquery_engine-debian-openssl-3.0.x.so.node
+WORKDIR /app
+ADD standalone.tgz /app/
+# sharp linux (da base) por cima do que veio do Windows; alias @prisma/client-<hash> do Turbopack.
+RUN rm -rf /app/lojas.avilaops.com/node_modules/sharp /app/lojas.avilaops.com/node_modules/@img && cp -r /opt/sharp/node_modules/sharp /app/lojas.avilaops.com/node_modules/sharp && cp -r /opt/sharp/node_modules/@img /app/lojas.avilaops.com/node_modules/@img && cd /app/lojas.avilaops.com/node_modules/@prisma && for h in $(grep -rhoE "@prisma/client-[0-9a-f]{16}" /app/lojas.avilaops.com/.next/server/chunks | sort -u | sed "s#@prisma/##"); do ln -sfn client "$h"; done
+EXPOSE 3080
+CMD ["node", "lojas.avilaops.com/server.js"]

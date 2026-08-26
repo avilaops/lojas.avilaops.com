@@ -1,0 +1,14 @@
+services:
+  lojas:
+    build: .
+    pull_policy: never
+    image: lojas-avilaops:latest
+    container_name: lojas-avilaops
+    restart: always
+    # Rede bridge padrao (docker0): e por ela que o Postgres do host escuta (172.17.0.1).
+    network_mode: bridge
+    env_file: [.env]
+    environment: [UPLOADS_DIR=/app/uploads]
+    volumes: ["/opt/lojas/uploads:/app/uploads"]
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    ports: ["127.0.0.1:3080:3080"]

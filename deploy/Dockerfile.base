@@ -1,0 +1,6 @@
+# Camada base da plataforma de lojas: node + openssl + sharp linux-x64.
+# Construída UMA vez (docker build -f Dockerfile.base -t lojas-base .) e
+# reaproveitada em todo deploy — o app só troca o standalone.tgz por cima.
+FROM node:22-bookworm-slim
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
+RUN mkdir -p /opt/sharp && cd /opt/sharp && npm init -y >/dev/null 2>&1 && npm install --no-save --os=linux --cpu=x64 --libc=glibc sharp@0.34.5 >/dev/null 2>&1 && ls node_modules/@img
