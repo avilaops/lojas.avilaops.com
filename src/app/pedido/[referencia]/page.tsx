@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { exigirTenant } from "@/lib/tenant";
 import { prisma } from "@/lib/db";
 import { formatarBRL } from "@/lib/catalogo";
+import Rastreio from "@/components/Rastreio";
 import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
 import EventoCompra from "@/components/EventoCompra";
 
@@ -63,7 +64,7 @@ export default async function PedidoPage({ params }: { params: Promise<{ referen
         </li>
       </ul>
 
-      {pedido.rastreio && <p className="mt-4 text-sm">Rastreio: <strong>{pedido.rastreio}</strong></p>}
+      {pedido.rastreio && <Rastreio codigo={pedido.rastreio} transportadora={pedido.freteNome} />}
 
       <div className="mt-6 flex flex-wrap gap-2">
         <Link href="/produtos" className="btn-secundario">Continuar comprando</Link>

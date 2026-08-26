@@ -158,3 +158,14 @@ body {
 .painel-espera li { display: flex; justify-content: space-between; gap: 1rem; }
 .painel-espera small { color: var(--muted-foreground); white-space: nowrap; }
 .painel-espera button { justify-self: start; }
+
+/* Barra de avisos da loja: uma linha, sem botão de fechar — é informação, não anúncio. */
+.barra-aviso {
+  border-bottom: 1px solid var(--border);
+  background: var(--foreground);
+  color: var(--background);
+  padding: 0.5rem 1rem;
+  text-align: center;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}

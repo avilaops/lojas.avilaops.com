@@ -101,6 +101,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <Pixels p={pixels} />
         <CartProvider slug={t.slug}>
           {t.status === "SUSPENSA" && <AvisoSuspensa />}
+          {t.avisoTopo && (
+            <p className="barra-aviso" role="status">{t.avisoTopo}</p>
+          )}
           <Header loja={publico} logoUrl={t.logoUrl} categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} />
           <main className="flex-1">{children}</main>
           <Footer tenant={t} categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} />

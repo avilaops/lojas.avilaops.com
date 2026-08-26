@@ -39,6 +39,7 @@ export const TenantEntradaSchema = z.object({
   tema: TemaSchema.partial().optional(),
   identidade: IdentidadeSchema.partial().optional(),
   slogan: z.string().max(140).optional(),
+  avisoTopo: z.string().trim().max(120).nullable().optional(),
   sobre: z.string().max(4000).optional(),
   // Aceita o formato brasileiro que o cliente conhece (DDD + número) e
   // normaliza para DDI 55, sem rejeitar quem já informou o código do país.

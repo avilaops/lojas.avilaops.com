@@ -123,6 +123,7 @@ export function tenantPublico(t: Tenant) {
     retiradaNaLoja: t.retiradaNaLoja,
     despachoDiasUteis: t.despachoDiasUteis,
     freteGratisAcima: t.freteGratisAcima,
+    avisoTopo: t.avisoTopo,
     vende: lojaVende(t),
   };
 }

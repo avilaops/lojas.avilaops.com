@@ -1,14 +1,24 @@
+# O container é a própria imagem base, com o código montado de /opt/lojas/app.
+# Nenhum deploy cria imagem — ver o porquê em deploy.sh.
 services:
   lojas:
-    build: .
+    image: lojas-base:latest
     pull_policy: never
-    image: lojas-avilaops:latest
     container_name: lojas-avilaops
     restart: always
     # Rede bridge padrao (docker0): e por ela que o Postgres do host escuta (172.17.0.1).
     network_mode: bridge
+    working_dir: /app
+    command: ["node", "lojas.avilaops.com/server.js"]
     env_file: [.env]
-    environment: [UPLOADS_DIR=/app/uploads]
-    volumes: ["/opt/lojas/uploads:/app/uploads"]
+    environment:
+      - NODE_ENV=production
+      - PORT=3080
+      - HOSTNAME=0.0.0.0
+      - UPLOADS_DIR=/app/uploads
+      - PRISMA_QUERY_ENGINE_LIBRARY=/app/lojas.avilaops.com/node_modules/.prisma/client/libquery_engine-debian-openssl-3.0.x.so.node
+    volumes:
+      - /opt/lojas/app:/app
+      - /opt/lojas/uploads:/app/uploads
     extra_hosts: ["host.docker.internal:host-gateway"]
     ports: ["127.0.0.1:3080:3080"]

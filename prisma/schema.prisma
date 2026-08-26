@@ -48,6 +48,10 @@ model Tenant {
   tema        Json      @default("{}")   // TemaLoja em src/lib/tema.ts
   identidade  Json      @default("{}")   // diagnóstico, voz e direção fotográfica
   slogan      String?
+  /// Barra fina acima do cabeçalho. Um texto curto, o mesmo em toda a loja:
+  /// é o lugar de "frete grátis acima de X" e de aviso de prazo em data
+  /// especial, sem ninguém pedir uma página nova.
+  avisoTopo   String?
   sobre       String?                    // texto da página "Sobre"
 
   // ── Contato e operação ───────────────────────────────────────────────

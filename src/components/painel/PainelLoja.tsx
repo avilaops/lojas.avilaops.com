@@ -29,6 +29,7 @@ export interface LojaView {
   logoUrl: string | null;
   whatsapp: string | null;
   emailContato: string | null;
+  avisoTopo: string | null;
   razaoSocial: string | null;
   cnpj: string | null;
   dominioPrincipal: string | null;
@@ -83,7 +84,7 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
   const [tema, setTema] = useState({ corPrimaria: loja.tema.corPrimaria, modo: loja.tema.modo, fonte: loja.tema.fonte, raio: loja.tema.raio, layout: loja.tema.layout });
   const [identidade, setIdentidade] = useState(loja.identidade);
   const [empresa, setEmpresa] = useState({ razaoSocial: loja.razaoSocial ?? "", cnpj: loja.cnpj ?? "" });
-  const [contato, setContato] = useState({ slogan: loja.slogan ?? "", whatsapp: loja.whatsapp ?? "", emailContato: loja.emailContato ?? "", logoUrl: loja.logoUrl ?? "", bannerUrl: loja.bannerUrl ?? "", dominioPrincipal: loja.dominioPrincipal ?? "" });
+  const [contato, setContato] = useState({ avisoTopo: loja.avisoTopo ?? "", slogan: loja.slogan ?? "", whatsapp: loja.whatsapp ?? "", emailContato: loja.emailContato ?? "", logoUrl: loja.logoUrl ?? "", bannerUrl: loja.bannerUrl ?? "", dominioPrincipal: loja.dominioPrincipal ?? "" });
   const [entrega, setEntrega] = useState({ retiradaNaLoja: loja.retiradaNaLoja, despachoDiasUteis: loja.despachoDiasUteis, freteGratisAcima: loja.freteGratisAcima != null ? String(loja.freteGratisAcima / 100).replace(".", ",") : "", tabela: loja.tabelaFrete.map((f) => ({ ufs: f.ufs.join(","), preco: String(f.preco / 100).replace(".", ","), prazo: String(f.prazoDiasUteis), nome: f.nome ?? "" })) });
   const [mp, setMp] = useState({ publicKey: loja.mpPublicKey ?? "", accessToken: "", webhookSecret: "" });
   const [senha, setSenha] = useState({ atual: "", nova: "" });
@@ -314,6 +315,7 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
                 <EnviarImagem aoEnviar={(url) => setContato((c) => ({ ...c, logoUrl: url }))} rotulo="Enviar logo" />
               </div>
             </Campo>
+            <Campo label="Barra de avisos" ajuda="Uma linha acima do cabeçalho, em toda a loja. Deixe vazio para não mostrar."><input className={inputClasse} value={contato.avisoTopo} onChange={(e) => setContato({ ...contato, avisoTopo: e.target.value })} placeholder="Frete grátis acima de R$ 199 · entrega em todo o Brasil" /></Campo>
             <Campo label="WhatsApp"><input className={inputClasse} value={contato.whatsapp} onChange={(e) => setContato({ ...contato, whatsapp: e.target.value })} /></Campo>
             <Campo label="E-mail de contato"><input className={inputClasse} value={contato.emailContato} onChange={(e) => setContato({ ...contato, emailContato: e.target.value })} /></Campo>
             <Campo label="Domínio próprio" ajuda="Depois de salvar, clique em “Configurar DNS e e-mail”."><input className={inputClasse} value={contato.dominioPrincipal} onChange={(e) => setContato({ ...contato, dominioPrincipal: e.target.value })} placeholder="sualoja.com.br" /></Campo>
@@ -329,7 +331,7 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
             </div>
           </Campo>
           <div className="flex flex-wrap gap-2">
-            <button className="btn-primario" disabled={ocupado} onClick={() => chamar("/api/painel/loja", "PATCH", { tema, identidade, ...Object.fromEntries(Object.entries(contato).filter(([, v]) => v !== "")), bannerUrl: contato.bannerUrl || null }, "Marca publicada.")}>Publicar identidade</button>
+            <button className="btn-primario" disabled={ocupado} onClick={() => chamar("/api/painel/loja", "PATCH", { tema, identidade, ...Object.fromEntries(Object.entries(contato).filter(([, v]) => v !== "")), avisoTopo: contato.avisoTopo.trim() || null, bannerUrl: contato.bannerUrl || null }, "Marca publicada.")}>Publicar identidade</button>
             <button className="btn-secundario" disabled={ocupado} onClick={() => chamar("/api/painel/loja", "POST", undefined, "Configuração reexecutada.")}>Configurar DNS e e-mail</button>
           </div>
           {Object.keys(loja.provisionamento).length > 0 && (
