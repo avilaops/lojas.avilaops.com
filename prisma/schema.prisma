@@ -75,6 +75,9 @@ model Tenant {
   cepOrigem         String?
   retiradaNaLoja    Boolean @default(true)
   despachoDiasUteis Int     @default(1)
+  /// A partir de quantas unidades o estoque conta como baixo: avisa o lojista
+  /// no painel e vira "últimas unidades" na loja. Zero desliga os dois.
+  estoqueBaixoEm    Int     @default(3)
   /// Caixa padrão (cm) e peso padrão (kg) para produto sem medida cadastrada.
   caixaPadrao       Json    @default("{\"altura\":15,\"largura\":20,\"comprimento\":25}")
   pesoPadraoKg      Float   @default(1)

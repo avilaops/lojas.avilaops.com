@@ -122,6 +122,7 @@ export function tenantPublico(t: Tenant) {
     meiosPagamento: t.meiosPagamento,
     retiradaNaLoja: t.retiradaNaLoja,
     despachoDiasUteis: t.despachoDiasUteis,
+    estoqueBaixoEm: t.estoqueBaixoEm,
     freteGratisAcima: t.freteGratisAcima,
     avisoTopo: t.avisoTopo,
     vende: lojaVende(t),

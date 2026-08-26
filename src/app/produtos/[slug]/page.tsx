@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { exigirTenant, lojaVende, urlDaLoja } from "@/lib/tenant";
 import { buscarProduto, formatarBRL, listarProdutos, resumoAvaliacoes } from "@/lib/catalogo";
 import AvisoEstoque from "@/components/AvisoEstoque";
+import EstoqueBaixo from "@/components/EstoqueBaixo";
 import AddToCartButton from "@/components/cart/AddToCartButton";
 import SeletorVariante from "@/components/SeletorVariante";
 import GaleriaProduto from "@/components/GaleriaProduto";
@@ -115,6 +116,10 @@ export default async function ProdutoPage({ params }: Props) {
               </a>
             ) : null}
           </div>
+
+          {p.opcoes.length === 0 && (
+            <div className="mt-4"><EstoqueBaixo estoque={p.estoque} limite={t.estoqueBaixoEm} /></div>
+          )}
 
           <ul className="mt-6 space-y-1 text-sm text-muted-foreground">
             {t.retiradaNaLoja && <li>✔ Retirada na loja sem custo</li>}

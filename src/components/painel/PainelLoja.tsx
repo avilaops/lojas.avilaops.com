@@ -41,6 +41,7 @@ export interface LojaView {
   freteGratisAcima: number | null;
   retiradaNaLoja: boolean;
   despachoDiasUteis: number;
+  estoqueBaixoEm: number;
   tabelaFrete: Array<{ ufs: string[]; preco: number; prazoDiasUteis: number; nome?: string }>;
   assinatura: { status: string; precoCentavos: number; planoNome: string; ultimoPagamentoEm: string | null; setupPagoEm: string | null; criadoEm: string; faturas: Array<{ id: string; centavos: number; status: string; pagaEm: string | null; criadoEm: string }> };
 }
@@ -83,6 +84,12 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
   const [rastreio, setRastreio] = useState<Record<string, string>>({});
   const [tema, setTema] = useState({ corPrimaria: loja.tema.corPrimaria, modo: loja.tema.modo, fonte: loja.tema.fonte, raio: loja.tema.raio, layout: loja.tema.layout });
   const [identidade, setIdentidade] = useState(loja.identidade);
+  const [limiteEstoque, setLimiteEstoque] = useState(String(loja.estoqueBaixoEm));
+  // Sai dos produtos que o painel já carregou: nenhuma consulta a mais.
+  const acabando = produtos
+    .filter((p) => p.ativo && p.variantes === 0 && p.estoque != null && p.estoque <= loja.estoqueBaixoEm)
+    .sort((a, b) => (a.estoque ?? 0) - (b.estoque ?? 0))
+    .slice(0, 12);
   const [empresa, setEmpresa] = useState({ razaoSocial: loja.razaoSocial ?? "", cnpj: loja.cnpj ?? "" });
   const [contato, setContato] = useState({ avisoTopo: loja.avisoTopo ?? "", slogan: loja.slogan ?? "", whatsapp: loja.whatsapp ?? "", emailContato: loja.emailContato ?? "", logoUrl: loja.logoUrl ?? "", bannerUrl: loja.bannerUrl ?? "", dominioPrincipal: loja.dominioPrincipal ?? "" });
   const [entrega, setEntrega] = useState({ retiradaNaLoja: loja.retiradaNaLoja, despachoDiasUteis: loja.despachoDiasUteis, freteGratisAcima: loja.freteGratisAcima != null ? String(loja.freteGratisAcima / 100).replace(".", ",") : "", tabela: loja.tabelaFrete.map((f) => ({ ufs: f.ufs.join(","), preco: String(f.preco / 100).replace(".", ","), prazo: String(f.prazoDiasUteis), nome: f.nome ?? "" })) });
@@ -160,6 +167,31 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
 
       {aba === "Produtos" && (
         <>
+          <Secao titulo="Estoque acabando" descricao="Quem está prestes a acabar aparece aqui, e a loja mostra “últimas unidades” para o comprador. O aviso some sozinho quando você repõe.">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Campo label="Avisar a partir de quantas unidades" ajuda="Zero desliga o aviso e o selo na loja.">
+                <input className={inputClasse} type="number" min={0} max={100} value={limiteEstoque} onChange={(e) => setLimiteEstoque(e.target.value)} />
+              </Campo>
+              <div className="flex items-end">
+                <button className="btn-secundario" disabled={ocupado} onClick={() => chamar("/api/painel/loja", "PATCH", { estoqueBaixoEm: Number(limiteEstoque) || 0 }, "Limite salvo.")}>Salvar limite</button>
+              </div>
+            </div>
+            {acabando.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nada acabando por enquanto.</p>
+            ) : (
+              <ul className="grid gap-1 text-sm">
+                {acabando.map((p) => (
+                  <li key={p.id} className="flex items-center justify-between gap-3 border-t border-border py-1.5">
+                    <span className="truncate">{p.nome}</span>
+                    <span className="flex items-center gap-3">
+                      <b className={p.estoque === 0 ? "text-red-700" : "text-amber-700"}>{p.estoque === 0 ? "esgotado" : `${p.estoque} un`}</b>
+                      <button className="text-xs underline" onClick={() => setEditando(p)}>repor</button>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Secao>
           {editando && <EditarProduto produtoId={editando.id} aoFechar={() => setEditando(null)} aoSalvar={(m) => { setOk(m); setEditando(null); router.refresh(); }} />}
           {gradeDe && <GradeVariantes produtoId={gradeDe.id} produtoNome={gradeDe.nome} aoFechar={() => setGradeDe(null)} aoSalvar={(m) => { setOk(m); setGradeDe(null); router.refresh(); }} />}
           <Secao titulo="Novo produto" descricao="Cadastro rápido. Foto: cole o link da imagem (ou use a planilha).">
@@ -232,6 +264,11 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
 
       {aba === "Pedidos" && (
         <Secao titulo="Pedidos">
+          {pedidos.length > 0 && (
+            <p className="text-sm">
+              <a href="/api/painel/exportar?tipo=pedidos" className="btn-secundario">Baixar pedidos (CSV)</a>
+            </p>
+          )}
           {pedidos.length === 0 ? <p className="text-sm text-muted-foreground">Nenhum pedido ainda.</p> : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -427,6 +464,10 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
             <Campo label="CNPJ"><input className={inputClasse} value={empresa.cnpj} onChange={(e) => setEmpresa({ ...empresa, cnpj: e.target.value })} placeholder="00.000.000/0001-00" inputMode="numeric" /></Campo>
           </div>
           <div><button className="btn-primario" disabled={ocupado} onClick={() => chamar("/api/painel/loja", "PATCH", { razaoSocial: empresa.razaoSocial.trim() || null, cnpj: empresa.cnpj.trim() || null }, "Dados da empresa salvos.")}>Salvar</button></div>
+        </Secao>
+        <Secao titulo="Dados dos seus clientes" descricao="Os dados de quem compra na sua loja são seus — e a responsabilidade por eles também. Se um cliente pedir por escrito o que você guarda sobre ele, é neste arquivo que está (LGPD, art. 18).">
+          <p><a href="/api/painel/exportar?tipo=clientes" className="btn-secundario">Baixar clientes (CSV)</a></p>
+          <p className="text-xs text-muted-foreground">Inclui quem comprou sem criar conta. Abre direto no Excel, com quantos pedidos cada pessoa fez e quanto gastou.</p>
         </Secao>
         <Secao titulo="Senha do painel">
           <div className="grid gap-4 sm:grid-cols-2">

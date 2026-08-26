@@ -65,6 +65,7 @@ export default async function PainelPage({ searchParams }: { searchParams: Promi
           freteGratisAcima: loja.freteGratisAcima,
           retiradaNaLoja: loja.retiradaNaLoja,
           despachoDiasUteis: loja.despachoDiasUteis,
+          estoqueBaixoEm: loja.estoqueBaixoEm,
           tabelaFrete: (loja.tabelaFrete as Array<{ ufs: string[]; preco: number; prazoDiasUteis: number; nome?: string }>) ?? [],
           assinatura: {
             status: loja.assinaturaStatus,

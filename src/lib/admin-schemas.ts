@@ -62,6 +62,7 @@ export const TenantEntradaSchema = z.object({
   retiradaNaLoja: z.boolean().optional(),
   enderecoPublico: z.boolean().optional(),
   despachoDiasUteis: z.number().int().min(0).max(30).optional(),
+  estoqueBaixoEm: z.number().int().min(0).max(100).optional(),
   pesoPadraoKg: z.number().positive().max(100).optional(),
   tabelaFrete: z
     .array(z.object({ ufs: z.array(z.string()), preco: z.number().int().nonnegative(), prazoDiasUteis: z.number().int().positive(), nome: z.string().optional() }))
