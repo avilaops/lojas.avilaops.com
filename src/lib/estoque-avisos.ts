@@ -26,6 +26,8 @@ export async function avisarQuemEsperava(): Promise<{ avisos: number }> {
       nome: a.tenant.nome,
       url: `${urlDaLoja(a.tenant)}/produtos/${a.produto.slug}`,
       emailRemetente: a.tenant.emailRemetente,
+      // Vira o Reply-To: quem responder o aviso fala com a loja, não com a plataforma.
+      emailContato: a.tenant.loginEmail ?? a.tenant.emailContato,
       destinatario: a.email,
       telefone: a.telefone,
       produtoNome: a.produto.nome,
