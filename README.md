@@ -101,7 +101,7 @@ npx prisma generate && npx next build
 cd .next/standalone && rm -rf lojas.avilaops.com/.next/static   && cp -r ../static lojas.avilaops.com/.next/static   && cp -r ../../public lojas.avilaops.com/public; cp -r ../../prisma lojas.avilaops.com/prisma   && tar --force-local -czf "$TMP/lojas-standalone.tgz" .
 # 2. envia e reinicia
 scp -i ~/.ssh/hetzner_avilaops "$TMP/lojas-standalone.tgz" root@178.105.82.48:/opt/lojas/standalone.tgz
-ssh -i ~/.ssh/hetzner_avilaops root@178.105.82.48 'cd /opt/lojas && docker compose up -d --build && docker image prune -f'
+ssh -i ~/.ssh/hetzner_avilaops root@178.105.82.48 '/opt/lojas/deploy.sh'
 # 3. migração nova? (do próprio servidor, contra o Postgres do host)
 ssh ... 'cd /opt/lojas && tar xzf standalone.tgz ./lojas.avilaops.com/prisma && DATABASE_URL=$(grep ^DATABASE_URL= .env | cut -d= -f2- | sed s/host.docker.internal/127.0.0.1/) npx -y prisma@6 migrate deploy --schema lojas.avilaops.com/prisma/schema.prisma'
 ```
@@ -111,6 +111,13 @@ symlink `@prisma/client-<hash>` que o Turbopack referencia e que o Windows não
 gera), `docker-compose.yml` com `network_mode: bridge` (o Postgres do host escuta
 em 172.17.0.1), `.env` (segredos gerados no servidor, chmod 600). Container
 `lojas-avilaops`, porta `127.0.0.1:3080` (3070 é do Migdolus).
+
+**Nunca rode `docker image prune -af` neste servidor.** Ele apaga a imagem
+`lojas-base` (nenhum container a usa; ela só é base de build) e o deploy passa a
+falhar tentando baixá-la do Docker Hub — em silêncio, com o container antigo
+seguindo no ar. O `deploy/deploy.sh` reconstrói a base se faltar, confere o
+healthcheck e limpa só imagens dangling; foi escrito depois de isso acontecer
+em 26/08/2026.
 
 **Caddy** (`/etc/caddy/Caddyfile`): o `ask` global do `on_demand_tls` aponta para
 `/api/dominio-permitido`, que repassa ao Comandeiro (3040) o que não for loja.
