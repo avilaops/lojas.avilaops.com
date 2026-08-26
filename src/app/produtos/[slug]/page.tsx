@@ -6,6 +6,7 @@ import AddToCartButton from "@/components/cart/AddToCartButton";
 import SeletorVariante from "@/components/SeletorVariante";
 import GaleriaProduto from "@/components/GaleriaProduto";
 import Avaliacoes from "@/components/Avaliacoes";
+import EventoVerProduto from "@/components/EventoVerProduto";
 import ProductCard from "@/components/ProductCard";
 import { prisma } from "@/lib/db";
 import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
@@ -66,6 +67,7 @@ export default async function ProdutoPage({ params }: Props) {
           { "@type": "ListItem", position: p.categoria ? 4 : 3, name: p.nome, item: `${urlDaLoja(t)}/produtos/${p.slug}` },
         ],
       }) }} />
+      <EventoVerProduto item={{ id: p.id, nome: p.nome, precoCentavos: p.precoCentavos, categoria: p.categoria?.nome ?? null }} />
       <nav className="mb-4 text-xs text-muted-foreground">
         <Link href="/">Início</Link> / <Link href="/produtos">Produtos</Link>
         {p.categoria && (

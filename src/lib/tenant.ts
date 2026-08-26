@@ -13,14 +13,17 @@ import { lerIdentidade, type IdentidadeLoja } from "./identidade";
  *      loja é criada (é o endereço de aprovação, antes do domínio próprio).
  *   2. domínio próprio (`Tenant.dominios`) → depois que o DNS aponta para cá.
  *
- * Cache curto em memória por processo: a vitrine recebe centenas de requisições
- * por minuto e o tenant muda uma vez por semana. 60 s de atraso numa troca de
- * cor é aceitável; um SELECT por requisição não.
+ * Sem cache entre requisições, de propósito. Já teve um `Map` com TTL de 60 s
+ * aqui e ele criava um bug difícil de enxergar: no build standalone, a rota de
+ * API e a página são bundles diferentes, cada um com sua instância do módulo —
+ * a API limpava o cache dela e a página seguia servindo o valor velho. O
+ * lojista salvava cor, layout ou pixel e a loja não mudava.
+ *
+ * O `cache()` do React já deduplica a consulta dentro da mesma requisição, e o
+ * Postgres está no mesmo host: é um SELECT por requisição, com índice único.
  */
 
 const BASE = (process.env.LOJAS_BASE_DOMAIN ?? "lojas.avilaops.com").toLowerCase();
-const TTL_MS = 60_000;
-const memoria = new Map<string, { tenant: Tenant | null; expira: number }>();
 
 export function normalizarHost(host: string | null): string {
   return (host ?? "").toLowerCase().replace(/:\d+$/, "").replace(/\.$/, "");
@@ -38,20 +41,20 @@ export async function buscarTenantPorHost(hostBruto: string | null): Promise<Ten
   const host = normalizarHost(hostBruto);
   if (!host) return null;
 
-  const emCache = memoria.get(host);
-  if (emCache && emCache.expira > Date.now()) return emCache.tenant;
-
   const slug = slugDoHost(host);
-  const tenant = slug
-    ? await prisma.tenant.findUnique({ where: { slug } })
-    : await prisma.tenant.findFirst({ where: { dominios: { has: host } } });
-
-  memoria.set(host, { tenant, expira: Date.now() + TTL_MS });
-  return tenant;
+  return slug
+    ? prisma.tenant.findUnique({ where: { slug } })
+    : prisma.tenant.findFirst({ where: { dominios: { has: host } } });
 }
 
-export function esquecerTenantEmCache(slug: string) {
-  for (const [host, v] of memoria) if (v.tenant?.slug === slug) memoria.delete(host);
+/**
+ * Mantida por compatibilidade com quem chamava depois de salvar (provisionar,
+ * assinatura, painel). Hoje não há cache para limpar — a função existe para
+ * esses pontos continuarem legíveis e para o dia em que houver um cache
+ * compartilhado de verdade (Redis ou revalidateTag).
+ */
+export function esquecerTenantEmCache(_slug: string) {
+  void _slug;
 }
 
 /** Tenant da requisição atual (server components e route handlers). */

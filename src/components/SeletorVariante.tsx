@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, ShoppingBag } from "lucide-react";
 import { useCart } from "@/components/cart/CartProvider";
+import { adicionarAoCarrinho } from "@/lib/eventos-loja";
 import { formatarBRL } from "@/lib/catalogo";
 
 export interface VarianteView { id: string; nome: string; valores: Record<string, string>; precoCentavos: number | null; estoque: number | null; imagem: string | null }
@@ -58,7 +59,10 @@ export default function SeletorVariante({ produto, opcoes, variantes, vende }: {
       {vende && (
         <button className="btn-primario w-full max-w-sm" disabled={!completa || !selecionada || !disponivel(selecionada)} onClick={() => {
           if (!selecionada) return;
-          adicionar({ id: `${produto.id}:${selecionada.id}`, slug: produto.slug, nome: `${produto.nome} — ${selecionada.nome}`, precoCentavos: preco, imagem: selecionada.imagem ?? produto.imagem });
+          const idItem = `${produto.id}:${selecionada.id}`;
+          const nomeItem = `${produto.nome} — ${selecionada.nome}`;
+          adicionar({ id: idItem, slug: produto.slug, nome: nomeItem, precoCentavos: preco, imagem: selecionada.imagem ?? produto.imagem });
+          adicionarAoCarrinho({ id: idItem, nome: nomeItem, precoCentavos: preco });
           setOk(true); setTimeout(() => setOk(false), 1500); router.push("/carrinho");
         }}>
           {ok ? <Check className="h-4 w-4" /> : <ShoppingBag className="h-4 w-4" />}

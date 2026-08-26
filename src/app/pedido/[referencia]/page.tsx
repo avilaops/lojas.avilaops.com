@@ -5,6 +5,7 @@ import { exigirTenant } from "@/lib/tenant";
 import { prisma } from "@/lib/db";
 import { formatarBRL } from "@/lib/catalogo";
 import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
+import EventoCompra from "@/components/EventoCompra";
 
 export const metadata: Metadata = { title: "Pedido", robots: { index: false } };
 
@@ -27,6 +28,16 @@ export default async function PedidoPage({ params }: { params: Promise<{ referen
 
   return (
     <div className="container-loja max-w-2xl py-10">
+      {pedido.status !== "AGUARDANDO_PAGAMENTO" && pedido.status !== "CANCELADO" && (
+        <EventoCompra
+          itens={pedido.itens.map((i) => ({ id: i.produtoId ?? i.nome, nome: i.nome, precoCentavos: i.precoUnitarioCentavos, quantidade: i.quantidade }))}
+          totalCentavos={pedido.totalCentavos}
+          freteCentavos={pedido.freteCentavos}
+          referencia={pedido.referencia}
+          googleAdsId={t.googleAdsId}
+          rotuloCompra={t.googleAdsRotuloCompra}
+        />
+      )}
       <p className="text-xs uppercase tracking-widest text-muted-foreground">Pedido #{pedido.numero}</p>
       <h1 className="mt-1 text-2xl font-bold">{ROTULO[pedido.status] ?? pedido.status}</h1>
       <p className="mt-1 text-sm text-muted-foreground">

@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CheckoutScreen, MercadoPagoCardBrick } from "@avilaops/checkout/ui";
 import { FRETE_RETIRADA_ID, type ItemCarrinho, type MeioPagamento, type OpcaoFrete, type ResultadoPagamento } from "@avilaops/checkout";
 import { useCart } from "@/components/cart/CartProvider";
+import { iniciarCheckout } from "@/lib/eventos-loja";
 import type { TenantPublico } from "@/lib/tenant";
 
 /**
@@ -32,6 +33,14 @@ export default function CheckoutClient({ loja, conta }: { loja: TenantPublico; c
     [itens],
   );
   const ids = useMemo(() => itens.map((i) => ({ id: i.id, quantidade: i.quantidade })), [itens]);
+
+  // Um begin_checkout por visita à tela, quando o carrinho já carregou.
+  const jaAvisou = useRef(false);
+  useEffect(() => {
+    if (!pronto || jaAvisou.current || itens.length === 0) return;
+    jaAvisou.current = true;
+    iniciarCheckout(itens.map((i) => ({ id: i.id, nome: i.nome, precoCentavos: i.precoCentavos, quantidade: i.quantidade })));
+  }, [pronto, itens]);
 
   // Polling do PIX: quando cair, vai para a página do pedido.
   useEffect(() => {

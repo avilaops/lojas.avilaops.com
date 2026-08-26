@@ -52,6 +52,7 @@ export default async function PainelPage({ searchParams }: { searchParams: Promi
           mpPublicKey: loja.mpPublicKey,
           emailRemetente: loja.emailRemetente,
           provisionamento: (loja.provisionamento as Record<string, string>) ?? {},
+          pixels: { gtmId: loja.gtmId, metaPixelId: loja.metaPixelId, ga4Id: loja.ga4Id, googleAdsId: loja.googleAdsId, googleAdsRotuloCompra: loja.googleAdsRotuloCompra, tiktokPixelId: loja.tiktokPixelId },
           freteGratisAcima: loja.freteGratisAcima,
           retiradaNaLoja: loja.retiradaNaLoja,
           despachoDiasUteis: loja.despachoDiasUteis,

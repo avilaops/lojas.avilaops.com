@@ -30,7 +30,13 @@ for i in $(seq 1 30); do
   sleep 2
   if curl -sf -o /dev/null http://127.0.0.1:3080/api/health; then
     echo "==> saudável na tentativa $i"
-    # Só dangling: -a apagaria a lojas-base de novo.
+    # Fica só UMA imagem da aplicação: a que está rodando. As anteriores
+    # viram dangling ao perder a tag e são apagadas aqui. Nunca use -a: isso
+    # levaria junto a lojas-base, que nenhum container usa.
+    atual=$(docker inspect -f "{{.Image}}" lojas-avilaops)
+    for img in $(docker images lojas-avilaops -q | sort -u); do
+      [ "$img" = "$atual" ] || docker rmi -f "$img" >/dev/null 2>&1 || true
+    done
     docker image prune -f >/dev/null
     docker builder prune -f --filter until=24h >/dev/null 2>&1 || true
     exit 0

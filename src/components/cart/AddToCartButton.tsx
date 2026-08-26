@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, ShoppingBag } from "lucide-react";
 import { useCart, type ItemLocal } from "./CartProvider";
+import { adicionarAoCarrinho } from "@/lib/eventos-loja";
 
 export default function AddToCartButton({ item, disponivel, irParaCarrinho = false }: { item: Omit<ItemLocal, "quantidade">; disponivel: boolean; irParaCarrinho?: boolean }) {
   const { adicionar } = useCart();
@@ -23,6 +24,7 @@ export default function AddToCartButton({ item, disponivel, irParaCarrinho = fal
       className="btn-primario w-full"
       onClick={() => {
         adicionar(item);
+        adicionarAoCarrinho({ id: item.id, nome: item.nome, precoCentavos: item.precoCentavos });
         setOk(true);
         setTimeout(() => setOk(false), 1500);
         if (irParaCarrinho) router.push("/carrinho");

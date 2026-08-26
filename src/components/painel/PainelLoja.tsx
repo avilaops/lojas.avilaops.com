@@ -12,6 +12,7 @@ import EditarProduto from "./EditarProduto";
 import Categorias, { type CategoriaView } from "./Categorias";
 import AvaliacoesPainel, { type AvaliacaoPainelView } from "./AvaliacoesPainel";
 import Buscadores from "./Buscadores";
+import Anuncios, { type PixelsView } from "./Anuncios";
 
 export interface LojaView {
   slug: string;
@@ -30,6 +31,7 @@ export interface LojaView {
   mpPublicKey: string | null;
   emailRemetente: string | null;
   provisionamento: Record<string, string>;
+  pixels: PixelsView;
   freteGratisAcima: number | null;
   retiradaNaLoja: boolean;
   despachoDiasUteis: number;
@@ -41,7 +43,7 @@ export interface PedidoView { id: string; numero: number; referencia: string; st
 
 const STATUS: Record<string, string> = { ATIVA: "No ar", PROVISIONANDO: "Configurando", SUSPENSA: "Suspensa", CANCELADA: "Cancelada" };
 const PEDIDO: Record<string, string> = { AGUARDANDO_PAGAMENTO: "Aguardando pagamento", PAGO: "Pago — separar", EM_SEPARACAO: "Em separação", ENVIADO: "Enviado", ENTREGUE: "Entregue", CANCELADO: "Cancelado", ESTORNADO: "Estornado" };
-const ABAS = ["Visão geral", "Marca", "Produtos", "Pedidos", "Cupons", "Avaliações", "Buscadores", "Entrega", "Recebimento", "Assinatura", "Conta"] as const;
+const ABAS = ["Visão geral", "Marca", "Produtos", "Pedidos", "Cupons", "Avaliações", "Buscadores", "Anúncios", "Entrega", "Recebimento", "Assinatura", "Conta"] as const;
 const ASSINATURA: Record<string, { rotulo: string; classe: string }> = {
   SEM_ASSINATURA: { rotulo: "Período de teste", classe: "bg-amber-100 text-amber-800" },
   PENDENTE: { rotulo: "Aguardando cartão", classe: "bg-amber-100 text-amber-800" },
@@ -217,6 +219,8 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
       {aba === "Avaliações" && <AvaliacoesPainel avaliacoes={avaliacoes} chamar={chamar} ocupado={ocupado} />}
 
       {aba === "Buscadores" && <Buscadores chamar={chamar} ocupado={ocupado} />}
+
+      {aba === "Anúncios" && <Anuncios pixels={loja.pixels} chamar={chamar} ocupado={ocupado} />}
 
       {aba === "Pedidos" && (
         <Secao titulo="Pedidos">

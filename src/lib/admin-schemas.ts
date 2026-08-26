@@ -57,7 +57,12 @@ export const TenantEntradaSchema = z.object({
     .optional(),
   freteGratisAcima: z.number().int().nonnegative().nullable().optional(),
   meiosPagamento: z.array(z.enum(["pix", "cartao", "boleto"])).min(1).optional(),
-  gtmId: z.string().regex(/^GTM-[A-Z0-9]+$/).optional(),
+  gtmId: z.string().regex(/^GTM-[A-Z0-9]+$/).nullable().optional(),
+  metaPixelId: z.string().regex(/^\d{6,20}$/).nullable().optional(),
+  ga4Id: z.string().regex(/^G-[A-Z0-9]{4,15}$/i).nullable().optional(),
+  googleAdsId: z.string().regex(/^AW-\d{6,15}$/i).nullable().optional(),
+  googleAdsRotuloCompra: z.string().trim().max(60).nullable().optional(),
+  tiktokPixelId: z.string().regex(/^[A-Z0-9]{10,30}$/i).nullable().optional(),
   /** Credenciais do Mercado Pago da loja. Só o access token é cifrado; a public key vai no HTML. */
   mercadoPago: z
     .object({ publicKey: z.string().min(10), accessToken: z.string().min(10), webhookSecret: z.string().min(10).optional() })
