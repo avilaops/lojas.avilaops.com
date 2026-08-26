@@ -109,6 +109,7 @@ model Tenant {
   faturas         Fatura[]
   cobrancaEventos CobrancaEvento[]
   cupons          Cupom[]
+  compradores     Comprador[]
   checkoutsAbertos CheckoutAberto[]
   avaliacoes      Avaliacao[]
 
@@ -207,6 +208,7 @@ model Pedido {
   subtotalCentavos Int
   descontoCentavos Int @default(0)
   cupomCodigo      String?
+  compradorId      String?
   /// Estoque já baixado para este pedido (evita baixar duas vezes no webhook).
   estoqueBaixado   Boolean @default(false)
   totalCentavos    Int
@@ -220,8 +222,9 @@ model Pedido {
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
-  tenant Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  itens  PedidoItem[]
+  tenant    Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  comprador Comprador?  @relation(fields: [compradorId], references: [id], onDelete: SetNull)
+  itens     PedidoItem[]
 
   @@index([tenantId, status])
   @@index([pagamentoId])
@@ -350,4 +353,44 @@ model Avaliacao {
 
   @@index([produtoId, aprovada])
   @@index([tenantId, aprovada, criadoEm])
+}
+
+/// Conta do comprador NA LOJA (não é o lojista). Escopo por tenant: o mesmo
+/// e-mail pode ter conta em lojas diferentes, e uma loja nunca enxerga o
+/// cadastro da outra.
+model Comprador {
+  id         String   @id @default(cuid())
+  tenantId   String
+  email      String
+  senhaHash  String
+  nome       String
+  telefone   String?
+  documento  String?
+  criadoEm   DateTime @default(now())
+  ultimoAcesso DateTime?
+
+  tenant     Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  enderecos  EnderecoComprador[]
+  pedidos    Pedido[]
+
+  @@unique([tenantId, email])
+}
+
+/// Endereço salvo pelo comprador — evita redigitar CEP e rua a cada compra.
+model EnderecoComprador {
+  id          String  @id @default(cuid())
+  compradorId String
+  apelido     String?
+  cep         String
+  logradouro  String
+  numero      String
+  complemento String?
+  bairro      String
+  cidade      String
+  uf          String
+  principal   Boolean @default(false)
+
+  comprador Comprador @relation(fields: [compradorId], references: [id], onDelete: Cascade)
+
+  @@index([compradorId])
 }

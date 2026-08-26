@@ -1,5 +1,5 @@
 import { createHmac, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import type { Tenant } from "@prisma/client";
 import { prisma } from "./db";
 
@@ -64,12 +64,25 @@ export function lerToken(token: string | undefined): { slug: string } | null {
 
 // ── Cookie ─────────────────────────────────────────────────────────────
 
+
+/**
+ * `Secure` vem do protocolo real da requisição, não do NODE_ENV: o
+ * `server.js` do build standalone força `production` mesmo quando rodamos em
+ * HTTP no desenvolvimento, e um cookie Secure em HTTP simplesmente não é
+ * guardado — o login "funcionava" e a sessão sumia. Atrás do Caddy chega
+ * `x-forwarded-proto: https`.
+ */
+async function conexaoSegura(): Promise<boolean> {
+  const h = await headers();
+  return (h.get("x-forwarded-proto") ?? "").split(",")[0].trim() === "https";
+}
+
 export async function abrirSessao(slug: string) {
   const store = await cookies();
   store.set(COOKIE, emitirToken(slug), {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: await conexaoSegura(),
     path: "/",
     maxAge: DIAS * 86_400,
   });

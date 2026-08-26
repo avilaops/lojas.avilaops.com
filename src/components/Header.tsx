@@ -22,6 +22,11 @@ export default function Header({ loja, logoUrl, categorias }: { loja: TenantPubl
         </form>
 
         <Link href="/produtos" aria-label="Buscar produtos" className="ml-auto inline-flex h-10 w-10 items-center justify-center rounded-full border border-border md:hidden"><Search className="h-4 w-4" /></Link>
+        {loja.vende && (
+          <Link href="/conta" className="hidden h-10 items-center rounded-lg border border-border bg-card px-3 text-sm font-medium sm:inline-flex" aria-label="Minha conta">
+            Minha conta
+          </Link>
+        )}
         {loja.vende && <CartButton />}
       </div>
 

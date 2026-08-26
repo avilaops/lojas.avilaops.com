@@ -17,7 +17,7 @@ function lojista(t: Tenant) {
  */
 export async function registrarPedido(
   t: Tenant,
-  dados: { referencia: string; pagamentoId: string; status: string; total: number; payload: PayloadCheckout; catalogo: ResolucaoCatalogo; cupomCodigo?: string | null },
+  dados: { referencia: string; pagamentoId: string; status: string; total: number; payload: PayloadCheckout; catalogo: ResolucaoCatalogo; cupomCodigo?: string | null; compradorId?: string | null },
 ) {
   const { pedido } = await montarPedidoSeguro(dados.payload, dados.catalogo);
   const totais = calcularTotais({ itens: pedido.itens, frete: pedido.frete, desconto: pedido.desconto ?? 0 });
@@ -39,6 +39,7 @@ export async function registrarPedido(
       descontoCentavos: totais.desconto,
       totalCentavos: totais.total,
       cupomCodigo: dados.cupomCodigo ?? null,
+      compradorId: dados.compradorId ?? null,
       meioPagamento: pedido.meioPagamento,
       pagamentoId: dados.pagamentoId,
       pagamentoStatus: dados.status,
@@ -54,6 +55,19 @@ export async function registrarPedido(
   });
 
   if (dados.status === "aprovado") await baixarEstoqueDoPedido(salvo.id);
+
+  // Comprador logado que digitou um endereço novo: guarda para a próxima compra.
+  if (dados.compradorId && pedido.entrega) {
+    const e = pedido.entrega;
+    const cep = e.cep.replace(/\D/g, "");
+    const jaTem = await prisma.enderecoComprador.findFirst({ where: { compradorId: dados.compradorId, cep, numero: e.numero } });
+    if (!jaTem) {
+      const primeiro = (await prisma.enderecoComprador.count({ where: { compradorId: dados.compradorId } })) === 0;
+      await prisma.enderecoComprador.create({
+        data: { compradorId: dados.compradorId, cep, logradouro: e.logradouro, numero: e.numero, complemento: e.complemento ?? null, bairro: e.bairro, cidade: e.cidade, uf: e.uf.toUpperCase(), principal: primeiro },
+      });
+    }
+  }
   await marcarConvertido(pedido.referencia);
 
   await emitir({

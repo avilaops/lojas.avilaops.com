@@ -5,6 +5,7 @@ import { cotarFrete } from "@/lib/frete";
 import { buscarCupomValido, descontoDoCupom, normalizarCodigo } from "@/lib/cupons";
 import { GatewayNaoConfigurado, providerDaLoja } from "@/lib/gateway";
 import { registrarPedido } from "@/lib/pedidos";
+import { compradorAtual } from "@/lib/conta";
 
 /**
  * Cobrança. O @avilaops/checkout faz o trabalho pesado (recalcular o total
@@ -50,13 +51,16 @@ export async function POST(request: Request) {
     },
   };
 
+  // Comprador logado: o pedido entra no histórico dele e o endereço fica salvo.
+  const comprador = await compradorAtual(t);
+
   const handler = criarRotaPagamento({
     provider,
     catalogo,
     aoCriarPagamento: async ({ referencia, pagamentoId, status, total }) => {
       const corpo = await copia.clone().json();
       const c = await cupom([]);
-      await registrarPedido(t, { referencia, pagamentoId, status, total, payload: corpo, catalogo, cupomCodigo: c ? c.codigo : null });
+      await registrarPedido(t, { referencia, pagamentoId, status, total, payload: corpo, catalogo, cupomCodigo: c ? c.codigo : null, compradorId: comprador?.id ?? null });
     },
   });
   return handler(copia);

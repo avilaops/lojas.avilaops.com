@@ -18,7 +18,7 @@ function novaReferencia(slug: string) {
   return `${slug}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`.toUpperCase();
 }
 
-export default function CheckoutClient({ loja }: { loja: TenantPublico }) {
+export default function CheckoutClient({ loja, conta }: { loja: TenantPublico; conta: { nome: string; email: string; telefone: string | null; documento: string | null; endereco: { cep: string; logradouro: string; numero: string; complemento: string | null; bairro: string; cidade: string; uf: string } | null } | null }) {
   const { itens, limpar, pronto, cupom } = useCart();
   const router = useRouter();
   const [fretes, setFretes] = useState<OpcaoFrete[]>(() =>
@@ -129,6 +129,8 @@ export default function CheckoutClient({ loja }: { loja: TenantPublico }) {
         itens={itensCheckout}
         fretes={fretes}
         meiosPagamento={loja.meiosPagamento as MeioPagamento[]}
+        clienteInicial={conta ? { nome: conta.nome.split(" ")[0], sobrenome: conta.nome.split(" ").slice(1).join(" "), email: conta.email, telefone: conta.telefone ?? "", documento: conta.documento ?? "" } : undefined}
+        enderecoInicial={conta?.endereco ? { ...conta.endereco, complemento: conta.endereco.complemento ?? "" } : undefined}
         aoInformarCep={aoInformarCep}
         aoIdentificar={(cliente) => { void fetch("/api/checkout/contato", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ referencia, cliente, itens: ids }) }).catch(() => undefined); }}
         aoFinalizar={aoFinalizar}
