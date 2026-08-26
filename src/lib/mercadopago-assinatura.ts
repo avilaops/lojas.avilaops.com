@@ -81,12 +81,15 @@ export const buscarPagamentoAutorizado = (id: string) => chamar<PagamentoAutoriz
 /**
  * Todas as cobranças de uma assinatura, da mais recente para a mais antiga.
  *
+ * `limit` acima de 12 e o par `sort=campo&criteria=desc` (que o resto da API
+ * aceita) devolvem 400 aqui — este endpoint quer `sort=campo:direcao`.
+ *
  * É o que permite a plataforma montar as faturas sem depender do webhook —
  * que, na conta da Avila Ops, é uma configuração só para todos os produtos e
  * hoje aponta para um host desligado, escutando o tópico errado.
  */
 export const buscarCobrancasDaAssinatura = (preapprovalId: string) =>
-  chamar<{ results: PagamentoAutorizado[] }>(`/authorized_payments/search?preapproval_id=${encodeURIComponent(preapprovalId)}&limit=20&sort=date_created&criteria=desc`, { method: "GET" });
+  chamar<{ results: PagamentoAutorizado[] }>(`/authorized_payments/search?preapproval_id=${encodeURIComponent(preapprovalId)}&limit=10&sort=date_created:desc`, { method: "GET" });
 
 /**
  * Confere a assinatura x-signature do webhook (manifesto
