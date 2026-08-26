@@ -135,11 +135,32 @@ async function registrarCobranca(id: string) {
  * DIAS_TOLERANCIA depois do período de teste, e as que ficaram > 30 +
  * tolerância sem pagamento. Lojas sem assinatura têm 14 dias de teste.
  */
-export async function verificarInadimplencia(): Promise<{ suspensas: string[] }> {
+export async function verificarInadimplencia(): Promise<{ suspensas: string[]; sincronizadas: number }> {
   const agora = Date.now();
   const lojas = await prisma.tenant.findMany({ where: { status: "ATIVA" } });
   const suspensas: string[] = [];
+  let sincronizadas = 0;
+
+  // Puxa o status de quem já tem assinatura antes de julgar qualquer um.
+  //
+  // O webhook não é confiável como única fonte: em preapproval o Mercado Pago
+  // notifica a URL da aplicação, que é uma só para toda a conta da Avila Ops e
+  // já apontou para um host desligado. Sem esta sincronização, um lojista que
+  // pagou continuaria como PENDENTE e seria suspenso ao fim da tolerância —
+  // o pior erro possível para quem está em dia. Falha do MP não derruba a
+  // rotina: quem não sincronizou fica como está e é reavaliado amanhã.
   for (const t of lojas) {
+    if (!t.assinaturaId) continue;
+    try {
+      await sincronizarPreapproval(t.assinaturaId);
+      sincronizadas++;
+    } catch (erro) {
+      console.error("[assinatura] não consegui sincronizar", t.slug, erro);
+    }
+  }
+  const atuais = sincronizadas ? await prisma.tenant.findMany({ where: { status: "ATIVA" } }) : lojas;
+
+  for (const t of atuais) {
     if (t.plano === "SITE" && t.assinaturaStatus === "SEM_ASSINATURA") continue; // vitrine grátis enquanto não assina? não: mesma regra
     const diasDesdeCriacao = (agora - t.criadoEm.getTime()) / 86_400_000;
     const diasDesdePagamento = t.ultimoPagamentoEm ? (agora - t.ultimoPagamentoEm.getTime()) / 86_400_000 : null;
@@ -151,5 +172,5 @@ export async function verificarInadimplencia(): Promise<{ suspensas: string[] }>
       suspensas.push(t.slug);
     }
   }
-  return { suspensas };
+  return { suspensas, sincronizadas };
 }

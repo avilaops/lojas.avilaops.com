@@ -53,6 +53,10 @@ export function criarPreapproval(input: { motivo: string; slug: string; payerEma
       external_reference: input.slug,
       payer_email: input.payerEmail,
       back_url: input.backUrl,
+      // Não adianta mandar notification_url aqui: em preapproval o Mercado
+      // Pago aceita o campo, devolve null e continua notificando a URL da
+      // aplicação (testado em 26/08/2026). Por isso a rotina diária também
+      // sincroniza o status direto na API — ver verificarInadimplencia.
       // Sem status/card_token: o MP devolve init_point e o cartão é cadastrado na página dele.
       auto_recurring: { frequency: 1, frequency_type: "months", transaction_amount: input.valorCentavos / 100, currency_id: "BRL" },
     },
