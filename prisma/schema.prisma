@@ -195,7 +195,14 @@ model Produto {
 
   @@unique([tenantId, slug])
   @@index([tenantId, ativo, destaque])
+  /// Texto normalizado (minúsculas, sem acento) de nome + marca + sku +
+  /// descrição curta. Mantido por gatilho no banco — ver a migração
+  /// 20260826200000_busca_sem_acento. Nunca escrever por aqui.
+  busca String @default("")
+
   avisosEstoque AvisoEstoque[]
+
+  @@index([tenantId, busca])
 }
 
 enum PedidoStatus {

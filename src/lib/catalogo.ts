@@ -30,6 +30,21 @@ const ORDENS: Record<OrdemCatalogo, Prisma.ProdutoOrderByWithRelationInput[]> = 
   nome: [{ nome: "asc" }],
 };
 
+/**
+ * Normaliza o que a pessoa digitou do mesmo jeito que o gatilho normaliza o
+ * produto: minúsculas, sem acento. Cada palavra vira uma condição — "valvula
+ * pressao" só traz quem tem as duas, em qualquer ordem.
+ */
+export function termosDeBusca(texto: string): string[] {
+  return texto
+    .normalize("NFD")
+    .replace(/\p{M}+/gu, "")
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((t) => t.length > 1)
+    .slice(0, 6);
+}
+
 export async function listarProdutos(tenantId: string, filtro?: FiltroCatalogo) {
   return prisma.produto.findMany({
     where: {
@@ -41,9 +56,7 @@ export async function listarProdutos(tenantId: string, filtro?: FiltroCatalogo) 
       ...(filtro?.minCentavos != null || filtro?.maxCentavos != null
         ? { precoCentavos: { ...(filtro.minCentavos != null ? { gte: filtro.minCentavos } : {}), ...(filtro.maxCentavos != null ? { lte: filtro.maxCentavos } : {}) } }
         : {}),
-      ...(filtro?.busca
-        ? { OR: [{ nome: { contains: filtro.busca, mode: "insensitive" } }, { marca: { contains: filtro.busca, mode: "insensitive" } }, { sku: { contains: filtro.busca, mode: "insensitive" } }, { descricaoCurta: { contains: filtro.busca, mode: "insensitive" } }] }
-        : {}),
+      ...(filtro?.busca ? { AND: termosDeBusca(filtro.busca).map((t) => ({ busca: { contains: t } })) } : {}),
     },
     include: { categoria: true },
     orderBy: ORDENS[filtro?.ordem ?? "relevancia"],
