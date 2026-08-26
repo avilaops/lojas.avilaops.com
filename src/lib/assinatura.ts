@@ -2,7 +2,7 @@ import type { Plano, Tenant } from "@prisma/client";
 import { prisma } from "./db";
 import { emitir } from "./eventos";
 import { esquecerTenantEmCache } from "./tenant";
-import { alterarPreapproval, buscarPagamentoAutorizado, buscarPreapproval, criarPreapproval } from "./mercadopago-assinatura";
+import { alterarPreapproval, buscarCobrancasDaAssinatura, buscarPagamentoAutorizado, buscarPreapproval, criarPreapproval, type PagamentoAutorizado } from "./mercadopago-assinatura";
 
 /**
  * Mensalidade da loja.
@@ -99,17 +99,33 @@ async function sincronizarPreapproval(id: string) {
   return { motivo: `assinatura ${status}`, tenantId: t.id };
 }
 
-async function registrarCobranca(id: string) {
-  const c = await buscarPagamentoAutorizado(id);
+const registrarCobranca = async (id: string) => aplicarCobranca(await buscarPagamentoAutorizado(id));
+
+/**
+ * Registra uma cobrança da mensalidade, venha ela do webhook ou da varredura
+ * diária.
+ *
+ * A varredura relê as mesmas cobranças todo dia, então o efeito colateral
+ * (avisar o lojista, contar tentativa, suspender) só acontece quando o estado
+ * muda de verdade — senão o lojista receberia o mesmo "mensalidade paga" toda
+ * manhã e uma recusa antiga viraria dez tentativas.
+ */
+async function aplicarCobranca(c: PagamentoAutorizado) {
   const t = await prisma.tenant.findFirst({ where: { assinaturaId: c.preapproval_id } });
   if (!t) return { motivo: "cobrança sem loja" };
   const aprovada = c.status === "processed" || c.payment?.status === "approved";
   const centavos = Math.round((c.transaction_amount ?? 0) * 100);
+  const situacao = aprovada ? "approved" : (c.payment?.status ?? c.status);
+  const conhecida = await prisma.fatura.findUnique({ where: { externalId: String(c.id) } });
+
   await prisma.fatura.upsert({
     where: { externalId: String(c.id) },
-    create: { tenantId: t.id, externalId: String(c.id), centavos, status: aprovada ? "approved" : (c.payment?.status ?? c.status), detalhe: c.payment?.status_detail ?? null, pagaEm: aprovada ? new Date() : null },
-    update: { status: aprovada ? "approved" : (c.payment?.status ?? c.status), detalhe: c.payment?.status_detail ?? null, pagaEm: aprovada ? new Date() : null },
+    create: { tenantId: t.id, externalId: String(c.id), centavos, status: situacao, detalhe: c.payment?.status_detail ?? null, pagaEm: aprovada ? new Date() : null },
+    update: { status: situacao, detalhe: c.payment?.status_detail ?? null, ...(aprovada && !conhecida?.pagaEm ? { pagaEm: new Date() } : {}) },
   });
+
+  if (conhecida?.status === situacao) return { motivo: "cobrança já registrada", tenantId: t.id };
+
   if (aprovada) {
     await prisma.tenant.update({ where: { id: t.id }, data: { ultimoPagamentoEm: new Date(), tentativasFalhas: 0 } });
     await reativar(t);
@@ -135,7 +151,7 @@ async function registrarCobranca(id: string) {
  * DIAS_TOLERANCIA depois do período de teste, e as que ficaram > 30 +
  * tolerância sem pagamento. Lojas sem assinatura têm 14 dias de teste.
  */
-export async function verificarInadimplencia(): Promise<{ suspensas: string[]; sincronizadas: number }> {
+export async function verificarInadimplencia(): Promise<{ suspensas: string[]; sincronizadas: number; faturasNovas: number }> {
   const agora = Date.now();
   const lojas = await prisma.tenant.findMany({ where: { status: "ATIVA" } });
   const suspensas: string[] = [];
@@ -149,11 +165,19 @@ export async function verificarInadimplencia(): Promise<{ suspensas: string[]; s
   // pagou continuaria como PENDENTE e seria suspenso ao fim da tolerância —
   // o pior erro possível para quem está em dia. Falha do MP não derruba a
   // rotina: quem não sincronizou fica como está e é reavaliado amanhã.
+  let faturasNovas = 0;
   for (const t of lojas) {
     if (!t.assinaturaId) continue;
     try {
       await sincronizarPreapproval(t.assinaturaId);
       sincronizadas++;
+      // As cobranças também vêm daqui: com isso as faturas do painel se
+      // preenchem sem webhook nenhum. O upsert é idempotente por externalId.
+      const { results } = await buscarCobrancasDaAssinatura(t.assinaturaId);
+      for (const c of results ?? []) {
+        const r = await aplicarCobranca(c);
+        if (r.motivo !== "cobrança já registrada") faturasNovas++;
+      }
     } catch (erro) {
       console.error("[assinatura] não consegui sincronizar", t.slug, erro);
     }
@@ -172,5 +196,5 @@ export async function verificarInadimplencia(): Promise<{ suspensas: string[]; s
       suspensas.push(t.slug);
     }
   }
-  return { suspensas, sincronizadas };
+  return { suspensas, sincronizadas, faturasNovas };
 }
