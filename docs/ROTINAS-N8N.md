@@ -10,30 +10,34 @@ Todos os POST abaixo vão com `Authorization: Bearer $LOJAS_ADMIN_TOKEN`.
 | Quando | Endpoint | O que faz |
 |---|---|---|
 | a cada hora | `POST /api/admin/carrinhos/verificar` | marca carrinho parado há 45 min e emite `carrinho.abandonado` |
-| a cada hora | `POST /api/admin/estoque/avisos` | **novo** — avisa quem esperava produto que voltou |
+| a cada hora | `POST /api/admin/estoque/avisos` | avisa quem esperava produto que voltou |
 | diário | `POST /api/admin/cobranca/verificar` | suspende quem passou da tolerância |
 | segunda 7h | `POST /api/admin/relatorios/semanal` | emite `loja.relatorio-semanal` por loja com movimento |
 
-## `loja.voltou-ao-estoque` — o que falta ligar
+## `loja.voltou-ao-estoque` — ligado em 26/08/2026
 
-O endpoint já está no ar e é idempotente: cada pessoa é avisada uma vez por
-produto (`AvisoEstoque.avisadoEm`). Falta a saída do switch no fluxo, com um nó
-de e-mail usando estes campos do evento:
+Pendurado no gatilho **A Cada Hora** que já existia (não foi criado outro
+schedule): ele dispara `Verificar Carrinhos Abandonados` e `Verificar Fila de
+Estoque` em paralelo. O evento cai na saída `loja.voltou-ao-estoque` do switch
+e vai para o nó **E-mail: Voltou ao Estoque**.
 
-| Campo | Uso na mensagem |
-|---|---|
-| `destinatario` | para quem vai o e-mail |
-| `emailRemetente` | remetente da loja (`pedidos@dominio`) |
-| `nome` | nome da loja |
-| `produtoNome` | "O <produto> voltou" |
-| `precoCentavos` | preço atual, em centavos |
-| `url` | link direto para a página do produto |
-| `telefone` | só quando a pessoa deixou; hoje ninguém pede |
+Campos que o `Normalizar Evento` passou a expor: `destinatario`, `precoReais`
+(`produtoNome`, `nome`, `url` e `emailRemetente` já existiam). O Reply-To sai
+de `lojistaEmail`, que vem do `emailContato` no evento.
 
-Assunto sugerido: `<produtoNome> voltou para a loja`. Corpo curto, com o botão
-apontando para `url` — a pessoa já quis comprar, não precisa ser convencida de
-novo.
+O endpoint é idempotente (`AvisoEstoque.avisadoEm`): rodar de novo não avisa
+ninguém duas vezes.
 
-Enquanto a saída não existe, ninguém é avisado e **a fila não se perde**: o
-`avisadoEm` só é preenchido quando o evento é emitido, e o painel do lojista já
-mostra quem está esperando (Visão geral → "Gente esperando produto que acabou").
+## E-mails ao comprador — credencial trocada em 26/08/2026
+
+A credencial **"SMTP account"** devolvia `535 5.7.8 authentication failed`.
+Ela era a dos três e-mails que vão para o comprador — confirmação de pedido,
+carrinho abandonado e o novo aviso de estoque —, ou seja, **nenhum deles
+chegava a ninguém**. Os três passaram a usar a mesma credencial dos e-mails ao
+lojista (`SMTP mail.avilaops.com`, id `tSZlEjwt75qo2MwC`), com remetente
+`<nome da loja> <lojas@avilaops.com>` e Reply-To do lojista.
+
+O ideal ainda é cada loja enviar pelo próprio domínio (o provisionamento já
+cria `contato@` no mail.avilaops.com), mas isso exige uma credencial SMTP por
+loja no n8n — não é padronizável hoje. Enquanto isso, o endereço que autentica
+é o da plataforma e o nome que aparece é o da loja.
