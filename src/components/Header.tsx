@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Search, Store } from "lucide-react";
 import type { TenantPublico } from "@/lib/tenant";
 import CartButton from "@/components/cart/CartButton";
+import BuscaLoja from "@/components/BuscaLoja";
 
 export default function Header({ loja, logoUrl, categorias }: { loja: TenantPublico; logoUrl: string | null; categorias: Array<{ slug: string; nome: string }> }) {
   return (
@@ -16,10 +17,7 @@ export default function Header({ loja, logoUrl, categorias }: { loja: TenantPubl
           )}
         </Link>
 
-        <form action="/produtos" className="busca-loja ml-auto hidden max-w-sm flex-1 items-center gap-2 rounded-full border border-border bg-card px-4 md:flex">
-          <Search className="h-4 w-4 text-muted-foreground" />
-          <input name="q" placeholder="O que você procura?" aria-label="Buscar produtos" className="h-10 w-full bg-transparent text-sm outline-none" />
-        </form>
+        <BuscaLoja />
 
         <Link href="/produtos" aria-label="Buscar produtos" className="ml-auto inline-flex h-10 w-10 items-center justify-center rounded-full border border-border md:hidden"><Search className="h-4 w-4" /></Link>
         {loja.vende && (

@@ -187,3 +187,33 @@ export async function diagnosticoDoFeed(tenantId: string): Promise<DiagnosticoFe
   problemas.sort((a, b) => b.bloqueios.length - a.bloqueios.length);
   return { total: produtos.length, prontos, problemas: problemas.slice(0, 12) };
 }
+
+export interface ProvaSocial {
+  media: number | null;
+  total: number;
+  avaliacoes: Array<{ id: string; nome: string; nota: number; texto: string; produtoNome: string; produtoSlug: string; criadoEm: Date }>;
+}
+
+/**
+ * O que os clientes dizem, para a home. Só entra avaliação aprovada e com
+ * texto — nota solta sem comentário não convence ninguém, e loja nova com duas
+ * avaliações parece mais vazia do que se não mostrasse nada (por isso o
+ * componente só desenha a partir de três).
+ */
+export async function provaSocialDa(tenantId: string): Promise<ProvaSocial> {
+  const [avaliacoes, resumo] = await Promise.all([
+    prisma.avaliacao.findMany({
+      where: { tenantId, aprovada: true, NOT: { texto: null } },
+      orderBy: { criadoEm: "desc" },
+      take: 6,
+      include: { produto: { select: { nome: true, slug: true } } },
+    }),
+    prisma.avaliacao.aggregate({ where: { tenantId, aprovada: true }, _avg: { nota: true }, _count: { _all: true } }),
+  ]);
+
+  return {
+    media: resumo._avg.nota ? Math.round(resumo._avg.nota * 10) / 10 : null,
+    total: resumo._count._all,
+    avaliacoes: avaliacoes.map((a) => ({ id: a.id, nome: a.nome, nota: a.nota, texto: a.texto ?? "", produtoNome: a.produto.nome, produtoSlug: a.produto.slug, criadoEm: a.criadoEm })),
+  };
+}
