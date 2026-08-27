@@ -2,6 +2,7 @@ import type { Tenant } from "@prisma/client";
 import { randomBytes } from "node:crypto";
 import { prisma } from "./db";
 import { emitir } from "./eventos";
+import { avisarBuscadores } from "./indexnow";
 import { esquecerTenantEmCache, urlDaLoja } from "./tenant";
 
 /**
@@ -180,6 +181,14 @@ export async function provisionarLoja(slug: string): Promise<Resultado> {
     data: { provisionamento: passos, ...(tudoOk && t.status === "PROVISIONANDO" ? { status: "ATIVA" } : {}) },
   });
   esquecerTenantEmCache(slug);
+
+  // Loja nova nasce invisível: sem este empurrão, ela só entra no radar quando
+  // o buscador a descobrir sozinho — o que leva semanas — ou quando o lojista
+  // cadastrar o primeiro produto. Avisar na hora em que ela fica ATIVA é o
+  // único momento em que dá para fazer isso sem depender de ninguém lembrar.
+  if (atualizado.status === "ATIVA") {
+    void avisarBuscadores(atualizado, ["/", "/produtos", "/sobre", "/contato"]);
+  }
 
   await emitir({ tipo: "loja.provisionada", slug, passos, nome: atualizado.nome, url: urlDaLoja(atualizado), emailContato: atualizado.emailContato, whatsapp: atualizado.whatsapp });
   passos.n8n = process.env.N8N_WEBHOOK_URL ? "ok: evento emitido" : "pendente: N8N_WEBHOOK_URL ausente";
