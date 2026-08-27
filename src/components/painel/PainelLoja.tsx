@@ -45,7 +45,7 @@ export interface LojaView {
   tabelaFrete: Array<{ ufs: string[]; preco: number; prazoDiasUteis: number; nome?: string }>;
   assinatura: { status: string; precoCentavos: number; planoNome: string; ultimoPagamentoEm: string | null; setupPagoEm: string | null; criadoEm: string; faturas: Array<{ id: string; centavos: number; status: string; pagaEm: string | null; criadoEm: string }> };
 }
-export interface ProdutoView { id: string; nome: string; sku: string | null; precoCentavos: number; ativo: boolean; destaque: boolean; categoria: string | null; imagem: string | null; disponibilidade: string; estoque: number | null; opcoes: string[]; variantes: number }
+export interface ProdutoView { id: string; nome: string; sku: string | null; precoCentavos: number; ativo: boolean; destaque: boolean; categoria: string | null; imagem: string | null; disponibilidade: string; estoque: number | null; opcoes: string[]; variantes: number; temEmbalagem: boolean }
 export interface PedidoView { id: string; numero: number; referencia: string; status: string; clienteNome: string; clienteTelefone: string; totalCentavos: number; meioPagamento: string; freteNome: string; rastreio: string | null; criadoEm: string; itens: Array<{ nome: string; quantidade: number }> }
 
 const STATUS: Record<string, string> = { ATIVA: "No ar", PROVISIONANDO: "Configurando", SUSPENSA: "Suspensa", CANCELADA: "Cancelada" };
@@ -85,6 +85,11 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
   const [tema, setTema] = useState({ corPrimaria: loja.tema.corPrimaria, modo: loja.tema.modo, fonte: loja.tema.fonte, raio: loja.tema.raio, layout: loja.tema.layout });
   const [identidade, setIdentidade] = useState(loja.identidade);
   const [limiteEstoque, setLimiteEstoque] = useState(String(loja.estoqueBaixoEm));
+  // Produto sem embalagem cadastrada cota pela caixa padrão da loja, que
+  // costuma ser maior — frete mais caro do que precisava, e é na tela do frete
+  // que mais se desiste da compra.
+  const semEmbalagem = produtos.filter((p) => p.ativo && !p.temEmbalagem);
+
   // Sai dos produtos que o painel já carregou: nenhuma consulta a mais.
   const acabando = produtos
     .filter((p) => p.ativo && p.variantes === 0 && p.estoque != null && p.estoque <= loja.estoqueBaixoEm)
@@ -167,6 +172,19 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
 
       {aba === "Produtos" && (
         <>
+          {semEmbalagem.length > 0 && (
+            <Secao titulo="Frete saindo mais caro que precisa" descricao="Estes produtos não têm a embalagem cadastrada, então o frete deles é cotado pela caixa padrão da loja — quase sempre maior que a real.">
+              <ul className="grid gap-1 text-sm">
+                {semEmbalagem.slice(0, 12).map((p) => (
+                  <li key={p.id} className="flex items-center justify-between gap-3 border-t border-border py-1.5">
+                    <span className="truncate">{p.nome}</span>
+                    <button className="text-xs underline" onClick={() => setEditando(p)}>medir embalagem</button>
+                  </li>
+                ))}
+              </ul>
+              {semEmbalagem.length > 12 && <p className="text-xs text-muted-foreground">e mais {semEmbalagem.length - 12}.</p>}
+            </Secao>
+          )}
           <Secao titulo="Estoque acabando" descricao="Quem está prestes a acabar aparece aqui, e a loja mostra “últimas unidades” para o comprador. O aviso some sozinho quando você repõe.">
             <div className="grid gap-4 sm:grid-cols-2">
               <Campo label="Avisar a partir de quantas unidades" ajuda="Zero desliga o aviso e o selo na loja.">

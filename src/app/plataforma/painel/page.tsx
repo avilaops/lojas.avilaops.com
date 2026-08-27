@@ -77,7 +77,7 @@ export default async function PainelPage({ searchParams }: { searchParams: Promi
             faturas: faturas.map((f) => ({ id: f.id, centavos: f.centavos, status: f.status, pagaEm: f.pagaEm?.toISOString() ?? null, criadoEm: f.criadoEm.toISOString() })),
           },
         }}
-        produtos={produtos.map((p) => ({ id: p.id, nome: p.nome, sku: p.sku, precoCentavos: p.precoCentavos, ativo: p.ativo, destaque: p.destaque, categoria: p.categoria?.nome ?? null, imagem: p.imagens[0] ?? null, disponibilidade: p.disponibilidade, estoque: p.estoque, opcoes: p.opcoes, variantes: p._count.variantes }))}
+        produtos={produtos.map((p) => ({ id: p.id, nome: p.nome, sku: p.sku, precoCentavos: p.precoCentavos, ativo: p.ativo, destaque: p.destaque, categoria: p.categoria?.nome ?? null, imagem: p.imagens[0] ?? null, disponibilidade: p.disponibilidade, estoque: p.estoque, opcoes: p.opcoes, variantes: p._count.variantes, temEmbalagem: p.alturaCm != null && p.larguraCm != null && p.comprimentoCm != null }))}
         categorias={categorias.map((c) => ({ id: c.id, nome: c.nome, slug: c.slug, descricao: c.descricao, imagemUrl: c.imagemUrl, ordem: c.ordem, produtos: c._count.produtos }))}
         vendas={vendas}
         catalogo={catalogo}

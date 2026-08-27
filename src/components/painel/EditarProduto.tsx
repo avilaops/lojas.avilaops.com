@@ -4,7 +4,11 @@ import { useEffect, useState } from "react";
 import { Campo, inputClasse } from "./campos";
 import EnviarImagem from "./EnviarImagem";
 
-interface Form { nome: string; categoria: string; marca: string; sku: string; preco: string; precoDe: string; descricaoCurta: string; descricao: string; imagens: string[]; destaque: boolean; ativo: boolean; disponibilidade: string; estoque: string; pesoKg: string }
+/** Campo vazio não vira 0: sem medida, o frete usa a caixa padrão da loja. */
+const medida = (chave: string, valor: string) =>
+  valor.trim() ? { [chave]: Number.parseFloat(valor.replace(",", ".")) } : {};
+
+interface Form { nome: string; categoria: string; marca: string; sku: string; preco: string; precoDe: string; descricaoCurta: string; descricao: string; imagens: string[]; destaque: boolean; ativo: boolean; disponibilidade: string; estoque: string; pesoKg: string; alturaCm: string; larguraCm: string; comprimentoCm: string }
 
 /** Formulário completo de um produto existente: várias fotos, descrição longa, estoque, ativo/destaque. */
 export default function EditarProduto({ produtoId, aoFechar, aoSalvar }: { produtoId: string; aoFechar: () => void; aoSalvar: (msg: string) => void }) {
@@ -20,6 +24,7 @@ export default function EditarProduto({ produtoId, aoFechar, aoSalvar }: { produ
         preco: (p.precoCentavos / 100).toFixed(2).replace(".", ","), precoDe: p.precoDeCentavos != null ? (p.precoDeCentavos / 100).toFixed(2).replace(".", ",") : "",
         descricaoCurta: p.descricaoCurta ?? "", descricao: p.descricao ?? "", imagens: p.imagens ?? [], destaque: p.destaque, ativo: p.ativo,
         disponibilidade: p.disponibilidade, estoque: p.estoque != null ? String(p.estoque) : "", pesoKg: p.pesoKg != null ? String(p.pesoKg) : "",
+        alturaCm: p.alturaCm != null ? String(p.alturaCm) : "", larguraCm: p.larguraCm != null ? String(p.larguraCm) : "", comprimentoCm: p.comprimentoCm != null ? String(p.comprimentoCm) : "",
       });
     });
   }, [produtoId]);
@@ -40,6 +45,7 @@ export default function EditarProduto({ produtoId, aoFechar, aoSalvar }: { produ
           ...(precoDe !== undefined && Number.isFinite(precoDe) ? { precoDeCentavos: precoDe } : {}),
           descricaoCurta: f.descricaoCurta || undefined, descricao: f.descricao || undefined, imagens: f.imagens, destaque: f.destaque, ativo: f.ativo,
           disponibilidade: f.disponibilidade, ...(f.estoque.trim() ? { estoque: Number(f.estoque) } : {}), ...(f.pesoKg.trim() ? { pesoKg: Number.parseFloat(f.pesoKg.replace(",", ".")) } : {}),
+        ...medida("alturaCm", f.alturaCm), ...medida("larguraCm", f.larguraCm), ...medida("comprimentoCm", f.comprimentoCm),
         }),
       });
       const d = await r.json();
@@ -69,7 +75,10 @@ export default function EditarProduto({ produtoId, aoFechar, aoSalvar }: { produ
         <Campo label="Preço (R$)"><input className={inputClasse} value={f.preco} onChange={(e) => set("preco", e.target.value)} inputMode="decimal" /></Campo>
         <Campo label="Preço “de” (R$)"><input className={inputClasse} value={f.precoDe} onChange={(e) => set("precoDe", e.target.value)} inputMode="decimal" /></Campo>
         <Campo label="Estoque" ajuda="Vazio = não controla"><input className={inputClasse} value={f.estoque} onChange={(e) => set("estoque", e.target.value)} inputMode="numeric" /></Campo>
-        <Campo label="Peso (kg)"><input className={inputClasse} value={f.pesoKg} onChange={(e) => set("pesoKg", e.target.value)} /></Campo>
+        <Campo label="Peso (kg)" ajuda="Do produto embalado"><input className={inputClasse} value={f.pesoKg} onChange={(e) => set("pesoKg", e.target.value)} inputMode="decimal" /></Campo>
+        <Campo label="Altura da embalagem (cm)"><input className={inputClasse} value={f.alturaCm} onChange={(e) => set("alturaCm", e.target.value)} inputMode="decimal" /></Campo>
+        <Campo label="Largura da embalagem (cm)"><input className={inputClasse} value={f.larguraCm} onChange={(e) => set("larguraCm", e.target.value)} inputMode="decimal" /></Campo>
+        <Campo label="Comprimento da embalagem (cm)"><input className={inputClasse} value={f.comprimentoCm} onChange={(e) => set("comprimentoCm", e.target.value)} inputMode="decimal" /></Campo>
         <Campo label="Disponibilidade">
           <select className={inputClasse} value={f.disponibilidade} onChange={(e) => set("disponibilidade", e.target.value)}><option value="in_stock">Em estoque</option><option value="backorder">Sob encomenda</option><option value="out_of_stock">Esgotado</option></select>
         </Campo>

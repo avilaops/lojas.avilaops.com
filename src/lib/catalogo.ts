@@ -109,6 +109,10 @@ export async function resolverItensDoCatalogo(
         imagem: v.imagem ?? prod.imagens[0],
         sku: v.sku ?? prod.sku ?? undefined,
         pesoGramas: (v.pesoKg ?? prod.pesoKg) != null ? Math.round((v.pesoKg ?? prod.pesoKg)! * 1000) : undefined,
+        // Variação não tem medida própria: a embalagem é a do produto.
+        alturaCm: prod.alturaCm ?? undefined,
+        larguraCm: prod.larguraCm ?? undefined,
+        comprimentoCm: prod.comprimentoCm ?? undefined,
       });
       continue;
     }
@@ -121,6 +125,9 @@ export async function resolverItensDoCatalogo(
       imagem: prod.imagens[0],
       sku: prod.sku ?? undefined,
       pesoGramas: prod.pesoKg != null ? Math.round(prod.pesoKg * 1000) : undefined,
+      alturaCm: prod.alturaCm ?? undefined,
+      larguraCm: prod.larguraCm ?? undefined,
+      comprimentoCm: prod.comprimentoCm ?? undefined,
     });
   }
   return itens;

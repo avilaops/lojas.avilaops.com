@@ -55,6 +55,42 @@ function extrair(dados: unknown): OpcaoFrete[] {
   return out.sort((a, b) => a.preco - b.preco);
 }
 
+/**
+ * A caixa que vai ser cotada.
+ *
+ * O lojista cadastra a embalagem de cada produto; usar a caixa padrão da loja
+ * para tudo faz um item de 4x10x10 pagar frete de caixa 15x20x25 — e o
+ * comprador desiste na tela do frete, que é onde mais se desiste.
+ *
+ * O empilhamento é o mesmo que o balcão faz na prática: os itens vão um sobre
+ * o outro, então a altura soma e a base é a maior entre eles. Item sem medida
+ * cadastrada entra com a caixa padrão da loja, para nunca cotar menos do que
+ * vai despachar.
+ */
+export function caixaDoCarrinho(t: Tenant, itens: ItemCarrinho[]): Caixa {
+  const padrao = (t.caixaPadrao as Caixa | null) ?? { altura: 15, largura: 20, comprimento: 25 };
+  let altura = 0;
+  let largura = 0;
+  let comprimento = 0;
+
+  for (const i of itens) {
+    const a = i.alturaCm ?? padrao.altura;
+    const l = i.larguraCm ?? padrao.largura;
+    const c = i.comprimentoCm ?? padrao.comprimento;
+    altura += a * i.quantidade;
+    largura = Math.max(largura, l);
+    comprimento = Math.max(comprimento, c);
+  }
+
+  // Mínimos dos Correios para encomenda em caixa: abaixo disso a cotação é
+  // recusada e o comprador ficaria sem opção nenhuma de frete.
+  return {
+    altura: Math.max(altura, 2),
+    largura: Math.max(largura, 11),
+    comprimento: Math.max(comprimento, 16),
+  };
+}
+
 function pesoTotalKg(t: Tenant, itens: ItemCarrinho[]): number {
   const total = itens.reduce((s, i) => s + ((i.pesoGramas ?? t.pesoPadraoKg * 1000) / 1000) * i.quantidade, 0);
   return Math.max(total, 0.3);
@@ -65,7 +101,7 @@ async function cotarCepCerto(t: Tenant, cep: string, itens: ItemCarrinho[]): Pro
   const origem = (t.cepOrigem ?? "").replace(/\D/g, "");
   if (!chave || origem.length !== 8) return null;
 
-  const caixa = (t.caixaPadrao as Caixa | null) ?? { altura: 15, largura: 20, comprimento: 25 };
+  const caixa = caixaDoCarrinho(t, itens);
   const valorEncomenda = itens.reduce((s, i) => s + i.precoUnitario * i.quantidade, 0) / 100;
 
   try {
