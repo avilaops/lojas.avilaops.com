@@ -5,9 +5,9 @@ import { FRETE_RETIRADA_ID, type ItemCarrinho, type OpcaoFrete } from "@avilaops
  * Cotação de frete da plataforma. Herdado de Websites/brilhax.com/src/lib/frete.ts
  * com duas mudanças:
  *
- *   1. Roda no SERVIDOR. Na Brilhax a chave pública da CepCerto ia no HTML e
- *      era liberada por domínio no painel deles; com N lojas isso seria N
- *      liberações. Aqui uma conta da plataforma cota para todas.
+ *   1. Roda no SERVIDOR, com a chave de API (CEPCERTO_CONSULTA_KEY). Na Brilhax
+ *      a chave pública ia no HTML e era liberada por domínio no painel deles;
+ *      com N lojas isso seria N liberações. Aqui uma conta cota para todas.
  *   2. Origem, caixa e peso padrão são colunas do tenant, não constantes.
  *
  * Ordem de decisão:
@@ -16,7 +16,15 @@ import { FRETE_RETIRADA_ID, type ItemCarrinho, type OpcaoFrete } from "@avilaops
  *   - senão → só retirada, ou nada (o checkout mostra "frete a combinar")
  */
 
-const ENDPOINT = "https://cepcerto.com/widget_frete/api/cotacao";
+/**
+ * API de servidor da CepCerto: a chave vai no caminho, não em cabeçalho.
+ *
+ * A plataforma chamava `widget_frete/api/cotacao` — o endpoint do widget, que
+ * usa chave pública liberada por domínio — mandando a chave de API. Resultado:
+ * 401 "domínio ou IP não autorizado" e toda loja caindo na tabela por UF sem
+ * ninguém perceber. São credenciais diferentes para portas diferentes.
+ */
+const ENDPOINT = "https://cepcerto.com/ws/json-frete";
 const BASE = process.env.LOJAS_BASE_DOMAIN ?? "lojas.avilaops.com";
 
 interface Caixa { altura: number; largura: number; comprimento: number }
@@ -31,43 +39,37 @@ function numero(v: unknown): number | undefined {
   return undefined;
 }
 
-/** A resposta da CepCerto muda de nome conforme o plano; lemos todas as formas. */
-function extrair(dados: unknown): OpcaoFrete[] {
-  const raiz = dados as Record<string, unknown> | undefined;
-  const lista =
-    (Array.isArray(raiz?.cotacoes) && raiz.cotacoes) ||
-    (Array.isArray(raiz?.resultado) && raiz.resultado) ||
-    (Array.isArray(raiz?.fretes) && raiz.fretes) ||
-    (Array.isArray(dados) && dados) ||
-    [];
-  const out: OpcaoFrete[] = [];
-  for (const item of lista as Array<Record<string, unknown>>) {
-    const valor = numero(item.valor ?? item.preco ?? item.price);
-    if (valor === undefined) continue;
-    const nome = String(item.servico ?? item.nome ?? item.service ?? "Envio");
-    out.push({
-      id: `cepcerto:${nome.toLowerCase().replace(/\W+/g, "-")}`,
-      nome: item.transportadora ? `${item.transportadora} · ${nome}` : nome,
-      preco: Math.round(valor * 100),
-      prazoDiasUteis: Math.round(numero(item.prazo ?? item.prazo_dias ?? item.dias) ?? 7),
-    });
+/**
+ * Converte a resposta da CepCerto nas opções que o checkout mostra.
+ *
+ * Os campos `*_desconto_cepcerto` são o preço do contrato deles com os
+ * Correios — mais barato que o balcão. É o que o comprador vê, e é o motivo de
+ * a loja despachar pela CepCerto: cotar o contrato e postar no balcão faria o
+ * lojista pagar a diferença do próprio bolso.
+ */
+function extrair(dados: Record<string, unknown>): OpcaoFrete[] {
+  const preco = (v: unknown) => {
+    const n = numero(v);
+    return n === undefined ? undefined : Math.round(n * 100);
+  };
+  const prazo = (v: unknown) => Math.round(numero(v) ?? 7);
+
+  const opcoes: OpcaoFrete[] = [];
+  const servicos: Array<[string, string, unknown, unknown, unknown]> = [
+    ["mini", "Mini Envios", dados.valorminienvios_cepcerto, undefined, dados.prazominienvios_cepcerto],
+    ["pac", "PAC", dados.valorpac_desconto_cepcerto, dados.valorpac, dados.prazopac],
+    ["sedex", "SEDEX", dados.valorsedex_desconto_cepcerto, dados.valorsedex, dados.prazosedex],
+  ];
+
+  for (const [id, nome, comDesconto, cheio, dias] of servicos) {
+    const valor = preco(comDesconto) ?? preco(cheio);
+    if (valor === undefined || valor <= 0) continue;
+    opcoes.push({ id: `cepcerto:${id}`, nome, preco: valor, prazoDiasUteis: prazo(dias) });
   }
-  return out.sort((a, b) => a.preco - b.preco);
+  return opcoes.sort((a, b) => a.preco - b.preco);
 }
 
-/**
- * A caixa que vai ser cotada.
- *
- * O lojista cadastra a embalagem de cada produto; usar a caixa padrão da loja
- * para tudo faz um item de 4x10x10 pagar frete de caixa 15x20x25 — e o
- * comprador desiste na tela do frete, que é onde mais se desiste.
- *
- * O empilhamento é o mesmo que o balcão faz na prática: os itens vão um sobre
- * o outro, então a altura soma e a base é a maior entre eles. Item sem medida
- * cadastrada entra com a caixa padrão da loja, para nunca cotar menos do que
- * vai despachar.
- */
-export function caixaDoCarrinho(t: Tenant, itens: ItemCarrinho[]): Caixa {
+function caixaDoCarrinho(t: Tenant, itens: ItemCarrinho[]): Caixa {
   const padrao = (t.caixaPadrao as Caixa | null) ?? { altura: 15, largura: 20, comprimento: 25 };
   let altura = 0;
   let largura = 0;
@@ -97,38 +99,19 @@ function pesoTotalKg(t: Tenant, itens: ItemCarrinho[]): number {
 }
 
 async function cotarCepCerto(t: Tenant, cep: string, itens: ItemCarrinho[]): Promise<OpcaoFrete[] | null> {
-  const chave = process.env.CEPCERTO_PUBLIC_KEY;
+  const chave = process.env.CEPCERTO_CONSULTA_KEY ?? process.env.CEP_CERTO_CONSULTA_API_KEY;
   const origem = (t.cepOrigem ?? "").replace(/\D/g, "");
   if (!chave || origem.length !== 8) return null;
 
   const caixa = caixaDoCarrinho(t, itens);
-  const valorEncomenda = itens.reduce((s, i) => s + i.precoUnitario * i.quantidade, 0) / 100;
 
   try {
-    const r = await fetch(ENDPOINT, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "X-CepCerto-Public-Key": chave,
-        // A chave é liberada por domínio; a cotação sai em nome da plataforma.
-        origin: `https://${BASE}`,
-        referer: `https://${BASE}/`,
-      },
-      body: JSON.stringify({
-        public_key: chave,
-        cep_remetente: origem,
-        cep_destinatario: cep,
-        peso: String(pesoTotalKg(t, itens)),
-        altura: String(caixa.altura),
-        largura: String(caixa.largura),
-        comprimento: String(caixa.comprimento),
-        valor_encomenda: valorEncomenda.toFixed(2),
-      }),
-      signal: AbortSignal.timeout(8000),
-    });
+    // Tudo no caminho: /cep-origem/cep-destino/peso-kg/altura/largura/comprimento/chave
+    const url = [ENDPOINT, origem, cep, pesoTotalKg(t, itens), caixa.altura, caixa.largura, caixa.comprimento, chave].join("/");
+    const r = await fetch(url, { headers: { "user-agent": BASE }, signal: AbortSignal.timeout(8000) });
     if (!r.ok) return null;
-    const dados = await r.json();
-    if (dados?.status === "erro") return null;
+    const dados = (await r.json()) as Record<string, unknown>;
+    if (dados?.status === "erro" || dados?.erro) return null;
     const cotacoes = extrair(dados);
     return cotacoes.length ? cotacoes : null;
   } catch {
