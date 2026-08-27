@@ -2,7 +2,7 @@ import type { Plano, Tenant } from "@prisma/client";
 import { prisma } from "./db";
 import { emitir } from "./eventos";
 import { esquecerTenantEmCache } from "./tenant";
-import { alterarPreapproval, buscarCobrancasDaAssinatura, buscarPagamentoAutorizado, buscarPreapproval, criarPreapproval, type PagamentoAutorizado } from "./mercadopago-assinatura";
+import { alterarPreapproval, atualizarValorPreapproval, buscarCobrancasDaAssinatura, buscarPagamentoAutorizado, buscarPreapproval, criarPreapproval, type PagamentoAutorizado } from "./mercadopago-assinatura";
 
 /**
  * Mensalidade da loja.
@@ -46,6 +46,31 @@ export async function iniciarAssinatura(t: Tenant): Promise<{ status: string; in
     data: { assinaturaId: pre.id, assinaturaStatus: STATUS_MP[pre.status] ?? "PENDENTE", assinaturaInitPoint: pre.init_point ?? null },
   });
   return { status: STATUS_MP[pre.status] ?? "PENDENTE", initPoint: pre.init_point ?? null };
+}
+
+/**
+ * Pausa ou retoma a mensalidade no Mercado Pago e reflete no banco.
+ *
+ * Diferente do cancelamento, pausar é reversível: o cartão continua vinculado
+ * e o MP volta a cobrar quando a assinatura for retomada. Serve para negociar
+ * com um lojista sem perder o meio de pagamento dele.
+ */
+export async function mudarEstadoAssinatura(t: Tenant, estado: "paused" | "authorized") {
+  if (!t.assinaturaId) throw new Error("Loja sem assinatura.");
+  await alterarPreapproval(t.assinaturaId, estado);
+  const status = estado === "paused" ? "PAUSADA" : "AUTORIZADA";
+  await prisma.tenant.update({ where: { id: t.id }, data: { assinaturaStatus: status } });
+  esquecerTenantEmCache(t.slug);
+  // Pausar não derruba a loja sozinho: quem decide isso é a régua de
+  // inadimplência. Retomar, sim, devolve o checkout na hora.
+  if (estado === "authorized") await reativar(t);
+}
+
+/** Reajuste do valor mensal — é também o caminho de ligar e desligar adicional. */
+export async function reajustarAssinatura(t: Tenant, centavos: number) {
+  if (!t.assinaturaId) throw new Error("Loja sem assinatura.");
+  await atualizarValorPreapproval(t.assinaturaId, centavos);
+  esquecerTenantEmCache(t.slug);
 }
 
 export async function cancelarAssinatura(t: Tenant) {
