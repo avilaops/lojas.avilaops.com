@@ -78,7 +78,7 @@ function extrair(dados: Record<string, unknown>): OpcaoFrete[] {
   return opcoes.sort((a, b) => a.preco - b.preco);
 }
 
-function caixaDoCarrinho(t: Tenant, itens: ItemCarrinho[]): Caixa {
+export function caixaDoCarrinho(t: Tenant, itens: ItemCarrinho[]): Caixa {
   const padrao = (t.caixaPadrao as Caixa | null) ?? { altura: 15, largura: 20, comprimento: 25 };
   let altura = 0;
   let largura = 0;
@@ -102,7 +102,7 @@ function caixaDoCarrinho(t: Tenant, itens: ItemCarrinho[]): Caixa {
   };
 }
 
-function pesoTotalKg(t: Tenant, itens: ItemCarrinho[]): number {
+export function pesoTotalKg(t: Tenant, itens: ItemCarrinho[]): number {
   const total = itens.reduce((s, i) => s + ((i.pesoGramas ?? t.pesoPadraoKg * 1000) / 1000) * i.quantidade, 0);
   return Math.max(total, 0.3);
 }

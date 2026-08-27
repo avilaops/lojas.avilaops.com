@@ -78,6 +78,9 @@ model Tenant {
   /// A partir de quantas unidades o estoque conta como baixo: avisa o lojista
   /// no painel e vira "últimas unidades" na loja. Zero desliga os dois.
   estoqueBaixoEm    Int     @default(3)
+  /// Teto de postagem adiantada pela Avila Ops que esta loja pode acumular sem
+  /// acertar. Zero desliga o limite. Padrão de R$ 300: cerca de dez envios.
+  limitePostagemCentavos Int @default(30000)
   /// Caixa padrão (cm) e peso padrão (kg) para produto sem medida cadastrada.
   caixaPadrao       Json    @default("{\"altura\":15,\"largura\":20,\"comprimento\":25}")
   pesoPadraoKg      Float   @default(1)
@@ -132,6 +135,7 @@ model Tenant {
   checkoutsAbertos CheckoutAberto[]
   avaliacoes      Avaliacao[]
   avisosEstoque   AvisoEstoque[]
+  postagens       Postagem[]
 
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
@@ -253,6 +257,7 @@ model Pedido {
   tenant    Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   comprador Comprador?  @relation(fields: [compradorId], references: [id], onDelete: SetNull)
   itens     PedidoItem[]
+  postagem  Postagem?
 
   @@index([tenantId, status])
   @@index([pagamentoId])
@@ -440,4 +445,34 @@ model AvisoEstoque {
 
   @@unique([produtoId, email])
   @@index([tenantId, avisadoEm])
+}
+
+/// Etiqueta emitida pela carteira da Avila Ops para despachar um pedido.
+///
+/// `custoCentavos` é o que saiu da nossa conta; `cobradoDoCompradorCentavos` é
+/// o frete que o comprador pagou ao lojista. A diferença entre os dois é o que
+/// a plataforma ganha ou perde no envio — e `acertadaEm` marca quando a gente
+/// recebeu de volta.
+model Postagem {
+  id       String @id @default(cuid())
+  tenantId String
+  pedidoId String @unique
+
+  servico      String            // pac | sedex | jadlog-package | jadlog-dotcom | loggi | mini
+  codigoObjeto String?           // rastreio, quando a etiqueta sai
+  custoCentavos              Int
+  cobradoDoCompradorCentavos Int
+  pdfEtiqueta   String?
+  pdfDeclaracao String?
+  status  String  @default("pendente")  // pendente | emitida | cancelada | erro
+  detalhe String?
+
+  acertadaEm   DateTime?
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  pedido Pedido @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, acertadaEm])
 }

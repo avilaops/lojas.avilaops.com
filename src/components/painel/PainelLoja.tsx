@@ -48,7 +48,7 @@ export interface LojaView {
 }
 export interface ProdutoView { id: string; nome: string; sku: string | null; precoCentavos: number; ativo: boolean; destaque: boolean; categoria: string | null; imagem: string | null; disponibilidade: string; estoque: number | null; opcoes: string[]; variantes: number; temEmbalagem: boolean }
 export interface EnderecoEntregaView { logradouro: string; numero: string; complemento?: string | null; bairro: string; cidade: string; uf: string; cep: string }
-export interface PedidoView { id: string; numero: number; referencia: string; status: string; clienteNome: string; clienteEmail: string; clienteTelefone: string; clienteDocumento: string; totalCentavos: number; subtotalCentavos: number; freteCentavos: number; descontoCentavos: number; cupomCodigo: string | null; meioPagamento: string; freteNome: string; rastreio: string | null; entrega: EnderecoEntregaView | null; criadoEm: string; itens: Array<{ nome: string; quantidade: number; sku: string | null; precoUnitarioCentavos: number }> }
+export interface PedidoView { id: string; numero: number; referencia: string; status: string; clienteNome: string; clienteEmail: string; clienteTelefone: string; clienteDocumento: string; totalCentavos: number; subtotalCentavos: number; freteCentavos: number; descontoCentavos: number; cupomCodigo: string | null; meioPagamento: string; freteNome: string; rastreio: string | null; entrega: EnderecoEntregaView | null; etiqueta: { status: string; codigoObjeto: string | null; pdf: string | null; custoCentavos: number } | null; criadoEm: string; itens: Array<{ nome: string; quantidade: number; sku: string | null; precoUnitarioCentavos: number }> }
 
 const STATUS: Record<string, string> = { ATIVA: "No ar", PROVISIONANDO: "Configurando", SUSPENSA: "Suspensa", CANCELADA: "Cancelada" };
 const PEDIDO: Record<string, string> = { AGUARDANDO_PAGAMENTO: "Aguardando pagamento", PAGO: "Pago — separar", EM_SEPARACAO: "Em separação", ENVIADO: "Enviado", ENTREGUE: "Entregue", CANCELADO: "Cancelado", ESTORNADO: "Estornado" };
@@ -61,7 +61,7 @@ const ASSINATURA: Record<string, { rotulo: string; classe: string }> = {
   CANCELADA: { rotulo: "Cancelada", classe: "bg-red-100 text-red-800" },
 };
 
-export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias, avaliacoes, vendas, catalogo, espera }: { loja: LojaView; produtos: ProdutoView[]; pedidos: PedidoView[]; cupons: CupomView[]; categorias: CategoriaView[]; avaliacoes: AvaliacaoPainelView[]; vendas: ResumoVendas; catalogo: DiagnosticoFeed; espera: Array<{ produto: string; pessoas: number }> }) {
+export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias, avaliacoes, vendas, catalogo, espera, postagem }: { loja: LojaView; produtos: ProdutoView[]; pedidos: PedidoView[]; cupons: CupomView[]; categorias: CategoriaView[]; avaliacoes: AvaliacaoPainelView[]; vendas: ResumoVendas; catalogo: DiagnosticoFeed; espera: Array<{ produto: string; pessoas: number }>; postagem: { etiquetas: number; custoCentavos: number; limiteCentavos: number } }) {
   const [gradeDe, setGradeDe] = useState<ProdutoView | null>(null);
   const [editando, setEditando] = useState<ProdutoView | null>(null);
   const router = useRouter();
@@ -286,6 +286,19 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
       {aba === "Pedidos" && (
         <>
         {ficha && <FichaPedido pedido={ficha} loja={{ nome: loja.nome, razaoSocial: loja.razaoSocial, cnpj: loja.cnpj }} aoFechar={() => setFicha(null)} />}
+        {postagem.etiquetas > 0 && (
+          <Secao titulo="Postagem a acertar" descricao="A Avila Ops adianta o valor da etiqueta e recebe depois. Quem decide se o frete é grátis ou cobrado do comprador é você — o adiantamento é o mesmo.">
+            <p className="text-sm">
+              <b>{brl(postagem.custoCentavos)}</b> em {postagem.etiquetas} etiqueta(s) emitida(s).
+              {postagem.limiteCentavos > 0 && ` Seu limite é ${brl(postagem.limiteCentavos)}.`}
+            </p>
+            {postagem.limiteCentavos > 0 && postagem.custoCentavos >= postagem.limiteCentavos * 0.8 && (
+              <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
+                Você está perto do limite. Chegando nele, novas etiquetas param até o acerto.
+              </p>
+            )}
+          </Secao>
+        )}
         <Secao titulo="Pedidos">
           {pedidos.length > 0 && (
             <p className="text-sm">
@@ -308,6 +321,19 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
                       <td className="py-2">
                         {p.status === "EM_SEPARACAO" && <input className={`${inputClasse} mb-1 h-9`} placeholder="Código de rastreio" value={rastreio[p.id] ?? ""} onChange={(e) => setRastreio({ ...rastreio, [p.id]: e.target.value })} />}
                         <button className="btn-secundario mb-1 h-9 w-full px-3 text-xs" onClick={() => setFicha(p)}>Ficha de envio</button>
+                        {p.entrega && p.status !== "AGUARDANDO_PAGAMENTO" && p.status !== "CANCELADO" && (
+                          p.etiqueta?.pdf ? (
+                            <a className="btn-secundario mb-1 flex h-9 w-full items-center justify-center px-3 text-xs" href={p.etiqueta.pdf} target="_blank" rel="noopener">Baixar etiqueta</a>
+                          ) : (
+                            <button
+                              className="btn-secundario mb-1 h-9 w-full px-3 text-xs"
+                              disabled={ocupado}
+                              onClick={() => chamar(`/api/painel/pedidos/${p.id}/etiqueta`, "POST", undefined, "Etiqueta solicitada.")}
+                            >
+                              Gerar etiqueta
+                            </button>
+                          )
+                        )}
                         {["PAGO", "EM_SEPARACAO", "ENVIADO"].includes(p.status) && (
                           <button className="btn-secundario h-9 px-3 text-xs" disabled={ocupado} onClick={() => avancar(p)}>
                             {p.status === "PAGO" ? "Separar" : p.status === "EM_SEPARACAO" ? "Marcar enviado" : "Marcar entregue"}
