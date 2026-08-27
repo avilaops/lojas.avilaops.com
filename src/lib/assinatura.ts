@@ -21,6 +21,8 @@ export const PRECO_PLANO: Record<Plano, number> = { SITE: 7900, LOJA: 11900, LOJ
 export const NOME_PLANO: Record<Plano, string> = { SITE: "Site", LOJA: "Loja", LOJA_PRO: "Loja Pro" };
 const DIAS_TOLERANCIA = Number(process.env.LOJAS_DIAS_TOLERANCIA ?? 7);
 const BASE = process.env.LOJAS_BASE_DOMAIN ?? "lojas.avilaops.com";
+/** Onde o lojista resolve a cobrança. Vai junto do evento para o n8n não precisar montar URL. */
+const LINK_ASSINATURA = `https://${BASE}/painel?aba=assinatura`;
 
 const STATUS_MP: Record<string, string> = { pending: "PENDENTE", authorized: "AUTORIZADA", paused: "PAUSADA", cancelled: "CANCELADA" };
 
@@ -55,14 +57,14 @@ async function suspender(t: Tenant, motivo: string) {
   if (t.status === "SUSPENSA" || t.status === "CANCELADA") return;
   await prisma.tenant.update({ where: { id: t.id }, data: { status: "SUSPENSA", suspensaEm: new Date() } });
   esquecerTenantEmCache(t.slug);
-  await emitir({ tipo: "loja.suspensa", slug: t.slug, nome: t.nome, motivo, emailContato: t.loginEmail ?? t.emailContato, whatsapp: t.whatsapp });
+  await emitir({ tipo: "loja.suspensa", slug: t.slug, nome: t.nome, motivo, link: LINK_ASSINATURA, emailContato: t.loginEmail ?? t.emailContato, whatsapp: t.whatsapp });
 }
 
 async function reativar(t: Tenant) {
   if (t.status !== "SUSPENSA") return;
   await prisma.tenant.update({ where: { id: t.id }, data: { status: "ATIVA", suspensaEm: null } });
   esquecerTenantEmCache(t.slug);
-  await emitir({ tipo: "loja.reativada", slug: t.slug, nome: t.nome, emailContato: t.loginEmail ?? t.emailContato, whatsapp: t.whatsapp });
+  await emitir({ tipo: "loja.reativada", slug: t.slug, nome: t.nome, url: `https://${t.slug}.${BASE}`, emailContato: t.loginEmail ?? t.emailContato, whatsapp: t.whatsapp });
 }
 
 // ── Webhook ────────────────────────────────────────────────────────────
@@ -140,7 +142,11 @@ async function aplicarCobranca(c: PagamentoAutorizado) {
     await suspender(t, `mensalidade recusada ${tentativas}x, tolerância de ${DIAS_TOLERANCIA} dias vencida`);
     return { motivo: "recusada, loja suspensa", tenantId: t.id };
   }
-  await emitir({ tipo: "loja.mensalidade-recusada", slug: t.slug, nome: t.nome, tentativas, emailContato: t.loginEmail ?? t.emailContato, whatsapp: t.whatsapp });
+  // Quantos dias ainda restam antes da suspensão automática. A régua de
+  // cobrança no n8n muda o tom conforme esse número — sem ele a mensagem
+  // teria de falar em "em breve", que ninguém trata como urgente.
+  const diasRestantes = Math.max(0, Math.ceil(30 + DIAS_TOLERANCIA - dias));
+  await emitir({ tipo: "loja.mensalidade-recusada", slug: t.slug, nome: t.nome, tentativas, diasRestantes, link: LINK_ASSINATURA, emailContato: t.loginEmail ?? t.emailContato, whatsapp: t.whatsapp });
   return { motivo: `recusada (${tentativas}ª), dentro da tolerância`, tenantId: t.id };
 }
 

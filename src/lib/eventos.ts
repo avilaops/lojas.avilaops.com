@@ -24,10 +24,10 @@ export type EventoPlataforma =
   | ({ tipo: "pedido.pago"; slug: string; referencia: string; numero?: number; total: number; clienteNome: string; clienteEmail: string; clienteTelefone: string; itens: string } & Lojista)
   | ({ tipo: "pedido.recusado"; slug: string; referencia: string; clienteNome: string; clienteEmail: string; clienteTelefone: string; motivo?: string } & Lojista)
   | { tipo: "lojista.recuperar-senha"; slug: string; nome: string; email: string; link: string }
-  | { tipo: "loja.suspensa"; slug: string; nome: string; motivo: string; emailContato: string | null; whatsapp: string | null }
-  | { tipo: "loja.reativada"; slug: string; nome: string; emailContato: string | null; whatsapp: string | null }
+  | { tipo: "loja.suspensa"; slug: string; nome: string; motivo: string; link: string; emailContato: string | null; whatsapp: string | null }
+  | { tipo: "loja.reativada"; slug: string; nome: string; url: string; emailContato: string | null; whatsapp: string | null }
   | { tipo: "loja.mensalidade-paga"; slug: string; nome: string; centavos: number; emailContato: string | null; whatsapp: string | null }
-  | { tipo: "loja.mensalidade-recusada"; slug: string; nome: string; tentativas: number; emailContato: string | null; whatsapp: string | null }
+  | { tipo: "loja.mensalidade-recusada"; slug: string; nome: string; tentativas: number; diasRestantes: number; link: string; emailContato: string | null; whatsapp: string | null }
   | ({ tipo: "carrinho.abandonado"; slug: string; referencia: string; clienteNome: string; clienteEmail: string; clienteTelefone: string; itens: string; total: number; linkCarrinho: string } & Lojista)
   | { tipo: "avaliacao.recebida"; slug: string; nome: string; produtoNome: string; nota: number; autor: string; emailContato: string | null; whatsapp: string | null }
   | { tipo: "loja.voltou-ao-estoque"; slug: string; nome: string; url: string; emailRemetente: string | null; emailContato: string | null; destinatario: string; telefone: string | null; produtoNome: string; precoCentavos: number }
