@@ -30,6 +30,7 @@ export type EventoPlataforma =
   | { tipo: "loja.mensalidade-recusada"; slug: string; nome: string; tentativas: number; diasRestantes: number; link: string; emailContato: string | null; whatsapp: string | null }
   | ({ tipo: "carrinho.abandonado"; slug: string; referencia: string; clienteNome: string; clienteEmail: string; clienteTelefone: string; itens: string; total: number; linkCarrinho: string } & Lojista)
   | { tipo: "avaliacao.recebida"; slug: string; nome: string; produtoNome: string; nota: number; autor: string; emailContato: string | null; whatsapp: string | null }
+  | ({ tipo: "pedido.enviado"; slug: string; referencia: string; numero: number; clienteNome: string; clienteEmail: string; clienteTelefone: string; transportadora: string; rastreio: string | null; linkPedido: string } & Lojista)
   | { tipo: "loja.voltou-ao-estoque"; slug: string; nome: string; url: string; emailRemetente: string | null; emailContato: string | null; destinatario: string; telefone: string | null; produtoNome: string; precoCentavos: number }
   | { tipo: "loja.relatorio-semanal"; slug: string; nome: string; url: string; emailContato: string | null; whatsapp: string | null; periodo: string; pedidosPagos: number; receitaCentavos: number; ticketMedioCentavos: number; topProdutos: string; carrinhosAbandonados: number; novasAvaliacoes: number };
 
