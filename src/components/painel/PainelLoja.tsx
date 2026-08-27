@@ -13,6 +13,7 @@ import Categorias, { type CategoriaView } from "./Categorias";
 import AvaliacoesPainel, { type AvaliacaoPainelView } from "./AvaliacoesPainel";
 import Buscadores from "./Buscadores";
 import Vendas from "./Vendas";
+import FichaPedido from "./FichaPedido";
 import type { ResumoVendas } from "@/lib/relatorio";
 import type { DiagnosticoFeed } from "@/lib/catalogo";
 import Anuncios, { type PixelsView } from "./Anuncios";
@@ -46,7 +47,8 @@ export interface LojaView {
   assinatura: { status: string; precoCentavos: number; planoNome: string; ultimoPagamentoEm: string | null; setupPagoEm: string | null; criadoEm: string; faturas: Array<{ id: string; centavos: number; status: string; pagaEm: string | null; criadoEm: string }> };
 }
 export interface ProdutoView { id: string; nome: string; sku: string | null; precoCentavos: number; ativo: boolean; destaque: boolean; categoria: string | null; imagem: string | null; disponibilidade: string; estoque: number | null; opcoes: string[]; variantes: number; temEmbalagem: boolean }
-export interface PedidoView { id: string; numero: number; referencia: string; status: string; clienteNome: string; clienteTelefone: string; totalCentavos: number; meioPagamento: string; freteNome: string; rastreio: string | null; criadoEm: string; itens: Array<{ nome: string; quantidade: number }> }
+export interface EnderecoEntregaView { logradouro: string; numero: string; complemento?: string | null; bairro: string; cidade: string; uf: string; cep: string }
+export interface PedidoView { id: string; numero: number; referencia: string; status: string; clienteNome: string; clienteEmail: string; clienteTelefone: string; clienteDocumento: string; totalCentavos: number; subtotalCentavos: number; freteCentavos: number; descontoCentavos: number; cupomCodigo: string | null; meioPagamento: string; freteNome: string; rastreio: string | null; entrega: EnderecoEntregaView | null; criadoEm: string; itens: Array<{ nome: string; quantidade: number; sku: string | null; precoUnitarioCentavos: number }> }
 
 const STATUS: Record<string, string> = { ATIVA: "No ar", PROVISIONANDO: "Configurando", SUSPENSA: "Suspensa", CANCELADA: "Cancelada" };
 const PEDIDO: Record<string, string> = { AGUARDANDO_PAGAMENTO: "Aguardando pagamento", PAGO: "Pago — separar", EM_SEPARACAO: "Em separação", ENVIADO: "Enviado", ENTREGUE: "Entregue", CANCELADO: "Cancelado", ESTORNADO: "Estornado" };
@@ -84,6 +86,7 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
   const [rastreio, setRastreio] = useState<Record<string, string>>({});
   const [tema, setTema] = useState({ corPrimaria: loja.tema.corPrimaria, modo: loja.tema.modo, fonte: loja.tema.fonte, raio: loja.tema.raio, layout: loja.tema.layout });
   const [identidade, setIdentidade] = useState(loja.identidade);
+  const [ficha, setFicha] = useState<PedidoView | null>(null);
   const [limiteEstoque, setLimiteEstoque] = useState(String(loja.estoqueBaixoEm));
   // Produto sem embalagem cadastrada cota pela caixa padrão da loja, que
   // costuma ser maior — frete mais caro do que precisava, e é na tela do frete
@@ -281,6 +284,8 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
       {aba === "Anúncios" && <Anuncios pixels={loja.pixels} catalogo={catalogo} feedUrl={`${loja.url}/feed/merchant.xml`} chamar={chamar} ocupado={ocupado} />}
 
       {aba === "Pedidos" && (
+        <>
+        {ficha && <FichaPedido pedido={ficha} loja={{ nome: loja.nome, razaoSocial: loja.razaoSocial, cnpj: loja.cnpj }} aoFechar={() => setFicha(null)} />}
         <Secao titulo="Pedidos">
           {pedidos.length > 0 && (
             <p className="text-sm">
@@ -302,6 +307,7 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
                       <td className="text-xs">{new Date(p.criadoEm).toLocaleDateString("pt-BR")}</td>
                       <td className="py-2">
                         {p.status === "EM_SEPARACAO" && <input className={`${inputClasse} mb-1 h-9`} placeholder="Código de rastreio" value={rastreio[p.id] ?? ""} onChange={(e) => setRastreio({ ...rastreio, [p.id]: e.target.value })} />}
+                        <button className="btn-secundario mb-1 h-9 w-full px-3 text-xs" onClick={() => setFicha(p)}>Ficha de envio</button>
                         {["PAGO", "EM_SEPARACAO", "ENVIADO"].includes(p.status) && (
                           <button className="btn-secundario h-9 px-3 text-xs" disabled={ocupado} onClick={() => avancar(p)}>
                             {p.status === "PAGO" ? "Separar" : p.status === "EM_SEPARACAO" ? "Marcar enviado" : "Marcar entregue"}
@@ -315,6 +321,7 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
             </div>
           )}
         </Secao>
+        </>
       )}
 
       {aba === "Marca" && (

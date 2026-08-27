@@ -232,3 +232,25 @@ body {
 .prova-estrelas span { opacity: 0.35; }
 @media (min-width: 640px) { .prova-social ul { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 1024px) { .prova-social ul { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+/* Ficha de expedição — a tela é só o rascunho; o que importa é o papel. */
+.ficha-rotulo { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted-foreground); }
+.ficha-pedido address { font-size: 0.9375rem; }
+
+@media print {
+  /* Some tudo menos a ficha: o lojista aperta Imprimir e sai a folha certa,
+     sem menu, sem tabela de pedidos e sem os próprios botões. */
+  body * { visibility: hidden; }
+  .ficha-pedido, .ficha-pedido * { visibility: visible; }
+  .ficha-pedido {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    border: 0;
+    padding: 0;
+    background: #fff;
+    color: #000;
+  }
+  .ficha-acoes, .ficha-aviso { display: none; }
+  .ficha-itens { page-break-inside: avoid; }
+}
