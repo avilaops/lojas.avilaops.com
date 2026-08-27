@@ -17,15 +17,16 @@ import { FRETE_RETIRADA_ID, type ItemCarrinho, type OpcaoFrete } from "@avilaops
  */
 
 /**
- * API de servidor da CepCerto: a chave vai no caminho, não em cabeçalho.
+ * Cotação autenticada da CepCerto, com a chave de postagem no corpo.
  *
- * A plataforma chamava `widget_frete/api/cotacao` — o endpoint do widget, que
- * usa chave pública liberada por domínio — mandando a chave de API. Resultado:
- * 401 "domínio ou IP não autorizado" e toda loja caindo na tabela por UF sem
- * ninguém perceber. São credenciais diferentes para portas diferentes.
+ * Existem três portas na CepCerto e só esta serve: o endpoint do widget
+ * (`widget_frete/api/cotacao`) usa chave pública liberada por domínio e nos
+ * devolvia 401; o público (`ws/json-frete`) aceita a chave no caminho mas só
+ * traz Correios — Mini Envios, PAC e SEDEX. Este devolve **as seis
+ * transportadoras**, incluindo Jadlog e Loggi, que costumam ser mais baratas
+ * que o PAC. Cotar sem elas é entregar frete mais caro ao comprador.
  */
-const ENDPOINT = "https://cepcerto.com/ws/json-frete";
-const BASE = process.env.LOJAS_BASE_DOMAIN ?? "lojas.avilaops.com";
+const ENDPOINT = "https://cepcerto.com/api-cotacao-frete/";
 
 interface Caixa { altura: number; largura: number; comprimento: number }
 interface FaixaTabela { ufs: string[]; preco: number; prazoDiasUteis: number; nome?: string }
@@ -39,32 +40,40 @@ function numero(v: unknown): number | undefined {
   return undefined;
 }
 
+/** "até 5 dias" → 5. Sem número reconhecível, assume uma semana. */
+function diasDoPrazo(v: unknown): number {
+  const n = numero(String(v ?? "").replace(/[^\d]/g, " "));
+  return n && n > 0 ? Math.round(n) : 7;
+}
+
 /**
  * Converte a resposta da CepCerto nas opções que o checkout mostra.
  *
- * Os campos `*_desconto_cepcerto` são o preço do contrato deles com os
- * Correios — mais barato que o balcão. É o que o comprador vê, e é o motivo de
- * a loja despachar pela CepCerto: cotar o contrato e postar no balcão faria o
- * lojista pagar a diferença do próprio bolso.
+ * Cada transportadora vem como um par `valor_x` / `prazo_x` no mesmo objeto —
+ * não é uma lista. O `_balcao` que acompanha PAC e SEDEX é o preço de balcão
+ * dos Correios; mostramos o do contrato, que é o que a loja paga de fato.
  */
 function extrair(dados: Record<string, unknown>): OpcaoFrete[] {
-  const preco = (v: unknown) => {
-    const n = numero(v);
-    return n === undefined ? undefined : Math.round(n * 100);
-  };
-  const prazo = (v: unknown) => Math.round(numero(v) ?? 7);
-
-  const opcoes: OpcaoFrete[] = [];
-  const servicos: Array<[string, string, unknown, unknown, unknown]> = [
-    ["mini", "Mini Envios", dados.valorminienvios_cepcerto, undefined, dados.prazominienvios_cepcerto],
-    ["pac", "PAC", dados.valorpac_desconto_cepcerto, dados.valorpac, dados.prazopac],
-    ["sedex", "SEDEX", dados.valorsedex_desconto_cepcerto, dados.valorsedex, dados.prazosedex],
+  const frete = (dados.frete ?? dados) as Record<string, unknown>;
+  const servicos: Array<[string, string, string, string]> = [
+    ["mini-envios", "Mini Envios", "valor_mini_envios", "prazo_mini_envios"],
+    ["jadlog-dotcom", "Jadlog .com", "valor_jadlog_dotcom", "prazo_jadlog_dotcom"],
+    ["jadlog-package", "Jadlog Package", "valor_jadlog_package", "prazo_jadlog_package"],
+    ["loggi", "Loggi", "valor_loggi", "prazo_loggi"],
+    ["pac", "PAC", "valor_pac", "prazo_pac"],
+    ["sedex", "SEDEX", "valor_sedex", "prazo_sedex"],
   ];
 
-  for (const [id, nome, comDesconto, cheio, dias] of servicos) {
-    const valor = preco(comDesconto) ?? preco(cheio);
+  const opcoes: OpcaoFrete[] = [];
+  for (const [id, nome, campoValor, campoPrazo] of servicos) {
+    const valor = numero(frete[campoValor]);
     if (valor === undefined || valor <= 0) continue;
-    opcoes.push({ id: `cepcerto:${id}`, nome, preco: valor, prazoDiasUteis: prazo(dias) });
+    opcoes.push({
+      id: `cepcerto:${id}`,
+      nome,
+      preco: Math.round(valor * 100),
+      prazoDiasUteis: diasDoPrazo(frete[campoPrazo]),
+    });
   }
   return opcoes.sort((a, b) => a.preco - b.preco);
 }
@@ -99,19 +108,34 @@ function pesoTotalKg(t: Tenant, itens: ItemCarrinho[]): number {
 }
 
 async function cotarCepCerto(t: Tenant, cep: string, itens: ItemCarrinho[]): Promise<OpcaoFrete[] | null> {
-  const chave = process.env.CEPCERTO_CONSULTA_KEY ?? process.env.CEP_CERTO_CONSULTA_API_KEY;
+  const chave = process.env.CEPCERTO_POSTAGEM_KEY ?? process.env.CEP_CERTO_POSTAGEM_API_KEY;
   const origem = (t.cepOrigem ?? "").replace(/\D/g, "");
   if (!chave || origem.length !== 8) return null;
 
   const caixa = caixaDoCarrinho(t, itens);
 
   try {
-    // Tudo no caminho: /cep-origem/cep-destino/peso-kg/altura/largura/comprimento/chave
-    const url = [ENDPOINT, origem, cep, pesoTotalKg(t, itens), caixa.altura, caixa.largura, caixa.comprimento, chave].join("/");
-    const r = await fetch(url, { headers: { "user-agent": BASE }, signal: AbortSignal.timeout(8000) });
+    // O seguro da CepCerto tem piso de R$ 50: pedido mais barato que isso é
+    // cotado com o piso, senão a requisição inteira é recusada.
+    const valorSeguro = Math.max(itens.reduce((s, i) => s + i.precoUnitario * i.quantidade, 0) / 100, 50);
+    const r = await fetch(ENDPOINT, {
+      method: "POST",
+      headers: { "content-type": "application/json", accept: "application/json" },
+      body: JSON.stringify({
+        token_cliente_postagem: chave,
+        cep_remetente: origem,
+        cep_destinatario: cep,
+        peso: String(pesoTotalKg(t, itens)),
+        altura: String(caixa.altura),
+        largura: String(caixa.largura),
+        comprimento: String(caixa.comprimento),
+        valor_encomenda: valorSeguro.toFixed(2),
+      }),
+      signal: AbortSignal.timeout(8000),
+    });
     if (!r.ok) return null;
     const dados = (await r.json()) as Record<string, unknown>;
-    if (dados?.status === "erro" || dados?.erro) return null;
+    if (dados?.status === "erro") return null;
     const cotacoes = extrair(dados);
     return cotacoes.length ? cotacoes : null;
   } catch {
