@@ -82,6 +82,36 @@ const FAQ = [
   ["Consigo trocar cores, fontes e layout?", "Sim. Você escolhe a direção visual e um dos layouts profissionais. O sistema mantém a experiência consistente no celular e no computador."],
 ] as const;
 
+const EXEMPLOS_VISUAIS = [
+  {
+    segmento: "Confeitaria",
+    marca: "Doce Brasa",
+    produto: "Caixa presente",
+    preco: "R$ 64",
+    imagem: "/media/exemplo-confeitaria.webp",
+    alt: "Vitrine de confeitaria com bolo de chocolate e brigadeiros",
+    tema: "terracota",
+  },
+  {
+    segmento: "Moda & acessórios",
+    marca: "Norte Studio",
+    produto: "Bolsa Essencial",
+    preco: "R$ 189",
+    imagem: "/media/exemplo-moda.webp",
+    alt: "Vitrine de moda com bolsa, óculos e peças em linho",
+    tema: "cobalto",
+  },
+  {
+    segmento: "Casa & feito à mão",
+    marca: "Casa Serena",
+    produto: "Coleção Origens",
+    preco: "Ver coleção",
+    imagem: "/media/exemplo-casa.webp",
+    alt: "Vitrine de decoração artesanal com cerâmica, fibras e madeira",
+    tema: "areia",
+  },
+] as const;
+
 function MarcaLojas({ compacta = false }: { compacta?: boolean }) {
   return (
     <span className="pl-marca">
@@ -155,14 +185,55 @@ export default function LandingPlataforma() {
         <div className="pl-container">
           <header className="pl-secao-cabecalho">
             <div><span className="pl-kicker">Da ideia à operação</span><h2>Você cuida do negócio.<br />A estrutura cuida do resto.</h2></div>
-            <p>Em vez de contratar cinco serviços e tentar fazê-los conversar, sua loja nasce como um sistema único, organizado para vender e evoluir.</p>
+            <p>Uma jornada guiada transforma suas escolhas em uma operação pronta para vender.</p>
           </header>
 
           <div className="pl-linha-processo">
-            <article><span>01</span><div className="pl-processo-icone"><WandSparkles /></div><h3>Conte o que quer construir</h3><p>Nome, produtos, estilo e operação. O onboarding transforma suas respostas em uma loja pronta.</p><em>Diagnóstico de marca</em></article>
-            <article><span>02</span><div className="pl-processo-icone"><Layers3 /></div><h3>Receba uma presença completa</h3><p>Site, domínio, e-mail, catálogo e checkout com a mesma identidade em cada ponto de contato.</p><em>Publicação integrada</em></article>
-            <article><span>03</span><div className="pl-processo-icone"><Bot /></div><h3>Venda com processos automáticos</h3><p>n8n e WhatsApp conectam confirmação, recuperação, estoque e pós-venda à sua rotina.</p><em>Rotinas conectadas</em></article>
-            <article><span>04</span><div className="pl-processo-icone"><BarChart3 /></div><h3>Aprenda e cresça</h3><p>Dados da operação viram acompanhamento claro, novos serviços e decisões melhores.</p><em>Evolução contínua</em></article>
+            <article><span>01</span><div className="pl-processo-icone"><WandSparkles /></div><h3>Conte o que quer construir</h3><p>Responda cinco etapas guiadas.</p><em>Diagnóstico de marca</em></article>
+            <article><span>02</span><div className="pl-processo-icone"><Layers3 /></div><h3>Receba uma presença completa</h3><p>Identidade, catálogo e checkout juntos.</p><em>Publicação integrada</em></article>
+            <article><span>03</span><div className="pl-processo-icone"><Bot /></div><h3>Venda no automático</h3><p>Venda, estoque e pós-venda conectados.</p><em>Rotinas conectadas</em></article>
+            <article><span>04</span><div className="pl-processo-icone"><BarChart3 /></div><h3>Aprenda e cresça</h3><p>Relatórios claros para decidir melhor.</p><em>Evolução contínua</em></article>
+          </div>
+        </div>
+      </section>
+
+      <section className="pl-secao pl-exemplos">
+        <div className="pl-container">
+          <header className="pl-exemplos-cabecalho">
+            <div>
+              <span className="pl-kicker">Exemplos visuais</span>
+              <h2>Um negócio.<br />Muitas formas de vender.</h2>
+            </div>
+            <Link href="/criar" className="pl-link">Quero ver a minha <ArrowRight size={16} /></Link>
+          </header>
+
+          <div className="pl-exemplos-grid">
+            {EXEMPLOS_VISUAIS.map((exemplo, indice) => (
+              <article key={exemplo.marca} className={`pl-exemplo pl-exemplo-${exemplo.tema}`}>
+                <div className="pl-exemplo-imagem">
+                  <Image
+                    src={exemplo.imagem}
+                    alt={exemplo.alt}
+                    fill
+                    sizes="(max-width: 700px) 92vw, (max-width: 1050px) 44vw, 33vw"
+                  />
+                  <div className="pl-exemplo-navegador" aria-hidden="true">
+                    <span><i /><i /><i /></span>
+                    <b>{exemplo.marca}</b>
+                    <em>•••</em>
+                  </div>
+                  <div className="pl-exemplo-marca">
+                    <span>{exemplo.segmento}</span>
+                    <h3>{exemplo.marca}</h3>
+                  </div>
+                  <div className="pl-exemplo-produto">
+                    <span><small>0{indice + 1}</small>{exemplo.produto}</span>
+                    <strong>{exemplo.preco}</strong>
+                  </div>
+                </div>
+                <p><BadgeCheck size={14} /> Exemplo de identidade aplicada</p>
+              </article>
+            ))}
           </div>
         </div>
       </section>

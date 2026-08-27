@@ -55,28 +55,23 @@ export async function saldoDaCarteira(): Promise<SaldoPostagem> {
   return { cliente: d.nome_cliente ?? "—", saldoCentavos: Math.round((Number.parseFloat(bruto) || 0) * 100) };
 }
 
-/** O serviço que o comprador escolheu, traduzido para o que a CepCerto espera. */
-const SERVICO_CEPCERTO: Record<string, string> = {
-  "cepcerto:pac": "pac",
-  "cepcerto:sedex": "sedex",
-  "cepcerto:mini-envios": "pac", // Mini Envios é postado como PAC na emissão
-  "cepcerto:jadlog-package": "jadlog-package",
-  "cepcerto:jadlog-dotcom": "jadlog-dotcom",
-  "cepcerto:loggi": "loggi",
-};
-
-/** Descobre o serviço a partir do nome gravado no pedido, que é o que sobra. */
-function servicoDoPedido(freteNome: string): string {
+/**
+ * Descobre o serviço de postagem a partir do nome gravado no pedido.
+ *
+ * Devolve `null` quando não reconhece, e o chamador recusa a emissão. Rebaixar
+ * em silêncio para PAC seria a pior saída possível: o comprador pagou o preço
+ * de um serviço e a etiqueta sairia de outro, com a diferença saindo da nossa
+ * carteira sem ninguém ver.
+ */
+function servicoDoPedido(freteNome: string): string | null {
   const n = freteNome.toLowerCase();
   if (n.includes("sedex")) return "sedex";
   if (n.includes("jadlog") && n.includes(".com")) return "jadlog-dotcom";
   if (n.includes("jadlog")) return "jadlog-package";
   if (n.includes("loggi")) return "loggi";
-  return "pac";
+  if (n.includes("pac")) return "pac";
+  return null;
 }
-
-export const servicoDaOpcao = (idOpcao: string, freteNome: string) =>
-  SERVICO_CEPCERTO[idOpcao] ?? servicoDoPedido(freteNome);
 
 interface RespostaEmissao {
   status?: string;
@@ -145,6 +140,13 @@ export async function emitirEtiqueta(
   const entrega = pedido.entrega as EnderecoEntrega | null;
   if (!entrega) throw new Error("Pedido de retirada na loja não gera etiqueta.");
 
+  const servico = servicoDoPedido(pedido.freteNome);
+  if (!servico) {
+    throw new Error(
+      `Não sei postar "${pedido.freteNome}" pela CepCerto. Despache manualmente e cole o código de rastreio no pedido.`,
+    );
+  }
+
   const origem = (t.cepOrigem ?? "").replace(/\D/g, "");
   if (origem.length !== 8) throw new Error("A loja precisa do CEP de origem para despachar (aba Entrega).");
 
@@ -178,7 +180,7 @@ export async function emitirEtiqueta(
     // Mesmo pedido, mesmo request_id: a CepCerto recusa a repetição em vez de
     // cobrar duas vezes se o botão for clicado de novo durante a chamada.
     request_id: `lojas-${pedido.referencia}`,
-    tipo_entrega: servicoDoPedido(pedido.freteNome),
+    tipo_entrega: servico,
     logistica_reversa: "N",
     cep_remetente: origem,
     cep_destinatario: entrega.cep.replace(/\D/g, ""),
@@ -216,7 +218,7 @@ export async function emitirEtiqueta(
     create: {
       tenantId: t.id,
       pedidoId: pedido.id,
-      servico: frete.servico ?? servicoDoPedido(pedido.freteNome),
+      servico: frete.servico ?? servico,
       codigoObjeto: frete.codigoObjeto || null,
       custoCentavos,
       cobradoDoCompradorCentavos: pedido.freteCentavos,

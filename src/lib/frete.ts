@@ -52,11 +52,16 @@ function diasDoPrazo(v: unknown): number {
  * Cada transportadora vem como um par `valor_x` / `prazo_x` no mesmo objeto —
  * não é uma lista. O `_balcao` que acompanha PAC e SEDEX é o preço de balcão
  * dos Correios; mostramos o do contrato, que é o que a loja paga de fato.
+ *
+ * **Mini Envios fica de fora de propósito.** A CepCerto cota (R$ 17,15 onde o
+ * PAC pede 22,37) mas não posta: a emissão só aceita sedex, pac, jadlog e
+ * loggi. Oferecer no checkout significaria cobrar 17,15 do comprador e emitir
+ * uma etiqueta PAC de 22,37 — prejuízo em toda venda que escolhesse a opção
+ * mais barata, que é justamente a que mais gente escolhe.
  */
 function extrair(dados: Record<string, unknown>): OpcaoFrete[] {
   const frete = (dados.frete ?? dados) as Record<string, unknown>;
   const servicos: Array<[string, string, string, string]> = [
-    ["mini-envios", "Mini Envios", "valor_mini_envios", "prazo_mini_envios"],
     ["jadlog-dotcom", "Jadlog .com", "valor_jadlog_dotcom", "prazo_jadlog_dotcom"],
     ["jadlog-package", "Jadlog Package", "valor_jadlog_package", "prazo_jadlog_package"],
     ["loggi", "Loggi", "valor_loggi", "prazo_loggi"],
