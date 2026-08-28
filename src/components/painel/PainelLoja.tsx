@@ -26,6 +26,7 @@ export interface LojaView {
   plano: string;
   tema: TemaLoja;
   identidade: IdentidadeLoja;
+  segmento: string;
   slogan: string | null;
   logoUrl: string | null;
   whatsapp: string | null;
@@ -85,6 +86,7 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
   const [csv, setCsv] = useState<{ nome: string; produtos: Array<Record<string, unknown>>; erros: string[] } | null>(null);
   const [rastreio, setRastreio] = useState<Record<string, string>>({});
   const [tema, setTema] = useState({ corPrimaria: loja.tema.corPrimaria, modo: loja.tema.modo, fonte: loja.tema.fonte, raio: loja.tema.raio, layout: loja.tema.layout });
+  const [segmento, setSegmento] = useState(loja.segmento);
   const [identidade, setIdentidade] = useState(loja.identidade);
   const [ficha, setFicha] = useState<PedidoView | null>(null);
   const [limiteEstoque, setLimiteEstoque] = useState(String(loja.estoqueBaixoEm));
@@ -379,6 +381,12 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
             <Campo label="Fonte"><select className={inputClasse} value={tema.fonte} onChange={(e) => setTema({ ...tema, fonte: e.target.value as typeof tema.fonte })}>{FONTES.map((x) => <option key={x.valor} value={x.valor}>{x.rotulo}</option>)}</select></Campo>
             <Campo label="Cantos"><select className={inputClasse} value={tema.raio} onChange={(e) => setTema({ ...tema, raio: e.target.value as typeof tema.raio })}><option value="reto">Retos</option><option value="suave">Suaves</option><option value="redondo">Redondos</option></select></Campo>
           </div>
+          <Campo label="Ramo da loja" ajuda="Peças e acessórios para motos liga a garagem: o cliente escolhe a moto e a loja mostra só o que serve. A compatibilidade é cadastrada em cada produto.">
+            <select className={inputClasse} value={segmento} onChange={(e) => setSegmento(e.target.value)}>
+              <option value="geral">Loja geral</option>
+              <option value="motopecas">Peças e acessórios para motos</option>
+            </select>
+          </Campo>
           <Campo label="Layout da página inicial" ajuda="Quatro composições prontas dos mesmos blocos. Troque e veja na loja na hora.">
             <div className="grid gap-2 sm:grid-cols-2">
               {LAYOUTS.map((l) => (
@@ -419,7 +427,7 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
             </div>
           </Campo>
           <div className="flex flex-wrap gap-2">
-            <button className="btn-primario" disabled={ocupado} onClick={() => chamar("/api/painel/loja", "PATCH", { tema, identidade, ...Object.fromEntries(Object.entries(contato).filter(([, v]) => v !== "")), avisoTopo: contato.avisoTopo.trim() || null, bannerUrl: contato.bannerUrl || null }, "Marca publicada.")}>Publicar identidade</button>
+            <button className="btn-primario" disabled={ocupado} onClick={() => chamar("/api/painel/loja", "PATCH", { tema, identidade, segmento, ...Object.fromEntries(Object.entries(contato).filter(([, v]) => v !== "")), avisoTopo: contato.avisoTopo.trim() || null, bannerUrl: contato.bannerUrl || null }, "Marca publicada.")}>Publicar identidade</button>
             <button className="btn-secundario" disabled={ocupado} onClick={() => chamar("/api/painel/loja", "POST", undefined, "Configuração reexecutada.")}>Configurar DNS e e-mail</button>
           </div>
           {Object.keys(loja.provisionamento).length > 0 && (

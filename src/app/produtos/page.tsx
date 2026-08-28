@@ -4,6 +4,8 @@ import { exigirTenant, lojaVende } from "@/lib/tenant";
 import { listarCategorias, listarProdutos, type OrdemCatalogo } from "@/lib/catalogo";
 import ProductCard from "@/components/ProductCard";
 import FiltrosProdutos from "@/components/FiltrosProdutos";
+import { minhaMoto } from "@/lib/minha-moto";
+import { nomeDaMoto } from "@/lib/motos";
 
 export const metadata: Metadata = { title: "Produtos" };
 
@@ -14,20 +16,26 @@ const reais = (v?: string) => {
   return Number.isFinite(n) ? Math.round(n * 100) : undefined;
 };
 
-export default async function Produtos({ searchParams }: { searchParams: Promise<{ q?: string; categoria?: string; ordem?: string; min?: string; max?: string }> }) {
+export default async function Produtos({ searchParams }: { searchParams: Promise<{ q?: string; categoria?: string; ordem?: string; min?: string; max?: string; marca?: string; modelo?: string; ano?: string; moto?: string }> }) {
   const t = await exigirTenant();
   const sp = await searchParams;
   const ordem = ORDENS.has(sp.ordem as OrdemCatalogo) ? (sp.ordem as OrdemCatalogo) : "relevancia";
+  const moto = t.segmento === "motopecas" ? await minhaMoto(sp) : null;
   const [categorias, produtos] = await Promise.all([
     listarCategorias(t.id),
-    listarProdutos(t.id, { busca: sp.q?.trim() || undefined, categoriaSlug: sp.categoria || undefined, ordem, minCentavos: reais(sp.min), maxCentavos: reais(sp.max) }),
+    listarProdutos(t.id, { busca: sp.q?.trim() || undefined, categoriaSlug: sp.categoria || undefined, ordem, minCentavos: reais(sp.min), maxCentavos: reais(sp.max), moto }),
   ]);
   const categoriaAtual = categorias.find((c) => c.slug === sp.categoria);
+  const titulo = sp.q ? `Resultados para “${sp.q}”` : categoriaAtual ? categoriaAtual.nome : moto ? `Peças para ${nomeDaMoto(moto)}` : "Todos os produtos";
 
   return (
     <div className="container-loja py-8">
-      <h1 className="mb-1 text-2xl font-bold">{sp.q ? `Resultados para “${sp.q}”` : categoriaAtual ? categoriaAtual.nome : "Todos os produtos"}</h1>
-      <p className="mb-4 text-sm text-muted-foreground">{produtos.length} item(ns)</p>
+      <h1 className="mb-1 text-2xl font-bold">{titulo}</h1>
+      <p className="mb-4 text-sm text-muted-foreground">
+        {produtos.length} item(ns)
+        {moto && (sp.q || categoriaAtual) && <> · mostrando o que serve na {nomeDaMoto(moto)}</>}
+        {moto && <> · <Link href="/produtos?moto=todas" className="underline">ver catálogo completo</Link></>}
+      </p>
       <FiltrosProdutos categorias={categorias} valores={sp} />
       {produtos.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
@@ -36,7 +44,7 @@ export default async function Produtos({ searchParams }: { searchParams: Promise
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {produtos.map((p) => (
-            <ProductCard key={p.id} produto={p} vende={lojaVende(t)} whatsapp={t.whatsapp} />
+            <ProductCard key={p.id} produto={p} vende={lojaVende(t)} whatsapp={t.whatsapp} moto={moto} />
           ))}
         </div>
       )}

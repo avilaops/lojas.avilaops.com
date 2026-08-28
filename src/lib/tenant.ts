@@ -125,6 +125,7 @@ export function tenantPublico(t: Tenant) {
     estoqueBaixoEm: t.estoqueBaixoEm,
     freteGratisAcima: t.freteGratisAcima,
     avisoTopo: t.avisoTopo,
+    segmento: t.segmento,
     vende: lojaVende(t),
   };
 }

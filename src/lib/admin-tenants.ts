@@ -75,9 +75,15 @@ export async function importarProdutos(tenantId: string, produtos: ProdutoEntrad
     }
 
     const slug = p.slug ? slugificar(p.slug) : slugificar(p.nome);
-    const { categoria: _c, ...campos } = p;
+    const { categoria: _c, compatibilidade, ...campos } = p;
     void _c;
-    const dados = { ...campos, slug, categoriaId, atributos: (p.atributos ?? {}) as Prisma.InputJsonValue };
+    const dados = {
+      ...campos,
+      slug,
+      categoriaId,
+      atributos: (p.atributos ?? {}) as Prisma.InputJsonValue,
+      ...(compatibilidade ? { compatibilidade: compatibilidade as unknown as Prisma.InputJsonValue } : {}),
+    };
 
     const existente = p.sku
       ? await prisma.produto.findFirst({ where: { tenantId, sku: p.sku } })

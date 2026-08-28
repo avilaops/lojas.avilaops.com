@@ -4,9 +4,17 @@ import type { Categoria } from "@prisma/client";
  * Barra de filtros da página de produtos. Formulário GET puro: funciona sem
  * JavaScript, cada combinação tem URL própria (compartilhável e indexável).
  */
-export default function FiltrosProdutos({ categorias, valores }: { categorias: Categoria[]; valores: { q?: string; categoria?: string; ordem?: string; min?: string; max?: string } }) {
+export default function FiltrosProdutos({ categorias, valores }: { categorias: Categoria[]; valores: { q?: string; categoria?: string; ordem?: string; min?: string; max?: string; marca?: string; modelo?: string; ano?: string; moto?: string } }) {
   return (
     <form action="/produtos" className="mb-6 grid gap-2 rounded-xl border border-border bg-card p-3 sm:grid-cols-[1fr_auto_auto_auto_auto_auto]">
+      {valores.marca && valores.modelo && (
+        <>
+          <input type="hidden" name="marca" value={valores.marca} />
+          <input type="hidden" name="modelo" value={valores.modelo} />
+          {valores.ano && <input type="hidden" name="ano" value={valores.ano} />}
+        </>
+      )}
+      {valores.moto === "todas" && <input type="hidden" name="moto" value="todas" />}
       <input name="q" defaultValue={valores.q ?? ""} placeholder="Buscar" className="h-10 rounded-lg border border-border bg-background px-3 text-sm" />
       <select name="categoria" defaultValue={valores.categoria ?? ""} className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
         <option value="">Todas as categorias</option>

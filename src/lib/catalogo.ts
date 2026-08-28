@@ -1,6 +1,7 @@
 import type { Prisma, Produto, Categoria } from "@prisma/client";
 import type { ItemCarrinho } from "@avilaops/checkout";
 import { prisma } from "./db";
+import { encaixe, lerCompatibilidade, type Moto } from "./motos";
 
 export type ProdutoComCategoria = Produto & { categoria: Categoria | null };
 
@@ -20,6 +21,11 @@ export interface FiltroCatalogo {
   /** Deixa de fora este id (ex.: "relacionados" na página do produto). */
   excetoId?: string;
   limite?: number;
+  /**
+   * Moto do comprador (segmento motopecas): o que serve vem primeiro, o
+   * universal (sem compatibilidade) vem depois, o que não serve some.
+   */
+  moto?: Moto | null;
 }
 
 const ORDENS: Record<OrdemCatalogo, Prisma.ProdutoOrderByWithRelationInput[]> = {
@@ -46,7 +52,7 @@ export function termosDeBusca(texto: string): string[] {
 }
 
 export async function listarProdutos(tenantId: string, filtro?: FiltroCatalogo) {
-  return prisma.produto.findMany({
+  const produtos = await prisma.produto.findMany({
     where: {
       tenantId,
       ativo: true,
@@ -60,8 +66,48 @@ export async function listarProdutos(tenantId: string, filtro?: FiltroCatalogo) 
     },
     include: { categoria: true },
     orderBy: ORDENS[filtro?.ordem ?? "relevancia"],
-    ...(filtro?.limite ? { take: filtro.limite } : {}),
+    // Com moto escolhida o corte é feito depois, então o limite também.
+    ...(filtro?.limite && !filtro.moto ? { take: filtro.limite } : {}),
   });
+  if (!filtro?.moto) return produtos;
+  // Catálogo de loja pequena cabe na memória; filtrar aqui evita consulta em
+  // JSON com faixa de anos, que o Prisma não expressa e o Postgres não indexa bem.
+  const moto = filtro.moto;
+  const servem = produtos.filter((p) => encaixe(p.compatibilidade, moto) === "serve");
+  const universais = produtos.filter((p) => encaixe(p.compatibilidade, moto) === "universal");
+  const lista = [...servem, ...universais];
+  return filtro.limite ? lista.slice(0, filtro.limite) : lista;
+}
+
+/**
+ * Marcas e modelos que a loja realmente atende (das compatibilidades dos
+ * produtos ativos), com a contagem de peças por modelo. Alimenta o seletor
+ * (junto com o catálogo-base) e o bloco "compre por moto" da home.
+ */
+export async function motosDaLoja(tenantId: string) {
+  const linhas = await prisma.produto.findMany({ where: { tenantId, ativo: true }, select: { compatibilidade: true } });
+  const porMarca: Record<string, string[]> = {};
+  const contagem = new Map<string, { marca: string; modelo: string; pecas: number }>();
+  for (const l of linhas) {
+    const vistas = new Set<string>();
+    for (const c of lerCompatibilidade(l.compatibilidade)) {
+      const chave = `${c.marca}|${c.modelo}`;
+      if (!(porMarca[c.marca] ??= []).includes(c.modelo)) porMarca[c.marca].push(c.modelo);
+      if (vistas.has(chave)) continue;
+      vistas.add(chave);
+      const atual = contagem.get(chave) ?? { marca: c.marca, modelo: c.modelo, pecas: 0 };
+      atual.pecas++;
+      contagem.set(chave, atual);
+    }
+  }
+  const populares = [...contagem.values()].sort((a, b) => b.pecas - a.pecas || a.modelo.localeCompare(b.modelo, "pt-BR", { numeric: true }));
+  return { porMarca, populares };
+}
+
+/** Marcas de produto (fabricantes de peças) da loja, mais frequentes primeiro. */
+export async function marcasDaLoja(tenantId: string): Promise<string[]> {
+  const grupos = await prisma.produto.groupBy({ by: ["marca"], where: { tenantId, ativo: true, marca: { not: null } }, _count: { _all: true }, orderBy: [{ _count: { marca: "desc" } }, { marca: "asc" }], take: 24 });
+  return grupos.map((g) => g.marca).filter((m): m is string => !!m);
 }
 
 /** Média e contagem das avaliações aprovadas de um produto. */

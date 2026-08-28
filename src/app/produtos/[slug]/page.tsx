@@ -12,6 +12,9 @@ import EventoVerProduto from "@/components/EventoVerProduto";
 import ProductCard from "@/components/ProductCard";
 import { prisma } from "@/lib/db";
 import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
+import Compatibilidade from "@/components/Compatibilidade";
+import { minhaMoto } from "@/lib/minha-moto";
+import { lerCompatibilidade } from "@/lib/motos";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -30,11 +33,13 @@ export default async function ProdutoPage({ params }: Props) {
   if (!p) notFound();
   const vende = lojaVende(t);
   const disponivel = p.disponibilidade !== "out_of_stock";
+  const moto = t.segmento === "motopecas" ? await minhaMoto() : null;
   const [avaliacoes, resumo, relacionados] = await Promise.all([
     prisma.avaliacao.findMany({ where: { produtoId: p.id, aprovada: true }, orderBy: { criadoEm: "desc" }, take: 20 }),
     resumoAvaliacoes(p.id),
-    listarProdutos(t.id, { categoriaSlug: p.categoria?.slug, excetoId: p.id, limite: 4 }),
+    listarProdutos(t.id, { categoriaSlug: p.categoria?.slug, excetoId: p.id, limite: 4, moto }),
   ]);
+  const compat = lerCompatibilidade(p.compatibilidade);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -43,6 +48,8 @@ export default async function ProdutoPage({ params }: Props) {
     ...(p.marca ? { brand: { "@type": "Brand", name: p.marca } } : {}),
     ...(p.sku ? { sku: p.sku } : {}),
     ...(p.gtin ? { gtin: p.gtin } : {}),
+    ...(p.codigoOriginal ? { mpn: p.codigoOriginal } : {}),
+    ...(compat.length ? { isAccessoryOrSparePartFor: compat.map((c) => ({ "@type": "Vehicle", name: `${c.marca} ${c.modelo}`, brand: { "@type": "Brand", name: c.marca }, model: c.modelo })) } : {}),
     image: p.imagens,
     description: p.descricaoCurta ?? p.descricao ?? undefined,
     ...(resumo.media != null ? { aggregateRating: { "@type": "AggregateRating", ratingValue: resumo.media, reviewCount: resumo.total } } : {}),
@@ -121,6 +128,8 @@ export default async function ProdutoPage({ params }: Props) {
             <div className="mt-4"><EstoqueBaixo estoque={p.estoque} limite={t.estoqueBaixoEm} /></div>
           )}
 
+          <Compatibilidade compatibilidade={p.compatibilidade} codigoOriginal={p.codigoOriginal} codigosEquivalentes={p.codigosEquivalentes} moto={moto} />
+
           <ul className="mt-6 space-y-1 text-sm text-muted-foreground">
             {t.retiradaNaLoja && <li>✔ Retirada na loja sem custo</li>}
             <li>✔ Envio em até {t.despachoDiasUteis} dia(s) útil(eis) após o pagamento</li>
@@ -150,7 +159,7 @@ export default async function ProdutoPage({ params }: Props) {
         <section className="mt-12">
           <h2 className="mb-4 text-base font-bold">Você também pode gostar</h2>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {relacionados.map((r) => <ProductCard key={r.id} produto={r} vende={vende} whatsapp={t.whatsapp} />)}
+            {relacionados.map((r) => <ProductCard key={r.id} produto={r} vende={vende} whatsapp={t.whatsapp} moto={moto} />)}
           </div>
         </section>
       )}

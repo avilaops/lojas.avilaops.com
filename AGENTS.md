@@ -11,6 +11,10 @@
   `montarPedidoSeguro` com `resolverItensDoCatalogo`.
 - **Tokens de gateway só cifrados** (`src/lib/cofre.ts`). Nunca logar, nunca
   devolver em resposta de API.
+- **Ramo da loja é dado, não código.** `Tenant.segmento` liga blocos de vitrine
+  (hoje só `motopecas`: garagem, compatibilidade, código original). O que o
+  bloco mostra vem do catálogo (`Produto.compatibilidade`), nunca de uma lista
+  por loja. Ver `src/lib/motos.ts`.
 - **Automação é n8n.** Código emite evento (`src/lib/eventos.ts`); o que fazer
   com ele é fluxo.
 - **Português nos nomes e comentários**, como no resto do monorepo.

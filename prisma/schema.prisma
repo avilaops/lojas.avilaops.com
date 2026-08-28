@@ -48,6 +48,12 @@ model Tenant {
   tema        Json      @default("{}")   // TemaLoja em src/lib/tema.ts
   identidade  Json      @default("{}")   // diagnóstico, voz e direção fotográfica
   slogan      String?
+  /**
+   * Segmento da loja. Liga blocos de vitrine específicos do ramo sem código
+   * por loja: "motopecas" ativa a garagem (peças por moto), compatibilidade
+   * e busca por código original. "geral" é a loja comum.
+   */
+  segmento    String    @default("geral")
   /// Barra fina acima do cabeçalho. Um texto curto, o mesmo em toda a loja:
   /// é o lugar de "frete grátis acima de X" e de aviso de prazo em data
   /// especial, sem ninguém pedir uma página nova.
@@ -187,6 +193,12 @@ model Produto {
   larguraCm     Float?
   comprimentoCm Float?
   atributos     Json     @default("{}") // livre: { "volumeMl": 500, "cor": "azul" }
+
+  // Peças e acessórios (segmento "motopecas"): a que veículos o item serve.
+  // Vazio = universal (capacete, óleo, serviço). Ver src/lib/motos.ts.
+  codigoOriginal      String?                       // código OEM do fabricante da moto
+  codigosEquivalentes String[] @default([])         // cross-reference: outras marcas/códigos
+  compatibilidade     Json     @default("[]")       // [{ marca, modelo, anoDe?, anoAte? }]
   /// Nomes das opções de variação, na ordem de exibição: ["Tamanho", "Cor"].
   /// Vazio = produto simples (estoque no próprio produto).
   opcoes        String[] @default([])

@@ -34,7 +34,8 @@ export async function GET() {
       <g:condition>new</g:condition>
       ${p.marca ? `<g:brand>${esc(p.marca)}</g:brand>` : ""}
       ${p.gtin ? `<g:gtin>${esc(p.gtin)}</g:gtin>` : ""}
-      ${!p.gtin ? "<g:identifier_exists>no</g:identifier_exists>" : ""}
+      ${p.codigoOriginal ? `<g:mpn>${esc(p.codigoOriginal)}</g:mpn>` : ""}
+      ${!p.gtin && !p.codigoOriginal ? "<g:identifier_exists>no</g:identifier_exists>" : ""}
       ${p.categoria ? `<g:product_type>${esc(p.categoria.nome)}</g:product_type>` : ""}
       ${p.pesoKg != null ? `<g:shipping_weight>${p.pesoKg} kg</g:shipping_weight>` : ""}
       ${extra}

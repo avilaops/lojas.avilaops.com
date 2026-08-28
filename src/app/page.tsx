@@ -1,5 +1,7 @@
 import { exigirTenant, identidadeDa, lojaVende, temaDo } from "@/lib/tenant";
-import { listarCategorias, listarProdutos, provaSocialDa } from "@/lib/catalogo";
+import { listarCategorias, listarProdutos, marcasDaLoja, motosDaLoja, provaSocialDa } from "@/lib/catalogo";
+import { minhaMoto } from "@/lib/minha-moto";
+import Garagem from "@/components/home/Garagem";
 import Classico from "@/components/home/Classico";
 import Vitrine from "@/components/home/Vitrine";
 import Editorial from "@/components/home/Editorial";
@@ -13,8 +15,16 @@ import ProvaSocial from "@/components/home/ProvaSocial";
  */
 export default async function Home() {
   const t = await exigirTenant();
-  const [categorias, destaques, prova] = await Promise.all([listarCategorias(t.id), listarProdutos(t.id, { destaque: true }), provaSocialDa(t.id)]);
-  const vitrine = destaques.length ? destaques : await listarProdutos(t.id);
+  const motopecas = t.segmento === "motopecas";
+  const moto = motopecas ? await minhaMoto() : null;
+  const [categorias, destaques, prova, motos, marcas] = await Promise.all([
+    listarCategorias(t.id),
+    listarProdutos(t.id, { destaque: true, moto }),
+    provaSocialDa(t.id),
+    motopecas ? motosDaLoja(t.id) : null,
+    motopecas ? marcasDaLoja(t.id) : [],
+  ]);
+  const vitrine = destaques.length ? destaques : await listarProdutos(t.id, { moto });
   const dados = { t, identidade: identidadeDa(t), categorias, vitrine, temDestaques: destaques.length > 0, vende: lojaVende(t) };
 
   const layout =
@@ -26,6 +36,7 @@ export default async function Home() {
   return (
     <>
       {layout}
+      {motos && <Garagem moto={moto} motos={motos} marcas={marcas} nomeDaLoja={t.nome} />}
       <ProvaSocial dados={prova} nomeDaLoja={t.nome} />
       {prova.media !== null && prova.total >= 3 && (
         // A nota só entra no JSON-LD porque está visível na própria página,

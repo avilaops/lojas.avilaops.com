@@ -39,6 +39,8 @@ export const TenantEntradaSchema = z.object({
   tema: TemaSchema.partial().optional(),
   identidade: IdentidadeSchema.partial().optional(),
   slogan: z.string().max(140).optional(),
+  /** "geral" ou "motopecas" (garagem, compatibilidade, código original). Ver src/lib/motos.ts. */
+  segmento: z.enum(["geral", "motopecas"]).optional(),
   avisoTopo: z.string().trim().max(120).nullable().optional(),
   sobre: z.string().max(4000).optional(),
   // Aceita o formato brasileiro que o cliente conhece (DDD + número) e
@@ -106,6 +108,13 @@ export const ProdutoEntradaSchema = z.object({
   larguraCm: z.number().positive().optional(),
   comprimentoCm: z.number().positive().optional(),
   atributos: z.record(z.string(), z.unknown()).optional(),
+  // Peças por moto (segmento motopecas). Vazio = universal.
+  codigoOriginal: z.string().trim().max(60).nullable().optional(),
+  codigosEquivalentes: z.array(z.string().trim().min(1).max(60)).max(30).optional(),
+  compatibilidade: z
+    .array(z.object({ marca: z.string().trim().min(1).max(40), modelo: z.string().trim().min(1).max(60), anoDe: z.number().int().min(1950).max(2100).optional(), anoAte: z.number().int().min(1950).max(2100).optional() }))
+    .max(200)
+    .optional(),
 });
 
 export type TenantEntrada = z.infer<typeof TenantEntradaSchema>;

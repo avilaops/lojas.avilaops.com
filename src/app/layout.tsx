@@ -15,6 +15,7 @@ import Footer from "@/components/Footer";
 import WhatsAppFlutuante from "@/components/WhatsAppFlutuante";
 import LojaNaoEncontrada from "@/components/LojaNaoEncontrada";
 import AvisoSuspensa from "@/components/AvisoSuspensa";
+import BarraGaragem from "@/components/BarraGaragem";
 
 export async function generateMetadata(): Promise<Metadata> {
   const h = await headers();
@@ -105,6 +106,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <p className="barra-aviso" role="status">{t.avisoTopo}</p>
           )}
           <Header loja={publico} logoUrl={t.logoUrl} categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} />
+          {t.segmento === "motopecas" && <BarraGaragem tenantId={t.id} />}
           <main className="flex-1">{children}</main>
           <Footer tenant={t} categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} />
           {t.whatsapp && <WhatsAppFlutuante numero={t.whatsapp} nome={t.nome} />}

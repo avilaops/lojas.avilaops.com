@@ -49,7 +49,7 @@ export async function PATCH(request: Request) {
   if (!loja) return Response.json({ erro: "Sessão expirada." }, { status: 401 });
   const r = Edicao.safeParse(await request.json().catch(() => null));
   if (!r.success) return Response.json({ erro: "Dados inválidos.", detalhes: r.error.flatten() }, { status: 422 });
-  const { id, categoria, atributos, slug, ...campos } = r.data;
+  const { id, categoria, atributos, slug, compatibilidade, ...campos } = r.data;
   const p = await prisma.produto.findFirst({ where: { id, tenantId: loja.id } });
   if (!p) return Response.json({ erro: "Produto não encontrado." }, { status: 404 });
 
@@ -64,7 +64,7 @@ export async function PATCH(request: Request) {
   }
   const atualizado = await prisma.produto.update({
     where: { id },
-    data: { ...campos, ...(slug ? { slug: slugificar(slug) } : {}), ...(categoriaId !== undefined ? { categoriaId } : {}), ...(atributos ? { atributos: atributos as Prisma.InputJsonValue } : {}) },
+    data: { ...campos, ...(slug ? { slug: slugificar(slug) } : {}), ...(categoriaId !== undefined ? { categoriaId } : {}), ...(atributos ? { atributos: atributos as Prisma.InputJsonValue } : {}), ...(compatibilidade ? { compatibilidade: compatibilidade as unknown as Prisma.InputJsonValue } : {}) },
   });
   void avisarBuscadores(loja, caminhosDoProduto(atualizado.slug, categoria ?? undefined));
   return Response.json({ id: atualizado.id, slug: atualizado.slug });
