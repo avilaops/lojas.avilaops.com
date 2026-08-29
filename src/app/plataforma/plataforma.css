@@ -144,8 +144,9 @@
 .pl-auth-story > span, .pl-auth-form > span { color: var(--pl-blue-light); font-size: 10px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
 .pl-auth-story h1 { max-width: 620px; margin-top: 24px; font-size: clamp(2.6rem,5vw,5.2rem); line-height: .93; letter-spacing: -.065em; }
 .pl-auth-story > p { max-width: 560px; margin-top: 26px; color: #aeb7c8; line-height: 1.7; }
-.pl-auth-story > div { display: grid; grid-template-columns: auto 1fr; gap: 10px 17px; margin-top: 55px; color: #aeb7c8; font-size: 12px; }
-.pl-auth-story > div strong { color: #567fff; }
+.pl-auth-story > ol { display: grid; grid-template-columns: auto 1fr; gap: 10px 17px; margin-top: 55px; padding: 0; color: #aeb7c8; font-size: 12px; list-style: none; }
+.pl-auth-story > ol li { display: contents; }
+.pl-auth-story > ol strong { color: #567fff; }
 .pl-auth-form { display: flex; flex-direction: column; justify-content: center; padding: clamp(30px,5vw,70px); border-radius: 0 28px 28px 0; color: #171b27; background: white; }
 .pl-auth-form h2 { margin-top: 16px; font-size: 32px; letter-spacing: -.045em; }
 .pl-auth-form > p { margin-top: 9px; color: #727b8b; line-height: 1.55; }

@@ -245,7 +245,7 @@ export default function LandingPlataforma() {
             <p>Este é o fluxo funcionando de verdade: o cliente descreve o negócio, recebe uma direção visual e revisa a estrutura antes de publicar.</p>
           </header>
           <div className="pl-demo-frame">
-            <div className="pl-demo-bar"><span><i /><i /><i /></span><strong>Estúdio de lançamento</strong><em>Fluxo real</em></div>
+            <div className="pl-demo-bar"><span><i /><i /><i /></span><strong>Estúdio Lojas</strong><em>Fluxo real</em></div>
             <video controls autoPlay muted loop playsInline preload="metadata" poster="/media/demo-criacao-loja-poster.png" aria-label="Demonstração do processo de criação de uma loja">
               <source src="/media/demo-criacao-loja.webm" type="video/webm" />
               Seu navegador não suporta vídeo. <Link href="/criar">Experimente o fluxo de criação</Link>.

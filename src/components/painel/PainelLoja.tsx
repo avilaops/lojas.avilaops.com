@@ -160,7 +160,7 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
         <div className="painel-overview">
           <Vendas r={vendas} espera={espera} irPara={setAba} />
           <section className="painel-hero">
-            <div><span>Estúdio da sua loja</span><h2>Sua marca está {loja.status === "ATIVA" ? "no ar" : "em preparação"}.</h2><p>Cuide primeiro do que o cliente percebe: identidade clara, catálogo visual e uma experiência consistente.</p></div>
+            <div><span>Estúdio Lojas</span><h2>Sua marca está {loja.status === "ATIVA" ? "no ar" : "em preparação"}.</h2><p>Cuide primeiro do que o cliente percebe: identidade clara, catálogo visual e uma experiência consistente.</p></div>
             <a href={loja.url} target="_blank" rel="noopener" className="btn-primario">Ver loja publicada ↗</a>
           </section>
           <div className="painel-metricas">
