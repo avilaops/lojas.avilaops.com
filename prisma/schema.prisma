@@ -143,6 +143,9 @@ model Tenant {
   avisosEstoque   AvisoEstoque[]
   postagens       Postagem[]
 
+  apiKeyEnc      String?
+  apiKeyCriadaEm DateTime?
+
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
@@ -161,6 +164,10 @@ model Categoria {
   descricao String?
   imagemUrl String?
   ordem     Int     @default(0)
+
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @default(now()) @updatedAt
 
   tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   produtos Produto[]
@@ -487,4 +494,30 @@ model Postagem {
   pedido Pedido @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, acertadaEm])
+}
+
+enum AutomacaoEventoStatus {
+  EMITIDO      // a plataforma enviou ao n8n
+  PROCESSANDO  // o n8n reivindicou (primeira entrega)
+  PROCESSADO
+  FALHOU
+  IGNORADO     // válido, mas sem ação (ex.: PIX pago antes do lembrete)
+}
+
+/// Um registro por evento emitido ao n8n. É a trava de idempotência (o n8n
+/// reivindica pelo eventId antes de qualquer efeito externo) e o rastro de
+/// "entreguei / executou".
+model AutomacaoEvento {
+  eventId      String                @id
+  tipo         String
+  slug         String
+  versao       Int                   @default(1)
+  status       AutomacaoEventoStatus @default(EMITIDO)
+  detalhe      String?
+  emitidoEm    DateTime              @default(now())
+  reivindicadoEm DateTime?
+  concluidoEm  DateTime?
+
+  @@index([slug, tipo])
+  @@index([status, emitidoEm])
 }

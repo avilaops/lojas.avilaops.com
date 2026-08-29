@@ -1,6 +1,6 @@
 import type { Prisma, Tenant } from "@prisma/client";
 import { prisma } from "./db";
-import { emitir } from "./eventos";
+import { emitir, itensParaTexto } from "./eventos";
 import { urlDaLoja } from "./tenant";
 
 /**
@@ -47,7 +47,7 @@ export async function verificarCarrinhosAbandonados(): Promise<{ lembrados: numb
       await prisma.checkoutAberto.update({ where: { id: c.id }, data: { status: "CONVERTIDO" } });
       continue;
     }
-    const itens = (c.itens as unknown as ItemCheckoutAberto[]).map((i) => `${i.quantidade}x ${i.nome}`).join(", ");
+    const itens = (c.itens as unknown as ItemCheckoutAberto[]).map((i) => ({ nome: i.nome, quantidade: i.quantidade, precoCentavos: i.precoUnitario }));
     const t = c.tenant;
     await emitir({
       tipo: "carrinho.abandonado",
@@ -57,7 +57,8 @@ export async function verificarCarrinhosAbandonados(): Promise<{ lembrados: numb
       clienteEmail: c.clienteEmail,
       clienteTelefone: c.clienteTelefone,
       itens,
-      total: c.totalCentavos,
+      itensTexto: itensParaTexto(itens),
+      totalCentavos: c.totalCentavos,
       linkCarrinho: `${urlDaLoja(t)}/carrinho`,
       lojaNome: t.nome,
       lojaUrl: urlDaLoja(t),

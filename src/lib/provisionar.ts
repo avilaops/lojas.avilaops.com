@@ -190,7 +190,12 @@ export async function provisionarLoja(slug: string): Promise<Resultado> {
     void avisarBuscadores(atualizado, ["/", "/produtos", "/sobre", "/contato"]);
   }
 
-  await emitir({ tipo: "loja.provisionada", slug, passos, nome: atualizado.nome, url: urlDaLoja(atualizado), emailContato: atualizado.emailContato, whatsapp: atualizado.whatsapp });
+  // Sucesso e falha são eventos distintos: o n8n não deduz erro lendo os
+  // passos, ele só reage ao tipo. `loja.ativada` sai uma vez só, na virada
+  // para ATIVA — é o marco de "loja no ar" que conta prazo para o resto.
+  const base = { slug, nome: atualizado.nome, url: urlDaLoja(atualizado), emailContato: atualizado.emailContato, whatsapp: atualizado.whatsapp };
+  await emitir(tudoOk ? { tipo: "loja.provisionada", passos, ...base } : { tipo: "loja.provisionamento-falhou", passos, ...base });
+  if (tudoOk && t.status === "PROVISIONANDO" && atualizado.status === "ATIVA") await emitir({ tipo: "loja.ativada", ...base });
   passos.n8n = process.env.N8N_WEBHOOK_URL ? "ok: evento emitido" : "pendente: N8N_WEBHOOK_URL ausente";
   await prisma.tenant.update({ where: { id: atualizado.id }, data: { provisionamento: passos } });
 

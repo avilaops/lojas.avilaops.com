@@ -2,7 +2,7 @@ import type { PedidoStatus, Prisma, Tenant } from "@prisma/client";
 import { montarPedidoSeguro, type PayloadCheckout, type ResolucaoCatalogo } from "@avilaops/checkout/server";
 import { calcularTotais } from "@avilaops/checkout";
 import { prisma } from "./db";
-import { emitir } from "./eventos";
+import { emitir, itensParaTexto } from "./eventos";
 import { baixarEstoqueDoPedido } from "./estoque";
 import { marcarConvertido } from "./carrinhos";
 import { urlDaLoja } from "./tenant";
@@ -75,7 +75,7 @@ export async function registrarPedido(
     slug: t.slug,
     referencia: pedido.referencia,
     numero: salvo.numero,
-    total: totais.total,
+    totalCentavos: totais.total,
     meioPagamento: pedido.meioPagamento,
     clienteNome: `${pedido.cliente.nome} ${pedido.cliente.sobrenome}`.trim(),
     clienteEmail: pedido.cliente.email,
@@ -105,10 +105,11 @@ export async function atualizarStatusPagamento(t: Tenant, pagamentoId: string, s
 
   if (novo === "PAGO" && avancaDeAguardando) {
     await baixarEstoqueDoPedido(pedido.id);
+    const itens = pedido.itens.map((i) => ({ nome: i.nome, quantidade: i.quantidade, precoCentavos: i.precoUnitarioCentavos }));
     await emitir({
-      tipo: "pedido.pago", slug: t.slug, referencia: pedido.referencia, numero: pedido.numero, total: pedido.totalCentavos,
+      tipo: "pedido.pago", slug: t.slug, referencia: pedido.referencia, numero: pedido.numero, totalCentavos: pedido.totalCentavos,
       clienteNome: pedido.clienteNome, clienteEmail: pedido.clienteEmail, clienteTelefone: pedido.clienteTelefone,
-      itens: pedido.itens.map((i) => `${i.quantidade}x ${i.nome}`).join(", "), ...lojista(t),
+      itens, itensTexto: itensParaTexto(itens), ...lojista(t),
     });
   } else if (status === "recusado") {
     await emitir({ tipo: "pedido.recusado", slug: t.slug, referencia: pedido.referencia, clienteNome: pedido.clienteNome, clienteEmail: pedido.clienteEmail, clienteTelefone: pedido.clienteTelefone, ...lojista(t) });
