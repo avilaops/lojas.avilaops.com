@@ -5,7 +5,7 @@ import { lojistaAtual } from "@/lib/sessao";
 import EntrarForm from "@/components/painel/EntrarForm";
 
 export const metadata: Metadata = {
-  title: "Entrar — Lojas by Avila Ops",
+  title: "Entrar | Lojas by Avila Ops",
   robots: { index: false, follow: false },
 };
 

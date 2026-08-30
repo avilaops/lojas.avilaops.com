@@ -51,5 +51,5 @@ export async function filaDeEspera(tenantId: string) {
   if (!agrupado.length) return [];
   const produtos = await prisma.produto.findMany({ where: { id: { in: agrupado.map((g) => g.produtoId) } }, select: { id: true, nome: true } });
   const nomes = new Map(produtos.map((p) => [p.id, p.nome]));
-  return agrupado.map((g) => ({ produto: nomes.get(g.produtoId) ?? "—", pessoas: g._count._all }));
+  return agrupado.map((g) => ({ produto: nomes.get(g.produtoId) ?? "-", pessoas: g._count._all }));
 }

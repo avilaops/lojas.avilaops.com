@@ -60,7 +60,7 @@ export default function SeletorVariante({ produto, opcoes, variantes, vende }: {
         <button className="btn-primario w-full max-w-sm" disabled={!completa || !selecionada || !disponivel(selecionada)} onClick={() => {
           if (!selecionada) return;
           const idItem = `${produto.id}:${selecionada.id}`;
-          const nomeItem = `${produto.nome} — ${selecionada.nome}`;
+          const nomeItem = `${produto.nome} · ${selecionada.nome}`;
           adicionar({ id: idItem, slug: produto.slug, nome: nomeItem, precoCentavos: preco, imagem: selecionada.imagem ?? produto.imagem });
           adicionarAoCarrinho({ id: idItem, nome: nomeItem, precoCentavos: preco });
           setOk(true); setTimeout(() => setOk(false), 1500); router.push("/carrinho");

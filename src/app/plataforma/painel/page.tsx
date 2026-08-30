@@ -10,7 +10,7 @@ import { diagnosticoDoFeed } from "@/lib/catalogo";
 import { filaDeEspera } from "@/lib/estoque-avisos";
 import { postagemAAcertar } from "@/lib/postagem";
 
-export const metadata: Metadata = { title: "Painel — Lojas by Avila Ops", robots: { index: false } };
+export const metadata: Metadata = { title: "Painel | Lojas by Avila Ops", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
 export default async function PainelPage({ searchParams }: { searchParams: Promise<{ nova?: string }> }) {

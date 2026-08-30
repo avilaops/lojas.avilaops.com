@@ -57,7 +57,7 @@ export default function ContaForm({ aoEntrar }: { aoEntrar?: () => void }) {
       <p className="mt-3 text-xs text-muted-foreground">
         {modo === "cadastrar"
           ? "Ao criar a conta, seus pedidos anteriores feitos com este e-mail aparecem no histórico."
-          : "Comprar não exige conta — ela serve para acompanhar pedidos e salvar endereço."}
+          : "Comprar não exige conta, ela serve para acompanhar pedidos e salvar endereço."}
       </p>
     </div>
   );

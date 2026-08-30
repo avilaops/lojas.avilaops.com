@@ -46,9 +46,9 @@ export default function Cupons({ cupons, chamar, ocupado }: { cupons: CupomView[
                 <tr key={c.id} className={`border-t border-border ${c.ativo ? "" : "opacity-50"}`}>
                   <td className="py-2 font-mono font-semibold">{c.codigo}{!c.ativo && " (inativo)"}</td>
                   <td>{c.tipo === "PERCENTUAL" ? `${c.valor}%` : c.tipo === "FIXO" ? brl(c.valor) : "Frete grátis"}</td>
-                  <td>{c.minimoCentavos ? brl(c.minimoCentavos) : "—"}</td>
+                  <td>{c.minimoCentavos ? brl(c.minimoCentavos) : "-"}</td>
                   <td>{c.usos}{c.usosMax ? ` / ${c.usosMax}` : ""}</td>
-                  <td>{c.validoAte ? new Date(c.validoAte).toLocaleDateString("pt-BR") : "—"}</td>
+                  <td>{c.validoAte ? new Date(c.validoAte).toLocaleDateString("pt-BR") : "-"}</td>
                   <td className="text-right">{c.ativo && <button className="text-xs text-muted-foreground underline" disabled={ocupado} onClick={() => chamar(`/api/painel/cupons?codigo=${c.codigo}`, "DELETE", undefined, "Cupom desativado.")}>desativar</button>}</td>
                 </tr>
               ))}

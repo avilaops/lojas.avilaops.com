@@ -81,7 +81,7 @@ export default function EditarProduto({ produtoId, aoFechar, aoSalvar }: { produ
   return (
     <div className="rounded-2xl border border-primary/40 bg-card p-6">
       <div className="flex items-start justify-between gap-4">
-        <h3 className="font-semibold">Editar — {f.nome}</h3>
+        <h3 className="font-semibold">Editar {f.nome}</h3>
         <button className="btn-secundario h-9 px-3 text-xs" onClick={aoFechar}>Fechar</button>
       </div>
       <div className="mt-4 grid gap-4 sm:grid-cols-2">

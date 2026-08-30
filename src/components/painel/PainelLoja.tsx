@@ -53,7 +53,7 @@ export interface EnderecoEntregaView { logradouro: string; numero: string; compl
 export interface PedidoView { id: string; numero: number; referencia: string; status: string; clienteNome: string; clienteEmail: string; clienteTelefone: string; clienteDocumento: string; totalCentavos: number; subtotalCentavos: number; freteCentavos: number; descontoCentavos: number; cupomCodigo: string | null; meioPagamento: string; freteNome: string; rastreio: string | null; entrega: EnderecoEntregaView | null; etiqueta: { status: string; codigoObjeto: string | null; pdf: string | null; custoCentavos: number } | null; criadoEm: string; itens: Array<{ nome: string; quantidade: number; sku: string | null; precoUnitarioCentavos: number }> }
 
 const STATUS: Record<string, string> = { ATIVA: "No ar", PROVISIONANDO: "Configurando", SUSPENSA: "Suspensa", CANCELADA: "Cancelada" };
-const PEDIDO: Record<string, string> = { AGUARDANDO_PAGAMENTO: "Aguardando pagamento", PAGO: "Pago — separar", EM_SEPARACAO: "Em separação", ENVIADO: "Enviado", ENTREGUE: "Entregue", CANCELADO: "Cancelado", ESTORNADO: "Estornado" };
+const PEDIDO: Record<string, string> = { AGUARDANDO_PAGAMENTO: "Aguardando pagamento", PAGO: "Pago, separar", EM_SEPARACAO: "Em separação", ENVIADO: "Enviado", ENTREGUE: "Entregue", CANCELADO: "Cancelado", ESTORNADO: "Estornado" };
 const ABAS = ["Visão geral", "Marca", "Produtos", "Pedidos", "Cupons", "Avaliações", "Buscadores", "Anúncios", "IA (Claude)", "Entrega", "Recebimento", "Assinatura", "Conta"] as const;
 const ASSINATURA: Record<string, { rotulo: string; classe: string }> = {
   SEM_ASSINATURA: { rotulo: "Período de teste", classe: "bg-amber-100 text-amber-800" },
@@ -179,7 +179,7 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
       {aba === "Produtos" && (
         <>
           {semEmbalagem.length > 0 && (
-            <Secao titulo="Frete saindo mais caro que precisa" descricao="Estes produtos não têm a embalagem cadastrada, então o frete deles é cotado pela caixa padrão da loja — quase sempre maior que a real.">
+            <Secao titulo="Frete saindo mais caro que precisa" descricao="Estes produtos não têm a embalagem cadastrada, então o frete deles é cotado pela caixa padrão da loja | quase sempre maior que a real.">
               <ul className="grid gap-1 text-sm">
                 {semEmbalagem.slice(0, 12).map((p) => (
                   <li key={p.id} className="flex items-center justify-between gap-3 border-t border-border py-1.5">
@@ -262,7 +262,7 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
                     {produtos.map((p) => (
                       <tr key={p.id} className={`border-t border-border ${p.ativo ? "" : "opacity-50"}`}>
                         <td className="py-2"><button className="text-left hover:underline" onClick={() => { setEditando(p); window.scrollTo({ top: 0, behavior: "smooth" }); }}>{p.destaque && "★ "}{p.nome}{!p.ativo && " (inativo)"}</button></td>
-                        <td>{p.categoria ?? "—"}</td><td>{p.sku ?? "—"}</td><td>{brl(p.precoCentavos)}</td>
+                        <td>{p.categoria ?? "-"}</td><td>{p.sku ?? "-"}</td><td>{brl(p.precoCentavos)}</td>
                         <td>{p.opcoes.length ? `${p.variantes} variações` : p.estoque == null ? "∞" : p.estoque === 0 ? <span className="text-red-700">esgotado</span> : p.estoque}</td>
                         <td className="whitespace-nowrap text-right text-xs">
                           {p.ativo && <button className="mr-2 underline" onClick={() => setGradeDe(p)}>{p.opcoes.length ? "grade" : "variações"}</button>}
@@ -292,7 +292,7 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
         <>
         {ficha && <FichaPedido pedido={ficha} loja={{ nome: loja.nome, razaoSocial: loja.razaoSocial, cnpj: loja.cnpj }} aoFechar={() => setFicha(null)} />}
         {postagem.etiquetas > 0 && (
-          <Secao titulo="Postagem a acertar" descricao="A Avila Ops adianta o valor da etiqueta e recebe depois. Quem decide se o frete é grátis ou cobrado do comprador é você — o adiantamento é o mesmo.">
+          <Secao titulo="Postagem a acertar" descricao="A Avila Ops adianta o valor da etiqueta e recebe depois. Quem decide se o frete é grátis ou cobrado do comprador é você | o adiantamento é o mesmo.">
             <p className="text-sm">
               <b>{brl(postagem.custoCentavos)}</b> em {postagem.etiquetas} etiqueta(s) emitida(s).
               {postagem.limiteCentavos > 0 && ` Seu limite é ${brl(postagem.limiteCentavos)}.`}
@@ -479,7 +479,7 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
       )}
 
       {aba === "Assinatura" && (
-        <Secao titulo={`Plano ${loja.assinatura.planoNome} — ${brl(loja.assinatura.precoCentavos)}/mês`} descricao="Cobrança mensal no cartão, pelo Mercado Pago da Avila Ops. O setup de R$ 497 é combinado à parte, no fechamento.">
+        <Secao titulo={`Plano ${loja.assinatura.planoNome} · ${brl(loja.assinatura.precoCentavos)}/mês`} descricao="Cobrança mensal no cartão, pelo Mercado Pago da Avila Ops. O setup de R$ 497 é combinado à parte, no fechamento.">
           <div className="flex flex-wrap items-center gap-3 text-sm">
             {loja.assinatura.isenta ? (
               <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-800">Loja da casa: sem cobrança</span>
@@ -522,7 +522,7 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
         <Secao titulo="Dados da empresa" descricao="Quem vende pela internet é obrigado a exibir razão social, CNPJ e endereço (Decreto 7.962/2013). Preenchendo aqui, isso aparece sozinho no rodapé de todas as páginas e nas políticas da loja.">
           {(!loja.razaoSocial || !loja.cnpj) && (
             <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
-              Sua loja ainda não exibe a identificação da empresa. Sem ela, o cliente que reclamar no Procon tem razão de cara — e o Google Ads costuma reprovar o anúncio.
+              Sua loja ainda não exibe a identificação da empresa. Sem ela, o cliente que reclamar no Procon tem razão de cara, e o Google Ads costuma reprovar o anúncio.
             </p>
           )}
           <div className="grid gap-4 sm:grid-cols-2">
@@ -531,7 +531,7 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
           </div>
           <div><button className="btn-primario" disabled={ocupado} onClick={() => chamar("/api/painel/loja", "PATCH", { razaoSocial: empresa.razaoSocial.trim() || null, cnpj: empresa.cnpj.trim() || null }, "Dados da empresa salvos.")}>Salvar</button></div>
         </Secao>
-        <Secao titulo="Dados dos seus clientes" descricao="Os dados de quem compra na sua loja são seus — e a responsabilidade por eles também. Se um cliente pedir por escrito o que você guarda sobre ele, é neste arquivo que está (LGPD, art. 18).">
+        <Secao titulo="Dados dos seus clientes" descricao="Os dados de quem compra na sua loja são seus, e a responsabilidade por eles também. Se um cliente pedir por escrito o que você guarda sobre ele, é neste arquivo que está (LGPD, art. 18).">
           <p><a href="/api/painel/exportar?tipo=clientes" className="btn-secundario">Baixar clientes (CSV)</a></p>
           <p className="text-xs text-muted-foreground">Inclui quem comprou sem criar conta. Abre direto no Excel, com quantos pedidos cada pessoa fez e quanto gastou.</p>
         </Secao>

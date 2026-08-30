@@ -34,7 +34,7 @@ export async function emitirRelatoriosSemanais(): Promise<{ lojas: number }> {
       pedidosPagos: pagos.length,
       receitaCentavos: receita,
       ticketMedioCentavos: pagos.length ? Math.round(receita / pagos.length) : 0,
-      topProdutos: top || "—",
+      topProdutos: top || "-",
       carrinhosAbandonados: abandonados,
       novasAvaliacoes: avaliacoes,
     });

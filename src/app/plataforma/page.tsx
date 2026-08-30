@@ -21,12 +21,12 @@ import {
 import ModelosInterativos from "@/components/plataforma/ModelosInterativos";
 
 export const metadata: Metadata = {
-  title: "Lojas Avila Ops — loja virtual pronta em um dia, Pix na hora, sem comissão",
+  title: "Lojas Avila Ops | loja virtual pronta em um dia, Pix na hora, sem comissão",
   description:
     "Loja virtual para o comércio de bairro: catálogo, carrinho, Pix na hora, cartão e boleto, frete por CEP, WhatsApp e e-mail profissional por R$ 119 fixos no mês. O dinheiro cai na conta da sua empresa.",
   alternates: { canonical: "https://lojas.avilaops.com" },
   openGraph: {
-    title: "Lojas Avila Ops — loja virtual pronta em um dia, Pix na hora, sem comissão",
+    title: "Lojas Avila Ops | loja virtual pronta em um dia, Pix na hora, sem comissão",
     description: "R$ 119 fixos no mês, sem comissão sobre venda. O dinheiro cai na conta da sua empresa.",
     url: "https://lojas.avilaops.com",
     siteName: "Lojas Avila Ops",
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Lojas Avila Ops — loja virtual pronta em um dia",
+    title: "Lojas Avila Ops | loja virtual pronta em um dia",
     description: "Pix na hora, sem comissão, R$ 119 fixos no mês.",
     images: ["/plataforma/opengraph-image"],
   },

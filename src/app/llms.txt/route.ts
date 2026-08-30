@@ -60,7 +60,7 @@ export async function GET() {
     ...categorias.map((c) => `- [${c.nome}](${base}/categoria/${c.slug})`),
     "",
     "## Produtos",
-    ...produtos.map((p) => `- [${p.nome}](${base}/produtos/${p.slug}) — ${formatarBRL(p.precoCentavos)}${p.disponibilidade === "out_of_stock" ? " (esgotado)" : ""}${p.descricaoCurta ? ` — ${p.descricaoCurta}` : ""}`),
+    ...produtos.map((p) => `- [${p.nome}](${base}/produtos/${p.slug}): ${formatarBRL(p.precoCentavos)}${p.disponibilidade === "out_of_stock" ? " (esgotado)" : ""}${p.descricaoCurta ? ` · ${p.descricaoCurta}` : ""}`),
     "",
     "## Políticas",
     `- [Envio e retirada](${base}/politicas/envio)`,

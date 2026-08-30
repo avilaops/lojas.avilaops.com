@@ -52,7 +52,7 @@ export interface SaldoPostagem {
 export async function saldoDaCarteira(): Promise<SaldoPostagem> {
   const d = await chamar<{ nome_cliente?: string; saldo_atual?: string }>("/api-saldo/", {});
   const bruto = (d.saldo_atual ?? "0").replace(/[^\d,.-]/g, "").replace(/\./g, "").replace(",", ".");
-  return { cliente: d.nome_cliente ?? "—", saldoCentavos: Math.round((Number.parseFloat(bruto) || 0) * 100) };
+  return { cliente: d.nome_cliente ?? "-", saldoCentavos: Math.round((Number.parseFloat(bruto) || 0) * 100) };
 }
 
 /**

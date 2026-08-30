@@ -58,7 +58,7 @@ export default function EnderecosSalvos({ enderecos }: { enderecos: EnderecoView
             <li key={e.id} className="flex flex-wrap items-center gap-3 p-4">
               <div className="min-w-0 flex-1">
                 <p className="font-semibold">{e.apelido || "Endereço"}{e.principal && <span className="ml-2 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">principal</span>}</p>
-                <p className="text-xs text-muted-foreground">{e.logradouro}, {e.numero}{e.complemento ? ` — ${e.complemento}` : ""} · {e.bairro} · {e.cidade}/{e.uf} · {e.cep.replace(/(\d{5})(\d{3})/, "$1-$2")}</p>
+                <p className="text-xs text-muted-foreground">{e.logradouro}, {e.numero}{e.complemento ? `, ${e.complemento}` : ""} · {e.bairro} · {e.cidade}/{e.uf} · {e.cep.replace(/(\d{5})(\d{3})/, "$1-$2")}</p>
               </div>
               <div className="flex gap-3 text-xs">
                 <button className="underline" onClick={() => { setF({ ...e, apelido: e.apelido ?? "", complemento: e.complemento ?? "" }); setAberto(true); }}>editar</button>

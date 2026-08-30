@@ -31,7 +31,7 @@ export default function Vendas({ r, espera, irPara }: { r: ResumoVendas; espera:
 
       <div className="painel-vendas-numeros">
         <div><small>Pedidos pagos</small><strong>{r.pedidos}</strong></div>
-        <div><small>Ticket médio</small><strong>{vendeu ? formatarBRL(r.ticketMedioCentavos) : "—"}</strong></div>
+        <div><small>Ticket médio</small><strong>{vendeu ? formatarBRL(r.ticketMedioCentavos) : "-"}</strong></div>
         <div><small>Aguardando pagamento</small><strong>{r.aguardandoPagamento}</strong></div>
         <div><small>Carrinhos abertos (7 dias)</small><strong>{r.carrinhosAbertos}</strong></div>
       </div>
@@ -65,7 +65,7 @@ export default function Vendas({ r, espera, irPara }: { r: ResumoVendas; espera:
 
       {espera.length > 0 && (
         <div className="painel-espera">
-          <p><b>Gente esperando produto que acabou.</b> Repor isto é venda quase certa — quem entrou na fila já quis comprar.</p>
+          <p><b>Gente esperando produto que acabou.</b> Repor isto é venda quase certa, quem entrou na fila já quis comprar.</p>
           <ul>
             {espera.map((e) => (
               <li key={e.produto}>
@@ -85,7 +85,7 @@ export default function Vendas({ r, espera, irPara }: { r: ResumoVendas; espera:
               Separar {r.aSeparar} pedido{r.aSeparar > 1 ? "s" : ""} pago{r.aSeparar > 1 ? "s" : ""}
             </button>
           )}
-          {r.carrinhosAbertos > 0 && <span>{r.carrinhosAbertos} carrinho(s) abandonado(s) — o lembrete automático já foi disparado.</span>}
+          {r.carrinhosAbertos > 0 && <span>{r.carrinhosAbertos} carrinho(s) abandonado(s), o lembrete automático já foi disparado.</span>}
         </div>
       )}
     </section>

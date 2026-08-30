@@ -34,7 +34,7 @@ export async function generateMetadata(): Promise<Metadata> {
   if (!t) return { title: "Loja não encontrada", robots: { index: false } };
   return {
     metadataBase: new URL(urlDaLoja(t)),
-    title: { default: t.slogan ? `${t.nome} — ${t.slogan}` : t.nome, template: `%s · ${t.nome}` },
+    title: { default: t.slogan ? `${t.nome} | ${t.slogan}` : t.nome, template: `%s · ${t.nome}` },
     description: t.slogan ?? `Loja virtual ${t.nome}`,
     robots: t.status === "ATIVA" ? undefined : { index: false, follow: false },
     openGraph: { siteName: t.nome, locale: "pt_BR", type: "website" },

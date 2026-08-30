@@ -69,7 +69,7 @@ export default function GradeVariantes({ produtoId, produtoNome, aoFechar, aoSal
     <div className="rounded-2xl border border-primary/40 bg-card p-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h3 className="font-semibold">Variações — {produtoNome}</h3>
+          <h3 className="font-semibold">Variações de {produtoNome}</h3>
           <p className="text-sm text-muted-foreground">Ex.: Tamanho: P, M, G · Cor: Preto, Branco. Depois clique em “Gerar grade”, preencha estoque e salve.</p>
         </div>
         <button className="btn-secundario h-9 px-3 text-xs" onClick={aoFechar}>Fechar</button>

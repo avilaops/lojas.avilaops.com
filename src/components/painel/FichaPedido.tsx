@@ -39,14 +39,14 @@ export default function FichaPedido({ pedido, loja, aoFechar }: { pedido: Pedido
           {e ? (
             <address className="mt-1 not-italic text-sm leading-relaxed">
               {e.logradouro}, {e.numero}
-              {e.complemento ? ` — ${e.complemento}` : ""}
+              {e.complemento ? `, ${e.complemento}` : ""}
               <br />
               {e.bairro}
               <br />
               {e.cidade}/{e.uf} · CEP {e.cep}
             </address>
           ) : (
-            <p className="mt-1 text-sm font-semibold text-amber-700">Retirada na loja — não despachar</p>
+            <p className="mt-1 text-sm font-semibold text-amber-700">Retirada na loja, não despachar</p>
           )}
           <p className="mt-2 text-sm">
             <a className="underline" href={`https://wa.me/${digitos(pedido.clienteTelefone)}`} target="_blank" rel="noopener">

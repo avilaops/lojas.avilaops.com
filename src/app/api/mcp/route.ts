@@ -4,7 +4,7 @@ import { MCP_TOOLS } from "@/lib/mcp-tools";
 const SERVER_INFO = {
   name: "avilaops-lojas-mcp",
   version: "1.0.0",
-  description: "Servidor MCP Oficial das Lojas Ávila Ops — E-commerce nativo com IA",
+  description: "Servidor MCP oficial das Lojas Ávila Ops: e-commerce nativo com IA",
 };
 
 /**

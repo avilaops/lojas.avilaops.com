@@ -65,7 +65,7 @@ export default async function Politica({ params }: { params: Promise<{ tipo: str
           <p key={i}>{p}</p>
         ))}
       </div>
-      {/* Identificação do fornecedor — Decreto 7.962/2013, art. 2º, I a III. */}
+      {/* Identificação do fornecedor, Decreto 7.962/2013, art. 2º, I a III. */}
       <div className="mt-8 rounded-xl border border-border bg-muted/40 p-4 text-xs text-muted-foreground">
         <p className="font-semibold text-foreground">Quem vende</p>
         <p className="mt-1">

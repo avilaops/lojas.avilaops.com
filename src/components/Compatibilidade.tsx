@@ -15,7 +15,7 @@ export default function Compatibilidade({ compatibilidade, codigoOriginal, codig
     <section className="compatibilidade mt-6">
       {moto && linhas.length > 0 && (
         <p className={`compat-selo compat-${situacao}`} role="status">
-          {situacao === "serve" ? <>✔ Serve na sua <strong>{nomeDaMoto(moto)}</strong></> : <>✕ Não consta para <strong>{nomeDaMoto(moto)}</strong> — confira a lista abaixo ou pergunte no WhatsApp</>}
+          {situacao === "serve" ? <>✔ Serve na sua <strong>{nomeDaMoto(moto)}</strong></> : <>✕ Não consta para <strong>{nomeDaMoto(moto)}</strong>, confira a lista abaixo ou pergunte no WhatsApp</>}
         </p>
       )}
       {linhas.length > 0 && (

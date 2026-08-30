@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Desenvolvedores & IA — Lojas Ávila Ops",
+  title: "Desenvolvedores & IA | Lojas Ávila Ops",
   description: "Documentação do conector MCP e APIs para automação e integração de e-commerce com IA.",
 };
 

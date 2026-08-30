@@ -153,7 +153,7 @@ async function passoMail(t: Tenant): Promise<string> {
   }
 
   await prisma.tenant.update({ where: { id: t.id }, data: { emailRemetente: `pedidos@${apex}` } });
-  return `ok: contato@${apex} (senha enviada para ${t.emailContato ?? "ninguém — defina emailContato"})`;
+  return `ok: contato@${apex} (senha enviada para ${t.emailContato ?? "ninguém, defina emailContato"})`;
 }
 
 // ── Orquestração ───────────────────────────────────────────────────────

@@ -48,7 +48,7 @@ export async function GET() {
           const chave = /tamanho|size/i.test(o) ? "g:size" : /cor|color/i.test(o) ? "g:color" : /material/i.test(o) ? "g:material" : null;
           return chave && valores[o] ? `<${chave}>${esc(valores[o])}</${chave}>` : "";
         }).join("");
-        itens.push(comum(`${p.id}:${v.id}`, `${p.nome} — ${v.nome}`, v.precoCentavos ?? p.precoCentavos, (v.estoque == null || v.estoque > 0) && p.disponibilidade !== "out_of_stock", v.imagem ?? p.imagens[0], extra));
+        itens.push(comum(`${p.id}:${v.id}`, `${p.nome} · ${v.nome}`, v.precoCentavos ?? p.precoCentavos, (v.estoque == null || v.estoque > 0) && p.disponibilidade !== "out_of_stock", v.imagem ?? p.imagens[0], extra));
       }
     } else {
       itens.push(comum(p.id, p.nome, p.precoCentavos, p.disponibilidade !== "out_of_stock" && (p.estoque == null || p.estoque > 0), p.imagens[0]));

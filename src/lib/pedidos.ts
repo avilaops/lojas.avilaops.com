@@ -47,7 +47,7 @@ export async function registrarPedido(
       itens: {
         create: pedido.itens.map((i) => {
           const [produtoId, varianteId] = i.id.split(":");
-          const [, varianteNome] = varianteId ? i.nome.split(" — ") : [null, null];
+          const [, varianteNome] = varianteId ? i.nome.split(/ [·—] /) : [null, null];
           return { produtoId, varianteId: varianteId ?? null, varianteNome: varianteNome ?? null, nome: i.nome, sku: i.sku, quantidade: i.quantidade, precoUnitarioCentavos: i.precoUnitario };
         }),
       },

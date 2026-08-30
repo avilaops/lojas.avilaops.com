@@ -60,7 +60,7 @@ export default function Buscadores({ chamar, ocupado }: { chamar: (c: string, m:
         </ul>
       </Secao>
 
-      <Secao titulo="Conectar ao Google e ao Bing (opcional)" descricao="Serve para você ver os relatórios de busca. Cole o código que o painel do buscador pedir — aceitamos a tag inteira.">
+      <Secao titulo="Conectar ao Google e ao Bing (opcional)" descricao="Serve para você ver os relatórios de busca. Cole o código que o painel do buscador pedir | aceitamos a tag inteira.">
         <div className="grid gap-4 sm:grid-cols-2">
           <Campo label="Google Search Console" ajuda="Verificação por tag HTML."><input className={inputClasse} value={google} onChange={(e) => setGoogle(e.target.value)} placeholder='<meta name="google-site-verification" content="…">' /></Campo>
           <Campo label="Bing Webmaster Tools" ajuda="Verificação por tag HTML."><input className={inputClasse} value={bing} onChange={(e) => setBing(e.target.value)} placeholder='<meta name="msvalidate.01" content="…">' /></Campo>
@@ -70,7 +70,7 @@ export default function Buscadores({ chamar, ocupado }: { chamar: (c: string, m:
           <a className="btn-secundario" href="https://search.google.com/search-console/welcome" target="_blank" rel="noopener">Abrir Search Console</a>
           <a className="btn-secundario" href="https://www.bing.com/webmasters" target="_blank" rel="noopener">Abrir Bing Webmaster</a>
         </div>
-        <p className="text-xs text-muted-foreground">Depois de verificar, envie o sitemap <code>{s.recursos.sitemap}</code> no painel do buscador — é o passo que acelera a primeira indexação.</p>
+        <p className="text-xs text-muted-foreground">Depois de verificar, envie o sitemap <code>{s.recursos.sitemap}</code> no painel do buscador, é o passo que acelera a primeira indexação.</p>
       </Secao>
     </>
   );

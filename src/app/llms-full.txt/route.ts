@@ -31,9 +31,9 @@ Pequenas empresas e operações comerciais que precisam vender online sem montar
 
 ## Planos
 
-- Site — R$ 79/mês: vitrine, catálogo, contato, pedidos pelo WhatsApp, domínio, SSL, hospedagem e e-mail profissional.
-- Loja — R$ 119/mês (o mais escolhido): tudo do Site + carrinho, Pix na hora, cartão e boleto no próprio checkout, frete por CEP e retirada, cupons, variações, estoque, feed do Google Shopping, carrinho abandonado, avaliações e relatório semanal. Sem comissão sobre venda.
-- Loja Pro — R$ 349/mês: tudo da Loja + domínio próprio, chave de API e assistente de IA, cotação B2B pelo WhatsApp, 5 e-mails e prioridade de suporte.
+- Site, R$ 79/mês: vitrine, catálogo, contato, pedidos pelo WhatsApp, domínio, SSL, hospedagem e e-mail profissional.
+- Loja, R$ 119/mês (o mais escolhido): tudo do Site + carrinho, Pix na hora, cartão e boleto no próprio checkout, frete por CEP e retirada, cupons, variações, estoque, feed do Google Shopping, carrinho abandonado, avaliações e relatório semanal. Sem comissão sobre venda.
+- Loja Pro, R$ 349/mês: tudo da Loja + domínio próprio, chave de API e assistente de IA, cotação B2B pelo WhatsApp, 5 e-mails e prioridade de suporte.
 - Setup único: R$ 497. 14 dias de teste. Mensalidade começa quando a loja entra no ar.
 
 ## Pagamentos
@@ -68,10 +68,10 @@ Avila Ops: https://avilaops.com
   const identidade = identidadeDa(t);
   const [categorias, produtos] = await Promise.all([listarCategorias(t.id), listarProdutos(t.id)]);
   const linhasCategorias = categorias.length
-    ? categorias.map((c) => `- [${c.nome}](${base}/categoria/${c.slug})${c.seoDescription ?? c.descricao ? ` — ${c.seoDescription ?? c.descricao}` : ""}`).join("\n")
+    ? categorias.map((c) => `- [${c.nome}](${base}/categoria/${c.slug})${c.seoDescription ?? c.descricao ? `: ${c.seoDescription ?? c.descricao}` : ""}`).join("\n")
     : "- Nenhuma categoria publicada.";
   const linhasProdutos = produtos.length
-    ? produtos.map((p) => `- [${p.nome}](${base}/produtos/${p.slug}) — R$ ${(p.precoCentavos / 100).toFixed(2).replace(".", ",")}${p.marca ? ` — ${p.marca}` : ""}`).join("\n")
+    ? produtos.map((p) => `- [${p.nome}](${base}/produtos/${p.slug}): R$ ${(p.precoCentavos / 100).toFixed(2).replace(".", ",")}${p.marca ? ` · ${p.marca}` : ""}`).join("\n")
     : "- Nenhum produto publicado.";
 
   return resposta(`# ${t.nome}

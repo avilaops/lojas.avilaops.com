@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { lojistaAtual } from "@/lib/sessao";
 import CriarLoja from "@/components/painel/CriarLoja";
 
-export const metadata: Metadata = { title: "Criar minha loja — Lojas by Avila Ops", robots: { index: false } };
+export const metadata: Metadata = { title: "Criar minha loja | Lojas by Avila Ops", robots: { index: false } };
 
 export default async function CriarPage({ searchParams }: { searchParams: Promise<{ plano?: string }> }) {
   if (await lojistaAtual()) redirect("/painel");

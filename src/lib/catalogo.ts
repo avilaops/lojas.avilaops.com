@@ -149,7 +149,7 @@ export async function resolverItensDoCatalogo(
       if (v.estoque != null && v.estoque < p.quantidade) continue;
       itens.push({
         id: `${prod.id}:${v.id}`,
-        nome: `${prod.nome} — ${v.nome}`,
+        nome: `${prod.nome} · ${v.nome}`,
         quantidade: p.quantidade,
         precoUnitario: v.precoCentavos ?? prod.precoCentavos,
         imagem: v.imagem ?? prod.imagens[0],
