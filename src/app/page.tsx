@@ -7,9 +7,12 @@ import Vitrine from "@/components/home/Vitrine";
 import Editorial from "@/components/home/Editorial";
 import Minimal from "@/components/home/Minimal";
 import ProvaSocial from "@/components/home/ProvaSocial";
+import Spotlight from "@/components/home/Spotlight";
+import Mercado from "@/components/home/Mercado";
+import Conversao from "@/components/home/Conversao";
 
 /**
- * Página inicial: um de quatro layouts fixos (Tenant.tema.layout), todos
+ * Página inicial: um dos layouts fixos (Tenant.tema.layout), todos
  * alimentados pelos mesmos dados. O lojista escolhe a composição; não
  * desenha. Ver src/lib/tema.ts (LAYOUTS).
  */
@@ -25,10 +28,13 @@ export default async function Home() {
     motopecas ? marcasDaLoja(t.id) : [],
   ]);
   const vitrine = destaques.length ? destaques : await listarProdutos(t.id, { moto });
-  const dados = { t, identidade: identidadeDa(t), categorias, vitrine, temDestaques: destaques.length > 0, vende: lojaVende(t) };
+  const dados = { t, identidade: identidadeDa(t), categorias, vitrine, temDestaques: destaques.length > 0, vende: lojaVende(t), moto };
 
   const layout =
-    temaDo(t).layout === "vitrine" ? <Vitrine {...dados} />
+    temaDo(t).layout === "spotlight" ? <Spotlight {...dados} />
+    : temaDo(t).layout === "mercado" ? <Mercado {...dados} />
+    : temaDo(t).layout === "conversao" ? <Conversao {...dados} />
+    : temaDo(t).layout === "vitrine" ? <Vitrine {...dados} />
     : temaDo(t).layout === "editorial" ? <Editorial {...dados} />
     : temaDo(t).layout === "minimal" ? <Minimal {...dados} />
     : <Classico {...dados} />;

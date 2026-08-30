@@ -1,4 +1,4 @@
-# lojas.avilaops.com — regras para agentes
+# lojas.avilaops.com: regras para agentes
 
 - **Next.js 16**: `middleware.ts` virou `proxy.ts`; `params`/`searchParams` são
   Promise; leia `node_modules/next/dist/docs/` antes de escrever código de

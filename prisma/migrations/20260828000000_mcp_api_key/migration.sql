@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Tenant" ADD COLUMN IF NOT EXISTS "apiKeyEnc" TEXT,
+ADD COLUMN IF NOT EXISTS "apiKeyCriadaEm" TIMESTAMP(3);

@@ -1,4 +1,4 @@
-# Marca e imagens — operação de lançamento
+# Marca e imagens: operação de lançamento
 
 ## Entregáveis por loja
 

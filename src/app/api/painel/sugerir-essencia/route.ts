@@ -1,15 +1,8 @@
 import { z } from "zod";
-import { SEGMENTOS, sugerirEssencia } from "@/lib/identidade";
+import { sugerirEssencia } from "@/lib/identidade";
+import { gerarDiagnosticoMarca, MODELO_GEMINI_PADRAO } from "@/lib/genai";
+import { lojistaAtual } from "@/lib/sessao";
 
-/**
- * Sugere as duas respostas de essência da marca ("quem você quer conquistar"
- * e "por que escolher sua marca") a partir do que o lojista já preencheu.
- *
- * Com `ANTHROPIC_API_KEY` no ambiente, usa a Messages API (texto curto, em
- * português, sem promessa que a loja não possa cumprir). Sem a chave, cai no
- * gerador local de `identidade.ts` — determinístico, instantâneo e de graça.
- * Em qualquer caso o texto entra no formulário como rascunho editável.
- */
 const Entrada = z.object({
   nome: z.string().trim().min(1).max(80),
   segmento: z.string().trim().max(40).optional(),
@@ -18,52 +11,70 @@ const Entrada = z.object({
 });
 
 export async function POST(request: Request) {
-  const r = Entrada.safeParse(await request.json().catch(() => null));
-  if (!r.success) return Response.json({ erro: "Informe pelo menos o nome da loja." }, { status: 422 });
+  // Autenticação multi-tenant / lojista
+  const lojista = await lojistaAtual();
 
-  const local = sugerirEssencia(r.data.nome, r.data.segmento, r.data.personalidade);
-  const chave = process.env.ANTHROPIC_API_KEY;
-  if (!chave) return Response.json({ ...local, origem: "local" });
+  const r = Entrada.safeParse(await request.json().catch(() => null));
+  if (!r.success) {
+    return Response.json({ erro: "Informe pelo menos o nome da loja." }, { status: 422 });
+  }
+
+  const nomeLoja = r.data.nome || lojista?.nome || "Sua loja";
+  const segmento = r.data.segmento || lojista?.segmento || "comércio";
+
+  const local = sugerirEssencia(nomeLoja, segmento, r.data.personalidade);
 
   try {
-    const { default: Anthropic } = await import("@anthropic-ai/sdk");
-    const client = new Anthropic({ apiKey: chave });
-    const segmento = SEGMENTOS.find(([v]) => v === r.data.segmento)?.[1] ?? r.data.segmento ?? "comércio";
-    const resposta = await client.messages.create({
-      model: "claude-opus-5",
-      max_tokens: 1000,
-      output_config: { effort: "low", format: {
-        type: "json_schema",
-        schema: {
-          type: "object",
-          properties: {
-            publico: { type: "string", description: "Quem a loja quer conquistar, até 240 caracteres, primeira pessoa do plural ou frase neutra." },
-            diferencial: { type: "string", description: "Por que escolher esta marca, até 300 caracteres." },
-          },
-          required: ["publico", "diferencial"],
-          additionalProperties: false,
-        },
-      } },
-      system:
-        "Você escreve o diagnóstico de marca de pequenas lojas brasileiras. Português do Brasil, tom simples e concreto, sem jargão de publicidade, sem superlativo vazio ('a melhor', 'líder'), sem inventar prêmio, número, prazo ou certificação. Escreva como o próprio lojista falaria.",
-      messages: [
-        {
-          role: "user",
-          content: `Loja: ${r.data.nome}\nSegmento: ${segmento}\nPersonalidade: ${(r.data.personalidade ?? []).join(", ") || "não informada"}\n${r.data.contexto ? `Contexto do lojista: ${r.data.contexto}\n` : ""}\nEscreva um rascunho para as duas perguntas: quem a loja quer conquistar (até 240 caracteres) e por que escolher a marca (até 300 caracteres).`,
-        },
-      ],
+    const resIa = await gerarDiagnosticoMarca({
+      nome: nomeLoja,
+      segmento,
+      personalidade: r.data.personalidade,
+      contexto: r.data.contexto,
     });
 
-    if (resposta.stop_reason === "refusal") return Response.json({ ...local, origem: "local" });
-    const texto = resposta.content.find((b) => b.type === "text");
-    const dados = texto && "text" in texto ? (JSON.parse(texto.text) as { publico?: string; diferencial?: string }) : {};
+    if (resIa) {
+      return Response.json({
+        success: true,
+        source: "gemini",
+        model: resIa.modelo,
+        data: resIa.dados,
+        publico: resIa.dados.publicoAlvo.slice(0, 240),
+        diferencial: resIa.dados.propostaValor.slice(0, 300),
+        slogan: resIa.dados.slogan,
+        tomDeVoz: resIa.dados.tomDeVoz,
+        origem: "ia",
+      });
+    }
+
     return Response.json({
-      publico: (dados.publico ?? local.publico).slice(0, 240),
-      diferencial: (dados.diferencial ?? local.diferencial).slice(0, 300),
-      origem: "ia",
+      success: true,
+      source: "fallback",
+      model: MODELO_GEMINI_PADRAO,
+      data: {
+        publicoAlvo: local.publico,
+        propostaValor: local.diferencial,
+        diferenciais: ["Atendimento humano", "Entrega garantida", "Preço justo"],
+        posicionamento: `A escolha certa em ${segmento} para o seu dia a dia.`,
+        tomDeVoz: "direto",
+        palavrasUsar: ["garantia", "qualidade", "agilidade"],
+        palavrasEvitar: ["melhor do mundo", "infalível"],
+        slogan: `${nomeLoja}: Qualidade e confiança em cada compra.`,
+        descricaoCurta: `${nomeLoja} - Produtos selecionados com entrega rápida.`,
+        pilaresComunicacao: ["Transparência", "Qualidade", "Agilidade"],
+      },
+      publico: local.publico,
+      diferencial: local.diferencial,
+      origem: "local",
     });
   } catch (erro) {
     console.error("[sugerir-essencia] caindo no gerador local:", erro);
-    return Response.json({ ...local, origem: "local" });
+    return Response.json({
+      success: true,
+      source: "fallback",
+      model: MODELO_GEMINI_PADRAO,
+      publico: local.publico,
+      diferencial: local.diferencial,
+      origem: "local",
+    });
   }
 }

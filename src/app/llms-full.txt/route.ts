@@ -68,7 +68,7 @@ Avila Ops: https://avilaops.com
   const identidade = identidadeDa(t);
   const [categorias, produtos] = await Promise.all([listarCategorias(t.id), listarProdutos(t.id)]);
   const linhasCategorias = categorias.length
-    ? categorias.map((c) => `- [${c.nome}](${base}/categoria/${c.slug})`).join("\n")
+    ? categorias.map((c) => `- [${c.nome}](${base}/categoria/${c.slug})${c.seoDescription ?? c.descricao ? ` — ${c.seoDescription ?? c.descricao}` : ""}`).join("\n")
     : "- Nenhuma categoria publicada.";
   const linhasProdutos = produtos.length
     ? produtos.map((p) => `- [${p.nome}](${base}/produtos/${p.slug}) — R$ ${(p.precoCentavos / 100).toFixed(2).replace(".", ",")}${p.marca ? ` — ${p.marca}` : ""}`).join("\n")

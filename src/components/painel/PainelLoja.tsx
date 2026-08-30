@@ -17,6 +17,7 @@ import FichaPedido from "./FichaPedido";
 import type { ResumoVendas } from "@/lib/relatorio";
 import type { DiagnosticoFeed } from "@/lib/catalogo";
 import Anuncios, { type PixelsView } from "./Anuncios";
+import McpPainel from "./McpPainel";
 
 export interface LojaView {
   slug: string;
@@ -53,7 +54,7 @@ export interface PedidoView { id: string; numero: number; referencia: string; st
 
 const STATUS: Record<string, string> = { ATIVA: "No ar", PROVISIONANDO: "Configurando", SUSPENSA: "Suspensa", CANCELADA: "Cancelada" };
 const PEDIDO: Record<string, string> = { AGUARDANDO_PAGAMENTO: "Aguardando pagamento", PAGO: "Pago — separar", EM_SEPARACAO: "Em separação", ENVIADO: "Enviado", ENTREGUE: "Entregue", CANCELADO: "Cancelado", ESTORNADO: "Estornado" };
-const ABAS = ["Visão geral", "Marca", "Produtos", "Pedidos", "Cupons", "Avaliações", "Buscadores", "Anúncios", "Entrega", "Recebimento", "Assinatura", "Conta"] as const;
+const ABAS = ["Visão geral", "Marca", "Produtos", "Pedidos", "Cupons", "Avaliações", "Buscadores", "Anúncios", "IA (Claude)", "Entrega", "Recebimento", "Assinatura", "Conta"] as const;
 const ASSINATURA: Record<string, { rotulo: string; classe: string }> = {
   SEM_ASSINATURA: { rotulo: "Período de teste", classe: "bg-amber-100 text-amber-800" },
   PENDENTE: { rotulo: "Aguardando cartão", classe: "bg-amber-100 text-amber-800" },
@@ -284,6 +285,8 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
       {aba === "Buscadores" && <Buscadores chamar={chamar} ocupado={ocupado} />}
 
       {aba === "Anúncios" && <Anuncios pixels={loja.pixels} catalogo={catalogo} feedUrl={`${loja.url}/feed/merchant.xml`} chamar={chamar} ocupado={ocupado} />}
+
+      {aba === "IA (Claude)" && <McpPainel lojaPlano={loja.plano} lojaSlug={loja.slug} aoIrParaAssinatura={() => setAba("Assinatura")} />}
 
       {aba === "Pedidos" && (
         <>

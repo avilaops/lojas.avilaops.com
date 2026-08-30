@@ -82,8 +82,27 @@ Todos os POST abaixo vão com `Authorization: Bearer $LOJAS_ADMIN_TOKEN`.
 |---|---|---|
 | a cada hora | `POST /api/admin/carrinhos/verificar` | marca carrinho parado há 45 min e emite `carrinho.abandonado` |
 | a cada hora | `POST /api/admin/estoque/avisos` | avisa quem esperava produto que voltou |
+| diário, 3h | `POST /api/admin/seo/categorias` | gera e publica SEO pendente em lote, sem IA no acesso público |
 | diário | `POST /api/admin/cobranca/verificar` | suspende quem passou da tolerância |
 | segunda 7h | `POST /api/admin/relatorios/semanal` | emite `loja.relatorio-semanal` por loja com movimento |
+
+## SEO de categorias V1
+
+O fluxo diário envia `{ "limite": 10 }` para
+`POST /api/admin/seo/categorias`. O endpoint reivindica cada categoria com uma
+trava de 15 minutos, gera o texto com Gemini ou fallback determinístico,
+publica no Postgres e avisa o IndexNow. Execuções concorrentes não processam a
+mesma categoria; falhas liberam a trava e mantêm `seoPendente=true`.
+
+Para monitorar sem consumir IA, use `GET /api/admin/seo/categorias`. A resposta
+informa `pendentes`, `processando`, `comErro` e `maisAntigaEm`. O evento
+`categoria.seo-pendente` permite uma execução antecipada; o agendamento diário
+continua sendo a rede de segurança. Depois da publicação sai
+`categoria.seo-publicado`.
+
+Nós sugeridos: **Schedule Trigger (3h)** → **HTTP Request / lote** →
+**IF falhas.length > 0** → alerta operacional. Não coloque o token administrativo
+no corpo ou na URL; use a credencial de header do n8n.
 
 ## `loja.voltou-ao-estoque`: ligado em 26/08/2026
 

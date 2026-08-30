@@ -1,4 +1,4 @@
-# Identidade visual de uma loja — briefing para quem vai personalizar
+# Identidade visual de uma loja: briefing para quem vai personalizar
 
 Este documento é para quem vai criar a identidade visual de uma loja da
 plataforma (designer, ChatGPT, agência). Ele diz exatamente **o que dá para
@@ -12,8 +12,8 @@ layouts são persistidos por tenant, mantendo a loja rápida e consistente em to
 
 O onboarding pergunta segmento, público, diferencial real, até três traços de
 personalidade, tom de voz, objetivo e direção fotográfica. `src/lib/identidade.ts`
-transforma essas respostas em uma direção reproduzível — sem depender de uma API
-externa — e salva o resultado em `Tenant.identidade`.
+transforma essas respostas em uma direção reproduzível, sem depender de uma API
+externa, e salva o resultado em `Tenant.identidade`.
 
 A aba **Marca** permite refazer a direção e depois refinar tokens, logo e banner.
 Ao publicar, `loja.identidade-atualizada` cria no n8n uma tarefa de revisão visual
@@ -34,7 +34,7 @@ no Todoist. A revisão deve conferir contraste, coerência e uso de fotos reais.
 | `raio` | `reto` \| `suave` \| `redondo` | Cantos de botões, cards e campos |
 | `layout` | `classico` \| `vitrine` \| `editorial` \| `minimal` | Composição da página inicial (ver §3) |
 
-### Imagens (enviadas pelo painel — botões "Enviar…")
+### Imagens (enviadas pelo painel: botões "Enviar…")
 
 | Imagem | Formato | Tamanho recomendado | Onde aparece |
 |---|---|---|---|
@@ -60,10 +60,10 @@ Limite: 5 MB por arquivo. PNG/JPG/WEBP/GIF/SVG. Tudo é servido de `https://loja
 
 ## 2. Como entregar
 
-**Opção A — pelo painel:** `https://lojas.avilaops.com/painel` → aba **Marca**
+**Opção A, pelo painel:** `https://lojas.avilaops.com/painel` → aba **Marca**
 (cores, fonte, cantos, layout, slogan, logo, banner) e aba **Produtos** (fotos, categorias com imagem).
 
-**Opção B — JSON, colado na aba Marca → "Colar identidade (JSON)":**
+**Opção B, JSON, colado na aba Marca → "Colar identidade (JSON)":**
 
 ```json
 {
@@ -76,17 +76,17 @@ Limite: 5 MB por arquivo. PNG/JPG/WEBP/GIF/SVG. Tudo é servido de `https://loja
 ```
 
 Só as chaves presentes são alteradas (merge). `logoUrl`/`bannerUrl` precisam ser
-URLs públicas — o mais simples é enviar as imagens pelo painel primeiro e usar
+URLs públicas, o mais simples é enviar as imagens pelo painel primeiro e usar
 as URLs que ele devolve.
 
-**Opção C — API (Avila Ops / n8n):** `PATCH /api/admin/tenants/<slug>` com o mesmo JSON, `Authorization: Bearer <LOJAS_ADMIN_TOKEN>`.
+**Opção C, API (Avila Ops / n8n):** `PATCH /api/admin/tenants/<slug>` com o mesmo JSON, `Authorization: Bearer <LOJAS_ADMIN_TOKEN>`.
 
 ## 3. Os quatro layouts, em uma frase
 
-- **Clássico** — faixa na cor primária com slogan; categorias em cartões; 8 destaques em 4 colunas. Neutro, funciona para tudo.
-- **Vitrine** — banner de ponta a ponta com o slogan em cima; chips de categoria; 12 produtos. Pede banner e fotos boas.
-- **Editorial** — slogan e texto à esquerda, imagem à direita; categorias com foto (16:9); 6 destaques grandes; bloco "Sobre" na cor primária. Pede banner e imagem por categoria.
-- **Minimal** — sem banner; slogan centralizado; categorias como links; 9 produtos em 3 colunas. Para catálogo pequeno e fotos fortes.
+- **Clássico**, faixa na cor primária com slogan; categorias em cartões; 8 destaques em 4 colunas. Neutro, funciona para tudo.
+- **Vitrine**, banner de ponta a ponta com o slogan em cima; chips de categoria; 12 produtos. Pede banner e fotos boas.
+- **Editorial**, slogan e texto à esquerda, imagem à direita; categorias com foto (16:9); 6 destaques grandes; bloco "Sobre" na cor primária. Pede banner e imagem por categoria.
+- **Minimal**, sem banner; slogan centralizado; categorias como links; 9 produtos em 3 colunas. Para catálogo pequeno e fotos fortes.
 
 ## 4. Checklist de entrega de uma identidade
 

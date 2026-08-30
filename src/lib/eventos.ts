@@ -57,6 +57,8 @@ export type EventoPlataforma =
   /** Emitido uma única vez, na virada PROVISIONANDO → ATIVA. É o gatilho de tudo que conta prazo "desde que a loja está no ar". */
   | { tipo: "loja.ativada"; slug: string; nome: string; url: string; emailContato?: string | null; whatsapp?: string | null }
   | { tipo: "loja.identidade-atualizada"; slug: string; nome: string; url: string; personalidade: string; direcaoFotografica: string; emailContato?: string | null; whatsapp?: string | null }
+  | { tipo: "categoria.seo-pendente"; slug: string; nome: string; categoriaId: string; categoriaSlug: string; categoriaNome: string; url: string }
+  | { tipo: "categoria.seo-publicado"; slug: string; nome: string; categoriaId: string; categoriaSlug: string; categoriaNome: string; url: string; origem: string }
   | ({ tipo: "pedido.criado"; slug: string; referencia: string; numero?: number; totalCentavos: number; meioPagamento: string; clienteNome: string; clienteEmail: string; clienteTelefone: string } & Lojista)
   | ({ tipo: "pedido.pago"; slug: string; referencia: string; numero?: number; totalCentavos: number; clienteNome: string; clienteEmail: string; clienteTelefone: string; itens: ItemEvento[]; itensTexto: string } & Lojista)
   | ({ tipo: "pedido.recusado"; slug: string; referencia: string; clienteNome: string; clienteEmail: string; clienteTelefone: string; motivo?: string } & Lojista)

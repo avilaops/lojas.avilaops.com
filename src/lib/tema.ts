@@ -17,14 +17,17 @@ export const TemaSchema = z.object({
   fonte: z.enum(["sistema", "inter", "poppins", "montserrat", "playfair"]).default("sistema"),
   raio: z.enum(["reto", "suave", "redondo"]).default("suave"),
   /**
-   * Layout da página inicial. São quatro composições fixas dos mesmos blocos
+   * Layout da página inicial. São composições fixas dos mesmos blocos
    * (banner, categorias, destaques, sobre) — o lojista escolhe uma, não
    * desenha. É o limite entre "personalizar" e "customizar".
    */
-  layout: z.enum(["classico", "vitrine", "editorial", "minimal"]).default("classico"),
+  layout: z.enum(["spotlight", "mercado", "conversao", "classico", "vitrine", "editorial", "minimal"]).default("classico"),
 });
 
 export const LAYOUTS: Array<{ valor: TemaLoja["layout"]; rotulo: string; descricao: string }> = [
+  { valor: "spotlight", rotulo: "Spotlight", descricao: "Hero de alto impacto, produto principal e navegação visual. Ideal para performance e marca." },
+  { valor: "mercado", rotulo: "Mercado", descricao: "Catálogo denso, departamentos e mais produtos por tela. Ideal para distribuidoras." },
+  { valor: "conversao", rotulo: "Conversão", descricao: "Oferta clara, benefícios e caminho curto até a compra. Ideal para campanhas." },
   { valor: "classico", rotulo: "Clássico", descricao: "Faixa colorida com slogan, categorias em cartões, destaques em 4 colunas." },
   { valor: "vitrine", rotulo: "Vitrine", descricao: "Banner grande de ponta a ponta, categorias em chips, grade cheia de produtos. Bom para muita foto." },
   { valor: "editorial", rotulo: "Editorial", descricao: "Texto de um lado, imagem do outro; categorias com foto; poucos destaques, grandes; bloco “sobre”. Bom para marca." },

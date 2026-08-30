@@ -165,6 +165,16 @@ model Categoria {
   imagemUrl String?
   ordem     Int     @default(0)
 
+  // SEO persistido: gerado fora do request público e revisável no painel.
+  seoTitle       String?
+  seoDescription String?
+  seoKeywords    String[] @default([])
+  seoPendente    Boolean  @default(true)
+  seoOrigem      String?  // manual | gemini | fallback
+  seoModelo      String?
+  seoAtualizadoEm DateTime?
+  seoProcessandoEm DateTime?
+  seoErro          String?
 
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @default(now()) @updatedAt
@@ -173,6 +183,7 @@ model Categoria {
   produtos Produto[]
 
   @@unique([tenantId, slug])
+  @@index([tenantId, seoPendente])
 }
 
 model Produto {

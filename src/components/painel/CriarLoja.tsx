@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { Campo, Secao, inputClasse, lerCsvProdutos } from "./campos";
 import { criarDirecaoVisual, PERSONALIDADES, SEGMENTOS, type DiagnosticoMarca, type IdentidadeLoja } from "@/lib/identidade";
 
@@ -31,7 +30,6 @@ function urlValida(valor: string) {
 }
 
 export default function CriarLoja({ planoInicial }: { planoInicial: "SITE" | "LOJA" | "LOJA_PRO" }) {
-  const router = useRouter();
   const wizardRef = useRef<HTMLDivElement>(null);
   const [passo, setPasso] = useState(0);
   const [erro, setErro] = useState<string | null>(null);

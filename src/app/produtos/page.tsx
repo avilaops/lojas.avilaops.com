@@ -25,6 +25,7 @@ export default async function Produtos({ searchParams }: { searchParams: Promise
     listarCategorias(t.id),
     listarProdutos(t.id, { busca: sp.q?.trim() || undefined, categoriaSlug: sp.categoria || undefined, ordem, minCentavos: reais(sp.min), maxCentavos: reais(sp.max), moto }),
   ]);
+  const vende = lojaVende(t);
   const categoriaAtual = categorias.find((c) => c.slug === sp.categoria);
   const titulo = sp.q ? `Resultados para “${sp.q}”` : categoriaAtual ? categoriaAtual.nome : moto ? `Peças para ${nomeDaMoto(moto)}` : "Todos os produtos";
 
@@ -44,7 +45,7 @@ export default async function Produtos({ searchParams }: { searchParams: Promise
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {produtos.map((p) => (
-            <ProductCard key={p.id} produto={p} vende={lojaVende(t)} whatsapp={t.whatsapp} moto={moto} />
+            <ProductCard key={p.id} produto={p} vende={vende} whatsapp={t.whatsapp} moto={moto} />
           ))}
         </div>
       )}

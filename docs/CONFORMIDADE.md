@@ -1,9 +1,9 @@
-# Conformidade — o que toda loja já cumpre sozinha
+# Conformidade: o que toda loja já cumpre sozinha
 
 Loja de pequeno negócio quase nunca tem quem cuide disso. Aqui a conformidade é
 parte da plataforma: o lojista não escreve política, não instala banner de
 cookie e não escolhe o que exibir. Ele preenche dois campos e o resto vem
-pronto, igual em todas as lojas — que é o mesmo motivo pelo qual o custo por
+pronto, igual em todas as lojas, que é o mesmo motivo pelo qual o custo por
 loja fica abaixo de R$ 10/mês.
 
 ## Identificação do fornecedor (Decreto 7.962/2013, art. 2º)
@@ -13,7 +13,7 @@ social, CNPJ, endereço físico e endereço eletrônico.
 
 - Campos `Tenant.razaoSocial` e `Tenant.cnpj` (14 dígitos, sem máscara; o
   dígito verificador é conferido em `admin-schemas.ts` com `validarCnpj` do
-  `@avilaops/checkout` — o rodapé nunca mostra CNPJ inventado).
+  `@avilaops/checkout` - o rodapé nunca mostra CNPJ inventado).
 - Preenchidos no painel em **Conta → Dados da empresa**. Enquanto faltarem, o
   painel avisa.
 - Aparecem sozinhos na última linha do rodapé de **todas** as páginas e no
@@ -26,7 +26,7 @@ social, CNPJ, endereço físico e endereço eletrônico.
 
 `/politicas/devolucao`, `/politicas/envio` e `/politicas/privacidade` são texto
 único da plataforma preenchido com os dados da loja (prazo de despacho,
-retirada, canal de atendimento). Nenhum lojista edita — é o que garante que os
+retirada, canal de atendimento). Nenhum lojista edita, é o que garante que os
 7 dias do art. 49 e os prazos de vício do art. 26 estejam escritos certo em
 toda loja, sem ninguém revisar uma por uma.
 
@@ -46,10 +46,10 @@ Pixel de anúncio depende. O comportamento é:
 
 - O aviso (`src/components/Consentimento.tsx`) **só aparece se a loja tiver
   algum pixel**. Loja que não anuncia não usa cookie de terceiro e não tem o
-  que perguntar — nem atrito para o comprador.
+  que perguntar, nem atrito para o comprador.
 - A escolha fica no `localStorage` do visitante (`loja_consentimento`), com
   versão. Subir `VERSAO` em `src/lib/consentimento.ts` faz todo mundo ser
-  perguntado de novo — é o que fazer quando o alcance do tratamento mudar.
+  perguntado de novo, é o que fazer quando o alcance do tratamento mudar.
 - A loja não guarda perfil de visitante. Nada de consentimento vai para o banco.
 - "Cookies", no rodapé, reabre a decisão (art. 8º, §5º: consentimento tem que
   ser revogável com a mesma facilidade).
@@ -61,5 +61,5 @@ Pixel de anúncio depende. O comportamento é:
 
 O comprador tem conta na loja (`/conta`), com histórico e endereços. Exportar
 os dados dos clientes finais em CSV mediante pedido por escrito é a **única**
-exceção ao padrão fechado da plataforma — é obrigação de LGPD do lojista, que é
+exceção ao padrão fechado da plataforma, é obrigação de LGPD do lojista, que é
 o controlador dos dados de quem compra dele.

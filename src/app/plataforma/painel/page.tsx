@@ -81,7 +81,24 @@ export default async function PainelPage({ searchParams }: { searchParams: Promi
           },
         }}
         produtos={produtos.map((p) => ({ id: p.id, nome: p.nome, sku: p.sku, precoCentavos: p.precoCentavos, ativo: p.ativo, destaque: p.destaque, categoria: p.categoria?.nome ?? null, imagem: p.imagens[0] ?? null, disponibilidade: p.disponibilidade, estoque: p.estoque, opcoes: p.opcoes, variantes: p._count.variantes, temEmbalagem: p.alturaCm != null && p.larguraCm != null && p.comprimentoCm != null }))}
-        categorias={categorias.map((c) => ({ id: c.id, nome: c.nome, slug: c.slug, descricao: c.descricao, imagemUrl: c.imagemUrl, ordem: c.ordem, produtos: c._count.produtos }))}
+        categorias={categorias.map((c) => ({
+          id: c.id,
+          nome: c.nome,
+          slug: c.slug,
+          descricao: c.descricao,
+          imagemUrl: c.imagemUrl,
+          ordem: c.ordem,
+          produtos: c._count.produtos,
+          seoTitle: c.seoTitle,
+          seoDescription: c.seoDescription,
+          seoKeywords: c.seoKeywords,
+          seoPendente: c.seoPendente,
+          seoOrigem: c.seoOrigem,
+          seoModelo: c.seoModelo,
+          seoAtualizadoEm: c.seoAtualizadoEm?.toISOString() ?? null,
+          seoProcessandoEm: c.seoProcessandoEm?.toISOString() ?? null,
+          seoErro: c.seoErro,
+        }))}
         vendas={vendas}
         catalogo={catalogo}
         espera={espera}

@@ -72,6 +72,128 @@ body {
 .placeholder-editorial { background-image: radial-gradient(circle at 72% 25%, color-mix(in srgb, var(--brand-support, var(--primary)) 48%, transparent), transparent 35%), linear-gradient(145deg, var(--muted), var(--card)); }
 .home-minimal .cartao-produto { border-color: transparent; }
 
+/* Três composições comerciais: impacto, distribuição e conversão. */
+.beneficios-barra { display: grid; overflow: hidden; border: 1px solid var(--border); border-radius: calc(var(--radius) * 1.5); background: var(--card); box-shadow: 0 18px 50px color-mix(in srgb, var(--foreground) 6%, transparent); }
+.beneficios-barra > div { display: flex; align-items: center; gap: .75rem; padding: 1rem 1.125rem; }
+.beneficios-barra > div + div { border-top: 1px solid var(--border); }
+.beneficios-barra svg { width: 1.25rem; height: 1.25rem; flex: 0 0 auto; color: var(--primary); }
+.beneficios-barra p { display: grid; gap: .15rem; }
+.beneficios-barra strong { font-size: .78rem; line-height: 1.2; }
+.beneficios-barra span { font-size: .68rem; line-height: 1.25; color: var(--muted-foreground); }
+.home-vazio { border: 1px dashed var(--border); border-radius: calc(var(--radius) * 1.4); padding: 2.5rem 1rem; text-align: center; font-size: .875rem; color: var(--muted-foreground); }
+
+.home-spotlight { overflow: hidden; padding-bottom: 4rem; }
+.spotlight-hero { position: relative; min-height: min(720px, 78vh); overflow: hidden; background: #07090d; color: #fff; }
+.spotlight-fundo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .36; filter: saturate(.78) contrast(1.08); }
+.spotlight-hero::after { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 75% 45%, transparent 0 15%, rgba(7,9,13,.68) 58%), linear-gradient(90deg, rgba(7,9,13,.96), rgba(7,9,13,.2)); }
+.spotlight-grade { position: absolute; inset: 0; z-index: 1; opacity: .18; background-image: linear-gradient(rgba(255,255,255,.12) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.12) 1px, transparent 1px); background-size: 64px 64px; mask-image: linear-gradient(90deg, #000, transparent 72%); }
+.spotlight-conteudo { position: relative; z-index: 2; display: grid; min-height: min(720px, 78vh); align-items: end; gap: 2rem; padding-block: 5rem 3rem; }
+.spotlight-copy { max-width: 46rem; }
+.spotlight-copy .home-selo { color: color-mix(in srgb, var(--primary) 72%, white); }
+.spotlight-copy h1 { max-width: 12ch; margin-top: 1rem; font-size: clamp(2.85rem, 8vw, 6.5rem); font-weight: 850; line-height: .88; letter-spacing: -.065em; text-wrap: balance; }
+.spotlight-copy > p:not(.home-selo) { max-width: 37rem; margin-top: 1.25rem; font-size: clamp(.9rem, 1.8vw, 1.05rem); line-height: 1.65; color: rgba(255,255,255,.72); }
+.spotlight-acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; margin-top: 1.75rem; }
+.spotlight-cta { display: inline-flex; height: 3.125rem; align-items: center; gap: .6rem; border-radius: 999px; background: var(--primary); padding-inline: 1.4rem; font-size: .85rem; font-weight: 750; color: var(--primary-foreground); transition: transform .2s, box-shadow .2s; }
+.spotlight-cta:hover { transform: translateY(-2px); box-shadow: 0 14px 35px color-mix(in srgb, var(--primary) 40%, transparent); }
+.spotlight-cta svg, .spotlight-acoes span svg { width: 1rem; height: 1rem; }
+.spotlight-acoes span { display: inline-flex; align-items: center; gap: .5rem; font-size: .75rem; color: rgba(255,255,255,.68); }
+.spotlight-produto { display: grid; gap: .45rem; align-self: end; max-width: 22rem; border: 1px solid rgba(255,255,255,.18); border-radius: calc(var(--radius) * 1.8); background: rgba(9,12,18,.72); padding: 1.35rem; backdrop-filter: blur(18px); transition: border-color .2s, transform .2s; }
+.spotlight-produto:hover { transform: translateY(-4px); border-color: color-mix(in srgb, var(--primary) 80%, white); }
+.spotlight-produto .home-selo { color: color-mix(in srgb, var(--primary) 72%, white); }
+.spotlight-produto strong { font-size: 1.15rem; line-height: 1.25; }
+.spotlight-produto small { font-size: .7rem; text-transform: uppercase; letter-spacing: .1em; color: rgba(255,255,255,.5); }
+.spotlight-produto b { margin-top: .5rem; font-size: 1.45rem; }
+.spotlight-produto i { display: flex; align-items: center; justify-content: space-between; margin-top: .4rem; border-top: 1px solid rgba(255,255,255,.12); padding-top: .8rem; font-size: .75rem; font-style: normal; color: rgba(255,255,255,.68); }
+.spotlight-produto i svg { width: 1rem; }
+.home-spotlight .beneficios-barra { position: relative; z-index: 3; margin-top: -1rem; }
+.spotlight-categorias, .spotlight-vitrine { padding-top: 4.5rem; }
+.spotlight-categorias header h2, .spotlight-vitrine h2 { margin-top: .5rem; font-size: clamp(1.7rem, 4vw, 2.6rem); font-weight: 780; letter-spacing: -.04em; }
+.spotlight-categorias > div { display: grid; margin-top: 1.5rem; border-top: 1px solid var(--border); }
+.spotlight-categorias > div a { display: grid; grid-template-columns: 2.5rem 1fr auto; align-items: center; gap: .75rem; border-bottom: 1px solid var(--border); padding: 1rem .25rem; transition: padding .2s, color .2s; }
+.spotlight-categorias > div a:hover { padding-inline: .75rem; color: var(--primary); }
+.spotlight-categorias a span { font-size: .65rem; color: var(--muted-foreground); }
+.spotlight-categorias a strong { font-size: .9rem; }
+.spotlight-categorias a svg { width: 1rem; }
+.spotlight-vitrine > header, .mercado-departamentos > header, .mercado-produtos > header, .conversao-produtos > header { display: flex; align-items: end; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
+.spotlight-vitrine > header .home-selo, .mercado-departamentos > header .home-selo { display: flex; align-items: center; gap: .35rem; }
+.spotlight-vitrine > header .home-selo svg, .mercado-departamentos > header .home-selo svg { width: .8rem; height: .8rem; }
+.spotlight-vitrine > header > a, .mercado-departamentos > header > a, .mercado-produtos > header > a, .conversao-produtos > header > a { display: none; align-items: center; gap: .35rem; font-size: .78rem; font-weight: 650; color: var(--muted-foreground); }
+.spotlight-vitrine > header > a svg, .mercado-departamentos > header > a svg, .mercado-produtos > header > a svg, .conversao-produtos > header > a svg { width: .9rem; }
+
+.home-mercado { padding-bottom: 4rem; }
+.mercado-abertura { position: relative; overflow: hidden; border-bottom: 1px solid var(--border); background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 11%, var(--background)), var(--background) 58%); }
+.mercado-abertura::after { content: ""; position: absolute; right: -8rem; bottom: -12rem; width: 32rem; height: 32rem; border: 1px solid color-mix(in srgb, var(--primary) 20%, transparent); border-radius: 50%; box-shadow: 0 0 0 4rem color-mix(in srgb, var(--primary) 3%, transparent), 0 0 0 8rem color-mix(in srgb, var(--primary) 2%, transparent); }
+.mercado-abertura-grid { position: relative; z-index: 1; display: grid; align-items: center; gap: 2.5rem; padding-block: 4rem; }
+.mercado-abertura h1 { max-width: 14ch; margin-top: .75rem; font-size: clamp(2.5rem, 6vw, 5.5rem); font-weight: 820; line-height: .96; letter-spacing: -.06em; }
+.mercado-abertura-grid > div > p:not(.home-selo) { max-width: 39rem; margin-top: 1rem; line-height: 1.65; color: var(--muted-foreground); }
+.mercado-acoes { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1.5rem; }
+.mercado-acoes svg { width: 1rem; height: 1rem; }
+.mercado-resumo { display: grid; grid-template-columns: auto 1fr; gap: 1rem; border: 1px solid var(--border); border-radius: calc(var(--radius) * 2); background: color-mix(in srgb, var(--card) 90%, transparent); padding: 1.5rem; box-shadow: 0 24px 70px color-mix(in srgb, var(--foreground) 8%, transparent); backdrop-filter: blur(12px); }
+.mercado-resumo > svg { grid-row: span 2; width: 2rem; height: 2rem; color: var(--primary); }
+.mercado-resumo p { display: grid; border-left: 1px solid var(--border); padding-left: 1rem; }
+.mercado-resumo strong { font-size: 1.35rem; }
+.mercado-resumo span { font-size: .72rem; color: var(--muted-foreground); }
+.home-mercado .beneficios-barra { margin-top: 1rem; }
+.mercado-departamentos, .mercado-produtos { padding-top: 3.75rem; }
+.mercado-departamentos h2, .mercado-produtos h2 { margin-top: .4rem; font-size: clamp(1.55rem, 3vw, 2.15rem); font-weight: 780; letter-spacing: -.035em; }
+.mercado-grade-categorias { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; }
+.mercado-grade-categorias a { position: relative; display: grid; min-height: 7.5rem; grid-template-columns: 1fr auto; align-items: end; overflow: hidden; border: 1px solid var(--border); border-radius: calc(var(--radius) * 1.4); background: var(--muted); padding: 1rem; transition: border-color .2s, transform .2s; }
+.mercado-grade-categorias a:hover { transform: translateY(-2px); border-color: var(--primary); }
+.mercado-grade-categorias img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .28; transition: transform .35s; }
+.mercado-grade-categorias a:hover img { transform: scale(1.05); }
+.mercado-grade-categorias span, .mercado-grade-categorias svg { position: relative; z-index: 1; }
+.mercado-grade-categorias span { font-size: .85rem; font-weight: 720; }
+.mercado-grade-categorias svg { width: 1rem; }
+.home-mercado .cartao-produto > div:last-child { padding: .8rem; }
+.home-mercado .cartao-produto .btn-primario, .home-mercado .cartao-produto .btn-secundario { height: 2.5rem; padding-inline: .65rem; }
+
+.home-conversao { padding-bottom: 4rem; }
+.conversao-hero { display: grid; align-items: center; gap: 2.5rem; padding-block: 3.5rem; }
+.conversao-copy h1 { max-width: 12ch; margin-top: .8rem; font-size: clamp(2.6rem, 7vw, 5.8rem); font-weight: 830; line-height: .92; letter-spacing: -.065em; text-wrap: balance; }
+.conversao-copy > p:not(.home-selo) { max-width: 38rem; margin-top: 1rem; line-height: 1.65; color: var(--muted-foreground); }
+.conversao-acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; margin-top: 1.5rem; }
+.conversao-acoes svg { width: 1rem; }
+.conversao-acoes span { display: inline-flex; align-items: center; gap: .45rem; font-size: .76rem; color: var(--muted-foreground); }
+.conversao-copy ul { display: flex; flex-wrap: wrap; gap: .75rem 1.25rem; margin-top: 1.5rem; font-size: .72rem; color: var(--muted-foreground); }
+.conversao-copy li { display: flex; align-items: center; gap: .35rem; }
+.conversao-copy li svg { width: .9rem; height: .9rem; color: var(--primary); }
+.conversao-visual { position: relative; min-height: 25rem; overflow: hidden; border-radius: calc(var(--radius) * 2.5); background: var(--muted); box-shadow: 0 30px 75px color-mix(in srgb, var(--foreground) 13%, transparent); }
+.conversao-visual > img, .conversao-visual > .produto-sem-foto { width: 100%; height: 100%; min-height: 25rem; object-fit: cover; }
+.conversao-visual::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.7), transparent 60%); pointer-events: none; }
+.conversao-oferta { position: absolute; z-index: 1; right: 1rem; bottom: 1rem; left: 1rem; display: grid; grid-template-columns: 1fr auto; gap: .2rem 1rem; border: 1px solid rgba(255,255,255,.22); border-radius: calc(var(--radius) * 1.5); background: rgba(10,12,16,.74); padding: 1rem; color: white; backdrop-filter: blur(16px); }
+.conversao-oferta small { grid-column: 1/-1; font-size: .62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .14em; color: color-mix(in srgb, var(--primary) 60%, white); }
+.conversao-oferta strong { font-size: .88rem; }
+.conversao-oferta span { grid-row: span 2; align-self: center; font-size: 1.15rem; font-weight: 800; }
+.conversao-oferta i { display: flex; align-items: center; gap: .3rem; font-size: .68rem; font-style: normal; color: rgba(255,255,255,.64); }
+.conversao-oferta i svg { width: .8rem; }
+.home-conversao .beneficios-barra { margin-top: .5rem; }
+.conversao-categorias { display: flex; gap: .55rem; overflow-x: auto; padding-block: 2rem 1rem; }
+.conversao-categorias a, .conversao-categorias > span { display: inline-flex; height: 2.5rem; flex: 0 0 auto; align-items: center; gap: .3rem; border: 1px solid var(--border); border-radius: 999px; padding-inline: .9rem; font-size: .75rem; }
+.conversao-categorias > span { border-color: var(--primary); background: var(--primary); font-weight: 700; color: var(--primary-foreground); }
+.conversao-categorias a:hover { border-color: var(--primary); color: var(--primary); }
+.conversao-categorias svg { width: .8rem; }
+.conversao-produtos { padding-top: 2.75rem; }
+.conversao-produtos h2 { margin-top: .4rem; font-size: clamp(1.65rem, 3vw, 2.35rem); font-weight: 780; letter-spacing: -.04em; }
+
+@media (min-width: 640px) {
+  .beneficios-barra { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .beneficios-barra > div + div { border-top: 0; border-left: 1px solid var(--border); }
+  .spotlight-categorias > div { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .spotlight-categorias > div a:nth-child(odd) { border-right: 1px solid var(--border); padding-right: 1rem; }
+  .spotlight-categorias > div a:nth-child(even) { padding-left: 1rem; }
+  .spotlight-vitrine > header > a, .mercado-departamentos > header > a, .mercado-produtos > header > a, .conversao-produtos > header > a { display: inline-flex; }
+  .mercado-grade-categorias { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .mercado-categoria-principal { grid-column: span 2; }
+}
+
+@media (min-width: 900px) {
+  .spotlight-conteudo { grid-template-columns: 1fr 20rem; align-items: end; }
+  .mercado-abertura-grid { grid-template-columns: minmax(0, 1.4fr) minmax(18rem, .6fr); padding-block: 5.5rem; }
+  .mercado-grade-categorias { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .mercado-categoria-principal { grid-column: span 2; grid-row: span 2; min-height: 15.65rem !important; }
+  .conversao-hero { grid-template-columns: minmax(0, .95fr) minmax(24rem, 1.05fr); min-height: 38rem; padding-block: 5rem; }
+}
+
 .cartao-produto { transition: transform .25s, border-color .25s, box-shadow .25s; }
 .cartao-produto:hover { transform: translateY(-4px); border-color: color-mix(in srgb, var(--primary) 30%, var(--border)); box-shadow: 0 18px 45px color-mix(in srgb, var(--foreground) 9%, transparent); }
 .cartao-produto-imagem::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, color-mix(in srgb, var(--foreground) 9%, transparent), transparent 40%); opacity: 0; transition: opacity .25s; pointer-events: none; }

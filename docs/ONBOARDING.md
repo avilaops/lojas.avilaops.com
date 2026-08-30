@@ -1,4 +1,4 @@
-# Onboarding de uma loja — do formulário ao ar em minutos
+# Onboarding de uma loja: do formulário ao ar em minutos
 
 Meta: **zero toque humano até a aprovação**. O que a C2TI faz com um júnior em
 2–4 h, aqui é um POST.
@@ -24,7 +24,7 @@ authorization: Bearer LOJAS_ADMIN_TOKEN
 ```
 
 e recebe `{ slug, url, status, provisionamento }`. A loja já responde em
-`https://<slug>.lojas.avilaops.com` — é esse link que vai para o cliente
+`https://<slug>.lojas.avilaops.com` - é esse link que vai para o cliente
 aprovar.
 
 ## 2. O que `provisionar` faz sozinho
@@ -42,7 +42,7 @@ criarTenant ─► evento loja.criada (n8n)
 
 Cada passo é idempotente; `POST /api/admin/tenants/:slug/provisionar` pode
 rodar de novo depois de corrigir uma credencial. Passo sem credencial fica
-`pendente:` — não bloqueia nada.
+`pendente:` - não bloqueia nada.
 
 ## 3. Fluxo n8n `lojas-onboarding` (a construir)
 
@@ -57,7 +57,7 @@ Webhook único (`N8N_WEBHOOK_URL`) recebendo `{ tipo, slug, ... }`:
 | `pedido.recusado` | WhatsApp ao comprador oferecendo PIX. |
 | 3 dias após aprovação | Pede as 2 indicações (condição do desconto do setup) e registra no CRM. |
 
-## 4. Painel do lojista (portal) — endpoints já disponíveis
+## 4. Painel do lojista (portal): endpoints já disponíveis
 
 | Tela | Endpoint |
 |---|---|

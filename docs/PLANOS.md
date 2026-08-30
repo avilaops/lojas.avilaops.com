@@ -27,7 +27,7 @@ Verificado em 24/08/2026 nos sites chiarodesign.com.br e infomaq.com.br:
 | Automações (carrinho abandonado, reposição, cupom, pós-venda) | | | ✔ |
 | Relatórios semanais + 5 caixas de e-mail + NF-e | | | ✔ |
 
-Condição do setup promocional: 2 indicações após a aprovação (igual à deles —
+Condição do setup promocional: 2 indicações após a aprovação (igual à deles
 funciona). Sem desconto por logo no rodapé: o "Loja por Avila Ops" é fixo.
 
 ## Por que ganhamos a comparação sem brigar por R$ 27
@@ -36,7 +36,7 @@ funciona). Sem desconto por logo no rodapé: o "Loja por Avila Ops" é fixo.
 |---|---|
 | Loja em ASP.NET WebForms, 2009 | Next.js 16, Core Web Vitals, JSON-LD de produto (Google Shopping grátis) |
 | "Gerenciador simples" | Painel no cliente.avilaops.com + tudo por API |
-| Pagamento: não descrito | PIX com QR na hora, cartão tokenizado, boleto — dinheiro cai na conta do lojista |
+| Pagamento: não descrito | PIX com QR na hora, cartão tokenizado, boleto, dinheiro cai na conta do lojista |
 | E-mail terceirizado | mail.avilaops.com, DKIM/DMARC prontos, webmail próprio |
 | Manutenção = "suporte" | Automações n8n que vendem: WhatsApp de pedido pago, carrinho abandonado |
 | Aprovação em dias | Loja no ar em minutos (`<slug>.lojas.avilaops.com`) |
@@ -53,4 +53,4 @@ funciona). Sem desconto por logo no rodapé: o "Loja por Avila Ops" é fixo.
 Domínio registrado pela Avila Ops, DNS na nossa Cloudflare, e-mail no nosso
 mail, painel nosso, automações nossas. Cancelou, sai do ar. Único limite: LGPD
 obriga a entregar os dados de clientes finais (cadastros/pedidos) se pedido por
-escrito — entrega-se um CSV; nada mais sai.
+escrito, entrega-se um CSV; nada mais sai.
