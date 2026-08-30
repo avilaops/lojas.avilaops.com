@@ -79,6 +79,11 @@ export async function cancelarAssinatura(t: Tenant) {
 }
 
 async function suspender(t: Tenant, motivo: string) {
+  // A isenção mora aqui, no único ponto por onde toda suspensão passa. Ela
+  // nasceu só dentro da rotina diária e a demo foi suspensa assim mesmo: o
+  // caminho do webhook (assinatura cancelada no Mercado Pago) não conhecia a
+  // regra. Guard no lugar errado é guard que um caminho novo esquece.
+  if (t.cobrancaIsenta) return;
   if (t.status === "SUSPENSA" || t.status === "CANCELADA") return;
   await prisma.tenant.update({ where: { id: t.id }, data: { status: "SUSPENSA", suspensaEm: new Date() } });
   esquecerTenantEmCache(t.slug);
@@ -216,7 +221,7 @@ export async function verificarInadimplencia(): Promise<{ suspensas: string[]; s
   const atuais = sincronizadas ? await prisma.tenant.findMany({ where: { status: "ATIVA" } }) : lojas;
 
   for (const t of atuais) {
-    if (t.cobrancaIsenta) continue; // loja da casa: nunca suspende
+    if (t.cobrancaIsenta) continue; // loja da casa: nem entra no cálculo (suspender() confere de novo)
     if (t.plano === "SITE" && t.assinaturaStatus === "SEM_ASSINATURA") continue; // vitrine grátis enquanto não assina? não: mesma regra
     const diasDesdeCriacao = (agora - t.criadoEm.getTime()) / 86_400_000;
     const diasDesdePagamento = t.ultimoPagamentoEm ? (agora - t.ultimoPagamentoEm.getTime()) / 86_400_000 : null;

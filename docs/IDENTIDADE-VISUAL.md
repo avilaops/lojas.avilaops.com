@@ -91,7 +91,7 @@ as URLs que ele devolve.
 ## 4. Checklist de entrega de uma identidade
 
 - [ ] Cor primária com contraste AA contra `corPrimariaTexto` (botões legíveis)
-- [ ] Fonte escolhida entre as cinco
+- [ ] Fonte escolhida entre as cincos
 - [ ] Logo em PNG transparente/SVG, legível a 36 px de altura
 - [ ] Banner no tamanho do layout escolhido, com área "calma" para o slogan
 - [ ] Fotos de produto quadradas, mesmo fundo em todas
