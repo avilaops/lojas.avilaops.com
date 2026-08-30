@@ -142,3 +142,33 @@ O ideal ainda é cada loja enviar pelo próprio domínio (o provisionamento já
 cria `contato@` no mail.avilaops.com), mas isso exige uma credencial SMTP por
 loja no n8n, não é padronizável hoje. Enquanto isso, o endereço que autentica
 é o da plataforma e o nome que aparece é o da loja.
+
+## Loja-demo por formulário: 30/08/2026
+
+Workflow **Lojas — Loja-demo por formulário** (`CE64HzanEWwy6xrn`), formulário
+interno em `https://n8n.avilaops.com/form/lojas-demo` (login n8n). Existe para a
+meta da ficha comercial: **5 lojas-demo por semana** a partir de dados públicos,
+sem mão de dev.
+
+```
+Formulário (nome, segmento, cidade, CEP, WhatsApp, Instagram, cor, produtos, origem)
+  └─ Montar Loja e Catálogo (Code)      slug, tema, endereço; uma linha por produto:
+  │                                      nome; preço; categoria; link da foto
+  ├─ POST /api/admin/tenants            cria a loja (sem provisionar: demo não precisa de DNS/e-mail)
+  ├─ PATCH /api/admin/tenants/:slug     { status: ATIVA, cobrancaIsenta: true }
+  ├─ PUT  …/produtos?importarImagens=1&tratar=1
+  │                                      baixa cada foto para /uploads e passa no removedor de fundo
+  ├─ Resumo (Code) → data table `lojas_demos` (rU1kKJ0XMPIn8OYA)
+  ├─ Todoist "Mostrar a loja-demo ao dono" (amanhã, P3)
+  └─ Página final com o link da loja
+```
+
+Regras que o fluxo respeita: a loja nasce **sem Mercado Pago** (vitrine e
+carrinho funcionam, ninguém é cobrado) e **isenta da régua** (`cobrancaIsenta`),
+então a rotina diária nunca a suspende. Linha de produto inválida não derruba a
+importação: entra em "Linhas ignoradas" na tarefa. Foto que não baixa fica com a
+URL original e é listada em "Fotos que não baixaram".
+
+Testado em 30/08/2026 (execução 1296): loja criada, 2 produtos, 2 fotos baixadas
+e tratadas, linha inválida reportada, linha na data table e tarefa no Todoist.
+A loja de teste (`teste-demo-automatica`) e a tarefa foram apagadas depois.

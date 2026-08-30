@@ -2,6 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { randomBytes } from "node:crypto";
 import path from "node:path";
 import { otimizarAoEntrar } from "./imagens";
+import { removedorConfigurado, removerFundo } from "./fundo";
 
 /**
  * Fotos de produto e logo. Ficam em disco (volume /opt/lojas/uploads no
@@ -50,6 +51,40 @@ export async function salvarImagem(slug: string, arquivo: File): Promise<{ url: 
   await mkdir(pasta, { recursive: true });
   await writeFile(path.join(pasta, nome), bytes);
   return { url: `https://${BASE}/uploads/${slug}/${nome}`, caminho: `${slug}/${nome}` };
+}
+
+/**
+ * Baixa uma imagem pública (Instagram, fornecedor, planilha) e guarda como se
+ * tivesse sido enviada pelo painel; com `tratar`, passa pelo removedor de
+ * fundo antes. É o caminho da loja-demo montada por dados públicos: a foto
+ * deixa de depender do site de origem e sai no padrão do catálogo.
+ */
+export async function importarImagemDeUrl(slug: string, url: string, tratar = false): Promise<{ url: string; tratada: boolean }> {
+  let alvo: URL;
+  try {
+    alvo = new URL(url);
+  } catch {
+    throw new UploadInvalido("URL de imagem inválida.");
+  }
+  if (alvo.protocol !== "https:" && alvo.protocol !== "http:") throw new UploadInvalido("URL de imagem inválida.");
+
+  const r = await fetch(alvo, { headers: { "user-agent": "Mozilla/5.0 (compatible; LojasAvilaOps/1.0)" }, redirect: "follow", signal: AbortSignal.timeout(20_000) });
+  if (!r.ok) throw new UploadInvalido(`Origem respondeu ${r.status}.`);
+  const tamanho = Number(r.headers.get("content-length") ?? 0);
+  if (tamanho > LIMITE * 2) throw new UploadInvalido("Imagem acima de 10 MB.");
+  const original = Buffer.from(await r.arrayBuffer());
+  if (original.length > LIMITE * 2) throw new UploadInvalido("Imagem acima de 10 MB.");
+  const tipo = tipoPelosBytes(original);
+  if (!tipo) throw new UploadInvalido("A URL não devolveu uma imagem.");
+
+  if (tratar && removedorConfigurado() && tipo.ext !== "svg" && tipo.ext !== "gif") {
+    const recortada = await removerFundo(original);
+    const salvo = await salvarBytes(slug, recortada, "webp");
+    return { url: salvo.url, tratada: true };
+  }
+  const { bytes, ext } = await otimizarAoEntrar(original, tipo.ext);
+  const salvo = await salvarBytes(slug, bytes, ext);
+  return { url: salvo.url, tratada: false };
 }
 
 export const MIME_POR_EXT: Record<string, string> = { png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", webp: "image/webp", gif: "image/gif", svg: "image/svg+xml" };
