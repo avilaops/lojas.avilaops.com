@@ -3,31 +3,27 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import {
   ArrowRight,
-  BadgeCheck,
   Banknote,
   Check,
   ChevronRight,
   Clock3,
   MessageCircleMore,
   PackageCheck,
-  Palette,
   QrCode,
   ShieldCheck,
-  Sparkles,
   Store,
   Truck,
-  Zap,
 } from "lucide-react";
 import ModelosInterativos from "@/components/plataforma/ModelosInterativos";
 
 export const metadata: Metadata = {
-  title: "Lojas Avila Ops | loja virtual pronta em um dia, Pix na hora, sem comissão",
+  title: "Lojas Avila Ops | a loja virtual com a cara do seu negócio",
   description:
-    "Loja virtual para o comércio de bairro: catálogo, carrinho, Pix na hora, cartão e boleto, frete por CEP, WhatsApp e e-mail profissional por R$ 119 fixos no mês. O dinheiro cai na conta da sua empresa.",
+    "Sua marca, suas cores, suas fotos: loja virtual pronta em um dia, com Pix na hora, frete por CEP, WhatsApp e e-mail profissional por R$ 119 fixos no mês. O dinheiro cai na conta da sua empresa.",
   alternates: { canonical: "https://lojas.avilaops.com" },
   openGraph: {
-    title: "Lojas Avila Ops | loja virtual pronta em um dia, Pix na hora, sem comissão",
-    description: "R$ 119 fixos no mês, sem comissão sobre venda. O dinheiro cai na conta da sua empresa.",
+    title: "Lojas Avila Ops | a loja virtual com a cara do seu negócio",
+    description: "Sua marca, suas cores, suas fotos. R$ 119 fixos no mês, sem comissão.",
     url: "https://lojas.avilaops.com",
     siteName: "Lojas Avila Ops",
     locale: "pt_BR",
@@ -36,8 +32,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Lojas Avila Ops | loja virtual pronta em um dia",
-    description: "Pix na hora, sem comissão, R$ 119 fixos no mês.",
+    title: "Lojas Avila Ops | a loja virtual com a cara do seu negócio",
+    description: "Sua marca, suas cores, suas fotos. R$ 119 fixos no mês, sem comissão.",
     images: ["/plataforma/opengraph-image"],
   },
 };
@@ -67,49 +63,91 @@ const PLANOS = [
     nome: "Loja Pro",
     rotulo: "Para quem já vende muito",
     preco: 349,
-    descricao: "Para distribuidor e atacado: domínio próprio, integrações e atendimento com prioridade.",
+    descricao: "Para distribuidor e atacado: domínio próprio, prioridade no atendimento e conversa com o sistema que você já usa.",
     destaque: false,
-    itens: ["Tudo da Loja", "Domínio próprio da sua marca", "Chave de API e assistente de IA", "Cotação B2B pelo WhatsApp", "5 e-mails profissionais", "Prioridade de suporte"],
+    itens: ["Tudo da Loja", "Domínio próprio da sua marca", "Cotação para revenda pelo WhatsApp", "Integração com o seu sistema", "5 e-mails profissionais", "Prioridade de suporte"],
   },
 ] as const;
 
 const FAQ = [
   ["Tem comissão sobre as vendas?", "Não. A mensalidade é fixa: venda R$ 500 ou R$ 50 mil no mês, o valor é o mesmo. Plataformas grandes cobram plano mais tarifa por venda; aqui não."],
-  ["O dinheiro passa pela Avila Ops?", "Não. Pix, cartão e boleto caem na conta Mercado Pago da sua empresa, na hora. A Avila Ops só cobra a mensalidade."],
-  ["Quanto tempo leva para a loja entrar no ar?", "Um dia. Você preenche cinco etapas no estúdio; domínio, e-mail e loja sobem sozinhos. Os produtos entram um a um ou por planilha, e a gente cadastra o resto junto com você no setup."],
-  ["Preciso entender de tecnologia?", "Não. O painel é o que a gente configura junto no setup. No dia a dia você só vê pedido chegar, separa e marca como enviado."],
-  ["Posso usar meu próprio domínio?", "Sim, no plano Loja Pro. Nos outros, a loja fica em seunome.lojas.avilaops.com, com SSL e e-mail profissional."],
+  ["O dinheiro passa pela Avila Ops?", "Não. Pix, cartão e boleto caem na conta da sua empresa, na hora. A gente só cobra a mensalidade."],
+  ["A loja fica com a minha cara ou com a de vocês?", "Com a sua. Cor, letra, fotos e o jeito de mostrar os produtos saem do seu negócio. O nome da Avila Ops aparece numa linha discreta no rodapé, só isso."],
+  ["Quanto tempo leva para entrar no ar?", "Um dia. Você conta como é o seu negócio em cinco etapas, e domínio, e-mail e loja sobem sozinhos. Os produtos entram um a um ou por planilha, e no setup a gente cadastra junto com você."],
+  ["Preciso entender de tecnologia?", "Não. No dia a dia você vê o pedido chegar, separa e marca como enviado. O resto já vai pronto."],
   ["E se eu cancelar?", "A loja sai do ar e você recebe os dados dos seus clientes e pedidos em planilha. Sem multa, sem fidelidade."],
 ] as const;
 
-/** Marcas fictícias, criadas para mostrar a direção visual. Não são clientes. */
-const EXEMPLOS_VISUAIS = [
+/**
+ * Cenas da página: cada uma é um negócio diferente, com a cor, a letra e a foto
+ * daquele negócio. É o argumento inteiro da página (a loja tem a cara do
+ * cliente, não a nossa) e por isso o site troca de atmosfera enquanto se rola.
+ *
+ * Marcas fictícias, criadas para mostrar direção visual. Nenhuma é cliente.
+ */
+const CENAS = [
   {
+    id: "confeitaria",
+    tom: "terracota",
     segmento: "Confeitaria",
     marca: "Doce Brasa",
-    produto: "Caixa presente",
-    preco: "R$ 64",
+    frase: "Encomenda de bolo não cabe num catálogo de PDF.",
+    texto:
+      "A vitrine puxa o marrom do chocolate, a letra tem serifa de convite e a foto ocupa a tela inteira. Quem abre no celular vê doce, não formulário.",
+    detalhe: ["Caixa presente", "R$ 64"],
     imagem: "/media/exemplo-confeitaria.webp",
     alt: "Vitrine de confeitaria com bolo de chocolate e brigadeiros",
-    tema: "terracota",
+    ganho: "Encomenda com data e recheio escolhidos, paga no Pix antes de sair da conversa.",
   },
   {
-    segmento: "Moda & acessórios",
+    id: "moda",
+    tom: "cobalto",
+    segmento: "Moda e acessórios",
     marca: "Norte Studio",
-    produto: "Bolsa de couro",
-    preco: "R$ 189",
+    frase: "Roupa vende pela foto e pelo tamanho certo.",
+    texto:
+      "Fundo limpo, uma cor forte de assinatura e a grade de tamanho e cor que o cliente escolhe sozinho. Esgotou um número, ele some do carrinho na hora.",
+    detalhe: ["Bolsa de couro", "R$ 189"],
     imagem: "/media/exemplo-moda.webp",
     alt: "Vitrine de moda com bolsa, óculos e peças em linho",
-    tema: "cobalto",
+    ganho: "Tamanho e cor resolvidos na tela, no lugar de trinta mensagens perguntando se tem P.",
   },
   {
-    segmento: "Casa & feito à mão",
+    id: "casa",
+    tom: "areia",
+    segmento: "Casa e feito à mão",
     marca: "Casa Serena",
-    produto: "Coleção Origens",
-    preco: "Ver coleção",
+    frase: "Peça artesanal precisa de história, não de tabela.",
+    texto:
+      "Tom de areia, tipografia calma e espaço em volta de cada peça. A descrição longa cabe inteira, e a coleção ganha página própria.",
+    detalhe: ["Coleção Origens", "Ver coleção"],
     imagem: "/media/exemplo-casa.webp",
     alt: "Vitrine de decoração artesanal com cerâmica, fibras e madeira",
-    tema: "areia",
+    ganho: "A peça chega ao cliente com a história junto e com o frete já calculado.",
+  },
+] as const;
+
+const OFICIOS = [
+  {
+    tom: "grafite",
+    segmento: "Motopeças e oficina",
+    marca: "Sandro Motos",
+    frase: "O cliente escolhe a moto e só vê o que serve nela.",
+    itens: ["Garagem por marca, modelo e ano", "Código original e equivalentes", "Selo \"serve na sua moto\""],
+  },
+  {
+    tom: "verde",
+    segmento: "Pet e agropecuária",
+    marca: "Casa Bicho",
+    frase: "Ração de 15 kg com frete certo e cliente que repete.",
+    itens: ["Peso real no cálculo do frete", "Avise-me quando chegar", "Recompra em dois toques"],
+  },
+  {
+    tom: "ameixa",
+    segmento: "Cosméticos e beleza",
+    marca: "Ateliê Lis",
+    frase: "Kit montado, brinde e cupom que fazem o carrinho subir.",
+    itens: ["Kits e combos", "Cupom de primeira compra", "\"Leve também\" no carrinho"],
   },
 ] as const;
 
@@ -129,12 +167,13 @@ const JSON_LD = {
   "@context": "https://schema.org",
   "@graph": [
     {
-      "@type": "SoftwareApplication",
+      "@type": "Service",
       name: "Lojas Avila Ops",
-      applicationCategory: "BusinessApplication",
-      operatingSystem: "Web",
+      serviceType: "Loja virtual para comércio local",
+      areaServed: "BR",
       url: "https://lojas.avilaops.com",
-      description: "Plataforma de loja virtual para o comércio de bairro: catálogo, carrinho, Pix na hora, cartão e boleto, frete por CEP, WhatsApp e e-mail profissional por mensalidade fixa, sem comissão sobre venda.",
+      description:
+        "Loja virtual com a identidade do próprio comércio: catálogo, carrinho, Pix na hora, cartão e boleto, frete por CEP, WhatsApp e e-mail profissional por mensalidade fixa, sem comissão sobre venda.",
       offers: PLANOS.map((p) => ({ "@type": "Offer", name: `Plano ${p.nome}`, price: p.preco, priceCurrency: "BRL", url: `https://lojas.avilaops.com/criar?plano=${p.id}`, description: p.descricao })),
       provider: { "@type": "Organization", name: "Avila Ops", url: "https://avilaops.com" },
     },
@@ -147,47 +186,43 @@ const JSON_LD = {
 
 export default function LandingPlataforma() {
   return (
-    <div className="pl-site">
+    <div className="pl-site pl-site-claro">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }} />
-      <div className="pl-ambiente" aria-hidden="true" />
 
-      <section className="pl-hero">
-        <div className="pl-container pl-hero-grid">
-          <div className="pl-hero-copy">
-            <div className="pl-eyebrow"><Sparkles size={14} /> Loja virtual para o comércio de bairro</div>
-            <h1>Sua loja no ar em um dia.<br /><span>Pix na hora, sem comissão.</span></h1>
+      <section className="pl-abertura">
+        <div className="pl-container pl-abertura-grid">
+          <div className="pl-abertura-copy">
+            <span className="pl-selo">Loja virtual para o comércio de bairro</span>
+            <h1>A loja com a cara<br />do <span>seu</span> negócio.</h1>
             <p>
-              Catálogo, carrinho, Pix, cartão e boleto, frete por CEP, WhatsApp e e-mail profissional
-              por <strong>R$ 119 fixos no mês</strong>. O dinheiro cai na conta da sua empresa, não na nossa.
+              Sua cor, sua letra, suas fotos, e o cliente comprando pelo celular sem
+              perguntar preço. No ar em um dia por <strong>R$ 119 fixos no mês</strong>,
+              com o dinheiro caindo na conta da sua empresa.
             </p>
             <div className="pl-acoes">
-              <Link href="/criar" className="pl-botao pl-botao-primario">
-                Criar minha loja <ArrowRight size={17} />
-              </Link>
-              <a href="https://demo.lojas.avilaops.com" target="_blank" rel="noopener" className="pl-botao pl-botao-secundario">
-                Ver uma loja de exemplo
-              </a>
+              <Link href="/criar" className="pl-botao pl-botao-primario">Criar minha loja <ArrowRight size={17} /></Link>
+              <a href="https://demo.lojas.avilaops.com" target="_blank" rel="noopener" className="pl-botao pl-botao-linha">Ver uma loja pronta</a>
             </div>
-            <div className="pl-provas" aria-label="O que está incluído">
-              <span><Banknote size={15} /> Sem comissão sobre venda</span>
-              <span><QrCode size={15} /> Pix na hora</span>
-              <span><Clock3 size={15} /> No ar em um dia</span>
-            </div>
+            <ul className="pl-provas">
+              <li><Banknote size={15} /> Sem comissão sobre venda</li>
+              <li><QrCode size={15} /> Pix na hora</li>
+              <li><Clock3 size={15} /> No ar em um dia</li>
+            </ul>
           </div>
 
-          <div className="pl-hero-visual">
-            <div className="pl-orbita pl-orbita-a" aria-hidden="true" />
-            <div className="pl-orbita pl-orbita-b" aria-hidden="true" />
-            <Image
-              src="/media/lojas-hero-commerce.webp"
-              alt="Composição tridimensional de uma vitrine digital modular"
-              width={1536}
-              height={1024}
-              priority
-              sizes="(max-width: 900px) 100vw, 54vw"
-            />
-            <div className="pl-status pl-status-venda"><span><Check size={12} /></span><div><small>Pedido #1042</small><strong>Pix recebido: R$ 189,00</strong></div></div>
-            <div className="pl-status pl-status-operacao"><MessageCircleMore size={17} /><div><small>WhatsApp</small><strong>Lojista avisado na hora</strong></div></div>
+          <div className="pl-abertura-mosaico" aria-hidden="true">
+            <figure className="pl-mosaico-item pl-tom-terracota">
+              <Image src="/media/exemplo-confeitaria.webp" alt="" width={420} height={520} sizes="(max-width: 900px) 44vw, 250px" />
+              <figcaption><small>Confeitaria</small><strong>Doce Brasa</strong></figcaption>
+            </figure>
+            <figure className="pl-mosaico-item pl-tom-cobalto">
+              <Image src="/media/exemplo-moda.webp" alt="" width={420} height={520} sizes="(max-width: 900px) 44vw, 250px" />
+              <figcaption><small>Moda</small><strong>Norte Studio</strong></figcaption>
+            </figure>
+            <figure className="pl-mosaico-item pl-tom-areia">
+              <Image src="/media/exemplo-casa.webp" alt="" width={420} height={520} sizes="(max-width: 900px) 44vw, 250px" />
+              <figcaption><small>Casa</small><strong>Casa Serena</strong></figcaption>
+            </figure>
           </div>
         </div>
       </section>
@@ -203,81 +238,81 @@ export default function LandingPlataforma() {
         </div>
       </div>
 
-      <section id="recursos" className="pl-secao pl-jornada">
-        <div className="pl-container">
-          <header className="pl-secao-cabecalho">
-            <div><span className="pl-kicker">Como funciona</span><h2>Você cuida da loja.<br />A estrutura cuida do resto.</h2></div>
-            <p>Quatro passos, sem reunião de tecnologia. Quem opera é quem já cuida do WhatsApp da loja.</p>
-          </header>
-
-          <div className="pl-linha-processo">
-            <article><span>01</span><div className="pl-processo-icone"><Store /></div><h3>Conte sobre a sua loja</h3><p>Nome, WhatsApp, o que vende e para quem. Cinco etapas, uns dez minutos.</p><em>Estúdio de criação</em></article>
-            <article><span>02</span><div className="pl-processo-icone"><Palette /></div><h3>Receba a loja pronta</h3><p>Cores, layout, domínio e e-mail sobem sozinhos. Os produtos entram um a um ou por planilha.</p><em>No ar no mesmo dia</em></article>
-            <article><span>03</span><div className="pl-processo-icone"><QrCode /></div><h3>O cliente escolhe e paga</h3><p>Carrinho, frete pelo CEP e Pix na hora. Você recebe o aviso no WhatsApp com o pedido inteiro.</p><em>Dinheiro na sua conta</em></article>
-            <article><span>04</span><div className="pl-processo-icone"><PackageCheck /></div><h3>Separe, envie, pronto</h3><p>Etiqueta, rastreio e e-mail para o cliente saem do painel. Carrinho abandonado e reposição avisam sozinhos.</p><em>Pós-venda automático</em></article>
-          </div>
-        </div>
-      </section>
-
-      <section className="pl-secao pl-exemplos">
-        <div className="pl-container">
-          <header className="pl-exemplos-cabecalho">
-            <div>
-              <span className="pl-kicker">Direções visuais</span>
-              <h2>Um negócio.<br />Muitas formas de vender.</h2>
+      {CENAS.map((cena, indice) => (
+        <section key={cena.id} className={`pl-cena pl-tom-${cena.tom}${indice % 2 ? " pl-cena-invertida" : ""}`}>
+          <div className="pl-container pl-cena-grid">
+            <div className="pl-cena-texto">
+              <span className="pl-cena-segmento">{cena.segmento}</span>
+              <h2>{cena.frase}</h2>
+              <p>{cena.texto}</p>
+              <p className="pl-cena-ganho"><Check size={16} /> {cena.ganho}</p>
+              <span className="pl-cena-ficticia">{cena.marca} é uma marca fictícia, criada só para mostrar a direção visual.</span>
             </div>
-            <Link href="/criar" className="pl-link">Quero ver a minha <ArrowRight size={16} /></Link>
-          </header>
+            <figure className="pl-cena-arte">
+              <Image src={cena.imagem} alt={cena.alt} fill sizes="(max-width: 900px) 92vw, 46vw" />
+              <div className="pl-cena-marca">
+                <small>{cena.segmento}</small>
+                <strong>{cena.marca}</strong>
+              </div>
+              <div className="pl-cena-produto">
+                <span>{cena.detalhe[0]}</span>
+                <b>{cena.detalhe[1]}</b>
+              </div>
+            </figure>
+          </div>
+        </section>
+      ))}
 
-          <div className="pl-exemplos-grid">
-            {EXEMPLOS_VISUAIS.map((exemplo, indice) => (
-              <article key={exemplo.marca} className={`pl-exemplo pl-exemplo-${exemplo.tema}`}>
-                <div className="pl-exemplo-imagem">
-                  <Image
-                    src={exemplo.imagem}
-                    alt={exemplo.alt}
-                    fill
-                    sizes="(max-width: 700px) 92vw, (max-width: 1050px) 44vw, 33vw"
-                  />
-                  <div className="pl-exemplo-navegador" aria-hidden="true">
-                    <span><i /><i /><i /></span>
-                    <b>{exemplo.marca}</b>
-                    <em>•••</em>
-                  </div>
-                  <div className="pl-exemplo-marca">
-                    <span>{exemplo.segmento}</span>
-                    <h3>{exemplo.marca}</h3>
-                  </div>
-                  <div className="pl-exemplo-produto">
-                    <span><small>0{indice + 1}</small>{exemplo.produto}</span>
-                    <strong>{exemplo.preco}</strong>
-                  </div>
-                </div>
-                <p><BadgeCheck size={14} /> Marca fictícia, só para mostrar a direção visual</p>
+      <section className="pl-oficios">
+        <div className="pl-container">
+          <header className="pl-cabecalho">
+            <span className="pl-kicker">Cada ramo vende de um jeito</span>
+            <h2>A loja se molda ao que você vende.</h2>
+            <p>Não é o mesmo modelo pintado de outra cor: muda o jeito de escolher, de calcular o frete e de fechar o pedido.</p>
+          </header>
+          <div className="pl-oficios-grid">
+            {OFICIOS.map((oficio) => (
+              <article key={oficio.marca} className={`pl-oficio pl-tom-${oficio.tom}`}>
+                <span className="pl-oficio-segmento">{oficio.segmento}</span>
+                <strong className="pl-oficio-marca">{oficio.marca}</strong>
+                <p>{oficio.frase}</p>
+                <ul>{oficio.itens.map((item) => <li key={item}><Check size={14} /> {item}</li>)}</ul>
               </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section id="modelos" className="pl-secao pl-modelos">
+      <section id="modelos" className="pl-modelos">
         <div className="pl-container">
-          <header className="pl-secao-cabecalho">
-            <div><span className="pl-kicker">Sete layouts prontos</span><h2>Não parece um template.<br />Parece a sua marca.</h2></div>
-            <p>Escolha a composição que combina com o seu catálogo. Cores, fontes e fotos assumem a personalidade da loja; dá para trocar depois no painel.</p>
+          <header className="pl-cabecalho pl-cabecalho-escuro">
+            <span className="pl-kicker">Sete jeitos de mostrar a vitrine</span>
+            <h2>Escolha a composição.<br />A cor e as fotos são suas.</h2>
+            <p>Toque para ver como fica cada uma. Dá para trocar depois, quantas vezes quiser, sem refazer nada.</p>
           </header>
           <ModelosInterativos />
-          <div className="pl-modelos-rodape">
-            <p><Palette size={18} /> <strong>Identidade da sua loja</strong><span>Paleta, tipografia, cantos, fotos e composição.</span></p>
-            <p><Zap size={18} /> <strong>Rápida no celular</strong><span>É onde o seu cliente compra.</span></p>
-            <p><Store size={18} /> <strong>Feita para vender</strong><span>Do catálogo ao Pix, sem perder a personalidade.</span></p>
-          </div>
         </div>
       </section>
 
-      <section id="planos" className="pl-secao pl-planos">
+      <section id="recursos" className="pl-passos">
         <div className="pl-container">
-          <header className="pl-planos-cabecalho">
+          <header className="pl-cabecalho">
+            <span className="pl-kicker">Como funciona</span>
+            <h2>Você cuida da loja.<br />O resto anda sozinho.</h2>
+            <p>Quatro passos. Quem opera é quem já cuida do WhatsApp do balcão.</p>
+          </header>
+          <ol className="pl-passos-lista">
+            <li><span>01</span><h3>Conte como é o seu negócio</h3><p>Nome, WhatsApp, o que vende e para quem. Uns dez minutos.</p></li>
+            <li><span>02</span><h3>Receba a loja com a sua cara</h3><p>Cores, letras e endereço prontos. Os produtos entram um a um ou por planilha.</p></li>
+            <li><span>03</span><h3>O cliente escolhe e paga</h3><p>Carrinho, frete pelo CEP e Pix na hora. Você recebe o aviso no WhatsApp.</p></li>
+            <li><span>04</span><h3>Separe, envie, pronto</h3><p>Etiqueta e rastreio saem do painel. O cliente acompanha sem precisar te perguntar.</p></li>
+          </ol>
+        </div>
+      </section>
+
+      <section id="planos" className="pl-planos">
+        <div className="pl-container">
+          <header className="pl-cabecalho pl-planos-cabecalho">
             <span className="pl-kicker">Três planos, preço fixo</span>
             <h2>Sem comissão. Sem dólar. Sem surpresa.</h2>
             <p>Setup único de <strong>R$ 497</strong> · 14 dias de teste · a mensalidade começa no dia em que a loja entra no ar.</p>
@@ -287,7 +322,7 @@ export default function LandingPlataforma() {
               <article key={plano.id} className={plano.destaque ? "pl-plano pl-plano-destaque" : "pl-plano"}>
                 <div className="pl-plano-topo">
                   <span>{plano.rotulo}</span>
-                  {plano.destaque && <b><Sparkles size={12} /> Mais escolhido</b>}
+                  {plano.destaque && <b>Mais escolhido</b>}
                 </div>
                 <h3>{plano.nome}</h3>
                 <p>{plano.descricao}</p>
@@ -299,13 +334,17 @@ export default function LandingPlataforma() {
               </article>
             ))}
           </div>
-          <p className="pl-planos-nota"><ShieldCheck size={15} /> Pix, cartão e boleto pelo Mercado Pago, na conta da sua empresa. O dinheiro não passa pela Avila Ops.</p>
+          <p className="pl-planos-nota"><ShieldCheck size={15} /> Pix, cartão e boleto caem na conta da sua empresa. O dinheiro não passa pela Avila Ops.</p>
         </div>
       </section>
 
-      <section className="pl-secao pl-faq">
+      <section className="pl-faq">
         <div className="pl-container pl-faq-grid">
-          <div><span className="pl-kicker">Dúvidas comuns</span><h2>Sem letras miúdas.<br />Sem complicação.</h2><p>Se a sua operação tiver uma necessidade específica, a gente combina antes de publicar. Fora do padrão é projeto à parte, e isso fica claro desde o começo.</p></div>
+          <div>
+            <span className="pl-kicker">Dúvidas comuns</span>
+            <h2>Sem letras miúdas.</h2>
+            <p>Se a sua operação tiver uma necessidade específica, a gente combina antes de publicar.</p>
+          </div>
           <div className="pl-faq-lista">
             {FAQ.map(([pergunta, resposta], indice) => (
               <details key={pergunta} open={indice === 0}><summary>{pergunta}<span>+</span></summary><p>{resposta}</p></details>
@@ -314,15 +353,19 @@ export default function LandingPlataforma() {
         </div>
       </section>
 
-      <section className="pl-cta-final">
-        <div className="pl-container pl-cta-grid">
-          <div className="pl-cta-glow" aria-hidden="true" />
-          <div className="pl-cta-copy"><MarcaLojas /><h2>Sua próxima venda pode ser hoje.</h2><p>Dez minutos no estúdio, a loja no ar no mesmo dia e o próximo Pix caindo na sua conta.</p><Link href="/criar" className="pl-botao pl-botao-claro">Criar minha loja <ArrowRight size={17} /></Link></div>
-          <div className="pl-cta-painel" aria-label="Resumo">
-            <span>O que você leva</span><strong>Uma loja pronta para vender.</strong>
-            <div><p><b>R$ 119</b><small>fixos por mês</small></p><p><b>0%</b><small>de comissão</small></p><p><b>1 dia</b><small>para entrar no ar</small></p></div>
-            <em><Check size={14} /> Catálogo, Pix, frete, WhatsApp e e-mail no mesmo lugar</em>
+      <section className="pl-fechamento">
+        <div className="pl-container pl-fechamento-grid">
+          <div className="pl-fechamento-copy">
+            <MarcaLojas />
+            <h2>Sua próxima venda<br />pode ser hoje.</h2>
+            <p>Dez minutos contando como é o seu negócio, a loja no ar no mesmo dia e o próximo Pix caindo na sua conta.</p>
+            <Link href="/criar" className="pl-botao pl-botao-claro">Criar minha loja <ArrowRight size={17} /></Link>
           </div>
+          <dl className="pl-fechamento-numeros">
+            <div><dt>R$ 119</dt><dd>fixos por mês</dd></div>
+            <div><dt>0%</dt><dd>de comissão</dd></div>
+            <div><dt>1 dia</dt><dd>para entrar no ar</dd></div>
+          </dl>
         </div>
       </section>
     </div>
