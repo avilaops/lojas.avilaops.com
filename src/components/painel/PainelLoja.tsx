@@ -46,7 +46,7 @@ export interface LojaView {
   despachoDiasUteis: number;
   estoqueBaixoEm: number;
   tabelaFrete: Array<{ ufs: string[]; preco: number; prazoDiasUteis: number; nome?: string }>;
-  assinatura: { status: string; precoCentavos: number; planoNome: string; ultimoPagamentoEm: string | null; setupPagoEm: string | null; criadoEm: string; faturas: Array<{ id: string; centavos: number; status: string; pagaEm: string | null; criadoEm: string }> };
+  assinatura: { status: string; isenta: boolean; precoCentavos: number; planoNome: string; ultimoPagamentoEm: string | null; setupPagoEm: string | null; criadoEm: string; faturas: Array<{ id: string; centavos: number; status: string; pagaEm: string | null; criadoEm: string }> };
 }
 export interface ProdutoView { id: string; nome: string; sku: string | null; precoCentavos: number; ativo: boolean; destaque: boolean; categoria: string | null; imagem: string | null; disponibilidade: string; estoque: number | null; opcoes: string[]; variantes: number; temEmbalagem: boolean }
 export interface EnderecoEntregaView { logradouro: string; numero: string; complemento?: string | null; bairro: string; cidade: string; uf: string; cep: string }
@@ -481,17 +481,21 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
       {aba === "Assinatura" && (
         <Secao titulo={`Plano ${loja.assinatura.planoNome} — ${brl(loja.assinatura.precoCentavos)}/mês`} descricao="Cobrança mensal no cartão, pelo Mercado Pago da Avila Ops. O setup de R$ 497 é combinado à parte, no fechamento.">
           <div className="flex flex-wrap items-center gap-3 text-sm">
-            <span className={`rounded-full px-3 py-1 text-xs font-semibold ${(ASSINATURA[loja.assinatura.status] ?? ASSINATURA.SEM_ASSINATURA).classe}`}>{(ASSINATURA[loja.assinatura.status] ?? ASSINATURA.SEM_ASSINATURA).rotulo}</span>
+            {loja.assinatura.isenta ? (
+              <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-800">Loja da casa: sem cobrança</span>
+            ) : (
+              <span className={`rounded-full px-3 py-1 text-xs font-semibold ${(ASSINATURA[loja.assinatura.status] ?? ASSINATURA.SEM_ASSINATURA).classe}`}>{(ASSINATURA[loja.assinatura.status] ?? ASSINATURA.SEM_ASSINATURA).rotulo}</span>
+            )}
             {loja.assinatura.ultimoPagamentoEm && <span className="text-muted-foreground">último pagamento {new Date(loja.assinatura.ultimoPagamentoEm).toLocaleDateString("pt-BR")}</span>}
             <span className="text-muted-foreground">setup: {loja.assinatura.setupPagoEm ? "pago" : "a combinar"}</span>
           </div>
-          {loja.assinatura.status === "SEM_ASSINATURA" && (
+          {!loja.assinatura.isenta && loja.assinatura.status === "SEM_ASSINATURA" && (
             <p className="text-sm text-muted-foreground">
               Sua loja está no período de teste de 14 dias (desde {new Date(loja.assinatura.criadoEm).toLocaleDateString("pt-BR")}). Ative a cobrança para não interromper as vendas.
             </p>
           )}
           <div className="flex flex-wrap gap-2">
-            {loja.assinatura.status !== "AUTORIZADA" && (
+            {!loja.assinatura.isenta && loja.assinatura.status !== "AUTORIZADA" && (
               <button className="btn-primario" disabled={ocupado} onClick={() => chamar("/api/painel/assinatura", "POST", undefined, "Assinatura criada.").then((d) => { if (d?.initPoint) window.location.href = d.initPoint; })}>
                 {loja.assinatura.status === "PENDENTE" ? "Cadastrar cartão" : "Ativar cobrança mensal"}
               </button>

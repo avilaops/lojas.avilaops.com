@@ -72,6 +72,7 @@ export default async function PainelPage({ searchParams }: { searchParams: Promi
           tabelaFrete: (loja.tabelaFrete as Array<{ ufs: string[]; preco: number; prazoDiasUteis: number; nome?: string }>) ?? [],
           assinatura: {
             status: loja.assinaturaStatus,
+            isenta: loja.cobrancaIsenta,
             precoCentavos: PRECO_PLANO[loja.plano],
             planoNome: NOME_PLANO[loja.plano],
             ultimoPagamentoEm: loja.ultimoPagamentoEm?.toISOString() ?? null,

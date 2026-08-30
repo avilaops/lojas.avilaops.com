@@ -14,6 +14,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     return [
       { url: base, changeFrequency: "weekly", priority: 1 },
       { url: `${base}/criar`, changeFrequency: "monthly", priority: 0.9 },
+      { url: `${base}/ajuda`, changeFrequency: "monthly", priority: 0.6 },
     ];
   }
   const t = await tenantAtual();

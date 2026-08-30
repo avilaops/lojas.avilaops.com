@@ -125,9 +125,30 @@ function MarcaLojas({ compacta = false }: { compacta?: boolean }) {
   );
 }
 
+const JSON_LD = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      name: "Lojas Avila Ops",
+      applicationCategory: "BusinessApplication",
+      operatingSystem: "Web",
+      url: "https://lojas.avilaops.com",
+      description: "Plataforma de loja virtual para o comércio de bairro: catálogo, carrinho, Pix na hora, cartão e boleto, frete por CEP, WhatsApp e e-mail profissional por mensalidade fixa, sem comissão sobre venda.",
+      offers: PLANOS.map((p) => ({ "@type": "Offer", name: `Plano ${p.nome}`, price: p.preco, priceCurrency: "BRL", url: `https://lojas.avilaops.com/criar?plano=${p.id}`, description: p.descricao })),
+      provider: { "@type": "Organization", name: "Avila Ops", url: "https://avilaops.com" },
+    },
+    {
+      "@type": "FAQPage",
+      mainEntity: FAQ.map(([pergunta, resposta]) => ({ "@type": "Question", name: pergunta, acceptedAnswer: { "@type": "Answer", text: resposta } })),
+    },
+  ],
+};
+
 export default function LandingPlataforma() {
   return (
     <div className="pl-site">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }} />
       <div className="pl-ambiente" aria-hidden="true" />
 
       <section className="pl-hero">

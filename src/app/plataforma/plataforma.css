@@ -568,3 +568,22 @@
 .pl-mini-oferta em { width: max-content; padding: 6px 10px; border-radius: 6px; background: #ea580c; color: white; font: 700 7px/1 system-ui; font-style: normal; text-transform: uppercase; letter-spacing: .08em; }
 .pl-mini-oferta-selo { position: absolute; right: 8%; top: 18%; display: grid; place-items: center; width: 22%; aspect-ratio: 1; border-radius: 50%; background: #ea580c; color: white; font: 800 clamp(11px, 1.6vw, 18px)/1 system-ui; box-shadow: 0 12px 30px rgba(234,88,12,.35); transform: rotate(8deg); }
 @media (max-width: 700px) { .pl-mini-mercado-grid { grid-template-columns: repeat(3, 1fr); } .pl-mini-mercado-grid span:nth-child(n+7) { display: none; } }
+
+/* /ajuda: tutorial em sete capítulos (30/08/2026). */
+.pl-ajuda .pl-secao-cabecalho h1 { margin: 10px 0 0; font-size: clamp(30px, 4.2vw, 50px); line-height: 1.05; letter-spacing: -.03em; }
+.pl-ajuda-indice { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin: 34px 0 54px; }
+.pl-ajuda-indice a { display: grid; gap: 4px; padding: 14px 16px; border: 1px solid var(--pl-line); border-radius: 14px; background: rgba(255,255,255,.025); color: #c7d0df; text-decoration: none; transition: .2s; }
+.pl-ajuda-indice a:hover { background: rgba(255,255,255,.05); color: white; }
+.pl-ajuda-indice strong { font-size: 14px; color: white; }
+.pl-ajuda-indice span { font-size: 12px; color: #8e99ac; }
+.pl-ajuda-capitulo { max-width: 760px; margin: 0 0 56px; padding-top: 18px; border-top: 1px solid var(--pl-line); scroll-margin-top: 90px; }
+.pl-ajuda-capitulo h2 { margin: 0 0 6px; font-size: clamp(22px, 2.6vw, 30px); letter-spacing: -.02em; }
+.pl-ajuda-resumo { margin: 0 0 20px; color: #8e99ac; }
+.pl-ajuda-capitulo ol { display: grid; gap: 14px; margin: 0; padding: 0; list-style: none; }
+.pl-ajuda-capitulo li { display: grid; grid-template-columns: 30px 1fr; gap: 12px; align-items: start; }
+.pl-ajuda-capitulo li span { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: rgba(91,130,255,.18); color: #b9c8ff; font: 700 12px/1 ui-monospace, monospace; }
+.pl-ajuda-capitulo li p { margin: 4px 0 0; color: #dce3f0; line-height: 1.55; }
+.pl-ajuda-dica { display: flex; gap: 8px; align-items: flex-start; margin: 22px 0 0; padding: 12px 14px; border-radius: 12px; background: rgba(52,211,153,.08); color: #b7f0d6; font-size: 14px; line-height: 1.5; }
+.pl-ajuda-dica svg { flex: none; margin-top: 3px; }
+.pl-ajuda-rodape { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; padding-top: 24px; border-top: 1px solid var(--pl-line); }
+.pl-ajuda-rodape p { margin: 0; color: #8e99ac; }

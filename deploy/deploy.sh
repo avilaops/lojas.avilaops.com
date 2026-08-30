@@ -51,6 +51,11 @@ mv app.novo app
 mkdir -p app/uploads
 docker compose up -d --force-recreate
 
+# O removedor de fundo (odoo-avilaops-recorte-1, FUNDO_URL) vive na rede do
+# Odoo; o container das lojas está na bridge padrão (para alcançar o Postgres
+# do host). Sem esta ligação o nome não resolve e "Tratar com IA" fica fora.
+docker network connect odoo-avilaops_default lojas-avilaops 2>/dev/null || true
+
 for i in $(seq 1 30); do
   sleep 2
   if curl -sf -o /dev/null http://127.0.0.1:3080/api/health; then
