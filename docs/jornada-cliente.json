@@ -1,0 +1,353 @@
+{
+  "meta": {
+    "produto": "Lojas Avila Ops",
+    "site": "https://lojas.avilaops.com",
+    "demo": "https://demo.lojas.avilaops.com",
+    "versao": "1.0.0",
+    "geradoEm": "2026-08-30",
+    "autor": "Comercial (Claude)",
+    "proposito": "Contrato único da jornada do cliente: serve de mapa para o comercial, de referência para as telas e de fonte para as automações do n8n. Cada etapa aponta a tela, o endpoint, o evento e o workflow que a sustentam.",
+    "fontes": [
+      "código em lojas.avilaops.com (rotas, src/lib, prisma/schema.prisma) em 30/08/2026",
+      "site no ar: landing, /ajuda, /criar, /painel",
+      "docs/PLANOS.md, docs/ROTINAS-N8N.md, docs/CONFORMIDADE.md",
+      "docs/comercial/lojas-ficha-comercial.md (monorepo)"
+    ],
+    "regraDeOuro": "O que varia entre lojas é dado, nunca código. Pedido fora do padrão é plano Pro ou projeto à parte."
+  },
+
+  "oferta": {
+    "umaFrase": "Loja virtual pronta em um dia, com Pix na hora, frete calculado, WhatsApp e e-mail profissional, por mensalidade fixa — e o dinheiro cai na conta do lojista.",
+    "inimigos": [
+      "a loja que nunca sai do papel (orçamento de agência)",
+      "a plataforma grande que cobra em dólar e tarifa por venda"
+    ],
+    "planos": [
+      {
+        "id": "SITE",
+        "nome": "Site",
+        "mensalidade": 79,
+        "setup": 497,
+        "comissaoSobreVenda": 0,
+        "paraQuem": "quem vende pelo WhatsApp e só quer catálogo com preço no ar",
+        "inclui": ["vitrine e catálogo", "busca sem acento", "página de contato", "botão de WhatsApp", "domínio, SSL e hospedagem", "1 e-mail profissional", "painel", "políticas e rodapé com CNPJ"],
+        "naoInclui": ["carrinho", "checkout", "frete por CEP"],
+        "regraTecnica": "lojaVende() em src/lib/tenant.ts: plano SITE nunca mostra checkout, mesmo ATIVA"
+      },
+      {
+        "id": "LOJA",
+        "nome": "Loja",
+        "mensalidade": 119,
+        "setup": 497,
+        "comissaoSobreVenda": 0,
+        "ancora": true,
+        "paraQuem": "comércio de bairro que já vende e quer receber sem responder preço o dia inteiro",
+        "inclui": ["tudo do Site", "carrinho e checkout na própria loja", "Pix com QR na hora, cartão tokenizado e boleto", "frete por CEP (6 transportadoras) e retirada na loja", "cupons", "variações e estoque", "feed do Google Shopping / Meta / TikTok", "carrinho abandonado", "avaliações moderadas", "avise-me quando chegar", "relatório semanal por e-mail", "contas de comprador", "exportação CSV de pedidos e clientes"]
+      },
+      {
+        "id": "LOJA_PRO",
+        "nome": "Loja Pro",
+        "mensalidade": 349,
+        "setup": 497,
+        "comissaoSobreVenda": 0,
+        "paraQuem": "distribuidor, atacado e quem já vende volume",
+        "inclui": ["tudo da Loja", "domínio próprio da marca", "chave de API e assistente de IA (MCP)", "cotação B2B pelo WhatsApp", "5 e-mails profissionais", "prioridade de suporte"]
+      }
+    ],
+    "condicoesComerciais": {
+      "periodoDeTeste": "14 dias",
+      "toleranciaDeAtraso": "7 dias (LOJAS_DIAS_TOLERANCIA)",
+      "mensalidadeComecaEm": "o dia em que a loja entra no ar",
+      "setupPromocional": "R$ 497 com a condição de 2 indicações após a aprovação",
+      "indicacao": "um mês grátis por indicação que fechar",
+      "cobrancaPor": "assinatura recorrente no Mercado Pago da Avila Ops (preapproval)",
+      "recebimentoDoLojista": "conta Mercado Pago da própria empresa do lojista; o dinheiro não passa pela Avila Ops"
+    },
+    "oQueNuncaProm": ["volume de vendas", "aparecer no Google sem trabalho de conteúdo", "integração com marketplace (Mercado Livre/Shopee)", "PayPal e Éfi como ativos (ainda não estão)"],
+    "quemNaoEClienteHoje": ["quem precisa de layout próprio", "quem precisa de marketplace integrado", "quem precisa de ERP fiscal"],
+    "lockIn": {
+      "decisao": "domínio, DNS, e-mail, painel e automações são da Avila Ops; rodapé 'Loja por Avila Ops' fixo; zero customização por cliente",
+      "unicoLimite": "LGPD: os dados dos clientes finais saem em CSV se pedidos por escrito"
+    },
+    "capacidadesTecnicas": {
+      "vitrine": ["7 layouts de home (classico, vitrine, editorial, minimal, spotlight, mercado, conversao)", "tema por tokens (cor, fonte, raio, modo) com contraste AA automático", "logo, banner, aviso no topo", "favicon e imagem de compartilhamento por loja", "JSON-LD de produto e avaliação", "sitemap e robots por host", "llms.txt e llms-full.txt"],
+      "catalogo": ["produto com várias fotos, descrição curta e longa", "variações até 3 opções com preço e estoque por combinação", "categorias ordenáveis com SEO gerado fora do request", "importação por planilha CSV", "tratamento de foto com fundo branco (removedor da casa)", "estoque com selo de últimas unidades"],
+      "vendas": ["carrinho local", "frete real por CEP via CepCerto (Correios, Jadlog .com, Jadlog Package, Loggi e outras)", "retirada na loja", "frete grátis acima de X", "cupom percentual, fixo ou frete grátis", "checkout transparente (a tela é nossa)", "sugestões 'leve também'"],
+      "posVenda": ["página pública do pedido com rastreio", "etiqueta de envio pela CepCerto com débito da carteira", "e-mail de confirmação, envio e carrinho abandonado", "avaliações moderadas", "avise-me quando chegar", "relatório semanal"],
+      "marketing": ["pixels por loja (Meta, GA4, Google Ads, TikTok, GTM) com Consent Mode v2", "aviso de cookies só quando há pixel", "feed único em /feed/merchant.xml com diagnóstico", "IndexNow ao publicar"],
+      "segmentoMotopecas": ["garagem: o comprador escolhe marca/modelo/ano e vê só o que serve", "compatibilidade e código original no produto", "busca por código e por moto"],
+      "conformidade": ["razão social e CNPJ com DV conferido no rodapé e nas políticas (Decreto 7.962/2013)", "políticas de envio, devolução e privacidade padronizadas", "exportação CSV de pedidos e clientes (LGPD)"],
+      "integracao": ["API administrativa por token", "MCP por loja (plano Pro): listar/criar/atualizar produto e categoria, cupom, pedidos, resumo de vendas, etiqueta, SEO", "eventos para o n8n com contrato v1 e idempotência"]
+    }
+  },
+
+  "personas": [
+    {
+      "id": "lojista",
+      "quem": "dono de comércio de bairro que já vende pelo WhatsApp e Instagram",
+      "decide": "o dono",
+      "opera": "o filho, a esposa ou o vendedor que mexe no Instagram",
+      "dorPrincipal": "responder 'quanto é?' quarenta vezes por dia e perder pedido fora do horário",
+      "eOClientePagante": true
+    },
+    {
+      "id": "comprador",
+      "quem": "cliente final do lojista, quase sempre no celular",
+      "dorPrincipal": "não saber preço, frete e prazo sem conversar com alguém",
+      "eOClientePagante": false
+    }
+  ],
+
+  "jornadaLojista": {
+    "descricao": "Do primeiro contato ao cliente que indica. O estado de cada demo vive na data table lojas_demos; o de cada lead, em lojas_leads.",
+    "etapas": [
+      {
+        "ordem": 1,
+        "id": "prospeccao",
+        "nome": "Prospecção",
+        "objetivo": "achar comércio que vende e ainda não tem site",
+        "gatilhoDeEntrada": "rotina semanal do n8n (segunda 6h) ou formulário sob demanda",
+        "quemAge": "automação",
+        "acoesDaPlataforma": ["consulta o OpenStreetMap (Overpass) por ramo e área", "descarta quem tem site e quem tem marca de rede", "exige telefone ou Instagram", "calcula prioridade e grava em lojas_leads"],
+        "acoesDoCliente": [],
+        "automacao": { "workflow": "Lojas — Leads de comércio local", "id": "ZYyy9O4CqDDR95nz", "formulario": "https://n8n.avilaops.com/form/lojas-leads", "dataTable": "lojas_leads (JovFRMuQg4xG9tNr)" },
+        "saidaEsperada": "tarefa no Todoist 'escolher 5 leads da semana' com os 10 mais promissores",
+        "criterioDeAvanco": "lead escolhido para virar demo",
+        "metrica": "leads novos por semana",
+        "observacao": "o OpenStreetMap quase não traz Instagram: o primeiro contato costuma ser telefone ou visita"
+      },
+      {
+        "ordem": 2,
+        "id": "demo",
+        "nome": "Loja-demo com os produtos dele",
+        "objetivo": "mostrar o produto pronto em vez de explicar o produto",
+        "gatilhoDeEntrada": "operador preenche o formulário com nome, WhatsApp, produtos e a chave do lead",
+        "quemAge": "operador + automação",
+        "acoesDaPlataforma": ["cria o tenant pela API admin", "marca ATIVA e cobrancaIsenta (não entra na régua de cobrança)", "importa produtos baixando as fotos para o nosso servidor e tratando o fundo", "marca o lead como DEMO_MONTADA com o slug", "grava em lojas_demos"],
+        "acoesDoCliente": [],
+        "endpoints": ["POST /api/admin/tenants", "PATCH /api/admin/tenants/:slug", "PUT /api/admin/tenants/:slug/produtos?importarImagens=1&tratar=1"],
+        "automacao": { "workflow": "Lojas — Loja-demo por formulário", "id": "CE64HzanEWwy6xrn", "formulario": "https://n8n.avilaops.com/form/lojas-demo", "dataTable": "lojas_demos (rU1kKJ0XMPIn8OYA)" },
+        "saidaEsperada": "loja no ar em <slug>.lojas.avilaops.com e tarefa 'mostrar ao dono'",
+        "criterioDeAvanco": "demo aberta no celular do dono",
+        "metrica": "demos montadas por semana",
+        "regra": "a demo nasce sem Mercado Pago: mostra vitrine e carrinho, não cobra ninguém",
+        "cuidado": "produto e preço têm que ser reais (vitrine, Instagram ou fornecedor); loja com nome real e preço inventado é constrangimento na certa"
+      },
+      {
+        "ordem": 3,
+        "id": "abordagem",
+        "nome": "Abordagem e régua",
+        "objetivo": "levar o dono da curiosidade à decisão sem insistência",
+        "gatilhoDeEntrada": "demo montada",
+        "quemAge": "comercial, lembrado pela automação",
+        "roteiro": {
+          "primeiraMensagem": "montei a sua loja com os seus produtos, olha aqui [link]; se gostar, fica no ar por R$ 119 no mês, Pix na hora e sem comissão; posso passar aí para te mostrar no celular?",
+          "tresPerguntasNaVisita": ["quantos pedidos por dia chegam pelo WhatsApp", "quanto tempo você gasta respondendo preço", "o que acontece com o pedido de quem manda mensagem fora do horário"],
+          "fechamento": "o setup eu cadastro o resto dos produtos hoje; a loja já está no ar; Pix ou cartão para o setup?"
+        },
+        "regua": [
+          { "dia": 0, "acao": "loja-demo + primeira mensagem" },
+          { "dia": 2, "acao": "viu a loja? quer que eu troque alguma foto?" },
+          { "dia": 5, "acao": "visita ou chamada de 10 min no celular" },
+          { "dia": 12, "acao": "caso real + comparação de custo" },
+          { "dia": 30, "acao": "última mensagem; avisa que a demo sai do ar em 7 dias" },
+          { "dia": 37, "acao": "demo sai do ar (PATCH status CANCELADA)" }
+        ],
+        "automacao": { "workflow": "Lojas — Régua da loja-demo", "id": "KmADL5B0HkeToNWY", "estadoNaColuna": "status de lojas_demos (MONTADA→D2→D5→D12→D30→ENCERRADA)", "comoPararARegua": "escrever CLIENTE ou PAUSADA na linha" },
+        "objecoes": [
+          { "objecao": "já vendo pelo Instagram", "resposta": "a loja é o Instagram com carrinho e Pix, sem responder preço" },
+          { "objecao": "meu cliente não compra online", "resposta": "ele já compra pelo WhatsApp; a loja só tira o 'quanto é?'" },
+          { "objecao": "Nuvemshop é mais conhecida", "resposta": "e cobra por venda; aqui é fixo" },
+          { "objecao": "não sei mexer", "resposta": "o painel é o que a gente cadastra junto no setup; o dono só vê pedido chegar" }
+        ],
+        "metrica": "donos que viram a demo no celular"
+      },
+      {
+        "ordem": 4,
+        "id": "fechamento",
+        "nome": "Fechamento",
+        "objetivo": "transformar a demo em loja paga",
+        "gatilhoDeEntrada": "dono diz sim",
+        "quemAge": "comercial",
+        "acoes": ["cobrar o setup de R$ 497 (com a condição das 2 indicações)", "marcar o setup como pago", "combinar plano e data de entrada no ar"],
+        "endpoints": ["POST /api/admin/tenants/:slug/setup"],
+        "saidaEsperada": "loja deixa de ser demo: cobrancaIsenta desligada e assinatura criada",
+        "metrica": "lojas pagas",
+        "pendencia": "hoje o pulo de demo para cliente é manual; falta um passo de 'converter demo em cliente' no n8n"
+      },
+      {
+        "ordem": 5,
+        "id": "cadastro",
+        "nome": "Cadastro (estúdio)",
+        "objetivo": "a loja nascer com identidade própria em dez minutos",
+        "gatilhoDeEntrada": "o lojista abre /criar (ou a Avila Ops preenche junto no setup)",
+        "quemAge": "lojista",
+        "tela": "https://lojas.avilaops.com/criar",
+        "etapasDoFormulario": ["Negócio: nome, segmento, e-mail (vira o login), WhatsApp obrigatório, plano", "Essência: para quem vende e o que diferencia", "Direção de marca: personalidade, voz, fotografia", "Operação: CEP de origem, retirada, prazo de despacho, planilha de produtos", "Conclusão: senha"],
+        "oQueAPlataformaFaz": ["gera direção visual determinística (cores, fonte, layout) a partir do diagnóstico", "cria o tenant e o subdomínio na hora", "guarda a senha em scrypt e abre a sessão"],
+        "endpoints": ["POST /api/painel/criar"],
+        "eventos": ["loja.criada"],
+        "saidaEsperada": "loja respondendo em <slug>.lojas.avilaops.com com SSL",
+        "criterioDeAvanco": "lojista dentro do painel",
+        "metrica": "cadastros concluídos / iniciados"
+      },
+      {
+        "ordem": 6,
+        "id": "provisionamento",
+        "nome": "Provisionamento",
+        "objetivo": "domínio e e-mail no ar sem ninguém tocar em DNS",
+        "gatilhoDeEntrada": "criação com ?provisionar=1 ou POST /api/admin/tenants/:slug/provisionar",
+        "quemAge": "automação",
+        "passos": [
+          { "passo": "dns", "oQueFaz": "cria a zona na Cloudflare, grava A/AAAA do apex e CNAME do www" },
+          { "passo": "mail", "oQueFaz": "cria o domínio no mail.avilaops.com com MX/SPF/DKIM/DMARC e a caixa contato@, mais aliases pedidos@ e vendas@" },
+          { "passo": "n8n", "oQueFaz": "emite o evento com o resultado de cada passo" }
+        ],
+        "idempotente": true,
+        "eventos": ["loja.provisionada", "loja.provisionamento-falhou", "loja.ativada"],
+        "automacao": { "workflow": "Lojas — Onboarding e Pedidos", "id": "ruVn7ddvPQB949p9" },
+        "saidaEsperada": "status ATIVA, WhatsApp de boas-vindas ao lojista, e-mail de treinamento, tarefa 'aprovar loja em 48h'",
+        "falha": "passo com erro vira tarefa no Todoist; passo sem credencial fica 'pendente' e não bloqueia"
+      },
+      {
+        "ordem": 7,
+        "id": "onboarding",
+        "nome": "Onboarding do painel",
+        "objetivo": "catálogo no ar e o lojista sabendo operar sozinho",
+        "gatilhoDeEntrada": "primeiro login em /entrar",
+        "quemAge": "lojista, com a Avila Ops no setup",
+        "abasDoPainel": ["Visão geral", "Marca", "Produtos", "Pedidos", "Cupons", "Avaliações", "Buscadores", "Anúncios", "IA (Claude)", "Entrega", "Recebimento", "Assinatura", "Conta"],
+        "tarefasDoLojista": ["logo, cor e layout na aba Marca", "razão social e CNPJ em Conta → Dados da empresa (exigência legal)", "categorias curtas com o nome que o cliente fala", "produtos um a um ou por planilha CSV", "chaves do Mercado Pago na aba Recebimento", "frete e retirada na aba Entrega"],
+        "materialDeApoio": "https://lojas.avilaops.com/ajuda (7 capítulos, 5 passos cada)",
+        "endpoints": ["/api/painel/produtos", "/api/painel/categorias", "/api/painel/imagens", "/api/painel/loja"],
+        "criterioDeAvanco": "primeiro pedido de teste feito pelo próprio lojista no celular",
+        "metrica": "dias entre cadastro e primeiro produto publicado",
+        "pendencia": "PDF e vídeos do tutorial ainda não existem"
+      },
+      {
+        "ordem": 8,
+        "id": "operacao",
+        "nome": "Operação do dia a dia",
+        "objetivo": "o lojista só ver pedido chegar e despachar",
+        "gatilhoDeEntrada": "primeira venda real",
+        "quemAge": "lojista + automações",
+        "cicloDoPedido": ["pedido pago chega no WhatsApp do lojista com itens, valor e endereço", "Separar", "emitir etiqueta na aba Entrega (rastreio entra sozinho)", "Marcar enviado (comprador recebe e-mail com rastreio)", "Marcar entregue"],
+        "automacoesQueTrabalhamSozinhas": ["Pix não pago em 30 min vira lembrete ao comprador", "carrinho parado há 45 min vira e-mail de recuperação", "produto que volta ao estoque avisa quem pediu", "relatório semanal na segunda às 7h", "SEO de categoria gerado às 3h"],
+        "eventos": ["pedido.criado", "pedido.pago", "pedido.recusado", "pedido.enviado", "carrinho.abandonado", "loja.voltou-ao-estoque", "avaliacao.recebida", "loja.relatorio-semanal"],
+        "metrica": "pedidos por loja por semana; tempo entre pago e enviado"
+      },
+      {
+        "ordem": 9,
+        "id": "cobranca",
+        "nome": "Mensalidade e inadimplência",
+        "objetivo": "receber sem constranger e sem perder cliente por descuido",
+        "quemAge": "automação",
+        "regras": ["14 dias de teste", "assinatura no Mercado Pago da Avila Ops por plano", "rotina diária às 6h sincroniza o preapproval e as cobranças", "1ª recusa: e-mail leve + WhatsApp, sem incomodar ninguém", "2ª em diante: e-mail com prazo real, WhatsApp e tarefa no Todoist", "passada a tolerância: SUSPENSA — a vitrine fica, o checkout some", "pagou, reativa na hora"],
+        "eventos": ["loja.mensalidade-recusada", "loja.mensalidade-paga", "loja.suspensa", "loja.reativada"],
+        "endpoints": ["POST /api/admin/cobranca/verificar", "/api/webhooks/mercadopago-assinatura"],
+        "isencao": "Tenant.cobrancaIsenta tira a loja da régua (usado nas lojas da casa e nas demos)",
+        "metrica": "MRR, churn, dias de atraso médio"
+      },
+      {
+        "ordem": 10,
+        "id": "crescimento",
+        "nome": "Crescimento e indicação",
+        "objetivo": "vender mais para quem já é cliente e ganhar o próximo pelo boca a boca",
+        "quemAge": "comercial",
+        "acoes": ["pedir as 2 indicações 3 dias depois da aprovação (condição do setup)", "um mês grátis por indicação que fechar", "upsell: domínio próprio e IA (Loja Pro), e-mail extra, campanha de anúncios com o feed pronto"],
+        "regraDaCasa": "toda entrega pede indicação; nunca fazer contato só para pedir",
+        "metrica": "indicações por cliente; lojas que sobem de plano"
+      },
+      {
+        "ordem": 11,
+        "id": "saida",
+        "nome": "Saída",
+        "objetivo": "cancelar sem drama e sem sequestrar dado",
+        "quemAge": "lojista",
+        "acoes": ["cancelamento pela aba Assinatura", "a loja sai do ar ao fim do período pago", "os dados de clientes e pedidos saem em CSV (LGPD)"],
+        "endpoints": ["/api/painel/exportar?tipo=pedidos", "/api/painel/exportar?tipo=clientes"],
+        "semMulta": true,
+        "semFidelidade": true
+      }
+    ]
+  },
+
+  "jornadaComprador": {
+    "descricao": "O cliente do lojista, quase sempre no celular. Cada etapa aqui é o que faz ou não faz o lojista vender.",
+    "etapas": [
+      { "ordem": 1, "id": "descoberta", "canal": ["link no WhatsApp", "bio do Instagram", "Google e Google Shopping", "domínio próprio"], "oQuePlataformaFaz": ["prévia com logo e cor da loja ao compartilhar", "JSON-LD e sitemap", "feed do Merchant Center"] },
+      { "ordem": 2, "id": "catalogo", "acoes": ["busca sem acento com sugestões", "filtros por categoria, preço e ordenação", "garagem por moto no segmento motopeças"], "telas": ["/", "/produtos", "/categoria/[slug]"] },
+      { "ordem": 3, "id": "produto", "acoes": ["galeria com zoom", "variações (tamanho, cor)", "selo de últimas unidades", "avise-me quando chegar se esgotado", "avaliações"], "tela": "/produtos/[slug]" },
+      { "ordem": 4, "id": "carrinho", "acoes": ["cupom", "quanto falta para o frete grátis", "leve também"], "tela": "/carrinho" },
+      { "ordem": 5, "id": "checkout", "acoes": ["CEP calcula frete real das transportadoras ou retirada", "Pix com QR na hora, cartão tokenizado ou boleto", "conta opcional: endereço salvo sozinho"], "tela": "/checkout", "regra": "a tela é da loja, o Mercado Pago é só o trilho; o dinheiro cai na conta do lojista" },
+      { "ordem": 6, "id": "pagamento", "acoes": ["a tela do Pix vira sozinha quando o pagamento cai"], "seNaoPagar": "lembrete de Pix em 30 minutos", "eventos": ["pedido.criado", "pedido.pago", "pedido.recusado"] },
+      { "ordem": 7, "id": "posVenda", "acoes": ["e-mail de confirmação", "página pública do pedido com rastreio", "e-mail quando o lojista marca enviado", "convite para avaliar"], "tela": "/pedido/[referencia]" },
+      { "ordem": 8, "id": "recompra", "acoes": ["conta com histórico e endereços", "pedidos antigos do mesmo e-mail são adotados ao criar a conta"], "tela": "/conta" }
+    ],
+    "privacidade": {
+      "aviso": "o banner de cookies só aparece se a loja tiver pixel configurado",
+      "consentMode": "Google entra em Consent Mode v2 negado e só recebe update no aceite; Meta e TikTok nem são inseridos antes",
+      "identificacaoDoVendedor": "razão social e CNPJ no rodapé de toda página (Decreto 7.962/2013)"
+    }
+  },
+
+  "automacoes": {
+    "webhookDeEventos": {
+      "contrato": "v1: eventId, versao, ocorridoEm, origem, tipo, slug; dinheiro sempre em centavos inteiros",
+      "idempotencia": "o n8n reivindica o evento em /api/admin/automacoes/eventos/reivindicar antes de agir e fecha em PATCH /api/admin/automacoes/eventos/:eventId",
+      "varreduraDePresos": "POST /api/admin/automacoes/eventos/varrer a cada hora"
+    },
+    "workflows": [
+      { "nome": "Lojas — Onboarding e Pedidos", "id": "ruVn7ddvPQB949p9", "papel": "roteia os 17 tipos de evento para e-mail, WhatsApp e Todoist; roda as rotinas de carrinho, estoque, cobrança, relatório e SEO" },
+      { "nome": "Lojas — Leads de comércio local", "id": "ZYyy9O4CqDDR95nz", "papel": "prospecção semanal pelo OpenStreetMap" },
+      { "nome": "Lojas — Loja-demo por formulário", "id": "CE64HzanEWwy6xrn", "papel": "monta a loja-demo e marca o lead" },
+      { "nome": "Lojas — Régua da loja-demo", "id": "KmADL5B0HkeToNWY", "papel": "dias 2, 5, 12, 30 e 37 da demo" },
+      { "nome": "Lojas — Manutenção das tabelas", "id": "wqW9qasy4oLYWC3P", "papel": "apaga linha de lojas_demos ou lojas_leads" },
+      { "nome": "Handler de Erro Central", "id": "weeyGMEHqlw9ZEG0", "papel": "toda falha vira tarefa; nenhum workflow das Lojas roda sem apontar para ele" }
+    ],
+    "dataTables": [
+      { "nome": "lojas_leads", "id": "JovFRMuQg4xG9tNr", "chave": "chave (osm:tipo/id)", "estados": ["(vazio) = novo", "DEMO_MONTADA"] },
+      { "nome": "lojas_demos", "id": "rU1kKJ0XMPIn8OYA", "chave": "slug", "estados": ["MONTADA", "D2", "D5", "D12", "D30", "ENCERRADA", "CLIENTE", "PAUSADA"] }
+    ],
+    "rotinas": [
+      { "quando": "a cada hora", "endpoint": "POST /api/admin/carrinhos/verificar" },
+      { "quando": "a cada hora", "endpoint": "POST /api/admin/estoque/avisos" },
+      { "quando": "a cada hora", "endpoint": "POST /api/admin/automacoes/eventos/varrer" },
+      { "quando": "diário 3h", "endpoint": "POST /api/admin/seo/categorias" },
+      { "quando": "diário 6h", "endpoint": "POST /api/admin/cobranca/verificar" },
+      { "quando": "diário 9h", "endpoint": "régua da loja-demo (lê lojas_demos)" },
+      { "quando": "segunda 6h", "endpoint": "prospecção de leads (Overpass)" },
+      { "quando": "segunda 7h", "endpoint": "POST /api/admin/relatorios/semanal" }
+    ]
+  },
+
+  "metricas": {
+    "trintaDias": { "ate": "2026-09-27", "lojasDemoMontadas": 15, "donosQueViramNoCelular": 10, "lojasPagas": 3, "mrr": 357, "churn": 0 },
+    "noventaDias": { "ate": "2026-11-26", "lojasDemoMontadas": 40, "donosQueViramNoCelular": 30, "lojasPagas": 12, "mrr": 1428, "churn": "< 1" },
+    "revisao": "toda segunda; o que o dono disse ao ver a demo muda a ficha"
+  },
+
+  "estadoReal": {
+    "em": "2026-08-30",
+    "lojasNoAr": ["demo (loja da casa, isenta)", "sandromotos (28 produtos)", "avila-ops-store (0 produtos)"],
+    "pedidosEmProducao": 0,
+    "lojasComGatewayDoLojista": 0,
+    "leiaComoAviso": "a jornada acima está inteira em código e automação, mas o trecho de dinheiro (checkout do lojista e mensalidade) nunca rodou com um pagamento real"
+  },
+
+  "pendencias": [
+    { "item": "compra real de R$ 1 ponta a ponta numa loja com Mercado Pago do lojista", "dono": "Nicolas", "trava": "portão 1: prova de que o fluxo principal funciona" },
+    { "item": "rotacionar MP_ACCESS_TOKEN e MP_WEBHOOK_SECRET e cadastrar o webhook de assinatura no painel do MP", "dono": "Nicolas", "trava": "portão 2: cobrar a mensalidade" },
+    { "item": "templates de WhatsApp aprovados na Meta", "dono": "Nicolas", "trava": "régua e aviso de pedido pago" },
+    { "item": "fotos e preços reais para as lojas-demo", "dono": "Nicolas / dono do comércio", "trava": "demo honesta na mão do dono" },
+    { "item": "PayPal e Éfi no packages/checkout", "dono": "Dev", "trava": "regra da casa dos três meios de pagamento" },
+    { "item": "converter demo em cliente por fluxo (hoje é manual)", "dono": "Comercial", "trava": "esteira sem buraco" },
+    { "item": "PDF e vídeos do tutorial", "dono": "Narrativa", "trava": "onboarding sem chamada de vídeo" },
+    { "item": "contrato server-side da CepCerto", "dono": "Dev", "trava": "frete com contrato próprio" }
+  ],
+
+  "inconsistenciasParaDecidir": [
+    { "onde": "docs/PLANOS.md x landing e ficha comercial", "divergencia": "PLANOS.md põe o setup do Loja Pro em R$ 1.490 e as automações como exclusivas do Pro; a landing e a ficha dizem setup R$ 497 para os três planos e as automações valem para toda loja", "decisao": "Nicolas / conselho" },
+    { "onde": "PLANOS.md", "divergencia": "cita o painel em cliente.avilaops.com, que foi apagado em 24/08/2026", "decisao": "corrigir o doc" }
+  ]
+}
