@@ -13,6 +13,8 @@ import { urlDaLoja } from "@/lib/tenant";
  */
 const Entrada = TenantEntradaSchema.omit({ slug: true, mercadoPago: true }).extend({
   emailContato: z.string().email("Informe um e-mail válido."),
+  // A régua inteira (boas-vindas, pedido pago, cobrança) fala pelo WhatsApp: sem ele a loja nasce muda.
+  whatsapp: TenantEntradaSchema.shape.whatsapp.unwrap(),
   senha: z.string().min(8, "A senha precisa ter pelo menos 8 caracteres.").max(200),
   produtos: z.array(ProdutoEntradaSchema).max(2000).optional(),
 });

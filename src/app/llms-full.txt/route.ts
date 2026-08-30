@@ -31,14 +31,14 @@ Pequenas empresas e operações comerciais que precisam vender online sem montar
 
 ## Planos
 
-- Essencial — R$ 79/mês: vitrine responsiva, pedidos pelo WhatsApp, domínio, SSL, hospedagem, 1 e-mail profissional, painel e treinamento.
-- Negócio — R$ 119/mês: tudo do Essencial, carrinho, checkout próprio, PIX, cartão, boleto, frete por CEP, retirada e avisos de venda.
-- Escala — R$ 349/mês: tudo do Negócio, recuperação de carrinho, pós-venda, cupons, alertas de estoque, relatório semanal, 5 e-mails e apoio à NF-e.
-- Implantação: a partir de R$ 497, com condição exibida na página de planos.
+- Site — R$ 79/mês: vitrine, catálogo, contato, pedidos pelo WhatsApp, domínio, SSL, hospedagem e e-mail profissional.
+- Loja — R$ 119/mês (o mais escolhido): tudo do Site + carrinho, Pix na hora, cartão e boleto no próprio checkout, frete por CEP e retirada, cupons, variações, estoque, feed do Google Shopping, carrinho abandonado, avaliações e relatório semanal. Sem comissão sobre venda.
+- Loja Pro — R$ 349/mês: tudo da Loja + domínio próprio, chave de API e assistente de IA, cotação B2B pelo WhatsApp, 5 e-mails e prioridade de suporte.
+- Setup único: R$ 497. 14 dias de teste. Mensalidade começa quando a loja entra no ar.
 
 ## Pagamentos
 
-PayPal, Mercado Pago e Éfi são as três opções definidas pela Avila Ops. O Mercado Pago está integrado no código atual; PayPal e Éfi estão previstos e ainda não devem ser apresentados como ativos. O dinheiro é recebido na conta da própria empresa.
+Pagamento pelo Mercado Pago (Pix, cartão e boleto) na conta da própria empresa: o dinheiro não passa pela Avila Ops e não há comissão sobre venda.
 
 ## Tecnologia e operação
 

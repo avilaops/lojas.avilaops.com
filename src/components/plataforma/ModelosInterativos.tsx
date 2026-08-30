@@ -3,12 +3,17 @@
 import Image from "next/image";
 import { useState } from "react";
 
-type Modelo = "minimal" | "editorial" | "vitrine";
+/** Os sete layouts de `LAYOUTS` em src/lib/tema.ts, na ordem em que o painel oferece. */
+type Modelo = "classico" | "vitrine" | "editorial" | "minimal" | "spotlight" | "mercado" | "conversao";
 
 const MODELOS: Array<{ id: Modelo; nome: string; resumo: string }> = [
-  { id: "minimal", nome: "Minimal", resumo: "Produtos fortes, catálogo enxuto e muito respiro." },
-  { id: "editorial", nome: "Editorial", resumo: "Narrativa, curadoria e construção de marca." },
+  { id: "classico", nome: "Clássico", resumo: "Banner, categorias e destaques. Funciona para qualquer catálogo." },
   { id: "vitrine", nome: "Vitrine", resumo: "Imagem, variedade e conversão em primeiro plano." },
+  { id: "editorial", nome: "Editorial", resumo: "Narrativa, curadoria e construção de marca." },
+  { id: "minimal", nome: "Minimal", resumo: "Produtos fortes, catálogo enxuto e muito respiro." },
+  { id: "spotlight", nome: "Spotlight", resumo: "Um produto principal em destaque e navegação visual." },
+  { id: "mercado", nome: "Mercado", resumo: "Catálogo denso, departamentos e mais produtos por tela." },
+  { id: "conversao", nome: "Conversão", resumo: "Oferta clara, benefícios e caminho curto até a compra." },
 ];
 
 function MiniLoja({ variante }: { variante: Modelo }) {
@@ -32,17 +37,66 @@ function MiniLoja({ variante }: { variante: Modelo }) {
       </div>
     );
   }
+  if (variante === "minimal") {
+    return (
+      <div className="pl-mini-loja pl-mini-minimal" aria-label="Prévia do layout Minimal">
+        <div className="pl-mini-topo"><i /><span>FORMA</span><b>•••</b></div>
+        <div className="pl-mini-minimal-copy"><small>OBJETOS PARA VIVER MELHOR</small><strong>Menos ruído.<br />Mais significado.</strong></div>
+        <div className="pl-mini-produtos pl-mini-galeria-minimal"><Image src="/media/modelo-minimal.webp" alt="Composição minimalista de autocuidado" fill sizes="(max-width: 700px) 90vw, 420px" /></div>
+      </div>
+    );
+  }
+  if (variante === "spotlight") {
+    return (
+      <div className="pl-mini-loja pl-mini-spotlight" aria-label="Prévia do layout Spotlight">
+        <div className="pl-mini-topo"><i /><span>CAPACETES RP</span><b>•••</b></div>
+        <div className="pl-mini-spot">
+          <div><small>LANÇAMENTO</small><strong>LS2 FF358<br />Blade Preto</strong><em>Comprar por R$ 599</em></div>
+          <span className="pl-mini-spot-produto" aria-hidden="true"><i /></span>
+        </div>
+        <div className="pl-mini-chips" aria-hidden="true"><span /><span /><span /><span /></div>
+      </div>
+    );
+  }
+  if (variante === "mercado") {
+    return (
+      <div className="pl-mini-loja pl-mini-mercado" aria-label="Prévia do layout Mercado">
+        <div className="pl-mini-topo"><i /><span>DISTRIBUIDORA SUL</span><b>•••</b></div>
+        <div className="pl-mini-departamentos" aria-hidden="true"><span>Pneus</span><span>Óleo</span><span>Freios</span><span>Relação</span><span>Elétrica</span></div>
+        <div className="pl-mini-mercado-grid" aria-hidden="true">
+          {Array.from({ length: 8 }).map((_, i) => <span key={i}><i /><b /><small /></span>)}
+        </div>
+      </div>
+    );
+  }
+  if (variante === "conversao") {
+    return (
+      <div className="pl-mini-loja pl-mini-conversao" aria-label="Prévia do layout Conversão">
+        <div className="pl-mini-topo"><i /><span>KIT SEMANA</span><b>•••</b></div>
+        <div className="pl-mini-oferta">
+          <div>
+            <small>OFERTA DA SEMANA</small>
+            <strong>Kit de 3 por R$ 129</strong>
+            <ul aria-hidden="true"><li>Frete grátis acima de R$ 150</li><li>Pix na hora</li><li>Troca em 7 dias</li></ul>
+            <em>Quero o kit</em>
+          </div>
+          <span className="pl-mini-oferta-selo" aria-hidden="true">-20%</span>
+        </div>
+      </div>
+    );
+  }
   return (
-    <div className="pl-mini-loja pl-mini-minimal" aria-label="Prévia do layout Minimal">
-      <div className="pl-mini-topo"><i /><span>FORMA</span><b>•••</b></div>
-      <div className="pl-mini-minimal-copy"><small>OBJETOS PARA VIVER MELHOR</small><strong>Menos ruído.<br />Mais significado.</strong></div>
-      <div className="pl-mini-produtos pl-mini-galeria-minimal"><Image src="/media/modelo-minimal.webp" alt="Composição minimalista de autocuidado" fill sizes="(max-width: 700px) 90vw, 420px" /></div>
+    <div className="pl-mini-loja pl-mini-classico" aria-label="Prévia do layout Clássico">
+      <div className="pl-mini-topo"><i /><span>EMPÓRIO CENTRAL</span><b>•••</b></div>
+      <div className="pl-mini-banner pl-mini-banner-classico"><small>BEM-VINDO</small><strong>Tudo para a sua casa,<br />entrega em 2 dias.</strong></div>
+      <div className="pl-mini-chips pl-mini-chips-claro" aria-hidden="true"><span /><span /><span /></div>
+      <div className="pl-mini-produtos"><span /><span /><span /></div>
     </div>
   );
 }
 
 export default function ModelosInterativos() {
-  const [ativo, setAtivo] = useState<Modelo>("editorial");
+  const [ativo, setAtivo] = useState<Modelo>("classico");
   return (
     <div className="pl-modelos-experiencia">
       <div className="pl-modelos-seletor" role="tablist" aria-label="Escolha um layout para visualizar">

@@ -216,6 +216,7 @@ export async function verificarInadimplencia(): Promise<{ suspensas: string[]; s
   const atuais = sincronizadas ? await prisma.tenant.findMany({ where: { status: "ATIVA" } }) : lojas;
 
   for (const t of atuais) {
+    if (t.cobrancaIsenta) continue; // loja da casa: nunca suspende
     if (t.plano === "SITE" && t.assinaturaStatus === "SEM_ASSINATURA") continue; // vitrine grátis enquanto não assina? não: mesma regra
     const diasDesdeCriacao = (agora - t.criadoEm.getTime()) / 86_400_000;
     const diasDesdePagamento = t.ultimoPagamentoEm ? (agora - t.ultimoPagamentoEm.getTime()) / 86_400_000 : null;

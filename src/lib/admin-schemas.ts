@@ -85,6 +85,8 @@ export const TenantEntradaSchema = z.object({
 
 export const TenantAtualizacaoSchema = TenantEntradaSchema.partial().extend({
   status: z.enum(["PROVISIONANDO", "ATIVA", "SUSPENSA", "CANCELADA"]).optional(),
+  /** Loja da casa (demo, vitrine própria): fora da régua de cobrança. */
+  cobrancaIsenta: z.boolean().optional(),
 });
 
 export const ProdutoEntradaSchema = z.object({

@@ -116,7 +116,8 @@ export default function CriarLoja({ planoInicial }: { planoInicial: "SITE" | "LO
       if (f.nome.trim().length < 2) erros.nome = "Informe o nome da loja com pelo menos 2 caracteres.";
       if (!/^\S+@\S+\.\S+$/.test(f.emailContato)) erros.emailContato = "Informe um e-mail válido. Ele será usado para entrar no estúdio.";
       const whatsapp = f.whatsapp.replace(/\D/g, "");
-      if (whatsapp && ![10, 11, 12, 13].includes(whatsapp.length)) erros.whatsapp = "Use DDD + número, por exemplo: (16) 99999-0000.";
+      if (!whatsapp) erros.whatsapp = "Informe o WhatsApp da loja: é por ele que avisamos pedido pago e falamos com você.";
+      else if (![10, 11, 12, 13].includes(whatsapp.length)) erros.whatsapp = "Use DDD + número, por exemplo: (16) 99999-0000.";
       if (f.instagram && !urlValida(f.instagram)) erros.instagram = "Informe o link completo, começando por https://.";
     }
     if (indice === 1) {
@@ -175,7 +176,7 @@ export default function CriarLoja({ planoInicial }: { planoInicial: "SITE" | "LO
     setOcupado(true);
     try {
       const r = await fetch("/api/painel/criar", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({
-        nome: f.nome, slogan: f.slogan || direcao.identidade.assinatura, whatsapp: f.whatsapp || undefined, instagram: f.instagram || undefined,
+        nome: f.nome, slogan: f.slogan || direcao.identidade.assinatura, whatsapp: f.whatsapp, instagram: f.instagram || undefined,
         emailContato: f.emailContato, senha: f.senha, plano: f.plano, identidade: direcao.identidade, tema: direcao.tema,
         endereco: { cep: f.cep || undefined, logradouro: f.logradouro || undefined, numero: f.numero || undefined, bairro: f.bairro || undefined, cidade: f.cidade || undefined, uf: f.uf || undefined },
         cepOrigem: f.cep || undefined, horario: f.horario || undefined, retiradaNaLoja: f.retiradaNaLoja, enderecoPublico: f.enderecoPublico, despachoDiasUteis: Number(f.despachoDiasUteis),
@@ -232,7 +233,7 @@ export default function CriarLoja({ planoInicial }: { planoInicial: "SITE" | "LO
         <Campo label="Nome da loja" obrigatorio erro={errosCampos.nome}><input {...propriedadesCampo("nome")} className={inputClasse} value={f.nome} onChange={(e) => set("nome", e.target.value)} placeholder="Como seus clientes conhecem a marca" autoComplete="organization" /></Campo>
         <Campo label="Segmento"><select className={inputClasse} value={f.segmento} onChange={(e) => set("segmento", e.target.value)}>{SEGMENTOS.map(([v,n]) => <option value={v} key={v}>{n}</option>)}</select></Campo>
         <Campo label="Seu e-mail" obrigatorio erro={errosCampos.emailContato} ajuda="Será seu login no estúdio da marca."><input {...propriedadesCampo("emailContato")} className={inputClasse} type="email" value={f.emailContato} onChange={(e) => set("emailContato", e.target.value)} placeholder="voce@empresa.com.br" autoComplete="email" /></Campo>
-        <Campo label="WhatsApp" erro={errosCampos.whatsapp} ajuda="Opcional. Informe DDD + número; o +55 é adicionado automaticamente."><input {...propriedadesCampo("whatsapp")} className={inputClasse} type="tel" inputMode="tel" value={f.whatsapp} onChange={(e) => set("whatsapp", e.target.value)} placeholder="(16) 99999-0000" autoComplete="tel" /></Campo>
+        <Campo label="WhatsApp *" erro={errosCampos.whatsapp} ajuda="É por ele que você recebe aviso de pedido pago. DDD + número; o +55 é adicionado automaticamente."><input {...propriedadesCampo("whatsapp")} className={inputClasse} type="tel" inputMode="tel" value={f.whatsapp} onChange={(e) => set("whatsapp", e.target.value)} placeholder="(16) 99999-0000" autoComplete="tel" /></Campo>
       </div>
       <Campo label="Slogan atual" ajuda="Opcional. Se ficar vazio, criaremos uma assinatura a partir do seu diferencial."><input className={inputClasse} value={f.slogan} maxLength={140} onChange={(e) => set("slogan", e.target.value)} placeholder="Se sua marca já usa uma frase, escreva aqui" /></Campo>
       <Campo label="Instagram" erro={errosCampos.instagram} ajuda="Opcional. Use o link completo do perfil."><input {...propriedadesCampo("instagram")} className={inputClasse} type="url" value={f.instagram} onChange={(e) => set("instagram", e.target.value)} placeholder="https://instagram.com/sualoja" /></Campo>

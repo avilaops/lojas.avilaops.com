@@ -132,6 +132,8 @@ model Tenant {
   ultimoPagamentoEm   DateTime?
   tentativasFalhas    Int      @default(0)
   suspensaEm          DateTime?
+  /// Loja da casa (demo, vitrine própria): a rotina diária nunca suspende. Marcado só pela API admin.
+  cobrancaIsenta      Boolean  @default(false)
   setupPagoEm         DateTime?          // R$ 497 — cobrado à parte, marcado pela Avila Ops
 
   faturas         Fatura[]
