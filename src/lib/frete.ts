@@ -108,8 +108,11 @@ export function caixaDoCarrinho(t: Tenant, itens: ItemCarrinho[]): Caixa {
 }
 
 export function pesoTotalKg(t: Tenant, itens: ItemCarrinho[]): number {
-  const total = itens.reduce((s, i) => s + ((i.pesoGramas ?? t.pesoPadraoKg * 1000) / 1000) * i.quantidade, 0);
-  return Math.max(total, 0.3);
+  // Soma em gramas (inteiro) e converte no fim: somar quilos em ponto
+  // flutuante devolvia 3.6000000000000005, e esse número ia como texto para a
+  // transportadora.
+  const gramas = itens.reduce((s, i) => s + (i.pesoGramas ?? Math.round(t.pesoPadraoKg * 1000)) * i.quantidade, 0);
+  return Math.max(gramas / 1000, 0.3);
 }
 
 async function cotarCepCerto(t: Tenant, cep: string, itens: ItemCarrinho[]): Promise<OpcaoFrete[] | null> {
