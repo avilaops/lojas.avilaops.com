@@ -100,6 +100,13 @@ informa `pendentes`, `processando`, `comErro` e `maisAntigaEm`. O evento
 continua sendo a rede de segurança. Depois da publicação sai
 `categoria.seo-publicado`.
 
+**Ligado em 29/08/2026** no fluxo `ruVn7ddvPQB949p9`: `Todo Dia às 3h` → `Gerar SEO de
+Categorias` (`{"limite": 10}`, credencial Lojas Admin Token, `onError` continua) →
+`SEO com Falha?` → `Todoist: SEO de Categoria Falhou` (número, motivo, id da
+execução, regra 12 do QUADRO). Primeira rodada manual em 29/08 processou `drones`
+(avila-ops-store) e `Pneus` (sandromotos) por fallback; a loja `demo` está
+SUSPENSA e o lote só pega tenant ATIVA.
+
 Nós sugeridos: **Schedule Trigger (3h)** → **HTTP Request / lote** →
 **IF falhas.length > 0** → alerta operacional. Não coloque o token administrativo
 no corpo ou na URL; use a credencial de header do n8n.
