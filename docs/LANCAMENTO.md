@@ -21,6 +21,21 @@ Ou seja: **nunca houve uma compra em produção.** O portão 1 ("fluxo principal
 100% de ponta a ponta") ainda não é verdade, e o portão 2 (cobrança) nunca
 foi exercitado com dinheiro.
 
+## Andamento (noite de 29/08, Comercial sozinho — GPT e Antigravity sem tokens)
+
+| Item | Estado |
+|---|---|
+| 2 demo reativada e isenta | **feito**: `Tenant.cobrancaIsenta` (migração `20260830000000`), demo ATIVA, Mercado Pago da Avila Ops instalado na demo, produto "Teste de pagamento (R$ 1,00)" |
+| 1 compra real de R$ 1 | **preparado, falta pagar**: pela API deu `Error in Financial Identity Use Case` (pagador com o mesmo CNPJ do recebedor). O teste real é o Nicolas comprar no celular em demo.lojas.avilaops.com/produtos/teste-de-pagamento-r-1-00 com o CPF dele. Webhook agora vai por cobrança (`notification_url`), sem depender do painel do MP |
+| 6, 7, 8, 9, 10 landing | **feito**: Site / Loja / Loja Pro, hero com a promessa da ficha, setup R$ 497 sem 12x, sem PayPal/Éfi, exemplos rotulados como fictícios, seções de tecnologia e vídeo removidas, 7 layouts, FAQ com comissão e cancelamento |
+| 12 Cloudflare | **feito**: apex `lojas.avilaops.com` proxied (GRU); `*.lojas` segue DNS-only |
+| 13 roteador n8n | **feito**: `categoria.seo-*` fecham como PROCESSADO |
+| 15 WhatsApp obrigatório | **feito** na tela e na API do `/criar` |
+| 3 rotacionar MP + webhook no painel | **Nicolas** (só o painel do MP permite) |
+| 4 fotos do Sandro | **Nicolas/Sandro**: as 28 fotos são stock da Unsplash; a fonte honesta é o dono mandar 10 fotos pelo WhatsApp |
+| 5 templates Meta | **Nicolas** |
+| 11, 14, 16, 17 | seguem no quadro |
+
 ## Bloqueia a venda (semana de 01 a 05/09)
 
 | # | O que | Dono | Por quê |

@@ -122,6 +122,12 @@ seguindo no ar. O `deploy/deploy.sh` reconstrói a base se faltar, confere o
 healthcheck e limpa só imagens dangling; foi escrito depois de isso acontecer
 em 26/08/2026.
 
+**Cloudflare (29/08/2026):** o apex `lojas.avilaops.com` (landing, `/criar`, `/painel`, webhooks) passou a ser **proxied** — o TTFB do Brasil caiu de ~0,9 s para ~0,4 s. O `*.lojas` continua DNS-only (o Universal SSL não cobre dois níveis). Zona `ssl=full`, `always_use_https=on`.
+
+**Webhook do Mercado Pago (29/08/2026):** cada cobrança leva `notification_url` = `https://lojas.avilaops.com/api/webhooks/mercadopago?loja=<slug>` (`MercadoPagoConfig.notificationUrl` no `packages/checkout`), então o webhook do pedido não depende da URL cadastrada na aplicação do MP.
+
+**Loja da casa:** `Tenant.cobrancaIsenta` tira a loja da régua de cobrança (rotina diária nunca suspende). Só a API admin marca (`PATCH /api/admin/tenants/:slug {"cobrancaIsenta":true}`); a `demo` está isenta desde 29/08.
+
 **Caddy** (`/etc/caddy/Caddyfile`): o `ask` global do `on_demand_tls` aponta para
 `/api/dominio-permitido`, que repassa ao Comandeiro (3040) o que não for loja.
 **Domínios próprios** das lojas entram por `import /etc/caddy/lojas.d/*.caddy`:

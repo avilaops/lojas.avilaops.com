@@ -88,6 +88,10 @@ Todos os POST abaixo vão com `Authorization: Bearer $LOJAS_ADMIN_TOKEN`.
 
 ## SEO de categorias V1
 
+O roteador (`Rotear por Tipo de Evento`) conhece `categoria.seo-pendente` e
+`categoria.seo-publicado` desde 29/08/2026 (saídas 18 e 19 → `Encerrar:
+Processado`); a saída extra do fallback é a 20 e continua em `Encerrar: Ignorado`.
+
 O fluxo diário envia `{ "limite": 10 }` para
 `POST /api/admin/seo/categorias`. O endpoint reivindica cada categoria com uma
 trava de 15 minutos, gera o texto com Gemini ou fallback determinístico,
