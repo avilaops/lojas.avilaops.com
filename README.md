@@ -126,6 +126,10 @@ em 26/08/2026.
 
 **Webhook do Mercado Pago (29/08/2026):** cada cobrança leva `notification_url` = `https://lojas.avilaops.com/api/webhooks/mercadopago?loja=<slug>` (`MercadoPagoConfig.notificationUrl` no `packages/checkout`), então o webhook do pedido não depende da URL cadastrada na aplicação do MP.
 
+**Ajuda (30/08/2026):** `/ajuda` é o tutorial em sete capítulos (uma tela por capítulo, cinco passos) que substitui a chamada de vídeo do onboarding; está no menu, no rodapé e no sitemap. Texto em `src/app/plataforma/ajuda/page.tsx`.
+
+**Removedor de fundo (30/08/2026):** `FUNDO_URL` aponta para `odoo-avilaops-recorte-1:5180`, que vive na rede `odoo-avilaops_default`; o `deploy.sh` faz `docker network connect` depois do `up`, senão o nome não resolve da bridge padrão e o botão "Tratar com IA" devolve 503.
+
 **Loja da casa:** `Tenant.cobrancaIsenta` tira a loja da régua de cobrança (rotina diária nunca suspende). Só a API admin marca (`PATCH /api/admin/tenants/:slug {"cobrancaIsenta":true}`); a `demo` está isenta desde 29/08.
 
 **Caddy** (`/etc/caddy/Caddyfile`): o `ask` global do `on_demand_tls` aponta para

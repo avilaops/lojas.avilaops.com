@@ -34,7 +34,10 @@ foi exercitado com dinheiro.
 | 3 rotacionar MP + webhook no painel | **Nicolas** (só o painel do MP permite) |
 | 4 fotos do Sandro | **Nicolas/Sandro**: as 28 fotos são stock da Unsplash; a fonte honesta é o dono mandar 10 fotos pelo WhatsApp |
 | 5 templates Meta | **Nicolas** |
-| 11, 14, 16, 17 | seguem no quadro |
+| 17 tutorial | **feito (texto)**: `/ajuda` com os 7 capítulos, no menu, rodapé e sitemap. PDF e os 3 vídeos de celular continuam com o Nicolas |
+| 16 removedor de fundo | **feito**: o container das lojas entra na rede do Odoo no deploy; "Tratar com IA" no painel responde em ~2 s |
+| JSON-LD | **feito**: SoftwareApplication (3 ofertas) + FAQPage na landing |
+| 11, 14 | seguem no quadro (página /lojas no site principal e chave Gemini) |
 
 ## Bloqueia a venda (semana de 01 a 05/09)
 
