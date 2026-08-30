@@ -98,3 +98,30 @@ as URLs que ele devolve.
 - [ ] Slogan ≤ 140 caracteres, sem ponto final, com a promessa da loja
 - [ ] Texto "Sobre" em 2–4 parágrafos
 - [ ] JSON final validado (colar no painel; ele recusa campo inválido)
+
+## A landing troca de cor a cada cena (30/08/2026)
+
+Decisão do Nicolas ao ver a página no celular: "o azul tá muito cara de
+tecnologia, a gente precisa da cara colorida, diversas cores, cenários
+diferentes, o cliente vai passando e vai vendo perspectivas diferentes; falar de
+tecnologia não adianta, tem que falar da identidade da empresa dele".
+
+O que isso virou em regra:
+
+1. **Nenhuma cor da plataforma domina a página.** O papel é neutro (creme
+   `#fbf8f4`) e cada cena empresta a paleta de um negócio: terracota para
+   confeitaria, cobalto para moda, areia para casa, grafite para oficina, verde
+   para pet, ameixa para beleza. Os tons vivem em `.pl-tom-*` no
+   `plataforma.css`, um bloco de quatro variáveis por cena
+   (`--tom`, `--tom-forte`, `--tom-tinta`, `--tom-suave`).
+2. **Uma cena escura só**, a dos sete layouts, porque vitrine aparece melhor no
+   escuro. O resto é claro, para o site não voltar a parecer painel.
+3. **O texto fala do negócio do lojista, nunca da técnica.** Nada de stack,
+   automação, API ou infraestrutura na página pública: o argumento é a marca
+   dele na tela do cliente.
+4. **Nome de marca em serifa** (Iowan Old Style / Palatino / Georgia) dentro das
+   cenas, para a vitrine ter cara de loja e não de software.
+5. **Marca fictícia sempre rotulada** como tal, na própria cena.
+6. Cabeçalho e rodapé acompanham a página clara por `:has(.pl-site-claro)` no
+   shell; as variáveis de papel precisam estar declaradas **também** no
+   `.plataforma-shell`, senão os dois ficam escuros no meio da página clara.
