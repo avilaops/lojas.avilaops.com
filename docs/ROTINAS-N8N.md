@@ -214,3 +214,30 @@ Regras que fazem o circuito não se atropelar:
 Testado em 30/08/2026: 70 leads de Ribeirão Preto gravados (execução 1298), demo
 da Tatinha Modas montada com o lead marcado (execução 1305), régua rodando sem
 duplicar (execuções 1309 e 1313). As lojas e linhas de teste foram apagadas.
+
+## Backup e restauração: conferidos em 30/08/2026
+
+O dump de todos os bancos roda às 3h30 (cron `backup-todos-bancos`, dumps em
+`/opt/backups/db`, rotação diária às 3h40 pelo timer `avilaops-rotacionar-backups`).
+
+**Quatro bancos de produtos no ar estavam fora da lista** e nunca haviam sido
+copiados: `lojas`, `ia`, `migdolus` e `sms`. A lista do script é explícita, e
+quem cria banco novo precisa acrescentar ali. Corrigido no mesmo dia; a lista
+também perdeu `jurisflow_poc`, `pkvedacoes_medusa` e `pkvedacoes_site`, que não
+existem mais.
+
+**A restauração foi testada de verdade**, não presumida: o dump de
+`host-lojas-20260830.sql.gz` foi restaurado num banco descartável
+(`restore_teste`, criado pelo superusuário porque o usuário `lojas` não cria
+banco) e comparado com o vivo. Bateu tudo: 3 lojas, 32 produtos, 8 categorias,
+23 migrações, com status e isenção de cobrança preservados. O banco de teste foi
+apagado depois.
+
+Para refazer o teste:
+
+```bash
+sudo -u postgres psql -c "create database restore_teste owner lojas"
+gunzip -c /opt/backups/db/host-lojas-AAAAMMDD.sql.gz | psql "postgresql://lojas:SENHA@127.0.0.1:5432/restore_teste"
+# comparar contagens com o banco vivo, depois:
+sudo -u postgres psql -c "drop database restore_teste"
+```
