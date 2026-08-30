@@ -12,6 +12,8 @@ import { decifrar } from "./cofre";
  * Hoje só Mercado Pago tem adaptador no pacote; PayPal e Éfi entram aqui
  * quando o pacote ganhar os adaptadores, sem tocar nas rotas.
  */
+const BASE_PLATAFORMA = process.env.LOJAS_BASE_DOMAIN ?? "lojas.avilaops.com";
+
 export class GatewayNaoConfigurado extends Error {}
 
 export function providerDaLoja(t: Tenant): PaymentProvider {
@@ -23,5 +25,8 @@ export function providerDaLoja(t: Tenant): PaymentProvider {
     webhookSecret: t.mpWebhookSecretEnc ? decifrar(t.mpWebhookSecretEnc) : undefined,
     descritorFatura: t.nome.replace(/[^A-Za-z0-9 ]/g, "").toUpperCase().slice(0, 13),
     pixExpiraEmMinutos: 30,
+    // Por cobrança, com `?loja=`: o webhook chega no host da plataforma e acha a
+    // loja pelo slug, sem depender da URL cadastrada na aplicação do MP.
+    notificationUrl: `https://${BASE_PLATAFORMA}/api/webhooks/mercadopago?loja=${t.slug}`,
   });
 }
