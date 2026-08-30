@@ -38,7 +38,9 @@ foi exercitado com dinheiro.
 | 16 removedor de fundo | **feito**: o container das lojas entra na rede do Odoo no deploy; "Tratar com IA" no painel responde em ~2 s |
 | JSON-LD | **feito**: SoftwareApplication (3 ofertas) + FAQPage na landing |
 | 11, 14 | seguem no quadro (página /lojas no site principal e chave Gemini) |
-| 5 demos/semana (ficha §4) | **feito**: workflow `CE64HzanEWwy6xrn` monta a loja-demo por formulário, com foto baixada e tratada; falta só a lista de leads |
+| 5 demos/semana (ficha §4) | **feito**: workflow `CE64HzanEWwy6xrn` monta a loja-demo por formulário, com foto baixada e tratada |
+| lista de leads de Ribeirão (ficha §4) | **feito**: `lojas_leads` no n8n com 70 comércios sem site (Overpass), atualizada toda segunda; nada de CSV |
+| régua da demo (ficha §6) | **feito**: `KmADL5B0HkeToNWY` roda dias 2, 5, 12, 30 e tira do ar no 37 |
 
 ## Bloqueia a venda (semana de 01 a 05/09)
 

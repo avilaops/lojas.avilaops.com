@@ -126,6 +126,8 @@ em 26/08/2026.
 
 **Webhook do Mercado Pago (29/08/2026):** cada cobrança leva `notification_url` = `https://lojas.avilaops.com/api/webhooks/mercadopago?loja=<slug>` (`MercadoPagoConfig.notificationUrl` no `packages/checkout`), então o webhook do pedido não depende da URL cadastrada na aplicação do MP.
 
+**Circuito comercial no n8n (30/08/2026):** `lojas_leads` (Overpass/OpenStreetMap, segunda 6h) → `/form/lojas-demo` monta a loja e marca o lead → `lojas_demos` → régua diária (dias 2, 5, 12, 30 e 37, com `PATCH status=CANCELADA` no 37). Quatro workflows, nenhuma planilha: `docs/ROTINAS-N8N.md`.
+
 **Loja-demo por formulário (30/08/2026):** o workflow n8n `CE64HzanEWwy6xrn` (`/form/lojas-demo`) monta uma loja de demonstração inteira a partir de dados públicos — cria o tenant, marca ATIVA + `cobrancaIsenta`, importa os produtos com `PUT /api/admin/tenants/:slug/produtos?importarImagens=1&tratar=1` (cada foto é baixada para o nosso `/uploads` e passa pelo removedor de fundo), registra em `lojas_demos` e abre a tarefa de mostrar ao dono. Ver `docs/ROTINAS-N8N.md`.
 
 **Ajuda (30/08/2026):** `/ajuda` é o tutorial em sete capítulos (uma tela por capítulo, cinco passos) que substitui a chamada de vídeo do onboarding; está no menu, no rodapé e no sitemap. Texto em `src/app/plataforma/ajuda/page.tsx`.

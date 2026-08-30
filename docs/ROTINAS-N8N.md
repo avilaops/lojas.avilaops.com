@@ -172,3 +172,45 @@ URL original e é listada em "Fotos que não baixaram".
 Testado em 30/08/2026 (execução 1296): loja criada, 2 produtos, 2 fotos baixadas
 e tratadas, linha inválida reportada, linha na data table e tarefa no Todoist.
 A loja de teste (`teste-demo-automatica`) e a tarefa foram apagadas depois.
+
+## O circuito comercial das Lojas: 30/08/2026
+
+Nada de planilha solta: leads, demos e régua vivem em data tables do n8n e a
+informação volta para a mesma tabela de onde saiu.
+
+```
+Lojas — Leads de comércio local (ZYyy9O4CqDDR95nz)
+  segunda 6h + /form/lojas-leads
+  Overpass (OpenStreetMap) → filtra sem site, sem marca de rede, com telefone ou Instagram
+  → upsert em `lojas_leads` (JovFRMuQg4xG9tNr) → Todoist "escolher 5 leads da semana"
+                    │
+                    ▼  (o operador copia a chave do lead)
+Lojas — Loja-demo por formulário (CE64HzanEWwy6xrn)
+  /form/lojas-demo → cria o tenant, ATIVA + cobrancaIsenta, importa produtos com foto tratada
+  → marca o lead como DEMO_MONTADA com o slug  → grava em `lojas_demos` (rU1kKJ0XMPIn8OYA)
+  → Todoist "mostrar ao dono"
+                    │
+                    ▼
+Lojas — Régua da loja-demo (KmADL5B0HkeToNWY)
+  diário 9h → lê `lojas_demos` → dia 2, 5, 12, 30 e 37 (ficha comercial §6)
+  → Todoist por passo → grava o passo na própria linha (MONTADA→D2→D5→D12→D30→ENCERRADA)
+  → no dia 37: PATCH /api/admin/tenants/:slug { status: CANCELADA }
+
+Lojas — Manutenção das tabelas (wqW9qasy4oLYWC3P)
+  /form/lojas-manutencao apaga linha de lojas_demos (slug) ou lojas_leads (chave)
+```
+
+Regras que fazem o circuito não se atropelar:
+
+- O upsert dos leads **não escreve** `status` nem `demo_slug`: o que a mão
+  humana (ou a demo) escreveu fica. Coluna `status` vazia = lead novo.
+- A régua só age quando o marco calculado é **maior** que o status gravado, então
+  rodar duas vezes no mesmo dia não duplica tarefa. `CLIENTE` ou `PAUSADA` na
+  linha tira a demo da régua.
+- A contagem parte de `mostrada_em` quando existir; senão, de `montada_em`.
+- Um lead marcado `DEMO_MONTADA` cuja loja não abre significa demo apagada:
+  remontar pelo formulário.
+
+Testado em 30/08/2026: 70 leads de Ribeirão Preto gravados (execução 1298), demo
+da Tatinha Modas montada com o lead marcado (execução 1305), régua rodando sem
+duplicar (execuções 1309 e 1313). As lojas e linhas de teste foram apagadas.
