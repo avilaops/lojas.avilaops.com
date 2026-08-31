@@ -62,6 +62,8 @@ export default async function PainelPage({ searchParams }: { searchParams: Promi
           dominioPrincipal: loja.dominioPrincipal,
           bannerUrl: loja.bannerUrl,
           mpPublicKey: loja.mpPublicKey,
+          // Só o fato de existir credencial; o token cifrado nunca sai daqui.
+          mpConfigurado: Boolean(loja.mpAccessTokenEnc),
           emailRemetente: loja.emailRemetente,
           provisionamento: (loja.provisionamento as Record<string, string>) ?? {},
           pixels: { gtmId: loja.gtmId, metaPixelId: loja.metaPixelId, ga4Id: loja.ga4Id, googleAdsId: loja.googleAdsId, googleAdsRotuloCompra: loja.googleAdsRotuloCompra, tiktokPixelId: loja.tiktokPixelId },

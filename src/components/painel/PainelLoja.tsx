@@ -46,6 +46,8 @@ export interface LojaView {
   despachoDiasUteis: number;
   estoqueBaixoEm: number;
   tabelaFrete: Array<{ ufs: string[]; preco: number; prazoDiasUteis: number; nome?: string }>;
+  /** Já tem credencial salva: o checkout aparece na loja. */
+  mpConfigurado: boolean;
   assinatura: { status: string; isenta: boolean; precoCentavos: number; planoNome: string; ultimoPagamentoEm: string | null; setupPagoEm: string | null; criadoEm: string; faturas: Array<{ id: string; centavos: number; status: string; pagaEm: string | null; criadoEm: string }> };
 }
 export interface ProdutoView { id: string; nome: string; sku: string | null; precoCentavos: number; ativo: boolean; destaque: boolean; categoria: string | null; imagem: string | null; disponibilidade: string; estoque: number | null; opcoes: string[]; variantes: number; temEmbalagem: boolean }
@@ -105,6 +107,9 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
   const [contato, setContato] = useState({ avisoTopo: loja.avisoTopo ?? "", slogan: loja.slogan ?? "", whatsapp: loja.whatsapp ?? "", emailContato: loja.emailContato ?? "", logoUrl: loja.logoUrl ?? "", bannerUrl: loja.bannerUrl ?? "", dominioPrincipal: loja.dominioPrincipal ?? "" });
   const [entrega, setEntrega] = useState({ retiradaNaLoja: loja.retiradaNaLoja, despachoDiasUteis: loja.despachoDiasUteis, freteGratisAcima: loja.freteGratisAcima != null ? String(loja.freteGratisAcima / 100).replace(".", ",") : "", tabela: loja.tabelaFrete.map((f) => ({ ufs: f.ufs.join(","), preco: String(f.preco / 100).replace(".", ","), prazo: String(f.prazoDiasUteis), nome: f.nome ?? "" })) });
   const [mp, setMp] = useState({ publicKey: loja.mpPublicKey ?? "", accessToken: "", webhookSecret: "" });
+  // Diagnóstico do recebimento: credencial errada só dava erro na primeira
+  // venda, com o comprador esperando. Aqui o lojista confere antes.
+  const [diagnostico, setDiagnostico] = useState<{ ok: boolean; mensagem: string; conta?: { apelido: string | null; email: string | null }; avisos: string[] } | null>(null);
   const [senha, setSenha] = useState({ atual: "", nova: "" });
   const [jsonIdentidade, setJsonIdentidade] = useState("");
 
@@ -469,12 +474,48 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
 
       {aba === "Recebimento" && (
         <Secao titulo="Recebimento (Mercado Pago)" descricao="O dinheiro cai direto na sua conta. Crie as credenciais em Mercado Pago → Suas integrações → Credenciais de produção.">
+          <div className="flex flex-wrap items-center gap-3 text-sm">
+            {loja.mpConfigurado ? (
+              <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">Recebendo</span>
+            ) : (
+              <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">Ainda não recebe</span>
+            )}
+            {!loja.mpConfigurado && <span className="text-muted-foreground">Sem isto, o cliente monta o carrinho e não consegue pagar.</span>}
+          </div>
+
           <div className="grid gap-4 sm:grid-cols-2">
             <Campo label="Public key"><input className={inputClasse} value={mp.publicKey} onChange={(e) => setMp({ ...mp, publicKey: e.target.value })} placeholder="APP_USR-…" /></Campo>
             <Campo label="Access token" ajuda={loja.mpPublicKey ? "Já configurado. Preencha só para trocar." : undefined}><input className={inputClasse} type="password" value={mp.accessToken} onChange={(e) => setMp({ ...mp, accessToken: e.target.value })} placeholder="APP_USR-…" /></Campo>
-            <Campo label="Segredo do webhook" ajuda={`Cadastre no painel MP a URL: ${loja.url}/api/webhooks/mercadopago?loja=${loja.slug}`}><input className={inputClasse} type="password" value={mp.webhookSecret} onChange={(e) => setMp({ ...mp, webhookSecret: e.target.value })} /></Campo>
+            <Campo label="Segredo do webhook" ajuda="Cadastre a URL abaixo no painel do Mercado Pago e cole aqui o segredo que ele gerar."><input className={inputClasse} type="password" value={mp.webhookSecret} onChange={(e) => setMp({ ...mp, webhookSecret: e.target.value })} /></Campo>
           </div>
-          <div><button className="btn-primario" disabled={ocupado || !mp.publicKey || !mp.accessToken} onClick={() => chamar("/api/painel/loja", "PATCH", { mercadoPago: { publicKey: mp.publicKey, accessToken: mp.accessToken, webhookSecret: mp.webhookSecret || undefined } }, "Recebimento configurado.").then(() => setMp({ ...mp, accessToken: "", webhookSecret: "" }))}>Salvar credenciais</button></div>
+
+          <Campo label="URL para cadastrar no Mercado Pago" ajuda="Suas integrações → sua aplicação → Webhooks. Eventos: pagamentos.">
+            <div className="flex gap-2">
+              <input className={inputClasse} readOnly value={`${loja.url}/api/webhooks/mercadopago?loja=${loja.slug}`} onFocus={(e) => e.currentTarget.select()} />
+              <button type="button" className="btn-secundario shrink-0" onClick={() => navigator.clipboard?.writeText(`${loja.url}/api/webhooks/mercadopago?loja=${loja.slug}`).then(() => setOk("Endereço copiado."), () => setErro("Copie à mão: o navegador bloqueou."))}>Copiar</button>
+            </div>
+          </Campo>
+
+          <div className="flex flex-wrap gap-2">
+            <button className="btn-primario" disabled={ocupado || !mp.publicKey || !mp.accessToken} onClick={() => chamar("/api/painel/loja", "PATCH", { mercadoPago: { publicKey: mp.publicKey, accessToken: mp.accessToken, webhookSecret: mp.webhookSecret || undefined } }, "Recebimento configurado.").then(() => { setMp({ ...mp, accessToken: "", webhookSecret: "" }); setDiagnostico(null); })}>Salvar credenciais</button>
+            <button className="btn-secundario" disabled={ocupado} onClick={() => chamar("/api/painel/recebimento", "POST", { accessToken: mp.accessToken || undefined, publicKey: mp.publicKey || undefined }, "Teste concluído.").then((d) => d && setDiagnostico(d))}>
+              Testar recebimento
+            </button>
+          </div>
+
+          {diagnostico && (
+            <div className={`rounded-xl border p-4 text-sm ${diagnostico.ok ? "border-emerald-200 bg-emerald-50" : "border-red-200 bg-red-50"}`}>
+              <p className="font-semibold">{diagnostico.mensagem}</p>
+              {diagnostico.conta?.apelido && (
+                <p className="mt-1 text-muted-foreground">Conta: {diagnostico.conta.apelido}{diagnostico.conta.email ? ` (${diagnostico.conta.email})` : ""}</p>
+              )}
+              {diagnostico.avisos.length > 0 && (
+                <ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground">
+                  {diagnostico.avisos.map((a) => <li key={a}>{a}</li>)}
+                </ul>
+              )}
+            </div>
+          )}
         </Secao>
       )}
 
