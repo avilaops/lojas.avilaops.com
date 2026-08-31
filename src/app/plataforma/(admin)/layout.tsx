@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { lojistaAtual } from "@/lib/sessao";
 import { urlDaLoja } from "@/lib/tenant";
 import NavPainel from "@/components/painel/NavPainel";
+import BuscaPainel from "@/components/painel/BuscaPainel";
 import "../plataforma.css";
 import "./painel.css";
 
@@ -21,6 +22,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div className="padm">
       <NavPainel nome={loja.nome} urlLoja={urlDaLoja(loja)} />
+      <BuscaPainel />
       <main className="padm-conteudo pl-workspace">{children}</main>
     </div>
   );

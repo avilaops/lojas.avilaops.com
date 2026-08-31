@@ -7,9 +7,7 @@ import { LAYOUTS, type TemaLoja } from "@/lib/tema";
 import { criarDirecaoVisual, PERSONALIDADES, SEGMENTOS, type IdentidadeLoja } from "@/lib/identidade";
 import { Campo, FONTES, Secao, brl, inputClasse, lerCsvProdutos } from "./campos";
 import EnviarImagem from "./EnviarImagem";
-import GradeVariantes from "./GradeVariantes";
 import Cupons, { type CupomView } from "./Cupons";
-import EditarProduto from "./EditarProduto";
 import Categorias, { type CategoriaView } from "./Categorias";
 import AvaliacoesPainel, { type AvaliacaoPainelView } from "./AvaliacoesPainel";
 import Buscadores from "./Buscadores";
@@ -92,8 +90,6 @@ const ASSINATURA: Record<string, { rotulo: string; classe: string }> = {
 };
 
 export default function PainelLoja({ secao, loja, produtos, pedidos, cupons, categorias, avaliacoes, vendas, catalogo, espera, postagem }: { secao: SecaoPainel; loja: LojaView; produtos: ProdutoView[]; pedidos: PedidoView[]; cupons: CupomView[]; categorias: CategoriaView[]; avaliacoes: AvaliacaoPainelView[]; vendas: ResumoVendas; catalogo: DiagnosticoFeed; espera: Array<{ produto: string; pessoas: number }>; postagem: { etiquetas: number; custoCentavos: number; limiteCentavos: number } }) {
-  const [gradeDe, setGradeDe] = useState<ProdutoView | null>(null);
-  const [editando, setEditando] = useState<ProdutoView | null>(null);
   const router = useRouter();
   // A seção vem da URL, não do estado: quem manda na tela é o endereço.
   const aba = secao;
@@ -184,8 +180,6 @@ export default function PainelLoja({ secao, loja, produtos, pedidos, cupons, cat
       {erro && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{erro}</p>}
       {ok && <p className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-700">{ok}</p>}
 
-      {editando && <EditarProduto produtoId={editando.id} aoFechar={() => setEditando(null)} aoSalvar={(m) => { setOk(m); setEditando(null); router.refresh(); }} />}
-      {gradeDe && <GradeVariantes produtoId={gradeDe.id} produtoNome={gradeDe.nome} aoFechar={() => setGradeDe(null)} aoSalvar={(m) => { setOk(m); setGradeDe(null); router.refresh(); }} />}
 
       {aba === "Visão geral" && (
         <div className="painel-overview">
@@ -214,7 +208,7 @@ export default function PainelLoja({ secao, loja, produtos, pedidos, cupons, cat
                 {semEmbalagem.slice(0, 12).map((p) => (
                   <li key={p.id} className="flex items-center justify-between gap-3 border-t border-border py-1.5">
                     <span className="truncate">{p.nome}</span>
-                    <button className="text-xs underline" onClick={() => setEditando(p)}>medir embalagem</button>
+                    <Link className="text-xs underline" href={`/painel/produtos/${p.id}`}>medir embalagem</Link>
                   </li>
                 ))}
               </ul>
@@ -263,11 +257,11 @@ export default function PainelLoja({ secao, loja, produtos, pedidos, cupons, cat
                   <tbody>
                     {produtos.map((p) => (
                       <tr key={p.id} className={`border-t border-border ${p.ativo ? "" : "opacity-50"}`}>
-                        <td className="py-2"><button className="text-left hover:underline" onClick={() => { setEditando(p); window.scrollTo({ top: 0, behavior: "smooth" }); }}>{p.destaque && "★ "}{p.nome}{!p.ativo && " (inativo)"}</button></td>
+                        <td className="py-2"><Link className="text-left hover:underline" href={`/painel/produtos/${p.id}`}>{p.destaque && "★ "}{p.nome}{!p.ativo && " (inativo)"}</Link></td>
                         <td>{p.categoria ?? "-"}</td><td>{p.sku ?? "-"}</td><td>{brl(p.precoCentavos)}</td>
                         <td>{p.opcoes.length ? `${p.variantes} variações` : p.estoque == null ? "∞" : p.estoque === 0 ? <span className="text-red-700">esgotado</span> : p.estoque}</td>
                         <td className="whitespace-nowrap text-right text-xs">
-                          {p.ativo && <button className="mr-2 underline" onClick={() => setGradeDe(p)}>{p.opcoes.length ? "grade" : "variações"}</button>}
+                          {p.ativo && <Link className="mr-2 underline" href={`/painel/produtos/${p.id}`}>{p.opcoes.length ? "grade" : "variações"}</Link>}
                           {p.ativo && <button className="text-muted-foreground underline" disabled={ocupado} onClick={() => chamar(`/api/painel/produtos?id=${p.id}`, "DELETE", undefined, "Produto desativado.")}>desativar</button>}
                         </td>
                       </tr>
@@ -302,7 +296,7 @@ export default function PainelLoja({ secao, loja, produtos, pedidos, cupons, cat
                 <span className="truncate">{p.nome}</span>
                 <span className="flex items-center gap-3">
                   <b className={p.estoque === 0 ? "text-red-700" : "text-amber-700"}>{p.estoque === 0 ? "esgotado" : `${p.estoque} un`}</b>
-                  <button className="text-xs underline" onClick={() => setEditando(p)}>repor</button>
+                  <Link className="text-xs underline" href={`/painel/produtos/${p.id}`}>repor</Link>
                 </span>
                 </li>
               ))}
@@ -320,7 +314,7 @@ export default function PainelLoja({ secao, loja, produtos, pedidos, cupons, cat
                       <td className="py-2 truncate">{p.nome}</td>
                       <td>{p.sku ?? "-"}</td>
                       <td className={p.estoque === 0 ? "text-red-700 font-semibold" : (p.estoque ?? 0) <= loja.estoqueBaixoEm ? "text-amber-700 font-semibold" : ""}>{p.estoque === 0 ? "esgotado" : `${p.estoque} un`}</td>
-                      <td className="text-right text-xs"><button className="underline" onClick={() => setEditando(p)}>ajustar</button></td>
+                      <td className="text-right text-xs"><Link className="underline" href={`/painel/produtos/${p.id}`}>ajustar</Link></td>
                     </tr>
                   ))}
                 </tbody>

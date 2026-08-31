@@ -243,3 +243,103 @@
 
 .padm-subnav a:hover { color: #12172a; }
 .padm-subnav-ativo { border-bottom-color: #2f6bff !important; color: #12172a !important; font-weight: 700; }
+
+/* ── busca (⌘K) ────────────────────────────────────────────────────────── */
+
+.pnav-busca {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: calc(100% - 16px);
+  margin: 10px 8px 0;
+  padding: 8px 10px;
+  border: 1px solid var(--padm-linha);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--padm-suave);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.pnav-busca:hover { background: rgba(255, 255, 255, 0.07); color: var(--padm-texto); }
+.pnav-busca span { flex: 1; text-align: left; }
+.pnav-busca kbd {
+  padding: 1px 5px;
+  border: 1px solid var(--padm-linha);
+  border-radius: 5px;
+  font-family: inherit;
+  font-size: 11px;
+}
+
+.pbusca { position: fixed; inset: 0; z-index: 100; }
+
+.pbusca-fundo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  border: 0;
+  background: rgba(4, 6, 14, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.pbusca-caixa {
+  position: absolute;
+  top: 12vh;
+  left: 50%;
+  width: min(92vw, 560px);
+  transform: translateX(-50%);
+  overflow: hidden;
+  border-radius: 14px;
+  background: white;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+}
+
+.pbusca-campo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid #e4e7ec;
+  color: #667085;
+}
+
+.pbusca-campo input {
+  flex: 1;
+  border: 0;
+  outline: 0;
+  color: #12172a;
+  font-size: 15px;
+  background: transparent;
+}
+
+.pbusca-lista { max-height: min(56vh, 420px); overflow-y: auto; padding: 6px; }
+
+.pbusca-grupo {
+  padding: 8px 10px 4px;
+  color: #98a2b8;
+  font-size: 10.5px;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.pbusca-item {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #12172a;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pbusca-item span { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.pbusca-item small { color: #667085; font-size: 12px; white-space: nowrap; }
+.pbusca-item-ativo { background: #eef2ff; }
+
+.pbusca-vazio { padding: 18px 12px; color: #667085; font-size: 14px; }

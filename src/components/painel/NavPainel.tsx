@@ -5,8 +5,9 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   Bot, ExternalLink, LayoutDashboard, LogOut, Megaphone, Menu, Package, Settings,
-  ShoppingCart, Star, Tags, Ticket, Users, Warehouse, X,
+  Search, ShoppingCart, Star, Tags, Ticket, Users, Warehouse, X,
 } from "lucide-react";
+import { abrirBusca } from "./BuscaPainel";
 
 /**
  * A navegação do painel, no formato de administração de e-commerce.
@@ -143,6 +144,11 @@ export default function NavPainel({ nome, urlLoja }: { nome: string; urlLoja: st
           <span className="pnav-avatar" aria-hidden="true">{nome.trim().charAt(0).toUpperCase() || "L"}</span>
           <span className="pnav-marca-nome">{nome}</span>
         </div>
+        <button className="pnav-busca" onClick={abrirBusca}>
+          <Search size={15} aria-hidden="true" />
+          <span>Buscar</span>
+          <kbd>⌘K</kbd>
+        </button>
         <Lista pathname={pathname} />
         <Rodape pathname={pathname} nome={nome} urlLoja={urlLoja} />
       </aside>
@@ -150,6 +156,7 @@ export default function NavPainel({ nome, urlLoja }: { nome: string; urlLoja: st
       <header className="pnav-barra">
         <button onClick={() => setAberto(true)} aria-label="Abrir menu" className="pnav-botao"><Menu size={20} /></button>
         <strong>{secaoAtual}</strong>
+        <button onClick={abrirBusca} aria-label="Buscar" className="pnav-botao"><Search size={18} /></button>
         <a href={urlLoja} target="_blank" rel="noopener" aria-label="Abrir a loja" className="pnav-botao"><ExternalLink size={18} /></a>
       </header>
 
