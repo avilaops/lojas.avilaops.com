@@ -93,44 +93,22 @@ curl -X POST http://127.0.0.1:3080/api/admin/tenants?provisionar=1 \
   -d '{"slug":"vedashow","nome":"Vedashow","dominioPrincipal":"vedashow.com.br","whatsapp":"5516999990000","cepOrigem":"14075240","tema":{"corPrimaria":"#c62828"}}'
 ```
 
-## Meios de pagamento: os três, por loja (31/08/2026)
+## Pagamento: Mercado Pago, um gateway só (31/08/2026)
 
-A regra da casa é sempre Mercado Pago, PayPal e Éfi. Os adaptadores dos três
-existiam em `packages/checkout/src/providers` desde o começo, mas **PayPal e Éfi
-não eram exportados**, não tinham onde guardar credencial e nem sequer
-compilavam (usavam `precoEmCentavos`, campo que não existe em `ItemCarrinho`).
-Na prática só o Mercado Pago cobrava.
+Decisão de escopo do Nicolas: a loja recebe pelo **Mercado Pago** e mais nada.
+Pix, cartão e boleto, na conta do próprio lojista, com o webhook validado por
+assinatura HMAC em tempo constante.
 
-Agora o gateway é escolha da loja (`Tenant.gateway`: `mercadopago` | `paypal` |
-`efi`), com credencial própria por loja e segredo cifrado com `LOJAS_SECRET`. O
-resto do código conhece só a interface `PaymentProvider` e não muda quando a
-loja troca de gateway.
+O código conhece apenas a interface `PaymentProvider` do `packages/checkout`,
+então acrescentar outro gateway um dia é implementar a interface e trocar o que
+`src/lib/gateway.ts` devolve, sem tocar em rota nem em tela.
 
-| Gateway | Recebe | Webhook |
-|---|---|---|
-| Mercado Pago | Pix, cartão, boleto | `/api/webhooks/mercadopago?loja=<slug>`, assinatura HMAC |
-| PayPal | cartão e saldo PayPal | `/api/webhooks/paypal?loja=<slug>`, verificação oficial |
-| Éfi | Pix, cartão, boleto | `/api/webhooks/efi?loja=<slug>`, segredo na URL + confirmação na API |
-
-### O que foi corrigido na validação
-
-Os dois adaptadores novos **aceitavam qualquer notificação**: faziam
-`JSON.parse` e devolviam o id. Quem descobrisse a URL marcava pedido como pago
-sem dinheiro nenhum ter entrado.
-
-- **PayPal** passa a chamar o verificador oficial
-  (`/v1/notifications/verify-webhook-signature`) com os cinco cabeçalhos
-  `paypal-*` e o corpo cru. Exige `webhookId` do painel: sem ele o adaptador
-  falha alto em vez de aceitar. O `cert_url` recebido é conferido contra o
-  domínio do PayPal, senão a notificação forjada apontaria o certificado para
-  onde o atacante quisesse.
-- **Éfi** não assina o corpo (ela autentica por mTLS, que morre no proxy). Então
-  a notificação vale como aviso: o txid é **confirmado na API** antes de
-  qualquer coisa, e um segredo opcional na URL é conferido em tempo constante.
-
-A rota `/api/webhooks/[gateway]` ainda confere se o gateway do caminho é o
-gateway da loja: sem isso, quem soubesse a URL escolheria o adaptador mais
-frouxo para validar a própria mensagem.
+Os adaptadores de PayPal e Éfi continuam no `packages/checkout`, **fora do
+caminho** (não são exportados). Enquanto estiveram meio ligados, os dois
+aceitavam qualquer notificação: faziam `JSON.parse`, pegavam o id e devolviam,
+o que deixaria qualquer um marcar pedido como pago. Isso foi corrigido antes de
+saírem de cena (PayPal passou a usar o verificador oficial; Éfi confirma o txid
+na API), para que ninguém os religue achando que estão prontos.
 
 ## Deploy (Hetzner, Docker): em produção desde 24/08/2026
 

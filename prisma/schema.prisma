@@ -96,25 +96,11 @@ model Tenant {
   freteGratisAcima  Int?                 // centavos
 
   // ── Pagamento (tokens cifrados com LOJAS_SECRET) ──────────────────────
-  /// Qual gateway cobra nesta loja: mercadopago | paypal | efi.
-  /// O dinheiro cai sempre na conta do lojista; a Avila Ops não intermedia.
-  gateway            String   @default("mercadopago")
+  /// Mercado Pago é o único gateway, por decisão de escopo de 31/08/2026.
+  /// A conta é do lojista: o dinheiro nunca passa pela Avila Ops.
   mpPublicKey        String?
   mpAccessTokenEnc   String?
   mpWebhookSecretEnc String?
-  /// PayPal (Orders v2). O `webhookId` vem do painel e é o que permite
-  /// verificar a assinatura da notificação; sem ele o adaptador recusa tudo.
-  paypalClientId       String?
-  paypalSecretEnc      String?
-  paypalWebhookId      String?
-  paypalSandbox        Boolean @default(false)
-  /// Éfi (Pix, boleto e cartão). `webhookToken` é o segredo que vai na URL da
-  /// notificação, já que a Éfi autentica por mTLS e o proxy encerra o TLS.
-  efiClientId          String?
-  efiSecretEnc         String?
-  efiChavePix          String?
-  efiWebhookTokenEnc   String?
-  efiSandbox           Boolean @default(false)
   meiosPagamento     String[] @default(["pix", "cartao", "boleto"])
 
   // ── E-mail (mail.avilaops.com) ────────────────────────────────────────

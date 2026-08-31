@@ -77,33 +77,9 @@ export const TenantEntradaSchema = z.object({
   googleAdsId: z.string().regex(/^AW-\d{6,15}$/i).nullable().optional(),
   googleAdsRotuloCompra: z.string().trim().max(60).nullable().optional(),
   tiktokPixelId: z.string().regex(/^[A-Z0-9]{10,30}$/i).nullable().optional(),
-  /** Quem cobra nesta loja. O dinheiro cai na conta do lojista em qualquer um. */
-  gateway: z.enum(["mercadopago", "paypal", "efi"]).optional(),
   /** Credenciais do Mercado Pago da loja. Só o access token é cifrado; a public key vai no HTML. */
   mercadoPago: z
     .object({ publicKey: z.string().min(10), accessToken: z.string().min(10), webhookSecret: z.string().min(10).optional() })
-    .optional(),
-  /**
-   * PayPal (Orders v2). `webhookId` vem do painel: sem ele o adaptador recusa
-   * toda notificação, que é o certo, mas a loja fica sem confirmar pagamento.
-   */
-  paypal: z
-    .object({
-      clientId: z.string().min(10),
-      clientSecret: z.string().min(10),
-      webhookId: z.string().min(3).optional(),
-      sandbox: z.boolean().optional(),
-    })
-    .optional(),
-  /** Éfi (Pix, boleto e cartão). `webhookToken` é o segredo que vai na URL da notificação. */
-  efi: z
-    .object({
-      clientId: z.string().min(10),
-      clientSecret: z.string().min(10),
-      chavePix: z.string().min(3).optional(),
-      webhookToken: z.string().min(8).optional(),
-      sandbox: z.boolean().optional(),
-    })
     .optional(),
 });
 
