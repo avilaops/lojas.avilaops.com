@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, Menu } from "lucide-react";
 import { lojistaAtual } from "@/lib/sessao";
-import "./plataforma.css";
+import "../plataforma.css";
 
 function MarcaLojas() {
   return (

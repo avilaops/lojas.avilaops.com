@@ -56,7 +56,33 @@ export interface PedidoView { id: string; numero: number; referencia: string; st
 
 const STATUS: Record<string, string> = { ATIVA: "No ar", PROVISIONANDO: "Configurando", SUSPENSA: "Suspensa", CANCELADA: "Cancelada" };
 const PEDIDO: Record<string, string> = { AGUARDANDO_PAGAMENTO: "Aguardando pagamento", PAGO: "Pago, separar", EM_SEPARACAO: "Em separação", ENVIADO: "Enviado", ENTREGUE: "Entregue", CANCELADO: "Cancelado", ESTORNADO: "Estornado" };
-const ABAS = ["Visão geral", "Marca", "Produtos", "Pedidos", "Cupons", "Avaliações", "Buscadores", "Anúncios", "IA (Claude)", "Entrega", "Recebimento", "Assinatura", "Conta"] as const;
+/**
+ * Cada seção é um endereço.
+ *
+ * Eram treze abas numa tira só, e a navegação inteira morava num useState: o
+ * lojista não conseguia voltar, recarregar caía sempre na "Visão geral" e o
+ * link que ele mandava para mim abria a tela errada. O menu agora é a barra
+ * lateral (NavPainel) e esta tabela é o que liga o nome da seção à rota.
+ */
+export const ROTA_DA_SECAO = {
+  "Visão geral": "/painel",
+  "Pedidos": "/painel/pedidos",
+  "Produtos": "/painel/produtos",
+  "Categorias": "/painel/produtos/categorias",
+  "Inventário": "/painel/estoque",
+  "Cupons": "/painel/promocoes",
+  "Avaliações": "/painel/avaliacoes",
+  "Buscadores": "/painel/marketing",
+  "Anúncios": "/painel/marketing/anuncios",
+  "IA (Claude)": "/painel/ia",
+  "Marca": "/painel/configuracoes/marca",
+  "Entrega": "/painel/configuracoes/entrega",
+  "Recebimento": "/painel/configuracoes/recebimento",
+  "Assinatura": "/painel/configuracoes/assinatura",
+  "Conta": "/painel/configuracoes/conta",
+} as const;
+
+export type SecaoPainel = keyof typeof ROTA_DA_SECAO;
 const ASSINATURA: Record<string, { rotulo: string; classe: string }> = {
   SEM_ASSINATURA: { rotulo: "Período de teste", classe: "bg-amber-100 text-amber-800" },
   PENDENTE: { rotulo: "Aguardando cartão", classe: "bg-amber-100 text-amber-800" },
@@ -65,11 +91,13 @@ const ASSINATURA: Record<string, { rotulo: string; classe: string }> = {
   CANCELADA: { rotulo: "Cancelada", classe: "bg-red-100 text-red-800" },
 };
 
-export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias, avaliacoes, vendas, catalogo, espera, postagem }: { loja: LojaView; produtos: ProdutoView[]; pedidos: PedidoView[]; cupons: CupomView[]; categorias: CategoriaView[]; avaliacoes: AvaliacaoPainelView[]; vendas: ResumoVendas; catalogo: DiagnosticoFeed; espera: Array<{ produto: string; pessoas: number }>; postagem: { etiquetas: number; custoCentavos: number; limiteCentavos: number } }) {
+export default function PainelLoja({ secao, loja, produtos, pedidos, cupons, categorias, avaliacoes, vendas, catalogo, espera, postagem }: { secao: SecaoPainel; loja: LojaView; produtos: ProdutoView[]; pedidos: PedidoView[]; cupons: CupomView[]; categorias: CategoriaView[]; avaliacoes: AvaliacaoPainelView[]; vendas: ResumoVendas; catalogo: DiagnosticoFeed; espera: Array<{ produto: string; pessoas: number }>; postagem: { etiquetas: number; custoCentavos: number; limiteCentavos: number } }) {
   const [gradeDe, setGradeDe] = useState<ProdutoView | null>(null);
   const [editando, setEditando] = useState<ProdutoView | null>(null);
   const router = useRouter();
-  const [aba, setAba] = useState<(typeof ABAS)[number]>("Visão geral");
+  // A seção vem da URL, não do estado: quem manda na tela é o endereço.
+  const aba = secao;
+  const irPara = (s: SecaoPainel) => router.push(ROTA_DA_SECAO[s]);
   const [erro, setErro] = useState<string | null>(null);
   const [ok, setOk] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
@@ -97,6 +125,8 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
   // costuma ser maior — frete mais caro do que precisava, e é na tela do frete
   // que mais se desiste da compra.
   const semEmbalagem = produtos.filter((p) => p.ativo && !p.temEmbalagem);
+  // Inventário lista só quem tem contagem: "∞" numa tabela de estoque é ruído.
+  const comEstoque = produtos.filter((p) => p.estoque != null && !p.opcoes.length);
 
   // Sai dos produtos que o painel já carregou: nenhuma consulta a mais.
   const acabando = produtos
@@ -150,33 +180,29 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
         <span className={`rounded-full px-3 py-1 text-xs font-semibold ${loja.status === "ATIVA" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>{STATUS[loja.status] ?? loja.status}</span>
         <span className="text-muted-foreground">Plano {loja.plano.replace("_", " ")}</span>
         {loja.emailRemetente && <span className="text-muted-foreground">e-mail: {loja.emailRemetente}</span>}
-        <a href={loja.url} target="_blank" rel="noopener" className="ml-auto underline">Abrir loja</a>
       </div>
-
-      <nav className="flex flex-wrap gap-1 border-b border-border text-sm">
-        {ABAS.map((a) => (
-          <button key={a} onClick={() => setAba(a)} className={`-mb-px border-b-2 px-3 py-2 ${aba === a ? "border-primary font-semibold" : "border-transparent text-muted-foreground"}`}>{a}</button>
-        ))}
-      </nav>
 
       {erro && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{erro}</p>}
       {ok && <p className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-700">{ok}</p>}
 
+      {editando && <EditarProduto produtoId={editando.id} aoFechar={() => setEditando(null)} aoSalvar={(m) => { setOk(m); setEditando(null); router.refresh(); }} />}
+      {gradeDe && <GradeVariantes produtoId={gradeDe.id} produtoNome={gradeDe.nome} aoFechar={() => setGradeDe(null)} aoSalvar={(m) => { setOk(m); setGradeDe(null); router.refresh(); }} />}
+
       {aba === "Visão geral" && (
         <div className="painel-overview">
-          <Vendas r={vendas} espera={espera} irPara={setAba} />
+          <Vendas r={vendas} espera={espera} irPara={irPara} />
           <section className="painel-hero">
             <div><span>Estúdio Lojas</span><h2>Sua marca está {loja.status === "ATIVA" ? "no ar" : "em preparação"}.</h2><p>Cuide primeiro do que o cliente percebe: identidade clara, catálogo visual e uma experiência consistente.</p></div>
             <a href={loja.url} target="_blank" rel="noopener" className="btn-primario">Ver loja publicada ↗</a>
           </section>
           <div className="painel-metricas">
-            <button onClick={() => setAba("Marca")}><small>Identidade</small><strong>{identidade.personalidade[0] || "A definir"}</strong><span>Refinar direção →</span></button>
-            <button onClick={() => setAba("Produtos")}><small>Catálogo</small><strong>{produtos.length}</strong><span>{produtos.length ? "Gerenciar produtos →" : "Adicionar primeiro produto →"}</span></button>
-            <button onClick={() => setAba("Pedidos")}><small>Operação</small><strong>{pedidos.length}</strong><span>Ver pedidos →</span></button>
+            <button onClick={() => irPara("Marca")}><small>Identidade</small><strong>{identidade.personalidade[0] || "A definir"}</strong><span>Refinar direção →</span></button>
+            <button onClick={() => irPara("Produtos")}><small>Catálogo</small><strong>{produtos.length}</strong><span>{produtos.length ? "Gerenciar produtos →" : "Adicionar primeiro produto →"}</span></button>
+            <button onClick={() => irPara("Pedidos")}><small>Operação</small><strong>{pedidos.length}</strong><span>Ver pedidos →</span></button>
           </div>
           <section className="painel-next">
             <div><small>Próximo passo recomendado</small><h3>{!loja.logoUrl ? "Envie o símbolo da sua marca" : !loja.bannerUrl ? "Crie a imagem principal da vitrine" : produtos.some((p) => !p.imagem) ? "Complete as fotos do catálogo" : "Sua presença visual está consistente"}</h3></div>
-            <button className="btn-secundario" onClick={() => setAba(!loja.logoUrl || !loja.bannerUrl ? "Marca" : "Produtos")}>Resolver agora</button>
+            <button className="btn-secundario" onClick={() => irPara(!loja.logoUrl || !loja.bannerUrl ? "Marca" : "Produtos")}>Resolver agora</button>
           </section>
         </div>
       )}
@@ -196,33 +222,6 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
               {semEmbalagem.length > 12 && <p className="text-xs text-muted-foreground">e mais {semEmbalagem.length - 12}.</p>}
             </Secao>
           )}
-          <Secao titulo="Estoque acabando" descricao="Quem está prestes a acabar aparece aqui, e a loja mostra “últimas unidades” para o comprador. O aviso some sozinho quando você repõe.">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Campo label="Avisar a partir de quantas unidades" ajuda="Zero desliga o aviso e o selo na loja.">
-                <input className={inputClasse} type="number" min={0} max={100} value={limiteEstoque} onChange={(e) => setLimiteEstoque(e.target.value)} />
-              </Campo>
-              <div className="flex items-end">
-                <button className="btn-secundario" disabled={ocupado} onClick={() => chamar("/api/painel/loja", "PATCH", { estoqueBaixoEm: Number(limiteEstoque) || 0 }, "Limite salvo.")}>Salvar limite</button>
-              </div>
-            </div>
-            {acabando.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nada acabando por enquanto.</p>
-            ) : (
-              <ul className="grid gap-1 text-sm">
-                {acabando.map((p) => (
-                  <li key={p.id} className="flex items-center justify-between gap-3 border-t border-border py-1.5">
-                    <span className="truncate">{p.nome}</span>
-                    <span className="flex items-center gap-3">
-                      <b className={p.estoque === 0 ? "text-red-700" : "text-amber-700"}>{p.estoque === 0 ? "esgotado" : `${p.estoque} un`}</b>
-                      <button className="text-xs underline" onClick={() => setEditando(p)}>repor</button>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Secao>
-          {editando && <EditarProduto produtoId={editando.id} aoFechar={() => setEditando(null)} aoSalvar={(m) => { setOk(m); setEditando(null); router.refresh(); }} />}
-          {gradeDe && <GradeVariantes produtoId={gradeDe.id} produtoNome={gradeDe.nome} aoFechar={() => setGradeDe(null)} aoSalvar={(m) => { setOk(m); setGradeDe(null); router.refresh(); }} />}
           <Secao titulo="Novo produto" descricao="Cadastro rápido. Foto: cole o link da imagem (ou use a planilha).">
             <div className="grid gap-4 sm:grid-cols-2">
               <Campo label="Nome"><input className={inputClasse} value={novo.nome} onChange={(e) => setNovo({ ...novo, nome: e.target.value })} /></Campo>
@@ -256,7 +255,6 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
             )}
           </Secao>
 
-          <Categorias categorias={categorias} chamar={chamar} ocupado={ocupado} />
 
           <Secao titulo={`Catálogo (${produtos.length})`} descricao="Clique no nome para editar (fotos, descrição, estoque, preço).">
             {produtos.length === 0 ? <p className="text-sm text-muted-foreground">Nenhum produto ainda.</p> : (
@@ -283,6 +281,57 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
         </>
       )}
 
+      {aba === "Categorias" && <Categorias categorias={categorias} chamar={chamar} ocupado={ocupado} />}
+
+      {aba === "Inventário" && (
+        <>
+        <Secao titulo="Estoque acabando" descricao="Quem está prestes a acabar aparece aqui, e a loja mostra “últimas unidades” para o comprador. O aviso some sozinho quando você repõe.">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Campo label="Avisar a partir de quantas unidades" ajuda="Zero desliga o aviso e o selo na loja.">
+              <input className={inputClasse} type="number" min={0} max={100} value={limiteEstoque} onChange={(e) => setLimiteEstoque(e.target.value)} />
+            </Campo>
+            <div className="flex items-end">
+              <button className="btn-secundario" disabled={ocupado} onClick={() => chamar("/api/painel/loja", "PATCH", { estoqueBaixoEm: Number(limiteEstoque) || 0 }, "Limite salvo.")}>Salvar limite</button>
+            </div>
+          </div>
+          {acabando.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nada acabando por enquanto.</p>
+          ) : (
+            <ul className="grid gap-1 text-sm">
+              {acabando.map((p) => (
+                <li key={p.id} className="flex items-center justify-between gap-3 border-t border-border py-1.5">
+                <span className="truncate">{p.nome}</span>
+                <span className="flex items-center gap-3">
+                  <b className={p.estoque === 0 ? "text-red-700" : "text-amber-700"}>{p.estoque === 0 ? "esgotado" : `${p.estoque} un`}</b>
+                  <button className="text-xs underline" onClick={() => setEditando(p)}>repor</button>
+                </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Secao>
+        <Secao titulo={`Estoque por produto (${comEstoque.length})`} descricao="Só aparece quem tem controle de estoque. Produto com variações é contado na grade, não aqui.">
+          {comEstoque.length === 0 ? <p className="text-sm text-muted-foreground">Nenhum produto com estoque controlado. Abra o produto e informe a quantidade para acompanhar por aqui.</p> : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="text-left text-xs uppercase text-muted-foreground"><tr><th className="py-2">Produto</th><th>SKU</th><th>Estoque</th><th></th></tr></thead>
+                <tbody>
+                  {comEstoque.map((p) => (
+                    <tr key={p.id} className={`border-t border-border ${p.ativo ? "" : "opacity-50"}`}>
+                      <td className="py-2 truncate">{p.nome}</td>
+                      <td>{p.sku ?? "-"}</td>
+                      <td className={p.estoque === 0 ? "text-red-700 font-semibold" : (p.estoque ?? 0) <= loja.estoqueBaixoEm ? "text-amber-700 font-semibold" : ""}>{p.estoque === 0 ? "esgotado" : `${p.estoque} un`}</td>
+                      <td className="text-right text-xs"><button className="underline" onClick={() => setEditando(p)}>ajustar</button></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Secao>
+        </>
+      )}
+
       {aba === "Cupons" && <Cupons cupons={cupons} chamar={chamar} ocupado={ocupado} />}
 
       {aba === "Avaliações" && <AvaliacoesPainel avaliacoes={avaliacoes} chamar={chamar} ocupado={ocupado} />}
@@ -291,7 +340,7 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
 
       {aba === "Anúncios" && <Anuncios pixels={loja.pixels} catalogo={catalogo} feedUrl={`${loja.url}/feed/merchant.xml`} chamar={chamar} ocupado={ocupado} />}
 
-      {aba === "IA (Claude)" && <McpPainel lojaPlano={loja.plano} lojaSlug={loja.slug} aoIrParaAssinatura={() => setAba("Assinatura")} />}
+      {aba === "IA (Claude)" && <McpPainel lojaPlano={loja.plano} lojaSlug={loja.slug} aoIrParaAssinatura={() => irPara("Assinatura")} />}
 
       {aba === "Pedidos" && (
         <>
@@ -571,10 +620,6 @@ export default function PainelLoja({ loja, produtos, pedidos, cupons, categorias
             <Campo label="CNPJ"><input className={inputClasse} value={empresa.cnpj} onChange={(e) => setEmpresa({ ...empresa, cnpj: e.target.value })} placeholder="00.000.000/0001-00" inputMode="numeric" /></Campo>
           </div>
           <div><button className="btn-primario" disabled={ocupado} onClick={() => chamar("/api/painel/loja", "PATCH", { razaoSocial: empresa.razaoSocial.trim() || null, cnpj: empresa.cnpj.trim() || null }, "Dados da empresa salvos.")}>Salvar</button></div>
-        </Secao>
-        <Secao titulo="Dados dos seus clientes" descricao="Os dados de quem compra na sua loja são seus, e a responsabilidade por eles também. Se um cliente pedir por escrito o que você guarda sobre ele, é neste arquivo que está (LGPD, art. 18).">
-          <p><a href="/api/painel/exportar?tipo=clientes" className="btn-secundario">Baixar clientes (CSV)</a></p>
-          <p className="text-xs text-muted-foreground">Inclui quem comprou sem criar conta. Abre direto no Excel, com quantos pedidos cada pessoa fez e quanto gastou.</p>
         </Secao>
         <Secao titulo="Senha do painel">
           <div className="grid gap-4 sm:grid-cols-2">

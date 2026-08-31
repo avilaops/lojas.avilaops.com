@@ -1,5 +1,5 @@
 import { prisma } from "./db";
-import { STATUS_VENDA } from "./relatorio";
+import { clientesDaLoja } from "./clientes";
 
 /**
  * Exportação em CSV.
@@ -58,47 +58,12 @@ export async function pedidosEmCsv(tenantId: string): Promise<string> {
 }
 
 export async function clientesEmCsv(tenantId: string): Promise<string> {
-  // Inclui quem comprou sem criar conta: o dado pessoal está no pedido, e a
-  // LGPD não distingue quem se cadastrou de quem só comprou.
-  const [compradores, pedidos] = await Promise.all([
-    prisma.comprador.findMany({ where: { tenantId }, include: { enderecos: true }, orderBy: { criadoEm: "asc" } }),
-    prisma.pedido.findMany({ where: { tenantId }, select: { clienteEmail: true, clienteNome: true, clienteTelefone: true, clienteDocumento: true, totalCentavos: true, status: true, criadoEm: true } }),
-  ]);
-
-  interface Resumo { nome: string; telefone: string; documento: string; pedidos: number; gasto: number; primeiro: Date; ultimo: Date; temConta: boolean; endereco: string }
-  const porEmail = new Map<string, Resumo>();
-
-  for (const p of pedidos) {
-    const chave = p.clienteEmail.toLowerCase();
-    const atual = porEmail.get(chave);
-    const conta = STATUS_VENDA.includes(p.status as (typeof STATUS_VENDA)[number]);
-    if (atual) {
-      atual.pedidos += 1;
-      if (conta) atual.gasto += p.totalCentavos;
-      if (p.criadoEm < atual.primeiro) atual.primeiro = p.criadoEm;
-      if (p.criadoEm > atual.ultimo) atual.ultimo = p.criadoEm;
-    } else {
-      porEmail.set(chave, { nome: p.clienteNome, telefone: p.clienteTelefone, documento: p.clienteDocumento, pedidos: 1, gasto: conta ? p.totalCentavos : 0, primeiro: p.criadoEm, ultimo: p.criadoEm, temConta: false, endereco: "" });
-    }
-  }
-
-  for (const c of compradores) {
-    const chave = c.email.toLowerCase();
-    const e = c.enderecos[0];
-    const endereco = e ? `${e.logradouro}, ${e.numero} - ${e.bairro}, ${e.cidade}/${e.uf} ${e.cep}` : "";
-    const atual = porEmail.get(chave);
-    if (atual) {
-      atual.temConta = true;
-      atual.endereco = endereco;
-      atual.nome = c.nome || atual.nome;
-    } else {
-      porEmail.set(chave, { nome: c.nome, telefone: c.telefone ?? "", documento: c.documento ?? "", pedidos: 0, gasto: 0, primeiro: c.criadoEm, ultimo: c.criadoEm, temConta: true, endereco });
-    }
-  }
-
+  // A apuração é a mesma que alimenta a tela de Clientes (src/lib/clientes.ts):
+  // arquivo e painel não podem discordar sobre quanto alguém gastou.
+  const clientes = await clientesDaLoja(tenantId);
   const linhas: unknown[][] = [["Nome", "E-mail", "Telefone", "Documento", "Tem conta", "Pedidos", "Total gasto", "Primeira compra", "Ultima compra", "Endereco"]];
-  for (const [email, r] of [...porEmail].sort((a, b) => b[1].gasto - a[1].gasto)) {
-    linhas.push([r.nome, email, r.telefone, r.documento, r.temConta ? "sim" : "nao", r.pedidos, reais(r.gasto), data(r.primeiro), data(r.ultimo), r.endereco]);
+  for (const c of clientes) {
+    linhas.push([c.nome, c.email, c.telefone, c.documento, c.temConta ? "sim" : "nao", c.pedidos, reais(c.gastoCentavos), data(c.primeiraCompra), data(c.ultimaCompra), c.endereco]);
   }
   return montarCsv(linhas);
 }
