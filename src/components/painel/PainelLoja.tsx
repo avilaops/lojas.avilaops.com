@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LAYOUTS, type TemaLoja } from "@/lib/tema";
 import { criarDirecaoVisual, PERSONALIDADES, SEGMENTOS, type IdentidadeLoja } from "@/lib/identidade";
@@ -13,7 +14,6 @@ import Categorias, { type CategoriaView } from "./Categorias";
 import AvaliacoesPainel, { type AvaliacaoPainelView } from "./AvaliacoesPainel";
 import Buscadores from "./Buscadores";
 import Vendas from "./Vendas";
-import FichaPedido from "./FichaPedido";
 import type { ResumoVendas } from "@/lib/relatorio";
 import type { DiagnosticoFeed } from "@/lib/catalogo";
 import Anuncios, { type PixelsView } from "./Anuncios";
@@ -119,7 +119,6 @@ export default function PainelLoja({ secao, loja, produtos, pedidos, cupons, cat
   const [tema, setTema] = useState({ corPrimaria: loja.tema.corPrimaria, modo: loja.tema.modo, fonte: loja.tema.fonte, raio: loja.tema.raio, layout: loja.tema.layout });
   const [segmento, setSegmento] = useState(loja.segmento);
   const [identidade, setIdentidade] = useState(loja.identidade);
-  const [ficha, setFicha] = useState<PedidoView | null>(null);
   const [limiteEstoque, setLimiteEstoque] = useState(String(loja.estoqueBaixoEm));
   // Produto sem embalagem cadastrada cota pela caixa padrão da loja, que
   // costuma ser maior — frete mais caro do que precisava, e é na tela do frete
@@ -344,7 +343,6 @@ export default function PainelLoja({ secao, loja, produtos, pedidos, cupons, cat
 
       {aba === "Pedidos" && (
         <>
-        {ficha && <FichaPedido pedido={ficha} loja={{ nome: loja.nome, razaoSocial: loja.razaoSocial, cnpj: loja.cnpj }} aoFechar={() => setFicha(null)} />}
         {postagem.etiquetas > 0 && (
           <Secao titulo="Postagem a acertar" descricao="A Avila Ops adianta o valor da etiqueta e recebe depois. Quem decide se o frete é grátis ou cobrado do comprador é você | o adiantamento é o mesmo.">
             <p className="text-sm">
@@ -371,7 +369,7 @@ export default function PainelLoja({ secao, loja, produtos, pedidos, cupons, cat
                 <tbody>
                   {pedidos.map((p) => (
                     <tr key={p.id} className="border-t border-border align-top">
-                      <td className="py-2">{p.numero}</td>
+                      <td className="py-2"><Link href={`/painel/pedidos/${p.id}`} className="font-medium hover:underline">{p.numero}</Link></td>
                       <td>{p.clienteNome}<br /><a className="text-xs underline" href={`https://wa.me/${p.clienteTelefone.replace(/\D/g, "")}`} target="_blank" rel="noopener">{p.clienteTelefone}</a></td>
                       <td className="text-xs">{p.itens.map((i) => `${i.quantidade}x ${i.nome}`).join(", ")}<br /><span className="text-muted-foreground">{p.freteNome}</span></td>
                       <td>{brl(p.totalCentavos)}</td>
@@ -379,7 +377,7 @@ export default function PainelLoja({ secao, loja, produtos, pedidos, cupons, cat
                       <td className="text-xs">{new Date(p.criadoEm).toLocaleDateString("pt-BR")}</td>
                       <td className="py-2">
                         {p.status === "EM_SEPARACAO" && <input className={`${inputClasse} mb-1 h-9`} placeholder="Código de rastreio" value={rastreio[p.id] ?? ""} onChange={(e) => setRastreio({ ...rastreio, [p.id]: e.target.value })} />}
-                        <button className="btn-secundario mb-1 h-9 w-full px-3 text-xs" onClick={() => setFicha(p)}>Ficha de envio</button>
+                        <Link href={`/painel/pedidos/${p.id}`} className="btn-secundario mb-1 flex h-9 w-full items-center justify-center px-3 text-xs">Abrir pedido</Link>
                         {p.entrega && p.status !== "AGUARDANDO_PAGAMENTO" && p.status !== "CANCELADO" && (
                           p.etiqueta?.pdf ? (
                             <a className="btn-secundario mb-1 flex h-9 w-full items-center justify-center px-3 text-xs" href={p.etiqueta.pdf} target="_blank" rel="noopener">Baixar etiqueta</a>
