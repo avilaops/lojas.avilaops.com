@@ -5,8 +5,23 @@ import { encaixe, lerCompatibilidade, type Moto } from "./motos";
 
 export type ProdutoComCategoria = Produto & { categoria: Categoria | null };
 
+/**
+ * Categorias que a vitrine anuncia.
+ *
+ * Só entram as que têm produto ativo. Categoria vazia no menu é beco sem saída:
+ * o comprador clica em "Pneus", cai num "nenhum produto encontrado" e conclui
+ * que a loja não trabalha com pneu, quando o lojista apenas criou a gaveta
+ * antes de guardar alguma coisa dentro. No sitemap é pior, porque aí quem
+ * recebe a página vazia é o Google.
+ *
+ * A categoria continua existindo: o painel lê o banco direto e mostra todas,
+ * inclusive as vazias, que é justamente onde o lojista precisa vê-las.
+ */
 export async function listarCategorias(tenantId: string) {
-  return prisma.categoria.findMany({ where: { tenantId }, orderBy: [{ ordem: "asc" }, { nome: "asc" }] });
+  return prisma.categoria.findMany({
+    where: { tenantId, produtos: { some: { ativo: true } } },
+    orderBy: [{ ordem: "asc" }, { nome: "asc" }],
+  });
 }
 
 export type OrdemCatalogo = "relevancia" | "menor-preco" | "maior-preco" | "recentes" | "nome";

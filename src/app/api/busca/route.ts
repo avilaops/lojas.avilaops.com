@@ -23,7 +23,8 @@ export async function GET(request: Request) {
       take: 6,
     }),
     prisma.categoria.findMany({
-      where: { tenantId: t.id, nome: { contains: termos[0], mode: "insensitive" } },
+      // Mesma regra da vitrine: não sugerir categoria sem produto ativo.
+      where: { tenantId: t.id, nome: { contains: termos[0], mode: "insensitive" }, produtos: { some: { ativo: true } } },
       select: { slug: true, nome: true },
       take: 3,
     }),
