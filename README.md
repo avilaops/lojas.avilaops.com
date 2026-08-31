@@ -93,6 +93,45 @@ curl -X POST http://127.0.0.1:3080/api/admin/tenants?provisionar=1 \
   -d '{"slug":"vedashow","nome":"Vedashow","dominioPrincipal":"vedashow.com.br","whatsapp":"5516999990000","cepOrigem":"14075240","tema":{"corPrimaria":"#c62828"}}'
 ```
 
+## Meios de pagamento: os três, por loja (31/08/2026)
+
+A regra da casa é sempre Mercado Pago, PayPal e Éfi. Os adaptadores dos três
+existiam em `packages/checkout/src/providers` desde o começo, mas **PayPal e Éfi
+não eram exportados**, não tinham onde guardar credencial e nem sequer
+compilavam (usavam `precoEmCentavos`, campo que não existe em `ItemCarrinho`).
+Na prática só o Mercado Pago cobrava.
+
+Agora o gateway é escolha da loja (`Tenant.gateway`: `mercadopago` | `paypal` |
+`efi`), com credencial própria por loja e segredo cifrado com `LOJAS_SECRET`. O
+resto do código conhece só a interface `PaymentProvider` e não muda quando a
+loja troca de gateway.
+
+| Gateway | Recebe | Webhook |
+|---|---|---|
+| Mercado Pago | Pix, cartão, boleto | `/api/webhooks/mercadopago?loja=<slug>`, assinatura HMAC |
+| PayPal | cartão e saldo PayPal | `/api/webhooks/paypal?loja=<slug>`, verificação oficial |
+| Éfi | Pix, cartão, boleto | `/api/webhooks/efi?loja=<slug>`, segredo na URL + confirmação na API |
+
+### O que foi corrigido na validação
+
+Os dois adaptadores novos **aceitavam qualquer notificação**: faziam
+`JSON.parse` e devolviam o id. Quem descobrisse a URL marcava pedido como pago
+sem dinheiro nenhum ter entrado.
+
+- **PayPal** passa a chamar o verificador oficial
+  (`/v1/notifications/verify-webhook-signature`) com os cinco cabeçalhos
+  `paypal-*` e o corpo cru. Exige `webhookId` do painel: sem ele o adaptador
+  falha alto em vez de aceitar. O `cert_url` recebido é conferido contra o
+  domínio do PayPal, senão a notificação forjada apontaria o certificado para
+  onde o atacante quisesse.
+- **Éfi** não assina o corpo (ela autentica por mTLS, que morre no proxy). Então
+  a notificação vale como aviso: o txid é **confirmado na API** antes de
+  qualquer coisa, e um segredo opcional na URL é conferido em tempo constante.
+
+A rota `/api/webhooks/[gateway]` ainda confere se o gateway do caminho é o
+gateway da loja: sem isso, quem soubesse a URL escolheria o adaptador mais
+frouxo para validar a própria mensagem.
+
 ## Deploy (Hetzner, Docker): em produção desde 24/08/2026
 
 O servidor (CX23, 4 GB, disco Docker sempre perto de 95%) **não builda**: o

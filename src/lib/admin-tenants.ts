@@ -6,7 +6,7 @@ import { esquecerTenantEmCache } from "./tenant";
 import type { ProdutoEntrada, TenantEntrada } from "./admin-schemas";
 
 function dadosDoTenant(entrada: Partial<TenantEntrada>): Prisma.TenantUpdateInput {
-  const { mercadoPago, tema, identidade, endereco, tabelaFrete, ...resto } = entrada;
+  const { mercadoPago, paypal, efi, tema, identidade, endereco, tabelaFrete, ...resto } = entrada;
   const dados: Prisma.TenantUpdateInput = { ...resto };
   if (tema) dados.tema = tema;
   if (identidade) dados.identidade = identidade;
@@ -16,6 +16,21 @@ function dadosDoTenant(entrada: Partial<TenantEntrada>): Prisma.TenantUpdateInpu
     dados.mpPublicKey = mercadoPago.publicKey;
     dados.mpAccessTokenEnc = cifrar(mercadoPago.accessToken);
     dados.mpWebhookSecretEnc = mercadoPago.webhookSecret ? cifrar(mercadoPago.webhookSecret) : null;
+  }
+  // Segredo entra cifrado; o que a tela do lojista mostra de volta (client id,
+  // webhook id, chave Pix) fica em claro de propósito.
+  if (paypal) {
+    dados.paypalClientId = paypal.clientId;
+    dados.paypalSecretEnc = cifrar(paypal.clientSecret);
+    dados.paypalWebhookId = paypal.webhookId ?? null;
+    dados.paypalSandbox = paypal.sandbox ?? false;
+  }
+  if (efi) {
+    dados.efiClientId = efi.clientId;
+    dados.efiSecretEnc = cifrar(efi.clientSecret);
+    dados.efiChavePix = efi.chavePix ?? null;
+    dados.efiWebhookTokenEnc = efi.webhookToken ? cifrar(efi.webhookToken) : null;
+    dados.efiSandbox = efi.sandbox ?? false;
   }
   return dados;
 }
