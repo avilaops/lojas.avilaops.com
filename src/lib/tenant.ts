@@ -106,8 +106,20 @@ export function urlDaLoja(t: Tenant): string {
   return `https://${host}`;
 }
 
+/**
+ * A loja pode fechar venda pela própria tela?
+ *
+ * Três condições, e a terceira faltava: **sem credencial de pagamento salva não
+ * existe checkout**. Antes, uma loja ATIVA no plano Loja mostrava "Finalizar
+ * compra", o comprador preenchia endereço e frete e só então recebia
+ * "pagamento ainda não configurado". Quem paga esse vexame é o lojista, na
+ * frente do cliente dele.
+ *
+ * Quando isto é falso a vitrine continua inteira e o pedido vai pelo WhatsApp,
+ * que é exatamente o que uma loja-demo deve fazer.
+ */
 export function lojaVende(t: Tenant): boolean {
-  return t.status === "ATIVA" && t.plano !== "SITE";
+  return t.status === "ATIVA" && t.plano !== "SITE" && Boolean(t.mpAccessTokenEnc);
 }
 
 /** O que o navegador pode saber da loja. Nunca inclui token cifrado. */
