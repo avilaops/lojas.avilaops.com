@@ -1,0 +1,4 @@
+# Script de shell vai para o servidor por scp, e o Windows trocaria LF por CRLF.
+# Com CRLF no shebang o Linux procura um interpretador chamado "bash" e o deploy
+# morre em `env: bash: No such file or directory` (aconteceu em 01/09/2026).
+*.sh text eol=lf

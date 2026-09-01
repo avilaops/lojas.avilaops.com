@@ -11,6 +11,7 @@ import { usePathname } from "next/navigation";
  */
 const SUB = [
   { slug: "marca", rotulo: "Marca" },
+  { slug: "dominio", rotulo: "Domínio" },
   { slug: "entrega", rotulo: "Entrega" },
   { slug: "recebimento", rotulo: "Recebimento" },
   { slug: "assinatura", rotulo: "Assinatura" },
