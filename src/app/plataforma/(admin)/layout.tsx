@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { prisma } from "@/lib/db";
 import { lojistaAtual } from "@/lib/sessao";
 import { urlDaLoja } from "@/lib/tenant";
 import NavPainel from "@/components/painel/NavPainel";
@@ -19,9 +20,15 @@ import "./painel.css";
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const loja = await lojistaAtual();
   if (!loja) redirect("/entrar");
+
+  // O pedido pago é o único que cobra ação agora: o dinheiro entrou e o
+  // produto ainda não saiu. Uma contagem por navegação é barata e evita que a
+  // venda durma esperando alguém abrir a aba certa por conta própria.
+  const aSeparar = await prisma.pedido.count({ where: { tenantId: loja.id, status: "PAGO" } });
+
   return (
     <div className="padm">
-      <NavPainel nome={loja.nome} urlLoja={urlDaLoja(loja)} />
+      <NavPainel nome={loja.nome} urlLoja={urlDaLoja(loja)} aSeparar={aSeparar} />
       <BuscaPainel />
       <main className="padm-conteudo pl-workspace">{children}</main>
     </div>

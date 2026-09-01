@@ -343,3 +343,21 @@
 .pbusca-item-ativo { background: #eef2ff; }
 
 .pbusca-vazio { padding: 18px 12px; color: #667085; font-size: 14px; }
+
+/* Selo de pedido esperando separação. Vermelho de propósito: é a única coisa
+   do menu que significa dinheiro parado. */
+.pnav-selo {
+  display: inline-grid;
+  place-items: center;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 5px;
+  border-radius: 10px;
+  background: #dc2626;
+  color: white;
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1;
+}
+
+.pnav-selo-barra { margin-left: -2px; text-decoration: none; }

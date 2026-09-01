@@ -70,7 +70,7 @@ function ativo(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function Lista({ pathname, aoNavegar }: { pathname: string; aoNavegar?: () => void }) {
+function Lista({ pathname, aoNavegar, aSeparar }: { pathname: string; aoNavegar?: () => void; aSeparar: number }) {
   return (
     <nav className="pnav-lista" aria-label="Seções do painel">
       {SECOES.map((s) => {
@@ -81,6 +81,11 @@ function Lista({ pathname, aoNavegar }: { pathname: string; aoNavegar?: () => vo
             <Link href={s.href} onClick={aoNavegar} className={`pnav-item${aberto ? " pnav-item-ativo" : ""}`} aria-current={aberto ? "page" : undefined}>
               <Icone size={16} aria-hidden="true" />
               <span>{s.rotulo}</span>
+              {/* Só em Pedidos, e só quando existe: selo que aparece sempre vira
+                  enfeite e para de ser lido. */}
+              {s.href === "/painel/pedidos" && aSeparar > 0 && (
+                <b className="pnav-selo" title={`${aSeparar} pedido(s) pago(s) esperando separação`}>{aSeparar}</b>
+              )}
             </Link>
             {/* Filhos só quando a seção está aberta: menu que não cresce sozinho. */}
             {aberto && s.filhos && (
@@ -119,7 +124,7 @@ function Rodape({ pathname, aoNavegar, nome, urlLoja }: { pathname: string; aoNa
   );
 }
 
-export default function NavPainel({ nome, urlLoja }: { nome: string; urlLoja: string }) {
+export default function NavPainel({ nome, urlLoja, aSeparar = 0 }: { nome: string; urlLoja: string; aSeparar?: number }) {
   const pathname = usePathname();
   const [aberto, setAberto] = useState(false);
 
@@ -149,13 +154,16 @@ export default function NavPainel({ nome, urlLoja }: { nome: string; urlLoja: st
           <span>Buscar</span>
           <kbd>⌘K</kbd>
         </button>
-        <Lista pathname={pathname} />
+        <Lista pathname={pathname} aSeparar={aSeparar} />
         <Rodape pathname={pathname} nome={nome} urlLoja={urlLoja} />
       </aside>
 
       <header className="pnav-barra">
         <button onClick={() => setAberto(true)} aria-label="Abrir menu" className="pnav-botao"><Menu size={20} /></button>
         <strong>{secaoAtual}</strong>
+        {aSeparar > 0 && pathname !== "/painel/pedidos" && (
+          <Link href="/painel/pedidos" className="pnav-selo pnav-selo-barra" title={`${aSeparar} pedido(s) esperando separação`}>{aSeparar}</Link>
+        )}
         <button onClick={abrirBusca} aria-label="Buscar" className="pnav-botao"><Search size={18} /></button>
         <a href={urlLoja} target="_blank" rel="noopener" aria-label="Abrir a loja" className="pnav-botao"><ExternalLink size={18} /></a>
       </header>
@@ -169,7 +177,7 @@ export default function NavPainel({ nome, urlLoja }: { nome: string; urlLoja: st
               <span className="pnav-marca-nome">{nome}</span>
               <button onClick={() => setAberto(false)} aria-label="Fechar menu" className="pnav-botao pnav-fechar"><X size={18} /></button>
             </div>
-            <Lista pathname={pathname} aoNavegar={() => setAberto(false)} />
+            <Lista pathname={pathname} aoNavegar={() => setAberto(false)} aSeparar={aSeparar} />
             <Rodape pathname={pathname} nome={nome} urlLoja={urlLoja} aoNavegar={() => setAberto(false)} />
           </div>
         </div>
