@@ -23,6 +23,7 @@ export default async function PlataformaLayout({ children }: { children: React.R
             <Link href="/#recursos">Como funciona</Link>
             <Link href="/#modelos">Layouts</Link>
             <Link href="/#planos">Planos</Link>
+            <Link href="/blog">Blog</Link>
             <Link href="/ajuda">Ajuda</Link>
           </nav>
           <div className="pl-header-acoes">
@@ -41,7 +42,7 @@ export default async function PlataformaLayout({ children }: { children: React.R
           <details className="pl-menu-mobile">
             <summary aria-label="Abrir menu"><Menu size={20} /></summary>
             <nav>
-              <Link href="/#recursos">Como funciona</Link><Link href="/#modelos">Layouts</Link><Link href="/#planos">Planos</Link><Link href="/ajuda">Ajuda</Link>
+              <Link href="/#recursos">Como funciona</Link><Link href="/#modelos">Layouts</Link><Link href="/#planos">Planos</Link><Link href="/blog">Blog</Link><Link href="/ajuda">Ajuda</Link>
               <Link href="/entrar">Entrar</Link><Link href="/criar">Criar minha loja</Link>
             </nav>
           </details>
@@ -51,7 +52,7 @@ export default async function PlataformaLayout({ children }: { children: React.R
       <footer className="pl-footer">
         <div className="pl-container pl-footer-grid">
           <div><MarcaLojas /><p>Loja virtual pronta em um dia. Pix na hora, sem comissão.</p></div>
-          <div><strong>Produto</strong><Link href="/#recursos">Como funciona</Link><Link href="/#modelos">Layouts</Link><Link href="/#planos">Planos</Link><Link href="/ajuda">Ajuda</Link></div>
+          <div><strong>Produto</strong><Link href="/#recursos">Como funciona</Link><Link href="/#modelos">Layouts</Link><Link href="/#planos">Planos</Link><Link href="/blog">Blog</Link><Link href="/ajuda">Ajuda</Link></div>
           <div><strong>Acesso</strong><Link href="/entrar">Painel do lojista</Link><Link href="/criar">Criar loja</Link><a href="https://avilaops.com">Avila Ops</a></div>
           <div><strong>Informações</strong><a href="/robots.txt">Robots</a><a href="/sitemap.xml">Sitemap</a><a href="/llms-full.txt">LLMs</a></div>
         </div>

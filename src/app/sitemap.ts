@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { headers } from "next/headers";
 import { tenantAtual, urlDaLoja } from "@/lib/tenant";
 import { listarCategorias, listarProdutos } from "@/lib/catalogo";
+import { postsPublicados } from "@/lib/blog";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +16,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       { url: base, changeFrequency: "weekly", priority: 1 },
       { url: `${base}/criar`, changeFrequency: "monthly", priority: 0.9 },
       { url: `${base}/ajuda`, changeFrequency: "monthly", priority: 0.6 },
+      { url: `${base}/blog`, changeFrequency: "daily", priority: 0.8 },
+      // Só o que já está publicado: post com data futura ainda não existe.
+      ...postsPublicados().map((p) => ({
+        url: `${base}/blog/${p.slug}`,
+        lastModified: new Date(`${p.publicadoEm}T12:00:00`),
+        changeFrequency: "monthly" as const,
+        priority: 0.7,
+      })),
     ];
   }
   const t = await tenantAtual();

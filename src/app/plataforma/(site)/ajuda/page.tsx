@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { ArrowRight, BookOpen, Check } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Ajuda: como cadastrar a loja, categorias, produtos e pedidos | Lojas Avila Ops",
+  title: "Ajuda: como cadastrar a loja, categorias, produtos e pedidos",
   description:
     "Passo a passo da plataforma Lojas Avila Ops: criar a loja, marca, categorias, produtos (um a um ou por planilha), publicar, pedidos e erros comuns. Na linguagem de quem vende, sem termo técnico.",
   alternates: { canonical: "https://lojas.avilaops.com/ajuda" },

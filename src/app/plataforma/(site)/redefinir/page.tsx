@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import RecuperarForm from "@/components/painel/RecuperarForm";
 
-export const metadata: Metadata = { title: "Nova senha | Lojas by Avila Ops", robots: { index: false } };
+export const metadata: Metadata = { title: "Nova senha", robots: { index: false } };
 
 export default async function RedefinirPage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
   const { token } = await searchParams;

@@ -3,7 +3,7 @@ import PainelLoja from "@/components/painel/PainelLoja";
 import CabecalhoSecao from "@/components/painel/CabecalhoSecao";
 import { dadosDoPainel } from "@/lib/painel-dados";
 
-export const metadata: Metadata = { title: "Painel | Lojas by Avila Ops", robots: { index: false } };
+export const metadata: Metadata = { title: "Painel", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
 export default async function Pagina({ searchParams }: { searchParams: Promise<{ nova?: string }> }) {

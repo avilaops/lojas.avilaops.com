@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import RecuperarForm from "@/components/painel/RecuperarForm";
 
-export const metadata: Metadata = { title: "Recuperar senha | Lojas by Avila Ops", robots: { index: false } };
+export const metadata: Metadata = { title: "Recuperar senha", robots: { index: false } };
 
 export default function RecuperarPage() {
   return (
