@@ -655,41 +655,81 @@
 
 /* ── blog da plataforma ────────────────────────────────────────────────── */
 
-.pl-blog, .pl-post { padding: 118px 0 96px; color: var(--pl-text); }
+/*
+ * O blog nao usa o azul da plataforma.
+ *
+ * Azul e a cor de quem vende tecnologia, e o leitor daqui nao quer tecnologia:
+ * quer vender mais. Cada texto recebe uma cor propria, rotativa, para a lista
+ * parecer uma banca de revista e nao um painel de sistema. E o mesmo raciocinio
+ * que tirou o azul da pagina inicial em 30/08.
+ */
+.pl-blog, .pl-post {
+  --b1: #f26522;  /* laranja  */
+  --b2: #e01e5a;  /* magenta  */
+  --b3: #16a34a;  /* verde    */
+  --b4: #7c3aed;  /* roxo     */
+  --b5: #f59e0b;  /* ambar    */
+  --b6: #0ea5e9;  /* ciano    */
+  padding: 118px 0 96px;
+  color: var(--pl-text);
+}
+
+/* Cor por posicao: o primeiro post e laranja, o segundo magenta, e assim por
+   diante. Seis cores bastam, porque a lista mostra poucos por vez. */
+.pl-blog-item:nth-child(6n + 1), .pl-blog-destaque { --cor: var(--b1); }
+.pl-blog-item:nth-child(6n + 2) { --cor: var(--b2); }
+.pl-blog-item:nth-child(6n + 3) { --cor: var(--b3); }
+.pl-blog-item:nth-child(6n + 4) { --cor: var(--b4); }
+.pl-blog-item:nth-child(6n + 5) { --cor: var(--b5); }
+.pl-blog-item:nth-child(6n)     { --cor: var(--b6); }
 
 .pl-blog-topo { max-width: 720px; }
-.pl-blog-topo > span { color: var(--pl-blue-light); font-size: 11px; font-weight: 750; letter-spacing: .18em; text-transform: uppercase; }
-.pl-blog-topo h1 { margin-top: 14px; font-size: clamp(2.1rem, 4.5vw, 3.4rem); line-height: 1.03; letter-spacing: -.05em; }
-.pl-blog-topo p { margin-top: 18px; color: #aeb7c8; font-size: 15px; line-height: 1.7; }
+.pl-blog-topo > span {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--b1), var(--b2));
+  color: white;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+.pl-blog-topo h1 { margin-top: 20px; font-size: clamp(2.1rem, 4.5vw, 3.4rem); line-height: 1.03; letter-spacing: -.05em; }
+.pl-blog-topo h1 em { font-style: normal; background: linear-gradient(90deg, var(--b5), var(--b1)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.pl-blog-topo p { margin-top: 18px; color: #c8cfdd; font-size: 15px; line-height: 1.7; }
 
 .pl-blog-destaque {
   display: block;
   margin-top: 44px;
-  padding: 30px;
+  padding: 32px;
   border: 1px solid var(--pl-line);
+  border-left: 5px solid var(--cor);
   border-radius: 18px;
-  background: rgba(255,255,255,.03);
-  transition: border-color .2s, background .2s;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--cor) 18%, transparent), rgba(255,255,255,.02));
+  transition: transform .2s, border-color .2s;
 }
-.pl-blog-destaque:hover { border-color: rgba(255,255,255,.24); background: rgba(255,255,255,.05); }
-.pl-blog-destaque time, .pl-blog-item time { color: var(--pl-blue-light); font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.pl-blog-destaque:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--cor) 55%, transparent); }
+.pl-blog-destaque time, .pl-blog-item time { color: var(--cor); font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
 .pl-blog-destaque h2 { margin-top: 10px; font-size: clamp(1.4rem, 2.6vw, 2rem); line-height: 1.15; letter-spacing: -.035em; }
-.pl-blog-destaque p { margin-top: 12px; max-width: 640px; color: #aeb7c8; line-height: 1.65; }
-.pl-blog-destaque > span { display: inline-flex; align-items: center; gap: 7px; margin-top: 16px; font-size: 13px; font-weight: 650; }
+.pl-blog-destaque p { margin-top: 12px; max-width: 640px; color: #cbd3e2; line-height: 1.65; }
+.pl-blog-destaque > span { display: inline-flex; align-items: center; gap: 7px; margin-top: 18px; color: var(--cor); font-size: 13px; font-weight: 750; }
 
 .pl-blog-grade { display: grid; gap: 16px; margin-top: 16px; }
 @media (min-width: 760px) { .pl-blog-grade { grid-template-columns: repeat(2, 1fr); } }
 
 .pl-blog-item {
   display: block;
-  padding: 22px;
+  padding: 24px;
   border: 1px solid var(--pl-line);
+  border-top: 4px solid var(--cor);
   border-radius: 15px;
-  transition: border-color .2s, background .2s;
+  background: rgba(255,255,255,.02);
+  transition: transform .2s, background .2s;
 }
-.pl-blog-item:hover { border-color: rgba(255,255,255,.2); background: rgba(255,255,255,.03); }
+.pl-blog-item:hover { transform: translateY(-2px); background: color-mix(in srgb, var(--cor) 10%, transparent); }
 .pl-blog-item h3 { margin-top: 9px; font-size: 1.06rem; line-height: 1.25; letter-spacing: -.02em; }
-.pl-blog-item p { margin-top: 9px; color: #98a2b8; font-size: 13.5px; line-height: 1.6; }
+.pl-blog-item p { margin-top: 9px; color: #a8b2c4; font-size: 13.5px; line-height: 1.6; }
 
 .pl-blog-vazio { margin-top: 40px; color: #98a2b8; }
 
@@ -700,42 +740,55 @@
   justify-content: space-between;
   gap: 22px;
   margin-top: 56px;
-  padding: 28px 30px;
-  border: 1px solid var(--pl-line);
+  padding: 30px;
   border-radius: 18px;
-  background: linear-gradient(135deg, rgba(47,107,255,.16), rgba(255,255,255,.03));
+  background: linear-gradient(120deg, var(--b1), var(--b2) 55%, var(--b4));
+  color: white;
 }
-.pl-blog-cta h2 { font-size: 1.35rem; letter-spacing: -.03em; }
-.pl-blog-cta p { margin-top: 7px; max-width: 460px; color: #c2cadb; font-size: 14px; line-height: 1.6; }
+.pl-blog-cta h2 { font-size: 1.4rem; letter-spacing: -.03em; }
+.pl-blog-cta p { margin-top: 7px; max-width: 460px; color: rgba(255,255,255,.9); font-size: 14px; line-height: 1.6; }
+.pl-blog-cta .pl-header-cta { border-color: rgba(255,255,255,.5); background: white; color: #17140f; font-weight: 700; }
+.pl-blog-cta .pl-header-cta:hover { background: rgba(255,255,255,.9); color: #17140f; }
 
 /* ── um texto ──────────────────────────────────────────────────────────── */
 
+.pl-post { --cor: var(--b1); }
 .pl-post article { max-width: 690px; }
 .pl-post-voltar { display: inline-flex; align-items: center; gap: 6px; color: #98a2b8; font-size: 13px; }
-.pl-post-voltar:hover { color: white; }
+.pl-post-voltar:hover { color: var(--cor); }
 .pl-post header { margin: 22px 0 34px; }
-.pl-post header time { color: var(--pl-blue-light); font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.pl-post header time { color: var(--cor); font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
 .pl-post h1 { margin-top: 12px; font-size: clamp(2rem, 4vw, 3rem); line-height: 1.05; letter-spacing: -.05em; }
 
 .pl-post-resposta {
-  margin-top: 22px;
-  padding-left: 18px;
-  border-left: 3px solid rgba(47,107,255,.55);
-  color: #dbe2f0;
+  margin-top: 24px;
+  padding: 18px 20px;
+  border-left: 4px solid var(--cor);
+  border-radius: 0 12px 12px 0;
+  background: color-mix(in srgb, var(--cor) 12%, transparent);
+  color: #eef2f9;
   font-size: 17px;
   line-height: 1.65;
 }
 
 .pl-post section { margin-top: 34px; }
 .pl-post section h2 { font-size: 1.28rem; letter-spacing: -.03em; }
-.pl-post section p { margin-top: 12px; color: #b8c1d2; font-size: 15.5px; line-height: 1.75; }
+.pl-post section p { margin-top: 12px; color: #bcc5d6; font-size: 15.5px; line-height: 1.75; }
 
 .pl-post-lista { margin-top: 16px; display: grid; gap: 9px; }
-.pl-post-lista li { display: flex; gap: 10px; align-items: flex-start; color: #c9d1e0; font-size: 14.5px; line-height: 1.5; }
-.pl-post-lista svg { flex: none; margin-top: 3px; color: var(--pl-blue-light); }
+.pl-post-lista li { display: flex; gap: 10px; align-items: flex-start; color: #cdd5e3; font-size: 14.5px; line-height: 1.5; }
+.pl-post-lista svg { flex: none; margin-top: 3px; color: var(--cor); }
 
 .pl-post-relacionados { margin-top: 40px; padding-top: 22px; border-top: 1px solid var(--pl-line); }
-.pl-post-relacionados strong { display: block; margin-bottom: 12px; font-size: 11px; font-weight: 750; letter-spacing: .16em; text-transform: uppercase; color: var(--pl-blue-light); }
+.pl-post-relacionados strong { display: block; margin-bottom: 12px; color: var(--cor); font-size: 11px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
 .pl-post-relacionados div { display: grid; gap: 8px; }
 .pl-post-relacionados a { color: #c2cadb; font-size: 14.5px; line-height: 1.45; }
-.pl-post-relacionados a:hover { color: white; text-decoration: underline; }
+.pl-post-relacionados a:hover { color: var(--cor); text-decoration: underline; }
+
+/* A página do texto herda a cor do cartão de onde o leitor clicou. */
+.pl-post[data-cor="0"] { --cor: var(--b1); }
+.pl-post[data-cor="1"] { --cor: var(--b2); }
+.pl-post[data-cor="2"] { --cor: var(--b3); }
+.pl-post[data-cor="3"] { --cor: var(--b4); }
+.pl-post[data-cor="4"] { --cor: var(--b5); }
+.pl-post[data-cor="5"] { --cor: var(--b6); }

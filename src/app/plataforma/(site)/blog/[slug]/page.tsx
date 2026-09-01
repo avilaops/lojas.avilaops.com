@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
-import { acharPost, postsPublicados, tituloDoRelacionado } from "@/lib/blog";
+import { acharPost, corDoPost, postsPublicados, tituloDoRelacionado } from "@/lib/blog";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +30,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
   const outros = postsPublicados().filter((p) => p.slug !== post.slug).slice(0, 3);
 
   return (
-    <div className="pl-container pl-post">
+    <div className="pl-container pl-post" data-cor={corDoPost(post.slug)}>
       <Link href="/blog" className="pl-post-voltar"><ArrowLeft size={15} /> Blog</Link>
 
       <article>

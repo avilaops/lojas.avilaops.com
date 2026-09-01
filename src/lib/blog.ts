@@ -313,3 +313,11 @@ export function tituloDoRelacionado(alvo: string): string | null {
   if (alvo.startsWith("/")) return null;
   return POSTS.find((p) => p.slug === alvo)?.title ?? null;
 }
+
+/** Seis cores, rotativas pela ordem de publicação. A página do texto usa a
+ *  mesma do cartão de onde o leitor veio, senão a troca de tela parece um
+ *  site diferente. */
+export function corDoPost(slug: string): number {
+  const i = POSTS.findIndex((p) => p.slug === slug);
+  return (i < 0 ? 0 : i) % 6;
+}
