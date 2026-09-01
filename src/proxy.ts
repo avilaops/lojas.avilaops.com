@@ -17,7 +17,10 @@ export function proxy(request: NextRequest) {
   const host = (request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? "").toLowerCase().replace(/:\d+$/, "");
   const { pathname } = request.nextUrl;
 
-  if (host === BASE && !pathname.startsWith("/api/") && !pathname.startsWith("/plataforma")) {
+  // /v1 é o contrato do Padrão Oficial e mora na raiz de src/app, como /api:
+  // sem esta exceção o caminho viraria /plataforma/v1 e o coletor receberia 404
+  // de uma app que está de pé.
+  if (host === BASE && !pathname.startsWith("/api/") && !pathname.startsWith("/v1/") && !pathname.startsWith("/plataforma")) {
     const url = request.nextUrl.clone();
     url.pathname = `/plataforma${pathname === "/" ? "" : pathname}`;
     // Cabeçalho de REQUISIÇÃO: é o que o layout raiz lê com headers().

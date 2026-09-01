@@ -1,0 +1,129 @@
+{
+  "gapp": "1",
+  "_nota": "Manifesto do Padrao Oficial v1. E JSON, e nao YAML, porque assim a aplicacao importa o proprio manifesto sem parser nem dependencia nova: /v1/manifest devolve exatamente este arquivo, e o checksum nao pode divergir do que foi registrado.",
+
+  "app": {
+    "id": "lojas",
+    "name": "Lojas Avila Ops",
+    "owner": "nicolas@avilaops.com",
+    "env": "prod",
+    "tier": "critical",
+    "lifecycle": "active",
+    "repo": "https://github.com/avilaops/lojas.avilaops.com",
+    "branch": "main",
+    "stack": "node",
+    "version": "0.1.0"
+  },
+
+  "endpoint": {
+    "public": true,
+    "base_url": "https://lojas.avilaops.com",
+    "domains": ["lojas.avilaops.com", "*.lojas.avilaops.com"],
+    "_internal_url": "sem valor de proposito: o container publica so em 127.0.0.1:3080 e o orchestrator nao alcanca 10.10.0.2 pela WireGuard hoje. CT-06 exige internal_url apenas quando public=false."
+  },
+
+  "runtime": {
+    "kind": "docker-compose",
+    "port": 3080,
+    "services": [
+      { "name": "lojas-avilaops", "role": "web", "image": "lojas-base:latest", "memory_mb": 512 }
+    ]
+  },
+
+  "db": {
+    "mode": "native",
+    "engine": "postgres",
+    "version": "18.6",
+    "name": "lojas",
+    "role": "lojas",
+    "migrations": {
+      "tool": "prisma",
+      "dir": "prisma/migrations",
+      "table": "_prisma_migrations"
+    },
+    "backup": {
+      "schedule": "30 3 * * *",
+      "retention": "7d"
+    }
+  },
+
+  "auth": {
+    "mode": "local",
+    "password_hash": "scrypt",
+    "mfa_admin": false,
+    "session_ttl_h": 720,
+    "_password_hash": "AUTH-P0-2 aceita apenas argon2id e bcrypt, e esta app usa scrypt. Declarado como e, nao como a norma gostaria: scrypt tem custo de memoria, e da mesma familia do argon2 e e superior ao bcrypt justamente onde o bcrypt e fraco. A emenda pedida esta em docs/lojas-no-padrao-v1.md.",
+    "_mfa_admin": "AUTH-P1-2 (P1) exige MFA para tier=critical. Nao existe ainda; e backlog assumido, nao esquecimento."
+  },
+
+  "data": {
+    "pii": true,
+    "dpo_email": "nicolas@avilaops.com",
+    "privacy_policy_url": "https://lojas.avilaops.com/ajuda",
+    "controller": {
+      "razao_social": "Avila Ops",
+      "cnpj": null
+    },
+    "categories": [
+      {
+        "name": "lojista",
+        "tables": ["public.Tenant"],
+        "purpose": "Operar a loja contratada: acesso ao painel, cobranca da mensalidade e suporte.",
+        "legal_basis": "execucao_de_contrato",
+        "retention_days": 1825,
+        "action": "anonymize"
+      },
+      {
+        "name": "comprador",
+        "tables": ["public.Comprador", "public.Pedido"],
+        "purpose": "Processar o pedido feito na loja do lojista: entrega, pagamento e pos-venda.",
+        "legal_basis": "execucao_de_contrato",
+        "retention_days": 1825,
+        "action": "anonymize"
+      },
+      {
+        "name": "avaliacao",
+        "tables": ["public.Avaliacao"],
+        "purpose": "Publicar avaliacao de produto escrita pelo comprador.",
+        "legal_basis": "consentimento",
+        "retention_days": 1095,
+        "action": "delete"
+      }
+    ],
+    "subprocessors": [
+      { "nome": "Mercado Pago", "papel": "meio de pagamento", "dados": "nome, documento, e-mail e valor do pedido" },
+      { "nome": "CepCerto", "papel": "frete e etiqueta", "dados": "CEP e endereco de entrega" },
+      { "nome": "Cloudflare", "papel": "DNS e borda", "dados": "endereco IP do visitante" }
+    ],
+    "_retencao": "1825 dias = cinco anos, o prazo do Codigo Civil para cobranca de divida liquida. Avaliacao sai antes por ser consentimento, que o titular revoga quando quiser."
+  },
+
+  "services": [
+    { "kind": "smtp", "provider": "mail.avilaops.com", "credential_ref": "lojas-smtp-prod" },
+    { "kind": "payments", "provider": "mercadopago", "credential_ref": "lojas-payments-prod" },
+    { "kind": "api", "provider": "cepcerto", "credential_ref": "lojas-api-prod" }
+  ],
+
+  "secrets": {
+    "backend": "env-file-0600",
+    "inventory": [
+      { "kind": "db", "name": "DATABASE_URL", "issued_by": "orchestrator", "rotation_days": 180 },
+      { "kind": "harness", "name": "GAPP_HARNESS_TOKEN", "issued_by": "orchestrator", "rotation_days": 90 },
+      { "kind": "jwt", "name": "LOJAS_SECRET", "issued_by": "app", "rotation_days": 180 },
+      { "kind": "smtp", "name": "MAIL_API_TOKEN", "issued_by": "mail.avilaops.com", "rotation_days": 180 },
+      { "kind": "payments", "name": "MP_ACCESS_TOKEN", "issued_by": "mercadopago", "rotation_days": 180 },
+      { "kind": "api", "name": "CEPCERTO_CONSULTA_KEY", "issued_by": "cepcerto", "rotation_days": 180 }
+    ],
+    "rotated_at": null
+  },
+
+  "harness": {
+    "token_env": "GAPP_HARNESS_TOKEN",
+    "stats_cache_s": 60
+  },
+
+  "stats": {
+    "mode": "native",
+    "queries": {}
+  }
+}

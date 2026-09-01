@@ -49,6 +49,12 @@ rm -rf app.falhou
 [ -d app ] && { rm -rf app.anterior; mv app app.anterior; }
 mv app.novo app
 mkdir -p app/uploads
+
+# O container roda como uid 1000 (CT-07 do Padrao Oficial v1), e cada deploy
+# troca a pasta app inteira: sem este chown o processo nao-root perde a escrita
+# no cache de imagem do Next e as fotos de produto param de ser otimizadas.
+mkdir -p app/lojas.avilaops.com/.next/cache
+chown -R 1000:1000 app/lojas.avilaops.com/.next/cache uploads 2>/dev/null || true
 docker compose up -d --force-recreate
 
 # O removedor de fundo (odoo-avilaops-recorte-1, FUNDO_URL) vive na rede do
