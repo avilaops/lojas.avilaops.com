@@ -32,7 +32,14 @@ sem foto, porque vira reclamação e devolução.
 
 **O que dá para aproveitar do que já existe: zero.** As 219 pastas do imdepa
 já estão em `product_image`, e delas 109 são de produto vendável (as outras
-110 são de item sem preço ou sem estoque). Os 117 no ar já são esse número.
+110 são de item sem preço ou sem estoque).
+
+> **Correção de 02/09/2026.** Eu disse duas vezes que "117 dos 2.114 vendáveis
+> têm foto na loja". Estava errado: a loja tinha **zero**. Os 117 existiam no
+> banco da Vedashow (`product_image`), mas o `exportar_loja.py` nunca preencheu
+> o campo `imagens`, então nada chegou à vitrine. O número só apareceu ao
+> conferir a cobertura depois de subir as ilustrações. Vincular esses 109 ao
+> catálogo continua pendente, e agora é a tarefa mais barata da fila.
 
 ## Por que os catálogos raspados não casam
 
