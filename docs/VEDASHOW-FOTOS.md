@@ -97,6 +97,63 @@ fotógrafo do catálogo.
 - a vitrine já trata ausência com "Imagem em preparação", então nada quebra
   enquanto a cobertura sobe.
 
+## Política de imagem da plataforma (02/09/2026)
+
+O erro do `gra/3792` — imagem plausível, produto errado — virou regra de
+código, porque ele vai reaparecer na PartsAgrícola e em todo catálogo técnico.
+Catálogo técnico tem incentivo forte para reaproveitar foto: todo rolamento
+6200 se parece. Reaproveitar **pode** ser honesto; fingir que a foto é do SKU
+exato não é.
+
+`Produto.imagemOrigem` declara o que a imagem é:
+
+| Valor | O que é | A vitrine |
+|---|---|---|
+| `propria` | foto do SKU exato (própria, ou do fabricante com código conferido) | nada a dizer |
+| `representativa` | foto de outro item da mesma família visual | avisa: "Imagem representativa da série. Confira as medidas e especificações deste produto." |
+| `ilustracao` | desenho gerado das medidas reais do cadastro | avisa que é ilustração, não fotografia |
+
+Duas travas, na entrada **e** no banco:
+
+- `representativa` exige `imagemFamilia` (a série de que herdou). Sem isso não
+  há como achar quem usa a foto no dia em que ela for trocada, e a imagem de
+  uma peça errada se espalha pelo catálogo sem rastro.
+- Declarar origem sem imagem nenhuma é recusado: o aviso apareceria na vitrine
+  sem foto para justificar.
+
+A trava do `imagemFamilia` é `CHECK` no Postgres, não só validação de schema —
+provado em produção. Nenhum caminho de escrita (importação, painel, SQL na
+mão) consegue gravar imagem herdada sem dizer de onde ela veio.
+
+**O que continua proibido**: associar imagem por coincidência de id ou de SKU
+numérico. Imagem externa só entra com fabricante **e** part number conferidos.
+
+## Como isso muda a fila
+
+O levantamento acima trata "1.997 produtos sem foto" como um problema só. São
+quatro, e separá-los corta o esforço sem custar confiança:
+
+1. **Precisa de fotografia** — correia e mangueira (71 itens): formas
+   diferentes entre si, sem família visual que ajude. É a sessão de meio dia.
+2. **Pode usar foto de família** — rolamento (470): mesma construção, muda a
+   dimensão. Inventariar as famílias (`6200`, `6300`, `32000`, `UC`, `UCP`)
+   e fotografar uma por família **e por construção**: mudou vedação, flange,
+   gaiola ou acabamento, é outra família, não a mesma com outro número.
+3. **Funciona melhor como ilustração** — retentor (881): 881 anéis pretos
+   fotografados dão 881 fotos quase idênticas. Um desenho a partir de
+   `diametroInternoMm × diametroExternoMm × alturaMm`, que **já estão no
+   cadastro**, informa mais que a foto e não mente, desde que apareça como
+   ilustração.
+4. **Pode vir do fabricante** — quando houver fonte oficial FAG/NSK/Timken com
+   part number, e só com o código conferido.
+
+**Sobre priorizar por valor em estoque**: é a proxy certa hoje, e só hoje. A
+loja abriu sem histórico, então valor parado é o único sinal disponível. Assim
+que houver pedido, a fila deve pesar giro e margem junto — um item de R$ 500
+parado há três anos merece menos foto que um de R$ 100 que sai toda semana.
+Vale montar o score quando o dado existir, não antes: hoje ele seria
+valor-em-estoque com etapas a mais.
+
 ### O que não vale a pena
 
 Raspar mais catálogo de fornecedor. Já foram três, renderam 4.830 arquivos e
