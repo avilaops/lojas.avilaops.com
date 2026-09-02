@@ -41,7 +41,24 @@ export interface FiltroCatalogo {
    * universal (sem compatibilidade) vem depois, o que não serve some.
    */
   moto?: Moto | null;
+  /**
+   * Faixa de medida, em milímetros, sobre `Produto.atributos`.
+   *
+   * É a navegação que catálogo técnico exige e que marketplace generalista não
+   * tem: quem procura peça sabe a medida do eixo, não o código do fabricante.
+   * Cada faixa é opcional e independente — dá para pedir só o diâmetro interno.
+   */
+  medidas?: Partial<Record<ChaveDeMedida, { de?: number; ate?: number }>>;
 }
+
+/** As três medidas que o catálogo indexa. O nome é o do campo em `atributos`. */
+export const MEDIDAS_FILTRAVEIS = {
+  diametroInternoMm: "Diâmetro interno",
+  diametroExternoMm: "Diâmetro externo",
+  alturaMm: "Altura",
+} as const;
+
+export type ChaveDeMedida = keyof typeof MEDIDAS_FILTRAVEIS;
 
 const ORDENS: Record<OrdemCatalogo, Prisma.ProdutoOrderByWithRelationInput[]> = {
   relevancia: [{ destaque: "desc" }, { nome: "asc" }],
@@ -108,17 +125,66 @@ export async function listarProdutos(tenantId: string, filtro?: FiltroCatalogo) 
     },
     include: { categoria: true },
     orderBy: ORDENS[filtro?.ordem ?? "relevancia"],
-    // Com moto escolhida o corte é feito depois, então o limite também.
-    ...(filtro?.limite && !filtro.moto ? { take: filtro.limite } : {}),
+    // Com moto ou medida escolhida o corte é feito depois, então o limite também.
+    ...(filtro?.limite && !filtro.moto && !filtro.medidas ? { take: filtro.limite } : {}),
   });
-  if (!filtro?.moto) return produtos;
-  // Catálogo de loja pequena cabe na memória; filtrar aqui evita consulta em
-  // JSON com faixa de anos, que o Prisma não expressa e o Postgres não indexa bem.
+
+  // Medida vive em `atributos` (JSON), que o Prisma não sabe comparar por
+  // faixa. Filtrar aqui segue o mesmo caminho já usado pela compatibilidade de
+  // moto: o catálogo de uma loja cabe na memória, e a alternativa seria SQL
+  // cru, perdendo a tipagem em troca de milissegundos que ninguém percebe.
+  let lista = produtos;
+  if (filtro?.medidas) {
+    const faixas = Object.entries(filtro.medidas) as Array<[ChaveDeMedida, { de?: number; ate?: number }]>;
+    lista = lista.filter((p) => {
+      const attr = (p.atributos ?? {}) as Record<string, unknown>;
+      return faixas.every(([campo, faixa]) => {
+        const v = Number(attr[campo]);
+        // Produto sem a medida cadastrada não entra: quem filtra por 20-25 mm
+        // quer o que cabe no eixo, e "não sei" não cabe.
+        if (!Number.isFinite(v)) return false;
+        if (faixa.de != null && v < faixa.de) return false;
+        if (faixa.ate != null && v > faixa.ate) return false;
+        return true;
+      });
+    });
+  }
+
+  if (!filtro?.moto) return filtro?.limite && filtro.medidas ? lista.slice(0, filtro.limite) : lista;
   const moto = filtro.moto;
-  const servem = produtos.filter((p) => encaixe(p.compatibilidade, moto) === "serve");
-  const universais = produtos.filter((p) => encaixe(p.compatibilidade, moto) === "universal");
-  const lista = [...servem, ...universais];
-  return filtro.limite ? lista.slice(0, filtro.limite) : lista;
+  const servem = lista.filter((p) => encaixe(p.compatibilidade, moto) === "serve");
+  const universais = lista.filter((p) => encaixe(p.compatibilidade, moto) === "universal");
+  const ordenada = [...servem, ...universais];
+  return filtro.limite ? ordenada.slice(0, filtro.limite) : ordenada;
+}
+
+/**
+ * Quais medidas esta loja realmente usa, e a faixa de cada uma.
+ *
+ * O filtro de medida só faz sentido em catálogo técnico: loja de roupa não tem
+ * diâmetro interno, e campo que nunca filtra nada é ruído no formulário. Como
+ * a decisão sai do dado, nenhuma loja precisa de configuração — e a de peças
+ * ganha a navegação sozinha.
+ */
+export async function medidasDaLoja(tenantId: string) {
+  const linhas = await prisma.produto.findMany({ where: { tenantId, ativo: true }, select: { atributos: true } });
+  const faixas = new Map<ChaveDeMedida, { min: number; max: number; itens: number }>();
+  for (const l of linhas) {
+    const attr = (l.atributos ?? {}) as Record<string, unknown>;
+    for (const campo of Object.keys(MEDIDAS_FILTRAVEIS) as ChaveDeMedida[]) {
+      const v = Number(attr[campo]);
+      if (!Number.isFinite(v)) continue;
+      const f = faixas.get(campo) ?? { min: v, max: v, itens: 0 };
+      f.min = Math.min(f.min, v);
+      f.max = Math.max(f.max, v);
+      f.itens++;
+      faixas.set(campo, f);
+    }
+  }
+  // Menos de 20 produtos com a medida não é navegação, é campo vazio na tela.
+  return (Object.keys(MEDIDAS_FILTRAVEIS) as ChaveDeMedida[])
+    .map((campo) => ({ campo, rotulo: MEDIDAS_FILTRAVEIS[campo], ...(faixas.get(campo) ?? { min: 0, max: 0, itens: 0 }) }))
+    .filter((m) => m.itens >= 20);
 }
 
 /**

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { exigirTenant, lojaVende } from "@/lib/tenant";
-import { listarCategorias, listarProdutos, type OrdemCatalogo } from "@/lib/catalogo";
+import { listarCategorias, listarProdutos, medidasDaLoja, type ChaveDeMedida, type OrdemCatalogo } from "@/lib/catalogo";
 import ProductCard from "@/components/ProductCard";
 import FiltrosProdutos from "@/components/FiltrosProdutos";
 import { minhaMoto } from "@/lib/minha-moto";
@@ -16,14 +16,45 @@ const reais = (v?: string) => {
   return Number.isFinite(n) ? Math.round(n * 100) : undefined;
 };
 
-export default async function Produtos({ searchParams }: { searchParams: Promise<{ q?: string; categoria?: string; ordem?: string; min?: string; max?: string; marca?: string; modelo?: string; ano?: string; moto?: string }> }) {
+/** "20", "20,5" ou "20.5" → 20.5. Milímetro aceita vírgula: é como se escreve aqui. */
+const mm = (v?: string) => {
+  if (!v) return undefined;
+  const n = Number.parseFloat(v.replace(",", "."));
+  return Number.isFinite(n) && n >= 0 ? n : undefined;
+};
+
+/**
+ * Faixas de medida vindas da URL (`di_de`, `di_ate`, `de_de`…). Só entra a
+ * medida que tem pelo menos um extremo: faixa vazia não filtra nada e não
+ * pode virar `{}`, que excluiria todo produto sem aquele atributo.
+ */
+function faixasDaUrl(sp: Record<string, string | undefined>) {
+  const campos: Array<[ChaveDeMedida, string]> = [
+    ["diametroInternoMm", "di"],
+    ["diametroExternoMm", "de"],
+    ["alturaMm", "alt"],
+  ];
+  const fora: Partial<Record<ChaveDeMedida, { de?: number; ate?: number }>> = {};
+  for (const [campo, prefixo] of campos) {
+    const d = mm(sp[`${prefixo}_de`]);
+    const a = mm(sp[`${prefixo}_ate`]);
+    if (d != null || a != null) fora[campo] = { de: d, ate: a };
+  }
+  return Object.keys(fora).length ? fora : undefined;
+}
+
+export default async function Produtos({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const t = await exigirTenant();
   const sp = await searchParams;
   const ordem = ORDENS.has(sp.ordem as OrdemCatalogo) ? (sp.ordem as OrdemCatalogo) : "relevancia";
   const moto = t.segmento === "motopecas" ? await minhaMoto(sp) : null;
-  const [categorias, produtos] = await Promise.all([
+  const medidas = faixasDaUrl(sp);
+  const [categorias, produtos, temMedida] = await Promise.all([
     listarCategorias(t.id),
-    listarProdutos(t.id, { busca: sp.q?.trim() || undefined, categoriaSlug: sp.categoria || undefined, ordem, minCentavos: reais(sp.min), maxCentavos: reais(sp.max), moto }),
+    listarProdutos(t.id, { busca: sp.q?.trim() || undefined, categoriaSlug: sp.categoria || undefined, ordem, minCentavos: reais(sp.min), maxCentavos: reais(sp.max), moto, medidas }),
+    // O filtro de medida só aparece onde faz sentido: loja de roupa não tem
+    // diâmetro interno, e campo que nunca filtra nada é ruído no formulário.
+    medidasDaLoja(t.id),
   ]);
   const vende = lojaVende(t);
   const categoriaAtual = categorias.find((c) => c.slug === sp.categoria);
@@ -37,7 +68,7 @@ export default async function Produtos({ searchParams }: { searchParams: Promise
         {moto && (sp.q || categoriaAtual) && <> · mostrando o que serve na {nomeDaMoto(moto)}</>}
         {moto && <> · <Link href="/produtos?moto=todas" className="underline">ver catálogo completo</Link></>}
       </p>
-      <FiltrosProdutos categorias={categorias} valores={sp} />
+      <FiltrosProdutos categorias={categorias} valores={sp} medidas={temMedida} />
       {produtos.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
           Nada encontrado com esses filtros. <Link href="/produtos" className="underline">Limpar filtros</Link>
