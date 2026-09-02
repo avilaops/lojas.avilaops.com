@@ -55,14 +55,41 @@ const ORDENS: Record<OrdemCatalogo, Prisma.ProdutoOrderByWithRelationInput[]> = 
  * Normaliza o que a pessoa digitou do mesmo jeito que o gatilho normaliza o
  * produto: minúsculas, sem acento. Cada palavra vira uma condição — "valvula
  * pressao" só traz quem tem as duas, em qualquer ordem.
+ *
+ * **A medida quebra junto.** Em catálogo técnico a pessoa digita a peça do
+ * jeito que ela é falada na oficina: `20x47x14`, `20 × 47 × 14`, `6204-2RS`.
+ * Separando só por espaço, `20x47x14` virava um token único que não casa com
+ * nada, e a loja respondia "nenhum produto" tendo o item em estoque. Agora o
+ * `x`, o `×` e o `-` entre números também separam.
+ *
+ * O hífen **não** separa quando gruda letra e número (`6204-2rs`, `uc209`):
+ * ali ele faz parte do código da peça, e quebrar destruiria a busca por código.
  */
 export function termosDeBusca(texto: string): string[] {
   return texto
     .normalize("NFD")
     .replace(/\p{M}+/gu, "")
     .toLowerCase()
-    .split(/\s+/)
-    .filter((t) => t.length > 1)
+    // 20x47x14 / 20×47×14 → 20 47 14. Só entre dígitos.
+    .replace(/(?<=\d)\s*[x×]\s*(?=\d)/g, " ")
+    // 20-47-14 → 20 47 14, e também 6204-2rs → 6204 2rs.
+    //
+    // Medido contra o catálogo da Vedashow em 02/09/2026: "6205 2RS" achava 6
+    // produtos e "6205-2rs" achava 2, porque o termo com hífen só casava com
+    // quem tinha o hífen escrito igual no cadastro. Quem digita o código com
+    // hífen procura a mesma peça de quem digita com espaço.
+    .replace(/(?<=\d)-(?=[\da-z])/g, " ")
+    // ROL6205 → rol 6205, RET30X47X7 → ret 30 47 7.
+    //
+    // O prefixo de balcão ("ROL", "RET", "COR") vem colado no código no sistema
+    // do lojista, e o comprador digita do mesmo jeito. Separar faz o termo do
+    // código casar sozinho; o prefixo vira mais um termo, que só ajuda.
+    .replace(/([a-z]{2,4})\.?(?=\d)/g, "$1 ")
+    .split(/[\s.]+/)
+    // Letra solta casa com quase tudo e só suja o resultado. Dígito solto não:
+    // "35x52x8" tem uma medida de um dígito, e descartá-la traria todo
+    // retentor 35x52 em vez do que a pessoa pediu.
+    .filter((t) => t.length > 1 || /\d/.test(t))
     .slice(0, 6);
 }
 
