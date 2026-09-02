@@ -88,7 +88,7 @@ export default async function ProdutoPage({ params }: Props) {
       </nav>
 
       <div className="grid gap-8 md:grid-cols-2">
-        <GaleriaProduto imagens={p.imagens} alt={p.nome} />
+        <GaleriaProduto imagens={p.imagens} alt={p.nome} origem={p.imagemOrigem} />
 
         <div>
           {p.marca && <p className="text-xs uppercase tracking-wide text-muted-foreground">{p.marca}</p>}

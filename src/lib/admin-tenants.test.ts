@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { slugLivre } from "./admin-tenants";
-import { TenantEntradaSchema } from "./admin-schemas";
+import { TenantEntradaSchema, ProdutoImportadoSchema } from "./admin-schemas";
 
 /**
  * O slug do produto sai do nome, e nome repetido é comum em catálogo técnico:
@@ -64,4 +64,39 @@ test("dominioPrincipal em www vira apex", () => {
 test("dominioPrincipal em apex fica como está", () => {
   const r = TenantEntradaSchema.parse({ slug: "x", nome: "Loja X", dominioPrincipal: "loja.com.br" });
   assert.equal(r.dominioPrincipal, "loja.com.br");
+});
+
+/**
+ * Imagem plausível de produto errado é pior que ausência de imagem: gera
+ * compra errada, devolução e desconfiança. Quem cadastra declara o que a
+ * imagem é, e as duas regras abaixo impedem a declaração incoerente.
+ */
+test("imagem representativa exige a família de que veio", () => {
+  const r = ProdutoImportadoSchema.safeParse({
+    nome: "Rolamento 6204", precoCentavos: 1890,
+    imagens: ["https://x.test/a.jpg"], imagemOrigem: "representativa",
+  });
+  assert.equal(r.success, false);
+});
+
+test("imagem representativa com família passa", () => {
+  const r = ProdutoImportadoSchema.safeParse({
+    nome: "Rolamento 6204", precoCentavos: 1890,
+    imagens: ["https://x.test/a.jpg"], imagemOrigem: "representativa", imagemFamilia: "6200",
+  });
+  assert.equal(r.success, true);
+});
+
+test("declarar origem sem imagem nenhuma é recusado", () => {
+  // O aviso apareceria na vitrine sem foto para justificar.
+  const r = ProdutoImportadoSchema.safeParse({
+    nome: "Rolamento 6204", precoCentavos: 1890, imagemOrigem: "ilustracao",
+  });
+  assert.equal(r.success, false);
+});
+
+test("sem declarar nada, o produto continua entrando", () => {
+  // Compatibilidade: o catálogo que já está no ar não declara origem.
+  const r = ProdutoImportadoSchema.safeParse({ nome: "Rolamento 6204", precoCentavos: 1890 });
+  assert.equal(r.success, true);
 });

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { autorizado, naoAutorizado } from "@/lib/admin-auth";
-import { ProdutoEntradaSchema } from "@/lib/admin-schemas";
+import { ProdutoImportadoSchema } from "@/lib/admin-schemas";
 import { importarProdutos } from "@/lib/admin-tenants";
 import { importarImagemDeUrl } from "@/lib/uploads";
 
@@ -32,7 +32,7 @@ export async function PUT(request: Request, { params }: Ctx) {
   const t = await prisma.tenant.findUnique({ where: { slug } });
   if (!t) return Response.json({ erro: "loja não encontrada" }, { status: 404 });
 
-  const r = z.array(ProdutoEntradaSchema).min(1).max(2000).safeParse(await request.json().catch(() => null));
+  const r = z.array(ProdutoImportadoSchema).min(1).max(2000).safeParse(await request.json().catch(() => null));
   if (!r.success) return Response.json({ erro: "dados inválidos", detalhes: r.error.flatten() }, { status: 422 });
 
   const q = new URL(request.url).searchParams;

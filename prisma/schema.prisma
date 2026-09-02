@@ -224,6 +224,24 @@ model Produto {
   descricaoCurta  String?
   descricao       String?
   imagens         String[] @default([])
+  /**
+   * De onde a imagem veio, e o quanto ela é deste item:
+   *
+   *   `propria`        foto do SKU exato (própria ou do fabricante com código
+   *                    conferido). É o padrão e não exibe aviso.
+   *   `representativa` foto de outro item da mesma família visual. A vitrine
+   *                    avisa, porque a peça da foto não é a que vai na caixa.
+   *   `ilustracao`     desenho gerado das medidas reais do cadastro. A vitrine
+   *                    avisa que é ilustração, não fotografia.
+   *
+   * Existe porque imagem plausível de produto errado é pior que ausência de
+   * imagem: gera compra errada, devolução e desconfiança. Quem escreve a
+   * imagem declara o que ela é; a vitrine só obedece.
+   */
+  imagemOrigem    String   @default("propria")
+  /// Família visual da imagem representativa ("6200", "UCP"), para auditoria:
+  /// permite achar todo item que herdou uma foto quando ela for substituída.
+  imagemFamilia   String?
   destaque        Boolean  @default(false)
   ativo           Boolean  @default(true)
   disponibilidade String   @default("in_stock") // in_stock | out_of_stock | backorder

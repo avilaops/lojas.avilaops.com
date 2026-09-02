@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { prisma } from "@/lib/db";
-import { ProdutoEntradaSchema } from "@/lib/admin-schemas";
+import { ProdutoEntradaSchema, conferirImagem } from "@/lib/admin-schemas";
 import { importarProdutos } from "@/lib/admin-tenants";
 import { lojistaAtual } from "@/lib/sessao";
 import { avisarBuscadores, caminhosDoProduto } from "@/lib/indexnow";
@@ -41,7 +41,7 @@ export async function GET(request: Request) {
   return Response.json({ ...p, categoria: p.categoria?.nome ?? null });
 }
 
-const Edicao = ProdutoEntradaSchema.partial().extend({ id: z.string() });
+const Edicao = conferirImagem(ProdutoEntradaSchema.partial().extend({ id: z.string() }));
 
 /** PATCH — edita um produto (qualquer campo; categoria por nome, criada se não existir). */
 export async function PATCH(request: Request) {

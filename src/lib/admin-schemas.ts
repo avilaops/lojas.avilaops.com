@@ -122,6 +122,16 @@ export const ProdutoEntradaSchema = z.object({
   descricaoCurta: z.string().max(300).optional(),
   descricao: z.string().max(8000).optional(),
   imagens: z.array(z.string().url()).max(10).optional(),
+  /**
+   * O que a imagem é deste item: `propria` (SKU exato), `representativa`
+   * (família visual, a vitrine avisa) ou `ilustracao` (desenho das medidas).
+   *
+   * Imagem plausível de produto errado é pior que ausência de imagem. Quem
+   * importa declara a origem; a vitrine só obedece.
+   */
+  imagemOrigem: z.enum(["propria", "representativa", "ilustracao"]).optional(),
+  /** Família da imagem representativa ("6200", "UCP"): obrigatória nela. */
+  imagemFamilia: z.string().trim().min(1).max(40).nullable().optional(),
   destaque: z.boolean().optional(),
   ativo: z.boolean().optional(),
   disponibilidade: z.enum(["in_stock", "out_of_stock", "backorder"]).optional(),
@@ -139,6 +149,35 @@ export const ProdutoEntradaSchema = z.object({
     .max(200)
     .optional(),
 });
+
+/**
+ * As duas regras de honestidade da imagem, aplicáveis a qualquer entrada
+ * (produto inteiro na importação ou campos soltos na edição do painel).
+ *
+ * Ficam fora do `z.object` porque `.refine()` devolve um `ZodEffects`, e aí
+ * `.partial()` deixa de existir — o painel edita campo a campo e precisa dele.
+ */
+export function conferirImagem<T extends { imagemOrigem?: string | null; imagemFamilia?: string | null; imagens?: string[] }>(
+  schema: z.ZodType<T>,
+): z.ZodEffects<z.ZodType<T>, T, unknown> {
+  return schema
+    // Imagem herdada tem que dizer de qual família herdou. Sem isso não há como
+    // achar quem a usa no dia em que ela for trocada, e a foto de uma peça
+    // errada fica espalhada pelo catálogo sem rastro.
+    .refine((p) => p.imagemOrigem !== "representativa" || !!p.imagemFamilia, {
+      message: "Imagem representativa exige imagemFamilia (a série de que ela veio).",
+      path: ["imagemFamilia"],
+    })
+    // Declarar origem sem imagem é engano de cadastro: o aviso apareceria na
+    // vitrine sem foto nenhuma para justificar.
+    .refine((p) => !p.imagemOrigem || p.imagemOrigem === "propria" || (p.imagens?.length ?? 0) > 0, {
+      message: "Origem de imagem declarada sem nenhuma imagem.",
+      path: ["imagens"],
+    });
+}
+
+/** Importação em lote: o produto vem inteiro, então as regras valem sempre. */
+export const ProdutoImportadoSchema = conferirImagem(ProdutoEntradaSchema);
 
 export type TenantEntrada = z.infer<typeof TenantEntradaSchema>;
 export type ProdutoEntrada = z.infer<typeof ProdutoEntradaSchema>;

@@ -2,8 +2,22 @@
 
 import { useState } from "react";
 
+/**
+ * O que a vitrine diz quando a imagem não é do próprio item.
+ *
+ * Foto de família é aceitável em catálogo técnico (todo rolamento 6200 se
+ * parece), mas só com o aviso: a peça da foto pode ter blindagem, vedação ou
+ * marca diferentes da que vai na caixa. Sem dizer isso, a economia de
+ * fotografia vira devolução.
+ */
+const AVISO: Record<string, string> = {
+  representativa: "Imagem representativa da série. Confira as medidas e especificações deste produto.",
+  ilustracao: "Ilustração técnica gerada a partir das medidas cadastradas, não é foto do produto.",
+};
+
 /** Galeria: foto principal com zoom ao passar o mouse e miniaturas clicáveis. */
-export default function GaleriaProduto({ imagens, alt }: { imagens: string[]; alt: string }) {
+export default function GaleriaProduto({ imagens, alt, origem = "propria" }: { imagens: string[]; alt: string; origem?: string }) {
+  const aviso = imagens.length > 0 ? AVISO[origem] : undefined;
   const [atual, setAtual] = useState(0);
   const [zoom, setZoom] = useState<{ x: number; y: number } | null>(null);
   const principal = imagens[atual];
@@ -31,6 +45,7 @@ export default function GaleriaProduto({ imagens, alt }: { imagens: string[]; al
           <div className="flex h-full items-center justify-center text-xs text-muted-foreground">Imagem em preparação</div>
         )}
       </div>
+      {aviso && <p className="text-xs leading-snug text-muted-foreground">{aviso}</p>}
       {imagens.length > 1 && (
         <div className="grid grid-cols-5 gap-2">
           {imagens.slice(0, 10).map((img, i) => (
