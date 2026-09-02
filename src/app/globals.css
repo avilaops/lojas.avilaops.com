@@ -518,3 +518,122 @@ body {
 .ficha-tecnica dl > div:nth-child(odd) { background: color-mix(in srgb, var(--muted) 55%, transparent); }
 .ficha-tecnica dt { color: var(--muted-foreground); }
 .ficha-tecnica dd { font-weight: 600; }
+
+/* ============================================================
+   Celular: a vitrine no padrão iOS
+   ============================================================
+   Medido num iPhone 14 Pro (393x660) com scripts/medir-mobile.mts. O que estas
+   regras corrigem, com número:
+
+   - o comprador rolava 2,8 telas até ver o primeiro produto, porque a abertura
+     institucional (título grande, texto e cartão de contagem) tomava a tela
+     inteira. Num catálogo B2B quem chega já sabe o que quer.
+   - as abas de categoria tinham 20px de altura de toque, menos da metade dos
+     44px que a Apple define como mínimo, e a tira cortava sem sinal de que rola.
+
+   Vale para todas as lojas, porque está no tema e não numa página. */
+@media (max-width: 640px) {
+  /* --- Cabeçalho: busca em primeiro lugar ---------------------------------
+     A lupa de 40px no canto era o único caminho até a busca. Quem compra peça
+     chega sabendo o código: o campo vira a primeira coisa da tela, como no
+     Mercado Livre e na Leroy Merlin. */
+  /* A busca ganha uma linha inteira. Sem o `flex-wrap` explícito e sem forçar a
+     quebra, ela dividia a primeira linha com o logo e o campo cortava no meio
+     da frase ("O que você"), que é pior que não ter campo. */
+  .cabecalho-loja > .container-loja { height: auto; padding-top: .625rem; padding-bottom: .625rem; row-gap: .5rem; flex-wrap: wrap; gap: .5rem; }
+  .cabecalho-loja > .container-loja > .busca-loja-caixa { flex-basis: 100%; order: 10; }
+  .cabecalho-loja .marca-loja { min-height: 44px; }
+  .cabecalho-loja .marca-loja span:last-child { font-size: 1.0625rem; }
+
+  /* O campo de busca ocupa a linha inteira e tem 44px de toque. A fonte de 16px
+     não é estética: abaixo disso o Safari do iPhone dá zoom sozinho ao focar o
+     campo, e a página fica torta depois de digitar. */
+  .busca-loja-caixa .busca-loja { padding-inline: .875rem; }
+  .busca-loja-caixa input { height: 44px; font-size: 1rem; }
+
+  /* A tira de categorias precisa mostrar que continua. Sem isto ela corta no
+     meio de uma palavra e parece conteúdo quebrado, não conteúdo rolável. */
+  .nav-loja { position: relative; }
+  .nav-loja::after {
+    content: ""; position: absolute; inset-block: 0; right: 0; width: 2.5rem;
+    background: linear-gradient(to right, transparent, var(--background));
+    pointer-events: none;
+  }
+  .nav-loja > .container-loja {
+    gap: .25rem; padding-block: 0;
+    scroll-snap-type: x proximity;
+    /* Rolagem com inércia e sem a barra cinza do desktop: é o gesto que o iOS
+       ensina, e a barra aqui só ocupa altura. */
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .nav-loja > .container-loja::-webkit-scrollbar { display: none; }
+  .nav-loja a {
+    display: inline-flex; align-items: center; min-height: 44px;
+    padding-inline: .75rem; border-radius: 999px;
+    scroll-snap-align: start;
+    /* Nome longo de categoria industrial ("Aço de baixo e médio teor de
+       carbono") vira uma tira sem fim. Corta com reticências e o toque continua
+       inteiro. */
+    /* Sem `max-width`: cortar "Aço de baixo e médio teor de carbono" em "Aço de"
+       entrega uma aba que não diz nada. A tira rola, então o nome vai inteiro e
+       quem procura reconhece o que procura. */
+    white-space: nowrap;
+  }
+  .nav-loja a:first-child { background: color-mix(in srgb, var(--primary) 12%, transparent); }
+
+  /* --- Abertura: menos institucional, mais produto ----------------------- */
+  .mercado-abertura-grid { padding-block: 1.75rem; gap: 1.25rem; }
+  .mercado-abertura h1 { max-width: 100%; font-size: 1.625rem; line-height: 1.15; letter-spacing: -.02em; }
+  .mercado-abertura-grid > div > p:not(.home-selo) {
+    margin-top: .625rem; font-size: .9375rem; line-height: 1.5;
+    /* Três linhas bastam para dizer quem é a empresa. O resto está em /sobre, e
+       aqui só empurraria o produto para fora da tela. */
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .mercado-abertura::after { display: none; }
+
+  /* Os dois botões empilhados ocupavam 7rem de altura. O primário fica cheio e
+     de largura inteira, o secundário vira texto: uma decisão por tela. */
+  .mercado-acoes { gap: .5rem; margin-top: 1rem; }
+  .mercado-acoes .btn-primario { flex: 1 1 100%; height: 48px; }
+  .mercado-acoes .btn-secundario { flex: 1 1 100%; height: 44px; background: transparent; border-color: transparent; text-decoration: underline; }
+
+  /* O cartão de contagem ("7 categorias · 20 produtos") é informação de apoio e
+     estava antes do produto. Vai para o fim da abertura, em uma linha. */
+  /* Contagem de categorias e produtos é informação de apoio: vira uma linha
+     fina, sem moldura, para não ocupar meia tela antes do primeiro produto. */
+  .mercado-resumo {
+    order: 2; grid-template-columns: auto auto; justify-content: start; gap: 1.25rem;
+    border: 0; padding: 0; box-shadow: none; backdrop-filter: none; background: transparent;
+  }
+  .mercado-resumo p { display: flex; align-items: baseline; gap: .375rem; }
+  .mercado-resumo > svg { display: none; }
+  .mercado-resumo p { border-left: 0; padding-left: 0; }
+  .mercado-resumo strong { font-size: .9375rem; }
+  .mercado-resumo span { font-size: .75rem; }
+
+  /* A barra de benefícios (despacho, frete, pagamento) ficava entre a abertura
+     e o catálogo, custando quase uma tela antes do primeiro produto. Ela
+     tranquiliza quem já escolheu, então o lugar dela é depois da vitrine, não
+     antes. Ordem só no celular: no desktop as duas coisas cabem juntas. */
+  .home-mercado { display: flex; flex-direction: column; }
+  .home-mercado > .mercado-abertura { order: 1; }
+  .home-mercado > .mercado-produtos { order: 2; }
+  .home-mercado > .mercado-departamentos { order: 3; }
+  .home-mercado > .container-loja:has(.beneficios-barra) { order: 4; margin-top: 2rem; }
+
+  /* --- Seções: respiro proporcional à tela ------------------------------- */
+  .mercado-departamentos, .mercado-produtos { padding-top: 2rem; }
+  .mercado-departamentos h2, .mercado-produtos h2 { font-size: 1.25rem; }
+  .mercado-grade-categorias a { min-height: 5.5rem; padding: .75rem; }
+  .mercado-grade-categorias span { font-size: .8125rem; }
+
+  /* --- Toque: o mínimo da Apple é 44px ----------------------------------- */
+  .cartao-produto a, .cartao-produto button { min-height: 44px; }
+  .rodape-loja a { display: inline-flex; align-items: center; min-height: 44px; }
+
+  /* --- Área segura do iPhone --------------------------------------------
+     Sem isto o conteúdo do rodapé fica atrás da barra inicial do aparelho. */
+  .rodape-loja { padding-bottom: max(1.5rem, env(safe-area-inset-bottom)); }
+}

@@ -76,7 +76,11 @@ export default function BuscaLoja() {
   }
 
   return (
-    <div ref={caixa} className="busca-loja-caixa ml-auto hidden max-w-sm flex-1 md:block">
+    // No celular a busca ocupa a linha inteira abaixo do logo, e não some.
+    // Antes era `hidden md:block`: quem abria a loja pelo telefone só tinha uma
+    // lupa que levava para outra página, quando buscar é o primeiro gesto de
+    // quem compra peça por código.
+    <div ref={caixa} className="busca-loja-caixa order-last w-full max-w-none flex-1 md:order-none md:ml-auto md:w-auto md:max-w-sm">
       <form
         action="/produtos"
         className="busca-loja flex items-center gap-2 rounded-full border border-border bg-card px-4"

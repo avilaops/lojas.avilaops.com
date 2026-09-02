@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Search, Store } from "lucide-react";
+import { Store } from "lucide-react";
 import type { TenantPublico } from "@/lib/tenant";
 import CartButton from "@/components/cart/CartButton";
 import BuscaLoja from "@/components/BuscaLoja";
@@ -19,7 +19,9 @@ export default function Header({ loja, logoUrl, categorias }: { loja: TenantPubl
 
         <BuscaLoja />
 
-        <Link href="/produtos" aria-label="Buscar produtos" className="ml-auto inline-flex h-10 w-10 items-center justify-center rounded-full border border-border md:hidden"><Search className="h-4 w-4" /></Link>
+        {/* A lupa era o único caminho para a busca no celular. Agora o campo de
+            busca está na própria barra, e manter as duas colocaria dois ícones
+            de lupa lado a lado querendo dizer coisas diferentes. */}
         {loja.vende && (
           <Link href="/conta" className="hidden h-10 items-center rounded-lg border border-border bg-card px-3 text-sm font-medium sm:inline-flex" aria-label="Minha conta">
             Minha conta
