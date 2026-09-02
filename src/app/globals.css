@@ -504,3 +504,17 @@ body {
 /* O cartão do produto sobe junto com a foto: o alvo de clique inteiro reage,
    não só o botão dentro dele. */
 .cartao-produto-imagem img { transition: transform 0.5s ease; }
+
+/* ── ficha técnica ─────────────────────────────────────────────────────── */
+
+/*
+ * Característica em lista de duas colunas, como em marketplace. Quem compra
+ * peça técnica não lê parágrafo: procura a linha da bitola e da amperagem.
+ */
+.ficha-tecnica { margin-top: 28px; }
+.ficha-tecnica h2 { margin-bottom: 12px; font-size: 1.05rem; font-weight: 700; }
+.ficha-tecnica dl { display: grid; gap: 0; border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
+.ficha-tecnica dl > div { display: grid; grid-template-columns: minmax(120px, 38%) 1fr; gap: 12px; padding: 10px 14px; font-size: 0.9rem; }
+.ficha-tecnica dl > div:nth-child(odd) { background: color-mix(in srgb, var(--muted) 55%, transparent); }
+.ficha-tecnica dt { color: var(--muted-foreground); }
+.ficha-tecnica dd { font-weight: 600; }
