@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, Boxes, Search, Tags } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import BeneficiosBarra from "./BeneficiosBarra";
+import AtalhosCategorias from "./AtalhosCategorias";
 import type { DadosHome } from "./tipos";
 
 /** Catálogo denso, direto e muito navegável. Para distribuidores com variedade. */
@@ -28,6 +29,10 @@ export default function Mercado({ t, identidade, categorias, vitrine, temDestaqu
           </aside>
         </div>
       </section>
+
+      {/* Atalhos com foto logo abaixo da abertura, como no Mercado Livre: no
+          celular é o que dá caminho a quem não vai digitar na busca. */}
+      <AtalhosCategorias categorias={categorias} />
 
       <div className="container-loja"><BeneficiosBarra t={t} /></div>
 
