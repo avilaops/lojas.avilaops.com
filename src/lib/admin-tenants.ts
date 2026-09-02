@@ -52,8 +52,35 @@ export async function atualizarTenant(slug: string, entrada: Partial<TenantEntra
 }
 
 /**
+ * Primeiro slug livre a partir do desejado: `-2`, `-3`… O `donoAtual` é o
+ * produto que está sendo gravado, se já existir — ele pode ficar com o slug
+ * que já é dele, senão toda reimportação renomearia tudo.
+ *
+ * Existe porque o slug sai do nome e nome repetido é comum: duas peças
+ * diferentes podem se chamar "Rolamento 6204 2RS". E reimportar uma planilha
+ * com nomes corrigidos também colide, porque o slug novo de um produto pode
+ * ser o slug atual de outro. Sem desviar, o lote inteiro morre com P2002.
+ */
+export async function slugLivre(
+  tenantId: string,
+  desejado: string,
+  donoAtual: string | null,
+  buscarDono: (slug: string) => Promise<{ id: string } | null> = (slug) =>
+    prisma.produto.findUnique({ where: { tenantId_slug: { tenantId, slug } }, select: { id: true } }),
+): Promise<string> {
+  for (let n = 1; ; n++) {
+    const slug = n === 1 ? desejado : `${desejado}-${n}`;
+    const dono = await buscarDono(slug);
+    if (!dono || dono.id === donoAtual) return slug;
+  }
+}
+
+/**
  * Importa/atualiza produtos em lote. Chave de idempotência: `sku`, senão `slug`,
  * senão o slug do nome. Rodar duas vezes a mesma planilha não duplica nada.
+ *
+ * O endereço da página (`slug`) é derivado, não é a chave: quando o slug
+ * desejado já é de outro produto, ganha um sufixo em vez de derrubar o lote.
  */
 export async function importarProdutos(tenantId: string, produtos: ProdutoEntrada[]) {
   const categorias = new Map<string, string>();
@@ -74,9 +101,15 @@ export async function importarProdutos(tenantId: string, produtos: ProdutoEntrad
       }
     }
 
-    const slug = p.slug ? slugificar(p.slug) : slugificar(p.nome);
+    const desejado = p.slug ? slugificar(p.slug) : slugificar(p.nome);
     const { categoria: _c, compatibilidade, ...campos } = p;
     void _c;
+    const existente = p.sku
+      ? await prisma.produto.findFirst({ where: { tenantId, sku: p.sku } })
+      : await prisma.produto.findUnique({ where: { tenantId_slug: { tenantId, slug: desejado } } });
+
+    const slug = await slugLivre(tenantId, desejado, existente?.id ?? null);
+
     const dados = {
       ...campos,
       slug,
@@ -84,10 +117,6 @@ export async function importarProdutos(tenantId: string, produtos: ProdutoEntrad
       atributos: (p.atributos ?? {}) as Prisma.InputJsonValue,
       ...(compatibilidade ? { compatibilidade: compatibilidade as unknown as Prisma.InputJsonValue } : {}),
     };
-
-    const existente = p.sku
-      ? await prisma.produto.findFirst({ where: { tenantId, sku: p.sku } })
-      : await prisma.produto.findUnique({ where: { tenantId_slug: { tenantId, slug } } });
 
     if (existente) {
       await prisma.produto.update({ where: { id: existente.id }, data: dados });
