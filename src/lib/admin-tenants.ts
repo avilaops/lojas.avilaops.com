@@ -131,7 +131,11 @@ export async function importarProdutos(tenantId: string, produtos: ProdutoEntrad
     const dados = {
       ...campos,
       slug,
-      categoriaId,
+      // Sem `categoria` na entrada, a categoria atual fica como está. Escrever
+      // null aqui tirava da prateleira todo produto de uma carga que só queria
+      // atualizar preço ou foto: aconteceu com 872 retentores em 02/09/2026,
+      // que sumiram do menu sem erro nenhum aparecer.
+      ...(p.categoria ? { categoriaId } : {}),
       atributos: (p.atributos ?? {}) as Prisma.InputJsonValue,
       ...(compatibilidade ? { compatibilidade: compatibilidade as unknown as Prisma.InputJsonValue } : {}),
     };
