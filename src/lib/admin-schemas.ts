@@ -35,6 +35,19 @@ export const TenantEntradaSchema = z.object({
   dominioPrincipal: z.string().min(4).max(253).toLowerCase().optional(),
   dominios: z.array(z.string().min(4).max(253).toLowerCase()).optional(),
   logoUrl: z.string().url().optional(),
+  /**
+   * Pasta dos ícones da loja, servida pela plataforma: `/uploads/<slug>` ou
+   * `/<pasta>` em `public`. Dentro dela os nomes são fixos (favicon.ico,
+   * favicon.svg, favicon-96x96.png, apple-touch-icon.png, site.webmanifest).
+   * Caminho, não URL: o ícone tem que resolver no domínio próprio do lojista
+   * também, e host fixo aqui quebraria isso.
+   */
+  faviconUrl: z
+    .string()
+    .regex(/^\/[A-Za-z0-9._\-/]*$/, "Informe um caminho como /uploads/minhaloja")
+    .max(200)
+    .nullable()
+    .optional(),
   bannerUrl: z.string().url().nullable().optional(),
   tema: TemaSchema.partial().optional(),
   identidade: IdentidadeSchema.partial().optional(),

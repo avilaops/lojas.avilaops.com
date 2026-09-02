@@ -87,4 +87,18 @@ export async function importarImagemDeUrl(slug: string, url: string, tratar = fa
   return { url: salvo.url, tratada: false };
 }
 
-export const MIME_POR_EXT: Record<string, string> = { png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", webp: "image/webp", gif: "image/gif", svg: "image/svg+xml" };
+/**
+ * O `ico` e o `webmanifest` não são foto de produto: entram porque o ícone da
+ * loja mora aqui, junto do resto do que é dela. Sem eles a rota devolve 404 e
+ * o navegador fica com o ícone padrão.
+ */
+export const MIME_POR_EXT: Record<string, string> = {
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  webp: "image/webp",
+  gif: "image/gif",
+  svg: "image/svg+xml",
+  ico: "image/x-icon",
+  webmanifest: "application/manifest+json",
+};

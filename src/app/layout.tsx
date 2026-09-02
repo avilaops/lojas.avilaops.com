@@ -24,30 +24,30 @@ import BarraGaragem from "@/components/BarraGaragem";
  * o ícone de um cliente na aba de todos os outros. Por isso o ícone é declarado
  * aqui, junto do resto dos metadados, onde já sabemos de que loja é a página.
  *
- * Enquanto o lojista não sobe a marca dele, o `icons` fica ausente e o navegador
- * usa o padrão, que é melhor que exibir a marca de outra empresa.
+ * A pasta vem de `Tenant.faviconUrl`, não de uma lista no código: loja é dado.
+ * Dentro dela os nomes são sempre os mesmos, que são os que o
+ * RealFaviconGenerator entrega — assim subir a marca de um cliente novo é
+ * copiar sete arquivos e preencher um campo, sem passar por deploy.
+ *
+ * Sem `faviconUrl`, o `icons` fica ausente e vale o `src/app/icon.tsx`, que
+ * desenha a inicial do nome sobre a cor primária da loja.
  */
-const ICONES_POR_LOJA: Record<string, { pasta: string; nomeCurto: string }> = {
-  // Gerado no RealFaviconGenerator a partir da marca da FX (Fênix Eletrodos).
-  fxeletrodos: { pasta: "/Fxeletrodos/favicon", nomeCurto: "Fenix" },
-};
-
-function iconesDa(slug: string): Pick<Metadata, "icons" | "manifest" | "appleWebApp"> {
-  const c = ICONES_POR_LOJA[slug];
-  if (!c) return {};
+function iconesDa(pasta: string | null, nome: string): Pick<Metadata, "icons" | "manifest" | "appleWebApp"> {
+  if (!pasta) return {};
+  const base = pasta.replace(/\/+$/, "");
   return {
     icons: {
       icon: [
-        { url: `${c.pasta}/favicon-96x96.png`, type: "image/png", sizes: "96x96" },
-        { url: `${c.pasta}/favicon.svg`, type: "image/svg+xml" },
-        { url: `${c.pasta}/favicon.ico`, rel: "shortcut icon" },
+        { url: `${base}/favicon-96x96.png`, type: "image/png", sizes: "96x96" },
+        { url: `${base}/favicon.svg`, type: "image/svg+xml" },
+        { url: `${base}/favicon.ico`, rel: "shortcut icon" },
       ],
-      apple: [{ url: `${c.pasta}/apple-touch-icon.png`, sizes: "180x180" }],
+      apple: [{ url: `${base}/apple-touch-icon.png`, sizes: "180x180" }],
     },
-    manifest: `${c.pasta}/site.webmanifest`,
+    manifest: `${base}/site.webmanifest`,
     // Vira `<meta name="apple-mobile-web-app-title">`: é o nome que aparece
     // embaixo do ícone quando alguém salva a loja na tela de início do iPhone.
-    appleWebApp: { title: c.nomeCurto },
+    appleWebApp: { title: nome },
   };
 }
 
@@ -68,7 +68,7 @@ export async function generateMetadata(): Promise<Metadata> {
   if (!t) return { title: "Loja não encontrada", robots: { index: false } };
   return {
     metadataBase: new URL(urlDaLoja(t)),
-    ...iconesDa(t.slug),
+    ...iconesDa(t.faviconUrl, t.nome),
     title: { default: t.slogan ? `${t.nome} | ${t.slogan}` : t.nome, template: `%s · ${t.nome}` },
     description: t.slogan ?? `Loja virtual ${t.nome}`,
     robots: t.status === "ATIVA" ? undefined : { index: false, follow: false },

@@ -45,6 +45,11 @@ model Tenant {
   // ── Identidade visual (só tokens; layout é um só) ─────────────────────
   logoUrl    String?
   bannerUrl  String? // imagem de fundo do topo da home
+  /// Ícone da aba. Vazio = a plataforma desenha a inicial do nome sobre a cor
+  /// primária (ver src/app/icon.tsx), que é o padrão e serve a maioria. Quem
+  /// tem símbolo próprio aponta o arquivo aqui: o logo do cabeçalho não serve,
+  /// porque é horizontal e some em 16 px.
+  faviconUrl String?
   tema       Json    @default("{}") // TemaLoja em src/lib/tema.ts
   identidade Json    @default("{}") // diagnóstico, voz e direção fotográfica
   slogan     String?
