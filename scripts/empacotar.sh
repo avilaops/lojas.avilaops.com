@@ -26,12 +26,20 @@ APP=".next/standalone/lojas.avilaops.com"
 # de 80 MB. Esperar a árvore parar de mudar é mais barato que descobrir isso
 # no deploy.
 echo "==> esperando o build assentar"
-for _ in $(seq 1 20); do
-  mexidos=$(find .next -newermt '-8 seconds' -type f 2>/dev/null | head -1)
-  [ -z "$mexidos" ] && break
+for _ in $(seq 1 45); do
+  quantos=$(find .next -newermt '-8 seconds' -type f 2>/dev/null | wc -l)
+  [ "$quantos" -eq 0 ] && break
+  printf "\r    %s arquivo(s) ainda sendo escritos…" "$quantos"
   sleep 4
 done
-[ -z "${mexidos:-}" ] || { echo "!! .next ainda mudando; um build está rodando?" >&2; exit 1; }
+printf "\r\033[K"
+if [ "${quantos:-0}" -ne 0 ]; then
+  # Mensagem específica: "ainda mudando" mandava a pessoa procurar o problema
+  # no lugar errado. O que resolve é ver qual processo está escrevendo.
+  echo "!! $quantos arquivo(s) de .next mudaram nos últimos 8 s após 3 min de espera." >&2
+  echo "   Há outro 'npm run build' rodando? Feche-o e rode este script de novo." >&2
+  exit 1
+fi
 
 echo "==> juntando static, public e prisma no standalone"
 rm -rf "$APP/.next/static" "$APP/public" "$APP/prisma"
