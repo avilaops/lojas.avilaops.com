@@ -171,7 +171,15 @@ export async function preverCategoria(nome: string, limite = 3) {
   }>;
 }
 
-/** Atributos que a categoria exige na publicação. */
+/**
+ * Atributos que a categoria exige na publicação.
+ *
+ * São três exigências distintas, e o diagnóstico precisa das três:
+ * `required` impede publicar, `catalog_required` impede casar com o catálogo do
+ * ML, e `conditional_required` (GTIN, por exemplo) deixa publicar sem, com
+ * regra própria. Filtrar as condicionais aqui esconderia do lojista justamente
+ * o campo que faz o anúncio aparecer menos.
+ */
 export async function atributosDaCategoria(categoriaId: string) {
   const r = await fetch(`${API}/categories/${categoriaId}/attributes`, {
     signal: AbortSignal.timeout(15_000),
@@ -183,7 +191,7 @@ export async function atributosDaCategoria(categoriaId: string) {
     tags?: Record<string, boolean>;
     value_type?: string;
   }>;
-  return todos.filter((a) => a.tags?.required || a.tags?.catalog_required);
+  return todos.filter((a) => a.tags?.required || a.tags?.catalog_required || a.tags?.conditional_required);
 }
 
 export function conectado(t: Tenant): boolean {

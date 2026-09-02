@@ -16,84 +16,84 @@ datasource db {
 }
 
 enum Plano {
-  SITE      // vitrine sem carrinho — R$ 79/mês
-  LOJA      // loja completa — R$ 119/mês (âncora)
-  LOJA_PRO  // + automações, relatórios, NF-e — R$ 349/mês
+  SITE // vitrine sem carrinho — R$ 79/mês
+  LOJA // loja completa — R$ 119/mês (âncora)
+  LOJA_PRO // + automações, relatórios, NF-e — R$ 349/mês
 }
 
 enum TenantStatus {
   PROVISIONANDO
   ATIVA
-  SUSPENSA   // inadimplente: a loja mostra aviso e some o checkout
-  CANCELADA  // sai do ar; dados ficam 90 dias
+  SUSPENSA // inadimplente: a loja mostra aviso e some o checkout
+  CANCELADA // sai do ar; dados ficam 90 dias
 }
 
 model Tenant {
-  id        String       @id @default(cuid())
+  id     String       @id @default(cuid())
   /// Identificador estável: vira <slug>.lojas.avilaops.com e o nome do container de dados.
-  slug      String       @unique
-  nome      String
-  plano     Plano        @default(LOJA)
-  status    TenantStatus @default(PROVISIONANDO)
+  slug   String       @unique
+  nome   String
+  plano  Plano        @default(LOJA)
+  status TenantStatus @default(PROVISIONANDO)
 
   /// Hosts que resolvem para esta loja (domínio próprio, www, apex). O subdomínio
   /// <slug>.LOJAS_BASE_DOMAIN resolve sempre, sem precisar estar aqui.
-  dominios  String[]     @default([])
+  dominios         String[] @default([])
   /// Domínio principal, usado em links absolutos, sitemap e e-mail.
   dominioPrincipal String?
 
   // ── Identidade visual (só tokens; layout é um só) ─────────────────────
-  logoUrl     String?
-  bannerUrl   String?                    // imagem de fundo do topo da home
-  tema        Json      @default("{}")   // TemaLoja em src/lib/tema.ts
-  identidade  Json      @default("{}")   // diagnóstico, voz e direção fotográfica
-  slogan      String?
+  logoUrl    String?
+  bannerUrl  String? // imagem de fundo do topo da home
+  tema       Json    @default("{}") // TemaLoja em src/lib/tema.ts
+  identidade Json    @default("{}") // diagnóstico, voz e direção fotográfica
+  slogan     String?
   /**
    * Segmento da loja. Liga blocos de vitrine específicos do ramo sem código
    * por loja: "motopecas" ativa a garagem (peças por moto), compatibilidade
    * e busca por código original. "geral" é a loja comum.
    */
-  segmento    String    @default("geral")
+  segmento   String  @default("geral")
   /// Barra fina acima do cabeçalho. Um texto curto, o mesmo em toda a loja:
   /// é o lugar de "frete grátis acima de X" e de aviso de prazo em data
   /// especial, sem ninguém pedir uma página nova.
-  avisoTopo   String?
-  sobre       String?                    // texto da página "Sobre"
+  avisoTopo  String?
+  sobre      String? // texto da página "Sobre"
 
   // ── Contato e operação ───────────────────────────────────────────────
-  whatsapp    String?                    // só dígitos, com DDI
-  telefone    String?
-  emailContato String?
-  instagram   String?
+  whatsapp        String? // só dígitos, com DDI
+  telefone        String?
+  emailContato    String?
+  instagram       String?
   /// Identificação do fornecedor — Decreto 7.962/2013, art. 2º. Toda loja na
   /// internet tem que exibir razão social, CNPJ e endereço em destaque; aqui
   /// isso é campo do tenant e vai para o rodapé sozinho, sem depender de o
   /// lojista lembrar de escrever numa página solta.
-  razaoSocial String?
-  cnpj        String?                    // 14 dígitos, sem máscara
-  endereco    Json?                      // { logradouro, numero, bairro, cidade, uf, cep }
+  razaoSocial     String?
+  cnpj            String? // 14 dígitos, sem máscara
+  endereco        Json? // { logradouro, numero, bairro, cidade, uf, cep }
   /// Exibir o endereço no site (rodapé, contato, JSON-LD). Falso por padrão:
   /// loja só online não expõe onde fica o estoque.
   enderecoPublico Boolean @default(false)
-  horario     String?
+  horario         String?
 
   // ── Entrega ──────────────────────────────────────────────────────────
-  cepOrigem         String?
-  retiradaNaLoja    Boolean @default(true)
-  despachoDiasUteis Int     @default(1)
+  cepOrigem              String?
+  retiradaNaLoja         Boolean @default(true)
+  despachoDiasUteis      Int     @default(1)
   /// A partir de quantas unidades o estoque conta como baixo: avisa o lojista
   /// no painel e vira "últimas unidades" na loja. Zero desliga os dois.
-  estoqueBaixoEm    Int     @default(3)
+  estoqueBaixoEm         Int     @default(3)
   /// Teto de postagem adiantada pela Avila Ops que esta loja pode acumular sem
   /// acertar. Zero desliga o limite. Padrão de R$ 300: cerca de dez envios.
-  limitePostagemCentavos Int @default(30000)
+  limitePostagemCentavos Int     @default(30000)
   /// Caixa padrão (cm) e peso padrão (kg) para produto sem medida cadastrada.
-  caixaPadrao       Json    @default("{\"altura\":15,\"largura\":20,\"comprimento\":25}")
-  pesoPadraoKg      Float   @default(1)
+  caixaPadrao            Json    @default("{\"altura\":15,\"largura\":20,\"comprimento\":25}")
+  pesoPadraoKg           Float   @default(1)
   /// Tabela própria por UF, usada quando a cotação por API não está disponível.
   /// [{ "ufs": ["SP"], "preco": 1990, "prazoDiasUteis": 3, "nome": "Sedex" }]
-  tabelaFrete       Json    @default("[]")
-  freteGratisAcima  Int?                 // centavos
+  tabelaFrete            Json    @default("[]")
+  freteGratisAcima       Int? // centavos
 
   // ── Pagamento (tokens cifrados com LOJAS_SECRET) ──────────────────────
   /// Mercado Pago é o único gateway, por decisão de escopo de 31/08/2026.
@@ -106,60 +106,60 @@ model Tenant {
   /// Mesma conta do Mercado Pago (provado em 02/09/2026: o token do MP
   /// responde em api.mercadolibre.com/users/me), mas com escopo de venda,
   /// que o token de pagamento não tem. Por isso credencial separada.
-  mlUserId           String?
-  mlNickname         String?
-  mlAccessTokenEnc   String?
+  mlUserId          String?
+  mlNickname        String?
+  mlAccessTokenEnc  String?
   /// offline_access: sem o refresh, o acesso morre em 6 horas.
-  mlRefreshTokenEnc  String?
-  mlExpiraEm         DateTime?
+  mlRefreshTokenEnc String?
+  mlExpiraEm        DateTime?
   /// Quando o lojista conectou. Nulo = nunca conectou.
-  mlConectadoEm      DateTime?
-  meiosPagamento     String[] @default(["pix", "cartao", "boleto"])
+  mlConectadoEm     DateTime?
+  meiosPagamento    String[]  @default(["pix", "cartao", "boleto"])
 
   // ── E-mail (mail.avilaops.com) ────────────────────────────────────────
-  emailRemetente String?   // pedidos@dominio — de onde saem as notificações
+  emailRemetente String? // pedidos@dominio — de onde saem as notificações
 
   // ── Analytics, anúncios e buscadores ──────────────────────────────────
-  gtmId String?
+  gtmId                 String?
   /// Pixels da loja. Cada um é opcional; sem id, o script nem é carregado.
-  metaPixelId   String?   // Meta (Facebook/Instagram) — 15-16 dígitos
-  ga4Id         String?   // Google Analytics 4 — G-XXXXXXX
-  googleAdsId   String?   // Google Ads — AW-XXXXXXXXX
-  googleAdsRotuloCompra String?  // rótulo da conversão de compra
-  tiktokPixelId String?
+  metaPixelId           String? // Meta (Facebook/Instagram) — 15-16 dígitos
+  ga4Id                 String? // Google Analytics 4 — G-XXXXXXX
+  googleAdsId           String? // Google Ads — AW-XXXXXXXXX
+  googleAdsRotuloCompra String? // rótulo da conversão de compra
+  tiktokPixelId         String?
   /// Conteúdo da meta de verificação (só o valor, não a tag inteira).
-  verificacaoGoogle String?
-  verificacaoBing   String?
+  verificacaoGoogle     String?
+  verificacaoBing       String?
   /// Último aviso enviado ao IndexNow — mostrado no painel.
-  indexadoEm        DateTime?
+  indexadoEm            DateTime?
 
   /// Log dos passos de provisionamento: { dns: "ok"|"pendente"|"erro:...", mail: ..., n8n: ... }
   provisionamento Json @default("{}")
 
   // ── Acesso do lojista ao painel (lojas.avilaops.com/painel) ───────────
   loginEmail String? @unique
-  senhaHash  String?   // scrypt, ver src/lib/sessao.ts
+  senhaHash  String? // scrypt, ver src/lib/sessao.ts
 
   // ── Mensalidade (assinatura no Mercado Pago da Avila Ops) ─────────────
-  assinaturaId        String?  @unique   // preapproval_id
-  assinaturaStatus    String   @default("SEM_ASSINATURA") // SEM_ASSINATURA | PENDENTE | AUTORIZADA | PAUSADA | CANCELADA
-  assinaturaInitPoint String?            // link para cadastrar o cartão, enquanto PENDENTE
+  assinaturaId        String?   @unique // preapproval_id
+  assinaturaStatus    String    @default("SEM_ASSINATURA") // SEM_ASSINATURA | PENDENTE | AUTORIZADA | PAUSADA | CANCELADA
+  assinaturaInitPoint String? // link para cadastrar o cartão, enquanto PENDENTE
   ultimoPagamentoEm   DateTime?
-  tentativasFalhas    Int      @default(0)
+  tentativasFalhas    Int       @default(0)
   suspensaEm          DateTime?
   /// Loja da casa (demo, vitrine própria): a rotina diária nunca suspende. Marcado só pela API admin.
-  cobrancaIsenta      Boolean  @default(false)
-  setupPagoEm         DateTime?          // R$ 497 — cobrado à parte, marcado pela Avila Ops
+  cobrancaIsenta      Boolean   @default(false)
+  setupPagoEm         DateTime? // R$ 497 — cobrado à parte, marcado pela Avila Ops
 
-  faturas         Fatura[]
-  cobrancaEventos CobrancaEvento[]
-  cupons          Cupom[]
-  compradores     Comprador[]
-  anunciosMl      AnuncioMercadoLivre[]
+  faturas          Fatura[]
+  cobrancaEventos  CobrancaEvento[]
+  cupons           Cupom[]
+  compradores      Comprador[]
+  anunciosMl       AnuncioMercadoLivre[]
   checkoutsAbertos CheckoutAberto[]
-  avaliacoes      Avaliacao[]
-  avisosEstoque   AvisoEstoque[]
-  postagens       Postagem[]
+  avaliacoes       Avaliacao[]
+  avisosEstoque    AvisoEstoque[]
+  postagens        Postagem[]
 
   apiKeyEnc      String?
   apiKeyCriadaEm DateTime?
@@ -184,13 +184,13 @@ model Categoria {
   ordem     Int     @default(0)
 
   // SEO persistido: gerado fora do request público e revisável no painel.
-  seoTitle       String?
-  seoDescription String?
-  seoKeywords    String[] @default([])
-  seoPendente    Boolean  @default(true)
-  seoOrigem      String?  // manual | gemini | fallback
-  seoModelo      String?
-  seoAtualizadoEm DateTime?
+  seoTitle         String?
+  seoDescription   String?
+  seoKeywords      String[]  @default([])
+  seoPendente      Boolean   @default(true)
+  seoOrigem        String? // manual | gemini | fallback
+  seoModelo        String?
+  seoAtualizadoEm  DateTime?
   seoProcessandoEm DateTime?
   seoErro          String?
 
@@ -205,59 +205,58 @@ model Categoria {
 }
 
 model Produto {
-  id          String  @id @default(cuid())
-  tenantId    String
-  categoriaId String?
-  slug        String
-  nome        String
-  marca       String?
-  sku         String?
-  gtin        String?
+  id              String   @id @default(cuid())
+  tenantId        String
+  categoriaId     String?
+  slug            String
+  nome            String
+  marca           String?
+  sku             String?
+  gtin            String?
   /// Centavos. Nunca float — ver packages/checkout/src/core/types.ts.
-  precoCentavos     Int
-  precoDeCentavos   Int?     // "de R$ X por R$ Y"
-  descricaoCurta    String?
-  descricao         String?
-  imagens           String[] @default([])
-  destaque          Boolean  @default(false)
-  ativo             Boolean  @default(true)
-  disponibilidade   String   @default("in_stock") // in_stock | out_of_stock | backorder
-  estoque           Int?
+  precoCentavos   Int
+  precoDeCentavos Int? // "de R$ X por R$ Y"
+  descricaoCurta  String?
+  descricao       String?
+  imagens         String[] @default([])
+  destaque        Boolean  @default(false)
+  ativo           Boolean  @default(true)
+  disponibilidade String   @default("in_stock") // in_stock | out_of_stock | backorder
+  estoque         Int?
   /// Peso em kg e medidas em cm. Sem eles, o frete usa a caixa padrão do tenant.
-  pesoKg        Float?
-  alturaCm      Float?
-  larguraCm     Float?
-  comprimentoCm Float?
-  atributos     Json     @default("{}") // livre: { "volumeMl": 500, "cor": "azul" }
+  pesoKg          Float?
+  alturaCm        Float?
+  larguraCm       Float?
+  comprimentoCm   Float?
+  atributos       Json     @default("{}") // livre: { "volumeMl": 500, "cor": "azul" }
 
   // Peças e acessórios (segmento "motopecas"): a que veículos o item serve.
   // Vazio = universal (capacete, óleo, serviço). Ver src/lib/motos.ts.
-  codigoOriginal      String?                       // código OEM do fabricante da moto
-  codigosEquivalentes String[] @default([])         // cross-reference: outras marcas/códigos
-  compatibilidade     Json     @default("[]")       // [{ marca, modelo, anoDe?, anoAte? }]
+  codigoOriginal      String? // código OEM do fabricante da moto
+  codigosEquivalentes String[] @default([]) // cross-reference: outras marcas/códigos
+  compatibilidade     Json     @default("[]") // [{ marca, modelo, anoDe?, anoAte? }]
   /// Nomes das opções de variação, na ordem de exibição: ["Tamanho", "Cor"].
   /// Vazio = produto simples (estoque no próprio produto).
-  opcoes        String[] @default([])
+  opcoes              String[] @default([])
 
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
-  tenant    Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  categoria Categoria? @relation(fields: [categoriaId], references: [id], onDelete: SetNull)
-  itens     PedidoItem[]
-  variantes Variante[]
+  tenant     Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  categoria  Categoria?   @relation(fields: [categoriaId], references: [id], onDelete: SetNull)
+  itens      PedidoItem[]
+  variantes  Variante[]
   avaliacoes Avaliacao[]
-
-  @@unique([tenantId, slug])
-  @@index([tenantId, ativo, destaque])
   /// Texto normalizado (minúsculas, sem acento) de nome + marca + sku +
   /// descrição curta. Mantido por gatilho no banco — ver a migração
   /// 20260826200000_busca_sem_acento. Nunca escrever por aqui.
-  busca String @default("")
+  busca      String       @default("")
 
   avisosEstoque AvisoEstoque[]
   anunciosMl    AnuncioMercadoLivre[]
 
+  @@unique([tenantId, slug])
+  @@index([tenantId, ativo, destaque])
   @@index([tenantId, busca])
 }
 
@@ -272,30 +271,30 @@ enum PedidoStatus {
 }
 
 model Pedido {
-  id          String       @id @default(cuid())
-  tenantId    String
+  id         String       @id @default(cuid())
+  tenantId   String
   /// Referência pública e idempotente (a do checkout). É o que o cliente vê.
-  referencia  String       @unique
-  numero      Int          @default(autoincrement())
-  status      PedidoStatus @default(AGUARDANDO_PAGAMENTO)
+  referencia String       @unique
+  numero     Int          @default(autoincrement())
+  status     PedidoStatus @default(AGUARDANDO_PAGAMENTO)
 
-  clienteNome     String
-  clienteEmail    String
-  clienteTelefone String
+  clienteNome      String
+  clienteEmail     String
+  clienteTelefone  String
   clienteDocumento String
-  entrega         Json?      // EnderecoEntrega ou null (retirada)
-  freteNome       String
-  freteCentavos   Int
+  entrega          Json? // EnderecoEntrega ou null (retirada)
+  freteNome        String
+  freteCentavos    Int
   subtotalCentavos Int
-  descontoCentavos Int @default(0)
+  descontoCentavos Int     @default(0)
   cupomCodigo      String?
   compradorId      String?
   /// Estoque já baixado para este pedido (evita baixar duas vezes no webhook).
   estoqueBaixado   Boolean @default(false)
   totalCentavos    Int
 
-  meioPagamento   String     // pix | cartao | boleto
-  gateway         String     @default("mercadopago")
+  meioPagamento   String // pix | cartao | boleto
+  gateway         String  @default("mercadopago")
   pagamentoId     String?
   pagamentoStatus String?
   rastreio        String?
@@ -303,8 +302,8 @@ model Pedido {
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
-  tenant    Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  comprador Comprador?  @relation(fields: [compradorId], references: [id], onDelete: SetNull)
+  tenant    Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  comprador Comprador?   @relation(fields: [compradorId], references: [id], onDelete: SetNull)
   itens     PedidoItem[]
   postagem  Postagem?
 
@@ -319,10 +318,10 @@ model Variante {
   produtoId     String
   /// Valores na ordem de Produto.opcoes: { "Tamanho": "P", "Cor": "Azul" }
   valores       Json
-  nome          String            // "P / Azul" — derivado, para exibir e para o pedido
+  nome          String // "P / Azul" — derivado, para exibir e para o pedido
   sku           String?
   precoCentavos Int?
-  estoque       Int?              // null = não controla
+  estoque       Int? // null = não controla
   pesoKg        Float?
   imagem        String?
   ativo         Boolean @default(true)
@@ -338,9 +337,9 @@ model Variante {
 model Cupom {
   id             String    @id @default(cuid())
   tenantId       String
-  codigo         String                     // maiúsculo, sem espaço
-  tipo           String                     // PERCENTUAL | FIXO | FRETE_GRATIS
-  valor          Int       @default(0)      // % (0–100) ou centavos
+  codigo         String // maiúsculo, sem espaço
+  tipo           String // PERCENTUAL | FIXO | FRETE_GRATIS
+  valor          Int       @default(0) // % (0–100) ou centavos
   minimoCentavos Int       @default(0)
   usosMax        Int?
   usos           Int       @default(0)
@@ -355,14 +354,14 @@ model Cupom {
 
 /// Uma cobrança mensal da assinatura (authorized_payment do Mercado Pago).
 model Fatura {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   tenantId   String
-  externalId String   @unique   // id do authorized_payment
+  externalId String    @unique // id do authorized_payment
   centavos   Int
-  status     String              // approved | rejected | pending | …
+  status     String // approved | rejected | pending | …
   detalhe    String?
   pagaEm     DateTime?
-  criadoEm   DateTime @default(now())
+  criadoEm   DateTime  @default(now())
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
@@ -371,27 +370,27 @@ model Fatura {
 
 /// Notificação do Mercado Pago já vista — idempotência do webhook.
 model CobrancaEvento {
-  id             String    @id @default(cuid())
-  notificacaoId  String    @unique   // "<topic>:<data.id>"
-  tenantId       String?
-  topico         String
-  processadoEm   DateTime?
-  erro           String?
-  criadoEm       DateTime  @default(now())
+  id            String    @id @default(cuid())
+  notificacaoId String    @unique // "<topic>:<data.id>"
+  tenantId      String?
+  topico        String
+  processadoEm  DateTime?
+  erro          String?
+  criadoEm      DateTime  @default(now())
 
   tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: SetNull)
 }
 
 model PedidoItem {
-  id         String  @id @default(cuid())
-  pedidoId   String
-  produtoId  String?
-  nome       String
-  sku        String?
-  quantidade Int
+  id                    String  @id @default(cuid())
+  pedidoId              String
+  produtoId             String?
+  nome                  String
+  sku                   String?
+  quantidade            Int
   precoUnitarioCentavos Int
-  varianteId   String?
-  varianteNome String?
+  varianteId            String?
+  varianteNome          String?
 
   pedido   Pedido    @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
   produto  Produto?  @relation(fields: [produtoId], references: [id], onDelete: SetNull)
@@ -407,7 +406,7 @@ model CheckoutAberto {
   clienteNome     String
   clienteEmail    String
   clienteTelefone String
-  itens           Json      // [{ id, nome, quantidade, precoUnitario }]
+  itens           Json // [{ id, nome, quantidade, precoUnitario }]
   totalCentavos   Int
   status          String    @default("ABERTO") // ABERTO | LEMBRADO | CONVERTIDO
   lembradoEm      DateTime?
@@ -425,7 +424,7 @@ model Avaliacao {
   tenantId  String
   produtoId String
   nome      String
-  nota      Int      // 1–5
+  nota      Int // 1–5
   texto     String?
   aprovada  Boolean  @default(false)
   criadoEm  DateTime @default(now())
@@ -441,19 +440,19 @@ model Avaliacao {
 /// e-mail pode ter conta em lojas diferentes, e uma loja nunca enxerga o
 /// cadastro da outra.
 model Comprador {
-  id         String   @id @default(cuid())
-  tenantId   String
-  email      String
-  senhaHash  String
-  nome       String
-  telefone   String?
-  documento  String?
-  criadoEm   DateTime @default(now())
+  id           String    @id @default(cuid())
+  tenantId     String
+  email        String
+  senhaHash    String
+  nome         String
+  telefone     String?
+  documento    String?
+  criadoEm     DateTime  @default(now())
   ultimoAcesso DateTime?
 
-  tenant     Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  enderecos  EnderecoComprador[]
-  pedidos    Pedido[]
+  tenant    Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  enderecos EnderecoComprador[]
+  pedidos   Pedido[]
 
   @@unique([tenantId, email])
 }
@@ -507,18 +506,18 @@ model Postagem {
   tenantId String
   pedidoId String @unique
 
-  servico      String            // pac | sedex | jadlog-package | jadlog-dotcom | loggi | mini
-  codigoObjeto String?           // rastreio, quando a etiqueta sai
+  servico                    String // pac | sedex | jadlog-package | jadlog-dotcom | loggi | mini
+  codigoObjeto               String? // rastreio, quando a etiqueta sai
   custoCentavos              Int
   cobradoDoCompradorCentavos Int
-  pdfEtiqueta   String?
-  pdfDeclaracao String?
-  status  String  @default("pendente")  // pendente | emitida | cancelada | erro
-  detalhe String?
+  pdfEtiqueta                String?
+  pdfDeclaracao              String?
+  status                     String  @default("pendente") // pendente | emitida | cancelada | erro
+  detalhe                    String?
 
   acertadaEm   DateTime?
-  criadoEm     DateTime @default(now())
-  atualizadoEm DateTime @updatedAt
+  criadoEm     DateTime  @default(now())
+  atualizadoEm DateTime  @updatedAt
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   pedido Pedido @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
@@ -527,26 +526,26 @@ model Postagem {
 }
 
 enum AutomacaoEventoStatus {
-  EMITIDO      // a plataforma enviou ao n8n
-  PROCESSANDO  // o n8n reivindicou (primeira entrega)
+  EMITIDO // a plataforma enviou ao n8n
+  PROCESSANDO // o n8n reivindicou (primeira entrega)
   PROCESSADO
   FALHOU
-  IGNORADO     // válido, mas sem ação (ex.: PIX pago antes do lembrete)
+  IGNORADO // válido, mas sem ação (ex.: PIX pago antes do lembrete)
 }
 
 /// Um registro por evento emitido ao n8n. É a trava de idempotência (o n8n
 /// reivindica pelo eventId antes de qualquer efeito externo) e o rastro de
 /// "entreguei / executou".
 model AutomacaoEvento {
-  eventId      String                @id
-  tipo         String
-  slug         String
-  versao       Int                   @default(1)
-  status       AutomacaoEventoStatus @default(EMITIDO)
-  detalhe      String?
-  emitidoEm    DateTime              @default(now())
+  eventId        String                @id
+  tipo           String
+  slug           String
+  versao         Int                   @default(1)
+  status         AutomacaoEventoStatus @default(EMITIDO)
+  detalhe        String?
+  emitidoEm      DateTime              @default(now())
   reivindicadoEm DateTime?
-  concluidoEm  DateTime?
+  concluidoEm    DateTime?
 
   @@index([slug, tipo])
   @@index([status, emitidoEm])
@@ -563,32 +562,43 @@ model AutomacaoEvento {
 /// sem guardar a resposta o lojista fica com um anúncio que "não subiu" sem
 /// saber o que corrigir.
 model AnuncioMercadoLivre {
-  id        String   @id @default(cuid())
+  id        String @id @default(cuid())
   tenantId  String
   produtoId String
 
   /// Id do anúncio no ML (MLB1234567890). Nulo enquanto é rascunho.
-  mlbId       String?  @unique
+  mlbId       String? @unique
   categoriaMl String?
   /// active | paused | closed | under_review
   statusMl    String?
   permalink   String?
 
   /// rascunho | publicando | publicado | recusado | pausado
-  estado      String   @default("rascunho")
-  motivoErro  String?
+  estado     String  @default("rascunho")
+  motivoErro String?
 
   /// Preço e estoque com que foi publicado, para saber o que mudou desde então.
   precoCentavosPublicado Int?
   estoquePublicado       Int?
 
+  /// Preparo antes de publicar: nome enriquecido, categoria prevista, atributos
+  /// conferidos e o veredito. Fica aqui e não em `Produto` porque é opinião de
+  /// um canal sobre o produto, não fato do produto: a mesma peça pode estar
+  /// pronta para o Mercado Livre e bloqueada na Amazon.
+  preparo       Json?
+  /// PRONTO | REVISAO | BLOQUEADO. Coluna própria para listar "o que falta
+  /// resolver" sem varrer o JSON de milhares de produtos.
+  preparoEstado String?
+  preparadoEm   DateTime?
+
   sincronizadoEm DateTime?
-  criadoEm       DateTime @default(now())
-  atualizadoEm   DateTime @updatedAt
+  criadoEm       DateTime  @default(now())
+  atualizadoEm   DateTime  @updatedAt
 
   tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   produto Produto @relation(fields: [produtoId], references: [id], onDelete: Cascade)
 
   @@unique([tenantId, produtoId])
   @@index([tenantId, estado])
+  @@index([tenantId, preparoEstado])
 }
