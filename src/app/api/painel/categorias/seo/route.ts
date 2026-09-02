@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { lojistaAtual } from "@/lib/sessao";
+import { exigir } from "@/lib/operadores";
 import { avisarBuscadores } from "@/lib/indexnow";
 import { emitir } from "@/lib/eventos";
 import { gerarRascunhoSeoCategoria, publicarSeoCategoria } from "@/lib/seo-categorias";
@@ -17,8 +17,9 @@ const Publicar = z.object({
 
 /** POST: gera rascunho, mas não publica sem a revisão do lojista. */
 export async function POST(request: Request) {
-  const loja = await lojistaAtual();
-  if (!loja) return Response.json({ erro: "Sessão expirada." }, { status: 401 });
+  const { s, erro } = await exigir("catalogo");
+  if (erro) return erro;
+  const loja = s.tenant;
   const entrada = Gerar.safeParse(await request.json().catch(() => null));
   if (!entrada.success) return Response.json({ erro: "Categoria ou contexto inválido." }, { status: 422 });
   const resultado = await gerarRascunhoSeoCategoria(loja, entrada.data.id, entrada.data.contexto);
@@ -28,8 +29,9 @@ export async function POST(request: Request) {
 
 /** PUT: publica o rascunho revisado no banco e avisa os buscadores. */
 export async function PUT(request: Request) {
-  const loja = await lojistaAtual();
-  if (!loja) return Response.json({ erro: "Sessão expirada." }, { status: 401 });
+  const { s, erro } = await exigir("catalogo");
+  if (erro) return erro;
+  const loja = s.tenant;
   const entrada = Publicar.safeParse(await request.json().catch(() => null));
   if (!entrada.success) return Response.json({ erro: "Revise o título, a descrição e as palavras-chave." }, { status: 422 });
   const { id, titulo, descricao, palavrasChave, origem, modelo } = entrada.data;

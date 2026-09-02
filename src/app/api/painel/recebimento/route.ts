@@ -1,4 +1,4 @@
-import { lojistaAtual } from "@/lib/sessao";
+import { exigir } from "@/lib/operadores";
 import { testarRecebimento } from "@/lib/recebimento";
 
 /**
@@ -9,8 +9,9 @@ import { testarRecebimento } from "@/lib/recebimento";
  * nem vai para log: o que sai daqui é o veredito e o apelido da conta.
  */
 export async function POST(request: Request) {
-  const loja = await lojistaAtual();
-  if (!loja) return Response.json({ erro: "Sessão expirada." }, { status: 401 });
+  const { s, erro } = await exigir("configuracoes");
+  if (erro) return erro;
+  const loja = s.tenant;
 
   const corpo = (await request.json().catch(() => null)) as
     | { accessToken?: string; publicKey?: string }

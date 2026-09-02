@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { lojistaAtual } from "@/lib/sessao";
+import { exigir } from "@/lib/operadores";
 import { normalizarCodigo } from "@/lib/cupons";
 
 const Entrada = z.object({
@@ -20,8 +21,9 @@ export async function GET() {
 
 /** POST — cria ou atualiza pelo código. */
 export async function POST(request: Request) {
-  const loja = await lojistaAtual();
-  if (!loja) return Response.json({ erro: "Sessão expirada." }, { status: 401 });
+  const { s, erro } = await exigir("catalogo");
+  if (erro) return erro;
+  const loja = s.tenant;
   const r = Entrada.safeParse(await request.json().catch(() => null));
   if (!r.success) return Response.json({ erro: "Dados inválidos.", detalhes: r.error.flatten() }, { status: 422 });
   if (r.data.tipo === "PERCENTUAL" && (r.data.valor < 1 || r.data.valor > 100)) return Response.json({ erro: "Percentual entre 1 e 100." }, { status: 422 });
@@ -35,8 +37,9 @@ export async function POST(request: Request) {
 
 /** DELETE ?codigo= — desativa. */
 export async function DELETE(request: Request) {
-  const loja = await lojistaAtual();
-  if (!loja) return Response.json({ erro: "Sessão expirada." }, { status: 401 });
+  const { s, erro } = await exigir("catalogo");
+  if (erro) return erro;
+  const loja = s.tenant;
   const codigo = normalizarCodigo(new URL(request.url).searchParams.get("codigo") ?? "");
   await prisma.cupom.updateMany({ where: { tenantId: loja.id, codigo }, data: { ativo: false } });
   return Response.json({ ok: true });

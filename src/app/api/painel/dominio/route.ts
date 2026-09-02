@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { lojistaAtual } from "@/lib/sessao";
+import { exigir } from "@/lib/operadores";
 import { conferirDominio, dominioValido, limparDominio, registrosNecessarios } from "@/lib/dominio";
 import { provisionarLoja } from "@/lib/provisionar";
 
@@ -14,8 +14,9 @@ import { provisionarLoja } from "@/lib/provisionar";
  * apontaria o DNS e receberia erro de certificado, sem entender por quê.
  */
 export async function POST(request: Request) {
-  const loja = await lojistaAtual();
-  if (!loja) return Response.json({ erro: "Sessão expirada." }, { status: 401 });
+  const { s, erro } = await exigir("configuracoes");
+  if (erro) return erro;
+  const loja = s.tenant;
 
   const corpo = (await request.json().catch(() => null)) as { acao?: string; dominio?: string } | null;
   const acao = corpo?.acao ?? "verificar";

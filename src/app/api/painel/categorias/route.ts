@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { lojistaAtual } from "@/lib/sessao";
+import { exigir } from "@/lib/operadores";
 import { slugificar } from "@/lib/catalogo";
 import { emitir } from "@/lib/eventos";
 import { avisarBuscadores } from "@/lib/indexnow";
@@ -22,8 +23,9 @@ export async function GET() {
 
 /** POST — cria ou atualiza (com id). */
 export async function POST(request: Request) {
-  const loja = await lojistaAtual();
-  if (!loja) return Response.json({ erro: "Sessão expirada." }, { status: 401 });
+  const { s, erro } = await exigir("catalogo");
+  if (erro) return erro;
+  const loja = s.tenant;
   const r = Entrada.safeParse(await request.json().catch(() => null));
   if (!r.success) return Response.json({ erro: "Dados inválidos." }, { status: 422 });
   const { id, ...dados } = r.data;
@@ -89,8 +91,9 @@ export async function POST(request: Request) {
 
 /** DELETE ?id= — apaga; produtos ficam sem categoria. */
 export async function DELETE(request: Request) {
-  const loja = await lojistaAtual();
-  if (!loja) return Response.json({ erro: "Sessão expirada." }, { status: 401 });
+  const { s, erro } = await exigir("catalogo");
+  if (erro) return erro;
+  const loja = s.tenant;
   const id = new URL(request.url).searchParams.get("id") ?? "";
   const c = await prisma.categoria.findFirst({ where: { id, tenantId: loja.id } });
   if (!c) return Response.json({ erro: "Categoria não encontrada." }, { status: 404 });

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { lojistaAtual } from "@/lib/sessao";
+import { exigir } from "@/lib/operadores";
 import { gerarCopyProduto, MODELO_GEMINI_PADRAO } from "@/lib/genai";
 
 const EntradaSchema = z.object({
@@ -10,11 +10,11 @@ const EntradaSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  // Autenticação multi-tenant / lojista
-  const lojista = await lojistaAtual();
-  if (!lojista) {
-    return Response.json({ erro: "Sessão expirada ou não autorizada." }, { status: 401 });
-  }
+  // Escrever texto de produto é mexer no catálogo, e gasta crédito de IA da
+  // loja: o balcão não decide isso.
+  const { s, erro } = await exigir("catalogo");
+  if (erro) return erro;
+  const lojista = s.tenant;
 
   const corpo = await request.json().catch(() => null);
   const validacao = EntradaSchema.safeParse(corpo);

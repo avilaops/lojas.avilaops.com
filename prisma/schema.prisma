@@ -165,6 +165,7 @@ model Tenant {
   avaliacoes       Avaliacao[]
   avisosEstoque    AvisoEstoque[]
   postagens        Postagem[]
+  operadores       OperadorLoja[]
 
   apiKeyEnc      String?
   apiKeyCriadaEm DateTime?
@@ -226,14 +227,12 @@ model Produto {
   imagens         String[] @default([])
   /**
    * De onde a imagem veio, e o quanto ela é deste item:
-   *
-   *   `propria`        foto do SKU exato (própria ou do fabricante com código
-   *                    conferido). É o padrão e não exibe aviso.
-   *   `representativa` foto de outro item da mesma família visual. A vitrine
-   *                    avisa, porque a peça da foto não é a que vai na caixa.
-   *   `ilustracao`     desenho gerado das medidas reais do cadastro. A vitrine
-   *                    avisa que é ilustração, não fotografia.
-   *
+   * `propria`        foto do SKU exato (própria ou do fabricante com código
+   * conferido). É o padrão e não exibe aviso.
+   * `representativa` foto de outro item da mesma família visual. A vitrine
+   * avisa, porque a peça da foto não é a que vai na caixa.
+   * `ilustracao`     desenho gerado das medidas reais do cadastro. A vitrine
+   * avisa que é ilustração, não fotografia.
    * Existe porque imagem plausível de produto errado é pior que ausência de
    * imagem: gera compra errada, devolução e desconfiança. Quem escreve a
    * imagem declara o que ela é; a vitrine só obedece.
@@ -624,4 +623,47 @@ model AnuncioMercadoLivre {
   @@unique([tenantId, produtoId])
   @@index([tenantId, estado])
   @@index([tenantId, preparoEstado])
+}
+
+/// Quem trabalha na loja e entra no painel.
+///
+/// Antes era uma senha por loja, gravada no proprio `Tenant`. Numa loja com
+/// equipe isso significa que o dono, quem separa pedido e quem cadastra produto
+/// usam a mesma senha: ninguem sabe quem despachou o que, e quando alguem sai
+/// da empresa a senha muda para todo mundo ao mesmo tempo.
+///
+/// Quem cria e remove e o proprio lojista, pela tela do painel. O
+/// `Tenant.loginEmail` continua sendo o dono da loja: ele nao aparece nesta
+/// tabela, nao pode ser removido pela tela e e o caminho de volta se a equipe
+/// se trancar fora. Ver src/lib/operadores.ts.
+model OperadorLoja {
+  id       String @id @default(cuid())
+  tenantId String
+
+  nome      String
+  email     String
+  /// scrypt, mesmo formato do lojista e do comprador (src/lib/sessao.ts).
+  senhaHash String
+
+  /// GERENTE | OPERADOR
+  ///
+  /// GERENTE cuida da loja (produto, preco, pedido, promocao) mas nao mexe em
+  /// assinatura nem em quem entra. OPERADOR e o balcao: ve e despacha pedido, e
+  /// nao muda preco. O dono nao esta aqui: ele e o Tenant.
+  papel String @default("OPERADOR")
+
+  /// Desligar nao apaga: o historico de quem despachou cada pedido tem que
+  /// continuar apontando para uma pessoa.
+  ativo Boolean @default(true)
+
+  ultimoAcessoEm DateTime?
+  criadoEm       DateTime  @default(now())
+  atualizadoEm   DateTime  @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  /// O mesmo e-mail pode operar em lojas diferentes (contador, agencia), mas
+  /// nunca duas vezes na mesma loja.
+  @@unique([tenantId, email])
+  @@index([tenantId, ativo])
 }

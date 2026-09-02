@@ -1,11 +1,12 @@
-import { lojistaAtual } from "@/lib/sessao";
+import { exigir } from "@/lib/operadores";
 import { cancelarAssinatura, iniciarAssinatura } from "@/lib/assinatura";
 import { MercadoPagoIndisponivel } from "@/lib/mercadopago-assinatura";
 
 /** POST — cria (ou reaproveita) a assinatura e devolve o link para cadastrar o cartão. */
 export async function POST() {
-  const loja = await lojistaAtual();
-  if (!loja) return Response.json({ erro: "Sessão expirada." }, { status: 401 });
+  const { s, erro } = await exigir("cobranca");
+  if (erro) return erro;
+  const loja = s.tenant;
   try {
     return Response.json(await iniciarAssinatura(loja));
   } catch (erro) {
@@ -17,8 +18,9 @@ export async function POST() {
 
 /** DELETE — cancela a assinatura (a loja segue até o fim do período pago; depois é suspensa). */
 export async function DELETE() {
-  const loja = await lojistaAtual();
-  if (!loja) return Response.json({ erro: "Sessão expirada." }, { status: 401 });
+  const { s, erro } = await exigir("cobranca");
+  if (erro) return erro;
+  const loja = s.tenant;
   await cancelarAssinatura(loja);
   return Response.json({ ok: true });
 }

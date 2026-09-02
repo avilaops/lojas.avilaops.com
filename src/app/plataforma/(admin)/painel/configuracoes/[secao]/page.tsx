@@ -3,8 +3,10 @@ import { notFound } from "next/navigation";
 import PainelLoja, { type SecaoPainel } from "@/components/painel/PainelLoja";
 import Dominio from "@/components/painel/Dominio";
 import Canais from "@/components/painel/Canais";
+import Equipe from "@/components/painel/Equipe";
 import { prisma } from "@/lib/db";
-import { lojistaAtual } from "@/lib/sessao";
+import { lojistaAtual, sessaoDoPainel } from "@/lib/sessao";
+import { listarOperadores, permite } from "@/lib/operadores";
 import { dadosDoPainel } from "@/lib/painel-dados";
 
 /** Endereço legível para o lojista, seção interna para o componente. */
@@ -24,6 +26,36 @@ export default async function Pagina({ params, searchParams }: {
   searchParams: Promise<{ ml?: string }>;
 }) {
   const { secao } = await params;
+
+  // Equipe também não é seção do PainelLoja: ela lê a própria tabela e não
+  // precisa do catálogo nem dos pedidos.
+  if (secao === "equipe") {
+    const s = await sessaoDoPainel();
+    if (!s) notFound();
+    // Só o dono vê e mexe. Gerente criando gerente seria quem tem acesso hoje
+    // garantindo acesso para sempre, mesmo depois de desligado.
+    if (!permite(s.papel, "equipe")) {
+      return (
+        <p className="rounded-lg bg-amber-50 p-4 text-sm text-amber-900">
+          Só o dono da loja gerencia quem entra no painel.
+        </p>
+      );
+    }
+    const operadores = await listarOperadores(s.tenant.id);
+    return (
+      <Equipe
+        dono={s.tenant.loginEmail}
+        operadores={operadores.map((o) => ({
+          id: o.id,
+          nome: o.nome,
+          email: o.email,
+          papel: o.papel,
+          ativo: o.ativo,
+          ultimoAcessoEm: o.ultimoAcessoEm?.toISOString() ?? null,
+        }))}
+      />
+    );
+  }
 
   // Canais não é seção do PainelLoja: é a tela para onde o /ml/callback volta,
   // e ela precisa do estado da conexão, não do catálogo nem dos pedidos.

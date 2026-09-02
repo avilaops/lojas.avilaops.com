@@ -3,14 +3,16 @@ import { prisma } from "@/lib/db";
 import { ProdutoEntradaSchema, conferirImagem } from "@/lib/admin-schemas";
 import { importarProdutos } from "@/lib/admin-tenants";
 import { lojistaAtual } from "@/lib/sessao";
+import { exigir } from "@/lib/operadores";
 import { avisarBuscadores, caminhosDoProduto } from "@/lib/indexnow";
 import { slugificar } from "@/lib/catalogo";
 import type { Prisma } from "@prisma/client";
 
 /** PUT — importa/atualiza em lote (CSV ou um único produto do formulário). */
 export async function PUT(request: Request) {
-  const loja = await lojistaAtual();
-  if (!loja) return Response.json({ erro: "Sessão expirada." }, { status: 401 });
+  const { s, erro } = await exigir("catalogo");
+  if (erro) return erro;
+  const loja = s.tenant;
   const r = z.array(ProdutoEntradaSchema).min(1).max(2000).safeParse(await request.json().catch(() => null));
   if (!r.success) return Response.json({ erro: "Dados inválidos.", detalhes: r.error.flatten() }, { status: 422 });
   const resultado = await importarProdutos(loja.id, r.data);
@@ -22,8 +24,9 @@ export async function PUT(request: Request) {
 
 /** DELETE ?id= — desativa (não apaga: pedidos antigos apontam para ele). */
 export async function DELETE(request: Request) {
-  const loja = await lojistaAtual();
-  if (!loja) return Response.json({ erro: "Sessão expirada." }, { status: 401 });
+  const { s, erro } = await exigir("catalogo");
+  if (erro) return erro;
+  const loja = s.tenant;
   const id = new URL(request.url).searchParams.get("id") ?? "";
   const p = await prisma.produto.findFirst({ where: { id, tenantId: loja.id } });
   if (!p) return Response.json({ erro: "Produto não encontrado." }, { status: 404 });
@@ -45,8 +48,9 @@ const Edicao = conferirImagem(ProdutoEntradaSchema.partial().extend({ id: z.stri
 
 /** PATCH — edita um produto (qualquer campo; categoria por nome, criada se não existir). */
 export async function PATCH(request: Request) {
-  const loja = await lojistaAtual();
-  if (!loja) return Response.json({ erro: "Sessão expirada." }, { status: 401 });
+  const { s, erro } = await exigir("catalogo");
+  if (erro) return erro;
+  const loja = s.tenant;
   const r = Edicao.safeParse(await request.json().catch(() => null));
   if (!r.success) return Response.json({ erro: "Dados inválidos.", detalhes: r.error.flatten() }, { status: 422 });
   const { id, categoria, atributos, slug, compatibilidade, ...campos } = r.data;

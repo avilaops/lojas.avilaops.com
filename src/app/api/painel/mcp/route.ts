@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { lojistaAtual } from "@/lib/sessao";
+import { exigir } from "@/lib/operadores";
 import { prisma } from "@/lib/db";
 import { cifrar } from "@/lib/cofre";
 
@@ -22,8 +23,9 @@ export async function GET() {
 
 /** POST — Gera ou rotaciona a chave de API da loja (Exclusivo LOJA_PRO). */
 export async function POST() {
-  const loja = await lojistaAtual();
-  if (!loja) return Response.json({ erro: "Sessão expirada." }, { status: 401 });
+  const { s, erro } = await exigir("configuracoes");
+  if (erro) return erro;
+  const loja = s.tenant;
 
   if (loja.plano !== "LOJA_PRO") {
     return Response.json(
@@ -60,8 +62,9 @@ export async function POST() {
 
 /** DELETE — Revoga a chave de API da loja. */
 export async function DELETE() {
-  const loja = await lojistaAtual();
-  if (!loja) return Response.json({ erro: "Sessão expirada." }, { status: 401 });
+  const { s, erro } = await exigir("configuracoes");
+  if (erro) return erro;
+  const loja = s.tenant;
 
   await prisma.tenant.update({
     where: { id: loja.id },

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { lojistaAtual } from "@/lib/sessao";
+import { exigir } from "@/lib/operadores";
 import { avisarBuscadores, chaveIndexNow } from "@/lib/indexnow";
 import { urlDaLoja } from "@/lib/tenant";
 
@@ -37,8 +38,9 @@ const Entrada = z.object({
 
 /** PATCH — grava os códigos de verificação do Search Console / Bing Webmaster. */
 export async function PATCH(request: Request) {
-  const loja = await lojistaAtual();
-  if (!loja) return Response.json({ erro: "Sessão expirada." }, { status: 401 });
+  const { s, erro } = await exigir("configuracoes");
+  if (erro) return erro;
+  const loja = s.tenant;
   const r = Entrada.safeParse(await request.json().catch(() => null));
   if (!r.success) return Response.json({ erro: "Código inválido." }, { status: 422 });
   // Aceita a tag inteira colada do painel do buscador: extraímos o content.
@@ -59,8 +61,9 @@ export async function PATCH(request: Request) {
 
 /** POST — "avisar buscadores agora": manda tudo o que existe para o IndexNow. */
 export async function POST() {
-  const loja = await lojistaAtual();
-  if (!loja) return Response.json({ erro: "Sessão expirada." }, { status: 401 });
+  const { s, erro } = await exigir("configuracoes");
+  if (erro) return erro;
+  const loja = s.tenant;
   const [produtos, categorias] = await Promise.all([
     prisma.produto.findMany({ where: { tenantId: loja.id, ativo: true }, select: { slug: true } }),
     prisma.categoria.findMany({ where: { tenantId: loja.id }, select: { slug: true } }),

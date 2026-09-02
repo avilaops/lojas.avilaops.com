@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { lojistaAtual } from "@/lib/sessao";
+import { exigir } from "@/lib/operadores";
 
 /**
  * Variações de um produto. PUT substitui o conjunto inteiro (opções + lista):
@@ -26,8 +27,9 @@ const Entrada = z.object({
 });
 
 export async function PUT(request: Request) {
-  const loja = await lojistaAtual();
-  if (!loja) return Response.json({ erro: "Sessão expirada." }, { status: 401 });
+  const { s, erro } = await exigir("catalogo");
+  if (erro) return erro;
+  const loja = s.tenant;
   const r = Entrada.safeParse(await request.json().catch(() => null));
   if (!r.success) return Response.json({ erro: "Dados inválidos.", detalhes: r.error.flatten() }, { status: 422 });
 

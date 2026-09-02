@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { lojistaAtual } from "@/lib/sessao";
+import { exigir } from "@/lib/operadores";
 import { urlDeAutorizacao } from "@/lib/mercadolivre";
 
 /**
@@ -30,8 +31,9 @@ export async function GET() {
  * comercial no lugar dele. O espelho fica, para reconectar sem republicar tudo.
  */
 export async function DELETE() {
-  const loja = await lojistaAtual();
-  if (!loja) return Response.json({ erro: "Sessão expirada." }, { status: 401 });
+  const { s, erro } = await exigir("configuracoes");
+  if (erro) return erro;
+  const loja = s.tenant;
 
   await prisma.tenant.update({
     where: { id: loja.id },

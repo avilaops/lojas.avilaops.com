@@ -2,6 +2,7 @@ import { z } from "zod";
 import { sugerirEssencia } from "@/lib/identidade";
 import { gerarDiagnosticoMarca, MODELO_GEMINI_PADRAO } from "@/lib/genai";
 import { lojistaAtual } from "@/lib/sessao";
+import { exigir } from "@/lib/operadores";
 
 const Entrada = z.object({
   nome: z.string().trim().min(1).max(80),
@@ -11,8 +12,11 @@ const Entrada = z.object({
 });
 
 export async function POST(request: Request) {
-  // Autenticação multi-tenant / lojista
-  const lojista = await lojistaAtual();
+  // A rota chamava `lojistaAtual()` e seguia sem conferir o resultado: qualquer
+  // pessoa sem sessão gastava crédito de IA da casa.
+  const { s, erro } = await exigir("configuracoes");
+  if (erro) return erro;
+  const lojista = s.tenant;
 
   const r = Entrada.safeParse(await request.json().catch(() => null));
   if (!r.success) {

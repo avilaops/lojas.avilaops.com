@@ -1,4 +1,4 @@
-import { lojistaAtual } from "@/lib/sessao";
+import { exigir } from "@/lib/operadores";
 import { UploadInvalido, salvarImagem, salvarBytes } from "@/lib/uploads";
 import { FundoIndisponivel, removedorConfigurado, removerFundo } from "@/lib/fundo";
 
@@ -11,8 +11,9 @@ import { FundoIndisponivel, removedorConfigurado, removerFundo } from "@/lib/fun
  * é o que faz um catálogo de celular parecer catálogo de loja grande.
  */
 export async function POST(request: Request) {
-  const loja = await lojistaAtual();
-  if (!loja) return Response.json({ erro: "Sessão expirada." }, { status: 401 });
+  const { s, erro } = await exigir("catalogo");
+  if (erro) return erro;
+  const loja = s.tenant;
 
   const form = await request.formData().catch(() => null);
   const arquivo = form?.get("arquivo");
