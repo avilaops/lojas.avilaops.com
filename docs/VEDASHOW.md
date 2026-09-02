@@ -71,7 +71,21 @@ por três motivos concretos:
 
 ### Fases
 
-**Fase 1 — a loja no ar (o entregável)**
+**Fase 1 — a loja no ar — FEITA em 02/09/2026**
+
+`https://vedashow.lojas.avilaops.com` — 2.114 produtos, 40 categorias, tema
+navy/laranja tirado do logo, layout `mercado`. O exportador é
+`vedashow/etl/exportar_loja.py`; o que ele decide e por quê está no README de
+lá. Dois bugs da plataforma apareceram na carga e foram corrigidos junto
+(slug repetido derrubava o lote; nome de categoria não era atualizado).
+
+O que ficou pendente e por quê:
+
+- **Foto**: 117 dos 2.114 vendáveis têm imagem. O resto entra com placeholder,
+  que a plataforma já trata ("Imagem em preparação"). É a Fase 2.
+- **Preço**: revisão do lojista, é a primeira remessa.
+
+**Fase 1 — o desenho original**
 
 - Tenant `vedashow` via `POST /api/admin/tenants` (script `criar-loja.ts`).
   Segmento `geral`; nada de código por loja, conforme `AGENTS.md`.
