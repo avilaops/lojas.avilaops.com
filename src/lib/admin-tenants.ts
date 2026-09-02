@@ -46,6 +46,16 @@ export async function atualizarTenant(slug: string, entrada: Partial<TenantEntra
     const atual = await prisma.tenant.findUniqueOrThrow({ where: { slug }, select: { identidade: true } });
     dados.identidade = { ...((atual.identidade as Record<string, unknown>) ?? {}), ...resto.identidade };
   }
+  // Definir o domínio principal tem que incluí-lo em `dominios`, que é a lista
+  // que o Caddy lê para emitir certificado (GET /api/admin/dominios). Na
+  // criação isso já acontecia; no PATCH não, então quem cadastrava o domínio
+  // depois — o caso normal, o domínio chega semanas depois da loja — ficava com
+  // o campo preenchido, nenhum erro à vista e o site sem responder pelo domínio.
+  if (resto.dominioPrincipal && resto.dominios === undefined) {
+    const apex = resto.dominioPrincipal.replace(/^www\./, "");
+    const atual = await prisma.tenant.findUniqueOrThrow({ where: { slug }, select: { dominios: true } });
+    dados.dominios = Array.from(new Set([...atual.dominios, apex, `www.${apex}`]));
+  }
   const t = await prisma.tenant.update({ where: { slug }, data: dados });
   esquecerTenantEmCache(slug);
   return t;
