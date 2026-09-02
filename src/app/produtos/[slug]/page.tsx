@@ -33,7 +33,11 @@ export default async function ProdutoPage({ params }: Props) {
   const p = await buscarProduto(t.id, slug);
   if (!p) notFound();
   const vende = lojaVende(t);
-  const disponivel = p.disponibilidade !== "out_of_stock";
+  // Preço zero é "ainda não precificado", não "de graça": item de referência
+  // vindo do ERP entra no catálogo para ser encontrado, e o preço vem por
+  // consulta. Ver ProductCard, que aplica a mesma regra na vitrine.
+  const sobConsulta = p.precoCentavos <= 0;
+  const disponivel = !sobConsulta && p.disponibilidade !== "out_of_stock";
   const moto = t.segmento === "motopecas" ? await minhaMoto() : null;
   const [avaliacoes, resumo, relacionados] = await Promise.all([
     prisma.avaliacao.findMany({ where: { produtoId: p.id, aprovada: true }, orderBy: { criadoEm: "desc" }, take: 20 }),
@@ -108,13 +112,28 @@ export default async function ProdutoPage({ params }: Props) {
           ) : (
           <div className="mt-5">
             {p.precoDeCentavos && p.precoDeCentavos > p.precoCentavos && <p className="text-sm text-muted-foreground line-through">{formatarBRL(p.precoDeCentavos)}</p>}
-            <p className="text-3xl font-bold">{formatarBRL(p.precoCentavos)}</p>
-            {vende && t.meiosPagamento.includes("pix") && <p className="text-xs text-muted-foreground">no PIX, cartão ou boleto</p>}
+            {sobConsulta ? (
+              <>
+                <p className="text-2xl font-bold text-muted-foreground">Preço sob consulta</p>
+                <p className="text-xs text-muted-foreground">Fale com a loja para receber o preço e o prazo deste item.</p>
+              </>
+            ) : (
+              <>
+                <p className="text-3xl font-bold">{formatarBRL(p.precoCentavos)}</p>
+                {vende && t.meiosPagamento.includes("pix") && <p className="text-xs text-muted-foreground">no PIX, cartão ou boleto</p>}
+              </>
+            )}
           </div>
           )}
 
           <div className="mt-6 max-w-sm">
-            {p.opcoes.length > 0 ? null : !disponivel || (p.estoque != null && p.estoque <= 0) ? (
+            {p.opcoes.length > 0 ? null : sobConsulta ? (
+              t.whatsapp ? (
+                <a className="btn-primario w-full" href={linkWhatsApp(t.whatsapp, `Olá! Quero saber o preço de: ${p.nome}`)} target="_blank" rel="noopener">
+                  Consultar preço
+                </a>
+              ) : null
+            ) : !disponivel || (p.estoque != null && p.estoque <= 0) ? (
               <AvisoEstoque produtoId={p.id} />
             ) : vende ? (
               <AddToCartButton item={{ id: p.id, slug: p.slug, nome: p.nome, precoCentavos: p.precoCentavos, imagem: p.imagens[0] }} disponivel irParaCarrinho />

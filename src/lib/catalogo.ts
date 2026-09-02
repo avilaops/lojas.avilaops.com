@@ -242,7 +242,12 @@ export async function resolverItensDoCatalogo(
   // O id do carrinho é `<produtoId>` ou `<produtoId>:<varianteId>`.
   const pares = pedidos.map((p) => ({ ...p, produtoId: p.id.split(":")[0], varianteId: p.id.split(":")[1] ?? null }));
   const produtos = await prisma.produto.findMany({
-    where: { tenantId, id: { in: pares.map((p) => p.produtoId) }, ativo: true, disponibilidade: { not: "out_of_stock" } },
+    // `precoCentavos > 0` fecha a porta do item sob consulta: ele existe no
+    // catálogo para ser encontrado, não para ser comprado. A vitrine já não
+    // oferece carrinho para ele, mas a trava tem que estar aqui — é esta
+    // função que decide o preço que o cliente paga, e o carrinho vem do
+    // navegador. Sem isso, um id forjado compraria a peça por R$ 0,00.
+    where: { tenantId, id: { in: pares.map((p) => p.produtoId) }, ativo: true, disponibilidade: { not: "out_of_stock" }, precoCentavos: { gt: 0 } },
     include: { variantes: { where: { ativo: true } } },
   });
   const porId = new Map(produtos.map((p) => [p.id, p]));

@@ -108,3 +108,31 @@ test("medida com decimal compara certo", () => {
   assert.equal(dentro(12.7, { de: 12, ate: 13 }), true);
   assert.equal(dentro(12.7, { de: 13 }), false);
 });
+
+/**
+ * Item sob consulta (preço 0) existe no catálogo para ser encontrado, não
+ * comprado. A vitrine já não oferece carrinho, mas a trava que importa é a do
+ * `resolverItensDoCatalogo`: é ela que decide o preço cobrado, e o carrinho
+ * chega do navegador. Sem ela, um id forjado levaria a peça por R$ 0,00.
+ *
+ * A consulta em si precisa de banco; o que se testa aqui é a condição.
+ */
+function entraNoCheckout(p: { ativo: boolean; disponibilidade: string; precoCentavos: number }): boolean {
+  return p.ativo && p.disponibilidade !== "out_of_stock" && p.precoCentavos > 0;
+}
+
+test("produto normal entra no checkout", () => {
+  assert.equal(entraNoCheckout({ ativo: true, disponibilidade: "in_stock", precoCentavos: 1890 }), true);
+});
+
+test("preço zero NÃO entra no checkout", () => {
+  assert.equal(entraNoCheckout({ ativo: true, disponibilidade: "in_stock", precoCentavos: 0 }), false);
+});
+
+test("esgotado não entra", () => {
+  assert.equal(entraNoCheckout({ ativo: true, disponibilidade: "out_of_stock", precoCentavos: 1890 }), false);
+});
+
+test("inativo não entra", () => {
+  assert.equal(entraNoCheckout({ ativo: false, disponibilidade: "in_stock", precoCentavos: 1890 }), false);
+});

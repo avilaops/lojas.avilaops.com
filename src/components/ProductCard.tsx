@@ -12,7 +12,11 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null }: {
   const segundaImagem = produto.imagens[1];
   const miniatura = imagem && /\/uploads\//.test(imagem) && !/\.svg$/i.test(imagem) ? `${imagem}?w=480` : imagem;
   const miniatura2 = segundaImagem && /\/uploads\//.test(segundaImagem) && !/\.svg$/i.test(segundaImagem) ? `${segundaImagem}?w=480` : segundaImagem;
-  const disponivel = produto.disponibilidade !== "out_of_stock" && (produto.estoque == null || produto.estoque > 0);
+  // Preço zero é "ainda não precificado", não "de graça". Catálogo importado
+  // de ERP traz item de referência sem preço, e mostrar "R$ 0,00" com botão de
+  // comprar faz a loja parecer quebrada — ou pior, promete o que não existe.
+  const sobConsulta = produto.precoCentavos <= 0;
+  const disponivel = !sobConsulta && produto.disponibilidade !== "out_of_stock" && (produto.estoque == null || produto.estoque > 0);
   const esgotado = produto.disponibilidade === "out_of_stock" || produto.estoque === 0;
   const estoqueBaixo = produto.estoque != null && produto.estoque > 0 && produto.estoque <= 3;
 
@@ -91,9 +95,25 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null }: {
           {produto.precoDeCentavos && produto.precoDeCentavos > produto.precoCentavos && (
             <p className="text-xs text-muted-foreground line-through">{formatarBRL(produto.precoDeCentavos)}</p>
           )}
-          <p className="text-xl font-black tracking-tight text-foreground">{formatarBRL(produto.precoCentavos)}</p>
+          {sobConsulta ? (
+            <p className="text-base font-bold tracking-tight text-muted-foreground">Preço sob consulta</p>
+          ) : (
+            <p className="text-xl font-black tracking-tight text-foreground">{formatarBRL(produto.precoCentavos)}</p>
+          )}
         </div>
-        {vende && produto.opcoes.length > 0 ? (
+        {sobConsulta ? (
+          // Sem preço não há carrinho: o caminho é falar com a loja. É assim
+          // que peça de catálogo técnico é comprada mesmo quando tem preço.
+          whatsapp ? (
+            <a className="btn-primario w-full text-xs" href={linkWhatsApp(whatsapp, `Olá! Quero saber o preço de: ${produto.nome}`)} target="_blank" rel="noopener">
+              Consultar preço
+            </a>
+          ) : (
+            <Link href={`/produtos/${produto.slug}`} className="btn-secundario w-full text-xs">
+              Ver detalhes
+            </Link>
+          )
+        ) : vende && produto.opcoes.length > 0 ? (
           <Link href={`/produtos/${produto.slug}`} className="btn-secundario w-full text-xs">
             Ver opções
           </Link>
