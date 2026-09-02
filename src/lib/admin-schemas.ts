@@ -32,7 +32,15 @@ export const TenantEntradaSchema = z.object({
   slug,
   nome: z.string().min(2).max(80),
   plano: z.enum(["SITE", "LOJA", "LOJA_PRO"]).optional(),
-  dominioPrincipal: z.string().min(4).max(253).toLowerCase().optional(),
+  // Sempre o apex: o proxy manda www para cá com 308, e um principal em www
+  // faria o redirecionamento apontar para si mesmo, em laço.
+  dominioPrincipal: z
+    .string()
+    .min(4)
+    .max(253)
+    .toLowerCase()
+    .transform((d) => d.replace(/^www\./, ""))
+    .optional(),
   dominios: z.array(z.string().min(4).max(253).toLowerCase()).optional(),
   logoUrl: z.string().url().optional(),
   /**

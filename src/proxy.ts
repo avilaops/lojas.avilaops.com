@@ -37,6 +37,24 @@ export function proxy(request: NextRequest) {
     return NextResponse.rewrite(new URL("/nao-encontrado", request.url));
   }
 
+  // www.loja.com.br → loja.com.br, em 308.
+  //
+  // O domínio próprio chega com apex e www apontando para cá, e os dois serviam
+  // a mesma página com 200. Para o Google isso é a loja inteira duplicada, com
+  // o agravante de que o `canonical`, o sitemap e os links de e-mail usam o
+  // apex (`Tenant.dominioPrincipal`): o www acumulava autoridade que o canônico
+  // não aproveita. Um endereço, uma página.
+  //
+  // 308 e não 302 porque preserva o método: um POST de checkout que caísse no
+  // www viraria GET no meio do pagamento.
+  if (host.startsWith("www.") && host !== `www.${BASE}`) {
+    const url = request.nextUrl.clone();
+    url.host = host.slice(4);
+    url.protocol = "https";
+    url.port = "";
+    return NextResponse.redirect(url, 308);
+  }
+
   return NextResponse.next();
 }
 
