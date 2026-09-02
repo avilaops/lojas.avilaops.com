@@ -17,6 +17,40 @@ import LojaNaoEncontrada from "@/components/LojaNaoEncontrada";
 import AvisoSuspensa from "@/components/AvisoSuspensa";
 import BarraGaragem from "@/components/BarraGaragem";
 
+/**
+ * Ícone e manifesto da loja, quando ela tem os seus.
+ *
+ * A plataforma é multi-loja: um `<link rel="icon">` fixo no `<head>` colocaria
+ * o ícone de um cliente na aba de todos os outros. Por isso o ícone é declarado
+ * aqui, junto do resto dos metadados, onde já sabemos de que loja é a página.
+ *
+ * Enquanto o lojista não sobe a marca dele, o `icons` fica ausente e o navegador
+ * usa o padrão, que é melhor que exibir a marca de outra empresa.
+ */
+const ICONES_POR_LOJA: Record<string, { pasta: string; nomeCurto: string }> = {
+  // Gerado no RealFaviconGenerator a partir da marca da FX (Fênix Eletrodos).
+  fxeletrodos: { pasta: "/Fxeletrodos/favicon", nomeCurto: "Fenix" },
+};
+
+function iconesDa(slug: string): Pick<Metadata, "icons" | "manifest" | "appleWebApp"> {
+  const c = ICONES_POR_LOJA[slug];
+  if (!c) return {};
+  return {
+    icons: {
+      icon: [
+        { url: `${c.pasta}/favicon-96x96.png`, type: "image/png", sizes: "96x96" },
+        { url: `${c.pasta}/favicon.svg`, type: "image/svg+xml" },
+        { url: `${c.pasta}/favicon.ico`, rel: "shortcut icon" },
+      ],
+      apple: [{ url: `${c.pasta}/apple-touch-icon.png`, sizes: "180x180" }],
+    },
+    manifest: `${c.pasta}/site.webmanifest`,
+    // Vira `<meta name="apple-mobile-web-app-title">`: é o nome que aparece
+    // embaixo do ícone quando alguém salva a loja na tela de início do iPhone.
+    appleWebApp: { title: c.nomeCurto },
+  };
+}
+
 export async function generateMetadata(): Promise<Metadata> {
   const h = await headers();
   if (h.get("x-plataforma") === "1") {
@@ -34,6 +68,7 @@ export async function generateMetadata(): Promise<Metadata> {
   if (!t) return { title: "Loja não encontrada", robots: { index: false } };
   return {
     metadataBase: new URL(urlDaLoja(t)),
+    ...iconesDa(t.slug),
     title: { default: t.slogan ? `${t.nome} | ${t.slogan}` : t.nome, template: `%s · ${t.nome}` },
     description: t.slogan ?? `Loja virtual ${t.nome}`,
     robots: t.status === "ATIVA" ? undefined : { index: false, follow: false },
