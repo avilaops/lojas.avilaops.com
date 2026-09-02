@@ -55,7 +55,19 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(url, 308);
   }
 
-  return NextResponse.next();
+  // Resposta de painel e de conta nunca pode ser guardada por ninguém.
+  //
+  // Medido em 02/09/2026: `/api/painel/equipe` voltava com
+  // `cf-cache-status: HIT` e `age: 1588` — o Cloudflare estava servindo a
+  // resposta de um lojista por 4 horas, e ela chegaria a outro. O cabeçalho não
+  // vinha do Caddy nem do código: é regra da borda. Como a borda respeita
+  // `no-store` da origem, a defesa fica aqui, que é o que está sob nosso
+  // controle e não depende de configuração de painel externo.
+  const resposta = NextResponse.next();
+  if (pathname.startsWith("/api/") || pathname.startsWith("/painel") || pathname.startsWith("/conta")) {
+    resposta.headers.set("cache-control", "private, no-store, max-age=0, must-revalidate");
+  }
+  return resposta;
 }
 
 export const config = {
