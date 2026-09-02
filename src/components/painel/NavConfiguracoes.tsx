@@ -14,6 +14,7 @@ const SUB = [
   { slug: "dominio", rotulo: "Domínio" },
   { slug: "entrega", rotulo: "Entrega" },
   { slug: "recebimento", rotulo: "Recebimento" },
+  { slug: "canais", rotulo: "Canais" },
   { slug: "assinatura", rotulo: "Assinatura" },
   { slug: "conta", rotulo: "Conta" },
 ] as const;
