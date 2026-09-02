@@ -101,6 +101,19 @@ model Tenant {
   mpPublicKey        String?
   mpAccessTokenEnc   String?
   mpWebhookSecretEnc String?
+
+  // ── Mercado Livre ─────────────────────────────────────────────────────
+  /// Mesma conta do Mercado Pago (provado em 02/09/2026: o token do MP
+  /// responde em api.mercadolibre.com/users/me), mas com escopo de venda,
+  /// que o token de pagamento não tem. Por isso credencial separada.
+  mlUserId           String?
+  mlNickname         String?
+  mlAccessTokenEnc   String?
+  /// offline_access: sem o refresh, o acesso morre em 6 horas.
+  mlRefreshTokenEnc  String?
+  mlExpiraEm         DateTime?
+  /// Quando o lojista conectou. Nulo = nunca conectou.
+  mlConectadoEm      DateTime?
   meiosPagamento     String[] @default(["pix", "cartao", "boleto"])
 
   // ── E-mail (mail.avilaops.com) ────────────────────────────────────────
@@ -142,6 +155,7 @@ model Tenant {
   cobrancaEventos CobrancaEvento[]
   cupons          Cupom[]
   compradores     Comprador[]
+  anunciosMl      AnuncioMercadoLivre[]
   checkoutsAbertos CheckoutAberto[]
   avaliacoes      Avaliacao[]
   avisosEstoque   AvisoEstoque[]
@@ -242,6 +256,7 @@ model Produto {
   busca String @default("")
 
   avisosEstoque AvisoEstoque[]
+  anunciosMl    AnuncioMercadoLivre[]
 
   @@index([tenantId, busca])
 }
@@ -535,4 +550,45 @@ model AutomacaoEvento {
 
   @@index([slug, tipo])
   @@index([status, emitidoEm])
+}
+
+/// O anúncio de um produto nosso no Mercado Livre.
+///
+/// Espelho, não cópia: o produto continua sendo nosso e o anúncio é o reflexo
+/// dele lá. Guardar o `MLB` é o que permite atualizar preço e estoque em vez de
+/// criar anúncio duplicado a cada sincronização, que é o erro mais comum e o
+/// que mais irrita o comprador.
+///
+/// `motivoErro` existe porque o ML recusa por atributo obrigatório faltando, e
+/// sem guardar a resposta o lojista fica com um anúncio que "não subiu" sem
+/// saber o que corrigir.
+model AnuncioMercadoLivre {
+  id        String   @id @default(cuid())
+  tenantId  String
+  produtoId String
+
+  /// Id do anúncio no ML (MLB1234567890). Nulo enquanto é rascunho.
+  mlbId       String?  @unique
+  categoriaMl String?
+  /// active | paused | closed | under_review
+  statusMl    String?
+  permalink   String?
+
+  /// rascunho | publicando | publicado | recusado | pausado
+  estado      String   @default("rascunho")
+  motivoErro  String?
+
+  /// Preço e estoque com que foi publicado, para saber o que mudou desde então.
+  precoCentavosPublicado Int?
+  estoquePublicado       Int?
+
+  sincronizadoEm DateTime?
+  criadoEm       DateTime @default(now())
+  atualizadoEm   DateTime @updatedAt
+
+  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  produto Produto @relation(fields: [produtoId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, produtoId])
+  @@index([tenantId, estado])
 }
