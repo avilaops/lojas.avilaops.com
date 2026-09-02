@@ -429,3 +429,78 @@ body {
   .garagem-hero { grid-template-columns: 1fr 1.4fr; align-items: center; padding: 2rem; }
 }
 @media (min-width: 1024px) { .garagem-modelos { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+/* ── capa de categoria ─────────────────────────────────────────────────── */
+
+/*
+ * Categoria nunca abre sem imagem. Antes era título solto numa página branca
+ * com "1 item" embaixo, e isso parece seção em construção para quem chega pela
+ * busca. Quando o lojista não subiu capa, entra a foto do primeiro produto; se
+ * nem isso houver, uma capa com a inicial e a cor da marca.
+ */
+.capa-categoria {
+  display: grid;
+  gap: 0;
+  margin-bottom: 28px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+}
+
+@media (min-width: 860px) {
+  .capa-categoria { grid-template-columns: 420px 1fr; align-items: stretch; }
+}
+
+.capa-categoria-imagem {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 180px;
+  background: color-mix(in srgb, var(--primary) 12%, var(--muted));
+}
+
+@media (min-width: 860px) { .capa-categoria-imagem { min-height: 230px; } }
+
+.capa-categoria-inicial {
+  font-size: 5rem;
+  font-weight: 800;
+  line-height: 1;
+  color: color-mix(in srgb, var(--primary) 55%, transparent);
+}
+
+.capa-categoria-texto { display: flex; flex-direction: column; justify-content: center; gap: 9px; padding: 26px; }
+.capa-categoria-texto h1 { font-size: clamp(1.6rem, 3.5vw, 2.3rem); font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; }
+.capa-categoria-texto p { max-width: 60ch; color: var(--muted-foreground); font-size: 0.95rem; line-height: 1.6; }
+
+.capa-categoria-selo {
+  align-self: flex-start;
+  padding: 4px 11px;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ── botões com reação ─────────────────────────────────────────────────── */
+
+/*
+ * Todo botão responde ao toque: sobe um pouco no hover, afunda no clique. Numa
+ * loja isso não é enfeite, é o retorno que diz "recebi", e a falta dele é o que
+ * faz o comprador clicar duas vezes no mesmo botão de comprar.
+ */
+.btn-primario, .btn-secundario {
+  transition: transform 0.12s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+}
+
+.btn-primario:hover { transform: translateY(-1px); box-shadow: 0 8px 20px color-mix(in srgb, var(--primary) 32%, transparent); }
+.btn-primario:active { transform: translateY(0); box-shadow: none; }
+.btn-secundario:hover { transform: translateY(-1px); border-color: var(--primary); color: var(--primary); }
+.btn-secundario:active { transform: translateY(0); }
+
+/* O cartão do produto sobe junto com a foto: o alvo de clique inteiro reage,
+   não só o botão dentro dele. */
+.cartao-produto-imagem img { transition: transform 0.5s ease; }

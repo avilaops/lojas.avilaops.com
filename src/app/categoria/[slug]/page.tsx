@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import CapaCategoria from "@/components/CapaCategoria";
 import { exigirTenant, lojaVende } from "@/lib/tenant";
 import { listarProdutos } from "@/lib/catalogo";
 import ProductCard from "@/components/ProductCard";
@@ -45,8 +46,13 @@ export default async function Categoria({ params, searchParams }: Props) {
 
   return (
     <main className="container-loja py-8">
-      <h1 className="mb-1 text-2xl font-bold">{categoria.nome}</h1>
-      {categoria.descricao && <p className="mb-2 max-w-2xl text-sm text-muted-foreground">{categoria.descricao}</p>}
+      <CapaCategoria
+        nome={categoria.nome}
+        descricao={categoria.descricao}
+        imagemUrl={categoria.imagemUrl}
+        fotoDoPrimeiroProduto={produtos.find((p) => p.imagens[0])?.imagens[0] ?? null}
+        quantidade={produtos.length}
+      />
       <p className="mb-6 text-sm text-muted-foreground">
         {moto ? (
           <>
