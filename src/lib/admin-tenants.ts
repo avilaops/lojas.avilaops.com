@@ -85,6 +85,7 @@ export async function slugLivre(
 export async function importarProdutos(tenantId: string, produtos: ProdutoEntrada[]) {
   const categorias = new Map<string, string>();
   for (const c of await prisma.categoria.findMany({ where: { tenantId } })) categorias.set(c.slug, c.id);
+  const nomesCorrigidos = new Set<string>();
 
   let criados = 0;
   let atualizados = 0;
@@ -98,6 +99,13 @@ export async function importarProdutos(tenantId: string, produtos: ProdutoEntrad
         const c = await prisma.categoria.create({ data: { tenantId, slug: cslug, nome: p.categoria, ordem: categorias.size } });
         categorias.set(cslug, c.id);
         categoriaId = c.id;
+      } else if (!nomesCorrigidos.has(cslug)) {
+        // O slug ignora acento, então "Eletrica" e "Elétrica" são a mesma
+        // categoria — mas o nome exibido continuava o da primeira importação.
+        // Corrigir a planilha não corrigia a vitrine, e o menu ficava com o
+        // erro de português à vista. Uma vez por lote, não por produto.
+        nomesCorrigidos.add(cslug);
+        await prisma.categoria.updateMany({ where: { id: categoriaId, nome: { not: p.categoria } }, data: { nome: p.categoria } });
       }
     }
 
