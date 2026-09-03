@@ -16,6 +16,7 @@ import type { ResumoVendas } from "@/lib/relatorio";
 import type { DiagnosticoFeed } from "@/lib/catalogo";
 import Anuncios, { type PixelsView } from "./Anuncios";
 import McpPainel from "./McpPainel";
+import CatalogoLista from "./CatalogoLista";
 
 export interface LojaView {
   slug: string;
@@ -89,7 +90,7 @@ const ASSINATURA: Record<string, { rotulo: string; classe: string }> = {
   CANCELADA: { rotulo: "Cancelada", classe: "bg-red-100 text-red-800" },
 };
 
-export default function PainelLoja({ secao, loja, produtos, pedidos, cupons, categorias, avaliacoes, vendas, catalogo, espera, postagem }: { secao: SecaoPainel; loja: LojaView; produtos: ProdutoView[]; pedidos: PedidoView[]; cupons: CupomView[]; categorias: CategoriaView[]; avaliacoes: AvaliacaoPainelView[]; vendas: ResumoVendas; catalogo: DiagnosticoFeed; espera: Array<{ produto: string; pessoas: number }>; postagem: { etiquetas: number; custoCentavos: number; limiteCentavos: number } }) {
+export default function PainelLoja({ secao, loja, contagens, produtos, pedidos, cupons, categorias, avaliacoes, vendas, catalogo, espera, postagem }: { secao: SecaoPainel; loja: LojaView; contagens: { semEmbalagem: number; ativos: number }; produtos: ProdutoView[]; pedidos: PedidoView[]; cupons: CupomView[]; categorias: CategoriaView[]; avaliacoes: AvaliacaoPainelView[]; vendas: ResumoVendas; catalogo: DiagnosticoFeed; espera: Array<{ produto: string; pessoas: number }>; postagem: { etiquetas: number; custoCentavos: number; limiteCentavos: number } }) {
   const router = useRouter();
   // A seção vem da URL, não do estado: quem manda na tela é o endereço.
   const aba = secao;
@@ -202,7 +203,7 @@ export default function PainelLoja({ secao, loja, produtos, pedidos, cupons, cat
 
       {aba === "Produtos" && (
         <>
-          {semEmbalagem.length > 0 && (
+          {contagens.semEmbalagem > 0 && (
             <Secao titulo="Frete saindo mais caro que precisa" descricao="Estes produtos não têm a embalagem cadastrada, então o frete deles é cotado pela caixa padrão da loja | quase sempre maior que a real.">
               <ul className="grid gap-1 text-sm">
                 {semEmbalagem.slice(0, 12).map((p) => (
@@ -212,7 +213,13 @@ export default function PainelLoja({ secao, loja, produtos, pedidos, cupons, cat
                   </li>
                 ))}
               </ul>
-              {semEmbalagem.length > 12 && <p className="text-xs text-muted-foreground">e mais {semEmbalagem.length - 12}.</p>}
+              {/* A conta vem do banco, não da fatia carregada: a tela dizia
+                  "e mais 488" numa loja com 5.591 produtos sem medida. */}
+              {contagens.semEmbalagem > 12 && (
+                <p className="text-xs text-muted-foreground">
+                  e mais {(contagens.semEmbalagem - 12).toLocaleString("pt-BR")} — de {contagens.ativos.toLocaleString("pt-BR")} produtos ativos.
+                </p>
+              )}
             </Secao>
           )}
           <Secao titulo="Novo produto" descricao="Cadastro rápido. Foto: cole o link da imagem (ou use a planilha).">
@@ -249,28 +256,10 @@ export default function PainelLoja({ secao, loja, produtos, pedidos, cupons, cat
           </Secao>
 
 
-          <Secao titulo={`Catálogo (${produtos.length})`} descricao="Clique no nome para editar (fotos, descrição, estoque, preço).">
-            {produtos.length === 0 ? <p className="text-sm text-muted-foreground">Nenhum produto ainda.</p> : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="text-left text-xs uppercase text-muted-foreground"><tr><th className="py-2">Produto</th><th>Categoria</th><th>SKU</th><th>Preço</th><th>Estoque</th><th></th></tr></thead>
-                  <tbody>
-                    {produtos.map((p) => (
-                      <tr key={p.id} className={`border-t border-border ${p.ativo ? "" : "opacity-50"}`}>
-                        <td className="py-2"><Link className="text-left hover:underline" href={`/painel/produtos/${p.id}`}>{p.destaque && "★ "}{p.nome}{!p.ativo && " (inativo)"}</Link></td>
-                        <td>{p.categoria ?? "-"}</td><td>{p.sku ?? "-"}</td><td>{brl(p.precoCentavos)}</td>
-                        <td>{p.opcoes.length ? `${p.variantes} variações` : p.estoque == null ? "∞" : p.estoque === 0 ? <span className="text-red-700">esgotado</span> : p.estoque}</td>
-                        <td className="whitespace-nowrap text-right text-xs">
-                          {p.ativo && <Link className="mr-2 underline" href={`/painel/produtos/${p.id}`}>{p.opcoes.length ? "grade" : "variações"}</Link>}
-                          {p.ativo && <button className="text-muted-foreground underline" disabled={ocupado} onClick={() => chamar(`/api/painel/produtos?id=${p.id}`, "DELETE", undefined, "Produto desativado.")}>desativar</button>}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </Secao>
+          {/* A listagem carrega do banco com busca, filtro e página: antes
+              vinham os 500 primeiros por nome, e num catálogo de 5.591 itens o
+              lojista não enxergava 91% do que vende. */}
+          <CatalogoLista categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} chamar={chamar} ocupado={ocupado} />
         </>
       )}
 
