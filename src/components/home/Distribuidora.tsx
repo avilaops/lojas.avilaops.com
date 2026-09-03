@@ -19,14 +19,12 @@ export default function Distribuidora({ t, identidade, categorias, vitrine, temD
 
   return (
     <main className="home-mercado home-distribuidora">
-      {/* O banner entra como fundo com véu escuro, e não como faixa própria: a
-          abertura já carrega título, texto e ações, e empilhar imagem sobre
-          tudo isso empurraria os produtos para fora da primeira tela — que é
-          justamente o que este layout existe para evitar. */}
-      <section
-        className={`mercado-abertura${t.bannerUrl ? " mercado-abertura-com-banner" : ""}`}
-        style={t.bannerUrl ? { backgroundImage: `linear-gradient(100deg, rgba(0,0,0,.82), rgba(0,0,0,.45) 62%, rgba(0,0,0,.2)), url(${t.bannerUrl})` } : undefined}
-      >
+      {/* O banner ocupa a metade direita da abertura, e não o fundo dela.
+          Arte de banner de distribuidora vem com a chamada já desenhada
+          ("A peça certa para sua manutenção"), então usá-la como fundo põe o
+          título do layout por cima do título da imagem: dois textos brigando
+          na primeira tela. Lado a lado, cada um se lê. */}
+      <section className={`mercado-abertura${t.bannerUrl ? " mercado-abertura-com-banner" : ""}`}>
         <div className="container-loja mercado-abertura-grid">
           <div>
             <p className="home-selo text-primary">{motopecas ? "Distribuição especializada" : identidade.palavrasChave[0] || "Catálogo completo"}</p>
@@ -37,11 +35,31 @@ export default function Distribuidora({ t, identidade, categorias, vitrine, temD
               {t.whatsapp && <Link href="/contato" className="btn-secundario">Falar com a equipe</Link>}
             </div>
           </div>
-          <aside className="mercado-resumo">
-            <Boxes />
-            <p><strong>{categorias.length || "Novas"}</strong><span>{categorias.length === 1 ? "categoria ativa" : "categorias para explorar"}</span></p>
-            <p><strong>{vitrine.length || "Em breve"}</strong><span>{temDestaques ? "ofertas em destaque" : "produtos nesta seleção"}</span></p>
-          </aside>
+          {t.bannerUrl ? (
+            /* A imagem já carrega a marca; os contadores viram uma tarja sobre
+               ela, em vez de custarem uma terceira coluna. */
+            <aside className="distribuidora-arte">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={t.bannerUrl} alt="" />
+              {/* Os números ficam abaixo da arte, não sobre ela: o rodapé do
+                  banner parece vazio mas é onde a arte fecha a frase, e a
+                  tarja caía justamente em cima dela.
+
+                  "nesta seleção" seria mentira: `vitrine` traz o catálogo
+                  ativo inteiro e a tela mostra dez. Com destaque o número é o
+                  da seleção mesmo; sem, é o tamanho do catálogo. */}
+              <div className="distribuidora-arte-numeros">
+                <p><strong>{categorias.length || "Novas"}</strong><span>{categorias.length === 1 ? "categoria" : "categorias"}</span></p>
+                <p><strong>{vitrine.length || "Em breve"}</strong><span>{temDestaques ? "em destaque" : "itens no catálogo"}</span></p>
+              </div>
+            </aside>
+          ) : (
+            <aside className="mercado-resumo">
+              <Boxes />
+              <p><strong>{categorias.length || "Novas"}</strong><span>{categorias.length === 1 ? "categoria ativa" : "categorias para explorar"}</span></p>
+              <p><strong>{vitrine.length || "Em breve"}</strong><span>{temDestaques ? "ofertas em destaque" : "produtos nesta seleção"}</span></p>
+            </aside>
+          )}
         </div>
       </section>
 

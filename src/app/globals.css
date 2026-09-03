@@ -135,33 +135,36 @@ body {
 .mercado-resumo span { font-size: .72rem; color: var(--muted-foreground); }
 .home-mercado .beneficios-barra { margin-top: 1rem; }
 
-/* Layout Distribuidora: o Mercado com banner na abertura. Herda tudo de
-   .home-mercado; só o que a imagem de fundo muda mora aqui. Sem banner
-   cadastrado a classe não entra e a abertura fica idêntica à do Mercado. */
-.mercado-abertura-com-banner { background-size: cover; background-position: center; }
-/* O texto passa a correr sobre foto: fixa-se claro, porque o véu do gradiente
-   garante o contraste, e --foreground seguiria a cor do tema (escuro sobre
-   escuro em loja de fundo claro). */
-.mercado-abertura-com-banner, .mercado-abertura-com-banner .mercado-abertura-grid > div > p:not(.home-selo) { color: #fff; }
-.mercado-abertura-com-banner .home-selo { color: #fff !important; opacity: .9; }
-/* O anel decorativo é desenho de fundo claro: sobre foto vira risco. */
+/* Layout Distribuidora: o Mercado com o banner ao lado do texto de abertura.
+   Herda .home-mercado inteiro; só a arte mora aqui. Sem banner cadastrado a
+   classe não entra e a tela fica idêntica à do Mercado.
+
+   A imagem fica ao lado e não como fundo porque banner de distribuidora vem
+   com a chamada desenhada: por baixo do h1, viram dois títulos sobrepostos. */
+/* O anel decorativo nasceu para preencher a direita vazia da abertura do
+   Mercado. Com a arte ali, ele só polui. */
 .mercado-abertura-com-banner::after { display: none; }
-/* Sombra sob o texto: o banner pode ter uma área clara justo atrás do título,
-   e o véu sozinho não cobre esse caso. */
-.mercado-abertura-com-banner h1 { text-shadow: 0 2px 24px rgba(0, 0, 0, .45); }
-/* A caixa de contadores é translúcida sobre fundo claro; sobre foto precisa de
-   corpo próprio, senão a imagem atravessa os números. */
-.mercado-abertura-com-banner .mercado-resumo { border-color: rgba(255, 255, 255, .28); background: rgba(12, 12, 16, .58); color: #fff; }
-.mercado-abertura-com-banner .mercado-resumo p { border-left-color: rgba(255, 255, 255, .28); }
-.mercado-abertura-com-banner .mercado-resumo span { color: rgba(255, 255, 255, .78); }
-.mercado-abertura-com-banner .mercado-resumo > svg { color: #fff; }
-/* O botão secundário é vazado: sobre foto, a borda do tema desaparece. No
-   celular ele já vira texto sublinhado sem borda (ver o bloco mobile adiante),
-   então aqui só a cor, e a borda volta a partir do tablet. */
-.mercado-abertura-com-banner .mercado-acoes .btn-secundario { color: #fff; }
-@media (min-width: 640px) {
-  .mercado-abertura-com-banner .mercado-acoes .btn-secundario { border-color: rgba(255, 255, 255, .5); }
+/* O título do layout divide a tela com o da arte: sem o tamanho gigante do
+   Mercado, senão os dois competem mesmo lado a lado. */
+.mercado-abertura-com-banner h1 { font-size: clamp(2rem, 3.4vw, 3.25rem); letter-spacing: -.04em; }
+.distribuidora-arte { display: grid; gap: .85rem; }
+.distribuidora-arte img { border-radius: calc(var(--radius) * 2); box-shadow: 0 24px 70px color-mix(in srgb, var(--foreground) 14%, transparent); }
+/* A coluna da direita do Mercado é estreita (cabia um cartão de contagem).
+   Uma arte 3:1 dentro dela vira uma tarja: as duas colunas se igualam. */
+@media (min-width: 1024px) {
+  .mercado-abertura-com-banner .mercado-abertura-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 }
+/* A arte deitada (3:1) é mostrada inteira, e a caixa toma a altura dela: com
+   `cover` numa coluna alta, o recorte comia as pontas da frase desenhada no
+   banner e sobrava o miolo de duas palavras. */
+.distribuidora-arte { align-self: center; }
+.distribuidora-arte img { display: block; width: 100%; height: auto; }
+/* Contadores em linha sob a arte. Sobre a imagem, cobriam o texto que a
+   própria arte desenha; e informação de apoio não merece uma terceira coluna. */
+.distribuidora-arte-numeros { display: flex; gap: 1.5rem; padding-inline: .25rem; }
+.distribuidora-arte-numeros p { display: flex; align-items: baseline; gap: .35rem; }
+.distribuidora-arte-numeros strong { font-size: 1.2rem; font-weight: 780; }
+.distribuidora-arte-numeros span { font-size: .72rem; color: var(--muted-foreground); }
 .mercado-departamentos, .mercado-produtos { padding-top: 3.75rem; }
 .mercado-departamentos h2, .mercado-produtos h2 { margin-top: .4rem; font-size: clamp(1.55rem, 3vw, 2.15rem); font-weight: 780; letter-spacing: -.035em; }
 .mercado-grade-categorias { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; }
@@ -635,6 +638,12 @@ body {
     order: 2; grid-template-columns: auto auto; justify-content: start; gap: 1.25rem;
     border: 0; padding: 0; box-shadow: none; backdrop-filter: none; background: transparent;
   }
+
+  /* A arte deitada já cabe na largura do celular; aqui só os números encolhem,
+     como o .mercado-resumo faz logo acima. */
+  .distribuidora-arte { order: 2; gap: .6rem; }
+  .distribuidora-arte-numeros { gap: 1rem; }
+  .distribuidora-arte-numeros strong { font-size: 1rem; }
   .mercado-resumo p { display: flex; align-items: baseline; gap: .375rem; }
   .mercado-resumo > svg { display: none; }
   .mercado-resumo p { border-left: 0; padding-left: 0; }
