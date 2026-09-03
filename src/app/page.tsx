@@ -9,6 +9,7 @@ import Minimal from "@/components/home/Minimal";
 import ProvaSocial from "@/components/home/ProvaSocial";
 import Spotlight from "@/components/home/Spotlight";
 import Mercado from "@/components/home/Mercado";
+import Distribuidora from "@/components/home/Distribuidora";
 import Conversao from "@/components/home/Conversao";
 
 /**
@@ -33,6 +34,7 @@ export default async function Home() {
   const layout =
     temaDo(t).layout === "spotlight" ? <Spotlight {...dados} />
     : temaDo(t).layout === "mercado" ? <Mercado {...dados} />
+    : temaDo(t).layout === "distribuidora" ? <Distribuidora {...dados} />
     : temaDo(t).layout === "conversao" ? <Conversao {...dados} />
     : temaDo(t).layout === "vitrine" ? <Vitrine {...dados} />
     : temaDo(t).layout === "editorial" ? <Editorial {...dados} />
