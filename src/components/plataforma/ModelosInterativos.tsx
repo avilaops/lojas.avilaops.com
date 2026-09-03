@@ -69,6 +69,18 @@ function MiniLoja({ variante }: { variante: Modelo }) {
       </div>
     );
   }
+  if (variante === "distribuidora") {
+    return (
+      <div className="pl-mini-loja pl-mini-mercado pl-mini-distribuidora" aria-label="Prévia do layout Distribuidora">
+        <div className="pl-mini-topo"><i /><span>DISTRIBUIDORA SUL</span><b>•••</b></div>
+        <div className="pl-mini-distribuidora-banner" aria-hidden="true"><strong>A peça certa,<br />no prazo certo.</strong></div>
+        <div className="pl-mini-departamentos" aria-hidden="true"><span>Pneus</span><span>Óleo</span><span>Freios</span><span>Relação</span><span>Elétrica</span></div>
+        <div className="pl-mini-mercado-grid" aria-hidden="true">
+          {Array.from({ length: 6 }).map((_, i) => <span key={i}><i /><b /><small /></span>)}
+        </div>
+      </div>
+    );
+  }
   if (variante === "conversao") {
     return (
       <div className="pl-mini-loja pl-mini-conversao" aria-label="Prévia do layout Conversão">

@@ -26,3 +26,43 @@ lojas.avilaops.com, *.lojas.avilaops.com {
 # que faz reverse_proxy para 3040 — por isso o passo "dns" do provisionamento
 # ainda precisa de um bloco por domínio OU de trocar o destino do https:// para
 # um roteador. Pendência anotada em docs/produtos/LOJAS-AVILAOPS.md.
+
+# ---------------------------------------------------------------------------
+# 03/09/2026 — cabeçalhos de segurança no bloco das lojas.
+#
+# O Lighthouse apontou CSP e HSTS ausentes com gravidade Alta: o bloco das
+# lojas não tinha cabeçalho nenhum, embora os outros sites do servidor já os
+# tivessem.
+#
+# A CSP entra em **modo de relato**, e não bloqueando. A vitrine carrega pixel
+# de rastreio configurado por cada lojista (Google Tag Manager, Meta, TikTok), e
+# derrubar o checkout de um cliente para passar numa auditoria seria trocar
+# problema real por selo. Depois de conferir o relato, `-Report-Only` sai do
+# nome do cabeçalho e a política passa a valer.
+#
+# Estado vivo no servidor (/etc/caddy/Caddyfile):
+
+lojas.avilaops.com, *.lojas.avilaops.com {
+	tls {
+		on_demand
+	}
+	encode zstd gzip
+
+	# Cabecalhos de seguranca. Apontados pelo Lighthouse em 03/09/2026 como
+	# gravidade Alta: nenhum estava presente aqui, embora os outros sites do
+	# servidor ja os tivessem.
+	#
+	# A CSP vai em modo de RELATO, e nao bloqueando: a vitrine carrega pixel de
+	# rastreio configurado por cada lojista (GTM, Meta, TikTok) e derrubar o
+	# checkout de um cliente para passar numa auditoria seria trocar problema
+	# real por selo. Depois de conferir que nada quebra, vira Content-Security-Policy.
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		X-Frame-Options "SAMEORIGIN"
+		Content-Security-Policy-Report-Only "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://connect.facebook.net https://analytics.tiktok.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https:; frame-ancestors 'self'; base-uri 'self'; form-action 'self' https://www.mercadopago.com.br"
+	}
+
+	reverse_proxy 127.0.0.1:3080
+}

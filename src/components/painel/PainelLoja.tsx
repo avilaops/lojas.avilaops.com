@@ -463,7 +463,7 @@ export default function PainelLoja({ secao, loja, contagens, produtos, pedidos, 
               <option value="motopecas">Peças e acessórios para motos</option>
             </select>
           </Campo>
-          <Campo label="Layout da página inicial" ajuda="Quatro composições prontas dos mesmos blocos. Troque e veja na loja na hora.">
+          <Campo label="Layout da página inicial" ajuda="Composições prontas dos mesmos blocos. Troque e veja na loja na hora.">
             <div className="grid gap-2 sm:grid-cols-2">
               {LAYOUTS.map((l) => (
                 <button key={l.valor} type="button" onClick={() => setTema({ ...tema, layout: l.valor })} className={`rounded-xl border p-3 text-left text-sm ${tema.layout === l.valor ? "border-primary" : "border-border"}`}>
