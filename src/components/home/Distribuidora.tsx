@@ -35,29 +35,14 @@ export default function Distribuidora({ t, identidade, categorias, vitrine, temD
               {t.whatsapp && <Link href="/contato" className="btn-secundario">Falar com a equipe</Link>}
             </div>
           </div>
-          {t.bannerUrl ? (
-            /* A imagem já carrega a marca; os contadores viram uma tarja sobre
-               ela, em vez de custarem uma terceira coluna. */
+          {/* Contagem de categorias e de itens não entra na vitrine.
+              Dizer "5.591 itens" entrega o tamanho do estoque para quem quer
+              comparar, e não ajuda ninguém a decidir a compra: quem procura
+              peça quer a peça certa, não o tamanho do catálogo. */}
+          {t.bannerUrl && (
             <aside className="distribuidora-arte">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={t.bannerUrl} alt="" />
-              {/* Os números ficam abaixo da arte, não sobre ela: o rodapé do
-                  banner parece vazio mas é onde a arte fecha a frase, e a
-                  tarja caía justamente em cima dela.
-
-                  "nesta seleção" seria mentira: `vitrine` traz o catálogo
-                  ativo inteiro e a tela mostra dez. Com destaque o número é o
-                  da seleção mesmo; sem, é o tamanho do catálogo. */}
-              <div className="distribuidora-arte-numeros">
-                <p><strong>{categorias.length || "Novas"}</strong><span>{categorias.length === 1 ? "categoria" : "categorias"}</span></p>
-                <p><strong>{vitrine.length || "Em breve"}</strong><span>{temDestaques ? "em destaque" : "itens no catálogo"}</span></p>
-              </div>
-            </aside>
-          ) : (
-            <aside className="mercado-resumo">
-              <Boxes />
-              <p><strong>{categorias.length || "Novas"}</strong><span>{categorias.length === 1 ? "categoria ativa" : "categorias para explorar"}</span></p>
-              <p><strong>{vitrine.length || "Em breve"}</strong><span>{temDestaques ? "ofertas em destaque" : "produtos nesta seleção"}</span></p>
             </aside>
           )}
         </div>

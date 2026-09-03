@@ -64,8 +64,9 @@ export default async function Produtos({ searchParams }: { searchParams: Promise
     <div className="container-loja py-8">
       <h1 className="mb-1 text-2xl font-bold">{titulo}</h1>
       <p className="mb-4 text-sm text-muted-foreground">
-        {produtos.length} item(ns)
-        {moto && (sp.q || categoriaAtual) && <> · mostrando o que serve na {nomeDaMoto(moto)}</>}
+        {/* Sem contagem: o número de itens é informação de estoque, não de
+            compra, e o comprador decide pelo produto que está vendo. */}
+        {moto && (sp.q || categoriaAtual) && <>Mostrando o que serve na {nomeDaMoto(moto)}</>}
         {moto && <> · <Link href="/produtos?moto=todas" className="underline">ver catálogo completo</Link></>}
       </p>
       <FiltrosProdutos categorias={categorias} valores={sp} medidas={temMedida} />

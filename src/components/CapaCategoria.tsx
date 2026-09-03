@@ -21,13 +21,11 @@ export default function CapaCategoria({
   nome,
   imagemUrl,
   fotoDoPrimeiroProduto,
-  quantidade,
   descricao,
 }: {
   nome: string;
   imagemUrl: string | null;
   fotoDoPrimeiroProduto: string | null;
-  quantidade: number;
   descricao?: string | null;
 }) {
   const foto = imagemUrl ?? fotoDoPrimeiroProduto;
@@ -43,7 +41,6 @@ export default function CapaCategoria({
       </div>
 
       <div className="capa-categoria-texto">
-        <span className="capa-categoria-selo">{quantidade} {quantidade === 1 ? "produto" : "produtos"}</span>
         <h1>{nome}</h1>
         {descricao && <p>{descricao}</p>}
       </div>

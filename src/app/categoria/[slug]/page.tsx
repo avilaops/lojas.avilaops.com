@@ -51,7 +51,6 @@ export default async function Categoria({ params, searchParams }: Props) {
         descricao={categoria.descricao}
         imagemUrl={categoria.imagemUrl}
         fotoDoPrimeiroProduto={produtos.find((p) => p.imagens[0])?.imagens[0] ?? null}
-        quantidade={produtos.length}
       />
       <p className="mb-6 text-sm text-muted-foreground">
         {moto ? (
@@ -61,9 +60,7 @@ export default async function Categoria({ params, searchParams }: Props) {
               ver tudo desta categoria
             </Link>
           </>
-        ) : (
-          <>{produtos.length} {produtos.length === 1 ? "item" : "itens"}</>
-        )}
+        ) : null}
       </p>
 
       {produtos.length === 0 ? (

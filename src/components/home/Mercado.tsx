@@ -22,11 +22,9 @@ export default function Mercado({ t, identidade, categorias, vitrine, temDestaqu
               {t.whatsapp && <Link href="/contato" className="btn-secundario">Falar com a equipe</Link>}
             </div>
           </div>
-          <aside className="mercado-resumo">
-            <Boxes />
-            <p><strong>{categorias.length || "Novas"}</strong><span>{categorias.length === 1 ? "categoria ativa" : "categorias para explorar"}</span></p>
-            <p><strong>{vitrine.length || "Em breve"}</strong><span>{temDestaques ? "ofertas em destaque" : "produtos nesta seleção"}</span></p>
-          </aside>
+          {/* Sem contagem de categorias e de produtos: ver "5.591 itens" não
+              ajuda quem procura uma peça, e entrega o tamanho do estoque a quem
+              quiser comparar. */}
         </div>
       </section>
 
