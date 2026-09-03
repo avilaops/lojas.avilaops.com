@@ -3,8 +3,8 @@
 import Image from "next/image";
 import { useState } from "react";
 
-/** Os sete layouts de `LAYOUTS` em src/lib/tema.ts, na ordem em que o painel oferece. */
-type Modelo = "classico" | "vitrine" | "editorial" | "minimal" | "spotlight" | "mercado" | "conversao";
+/** Os oito layouts de `LAYOUTS` em src/lib/tema.ts, na ordem em que o painel oferece. */
+type Modelo = "classico" | "vitrine" | "editorial" | "minimal" | "spotlight" | "mercado" | "distribuidora" | "conversao";
 
 const MODELOS: Array<{ id: Modelo; nome: string; resumo: string }> = [
   { id: "classico", nome: "Clássico", resumo: "Banner, categorias e destaques. Funciona para qualquer catálogo." },
@@ -13,6 +13,7 @@ const MODELOS: Array<{ id: Modelo; nome: string; resumo: string }> = [
   { id: "minimal", nome: "Minimal", resumo: "Produtos fortes, catálogo enxuto e muito respiro." },
   { id: "spotlight", nome: "Spotlight", resumo: "Um produto principal em destaque e navegação visual." },
   { id: "mercado", nome: "Mercado", resumo: "Catálogo denso, departamentos e mais produtos por tela." },
+  { id: "distribuidora", nome: "Distribuidora", resumo: "O catálogo denso com a sua imagem de banner na abertura." },
   { id: "conversao", nome: "Conversão", resumo: "Oferta clara, benefícios e caminho curto até a compra." },
 ];
 
