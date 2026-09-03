@@ -205,6 +205,12 @@
 
 .padm-conteudo {
   padding: 18px 16px 64px;
+  /* Sem isto, um nome de produto longo dentro de qualquer seção estica a área
+     inteira e a página rola de lado no celular. Medido em 03/09/2026 na tela de
+     produtos da Vedashow: 679px de conteúdo numa tela de 393. `min-width: 0`
+     porque item de grid/flex não encolhe abaixo do conteúdo por padrão. */
+  min-width: 0;
+  max-width: 100%;
 }
 
 .padm-cabecalho { margin-bottom: 18px; }

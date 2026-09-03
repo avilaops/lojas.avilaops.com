@@ -32,10 +32,14 @@ export const inputClasse = "h-11 w-full rounded-lg border border-border bg-backg
 
 export function Secao({ titulo, descricao, children }: { titulo: string; descricao?: string; children: ReactNode }) {
   return (
-    <section className="rounded-2xl border border-border bg-card p-6">
+    // `min-w-0` no bloco e na grade interna: item de grid tem largura mínima
+    // automática, então um nome técnico longo ("02400 JOGO C/8 PÇS
+    // (8x14,1x8,9x13) - Retentor…") estica a seção inteira e a página passa a
+    // rolar de lado no celular. Medido em 03/09/2026: 679px numa tela de 393.
+    <section className="min-w-0 rounded-2xl border border-border bg-card p-4 sm:p-6">
       <h2 className="text-base font-semibold">{titulo}</h2>
       {descricao && <p className="mt-1 text-sm text-muted-foreground">{descricao}</p>}
-      <div className="mt-4 grid gap-4">{children}</div>
+      <div className="mt-4 grid min-w-0 gap-4">{children}</div>
     </section>
   );
 }

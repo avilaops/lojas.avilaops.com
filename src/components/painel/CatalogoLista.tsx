@@ -132,8 +132,10 @@ export default function CatalogoLista({
             )}
           </div>
 
+          {/* Os dois selects dividem a linha no celular: lado a lado com a
+              busca eles ficavam com 6 caracteres visíveis. */}
           <select
-            className="h-11 rounded-lg border border-border bg-background px-3 text-sm"
+            className="h-11 min-w-0 flex-1 rounded-lg border border-border bg-background px-3 text-sm sm:flex-none"
             value={categoria}
             onChange={(e) => {
               setCategoria(e.target.value);
@@ -147,7 +149,7 @@ export default function CatalogoLista({
           </select>
 
           <select
-            className="h-11 rounded-lg border border-border bg-background px-3 text-sm"
+            className="h-11 min-w-0 flex-1 rounded-lg border border-border bg-background px-3 text-sm sm:flex-none"
             value={situacao}
             onChange={(e) => {
               setSituacao(e.target.value);
@@ -174,58 +176,117 @@ export default function CatalogoLista({
         </p>
       </div>
 
+      {/* No celular a tabela vira lista de cartões.
+          Seis colunas em 393px de largura obrigam a rolar de lado para ver o
+          preço, e num painel que o lojista abre do balcão isso é inútil.
+          Medido com scripts/medir-mobile.mts: a tabela pedia 736px. */}
       {dados && dados.produtos.length > 0 && (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+        <ul className="grid gap-2 sm:hidden">
+          {dados.produtos.map((p) => (
+            <li key={p.id} className={`rounded-lg border border-border p-3 ${p.ativo ? "" : "opacity-50"}`}>
+              <Link className="block font-medium hover:underline" href={`/painel/produtos/${p.id}`}>
+                {p.destaque && "★ "}
+                {p.nome}
+                {!p.ativo && " (inativo)"}
+              </Link>
+
+              <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                {p.categoria && <span>{p.categoria}</span>}
+                {p.sku && <span className="tabular-nums">SKU {p.sku}</span>}
+                {!p.temFoto && (
+                  <span className="inline-flex items-center gap-1 rounded bg-amber-50 px-1.5 py-0.5 text-amber-800">
+                    <ImageOff size={10} aria-hidden="true" /> sem foto
+                  </span>
+                )}
+              </div>
+
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+                <b className="tabular-nums">
+                  {p.precoCentavos > 0 ? brl(p.precoCentavos) : <span className="text-sm font-normal text-muted-foreground">sob consulta</span>}
+                </b>
+                <span className="text-xs tabular-nums text-muted-foreground">
+                  {p.opcoes.length
+                    ? `${p.variantes} variações`
+                    : p.estoque == null
+                      ? "estoque livre"
+                      : p.estoque === 0
+                        ? <span className="font-medium text-red-700">esgotado</span>
+                        : `${p.estoque} em estoque`}
+                </span>
+                {p.ativo && (
+                  <button
+                    className="ml-auto inline-flex h-9 items-center px-2 text-xs text-muted-foreground underline"
+                    disabled={ocupado}
+                    onClick={() => desativar(p)}
+                  >
+                    desativar
+                  </button>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {dados && dados.produtos.length > 0 && (
+        <div className="hidden overflow-x-auto sm:block">
+          {/* Largura mínima e colunas fixas: sem isso o nome técnico ("02400
+              JOGO C/8 PÇS (8x14,1x8,9x13) - Retentor…") empurrava as demais e
+              SKU e preço apareciam grudados ("4139R$ 90,00"). */}
+          <table className="w-full min-w-[46rem] text-sm">
             <thead className="text-left text-xs uppercase text-muted-foreground">
-              <tr>
-                <th className="py-2">Produto</th>
-                <th>Categoria</th>
-                <th>SKU</th>
-                <th>Preço</th>
-                <th>Estoque</th>
-                <th />
+              <tr className="border-b border-border">
+                <th className="w-auto py-2 pr-4 font-medium">Produto</th>
+                <th className="w-32 py-2 pr-4 font-medium">Categoria</th>
+                <th className="w-20 py-2 pr-4 font-medium">SKU</th>
+                <th className="w-28 py-2 pr-4 text-right font-medium">Preço</th>
+                <th className="w-24 py-2 pr-4 text-right font-medium">Estoque</th>
+                <th className="w-28 py-2" />
               </tr>
             </thead>
             <tbody className={carregando ? "opacity-50" : undefined}>
               {dados.produtos.map((p) => (
-                <tr key={p.id} className={`border-t border-border ${p.ativo ? "" : "opacity-50"}`}>
-                  <td className="py-2">
-                    <Link className="text-left hover:underline" href={`/painel/produtos/${p.id}`}>
+                <tr key={p.id} className={`border-t border-border align-top ${p.ativo ? "" : "opacity-50"}`}>
+                  <td className="py-2.5 pr-4">
+                    <Link className="hover:underline" href={`/painel/produtos/${p.id}`}>
                       {p.destaque && "★ "}
                       {p.nome}
                       {!p.ativo && " (inativo)"}
                     </Link>
                     {/* Sem foto é o problema mais caro de um catálogo grande, e
-                        aparece no lugar onde a decisão é tomada. */}
+                        aparece no lugar onde a decisão é tomada. Em linha
+                        própria: colado ao nome, ele quebrava a coluna no meio
+                        de uma palavra. */}
                     {!p.temFoto && (
-                      <span className="ml-2 inline-flex items-center gap-1 rounded bg-amber-50 px-1.5 py-0.5 text-[11px] text-amber-800">
-                        <ImageOff size={10} /> sem foto
+                      <span className="mt-1 flex w-fit items-center gap-1 rounded bg-amber-50 px-1.5 py-0.5 text-[11px] text-amber-800">
+                        <ImageOff size={10} aria-hidden="true" /> sem foto
                       </span>
                     )}
                   </td>
-                  <td>{p.categoria ?? "-"}</td>
-                  <td>{p.sku ?? "-"}</td>
-                  <td>{p.precoCentavos > 0 ? brl(p.precoCentavos) : <span className="text-muted-foreground">sob consulta</span>}</td>
-                  <td>
+                  <td className="py-2.5 pr-4 text-muted-foreground">{p.categoria ?? "—"}</td>
+                  <td className="py-2.5 pr-4 tabular-nums text-muted-foreground">{p.sku ?? "—"}</td>
+                  <td className="py-2.5 pr-4 text-right tabular-nums whitespace-nowrap">
+                    {p.precoCentavos > 0 ? brl(p.precoCentavos) : <span className="text-xs text-muted-foreground">sob consulta</span>}
+                  </td>
+                  <td className="py-2.5 pr-4 text-right tabular-nums whitespace-nowrap">
                     {p.opcoes.length
-                      ? `${p.variantes} variações`
+                      ? <span className="text-xs text-muted-foreground">{p.variantes} variações</span>
                       : p.estoque == null
-                        ? "∞"
+                        ? <span className="text-muted-foreground">∞</span>
                         : p.estoque === 0
-                          ? <span className="text-red-700">esgotado</span>
+                          ? <span className="text-xs font-medium text-red-700">esgotado</span>
                           : p.estoque}
                   </td>
-                  <td className="whitespace-nowrap text-right text-xs">
+                  <td className="py-2.5 text-right text-xs whitespace-nowrap">
                     {p.ativo && (
-                      <Link className="mr-2 underline" href={`/painel/produtos/${p.id}`}>
-                        {p.opcoes.length ? "grade" : "variações"}
-                      </Link>
-                    )}
-                    {p.ativo && (
-                      <button className="text-muted-foreground underline" disabled={ocupado} onClick={() => desativar(p)}>
-                        desativar
-                      </button>
+                      <>
+                        <Link className="underline" href={`/painel/produtos/${p.id}`}>
+                          {p.opcoes.length ? "grade" : "variações"}
+                        </Link>
+                        <button className="ml-3 text-muted-foreground underline" disabled={ocupado} onClick={() => desativar(p)}>
+                          desativar
+                        </button>
+                      </>
                     )}
                   </td>
                 </tr>

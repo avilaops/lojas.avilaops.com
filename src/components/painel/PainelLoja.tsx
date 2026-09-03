@@ -17,6 +17,8 @@ import type { DiagnosticoFeed } from "@/lib/catalogo";
 import Anuncios, { type PixelsView } from "./Anuncios";
 import McpPainel from "./McpPainel";
 import CatalogoLista from "./CatalogoLista";
+import SoltarPlanilha from "./SoltarPlanilha";
+import { FileCheck2 } from "lucide-react";
 
 export interface LojaView {
   slug: string;
@@ -207,9 +209,12 @@ export default function PainelLoja({ secao, loja, contagens, produtos, pedidos, 
             <Secao titulo="Frete saindo mais caro que precisa" descricao="Estes produtos não têm a embalagem cadastrada, então o frete deles é cotado pela caixa padrão da loja | quase sempre maior que a real.">
               <ul className="grid gap-1 text-sm">
                 {semEmbalagem.slice(0, 12).map((p) => (
-                  <li key={p.id} className="flex items-center justify-between gap-3 border-t border-border py-1.5">
-                    <span className="truncate">{p.nome}</span>
-                    <Link className="text-xs underline" href={`/painel/produtos/${p.id}`}>medir embalagem</Link>
+                  <li key={p.id} className="flex min-w-0 items-center justify-between gap-3 border-t border-border">
+                    {/* `min-w-0` é o que faz o `truncate` funcionar dentro de um
+                        flex: sem ele o nome técnico não encolhe e empurra a
+                        linha para fora da tela do celular. */}
+                    <span className="min-w-0 flex-1 truncate py-1.5">{p.nome}</span>
+                    <Link className="inline-flex h-11 flex-none items-center text-xs underline" href={`/painel/produtos/${p.id}`}>medir embalagem</Link>
                   </li>
                 ))}
               </ul>
@@ -245,12 +250,45 @@ export default function PainelLoja({ secao, loja, contagens, produtos, pedidos, 
 
           <Secao titulo="Importar planilha" descricao="Produto com o mesmo SKU é atualizado, não duplicado.">
             <p className="text-xs text-muted-foreground">Colunas: <code>nome, preco, categoria, marca, sku, preco_de, descricao_curta, descricao, imagem, destaque, peso_kg</code></p>
-            <input type="file" accept=".csv,text/csv" className="text-sm" onChange={(e) => e.target.files?.[0]?.text().then((t) => setCsv({ nome: e.target.files![0].name, ...lerCsvProdutos(t) }))} />
+            <SoltarPlanilha
+              desabilitado={ocupado}
+              onArquivo={(a) => a.text().then((t) => setCsv({ nome: a.name, ...lerCsvProdutos(t) }))}
+            />
             {csv && (
-              <div className="rounded-lg border border-border p-3 text-sm">
-                <p><strong>{csv.nome}</strong>: {csv.produtos.length} produto(s).</p>
-                {csv.erros.length > 0 && <ul className="mt-1 list-disc pl-5 text-xs text-amber-700">{csv.erros.slice(0, 5).map((x) => <li key={x}>{x}</li>)}</ul>}
-                <button className="btn-primario mt-3" disabled={ocupado || !csv.produtos.length} onClick={() => chamar("/api/painel/produtos", "PUT", csv.produtos, "Produtos importados.").then(() => setCsv(null))}>Importar</button>
+              <div className="rounded-lg border border-border p-4 text-sm">
+                <p className="flex flex-wrap items-center gap-2">
+                  <FileCheck2 size={16} className="flex-none text-emerald-600" aria-hidden="true" />
+                  <strong>{csv.nome}</strong>
+                  <span className="text-muted-foreground">
+                    {csv.produtos.length.toLocaleString("pt-BR")} produto(s) prontos para importar
+                  </span>
+                </p>
+                {/* O erro aparece antes de importar, e não depois: planilha de
+                    fornecedor quase sempre tem linha torta, e descobrir isso
+                    com metade do catálogo gravado é pior. */}
+                {csv.erros.length > 0 && (
+                  <div className="mt-2 rounded-lg bg-amber-50 p-3">
+                    <p className="text-xs font-medium text-amber-900">
+                      {csv.erros.length} linha(s) com problema serão ignoradas:
+                    </p>
+                    <ul className="mt-1 list-disc pl-5 text-xs text-amber-800">
+                      {csv.erros.slice(0, 5).map((x) => <li key={x}>{x}</li>)}
+                      {csv.erros.length > 5 && <li>e mais {csv.erros.length - 5}.</li>}
+                    </ul>
+                  </div>
+                )}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    className="btn-primario"
+                    disabled={ocupado || !csv.produtos.length}
+                    onClick={() => chamar("/api/painel/produtos", "PUT", csv.produtos, "Produtos importados.").then(() => setCsv(null))}
+                  >
+                    Importar {csv.produtos.length.toLocaleString("pt-BR")} produto(s)
+                  </button>
+                  <button className="btn-secundario px-4" disabled={ocupado} onClick={() => setCsv(null)}>
+                    Escolher outra
+                  </button>
+                </div>
               </div>
             )}
           </Secao>
