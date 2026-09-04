@@ -229,7 +229,10 @@
 /* Sub-navegação de Configurações: rola na horizontal no celular em vez de
    quebrar em duas linhas e empurrar o conteúdo para baixo. */
 .padm-subnav {
-  display: flex;
+  /* Escondida no celular: lá a navegação é a lista de /painel/configuracoes,
+     com uma página por seção. A barra tinha oito abas e terminava cortada em
+     393px, e o `hidden` do Tailwind não vencia esta regra. */
+  display: none;
   gap: 4px;
   margin-bottom: 18px;
   overflow-x: auto;
@@ -238,6 +241,10 @@
 }
 
 .padm-subnav::-webkit-scrollbar { display: none; }
+
+@media (min-width: 640px) {
+  .padm-subnav { display: flex; }
+}
 
 .padm-subnav a {
   padding: 8px 12px;
