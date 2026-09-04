@@ -4,7 +4,7 @@ import type { TenantPublico } from "@/lib/tenant";
 import CartButton from "@/components/cart/CartButton";
 import BuscaLoja from "@/components/BuscaLoja";
 
-export default function Header({ loja, logoUrl, categorias }: { loja: TenantPublico; logoUrl: string | null; categorias: Array<{ slug: string; nome: string }> }) {
+export default function Header({ loja, logoUrl, categorias, exemploBusca }: { loja: TenantPublico; logoUrl: string | null; categorias: Array<{ slug: string; nome: string }>; exemploBusca?: string | null }) {
   return (
     <header className="cabecalho-loja sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur-xl">
       <div className="container-loja flex h-[72px] items-center gap-4">
@@ -17,7 +17,7 @@ export default function Header({ loja, logoUrl, categorias }: { loja: TenantPubl
           )}
         </Link>
 
-        <BuscaLoja />
+        <BuscaLoja exemplo={exemploBusca} />
 
         {/* A lupa era o único caminho para a busca no celular. Agora o campo de
             busca está na própria barra, e manter as duas colocaria dois ícones

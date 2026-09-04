@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import CapaCategoria from "@/components/CapaCategoria";
-import { exigirTenant, lojaVende } from "@/lib/tenant";
+import { exigirTenant, lojaVende, urlDaLoja } from "@/lib/tenant";
 import { listarProdutos } from "@/lib/catalogo";
 import ProductCard from "@/components/ProductCard";
 import { minhaMoto } from "@/lib/minha-moto";
 import { nomeDaMoto } from "@/lib/motos";
 import { buscarCategoriaPublica } from "@/lib/categorias";
+import Trilha from "@/components/Trilha";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -46,6 +47,7 @@ export default async function Categoria({ params, searchParams }: Props) {
 
   return (
     <main className="container-loja py-8">
+      <Trilha base={urlDaLoja(t)} itens={[{ nome: "Produtos", href: "/produtos" }, { nome: categoria.nome }]} />
       <CapaCategoria
         nome={categoria.nome}
         descricao={categoria.descricao}

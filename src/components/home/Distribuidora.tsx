@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Boxes, Search, Tags } from "lucide-react";
+import { ArrowRight, Search, Tags } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import BeneficiosBarra from "./BeneficiosBarra";
 import AtalhosCategorias from "./AtalhosCategorias";
@@ -34,6 +34,9 @@ export default function Distribuidora({ t, identidade, categorias, vitrine, temD
               <Link href="/produtos" className="btn-primario">Buscar produtos <Search /></Link>
               {t.whatsapp && <Link href="/contato" className="btn-secundario">Falar com a equipe</Link>}
             </div>
+            {/* Ensina o gesto que a busca entende. Quem compra peça costuma ter
+                a medida na mão e não imagina que dá para digitá-la. */}
+            <p className="mercado-dica">Encontre por nome, medida ou código do fabricante.</p>
           </div>
           {/* Contagem de categorias e de itens não entra na vitrine.
               Dizer "5.591 itens" entrega o tamanho do estoque para quem quer

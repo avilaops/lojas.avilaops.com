@@ -19,6 +19,7 @@ import McpPainel from "./McpPainel";
 import CatalogoLista from "./CatalogoLista";
 import SoltarPlanilha from "./SoltarPlanilha";
 import { FileCheck2 } from "lucide-react";
+import Inventario from "./Inventario";
 
 export interface LojaView {
   slug: string;
@@ -249,7 +250,7 @@ export default function PainelLoja({ secao, loja, contagens, produtos, pedidos, 
           </Secao>
 
           <Secao titulo="Importar planilha" descricao="Produto com o mesmo SKU é atualizado, não duplicado.">
-            <p className="text-xs text-muted-foreground">Colunas: <code>nome, preco, categoria, marca, sku, preco_de, descricao_curta, descricao, imagem, destaque, peso_kg</code></p>
+            <p className="text-xs text-muted-foreground">Colunas: <code>nome, preco, categoria, marca, sku, gtin, preco_de, descricao_curta, descricao, imagem, destaque, peso_kg</code></p>
             <SoltarPlanilha
               desabilitado={ocupado}
               onArquivo={(a) => a.text().then((t) => setCsv({ nome: a.name, ...lerCsvProdutos(t) }))}
@@ -305,50 +306,30 @@ export default function PainelLoja({ secao, loja, contagens, produtos, pedidos, 
 
       {aba === "Inventário" && (
         <>
-        <Secao titulo="Estoque acabando" descricao="Quem está prestes a acabar aparece aqui, e a loja mostra “últimas unidades” para o comprador. O aviso some sozinho quando você repõe.">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Campo label="Avisar a partir de quantas unidades" ajuda="Zero desliga o aviso e o selo na loja.">
-              <input className={inputClasse} type="number" min={0} max={100} value={limiteEstoque} onChange={(e) => setLimiteEstoque(e.target.value)} />
-            </Campo>
-            <div className="flex items-end">
-              <button className="btn-secundario" disabled={ocupado} onClick={() => chamar("/api/painel/loja", "PATCH", { estoqueBaixoEm: Number(limiteEstoque) || 0 }, "Limite salvo.")}>Salvar limite</button>
+          {/* A lista vem primeiro: a tarefa da tela é achar um item e ajustar.
+              O aviso de estoque baixo é ajuste raro e vai para o fim — antes
+              ele ocupava a primeira tela inteira do celular. */}
+          <Inventario chamar={chamar} ocupado={ocupado} />
+
+          <Secao titulo="Avisar quando estiver acabando" descricao="Abaixo desta quantidade a loja mostra “últimas unidades” para o comprador, e o produto aparece em Acabando. Zero desliga o aviso.">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Campo label="Avisar a partir de quantas unidades">
+                <input
+                  className={inputClasse}
+                  type="number"
+                  min={0}
+                  inputMode="numeric"
+                  value={limiteEstoque}
+                  onChange={(e) => setLimiteEstoque(e.target.value)}
+                />
+              </Campo>
             </div>
-          </div>
-          {acabando.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nada acabando por enquanto.</p>
-          ) : (
-            <ul className="grid gap-1 text-sm">
-              {acabando.map((p) => (
-                <li key={p.id} className="flex items-center justify-between gap-3 border-t border-border py-1.5">
-                <span className="truncate">{p.nome}</span>
-                <span className="flex items-center gap-3">
-                  <b className={p.estoque === 0 ? "text-red-700" : "text-amber-700"}>{p.estoque === 0 ? "esgotado" : `${p.estoque} un`}</b>
-                  <Link className="text-xs underline" href={`/painel/produtos/${p.id}`}>repor</Link>
-                </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Secao>
-        <Secao titulo={`Estoque por produto (${comEstoque.length})`} descricao="Só aparece quem tem controle de estoque. Produto com variações é contado na grade, não aqui.">
-          {comEstoque.length === 0 ? <p className="text-sm text-muted-foreground">Nenhum produto com estoque controlado. Abra o produto e informe a quantidade para acompanhar por aqui.</p> : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="text-left text-xs uppercase text-muted-foreground"><tr><th className="py-2">Produto</th><th>SKU</th><th>Estoque</th><th></th></tr></thead>
-                <tbody>
-                  {comEstoque.map((p) => (
-                    <tr key={p.id} className={`border-t border-border ${p.ativo ? "" : "opacity-50"}`}>
-                      <td className="py-2 truncate">{p.nome}</td>
-                      <td>{p.sku ?? "-"}</td>
-                      <td className={p.estoque === 0 ? "text-red-700 font-semibold" : (p.estoque ?? 0) <= loja.estoqueBaixoEm ? "text-amber-700 font-semibold" : ""}>{p.estoque === 0 ? "esgotado" : `${p.estoque} un`}</td>
-                      <td className="text-right text-xs"><Link className="underline" href={`/painel/produtos/${p.id}`}>ajustar</Link></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div>
+              <button className="btn-primario" disabled={ocupado} onClick={() => chamar("/api/painel/loja", "PATCH", { estoqueBaixoEm: Number(limiteEstoque) || 0 }, "Aviso ajustado.")}>
+                Salvar
+              </button>
             </div>
-          )}
-        </Secao>
+          </Secao>
         </>
       )}
 

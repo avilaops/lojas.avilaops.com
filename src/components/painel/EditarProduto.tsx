@@ -9,7 +9,7 @@ import { ANO_MAX, ANO_MIN, MOTOS_BRASIL, lerCompatibilidade, type Compatibilidad
 const medida = (chave: string, valor: string) =>
   valor.trim() ? { [chave]: Number.parseFloat(valor.replace(",", ".")) } : {};
 
-interface Form { nome: string; categoria: string; marca: string; sku: string; preco: string; precoDe: string; descricaoCurta: string; descricao: string; imagens: string[]; destaque: boolean; ativo: boolean; disponibilidade: string; estoque: string; pesoKg: string; alturaCm: string; larguraCm: string; comprimentoCm: string; codigoOriginal: string; codigosEquivalentes: string; compatibilidade: LinhaCompat[] }
+interface Form { nome: string; categoria: string; marca: string; sku: string; gtin: string; preco: string; precoDe: string; descricaoCurta: string; descricao: string; imagens: string[]; destaque: boolean; ativo: boolean; disponibilidade: string; estoque: string; pesoKg: string; alturaCm: string; larguraCm: string; comprimentoCm: string; codigoOriginal: string; codigosEquivalentes: string; compatibilidade: LinhaCompat[] }
 /** Linha do editor de compatibilidade: texto livre até salvar (ano vazio = sem limite). */
 interface LinhaCompat { marca: string; modelo: string; anoDe: string; anoAte: string }
 
@@ -33,7 +33,7 @@ export default function EditarProduto({ produtoId, aoFechar, aoSalvar }: { produ
     fetch(`/api/painel/produtos?id=${produtoId}`).then((r) => r.json()).then((p) => {
       if (p?.erro) return setErro(p.erro);
       setF({
-        nome: p.nome, categoria: p.categoria ?? "", marca: p.marca ?? "", sku: p.sku ?? "",
+        nome: p.nome, categoria: p.categoria ?? "", marca: p.marca ?? "", sku: p.sku ?? "", gtin: p.gtin ?? "",
         preco: (p.precoCentavos / 100).toFixed(2).replace(".", ","), precoDe: p.precoDeCentavos != null ? (p.precoDeCentavos / 100).toFixed(2).replace(".", ",") : "",
         descricaoCurta: p.descricaoCurta ?? "", descricao: p.descricao ?? "", imagens: p.imagens ?? [], destaque: p.destaque, ativo: p.ativo,
         disponibilidade: p.disponibilidade, estoque: p.estoque != null ? String(p.estoque) : "", pesoKg: p.pesoKg != null ? String(p.pesoKg) : "",
@@ -55,7 +55,7 @@ export default function EditarProduto({ produtoId, aoFechar, aoSalvar }: { produ
       const r = await fetch("/api/painel/produtos", {
         method: "PATCH", headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          id: produtoId, nome: f.nome, categoria: f.categoria, marca: f.marca || undefined, sku: f.sku || undefined, precoCentavos: preco,
+          id: produtoId, nome: f.nome, categoria: f.categoria, marca: f.marca || undefined, sku: f.sku || undefined, gtin: f.gtin.replace(/\D/g, "") || undefined, precoCentavos: preco,
           ...(precoDe !== undefined && Number.isFinite(precoDe) ? { precoDeCentavos: precoDe } : {}),
           descricaoCurta: f.descricaoCurta || undefined, descricao: f.descricao || undefined, imagens: f.imagens, destaque: f.destaque, ativo: f.ativo,
           disponibilidade: f.disponibilidade, ...(f.estoque.trim() ? { estoque: Number(f.estoque) } : {}), ...(f.pesoKg.trim() ? { pesoKg: Number.parseFloat(f.pesoKg.replace(",", ".")) } : {}),
@@ -89,6 +89,13 @@ export default function EditarProduto({ produtoId, aoFechar, aoSalvar }: { produ
         <Campo label="Categoria"><input className={inputClasse} value={f.categoria} onChange={(e) => set("categoria", e.target.value)} /></Campo>
         <Campo label="Marca"><input className={inputClasse} value={f.marca} onChange={(e) => set("marca", e.target.value)} /></Campo>
         <Campo label="SKU"><input className={inputClasse} value={f.sku} onChange={(e) => set("sku", e.target.value)} /></Campo>
+        {/* O GTIN é o que faz o Google e o Mercado Livre reconhecerem que a
+            peça é a mesma que o concorrente anuncia. Sem ele o produto fica
+            fora do catálogo unificado do ML e perde alcance no Shopping.
+            Quem emite é o fabricante: vem na caixa ou com o fornecedor. */}
+        <Campo label="GTIN / código de barras" ajuda="Os 13 dígitos impressos na caixa (EAN). Sem ele o produto não entra no catálogo do Mercado Livre.">
+          <input className={inputClasse} value={f.gtin} onChange={(e) => set("gtin", e.target.value)} inputMode="numeric" placeholder="7891234567895" maxLength={14} />
+        </Campo>
         <Campo label="Preço (R$)"><input className={inputClasse} value={f.preco} onChange={(e) => set("preco", e.target.value)} inputMode="decimal" /></Campo>
         <Campo label="Preço “de” (R$)"><input className={inputClasse} value={f.precoDe} onChange={(e) => set("precoDe", e.target.value)} inputMode="decimal" /></Campo>
         <Campo label="Estoque" ajuda="Vazio = não controla"><input className={inputClasse} value={f.estoque} onChange={(e) => set("estoque", e.target.value)} inputMode="numeric" /></Campo>

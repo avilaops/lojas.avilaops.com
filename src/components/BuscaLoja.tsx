@@ -14,8 +14,13 @@ interface Categoria { slug: string; nome: string }
  * O comprador de loja pequena costuma saber o nome do que quer e desistir se a
  * listagem não trouxer de primeira. Mostrar o produto embaixo do campo corta
  * um passo inteiro — e ainda avisa quando está esgotado antes do clique.
+ *
+ * `exemplo` é um produto de verdade do catálogo, escolhido no servidor.
+ * "O que você procura?" não ensina nada: numa distribuidora de peça o comprador
+ * não sabe que dá para digitar a medida, e é justamente a busca que entende
+ * "25x52x15" e "ROL6205". Um exemplo real ensina o gesto sem texto de ajuda.
  */
-export default function BuscaLoja() {
+export default function BuscaLoja({ exemplo }: { exemplo?: string | null }) {
   const router = useRouter();
   const listaId = useId();
   const [termo, setTermo] = useState("");
@@ -97,7 +102,7 @@ export default function BuscaLoja() {
           }}
           onFocus={() => setAberto(true)}
           onKeyDown={aoTeclar}
-          placeholder="O que você procura?"
+          placeholder={exemplo ? `Ex.: ${exemplo}` : "O que você procura?"}
           aria-label="Buscar produtos"
           className="h-10 w-full bg-transparent text-sm outline-none"
           autoComplete="off"

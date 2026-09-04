@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Boxes, Search, Tags } from "lucide-react";
+import { ArrowRight, Search, Tags } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import BeneficiosBarra from "./BeneficiosBarra";
 import AtalhosCategorias from "./AtalhosCategorias";
@@ -21,6 +21,9 @@ export default function Mercado({ t, identidade, categorias, vitrine, temDestaqu
               <Link href="/produtos" className="btn-primario">Buscar produtos <Search /></Link>
               {t.whatsapp && <Link href="/contato" className="btn-secundario">Falar com a equipe</Link>}
             </div>
+            {/* Ensina o gesto que a busca entende. Quem compra peça costuma ter
+                a medida na mão e não imagina que dá para digitá-la. */}
+            <p className="mercado-dica">Encontre por nome, medida ou código do fabricante.</p>
           </div>
           {/* Sem contagem de categorias e de produtos: ver "5.591 itens" não
               ajuda quem procura uma peça, e entrega o tamanho do estoque a quem

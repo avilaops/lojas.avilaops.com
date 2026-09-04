@@ -16,6 +16,7 @@ import WhatsAppFlutuante from "@/components/WhatsAppFlutuante";
 import LojaNaoEncontrada from "@/components/LojaNaoEncontrada";
 import AvisoSuspensa from "@/components/AvisoSuspensa";
 import BarraGaragem from "@/components/BarraGaragem";
+import { prisma } from "@/lib/db";
 
 /**
  * Ícone e manifesto da loja, quando ela tem os seus.
@@ -108,6 +109,18 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const identidade = identidadeDa(t);
   const fonte = fonteGoogleHref(tema);
   const categorias = await listarCategorias(t.id);
+
+  // Exemplo de busca: um produto de verdade da loja, não frase genérica.
+  //
+  // O nome vem cortado antes do primeiro travessão, porque o cadastro do
+  // lojista costuma trazer descrição junto ("FAG 6205-2RS - Rolamento Radial
+  // Esfera Fixo - Unitário"), e o placeholder tem que caber no campo.
+  const exemplo = await prisma.produto.findFirst({
+    where: { tenantId: t.id, ativo: true, imagens: { isEmpty: false } },
+    orderBy: [{ destaque: "desc" }, { criadoEm: "desc" }],
+    select: { nome: true },
+  });
+  const exemploBusca = exemplo?.nome.split(" - ")[0].trim().slice(0, 32) ?? null;
   const publico = tenantPublico(t);
   const pixels = pixelsDo(t);
   const endereco = enderecoDo(t);
@@ -140,7 +153,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           {t.avisoTopo && (
             <p className="barra-aviso" role="status">{t.avisoTopo}</p>
           )}
-          <Header loja={publico} logoUrl={t.logoUrl} categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} />
+          <Header loja={publico} logoUrl={t.logoUrl} categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} exemploBusca={exemploBusca} />
           {t.segmento === "motopecas" && <BarraGaragem tenantId={t.id} />}
           <main className="flex-1">{children}</main>
           <Footer tenant={t} categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} />

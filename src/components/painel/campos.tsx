@@ -100,6 +100,9 @@ export function lerCsvProdutos(texto: string) {
       categoria: pega("categoria"),
       marca: pega("marca"),
       sku: pega("sku"),
+      // O código de barras costuma vir com pontuação ou como texto do Excel;
+      // só os dígitos interessam, e vazio não vira string vazia no banco.
+      gtin: pega("gtin")?.replace(/\D/g, "") || undefined,
       descricaoCurta: pega("descricao_curta"),
       descricao: pega("descricao"),
       imagens: pega("imagem") ? [pega("imagem")!] : undefined,
