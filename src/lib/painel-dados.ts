@@ -24,7 +24,7 @@ export async function dadosDoPainel() {
   const loja = await lojistaAtual();
   if (!loja) redirect("/entrar");
 
-  const [produtos, semEmbalagemTotal, ativosTotal, pedidos, faturas, cupons, categorias, avaliacoes, vendas, catalogo, espera, postagem] = await Promise.all([
+  const [produtos, semEmbalagemTotal, ativosTotal, semFotoTotal, pedidos, faturas, cupons, categorias, avaliacoes, vendas, catalogo, espera, postagem] = await Promise.all([
     prisma.produto.findMany({ where: { tenantId: loja.id }, include: { categoria: true, _count: { select: { variantes: { where: { ativo: true } } } } }, orderBy: [{ ativo: "desc" }, { nome: "asc" }], take: 500 }),
     // Contagens do catálogo inteiro, e não da fatia de 500 carregada acima.
     //
@@ -33,6 +33,9 @@ export async function dadosDoPainel() {
     // lojista decide o que arrumar primeiro é pior que número nenhum.
     prisma.produto.count({ where: { tenantId: loja.id, ativo: true, OR: [{ pesoKg: null }, { alturaCm: null }, { larguraCm: null }, { comprimentoCm: null }] } }),
     prisma.produto.count({ where: { tenantId: loja.id, ativo: true } }),
+    // Sem foto e o problema mais caro de um catalogo grande, e e o que a Visao
+    // geral aponta como proximo passo.
+    prisma.produto.count({ where: { tenantId: loja.id, ativo: true, imagens: { isEmpty: true } } }),
     prisma.pedido.findMany({ where: { tenantId: loja.id }, include: { itens: true, postagem: true }, orderBy: { criadoEm: "desc" }, take: 200 }),
     prisma.fatura.findMany({ where: { tenantId: loja.id }, orderBy: { criadoEm: "desc" }, take: 24 }),
     prisma.cupom.findMany({ where: { tenantId: loja.id }, orderBy: { criadoEm: "desc" } }),
@@ -46,7 +49,7 @@ export async function dadosDoPainel() {
 
   return {
     /** Contagens do catálogo inteiro, para a tela não afirmar número de uma fatia. */
-    contagens: { semEmbalagem: semEmbalagemTotal, ativos: ativosTotal },
+    contagens: { semEmbalagem: semEmbalagemTotal, ativos: ativosTotal, semFoto: semFotoTotal },
     loja: {
       slug: loja.slug,
       nome: loja.nome,

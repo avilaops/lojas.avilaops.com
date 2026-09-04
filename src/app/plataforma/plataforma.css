@@ -126,7 +126,7 @@
 .painel-hero h2 { max-width: 600px; margin-top: 12px; font-size: clamp(2rem,4vw,3.2rem); line-height: 1; letter-spacing: -.05em; }
 .painel-hero p { max-width: 620px; margin-top: 15px; color: #aeb7c8; line-height: 1.6; }
 .painel-metricas { display: grid; grid-template-columns: repeat(3,1fr); gap: 1px; overflow: hidden; border: 1px solid #dfe3eb; border-radius: 18px; background: #dfe3eb; }
-.painel-metricas button { display: grid; min-height: 150px; padding: 24px; color: #171b27; background: white; text-align: left; }
+.painel-metricas button, .painel-metricas a { display: grid; min-height: 150px; padding: 24px; color: #171b27; background: white; text-align: left; }
 .painel-metricas small { color: #747d8e; font-size: 10px; font-weight: 750; letter-spacing: .13em; text-transform: uppercase; }
 .painel-metricas strong { margin-top: 12px; font-size: 27px; text-transform: capitalize; }
 .painel-metricas span { align-self: end; color: #315fcc; font-size: 11px; font-weight: 700; }
@@ -797,3 +797,22 @@
 .pl-post[data-cor="3"] { --cor: var(--b4); }
 .pl-post[data-cor="4"] { --cor: var(--b5); }
 .pl-post[data-cor="5"] { --cor: var(--b6); }
+
+/* Painel enxuto no celular.
+   Os cartoes usavam o mesmo respiro do computador: tres numeros ocupavam 450px
+   (150 cada) numa tela de 393 de largura. Aqui viram uma coluna de linhas
+   baixas, que e o formato de quem le de relance. */
+@media (max-width: 640px) {
+  .painel-metricas { grid-template-columns: 1fr; }
+  .painel-metricas button, .painel-metricas a {
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    min-height: 60px;
+    padding: 14px 16px;
+  }
+  .painel-metricas small { grid-column: 1; font-size: 10px; }
+  .painel-metricas strong { grid-column: 1; margin-top: 2px; font-size: 18px; }
+  .painel-metricas span { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
+  .painel-next { padding: 16px !important; }
+  .painel-next h3 { font-size: 15px; }
+}

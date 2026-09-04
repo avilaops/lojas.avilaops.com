@@ -745,3 +745,17 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
 .trilha a { transition: color .2s; }
 .trilha a:hover { color: var(--foreground); text-decoration: underline; }
 .trilha [aria-current="page"] { color: var(--foreground); font-weight: 500; }
+
+/* Painel mais enxuto no celular.
+   Os cartões usavam o mesmo respiro do computador: no iPhone o resumo de
+   vendas ocupava quase 700px para mostrar quatro zeros. Aqui o espaço interno
+   encolhe e o número perde peso — informação de apoio não precisa do mesmo
+   tamanho do valor principal. */
+@media (max-width: 640px) {
+  .painel-vendas { gap: .75rem; padding: 1rem; }
+  .painel-vendas header strong { font-size: 1.5rem; }
+  .painel-vendas-numeros { gap: .5rem .75rem; }
+  .painel-vendas-numeros strong { font-size: 1rem; }
+  .painel-vendas-numeros small, .painel-vendas header small { font-size: .65rem; letter-spacing: .03em; }
+  .painel-vazio { font-size: .8125rem; }
+}

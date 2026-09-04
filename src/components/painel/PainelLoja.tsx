@@ -94,7 +94,7 @@ const ASSINATURA: Record<string, { rotulo: string; classe: string }> = {
   CANCELADA: { rotulo: "Cancelada", classe: "bg-red-100 text-red-800" },
 };
 
-export default function PainelLoja({ secao, loja, contagens, produtos, pedidos, cupons, categorias, avaliacoes, vendas, catalogo, espera, postagem }: { secao: SecaoPainel; loja: LojaView; contagens: { semEmbalagem: number; ativos: number }; produtos: ProdutoView[]; pedidos: PedidoView[]; cupons: CupomView[]; categorias: CategoriaView[]; avaliacoes: AvaliacaoPainelView[]; vendas: ResumoVendas; catalogo: DiagnosticoFeed; espera: Array<{ produto: string; pessoas: number }>; postagem: { etiquetas: number; custoCentavos: number; limiteCentavos: number } }) {
+export default function PainelLoja({ secao, loja, contagens, produtos, pedidos, cupons, categorias, avaliacoes, vendas, catalogo, espera, postagem }: { secao: SecaoPainel; loja: LojaView; contagens: { semEmbalagem: number; ativos: number; semFoto: number }; produtos: ProdutoView[]; pedidos: PedidoView[]; cupons: CupomView[]; categorias: CategoriaView[]; avaliacoes: AvaliacaoPainelView[]; vendas: ResumoVendas; catalogo: DiagnosticoFeed; espera: Array<{ produto: string; pessoas: number }>; postagem: { etiquetas: number; custoCentavos: number; limiteCentavos: number } }) {
   const router = useRouter();
   // A seção vem da URL, não do estado: quem manda na tela é o endereço.
   const aba = secao;
@@ -189,19 +189,54 @@ export default function PainelLoja({ secao, loja, contagens, produtos, pedidos, 
       {aba === "Visão geral" && (
         <div className="painel-overview">
           <Vendas r={vendas} espera={espera} irPara={irPara} />
-          <section className="painel-hero">
-            <div><span>Estúdio Lojas</span><h2>Sua marca está {loja.status === "ATIVA" ? "no ar" : "em preparação"}.</h2><p>Cuide primeiro do que o cliente percebe: identidade clara, catálogo visual e uma experiência consistente.</p></div>
-            <a href={loja.url} target="_blank" rel="noopener" className="btn-primario">Ver loja publicada ↗</a>
-          </section>
-          <div className="painel-metricas">
-            <button onClick={() => irPara("Marca")}><small>Identidade</small><strong>{identidade.personalidade[0] || "A definir"}</strong><span>Refinar direção →</span></button>
-            <button onClick={() => irPara("Produtos")}><small>Catálogo</small><strong>{produtos.length}</strong><span>{produtos.length ? "Gerenciar produtos →" : "Adicionar primeiro produto →"}</span></button>
-            <button onClick={() => irPara("Pedidos")}><small>Operação</small><strong>{pedidos.length}</strong><span>Ver pedidos →</span></button>
-          </div>
+
+          {/* O painel responde o que precisa de acao, nao explica a plataforma.
+              Havia aqui um bloco institucional ("Sua marca esta no ar. Cuide
+              primeiro do que o cliente percebe...") maior que o resumo de
+              vendas inteiro: quem ja entrou no painel nao precisa que lhe
+              vendam o painel. */}
           <section className="painel-next">
-            <div><small>Próximo passo recomendado</small><h3>{!loja.logoUrl ? "Envie o símbolo da sua marca" : !loja.bannerUrl ? "Crie a imagem principal da vitrine" : produtos.some((p) => !p.imagem) ? "Complete as fotos do catálogo" : "Sua presença visual está consistente"}</h3></div>
-            <button className="btn-secundario" onClick={() => irPara(!loja.logoUrl || !loja.bannerUrl ? "Marca" : "Produtos")}>Resolver agora</button>
+            <div>
+              <small>Próximo passo</small>
+              <h3>
+                {!loja.logoUrl
+                  ? "Envie o símbolo da sua marca"
+                  : !loja.bannerUrl
+                    ? "Crie a imagem principal da vitrine"
+                    : contagens.semFoto > 0
+                      ? `${contagens.semFoto.toLocaleString("pt-BR")} produtos sem foto`
+                      : contagens.semEmbalagem > 0
+                        ? `${contagens.semEmbalagem.toLocaleString("pt-BR")} produtos sem medida para o frete`
+                        : "Está tudo em ordem por aqui"}
+              </h3>
+            </div>
+            {(!loja.logoUrl || !loja.bannerUrl || contagens.semFoto > 0 || contagens.semEmbalagem > 0) && (
+              <button
+                className="btn-secundario"
+                onClick={() => irPara(!loja.logoUrl || !loja.bannerUrl ? "Marca" : "Produtos")}
+              >
+                Resolver
+              </button>
+            )}
           </section>
+
+          <div className="painel-metricas">
+            <button onClick={() => irPara("Produtos")}>
+              <small>Catálogo</small>
+              <strong>{contagens.ativos.toLocaleString("pt-BR")}</strong>
+              <span>{contagens.ativos ? "Ver produtos →" : "Cadastrar o primeiro →"}</span>
+            </button>
+            <button onClick={() => irPara("Pedidos")}>
+              <small>Pedidos</small>
+              <strong>{pedidos.length}</strong>
+              <span>Ver pedidos →</span>
+            </button>
+            <a href={loja.url} target="_blank" rel="noopener">
+              <small>Sua loja</small>
+              <strong>{loja.status === "ATIVA" ? "No ar" : "Em preparação"}</strong>
+              <span>Abrir loja ↗</span>
+            </a>
+          </div>
         </div>
       )}
 

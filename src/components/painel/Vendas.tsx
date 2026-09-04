@@ -29,12 +29,17 @@ export default function Vendas({ r, espera, irPara }: { r: ResumoVendas; espera:
         )}
       </header>
 
-      <div className="painel-vendas-numeros">
-        <div><small>Pedidos pagos</small><strong>{r.pedidos}</strong></div>
-        <div><small>Ticket médio</small><strong>{vendeu ? formatarBRL(r.ticketMedioCentavos) : "-"}</strong></div>
-        <div><small>Aguardando pagamento</small><strong>{r.aguardandoPagamento}</strong></div>
-        <div><small>Carrinhos abertos (7 dias)</small><strong>{r.carrinhosAbertos}</strong></div>
-      </div>
+      {/* Quatro zeros lado a lado ocupavam meia tela para nao dizer nada. Sem
+          venda, so entra o que tem valor diferente de zero; sem nenhum, o bloco
+          inteiro sai e sobra a frase que explica. */}
+      {(vendeu || r.aguardandoPagamento > 0 || r.carrinhosAbertos > 0) && (
+        <div className="painel-vendas-numeros">
+          {vendeu && <div><small>Pedidos pagos</small><strong>{r.pedidos}</strong></div>}
+          {vendeu && <div><small>Ticket médio</small><strong>{formatarBRL(r.ticketMedioCentavos)}</strong></div>}
+          {r.aguardandoPagamento > 0 && <div><small>Aguardando pagamento</small><strong>{r.aguardandoPagamento}</strong></div>}
+          {r.carrinhosAbertos > 0 && <div><small>Carrinhos abertos</small><strong>{r.carrinhosAbertos}</strong></div>}
+        </div>
+      )}
 
       {vendeu ? (
         <>
@@ -60,7 +65,7 @@ export default function Vendas({ r, espera, irPara }: { r: ResumoVendas; espera:
           </ol>
         </>
       ) : (
-        <p className="painel-vazio">Nenhuma venda paga nos últimos 30 dias. Quando o primeiro pedido cair, o resumo aparece aqui.</p>
+        <p className="painel-vazio">Nenhuma venda paga ainda. O resumo aparece aqui quando o primeiro pedido cair.</p>
       )}
 
       {espera.length > 0 && (
