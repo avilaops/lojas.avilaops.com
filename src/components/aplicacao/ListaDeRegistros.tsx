@@ -86,6 +86,8 @@ export default function ListaDeRegistros<T extends { id: string }>({
                   {conteudo}
                 </Link>
               ) : (
+                // Sem `href` nao ha tela de detalhe, entao a acao mora aqui
+                // mesmo: e o unico lugar onde ela cabe.
                 <div className="flex min-h-[56px] items-start gap-3 rounded-lg border border-border p-3">
                   {conteudo}
                   {acoes && <div className="flex-none">{acoes(item)}</div>}

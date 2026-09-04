@@ -20,6 +20,7 @@ import CatalogoLista from "./CatalogoLista";
 import SoltarPlanilha from "./SoltarPlanilha";
 import { FileCheck2 } from "lucide-react";
 import Inventario from "./Inventario";
+import Pedidos from "./Pedidos";
 
 export interface LojaView {
   slug: string;
@@ -358,54 +359,9 @@ export default function PainelLoja({ secao, loja, contagens, produtos, pedidos, 
             )}
           </Secao>
         )}
-        <Secao titulo="Pedidos">
-          {pedidos.length > 0 && (
-            <p className="text-sm">
-              <a href="/api/painel/exportar?tipo=pedidos" className="btn-secundario">Baixar pedidos (CSV)</a>
-            </p>
-          )}
-          {pedidos.length === 0 ? <p className="text-sm text-muted-foreground">Nenhum pedido ainda.</p> : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="text-left text-xs uppercase text-muted-foreground"><tr><th className="py-2">#</th><th>Cliente</th><th>Itens</th><th>Total</th><th>Situação</th><th>Data</th><th></th></tr></thead>
-                <tbody>
-                  {pedidos.map((p) => (
-                    <tr key={p.id} className="border-t border-border align-top">
-                      <td className="py-2"><Link href={`/painel/pedidos/${p.id}`} className="font-medium hover:underline">{p.numero}</Link></td>
-                      <td>{p.clienteNome}<br /><a className="text-xs underline" href={`https://wa.me/${p.clienteTelefone.replace(/\D/g, "")}`} target="_blank" rel="noopener">{p.clienteTelefone}</a></td>
-                      <td className="text-xs">{p.itens.map((i) => `${i.quantidade}x ${i.nome}`).join(", ")}<br /><span className="text-muted-foreground">{p.freteNome}</span></td>
-                      <td>{brl(p.totalCentavos)}</td>
-                      <td>{PEDIDO[p.status] ?? p.status}{p.rastreio && <><br /><span className="text-xs">rastreio {p.rastreio}</span></>}</td>
-                      <td className="text-xs">{new Date(p.criadoEm).toLocaleDateString("pt-BR")}</td>
-                      <td className="py-2">
-                        {p.status === "EM_SEPARACAO" && <input className={`${inputClasse} mb-1 h-9`} placeholder="Código de rastreio" value={rastreio[p.id] ?? ""} onChange={(e) => setRastreio({ ...rastreio, [p.id]: e.target.value })} />}
-                        <Link href={`/painel/pedidos/${p.id}`} className="btn-secundario mb-1 flex h-9 w-full items-center justify-center px-3 text-xs">Abrir pedido</Link>
-                        {p.entrega && p.status !== "AGUARDANDO_PAGAMENTO" && p.status !== "CANCELADO" && (
-                          p.etiqueta?.pdf ? (
-                            <a className="btn-secundario mb-1 flex h-9 w-full items-center justify-center px-3 text-xs" href={p.etiqueta.pdf} target="_blank" rel="noopener">Baixar etiqueta</a>
-                          ) : (
-                            <button
-                              className="btn-secundario mb-1 h-9 w-full px-3 text-xs"
-                              disabled={ocupado}
-                              onClick={() => chamar(`/api/painel/pedidos/${p.id}/etiqueta`, "POST", undefined, "Etiqueta solicitada.")}
-                            >
-                              Gerar etiqueta
-                            </button>
-                          )
-                        )}
-                        {["PAGO", "EM_SEPARACAO", "ENVIADO"].includes(p.status) && (
-                          <button className="btn-secundario h-9 px-3 text-xs" disabled={ocupado} onClick={() => avancar(p)}>
-                            {p.status === "PAGO" ? "Separar" : p.status === "EM_SEPARACAO" ? "Marcar enviado" : "Marcar entregue"}
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </Secao>
+        {/* Lista com busca, filtro e uma acao principal por pedido. Antes
+            eram sete colunas com ate quatro botoes de 36px na ultima. */}
+        <Pedidos pedidos={pedidos} chamar={chamar} ocupado={ocupado} />
         </>
       )}
 
