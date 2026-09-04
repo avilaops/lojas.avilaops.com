@@ -16,8 +16,9 @@ import type { Prisma } from "@prisma/client";
  */
 export const dynamic = "force-dynamic";
 
-/** Página cheia o bastante para valer a rolagem, curta o bastante para carregar rápido. */
-const POR_PAGINA = 50;
+/** Mesma medida do inventário: 25 cabe em poucas rolagens no celular e ainda
+ *  dá visão de conjunto no computador. Com 50 a tela ia a 9.201px. */
+const POR_PAGINA = 25;
 
 export async function GET(request: Request) {
   const { s, erro } = await exigir("catalogo");

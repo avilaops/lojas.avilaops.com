@@ -59,13 +59,13 @@ export default function SoltarPlanilha({
         <p className="mt-2 text-sm">
           <button
             type="button"
-            className="font-semibold text-primary underline underline-offset-2"
+            className="btn-secundario inline-flex h-11 items-center px-4 text-sm font-medium"
             disabled={desabilitado}
             onClick={() => campo.current?.click()}
           >
             Escolher a planilha
-          </button>{" "}
-          <span className="text-muted-foreground">ou arraste o arquivo até aqui</span>
+          </button>
+          <span className="mt-2 block text-muted-foreground">ou arraste o arquivo até aqui</span>
         </p>
         <p className="mt-1 text-xs text-muted-foreground">Arquivo .csv</p>
 

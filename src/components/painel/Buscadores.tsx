@@ -62,7 +62,7 @@ export default function Buscadores({ chamar, ocupado }: { chamar: (c: string, m:
             </span>
           </span>
           <button
-            className="btn-secundario inline-flex h-9 items-center gap-1.5 px-3 text-xs"
+            className="btn-secundario inline-flex h-11 items-center gap-1.5 px-3 text-xs"
             disabled={ocupado}
             onClick={() => chamar("/api/painel/buscadores", "POST", undefined, "Pronto, avisamos os buscadores.")}
             title="Normalmente não é preciso: o aviso é automático."
@@ -98,7 +98,7 @@ export default function Buscadores({ chamar, ocupado }: { chamar: (c: string, m:
               {Object.entries(s.recursos).map(([chave, url]) => (
                 <li key={chave} className="flex flex-wrap items-center gap-2">
                   <span className="text-muted-foreground">{chave}:</span>
-                  <a href={url} target="_blank" rel="noopener" className="underline">{url.replace(s.base, "")}</a>
+                  <a href={url} target="_blank" rel="noopener" className="inline-flex h-11 items-center underline">{url.replace(s.base, "")}</a>
                 </li>
               ))}
             </ul>

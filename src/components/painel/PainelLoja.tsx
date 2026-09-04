@@ -245,7 +245,7 @@ export default function PainelLoja({ secao, loja, contagens, produtos, pedidos, 
               </Campo>
               <Campo label="Descrição curta"><input className={inputClasse} value={novo.descricaoCurta} onChange={(e) => setNovo({ ...novo, descricaoCurta: e.target.value })} /></Campo>
             </div>
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={novo.destaque} onChange={(e) => setNovo({ ...novo, destaque: e.target.checked })} /> Destaque na página inicial</label>
+            <label className="flex min-h-[44px] items-center gap-2 text-sm"><input type="checkbox" className="h-5 w-5" checked={novo.destaque} onChange={(e) => setNovo({ ...novo, destaque: e.target.checked })} /> Destaque na página inicial</label>
             <div><button className="btn-primario" disabled={ocupado} onClick={salvarProduto}>Salvar produto</button></div>
           </Secao>
 
@@ -496,7 +496,7 @@ export default function PainelLoja({ secao, loja, contagens, produtos, pedidos, 
       {aba === "Entrega" && (
         <Secao titulo="Entrega e frete" descricao="Sem tabela, o cliente vê apenas retirada na loja (ou frete a combinar).">
           <div className="grid gap-4 sm:grid-cols-3">
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={entrega.retiradaNaLoja} onChange={(e) => setEntrega({ ...entrega, retiradaNaLoja: e.target.checked })} /> Retirada na loja</label>
+            <label className="flex min-h-[44px] items-center gap-2 text-sm"><input type="checkbox" className="h-5 w-5" checked={entrega.retiradaNaLoja} onChange={(e) => setEntrega({ ...entrega, retiradaNaLoja: e.target.checked })} /> Retirada na loja</label>
             <Campo label="Despacho (dias úteis)"><input className={inputClasse} type="number" min={0} max={30} value={entrega.despachoDiasUteis} onChange={(e) => setEntrega({ ...entrega, despachoDiasUteis: Number(e.target.value) })} /></Campo>
             <Campo label="Frete grátis acima de (R$)"><input className={inputClasse} value={entrega.freteGratisAcima} onChange={(e) => setEntrega({ ...entrega, freteGratisAcima: e.target.value })} placeholder="200,00" /></Campo>
           </div>
