@@ -27,6 +27,12 @@ export type Post = {
   sections: { title: string; body: string; checklist?: string[] }[];
   /** Slug de outro post, ou caminho da plataforma começando com "/". */
   related: string[];
+  /**
+   * Arte de compartilhamento, em `/media/blog/`. Sem ela o post entra no
+   * WhatsApp e no LinkedIn como um bloco de texto sem imagem, que é o que
+   * acontecia com os sete primeiros.
+   */
+  capa?: string;
 };
 
 export const POSTS: Post[] = [
