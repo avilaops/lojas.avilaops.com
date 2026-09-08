@@ -1,0 +1,40 @@
+{
+  "modo": "image_gen integrado",
+  "artes": [
+    {
+      "slug": "o-que-e-loja-virtual",
+      "titulo": "Loja virtual",
+      "prompt": "Use case: ads-marketing. Crie uma imagem de preview Open Graph horizontal 1200x630 para artigo de blog brasileiro. Tema: Loja virtual. Uma pequena loja de cerâmica artesanal se transforma em uma vitrine digital: notebook com produtos de cerâmica, peças reais e pacote pronto para envio, composição editorial fotográfica acolhedora em terracota e azul. Inclua título exato \"Loja virtual\" em tipografia editorial grande, perfeitamente legível, com margem segura de 60px. Pequena assinatura \"Lojas Avila Ops\". Arte sofisticada, específica do assunto, sem elementos genéricos de IA, sem gráficos de crescimento, sem marcas de terceiros."
+    },
+    {
+      "slug": "o-que-e-carrinho-de-compras",
+      "titulo": "Carrinho de compras",
+      "prompt": "Use case: ads-marketing. Preview Open Graph horizontal 1200x630 para blog brasileiro. Tema: Carrinho de compras. Natureza-morta publicitária com mini carrinho de metal contendo três produtos de papelaria de cores diferentes, os três reunidos em uma única caixa de envio aberta; fundo amarelo manteiga e sombras gráficas. Conceito de reunir produtos em um pedido. Título exato \"Carrinho de compras\" grande com margens seguras de 60px, assinatura pequena \"Lojas Avila Ops\". Sofisticado, sem marcas de terceiros."
+    },
+    {
+      "slug": "o-que-e-checkout-da-loja",
+      "titulo": "A hora de fechar o pedido",
+      "prompt": "Use case: ads-marketing. Preview Open Graph horizontal 1200x630 para blog brasileiro. Tema: A hora de fechar o pedido. Close editorial de smartphone sobre mesa com um tênis e embalagem ao fundo, tela conceitual elegante com resumo de pedido e grande botão 'Confirmar pedido', seleção de entrega. Ambiente azul cobalto, composição diagonal. Título exato \"A hora de fechar o pedido\" grande com margens seguras de 60px, assinatura pequena \"Lojas Avila Ops\". Sofisticado, sem marcas de terceiros. Se mostrar gateways apresentar os três PayPal, Mercado Pago e Éfi igualmente; preferir não mostrar marcas."
+    },
+    {
+      "slug": "quem-e-quem-no-pagamento-online",
+      "titulo": "Quem participa do pagamento?",
+      "prompt": "Use case: ads-marketing. Preview Open Graph horizontal 1200x630 para blog brasileiro. Tema: Quem participa do pagamento?. Ilustração tridimensional editorial vista isométrica de quatro estações conectadas: pequena loja, processador de pagamentos, cartão sem marca e banco. Percurso de uma transação com linha luminosa, estações distintas e legíveis, fundo azul-noite, cobre e creme. Não inserir nomes de empresas. Título exato \"Quem participa do pagamento?\" grande com margens seguras de 60px, assinatura pequena \"Lojas Avila Ops\". Quatro estações rotuladas \"Loja\", \"Intermediário\", \"Bandeira\", \"Banco\". Sofisticado, sem marcas de terceiros."
+    },
+    {
+      "slug": "para-que-serve-o-pix-na-loja",
+      "titulo": "Pix na sua loja",
+      "prompt": "Use case: ads-marketing. Preview Open Graph horizontal 1200x630 para blog brasileiro. Tema: Pix na sua loja. Fotografia publicitária de balcão de floricultura com buquê amarelo, mãos segurando celular com confirmação 'Pagamento recebido', plaquinha com QR ilustrativo e pacote floral. Luz natural verde sálvia, sensação de venda real concluída. QR meramente decorativo. Título exato \"Pix na sua loja\" grande com margens seguras de 60px, assinatura pequena \"Lojas Avila Ops\". Sofisticado, sem marcas de terceiros."
+    },
+    {
+      "slug": "o-que-e-gateway-de-pagamento",
+      "titulo": "O que faz um gateway?",
+      "prompt": "Use case: ads-marketing. Preview Open Graph horizontal 1200x630 para blog brasileiro. Tema: O que faz um gateway?. Ilustração editorial 3D de uma central de pagamentos em vidro fosco, conectando três entradas representadas por cartão, QR e boleto a uma caixa de pedidos confirmados; pequeno símbolo percentual junto à central representa tarifa. Fundo lilás muito claro com roxo profundo, enquadramento frontal simétrico. Título exato \"O que faz um gateway?\" grande com margens seguras de 60px, assinatura pequena \"Lojas Avila Ops\". Sofisticado, sem marcas de terceiros."
+    },
+    {
+      "slug": "o-que-e-sku",
+      "titulo": "SKU: cada produto, um código",
+      "prompt": "Use case: ads-marketing. Preview Open Graph horizontal 1200x630 para blog brasileiro. Tema: SKU: cada produto, um código. Fotografia editorial de organização de estoque de camisetas dobradas em três nichos distintos, etiquetas nítidas 'CAM-BR-P', 'CAM-BR-M', 'CAM-BR-G', mão usando leitor de código de barras para conferir uma etiqueta. Bancada industrial clara, acentos laranja, ângulo lateral próximo. Título exato \"SKU: cada produto, um código\" grande com margens seguras de 60px, assinatura pequena \"Lojas Avila Ops\". Sofisticado, sem marcas de terceiros."
+    }
+  ]
+}
