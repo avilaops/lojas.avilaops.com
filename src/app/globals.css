@@ -759,3 +759,10 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
   .painel-vendas-numeros small, .painel-vendas header small { font-size: .65rem; letter-spacing: .03em; }
   .painel-vazio { font-size: .8125rem; }
 }
+
+/* A tira de categorias rola de lado sem mostrar a barra cinza do sistema.
+   Ela aparecia no computador logo abaixo dos nomes e parecia parte do desenho,
+   quando é só o navegador dizendo que há mais conteúdo. O desvanecimento na
+   borda direita já diz isso melhor. */
+.nav-loja-tira { scrollbar-width: none; -ms-overflow-style: none; }
+.nav-loja-tira::-webkit-scrollbar { display: none; }

@@ -129,7 +129,7 @@ export default function CatalogoLista({
         fichas={SITUACOES}
         extra={
           <select
-            className="h-11 min-w-0 flex-1 rounded-lg border border-border bg-background px-3 text-base sm:flex-none sm:text-sm"
+            className="h-11 w-full min-w-0 rounded-lg border border-border bg-background px-3 text-base sm:w-auto sm:flex-none sm:text-sm"
             value={categoria}
             onChange={(e) => { setCategoria(e.target.value); setPagina(1); }}
             aria-label="Categoria"

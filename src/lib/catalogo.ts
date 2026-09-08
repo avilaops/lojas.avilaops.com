@@ -18,10 +18,22 @@ export type ProdutoComCategoria = Produto & { categoria: Categoria | null };
  * inclusive as vazias, que é justamente onde o lojista precisa vê-las.
  */
 export async function listarCategorias(tenantId: string) {
-  return prisma.categoria.findMany({
+  const categorias = await prisma.categoria.findMany({
     where: { tenantId, produtos: { some: { ativo: true } } },
+    include: { _count: { select: { produtos: { where: { ativo: true } } } } },
     orderBy: [{ ordem: "asc" }, { nome: "asc" }],
   });
+
+  // Quem tem mais produto aparece primeiro.
+  //
+  // O campo `ordem` guarda a sequência em que a categoria foi criada, não uma
+  // escolha do lojista: na Vedashow a barra abria com "Vedações" (8 produtos)
+  // enquanto "Retentores" (2.003) ficava em quarto. Numa distribuidora a
+  // categoria que importa é a que tem estoque.
+  //
+  // O desempate segue `ordem`, então duas categorias do mesmo tamanho mantêm a
+  // sequência que o lojista vê no painel.
+  return categorias.sort((a, b) => b._count.produtos - a._count.produtos || a.ordem - b.ordem);
 }
 
 export type OrdemCatalogo = "relevancia" | "menor-preco" | "maior-preco" | "recentes" | "nome";

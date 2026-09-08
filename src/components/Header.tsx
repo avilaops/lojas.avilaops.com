@@ -4,6 +4,15 @@ import type { TenantPublico } from "@/lib/tenant";
 import CartButton from "@/components/cart/CartButton";
 import BuscaLoja from "@/components/BuscaLoja";
 
+/**
+ * Quantas categorias entram na barra e nos atalhos com foto.
+ *
+ * O mesmo número nos dois lugares, de propósito: eram duas listas diferentes na
+ * mesma tela, a de texto com todas as 50 e a de foto com oito. Fica aqui porque
+ * é a barra que define quantas cabem sem virar rolagem infinita.
+ */
+export const PRINCIPAIS = 8;
+
 export default function Header({ loja, logoUrl, categorias, exemploBusca }: { loja: TenantPublico; logoUrl: string | null; categorias: Array<{ slug: string; nome: string }>; exemploBusca?: string | null }) {
   return (
     <header className="cabecalho-loja sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur-xl">
@@ -30,17 +39,27 @@ export default function Header({ loja, logoUrl, categorias, exemploBusca }: { lo
         {loja.vende && <CartButton />}
       </div>
 
+      {/* A barra mostra as principais, não o catálogo de categorias inteiro.
+          Na Vedashow eram 50 numa tira que rolava de lado sem fim, com barra de
+          rolagem cinza à mostra, repetindo o que os atalhos com foto já dizem.
+          As duas listas passaram a sair da mesma ordem (maiores primeiro), e
+          quem procura o resto tem "Ver todas". */}
       {categorias.length > 0 && (
         <nav className="nav-loja border-t border-border">
-          <div className="container-loja flex gap-6 overflow-x-auto py-2.5 text-[13px]">
+          <div className="container-loja nav-loja-tira flex gap-6 overflow-x-auto py-2.5 text-[13px]">
             <Link href="/produtos" className="whitespace-nowrap font-semibold text-foreground">
               Todos
             </Link>
-            {categorias.map((c) => (
+            {categorias.slice(0, PRINCIPAIS).map((c) => (
               <Link key={c.slug} href={`/categoria/${c.slug}`} className="whitespace-nowrap text-muted-foreground hover:text-foreground">
                 {c.nome}
               </Link>
             ))}
+            {categorias.length > PRINCIPAIS && (
+              <Link href="/produtos" className="whitespace-nowrap font-medium text-primary">
+                Ver todas
+              </Link>
+            )}
           </div>
         </nav>
       )}

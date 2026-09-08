@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PRINCIPAIS } from "@/components/Header";
 
 /**
  * Atalhos redondos de categoria, na primeira tela.
@@ -25,7 +26,7 @@ export default function AtalhosCategorias({
   return (
     <nav className="atalhos-cat" aria-label="Categorias em destaque">
       <div className="container-loja atalhos-cat-tira">
-        {comFoto.slice(0, 8).map((c) => (
+        {comFoto.slice(0, PRINCIPAIS).map((c) => (
           <Link key={c.id} href={`/categoria/${c.slug}`}>
             <span className="atalhos-cat-foto">
               {/* eslint-disable-next-line @next/next/no-img-element */}

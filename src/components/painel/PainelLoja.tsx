@@ -21,6 +21,7 @@ import SoltarPlanilha from "./SoltarPlanilha";
 import { FileCheck2 } from "lucide-react";
 import Inventario from "./Inventario";
 import Pedidos from "./Pedidos";
+import NovoProduto from "./NovoProduto";
 
 export interface LojaView {
   slug: string;
@@ -242,47 +243,37 @@ export default function PainelLoja({ secao, loja, contagens, produtos, pedidos, 
 
       {aba === "Produtos" && (
         <>
+          {/* Um aviso, não uma lista.
+              Isto abria a aba com doze produtos e doze links "medir embalagem",
+              empurrando o catálogo para baixo toda vez. Numa loja com 5.589
+              produtos sem medida, doze exemplos não ajudam a decidir nada: o
+              número decide, e quem quiser trabalhar nisso usa o filtro. */}
           {contagens.semEmbalagem > 0 && (
-            <Secao titulo="Frete saindo mais caro que precisa" descricao="Estes produtos não têm a embalagem cadastrada, então o frete deles é cotado pela caixa padrão da loja | quase sempre maior que a real.">
-              <ul className="grid gap-1 text-sm">
-                {semEmbalagem.slice(0, 12).map((p) => (
-                  <li key={p.id} className="flex min-w-0 items-center justify-between gap-3 border-t border-border">
-                    {/* `min-w-0` é o que faz o `truncate` funcionar dentro de um
-                        flex: sem ele o nome técnico não encolhe e empurra a
-                        linha para fora da tela do celular. */}
-                    <span className="min-w-0 flex-1 truncate py-1.5">{p.nome}</span>
-                    <Link className="inline-flex h-11 flex-none items-center text-xs underline" href={`/painel/produtos/${p.id}`}>medir embalagem</Link>
-                  </li>
-                ))}
-              </ul>
-              {/* A conta vem do banco, não da fatia carregada: a tela dizia
-                  "e mais 488" numa loja com 5.591 produtos sem medida. */}
-              {contagens.semEmbalagem > 12 && (
-                <p className="text-xs text-muted-foreground">
-                  e mais {(contagens.semEmbalagem - 12).toLocaleString("pt-BR")} — de {contagens.ativos.toLocaleString("pt-BR")} produtos ativos.
-                </p>
-              )}
-            </Secao>
+            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-border bg-amber-50/60 px-4 py-3 text-sm">
+              <span className="min-w-0 flex-1">
+                <b>{contagens.semEmbalagem.toLocaleString("pt-BR")} produtos sem medida</b>{" "}
+                <span className="text-muted-foreground">
+                  pagam frete pela caixa padrão da loja, quase sempre mais caro que o real.
+                </span>
+              </span>
+            </p>
           )}
-          <Secao titulo="Novo produto" descricao="Cadastro rápido. Foto: cole o link da imagem (ou use a planilha).">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Campo label="Nome"><input className={inputClasse} value={novo.nome} onChange={(e) => setNovo({ ...novo, nome: e.target.value })} /></Campo>
-              <Campo label="Categoria"><input className={inputClasse} value={novo.categoria} onChange={(e) => setNovo({ ...novo, categoria: e.target.value })} placeholder="Ex.: Vedações" /></Campo>
-              <Campo label="Preço (R$)"><input className={inputClasse} value={novo.preco} onChange={(e) => setNovo({ ...novo, preco: e.target.value })} placeholder="59,90" inputMode="decimal" /></Campo>
-              <Campo label="Preço “de” (R$)" ajuda="Opcional, para mostrar desconto"><input className={inputClasse} value={novo.precoDe} onChange={(e) => setNovo({ ...novo, precoDe: e.target.value })} inputMode="decimal" /></Campo>
-              <Campo label="SKU / código"><input className={inputClasse} value={novo.sku} onChange={(e) => setNovo({ ...novo, sku: e.target.value })} /></Campo>
-              <Campo label="Peso (kg)" ajuda="Para o frete"><input className={inputClasse} value={novo.pesoKg} onChange={(e) => setNovo({ ...novo, pesoKg: e.target.value })} inputMode="decimal" /></Campo>
-              <Campo label="Estoque" ajuda="Vazio = não controla. Com variações, o estoque é por variação."><input className={inputClasse} value={novo.estoque} onChange={(e) => setNovo({ ...novo, estoque: e.target.value })} inputMode="numeric" /></Campo>
-              <Campo label="Foto">
-                <div className="flex items-center gap-2">
-                  <input className={inputClasse} value={novo.imagem} onChange={(e) => setNovo({ ...novo, imagem: e.target.value })} placeholder="https://…/foto.jpg ou envie um arquivo" />
-                  <EnviarImagem aoEnviar={(url) => setNovo((n) => ({ ...n, imagem: url }))} rotulo="Enviar foto" />
-                </div>
-              </Campo>
-              <Campo label="Descrição curta"><input className={inputClasse} value={novo.descricaoCurta} onChange={(e) => setNovo({ ...novo, descricaoCurta: e.target.value })} /></Campo>
-            </div>
-            <label className="flex min-h-[44px] items-center gap-2 text-sm"><input type="checkbox" className="h-5 w-5" checked={novo.destaque} onChange={(e) => setNovo({ ...novo, destaque: e.target.checked })} /> Destaque na página inicial</label>
-            <div><button className="btn-primario" disabled={ocupado} onClick={salvarProduto}>Salvar produto</button></div>
+          {/* A listagem carrega do banco com busca, filtro e página: antes
+              vinham os 500 primeiros por nome, e num catálogo de 5.591 itens o
+              lojista não enxergava 91% do que vende. */}
+          <CatalogoLista categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} chamar={chamar} ocupado={ocupado} />
+
+          {/* Cadastro sob demanda, com so o essencial a vista. Antes eram
+              nove campos abertos de uma vez, todos com o mesmo peso, e o
+              lojista rolava oito deles antes de achar o botao de salvar. */}
+          <Secao titulo="Adicionar produto" descricao="Um de cada vez, ou a planilha inteira de uma vez.">
+            <NovoProduto
+              valor={novo}
+              aoMudar={setNovo}
+              aoSalvar={salvarProduto}
+              ocupado={ocupado}
+              categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))}
+            />
           </Secao>
 
           <Secao titulo="Importar planilha" descricao="Produto com o mesmo SKU é atualizado, não duplicado.">
@@ -331,10 +322,6 @@ export default function PainelLoja({ secao, loja, contagens, produtos, pedidos, 
           </Secao>
 
 
-          {/* A listagem carrega do banco com busca, filtro e página: antes
-              vinham os 500 primeiros por nome, e num catálogo de 5.591 itens o
-              lojista não enxergava 91% do que vende. */}
-          <CatalogoLista categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} chamar={chamar} ocupado={ocupado} />
         </>
       )}
 
