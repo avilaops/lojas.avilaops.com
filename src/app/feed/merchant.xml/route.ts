@@ -1,5 +1,6 @@
 import { tenantAtual, urlDaLoja } from "@/lib/tenant";
 import { prisma } from "@/lib/db";
+import { categoriaGoogle } from "@/lib/categoria-google";
 
 /**
  * Feed de produtos para o Google Merchant Center (RSS 2.0 + namespace g:),
@@ -16,7 +17,17 @@ export async function GET() {
   const t = await tenantAtual();
   if (!t || t.status !== "ATIVA") return new Response("não", { status: 404 });
   const base = urlDaLoja(t);
-  const produtos = await prisma.produto.findMany({ where: { tenantId: t.id, ativo: true }, include: { categoria: true, variantes: { where: { ativo: true } } }, orderBy: { nome: "asc" } });
+  /**
+   * Produto sem foto fica de fora, e não é rigor nosso: `image_link` é campo
+   * obrigatório do Merchant Center. Mandar assim mesmo não faz o item aparecer
+   * no Shopping — faz ele ser reprovado, e conta com muita reprovação passa a
+   * ser olhada com desconfiança pelo Google.
+   *
+   * Sem este filtro a Brilhax estrearia com 17 dos 79 itens reprovados de
+   * saída, todos boinas e espumas de polimento que ainda não têm foto.
+   */
+  const produtos = (await prisma.produto.findMany({ where: { tenantId: t.id, ativo: true }, include: { categoria: true, variantes: { where: { ativo: true } } }, orderBy: { nome: "asc" } }))
+    .filter((p) => p.imagens.length > 0 || p.variantes.some((v) => v.imagem));
 
   const itens: string[] = [];
   for (const p of produtos) {
@@ -37,6 +48,7 @@ export async function GET() {
       ${p.codigoOriginal ? `<g:mpn>${esc(p.codigoOriginal)}</g:mpn>` : ""}
       ${!p.gtin && !p.codigoOriginal ? "<g:identifier_exists>no</g:identifier_exists>" : ""}
       ${p.categoria ? `<g:product_type>${esc(p.categoria.nome)}</g:product_type>` : ""}
+      ${categoriaGoogle(p.categoria?.nome) ? `<g:google_product_category>${categoriaGoogle(p.categoria?.nome)}</g:google_product_category>` : ""}
       ${p.pesoKg != null ? `<g:shipping_weight>${p.pesoKg} kg</g:shipping_weight>` : ""}
       ${extra}
     </item>`;

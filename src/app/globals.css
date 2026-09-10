@@ -133,11 +133,11 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
 .spotlight-categorias a span { font-size: .65rem; color: var(--muted-foreground); }
 .spotlight-categorias a strong { font-size: .9rem; }
 .spotlight-categorias a svg { width: 1rem; }
-.spotlight-vitrine > header, .mercado-departamentos > header, .mercado-produtos > header, .conversao-produtos > header { display: flex; align-items: end; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
-.spotlight-vitrine > header .home-selo, .mercado-departamentos > header .home-selo { display: flex; align-items: center; gap: .35rem; }
-.spotlight-vitrine > header .home-selo svg, .mercado-departamentos > header .home-selo svg { width: .8rem; height: .8rem; }
-.spotlight-vitrine > header > a, .mercado-departamentos > header > a, .mercado-produtos > header > a, .conversao-produtos > header > a { display: none; align-items: center; gap: .35rem; font-size: .78rem; font-weight: 650; color: var(--muted-foreground); }
-.spotlight-vitrine > header > a svg, .mercado-departamentos > header > a svg, .mercado-produtos > header > a svg, .conversao-produtos > header > a svg { width: .9rem; }
+.spotlight-vitrine > header, .mercado-departamentos > header, .mercado-produtos > header, .conversao-produtos > header, .automotivo-trilha > header { display: flex; align-items: end; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
+.spotlight-vitrine > header .home-selo, .mercado-departamentos > header .home-selo, .automotivo-trilha > header .home-selo { display: flex; align-items: center; gap: .35rem; }
+.spotlight-vitrine > header .home-selo svg, .mercado-departamentos > header .home-selo svg, .automotivo-trilha > header .home-selo svg { width: .8rem; height: .8rem; }
+.spotlight-vitrine > header > a, .mercado-departamentos > header > a, .mercado-produtos > header > a, .conversao-produtos > header > a, .automotivo-trilha > header > a { display: none; align-items: center; gap: .35rem; font-size: .78rem; font-weight: 650; color: var(--muted-foreground); }
+.spotlight-vitrine > header > a svg, .mercado-departamentos > header > a svg, .mercado-produtos > header > a svg, .conversao-produtos > header > a svg, .automotivo-trilha > header > a svg { width: .9rem; }
 
 .home-mercado { padding-bottom: 4rem; }
 .mercado-abertura { position: relative; overflow: hidden; border-bottom: 1px solid var(--border); background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 11%, var(--background)), var(--background) 58%); }
@@ -189,8 +189,6 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
    reconhecidas não renderiza a seção e a tela fica idêntica à do Mercado. */
 .automotivo-trilha { padding-top: 3.75rem; }
 .automotivo-trilha h2 { margin-top: .4rem; font-size: clamp(1.55rem, 3vw, 2.15rem); font-weight: 780; letter-spacing: -.035em; }
-.automotivo-trilha > header .home-selo { display: flex; align-items: center; gap: .35rem; }
-.automotivo-trilha > header .home-selo svg { width: .8rem; height: .8rem; }
 .automotivo-trilha ol { display: grid; gap: .65rem; margin-top: 1.5rem; padding: 0; list-style: none; }
 .automotivo-trilha a { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 1rem; border: 1px solid var(--border); border-radius: calc(var(--radius) * 1.4); background: var(--card); padding: 1.1rem 1.25rem; transition: border-color .2s, transform .2s; }
 .automotivo-trilha a:hover { border-color: color-mix(in srgb, var(--primary) 45%, var(--border)); transform: translateY(-2px); }
@@ -210,7 +208,7 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
   .automotivo-trilha ol { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (min-width: 1180px) {
-  .automotivo-trilha ol { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .automotivo-trilha ol { grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); }
   .automotivo-trilha a { grid-template-columns: auto 1fr; align-items: start; }
   /* Na coluna estreita a seta empurraria o texto para duas linhas; a linha
      inteira já é clicável e o cartão inteiro reage no hover. */
@@ -264,7 +262,7 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
   .spotlight-categorias > div { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .spotlight-categorias > div a:nth-child(odd) { border-right: 1px solid var(--border); padding-right: 1rem; }
   .spotlight-categorias > div a:nth-child(even) { padding-left: 1rem; }
-  .spotlight-vitrine > header > a, .mercado-departamentos > header > a, .mercado-produtos > header > a, .conversao-produtos > header > a { display: inline-flex; }
+  .spotlight-vitrine > header > a, .mercado-departamentos > header > a, .mercado-produtos > header > a, .conversao-produtos > header > a, .automotivo-trilha > header > a { display: inline-flex; }
   .mercado-grade-categorias { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .mercado-categoria-principal { grid-column: span 2; }
 }
