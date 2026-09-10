@@ -3,6 +3,7 @@ import { ArrowRight, Search, Tags } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import BeneficiosBarra from "./BeneficiosBarra";
 import AtalhosCategorias from "./AtalhosCategorias";
+import IconeCategoria from "@/components/IconeCategoria";
 import type { DadosHome } from "./tipos";
 
 /** Catálogo denso, direto e muito navegável. Para distribuidores com variedade. */
@@ -11,7 +12,11 @@ export default function Mercado({ t, identidade, categorias, vitrine, temDestaqu
 
   return (
     <main className="home-mercado">
-      <section className="mercado-abertura">
+      <section className={`mercado-abertura ${t.bannerUrl ? "mercado-abertura-visual" : ""}`}>
+        {t.bannerUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img className="mercado-abertura-fundo" src={t.bannerUrl} alt="" fetchPriority="high" />
+        )}
         <div className="container-loja mercado-abertura-grid">
           <div>
             <p className="home-selo text-primary">{motopecas ? "Distribuição especializada" : identidade.palavrasChave[0] || "Catálogo completo"}</p>
@@ -47,6 +52,7 @@ export default function Mercado({ t, identidade, categorias, vitrine, temDestaqu
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={categoria.imagemUrl} alt="" loading="lazy" />
                 )}
+                {!categoria.imagemUrl && <IconeCategoria slug={categoria.slug} className="mercado-categoria-icone" />}
                 <span>{categoria.nome}</span><ArrowRight />
               </Link>
             ))}

@@ -72,6 +72,21 @@ export const MEDIDAS_FILTRAVEIS = {
 
 export type ChaveDeMedida = keyof typeof MEDIDAS_FILTRAVEIS;
 
+/**
+ * Teto de sanidade para medida em milímetros.
+ *
+ * O filtro da Vedashow anunciava diâmetro interno "de 0 mm a 5.176.168 mm":
+ * um código de peça lido como medida. Três metros cobre qualquer retentor,
+ * rolamento ou anel que uma loja desta plataforma vai vender; acima disso não
+ * é medida, é lixo de importação, e lixo não entra no filtro nem na faixa que
+ * o formulário mostra. Zero também não: peça sem diâmetro não existe.
+ */
+export const MEDIDA_MAXIMA_MM = 3000;
+
+export function medidaValida(v: unknown): v is number {
+  return typeof v === "number" && Number.isFinite(v) && v > 0 && v <= MEDIDA_MAXIMA_MM;
+}
+
 const ORDENS: Record<OrdemCatalogo, Prisma.ProdutoOrderByWithRelationInput[]> = {
   relevancia: [{ destaque: "desc" }, { nome: "asc" }],
   "menor-preco": [{ precoCentavos: "asc" }],
@@ -153,8 +168,9 @@ export async function listarProdutos(tenantId: string, filtro?: FiltroCatalogo) 
       return faixas.every(([campo, faixa]) => {
         const v = Number(attr[campo]);
         // Produto sem a medida cadastrada não entra: quem filtra por 20-25 mm
-        // quer o que cabe no eixo, e "não sei" não cabe.
-        if (!Number.isFinite(v)) return false;
+        // quer o que cabe no eixo, e "não sei" não cabe. Medida absurda é
+        // "não sei" com outro nome.
+        if (!medidaValida(v)) return false;
         if (faixa.de != null && v < faixa.de) return false;
         if (faixa.ate != null && v > faixa.ate) return false;
         return true;
@@ -171,6 +187,59 @@ export async function listarProdutos(tenantId: string, filtro?: FiltroCatalogo) 
 }
 
 /**
+ * Um produto tem o que mostrar para quem chega de fora?
+ *
+ * Sem foto e sem preço, a página é um nome e uma ficha: o Google não tem o
+ * que exibir e o comprador não tem como decidir. É cadastro de referência, e
+ * cadastro de referência fica fora do sitemap e da primeira vitrine. Continua
+ * acessível pela busca da loja, que é onde quem sabe o código vai procurá-lo.
+ *
+ * Foto OU preço basta: "sob consulta" com foto é oferta; preço sem foto
+ * também, desde que o card diga o que é.
+ */
+export function produtoPublicavel(p: Pick<Produto, "ativo" | "imagens" | "precoCentavos">): boolean {
+  return p.ativo && (p.imagens.length > 0 || p.precoCentavos > 0);
+}
+
+/**
+ * A prateleira da primeira tela, quando o lojista não marcou destaques.
+ *
+ * Duas coisas que a home fazia errado, e que só apareceram com catálogo
+ * grande: carregava os 5.591 produtos da loja para mostrar dez (era isso o
+ * TTFB de 3 s), e mostrava os dez primeiros por nome, que na Vedashow eram
+ * abraçadeiras de R$ 1,80 sem foto. Quem tem foto e preço vem primeiro; os
+ * outros só completam a fileira se faltar gente.
+ *
+ * Com moto escolhida o corte é por compatibilidade e continua em memória,
+ * como em `listarProdutos`: aí a ordem por foto se aplica sobre o que serve.
+ */
+export async function vitrineDaLoja(tenantId: string, opcoes: { moto?: Moto | null; limite?: number } = {}) {
+  const limite = opcoes.limite ?? 12;
+  const completude = (p: Produto) => (p.imagens.length > 0 ? 1 : 0) + (p.precoCentavos > 0 ? 1 : 0);
+
+  if (opcoes.moto) {
+    const todos = await listarProdutos(tenantId, { moto: opcoes.moto });
+    return todos.sort((a, b) => completude(b) - completude(a)).slice(0, limite);
+  }
+
+  const completos = await prisma.produto.findMany({
+    where: { tenantId, ativo: true, imagens: { isEmpty: false }, precoCentavos: { gt: 0 } },
+    include: { categoria: true },
+    orderBy: ORDENS.relevancia,
+    take: limite,
+  });
+  if (completos.length >= limite) return completos;
+
+  const resto = await prisma.produto.findMany({
+    where: { tenantId, ativo: true, id: { notIn: completos.map((p) => p.id) } },
+    include: { categoria: true },
+    orderBy: ORDENS.relevancia,
+    take: limite * 4,
+  });
+  return [...completos, ...resto.sort((a, b) => completude(b) - completude(a))].slice(0, limite);
+}
+
+/**
  * Quais medidas esta loja realmente usa, e a faixa de cada uma.
  *
  * O filtro de medida só faz sentido em catálogo técnico: loja de roupa não tem
@@ -180,22 +249,37 @@ export async function listarProdutos(tenantId: string, filtro?: FiltroCatalogo) 
  */
 export async function medidasDaLoja(tenantId: string) {
   const linhas = await prisma.produto.findMany({ where: { tenantId, ativo: true }, select: { atributos: true } });
-  const faixas = new Map<ChaveDeMedida, { min: number; max: number; itens: number }>();
+  const valores = new Map<ChaveDeMedida, number[]>();
   for (const l of linhas) {
     const attr = (l.atributos ?? {}) as Record<string, unknown>;
     for (const campo of Object.keys(MEDIDAS_FILTRAVEIS) as ChaveDeMedida[]) {
       const v = Number(attr[campo]);
-      if (!Number.isFinite(v)) continue;
-      const f = faixas.get(campo) ?? { min: v, max: v, itens: 0 };
-      f.min = Math.min(f.min, v);
-      f.max = Math.max(f.max, v);
-      f.itens++;
-      faixas.set(campo, f);
+      if (!medidaValida(v)) continue;
+      const lista = valores.get(campo) ?? [];
+      lista.push(v);
+      valores.set(campo, lista);
     }
   }
+  // A faixa mostrada é onde o catálogo está, não onde o maior outlier está.
+  //
+  // Mesmo com o teto, um único rolamento de 2 m num catálogo de 20 a 120 mm
+  // faria o campo anunciar "até 2000 mm", e o comprador digitaria 25 num
+  // controle calibrado para dois metros. O 1º e o 99º percentil dão a faixa em
+  // que 98% das peças cabem; quem digitar fora dela continua atendido, porque
+  // o filtro usa o valor digitado, não a faixa.
+  const percentil = (lista: number[], p: number) => lista[Math.min(lista.length - 1, Math.floor(lista.length * p))];
   // Menos de 20 produtos com a medida não é navegação, é campo vazio na tela.
   return (Object.keys(MEDIDAS_FILTRAVEIS) as ChaveDeMedida[])
-    .map((campo) => ({ campo, rotulo: MEDIDAS_FILTRAVEIS[campo], ...(faixas.get(campo) ?? { min: 0, max: 0, itens: 0 }) }))
+    .map((campo) => {
+      const lista = (valores.get(campo) ?? []).sort((a, b) => a - b);
+      return {
+        campo,
+        rotulo: MEDIDAS_FILTRAVEIS[campo],
+        min: lista.length ? Math.floor(percentil(lista, 0.01)) : 0,
+        max: lista.length ? Math.ceil(percentil(lista, 0.99)) : 0,
+        itens: lista.length,
+      };
+    })
     .filter((m) => m.itens >= 20);
 }
 

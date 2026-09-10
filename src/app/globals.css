@@ -142,6 +142,15 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
 .home-mercado { padding-bottom: 4rem; }
 .mercado-abertura { position: relative; overflow: hidden; border-bottom: 1px solid var(--border); background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 11%, var(--background)), var(--background) 58%); }
 .mercado-abertura::after { content: ""; position: absolute; right: -8rem; bottom: -12rem; width: 32rem; height: 32rem; border: 1px solid color-mix(in srgb, var(--primary) 20%, transparent); border-radius: 50%; box-shadow: 0 0 0 4rem color-mix(in srgb, var(--primary) 3%, transparent), 0 0 0 8rem color-mix(in srgb, var(--primary) 2%, transparent); }
+.mercado-abertura-visual { min-height: 31rem; display: grid; align-items: center; background: #171833; color: #fff; }
+.mercado-abertura-visual::after { inset: 0; width: auto; height: auto; border: 0; border-radius: 0; box-shadow: none; background: linear-gradient(90deg, rgba(15,17,45,.98) 0%, rgba(20,22,54,.9) 42%, rgba(20,22,54,.18) 78%, rgba(20,22,54,.08) 100%); }
+.mercado-abertura-fundo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.mercado-abertura-visual .mercado-abertura-grid { z-index: 2; }
+.mercado-abertura-visual .mercado-abertura-grid > div { max-width: 43rem; }
+.mercado-abertura-visual .mercado-abertura-grid > div > p:not(.home-selo) { color: rgba(255,255,255,.76); }
+.mercado-abertura-visual .home-selo { color: #ff947c !important; }
+.mercado-abertura-visual .btn-primario { background: var(--brand-support); color: #1b1631; }
+.mercado-abertura-visual .btn-secundario { border-color: rgba(255,255,255,.36); background: rgba(255,255,255,.08); color: #fff; }
 .mercado-abertura-grid { position: relative; z-index: 1; display: grid; align-items: center; gap: 2.5rem; padding-block: 4rem; }
 .mercado-abertura h1 { max-width: 14ch; margin-top: .75rem; font-size: clamp(2.5rem, 6vw, 5.5rem); font-weight: 820; line-height: .96; letter-spacing: -.06em; }
 .mercado-abertura-grid > div > p:not(.home-selo) { max-width: 39rem; margin-top: 1rem; line-height: 1.65; color: var(--muted-foreground); }
@@ -223,6 +232,7 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
 .mercado-grade-categorias img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .28; transition: transform .35s; }
 .mercado-grade-categorias a:hover img { transform: scale(1.05); }
 .mercado-grade-categorias span, .mercado-grade-categorias svg { position: relative; z-index: 1; }
+.mercado-grade-categorias .mercado-categoria-icone { position: absolute; right: .7rem; top: .55rem; width: 4.5rem; height: 4.5rem; color: var(--primary); opacity: .82; }
 .mercado-grade-categorias span { font-size: .85rem; font-weight: 720; }
 .mercado-grade-categorias svg { width: 1rem; }
 .home-mercado .cartao-produto > div:last-child { padding: .8rem; }
@@ -745,6 +755,7 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
   background: var(--muted); transition: border-color .2s, transform .2s;
 }
 .atalhos-cat-foto img { width: 100%; height: 100%; object-fit: cover; }
+.atalhos-cat-foto svg { width: 2.55rem; height: 2.55rem; color: var(--primary); }
 .atalhos-cat-tira > a:hover .atalhos-cat-foto { border-color: var(--primary); transform: translateY(-2px); }
 .atalhos-cat-nome {
   font-size: .6875rem; line-height: 1.25; color: var(--muted-foreground);

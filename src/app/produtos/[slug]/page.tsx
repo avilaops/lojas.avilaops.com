@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import FichaTecnica from "@/components/FichaTecnica";
 import { exigirTenant, lojaVende, urlDaLoja } from "@/lib/tenant";
-import { buscarProduto, formatarBRL, listarProdutos, resumoAvaliacoes } from "@/lib/catalogo";
+import { buscarProduto, formatarBRL, listarProdutos, produtoPublicavel, resumoAvaliacoes } from "@/lib/catalogo";
 import AvisoEstoque from "@/components/AvisoEstoque";
 import EstoqueBaixo from "@/components/EstoqueBaixo";
 import AddToCartButton from "@/components/cart/AddToCartButton";
@@ -24,7 +24,15 @@ export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
   const p = await buscarProduto(t.id, slug);
   if (!p) return { title: "Produto" };
-  return { title: p.nome, description: p.descricaoCurta ?? undefined, alternates: { canonical: `/produtos/${p.slug}` }, openGraph: { images: p.imagens.slice(0, 1) } };
+  return {
+    title: p.nome,
+    description: p.descricaoCurta ?? undefined,
+    alternates: { canonical: `/produtos/${p.slug}` },
+    openGraph: { images: p.imagens.slice(0, 1) },
+    // A mesma régua do sitemap: o que fica fora dele também pede para não ser
+    // indexado, senão o Google chega pelo link interno e indexa do mesmo jeito.
+    ...(produtoPublicavel(p) ? {} : { robots: { index: false, follow: true } }),
+  };
 }
 
 export default async function ProdutoPage({ params }: Props) {

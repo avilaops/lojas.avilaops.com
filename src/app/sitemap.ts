@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { headers } from "next/headers";
 import { tenantAtual, urlDaLoja } from "@/lib/tenant";
-import { listarCategorias, listarProdutos } from "@/lib/catalogo";
+import { listarCategorias, listarProdutos, produtoPublicavel } from "@/lib/catalogo";
 import { postsPublicados } from "@/lib/blog";
 
 export const dynamic = "force-dynamic";
@@ -34,7 +34,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: base, changeFrequency: "daily", priority: 1 },
     { url: `${base}/produtos`, changeFrequency: "daily", priority: 0.9 },
     ...categorias.map((c) => ({ url: `${base}/categoria/${c.slug}`, lastModified: c.atualizadoEm, changeFrequency: "weekly" as const, priority: 0.7 })),
-    ...produtos.map((p) => ({ url: `${base}/produtos/${p.slug}`, lastModified: p.atualizadoEm, changeFrequency: "weekly" as const, priority: 0.8 })),
+    // Só o que tem foto ou preço. A Vedashow mandava 5.589 produtos ao Google
+    // com 2.100 vendáveis: o resto era nome e ficha, sem nada para exibir, e
+    // milhares de páginas quase iguais derrubam as boas junto.
+    ...produtos.filter(produtoPublicavel).map((p) => ({ url: `${base}/produtos/${p.slug}`, lastModified: p.atualizadoEm, changeFrequency: "weekly" as const, priority: 0.8 })),
     ...["sobre", "contato", "politicas/envio", "politicas/devolucao", "politicas/privacidade"].map((s) => ({ url: `${base}/${s}`, priority: 0.3 })),
   ];
 }

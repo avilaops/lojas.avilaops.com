@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PRINCIPAIS } from "@/components/Header";
+import IconeCategoria from "@/components/IconeCategoria";
 
 /**
  * Atalhos redondos de categoria, na primeira tela.
@@ -18,19 +19,21 @@ export default function AtalhosCategorias({
 }: {
   categorias: Array<{ id: string; slug: string; nome: string; imagemUrl: string | null }>;
 }) {
-  const comFoto = categorias.filter((c) => c.imagemUrl);
-  // Menos de três atalhos não formam uma fileira: viram dois círculos soltos
-  // ocupando espaço que o produto usaria melhor.
-  if (comFoto.length < 3) return null;
+  if (categorias.length < 3) return null;
 
   return (
     <nav className="atalhos-cat" aria-label="Categorias em destaque">
       <div className="container-loja atalhos-cat-tira">
-        {comFoto.slice(0, PRINCIPAIS).map((c) => (
+        {categorias.slice(0, PRINCIPAIS).map((c) => (
           <Link key={c.id} href={`/categoria/${c.slug}`}>
             <span className="atalhos-cat-foto">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={c.imagemUrl!} alt="" loading="eager" />
+              {c.imagemUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={c.imagemUrl} alt="" loading="eager" />
+              ) : (
+                <IconeCategoria slug={c.slug} />
+              )}
             </span>
             {/* Duas linhas no máximo: o nome inteiro numa só empurraria a
                 fileira para o dobro da altura por causa de uma categoria. */}

@@ -1,5 +1,5 @@
 import { exigirTenant, identidadeDa, lojaVende, temaDo } from "@/lib/tenant";
-import { listarCategorias, listarProdutos, marcasDaLoja, motosDaLoja, provaSocialDa } from "@/lib/catalogo";
+import { listarCategorias, listarProdutos, marcasDaLoja, motosDaLoja, provaSocialDa, vitrineDaLoja } from "@/lib/catalogo";
 import { minhaMoto } from "@/lib/minha-moto";
 import Automotivo from "@/components/home/Automotivo";
 import Garagem from "@/components/home/Garagem";
@@ -29,7 +29,7 @@ export default async function Home() {
     motopecas ? motosDaLoja(t.id) : null,
     motopecas ? marcasDaLoja(t.id) : [],
   ]);
-  const vitrine = destaques.length ? destaques : await listarProdutos(t.id, { moto });
+  const vitrine = destaques.length ? destaques : await vitrineDaLoja(t.id, { moto });
   const dados = { t, identidade: identidadeDa(t), categorias, vitrine, temDestaques: destaques.length > 0, vende: lojaVende(t), moto };
 
   const layout =

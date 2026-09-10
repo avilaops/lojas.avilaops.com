@@ -66,8 +66,44 @@ export function proxy(request: NextRequest) {
   const resposta = NextResponse.next();
   if (pathname.startsWith("/api/") || pathname.startsWith("/painel") || pathname.startsWith("/conta")) {
     resposta.headers.set("cache-control", "private, no-store, max-age=0, must-revalidate");
+    return resposta;
+  }
+
+  // Vitrine de loja pode ficar um minuto na borda.
+  //
+  // Toda página é dinâmica (o tenant sai do Host), e o Next responde isso com
+  // `no-store`. O resultado, medido em 10/09/2026 na Vedashow: 3,1 s até o
+  // primeiro byte numa home de catálogo, e cada visitante pagando a renderização
+  // inteira de novo. Catálogo não muda a cada segundo; um minuto de cache e
+  // dez de "sirva o velho enquanto renova" tiram o servidor do caminho de quem
+  // só está olhando.
+  //
+  // Só quando o pedido não traz cookie nosso. Conta (`loja_conta`) e moto
+  // escolhida (`minha-moto`) mudam a página, e uma cópia guardada com a moto
+  // de um comprador chegaria ao próximo; o carrinho é do navegador e não
+  // entra nisso. Sessão de lojista (`lojas_sessao`) nem pisa aqui, mas a
+  // regra é a mesma: com cookie, resposta é de quem pediu.
+  if (host !== BASE && request.method === "GET" && paginaDeVitrine(pathname) && !temCookieNosso(request)) {
+    resposta.headers.set("cache-control", "public, s-maxage=60, stale-while-revalidate=600");
   }
   return resposta;
+}
+
+/** As páginas que qualquer visitante vê igual: home, catálogo, produto, institucionais. */
+function paginaDeVitrine(pathname: string): boolean {
+  return (
+    pathname === "/" ||
+    pathname === "/produtos" ||
+    pathname.startsWith("/produtos/") ||
+    pathname.startsWith("/categoria/") ||
+    pathname === "/sobre" ||
+    pathname === "/contato" ||
+    pathname.startsWith("/politicas/")
+  );
+}
+
+function temCookieNosso(request: NextRequest): boolean {
+  return ["loja_conta", "lojas_sessao", "minha-moto"].some((nome) => request.cookies.has(nome));
 }
 
 export const config = {
