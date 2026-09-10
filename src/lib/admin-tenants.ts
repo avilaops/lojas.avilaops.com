@@ -4,7 +4,7 @@ import { cifrar } from "./cofre";
 import { slugificar } from "./catalogo";
 import { esquecerTenantEmCache } from "./tenant";
 import type { ProdutoEntrada, TenantEntrada } from "./admin-schemas";
-import { invalidarCatalogo } from "./catalogo";
+import { invalidarCatalogo } from "./catalogo-cache";
 
 function dadosDoTenant(entrada: Partial<TenantEntrada>): Prisma.TenantUpdateInput {
   const { mercadoPago, tema, identidade, endereco, tabelaFrete, ...resto } = entrada;

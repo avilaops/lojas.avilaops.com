@@ -8,7 +8,7 @@ import { gerarRascunhoSeoCategoria, publicarSeoCategoria } from "@/lib/seo-categ
 import { avisarBuscadores } from "@/lib/indexnow";
 import { emitir } from "@/lib/eventos";
 import type { Tenant, PedidoStatus } from "@prisma/client";
-import { invalidarCatalogo } from "./catalogo";
+import { invalidarCatalogo } from "./catalogo-cache";
 
 export interface McpTool {
   name: string;

@@ -1,7 +1,7 @@
 import type { Prisma, Produto, Categoria } from "@prisma/client";
 import type { ItemCarrinho } from "@avilaops/checkout";
 import { cache } from "react";
-import { revalidateTag, unstable_cache } from "next/cache";
+import { unstable_cache } from "next/cache";
 import { prisma } from "./db";
 import { encaixe, lerCompatibilidade, type Moto } from "./motos";
 import type { TemaLoja } from "./tema";
@@ -67,11 +67,9 @@ export function categoriasParaVitrine<C extends { imagemUrl: string | null }>(
  * até cinco minutos, e a primeira pergunta no suporte seria "importei e não
  * apareceu".
  */
-const etiquetaDoCatalogo = (tenantId: string) => `catalogo:${tenantId}`;
-
-export function invalidarCatalogo(tenantId: string): void {
-  revalidateTag(etiquetaDoCatalogo(tenantId), "max");
-}
+export const etiquetaDoCatalogo = (tenantId: string) => `catalogo:${tenantId}`;
+// `invalidarCatalogo` mora em catalogo-cache.ts: `revalidateTag` é só de
+// servidor, e este arquivo entra no bundle do navegador por `formatarBRL`.
 
 export type OrdemCatalogo = "relevancia" | "menor-preco" | "maior-preco" | "recentes" | "nome";
 

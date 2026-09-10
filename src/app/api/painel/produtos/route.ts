@@ -7,7 +7,7 @@ import { exigir } from "@/lib/operadores";
 import { avisarBuscadores, caminhosDoProduto } from "@/lib/indexnow";
 import { slugificar } from "@/lib/catalogo";
 import type { Prisma } from "@prisma/client";
-import { invalidarCatalogo } from "@/lib/catalogo";
+import { invalidarCatalogo } from "@/lib/catalogo-cache";
 
 /** PUT — importa/atualiza em lote (CSV ou um único produto do formulário). */
 export async function PUT(request: Request) {
