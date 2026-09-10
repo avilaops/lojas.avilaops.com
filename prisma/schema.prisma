@@ -80,6 +80,10 @@ model Tenant {
   /// Exibir o endereço no site (rodapé, contato, JSON-LD). Falso por padrão:
   /// loja só online não expõe onde fica o estoque.
   enderecoPublico Boolean @default(false)
+  /// Deixa crawlers de TREINAMENTO (GPTBot, Google-Extended, ClaudeBot, CCBot)
+  /// lerem a loja. Não tem relação com aparecer na busca do Google, do Bing ou
+  /// do ChatGPT, que é sempre liberada em loja ativa. Ver src/lib/descoberta.ts.
+  permiteTreinamentoIa Boolean @default(false)
   horario         String?
 
   // ── Entrega ──────────────────────────────────────────────────────────

@@ -1,0 +1,119 @@
+import { medidaValida } from "./catalogo";
+
+/**
+ * A ficha técnica de um produto, na língua de quem compra e de quem indexa.
+ *
+ * `Produto.atributos` é JSON livre e chega do ERP do lojista com o que o ERP
+ * tinha: `grupoLegado`, `ncm`, `unidade`, além das medidas. A tela mostrava
+ * tudo cru ("Diametro interno mm 6", "Grupo legado Diversos"), e a mesma
+ * medida que decide a compra saía sem unidade formatada e com a chave do
+ * banco como rótulo. Para um crawler, "Altura mm 114" não é "altura de
+ * 114 mm".
+ *
+ * Aqui mora a regra, uma vez, para a ficha visível e o JSON-LD dizerem a
+ * mesma coisa:
+ *
+ *   - medida (`*Mm`) vira "Diâmetro interno · 101,6 mm", só se for válida
+ *     (ver `medidaValida`); inválida não aparece, porque errada é pior que
+ *     ausente;
+ *   - chave interna do ERP (`grupoLegado`, e qualquer `_privada`) não sai;
+ *   - o resto ganha rótulo traduzido quando é conhecido, e a regra geral de
+ *     camelCase → texto quando não é.
+ */
+
+export type LinhaDaFicha = {
+  chave: string;
+  rotulo: string;
+  /** O que a tela mostra ("101,6 mm"). */
+  valor: string;
+  /** Só para medida: o número e a unidade, para dado estruturado. */
+  numero?: number;
+  unidade?: "mm";
+};
+
+const MEDIDAS: Record<string, string> = {
+  diametroInternoMm: "Diâmetro interno",
+  diametroExternoMm: "Diâmetro externo",
+  alturaMm: "Altura",
+  larguraMm: "Largura",
+  comprimentoMm: "Comprimento",
+  espessuraMm: "Espessura",
+  furoMm: "Furo",
+};
+
+/** Chaves que são do ERP, não do produto. */
+const INTERNAS = new Set(["grupoLegado"]);
+
+const ROTULOS: Record<string, string> = {
+  ncm: "NCM",
+  unidade: "Unidade de venda",
+  unidadeVenda: "Unidade de venda",
+  referencia: "Referência",
+  subtipo: "Subtipo",
+  vedacao: "Vedação",
+  folga: "Folga",
+  linha: "Linha",
+  material: "Material",
+  tipo: "Tipo",
+  aplicacao: "Aplicação",
+  classificacaoAws: "Classificação AWS",
+  bitola: "Bitola",
+  correnteIndicada: "Corrente indicada",
+  poloEPosicao: "Polo e posição",
+  limiteResistencia: "Limite de resistência",
+  limiteEscoamento: "Limite de escoamento",
+  alongamento: "Alongamento",
+  charpy: "Charpy",
+  composicaoDeposito: "Composição do depósito",
+  fabricacao: "Fabricação",
+  composicao: "Composição",
+  identificacao: "Identificação",
+  processo: "Processo",
+  corrente: "Corrente",
+  diametro: "Diâmetro",
+  espessura: "Espessura",
+  furo: "Furo",
+  liga: "Liga",
+};
+
+const SIGLAS = new Set(["aws", "din", "hb", "hrc", "mpa", "cc", "ca", "tig", "mig", "ncm", "sae", "iso", "abnt"]);
+
+function rotuloGeral(chave: string): string {
+  const texto = chave
+    .replace(/([a-z\d])([A-Z])/g, "$1 $2")
+    .replace(/[_-]+/g, " ")
+    .trim()
+    .toLowerCase();
+  return texto
+    .split(" ")
+    .map((p, i) => (SIGLAS.has(p) ? p.toUpperCase() : i === 0 ? p.charAt(0).toUpperCase() + p.slice(1) : p))
+    .join(" ");
+}
+
+/** "101.6" → "101,6 mm". Sem zeros à toa: 14 é "14 mm", não "14,0 mm". */
+export function formatarMm(n: number): string {
+  return `${n.toLocaleString("pt-BR", { maximumFractionDigits: 3 })} mm`;
+}
+
+export function fichaDoProduto(atributos: Record<string, unknown> | null | undefined): LinhaDaFicha[] {
+  const entradas = Object.entries(atributos ?? {}).filter(
+    ([k, v]) => !INTERNAS.has(k) && !k.startsWith("_") && v !== null && v !== undefined && String(v).trim() !== "",
+  );
+
+  const medidas: LinhaDaFicha[] = [];
+  const outras: LinhaDaFicha[] = [];
+  for (const [chave, bruto] of entradas) {
+    if (MEDIDAS[chave]) {
+      const n = Number(bruto);
+      if (!medidaValida(n)) continue;
+      medidas.push({ chave, rotulo: MEDIDAS[chave], valor: formatarMm(n), numero: n, unidade: "mm" });
+    } else {
+      outras.push({ chave, rotulo: ROTULOS[chave] ?? rotuloGeral(chave), valor: String(bruto).trim() });
+    }
+  }
+  // Medida primeiro, na ordem em que a peça é lida (interno, externo, altura):
+  // é a linha que decide se serve.
+  const ordem = Object.keys(MEDIDAS);
+  medidas.sort((a, b) => ordem.indexOf(a.chave) - ordem.indexOf(b.chave));
+  return [...medidas, ...outras];
+}

@@ -53,24 +53,27 @@ O Next **ignora** o `Cache-Control` que o `proxy.ts` tenta pôr em página
 dinâmica; é por isso que a regra vive no Caddy. Testar com `GET`, nunca com
 `curl -I` (HEAD não casa a regra).
 
-### Com Cloudflare (`*.lojas.avilaops.com`)
+### Com Cloudflare
 
-O Cloudflare **não guarda HTML por padrão**, mesmo com `s-maxage`. Para a
-camada 3 valer nos subdomínios é preciso uma Cache Rule no painel da zona
-`avilaops.com`: *hostname termina em `.lojas.avilaops.com` e caminho não
-começa com `/painel`, `/conta`, `/carrinho`, `/checkout`, `/pedido`,
-`/api` → Eligible for cache, respeitar origin TTL*. Enquanto a regra não
-existe, o cabeçalho é inofensivo e a página é servida pela origem.
+**Corrigido em 10/09/2026:** só o apex `lojas.avilaops.com` (plataforma e
+`/uploads`) passa pelo Cloudflare. `*.lojas.avilaops.com` e os domínios
+próprios resolvem **direto** para o Hetzner. Ou seja, hoje **nenhuma
+página de loja** tem CDN na frente; o `s-maxage` é emitido para um CDN
+futuro. Se um dia os subdomínios ganharem proxy laranja, o Cloudflare **não
+guarda HTML por padrão** mesmo com `s-maxage`: precisará de uma Cache Rule
+(*hostname termina em `.lojas.avilaops.com` e caminho não começa com
+`/painel`, `/conta`, `/carrinho`, `/checkout`, `/pedido`, `/api` → Eligible
+for cache, respeitar origin TTL*).
 
-O que já é cacheado hoje: `/uploads/*` (imagens, `immutable`, um ano) e
-`/_next/static/*`. **Corolário:** quando uma variante de imagem muda de
+O que o Cloudflare já cacheia hoje: `lojas.avilaops.com/uploads/*` (imagens,
+`immutable`, um ano). **Corolário:** quando uma variante de imagem muda de
 conteúdo sem mudar de URL (foi o caso das miniaturas `?w=480`, que eram o
 original até 10/09), é preciso purge no Cloudflare; a origem não tem como
 forçar.
 
-### Sem Cloudflare (domínio próprio, ex.: `vedashow.com.br`)
+### Sem Cloudflare (toda loja hoje)
 
-Domínio próprio aponta direto para o Caddy, sem proxy laranja. Não há quem
+Subdomínio e domínio próprio apontam direto para o Caddy, sem proxy laranja. Não há quem
 obedeça `s-maxage`: cada requisição chega à origem. O cabeçalho é emitido
 mesmo assim, para um CDN futuro ou para o proxy de quem quiser pôr um na
 frente. O desempenho ali é o das consultas, e é por isso que a home e a
@@ -89,7 +92,7 @@ listagem foram feitas para pedir ao banco só o que mostram.
 
 ## O que uma alteração no painel leva para aparecer
 
-| mudou | subdomínio (se a Cache Rule existir) | domínio próprio |
+| mudou | com CDN na frente (não é o caso hoje) | loja hoje (sem CDN) |
 |---|---|---|
 | preço, nome, foto, estoque | até 60 s (+ uma resposta stale) | imediato |
 | categoria, banner, tema | até 60 s | imediato |

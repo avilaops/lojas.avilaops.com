@@ -1,0 +1,13 @@
+# Log de acesso das lojas (10/09/2026). Antes nao havia nenhum: sem ele nao
+# da para saber se o Googlebot ou o OAI-SearchBot chegaram, nem com que
+# status sairam. JSON, um arquivo, rotacao por tamanho.
+(lojas_log) {
+	log {
+		output file /var/log/caddy/lojas.log {
+			roll_size 50MiB
+			roll_keep 5
+		}
+		format json
+	}
+}
+

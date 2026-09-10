@@ -64,6 +64,8 @@ export const TenantEntradaSchema = z.object({
   segmento: z.enum(["geral", "motopecas"]).optional(),
   avisoTopo: z.string().trim().max(120).nullable().optional(),
   sobre: z.string().max(4000).optional(),
+  /** Crawlers de treinamento de IA. Não muda nada na busca; ver descoberta.ts. */
+  permiteTreinamentoIa: z.boolean().optional(),
   // Aceita o formato brasileiro que o cliente conhece (DDD + número) e
   // normaliza para DDI 55, sem rejeitar quem já informou o código do país.
   whatsapp: whatsappBrasil.optional(),

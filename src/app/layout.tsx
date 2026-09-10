@@ -157,12 +157,33 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       : {}),
   };
 
+  // WebSite com SearchAction: é o que diz ao Google que /produtos?q= é a busca
+  // da loja. Sem inventar nada: a URL é a que o formulário do cabeçalho usa.
+  const jsonLdSite = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": `${urlDaLoja(t)}/#website`,
+    url: urlDaLoja(t),
+    name: t.nome,
+    publisher: { "@id": `${urlDaLoja(t)}/#organization` },
+    potentialAction: {
+      "@type": "SearchAction",
+      target: { "@type": "EntryPoint", urlTemplate: `${urlDaLoja(t)}/produtos?q={search_term_string}` },
+      "query-input": "required name=search_term_string",
+    },
+  };
+
   return (
     <html lang="pt-BR" data-ck-theme={tema.modo === "escuro" ? "dark" : "light"}>
       <head>
         {fonte && <link rel="stylesheet" href={fonte} />}
         <style dangerouslySetInnerHTML={{ __html: `${cssDoTema(tema)}:root{--brand-support:${identidade.corApoio}}` }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSite) }} />
+        {/* Descoberta do llms.txt pela especificação v2 (llmstxt.org, ago/2026):
+            rel="describedby" aponta para o arquivo que descreve o site. É
+            complemento; quem indexa continua sendo sitemap + páginas. */}
+        <link rel="describedby" href="/llms.txt" />
       </head>
       <body className="flex min-h-screen flex-col">
         <Pixels p={pixels} />

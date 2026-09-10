@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import { identidadeDa, tenantAtual, urlDaLoja } from "@/lib/tenant";
 import { listarCategorias, listarProdutos } from "@/lib/catalogo";
+import { emEstoque, publicavel } from "@/lib/produto-regras";
 
 export const dynamic = "force-dynamic";
 
@@ -66,12 +67,15 @@ Avila Ops: https://avilaops.com
   if (!t || t.status !== "ATIVA") return resposta("Loja não encontrada.\n", 404);
   const base = urlDaLoja(t);
   const identidade = identidadeDa(t);
-  const [categorias, produtos] = await Promise.all([listarCategorias(t.id), listarProdutos(t.id)]);
+  // É o "full" da especificação: o catálogo inteiro em texto. Mas só o que é
+  // publicável (foto ou preço): cadastro de referência não descreve a loja.
+  const [categorias, todos] = await Promise.all([listarCategorias(t.id), listarProdutos(t.id)]);
+  const produtos = todos.filter(publicavel);
   const linhasCategorias = categorias.length
     ? categorias.map((c) => `- [${c.nome}](${base}/categoria/${c.slug})${c.seoDescription ?? c.descricao ? `: ${c.seoDescription ?? c.descricao}` : ""}`).join("\n")
     : "- Nenhuma categoria publicada.";
   const linhasProdutos = produtos.length
-    ? produtos.map((p) => `- [${p.nome}](${base}/produtos/${p.slug}): R$ ${(p.precoCentavos / 100).toFixed(2).replace(".", ",")}${p.marca ? ` · ${p.marca}` : ""}`).join("\n")
+    ? produtos.map((p) => `- [${p.nome}](${base}/produtos/${p.slug}): ${p.precoCentavos > 0 ? `R$ ${(p.precoCentavos / 100).toFixed(2).replace(".", ",")}` : "preço sob consulta"}${!emEstoque(p) ? " (esgotado)" : ""}${p.marca ? ` · ${p.marca}` : ""}`).join("\n")
     : "- Nenhum produto publicado.";
 
   return resposta(`# ${t.nome}

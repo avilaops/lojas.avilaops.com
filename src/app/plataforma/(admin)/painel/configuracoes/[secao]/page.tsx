@@ -3,6 +3,9 @@ import { notFound } from "next/navigation";
 import PainelLoja, { type SecaoPainel } from "@/components/painel/PainelLoja";
 import Dominio from "@/components/painel/Dominio";
 import Canais from "@/components/painel/Canais";
+import Descoberta from "@/components/painel/Descoberta";
+import { estadoDescoberta } from "@/lib/descoberta";
+import { headers } from "next/headers";
 import Equipe from "@/components/painel/Equipe";
 import { prisma } from "@/lib/db";
 import { lojistaAtual, sessaoDoPainel } from "@/lib/sessao";
@@ -89,6 +92,15 @@ export default async function Pagina({ params, searchParams }: {
         />
       </div>
     );
+  }
+
+  // Descoberta: leitura do que a plataforma já garante (robots, sitemap,
+  // llms.txt, domínio canônico) e a única decisão do lojista, a de treinamento.
+  if (secao === "descoberta") {
+    const loja = await lojistaAtual();
+    if (!loja) notFound();
+    const h = await headers();
+    return <div className="grid gap-6"><Descoberta estado={estadoDescoberta(loja, h.get("x-forwarded-host") ?? h.get("host"))} /></div>;
   }
 
   // Domínio não é uma seção do PainelLoja: é tela própria, com verificação de

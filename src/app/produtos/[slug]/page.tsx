@@ -4,6 +4,7 @@ import FichaTecnica from "@/components/FichaTecnica";
 import { exigirTenant, lojaVende, urlDaLoja } from "@/lib/tenant";
 import { buscarProduto, formatarBRL, listarProdutos, resumoAvaliacoes } from "@/lib/catalogo";
 import * as regras from "@/lib/produto-regras";
+import { fichaDoProduto } from "@/lib/ficha";
 import AvisoEstoque from "@/components/AvisoEstoque";
 import EstoqueBaixo from "@/components/EstoqueBaixo";
 import AddToCartButton from "@/components/cart/AddToCartButton";
@@ -56,6 +57,7 @@ export default async function ProdutoPage({ params }: Props) {
     listarProdutos(t.id, { categoriaSlug: p.categoria?.slug, excetoId: p.id, limite: 4, moto }),
   ]);
   const compat = lerCompatibilidade(p.compatibilidade);
+  const ficha = fichaDoProduto((p.atributos as Record<string, unknown>) ?? {});
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -68,6 +70,20 @@ export default async function ProdutoPage({ params }: Props) {
     ...(compat.length ? { isAccessoryOrSparePartFor: compat.map((c) => ({ "@type": "Vehicle", name: `${c.marca} ${c.modelo}`, brand: { "@type": "Brand", name: c.marca }, model: c.modelo })) } : {}),
     image: p.imagens,
     description: p.descricaoCurta ?? p.descricao ?? undefined,
+    ...(p.categoria ? { category: p.categoria.nome } : {}),
+    // As medidas e características que a ficha visível mostra, como
+    // PropertyValue: o mesmo dado, legível por máquina. Nada aqui é inventado;
+    // se a ficha não tem, isto não tem.
+    ...(ficha.length
+      ? {
+          additionalProperty: ficha.map((l) => ({
+            "@type": "PropertyValue",
+            name: l.rotulo,
+            value: l.numero ?? l.valor,
+            ...(l.unidade === "mm" ? { unitCode: "MMT", unitText: "mm" } : {}),
+          })),
+        }
+      : {}),
     ...(resumo.media != null ? { aggregateRating: { "@type": "AggregateRating", ratingValue: resumo.media, reviewCount: resumo.total } } : {}),
     offers: {
       "@type": "Offer",

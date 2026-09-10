@@ -1,5 +1,5 @@
 import { headers } from "next/headers";
-import { tenantAtual, urlDaLoja, identidadeDa, enderecoCompleto } from "@/lib/tenant";
+import { tenantAtual, urlDaLoja, identidadeDa, enderecoCompleto, lojaVende } from "@/lib/tenant";
 import { listarCategorias, listarProdutos, formatarBRL } from "@/lib/catalogo";
 
 /**
@@ -55,8 +55,16 @@ políticas dela. Este arquivo descreve a plataforma, não uma loja.
   if (!t || t.status !== "ATIVA") return new Response("Loja nao encontrada.", { status: 404, headers: { "content-type": "text/plain; charset=utf-8" } });
   const base = urlDaLoja(t);
   const identidade = identidadeDa(t);
-  const [categorias, produtos] = await Promise.all([listarCategorias(t.id), listarProdutos(t.id, { limite: 200 })]);
+  // Categorias em ordem de tamanho (é como `listarCategorias` devolve) e só as
+  // principais: 73 links de categoria já é lista, não orientação.
+  // Destaques são o que o lojista marcou, com teto. Produto não entra em
+  // massa: isto descreve a loja; o catálogo é do sitemap e das categorias.
+  const [categorias, destaques] = await Promise.all([
+    listarCategorias(t.id),
+    listarProdutos(t.id, { destaque: true, limite: 12 }),
+  ]);
   const endereco = t.enderecoPublico ? enderecoCompleto(t) : "";
+  const vende = lojaVende(t);
 
   const linhas = [
     `# ${t.nome}`,
@@ -64,35 +72,47 @@ políticas dela. Este arquivo descreve a plataforma, não uma loja.
     `> ${t.slogan ?? identidade.diferencial ?? `Loja virtual ${t.nome}`}`,
     "",
     "## Sobre",
-    t.sobre ? t.sobre.split(/\n{2,}/)[0] : identidade.diferencial || `${t.nome} vende pela internet com pagamento seguro.`,
+    t.sobre ? t.sobre.split(/\n{2,}/)[0] : identidade.diferencial || `${t.nome} vende pela internet.`,
+    "",
+    `- [Sobre a loja](${base}/sobre)`,
+    `- [Contato](${base}/contato)`,
     "",
     "## Como comprar",
-    `- Catálogo: ${base}/produtos`,
-    t.plano === "SITE" ? `- Pedidos pelo WhatsApp` : `- Pagamento na própria loja: PIX, cartão e boleto`,
+    `- [Catálogo completo](${base}/produtos): busca por nome, código, medida ou marca; filtros por categoria, preço e medida`,
+    // Só o que é verdade hoje: loja sem gateway ligado não "aceita PIX".
+    vende
+      ? `- Pagamento na própria loja: ${t.meiosPagamento.length ? t.meiosPagamento.join(", ") : "PIX, cartão e boleto"}`
+      : t.whatsapp
+        ? `- Pedidos e orçamentos pelo WhatsApp`
+        : "",
     t.retiradaNaLoja ? `- Retirada na loja disponível` : `- Entrega para todo o Brasil`,
-    `- Envio em até ${t.despachoDiasUteis} dia(s) útil(eis) após o pagamento`,
-    t.freteGratisAcima != null ? `- Frete grátis acima de ${formatarBRL(t.freteGratisAcima)}` : "",
+    vende ? `- Envio em até ${t.despachoDiasUteis} dia(s) útil(eis) após o pagamento` : "",
+    vende && t.freteGratisAcima != null ? `- Frete grátis acima de ${formatarBRL(t.freteGratisAcima)}` : "",
     "",
     "## Contato",
     t.whatsapp ? `- WhatsApp: https://wa.me/${t.whatsapp}` : "",
+    t.telefone ? `- Telefone: ${t.telefone}` : "",
     t.emailContato ? `- E-mail: ${t.emailContato}` : "",
     endereco ? `- Endereço: ${endereco}` : "",
     t.horario ? `- Horário: ${t.horario}` : "",
+    t.razaoSocial ? `- Razão social: ${t.razaoSocial}` : "",
     "",
-    "## Categorias",
-    ...categorias.map((c) => `- [${c.nome}](${base}/categoria/${c.slug})`),
-    "",
-    "## Produtos",
-    ...produtos.map((p) => `- [${p.nome}](${base}/produtos/${p.slug}): ${formatarBRL(p.precoCentavos)}${p.disponibilidade === "out_of_stock" ? " (esgotado)" : ""}${p.descricaoCurta ? ` · ${p.descricaoCurta}` : ""}`),
+    "## Categorias principais",
+    ...categorias.slice(0, 30).map((c) => `- [${c.nome}](${base}/categoria/${c.slug})${c.seoDescription ?? c.descricao ? `: ${(c.seoDescription ?? c.descricao ?? "").slice(0, 120)}` : ""}`),
+    ...(destaques.length
+      ? ["", "## Destaques", ...destaques.map((p) => `- [${p.nome}](${base}/produtos/${p.slug})${p.precoCentavos > 0 ? `: ${formatarBRL(p.precoCentavos)}` : ": preço sob consulta"}`)]
+      : []),
     "",
     "## Políticas",
     `- [Envio e retirada](${base}/politicas/envio)`,
     `- [Trocas e devoluções](${base}/politicas/devolucao)`,
     `- [Privacidade](${base}/politicas/privacidade)`,
+    `- [Termos de uso](${base}/politicas/termos)`,
     "",
-    "## Dados estruturados",
-    `- Sitemap: ${base}/sitemap.xml`,
-    `- Feed do Google Merchant: ${base}/feed/merchant.xml`,
+    "## Optional",
+    `- [Sitemap](${base}/sitemap.xml): todas as páginas públicas`,
+    `- [Catálogo completo em texto](${base}/llms-full.txt): todos os produtos publicados, com preço`,
+    vende ? `- [Feed do Google Merchant](${base}/feed/merchant.xml)` : "",
   ];
 
   return new Response(linhas.filter((l) => l !== "").join("\n") + "\n", {

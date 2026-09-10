@@ -30,6 +30,7 @@ NOVO=$(mktemp)
     echo "	}"
     echo "	encode zstd gzip"
     echo "	import lojas_vitrine_cache"
+    echo "	import lojas_log"
     echo "	reverse_proxy 127.0.0.1:3080"
     echo "}"
   fi
@@ -41,7 +42,11 @@ if [ -f "$ALVO" ] && diff -q <(grep -v '^#' "$ALVO") <(grep -v '^#' "$NOVO") >/d
 fi
 
 if caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile >/dev/null 2>&1; then :; fi
-cp "$NOVO" "$ALVO"; rm -f "$NOVO"
+# mktemp cria 0600 e o `cp` herda o modo quando o alvo nao existe: em
+# 10/09/2026 o reload do Caddy morreu com "permission denied" no arquivo
+# gerado, e so nao derrubou nada porque reload que falha mantem a config
+# anterior. O usuario caddy precisa ler.
+cp "$NOVO" "$ALVO"; rm -f "$NOVO"; chmod 644 "$ALVO"
 if caddy validate --config /etc/caddy/Caddyfile >/dev/null 2>&1; then
   systemctl reload caddy && echo "caddy recarregado: $(echo "$HOSTS" | wc -l) domínio(s)"
 else

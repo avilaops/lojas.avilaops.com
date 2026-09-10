@@ -13,6 +13,7 @@
     "prisma:dev": "prisma migrate dev",
     "seed:demo": "tsx scripts/seed-demo.ts",
     "loja:criar": "tsx scripts/criar-loja.ts",
+    "loja:publicacao": "tsx scripts/conferir-publicacao.ts",
     "test": "tsx --test src/lib/*.test.ts ../packages/checkout/src/core/*.test.ts ../packages/checkout/src/server/*.test.ts ../packages/checkout/src/providers/*.test.ts"
   },
   "dependencies": {
