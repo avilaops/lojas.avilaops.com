@@ -29,6 +29,7 @@ NOVO=$(mktemp)
     echo "		on_demand"
     echo "	}"
     echo "	encode zstd gzip"
+    echo "	import lojas_vitrine_cache"
     echo "	reverse_proxy 127.0.0.1:3080"
     echo "}"
   fi

@@ -1,0 +1,27 @@
+# Vitrine de loja pode ficar um minuto na borda (10/09/2026).
+#
+# Toda pagina da loja e dinamica (o tenant sai do Host), e o Next responde
+# isso com "private, no-store" e ignora o que o proxy da aplicacao tenta por
+# no lugar. O resultado, medido na Vedashow: 3,1 s ate o primeiro byte numa
+# home de catalogo, com cada visitante pagando a renderizacao inteira.
+#
+# Vale so para pagina que todo visitante ve igual, em GET, e sem cookie nosso:
+# conta do comprador (loja_conta) e moto escolhida (minha-moto) mudam a pagina,
+# e uma copia guardada com a moto de um chegaria ao proximo. O carrinho vive
+# no navegador e nao entra nisso. Painel, conta, carrinho, checkout e API
+# ficam fora da lista de propósito. O Cloudflare nao guarda 5xx, entao um
+# tropeço do servidor nao fica um minuto no ar.
+(lojas_vitrine_cache) {
+	@vitrine {
+		method GET
+		path / /produtos /produtos/* /categoria/* /sobre /contato /politicas/*
+		not header Cookie *loja_conta=*
+		not header Cookie *lojas_sessao=*
+		not header Cookie *minha-moto=*
+	}
+	header @vitrine {
+		Cache-Control "public, s-maxage=60, stale-while-revalidate=600"
+		defer
+	}
+}
+
