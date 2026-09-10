@@ -429,6 +429,15 @@
 .pl-mini-distribuidora-banner { display: grid; align-items: end; height: 26%; margin: 3% 3% 0; padding: 5%; border-radius: 5px; background: linear-gradient(100deg, rgba(0,0,0,.78), rgba(0,0,0,.25)), linear-gradient(135deg, #0f766e, #4b9c93); }
 .pl-mini-distribuidora-banner strong { color: #fff; font: 800 9px/1.15 system-ui; letter-spacing: -.02em; }
 .pl-mini-distribuidora .pl-mini-mercado-grid { height: 40%; grid-template-rows: 1fr; }
+/* Automotivo: o Mercado com a trilha numerada no lugar dos departamentos.
+   A numeração é o que a prévia precisa mostrar, porque é o que distingue este
+   modelo dos outros na hora de escolher. */
+.pl-mini-trilha { display: flex; gap: 2%; padding: 4% 3% 0; }
+.pl-mini-trilha span { flex: 1; display: flex; align-items: center; gap: 4px; padding: 5px 4px; border: 1px solid rgba(0,0,0,.08); border-radius: 5px; }
+.pl-mini-trilha i { display: grid; place-items: center; width: 9px; height: 9px; border-radius: 50%; background: #e8f3f1; color: #0f766e; font: 800 6px/1 system-ui; font-style: normal; }
+.pl-mini-trilha b { color: #1c2028; font: 700 6px/1 system-ui; letter-spacing: .04em; text-transform: uppercase; }
+.pl-mini-automotivo .pl-mini-mercado-grid { height: 52%; }
+
 .pl-mini-conversao { color: #1c2028; background: #fff7ed; }
 .pl-mini-conversao .pl-mini-topo i { background: #ea580c; }
 .pl-mini-oferta { position: relative; height: 88%; display: flex; align-items: center; padding: 5% 7%; }

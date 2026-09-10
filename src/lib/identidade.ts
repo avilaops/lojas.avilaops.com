@@ -42,6 +42,20 @@ const SEGMENTO_COR: Partial<Record<IdentidadeLoja["segmento"], string>> = {
   automotivo: "#cf2e2e", agro: "#397047", casa: "#8b5e3c",
 };
 
+/**
+ * Segmentos cujo layout é decidido pelo ramo, não pela personalidade.
+ *
+ * A receita da personalidade escolhe bem quando a diferença entre as lojas é de
+ * gosto. Em alguns ramos ela é de estrutura: em estética automotiva o cliente
+ * precisa da ordem de aplicação (lavar, corrigir, proteger) antes de precisar
+ * de uma vitrine bonita, e uma loja "sofisticada" desse ramo continua tendo de
+ * ensinar a ordem. Nesses casos o ramo manda, pelo mesmo motivo que já manda na
+ * cor.
+ */
+const SEGMENTO_LAYOUT: Partial<Record<IdentidadeLoja["segmento"], TemaLoja["layout"]>> = {
+  automotivo: "automotivo",
+};
+
 const FOTOGRAFIA: Record<IdentidadeLoja["estiloFotografico"], string> = {
   editorial: "Composição editorial, luz controlada, respiro e enquadramentos que valorizem textura e acabamento.",
   produto: "Produto em primeiro plano, fundo limpo, luz uniforme e cores fiéis; uma foto de contexto por coleção.",
@@ -71,7 +85,8 @@ export function criarDirecaoVisual(diagnostico: DiagnosticoMarca, nome = "Sua ma
     direcaoFotografica: FOTOGRAFIA[diagnostico.estiloFotografico],
     palavrasChave,
   });
-  const tema = TemaSchema.parse({ ...receita, corPrimaria });
+  const layout = SEGMENTO_LAYOUT[diagnostico.segmento] ?? receita.layout;
+  const tema = TemaSchema.parse({ ...receita, corPrimaria, layout });
   return { identidade, tema };
 }
 

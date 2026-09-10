@@ -1,6 +1,7 @@
 import { exigirTenant, identidadeDa, lojaVende, temaDo } from "@/lib/tenant";
 import { listarCategorias, listarProdutos, marcasDaLoja, motosDaLoja, provaSocialDa } from "@/lib/catalogo";
 import { minhaMoto } from "@/lib/minha-moto";
+import Automotivo from "@/components/home/Automotivo";
 import Garagem from "@/components/home/Garagem";
 import Classico from "@/components/home/Classico";
 import Vitrine from "@/components/home/Vitrine";
@@ -35,6 +36,7 @@ export default async function Home() {
     temaDo(t).layout === "spotlight" ? <Spotlight {...dados} />
     : temaDo(t).layout === "mercado" ? <Mercado {...dados} />
     : temaDo(t).layout === "distribuidora" ? <Distribuidora {...dados} />
+    : temaDo(t).layout === "automotivo" ? <Automotivo {...dados} />
     : temaDo(t).layout === "conversao" ? <Conversao {...dados} />
     : temaDo(t).layout === "vitrine" ? <Vitrine {...dados} />
     : temaDo(t).layout === "editorial" ? <Editorial {...dados} />

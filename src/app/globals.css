@@ -184,6 +184,39 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
 .distribuidora-arte-numeros p { display: flex; align-items: baseline; gap: .35rem; }
 .distribuidora-arte-numeros strong { font-size: 1.2rem; font-weight: 780; }
 .distribuidora-arte-numeros span { font-size: .72rem; color: var(--muted-foreground); }
+/* Layout Automotivo: o Mercado com a trilha do serviço antes das categorias.
+   Herda .home-mercado inteiro; só a trilha mora aqui. Loja sem etapas
+   reconhecidas não renderiza a seção e a tela fica idêntica à do Mercado. */
+.automotivo-trilha { padding-top: 3.75rem; }
+.automotivo-trilha h2 { margin-top: .4rem; font-size: clamp(1.55rem, 3vw, 2.15rem); font-weight: 780; letter-spacing: -.035em; }
+.automotivo-trilha > header .home-selo { display: flex; align-items: center; gap: .35rem; }
+.automotivo-trilha > header .home-selo svg { width: .8rem; height: .8rem; }
+.automotivo-trilha ol { display: grid; gap: .65rem; margin-top: 1.5rem; padding: 0; list-style: none; }
+.automotivo-trilha a { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 1rem; border: 1px solid var(--border); border-radius: calc(var(--radius) * 1.4); background: var(--card); padding: 1.1rem 1.25rem; transition: border-color .2s, transform .2s; }
+.automotivo-trilha a:hover { border-color: color-mix(in srgb, var(--primary) 45%, var(--border)); transform: translateY(-2px); }
+/* O número é o que transforma quatro cartões numa sequência: sem ele a pessoa
+   lê quatro atalhos soltos e a ordem, que é o ponto, se perde. */
+.automotivo-passo-numero { display: grid; place-items: center; width: 2.25rem; height: 2.25rem; border-radius: 50%; background: color-mix(in srgb, var(--primary) 12%, transparent); color: var(--primary); font-size: .9rem; font-weight: 800; }
+.automotivo-passo-texto { display: grid; gap: .15rem; min-width: 0; }
+.automotivo-passo-texto strong { font-size: 1rem; font-weight: 760; letter-spacing: -.02em; }
+.automotivo-passo-texto > span { font-size: .82rem; line-height: 1.5; color: var(--muted-foreground); }
+/* O nome cadastrado, discreto: é a ponte entre o verbo da etapa e o rótulo que
+   a pessoa reencontra no menu e na busca. */
+.automotivo-passo-texto em { font-size: .7rem; font-style: normal; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: color-mix(in srgb, var(--primary) 80%, var(--foreground)); }
+.automotivo-trilha a > svg { width: 1rem; height: 1rem; color: var(--muted-foreground); }
+/* A partir do tablet as etapas ficam lado a lado: a sequência se lê da esquerda
+   para a direita, que é como se lê um processo. */
+@media (min-width: 768px) {
+  .automotivo-trilha ol { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1180px) {
+  .automotivo-trilha ol { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .automotivo-trilha a { grid-template-columns: auto 1fr; align-items: start; }
+  /* Na coluna estreita a seta empurraria o texto para duas linhas; a linha
+     inteira já é clicável e o cartão inteiro reage no hover. */
+  .automotivo-trilha a > svg { display: none; }
+}
+
 .mercado-departamentos, .mercado-produtos { padding-top: 3.75rem; }
 .mercado-departamentos h2, .mercado-produtos h2 { margin-top: .4rem; font-size: clamp(1.55rem, 3vw, 2.15rem); font-weight: 780; letter-spacing: -.035em; }
 .mercado-grade-categorias { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; }

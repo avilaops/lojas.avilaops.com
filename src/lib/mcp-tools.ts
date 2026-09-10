@@ -67,7 +67,7 @@ export const MCP_TOOLS: McpTool[] = [
       properties: {
         layout: {
           type: "string",
-          enum: ["spotlight", "mercado", "conversao", "classico", "vitrine", "editorial", "minimal"],
+          enum: ["spotlight", "mercado", "distribuidora", "automotivo", "conversao", "classico", "vitrine", "editorial", "minimal"],
           description: "Modelo visual da página inicial da loja.",
         },
         corPrimaria: { type: "string", description: "Cor primária em formato hexadecimal (ex: #2563eb ou #c62828)." },

@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useState } from "react";
 
 /** Os oito layouts de `LAYOUTS` em src/lib/tema.ts, na ordem em que o painel oferece. */
-type Modelo = "classico" | "vitrine" | "editorial" | "minimal" | "spotlight" | "mercado" | "distribuidora" | "conversao";
+type Modelo = "classico" | "vitrine" | "editorial" | "minimal" | "spotlight" | "mercado" | "distribuidora" | "automotivo" | "conversao";
 
 const MODELOS: Array<{ id: Modelo; nome: string; resumo: string }> = [
   { id: "classico", nome: "Clássico", resumo: "Banner, categorias e destaques. Funciona para qualquer catálogo." },
@@ -14,6 +14,7 @@ const MODELOS: Array<{ id: Modelo; nome: string; resumo: string }> = [
   { id: "spotlight", nome: "Spotlight", resumo: "Um produto principal em destaque e navegação visual." },
   { id: "mercado", nome: "Mercado", resumo: "Catálogo denso, departamentos e mais produtos por tela." },
   { id: "distribuidora", nome: "Distribuidora", resumo: "O catálogo denso com a sua imagem de banner na abertura." },
+  { id: "automotivo", nome: "Automotivo", resumo: "O catálogo na ordem do serviço: lavar, corrigir, proteger." },
   { id: "conversao", nome: "Conversão", resumo: "Oferta clara, benefícios e caminho curto até a compra." },
 ];
 
@@ -76,6 +77,23 @@ function MiniLoja({ variante }: { variante: Modelo }) {
         <div className="pl-mini-topo"><i /><span>DISTRIBUIDORA SUL</span><b>•••</b></div>
         <div className="pl-mini-distribuidora-banner" aria-hidden="true"><strong>A peça certa,<br />no prazo certo.</strong></div>
         <div className="pl-mini-departamentos" aria-hidden="true"><span>Pneus</span><span>Óleo</span><span>Freios</span><span>Relação</span><span>Elétrica</span></div>
+        <div className="pl-mini-mercado-grid" aria-hidden="true">
+          {Array.from({ length: 6 }).map((_, i) => <span key={i}><i /><b /><small /></span>)}
+        </div>
+      </div>
+    );
+  }
+  if (variante === "automotivo") {
+    return (
+      <div className="pl-mini-loja pl-mini-mercado pl-mini-automotivo" aria-label="Prévia do layout Automotivo">
+        <div className="pl-mini-topo"><i /><span>ESTÉTICA AUTOMOTIVA</span><b>•••</b></div>
+        {/* A prévia mostra a trilha numerada, que é o que distingue este
+            modelo dos outros na hora de escolher. */}
+        <div className="pl-mini-trilha" aria-hidden="true">
+          {["Lavar", "Corrigir", "Proteger"].map((etapa, i) => (
+            <span key={etapa}><i>{i + 1}</i><b>{etapa}</b></span>
+          ))}
+        </div>
         <div className="pl-mini-mercado-grid" aria-hidden="true">
           {Array.from({ length: 6 }).map((_, i) => <span key={i}><i /><b /><small /></span>)}
         </div>
