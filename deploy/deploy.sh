@@ -40,8 +40,22 @@ docker run --rm -v /opt/lojas/app.novo:/app lojas-base sh -c '
   rm -rf /app/lojas.avilaops.com/node_modules/sharp /app/lojas.avilaops.com/node_modules/@img
   cp -r /opt/sharp/node_modules/sharp /app/lojas.avilaops.com/node_modules/sharp
   cp -r /opt/sharp/node_modules/@img /app/lojas.avilaops.com/node_modules/@img
+  # As dependencias do sharp tambem. O `import("sharp")` e dinamico, entao o
+  # rastreio de arquivos do Next nao leva `semver` para o standalone, e o
+  # sharp quebra no require com "Cannot find module semver/functions/coerce".
+  # Foi assim, em silencio, de 02/09 a 10/09/2026: a rota /uploads caia no
+  # "sem otimizacao" e todo card de produto recebia o original de 1000 px
+  # no lugar da miniatura de 480. Copia so o que falta, sem sobrescrever.
+  for dep in semver detect-libc @emnapi; do
+    [ -e "/app/lojas.avilaops.com/node_modules/$dep" ] || cp -r "/opt/sharp/node_modules/$dep" "/app/lojas.avilaops.com/node_modules/$dep"
+  done
   cd /app/lojas.avilaops.com/node_modules/@prisma
   for h in $(grep -rhoE "@prisma/client-[0-9a-f]{16}" /app/lojas.avilaops.com/.next/server/chunks | sort -u | sed "s#@prisma/##"); do ln -sfn client "$h"; done
+  # O sharp recebe o mesmo tratamento: o Turbopack externaliza como
+  # require("sharp-<hash>"), e sem o symlink o import dinamico cai no catch e
+  # a rota /uploads serve o original no lugar da miniatura (10/09/2026).
+  cd /app/lojas.avilaops.com/node_modules
+  for h in $(grep -rhoE "\"sharp-[0-9a-f]{16}\"" /app/lojas.avilaops.com/.next/server/chunks | tr -d "\"" | sort -u); do ln -sfn sharp "$h"; done
 '
 
 echo "==> trocando a versão no ar"
