@@ -1,5 +1,6 @@
 import type { Prisma, Produto, Categoria } from "@prisma/client";
 import type { ItemCarrinho } from "@avilaops/checkout";
+import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import { prisma } from "./db";
 import { encaixe, lerCompatibilidade, type Moto } from "./motos";
@@ -19,7 +20,10 @@ export type ProdutoComCategoria = Produto & { categoria: Categoria | null };
  * A categoria continua existindo: o painel lê o banco direto e mostra todas,
  * inclusive as vazias, que é justamente onde o lojista precisa vê-las.
  */
-export async function listarCategorias(tenantId: string) {
+export const listarCategorias = cache(async (tenantId: string) => {
+  // `cache()` do React: o layout (menu) e a página (blocos da home, filtros
+  // do catálogo) pedem a mesma lista na mesma requisição, e cada pedido são
+  // N subconsultas de contagem. Uma ida ao banco por requisição.
   const categorias = await prisma.categoria.findMany({
     where: { tenantId, produtos: { some: { ativo: true } } },
     include: { _count: { select: { produtos: { where: { ativo: true } } } } },
@@ -36,7 +40,7 @@ export async function listarCategorias(tenantId: string) {
   // O desempate segue `ordem`, então duas categorias do mesmo tamanho mantêm a
   // sequência que o lojista vê no painel.
   return categorias.sort((a, b) => b._count.produtos - a._count.produtos || a.ordem - b.ordem);
-}
+});
 
 /**
  * Quais categorias entram nos blocos VISUAIS da home (atalhos redondos, grade
@@ -319,6 +323,13 @@ async function medidasDaLojaSemCache(tenantId: string) {
  * (junto com o catálogo-base) e o bloco "compre por moto" da home.
  */
 export async function motosDaLoja(tenantId: string) {
+  // Cinco minutos por loja, como `medidasDaLoja`: lê o JSON de compatibilidade
+  // de todos os produtos ativos para montar um seletor que muda quando o
+  // lojista cadastra peça, não a cada visita.
+  return unstable_cache(motosDaLojaSemCache, ["motos-da-loja"], { revalidate: 300 })(tenantId);
+}
+
+async function motosDaLojaSemCache(tenantId: string) {
   const linhas = await prisma.produto.findMany({ where: { tenantId, ativo: true }, select: { compatibilidade: true } });
   const porMarca: Record<string, string[]> = {};
   const contagem = new Map<string, { marca: string; modelo: string; pecas: number }>();

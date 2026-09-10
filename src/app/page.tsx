@@ -24,7 +24,9 @@ export default async function Home() {
   const moto = motopecas ? await minhaMoto() : null;
   const [categorias, destaques, prova, motos, marcas] = await Promise.all([
     listarCategorias(t.id),
-    listarProdutos(t.id, { destaque: true, moto }),
+    // Nenhum layout mostra mais de 10 destaques: pedir mais é carregar o que
+    // o lojista marcou ao longo de meses para descartar na tela.
+    listarProdutos(t.id, { destaque: true, moto, limite: 12 }),
     provaSocialDa(t.id),
     motopecas ? motosDaLoja(t.id) : null,
     motopecas ? marcasDaLoja(t.id) : [],
