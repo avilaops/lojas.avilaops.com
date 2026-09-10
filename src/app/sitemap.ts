@@ -38,6 +38,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // com 2.100 vendáveis: o resto era nome e ficha, sem nada para exibir, e
     // milhares de páginas quase iguais derrubam as boas junto.
     ...produtos.filter(produtoPublicavel).map((p) => ({ url: `${base}/produtos/${p.slug}`, lastModified: p.atualizadoEm, changeFrequency: "weekly" as const, priority: 0.8 })),
-    ...["sobre", "contato", "politicas/envio", "politicas/devolucao", "politicas/privacidade"].map((s) => ({ url: `${base}/${s}`, priority: 0.3 })),
+    ...["sobre", "contato", "politicas/envio", "politicas/devolucao", "politicas/privacidade", "politicas/termos"].map((s) => ({ url: `${base}/${s}`, priority: 0.3 })),
   ];
 }

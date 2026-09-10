@@ -51,6 +51,7 @@ export default function Footer({ tenant, categorias }: { tenant: Tenant; categor
             <li><Link href="/politicas/envio">Envio e retirada</Link></li>
             <li><Link href="/politicas/devolucao">Trocas e devoluções</Link></li>
             <li><Link href="/politicas/privacidade">Privacidade</Link></li>
+            <li><Link href="/politicas/termos">Termos de uso</Link></li>
             {tenant.instagram && (
               <li>
                 <a href={tenant.instagram} target="_blank" rel="noopener">Instagram</a>

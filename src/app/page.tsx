@@ -18,6 +18,20 @@ import Conversao from "@/components/home/Conversao";
  * alimentados pelos mesmos dados. O lojista escolhe a composição; não
  * desenha. Ver src/lib/tema.ts (LAYOUTS).
  */
+/**
+ * A home é a página que mais precisa de canonical, e era a única sem.
+ *
+ * Uma loja pode responder em três endereços ao mesmo tempo: o domínio próprio,
+ * o `www` dele e `<loja>.lojas.avilaops.com`. Sem canonical o Google trata os
+ * três como páginas diferentes com o mesmo conteúdo e divide o sinal entre
+ * eles. Numa migração de domínio isso é pior ainda: é exatamente o canonical
+ * que diz ao Google onde consolidar o que a loja antiga já tinha conquistado.
+ *
+ * A URL absoluta sai do `metadataBase` do layout, que já é o endereço público
+ * da loja.
+ */
+export const metadata = { alternates: { canonical: "/" } };
+
 export default async function Home() {
   const t = await exigirTenant();
   const motopecas = t.segmento === "motopecas";

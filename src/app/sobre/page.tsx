@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { exigirTenant } from "@/lib/tenant";
 
-export const metadata: Metadata = { title: "Sobre" };
+export const metadata: Metadata = { title: "Sobre" , alternates: { canonical: "/sobre" } };
 
 export default async function Sobre() {
   const t = await exigirTenant();

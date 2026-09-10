@@ -7,7 +7,7 @@ import { mascararDocumento } from "@avilaops/checkout";
  * da loja. O lojista não edita — é o que garante que toda loja cumpra CDC
  * (arrependimento em 7 dias) e LGPD sem ninguém revisar texto por texto.
  */
-const TIPOS = ["envio", "devolucao", "privacidade"] as const;
+const TIPOS = ["envio", "devolucao", "privacidade", "termos"] as const;
 type Tipo = (typeof TIPOS)[number];
 
 export function generateStaticParams() {
@@ -16,7 +16,12 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ tipo: string }> }) {
   const { tipo } = await params;
-  return { title: { envio: "Envio e retirada", devolucao: "Trocas e devoluções", privacidade: "Privacidade" }[tipo] ?? "Políticas" };
+  return {
+    title: { envio: "Envio e retirada", devolucao: "Trocas e devoluções", privacidade: "Privacidade", termos: "Termos de uso" }[tipo] ?? "Políticas",
+    // Sem canonical, o Google trata a mesma política em domínio próprio e em
+    // <loja>.lojas.avilaops.com como duas páginas, e divide o sinal entre elas.
+    alternates: { canonical: `/politicas/${tipo}` },
+  };
 }
 
 export default async function Politica({ params }: { params: Promise<{ tipo: string }> }) {
@@ -52,6 +57,34 @@ export default async function Politica({ params }: { params: Promise<{ tipo: str
         "Dados de cartão não passam por nossos servidores: são tokenizados pelo provedor de pagamento no seu navegador.",
         `Você pode solicitar acesso, correção ou exclusão dos seus dados a qualquer momento pelo ${contato}. Os dados de pedidos são mantidos pelo prazo exigido pela legislação fiscal.`,
         "Esta loja usa cookies estritamente necessários para o funcionamento do carrinho e, quando configurado, ferramentas de medição de audiência.",
+      ],
+    },
+    /**
+     * Termos de uso.
+     *
+     * Descrevem a loja como ela É: vitrine com carrinho, checkout e pagamento
+     * online. Isso precisa ser dito porque muita loja chega aqui vindo de um
+     * site que era só catálogo, e os termos antigos costumam afirmar o
+     * contrário ("o site não tem checkout, o pedido é fechado no atendimento").
+     * Aproveitar aquele texto publicaria uma informação falsa justamente na
+     * página que existe para dar segurança jurídica.
+     *
+     * O que está aqui é fato verificável (como a loja funciona) ou lei que não
+     * depende de escolha do lojista (CDC). Nada de prazo de garantia próprio,
+     * política de erro de preço ou foro: isso é decisão comercial de cada
+     * lojista e, se for inventado aqui, vira promessa que ele terá de cumprir
+     * sem nunca ter feito.
+     */
+    termos: {
+      titulo: "Termos de uso",
+      paragrafos: [
+        `Estes termos valem para o uso da loja da ${empresa}${t.cnpj ? `, CNPJ ${mascararDocumento(t.cnpj)}` : ""}. Navegar e comprar significa concordar com eles.`,
+        "A loja apresenta os produtos, o preço e as condições de entrega, e a compra é feita aqui mesmo: você monta o carrinho, escolhe o frete e paga online. O contrato de venda se forma quando o pagamento é confirmado pelo provedor de pagamento.",
+        "Preço, disponibilidade e prazo são os exibidos no momento da compra. Erros evidentes de cadastro (preço incompatível com o produto, por exemplo) não obrigam a loja à venda: nesse caso o pedido é cancelado e o valor devolvido integralmente.",
+        "As imagens são ilustrativas do produto anunciado. Embalagem, rótulo e apresentação podem mudar por conta do fabricante sem aviso prévio.",
+        "Use os produtos conforme a orientação do fabricante no rótulo. Quando a instrução do rótulo divergir de qualquer texto desta loja, é o rótulo que vale.",
+        "O conteúdo da loja (textos, fotos, marca e organização do catálogo) pertence a quem o produziu e não pode ser copiado sem autorização.",
+        `Dúvida sobre estes termos, sobre um pedido ou sobre um produto: fale conosco pelo ${contato}.`,
       ],
     },
   };

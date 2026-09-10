@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { enderecoCompleto, exigirTenant } from "@/lib/tenant";
 import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
 
-export const metadata: Metadata = { title: "Contato" };
+export const metadata: Metadata = { title: "Contato" , alternates: { canonical: "/contato" } };
 
 export default async function Contato() {
   const t = await exigirTenant();
