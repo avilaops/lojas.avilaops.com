@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { temaDo } from "@/lib/tenant";
 import { ArrowRight, Search, Tags } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import BeneficiosBarra from "./BeneficiosBarra";
@@ -38,7 +39,7 @@ export default function Mercado({ t, identidade, categorias, vitrine, temDestaqu
 
       {/* Atalhos com foto logo abaixo da abertura, como no Mercado Livre: no
           celular é o que dá caminho a quem não vai digitar na busca. */}
-      <AtalhosCategorias categorias={categorias} />
+      <AtalhosCategorias categorias={categorias} semImagem={temaDo(t).categoriaSemImagem} />
 
       <div className="container-loja"><BeneficiosBarra t={t} /></div>
 
@@ -52,7 +53,7 @@ export default function Mercado({ t, identidade, categorias, vitrine, temDestaqu
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={categoria.imagemUrl} alt="" loading="lazy" />
                 )}
-                {!categoria.imagemUrl && <IconeCategoria slug={categoria.slug} className="mercado-categoria-icone" />}
+                {!categoria.imagemUrl && temaDo(t).categoriaSemImagem === "icone" && <IconeCategoria slug={categoria.slug} className="mercado-categoria-icone" />}
                 <span>{categoria.nome}</span><ArrowRight />
               </Link>
             ))}

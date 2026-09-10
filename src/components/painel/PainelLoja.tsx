@@ -118,7 +118,7 @@ export default function PainelLoja({ secao, loja, contagens, produtos, pedidos, 
   const [novo, setNovo] = useState({ nome: "", preco: "", precoDe: "", categoria: "", sku: "", descricaoCurta: "", imagem: "", destaque: false, pesoKg: "", estoque: "" });
   const [csv, setCsv] = useState<{ nome: string; produtos: Array<Record<string, unknown>>; erros: string[] } | null>(null);
   const [rastreio, setRastreio] = useState<Record<string, string>>({});
-  const [tema, setTema] = useState({ corPrimaria: loja.tema.corPrimaria, modo: loja.tema.modo, fonte: loja.tema.fonte, raio: loja.tema.raio, layout: loja.tema.layout });
+  const [tema, setTema] = useState({ corPrimaria: loja.tema.corPrimaria, modo: loja.tema.modo, fonte: loja.tema.fonte, raio: loja.tema.raio, layout: loja.tema.layout, categoriaSemImagem: loja.tema.categoriaSemImagem });
   const [segmento, setSegmento] = useState(loja.segmento);
   const [identidade, setIdentidade] = useState(loja.identidade);
   const [limiteEstoque, setLimiteEstoque] = useState(String(loja.estoqueBaixoEm));
@@ -153,7 +153,7 @@ export default function PainelLoja({ secao, loja, contagens, produtos, pedidos, 
       objetivo: identidade.objetivo, estiloFotografico: identidade.estiloFotografico,
     }, loja.nome);
     setIdentidade(nova.identidade);
-    setTema({ corPrimaria: nova.tema.corPrimaria, modo: nova.tema.modo, fonte: nova.tema.fonte, raio: nova.tema.raio, layout: nova.tema.layout });
+    setTema({ corPrimaria: nova.tema.corPrimaria, modo: nova.tema.modo, fonte: nova.tema.fonte, raio: nova.tema.raio, layout: nova.tema.layout, categoriaSemImagem: nova.tema.categoriaSemImagem });
     setContato((c) => ({ ...c, slogan: c.slogan || nova.identidade.assinatura }));
     setOk("Nova direção gerada. Revise e salve para publicar.");
   }
@@ -415,6 +415,12 @@ export default function PainelLoja({ secao, loja, contagens, produtos, pedidos, 
             <Campo label="Modo"><select className={inputClasse} value={tema.modo} onChange={(e) => setTema({ ...tema, modo: e.target.value as "claro" | "escuro" })}><option value="claro">Claro</option><option value="escuro">Escuro</option></select></Campo>
             <Campo label="Fonte"><select className={inputClasse} value={tema.fonte} onChange={(e) => setTema({ ...tema, fonte: e.target.value as typeof tema.fonte })}>{FONTES.map((x) => <option key={x.valor} value={x.valor}>{x.rotulo}</option>)}</select></Campo>
             <Campo label="Cantos"><select className={inputClasse} value={tema.raio} onChange={(e) => setTema({ ...tema, raio: e.target.value as typeof tema.raio })}><option value="reto">Retos</option><option value="suave">Suaves</option><option value="redondo">Redondos</option></select></Campo>
+            <Campo label="Categoria sem foto" ajuda="Vale para os atalhos e departamentos da página inicial. No menu e no catálogo todas aparecem.">
+              <select className={inputClasse} value={tema.categoriaSemImagem} onChange={(e) => setTema({ ...tema, categoriaSemImagem: e.target.value as typeof tema.categoriaSemImagem })}>
+                <option value="ocultar">Fica fora da página inicial</option>
+                <option value="icone">Entra com um ícone</option>
+              </select>
+            </Campo>
           </div>
           <Campo label="Ramo da loja" ajuda="Peças e acessórios para motos liga a garagem: o cliente escolhe a moto e a loja mostra só o que serve. A compatibilidade é cadastrada em cada produto.">
             <select className={inputClasse} value={segmento} onChange={(e) => setSegmento(e.target.value)}>

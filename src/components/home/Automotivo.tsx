@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { temaDo } from "@/lib/tenant";
 import { ArrowRight, Search, Sparkles } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import BeneficiosBarra from "./BeneficiosBarra";
@@ -52,7 +53,7 @@ export default function Automotivo({ t, identidade, categorias, vitrine, temDest
         </div>
       </section>
 
-      <AtalhosCategorias categorias={categorias} />
+      <AtalhosCategorias categorias={categorias} semImagem={temaDo(t).categoriaSemImagem} />
 
       <div className="container-loja"><BeneficiosBarra t={t} /></div>
 

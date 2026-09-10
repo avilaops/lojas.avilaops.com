@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { temaDo } from "@/lib/tenant";
 import { ArrowRight, Search, Tags } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import BeneficiosBarra from "./BeneficiosBarra";
@@ -53,7 +54,7 @@ export default function Distribuidora({ t, identidade, categorias, vitrine, temD
 
       {/* Atalhos com foto logo abaixo da abertura, como no Mercado Livre: no
           celular é o que dá caminho a quem não vai digitar na busca. */}
-      <AtalhosCategorias categorias={categorias} />
+      <AtalhosCategorias categorias={categorias} semImagem={temaDo(t).categoriaSemImagem} />
 
       <div className="container-loja"><BeneficiosBarra t={t} /></div>
 

@@ -22,6 +22,22 @@ export const TemaSchema = z.object({
    * desenha. É o limite entre "personalizar" e "customizar".
    */
   layout: z.enum(["spotlight", "mercado", "distribuidora", "automotivo", "conversao", "classico", "vitrine", "editorial", "minimal"]).default("classico"),
+  /**
+   * O que a vitrine faz com categoria que não tem foto.
+   *
+   *   ocultar  a categoria fica fora dos atalhos e da grade de departamentos
+   *            da home (continua no menu, no catálogo e no painel). É o
+   *            padrão: fileira de círculos onde metade é desenho genérico
+   *            parece loja inacabada, e a área mais cara da página vai para
+   *            quem tem o que mostrar.
+   *   icone    entra com um pictograma escolhido pelo nome da categoria.
+   *            Serve a loja que prefere a fileira inteira à fileira bonita.
+   *
+   * Nasceu como decisão de produto em 09/09/2026 ("deixar apenas a que tem
+   * foto") e virou pictograma global em 10/09 sem passar por aqui. Agora é
+   * escolha da loja, com o padrão do lado da decisão original.
+   */
+  categoriaSemImagem: z.enum(["ocultar", "icone"]).default("ocultar"),
 });
 
 export const LAYOUTS: Array<{ valor: TemaLoja["layout"]; rotulo: string; descricao: string }> = [

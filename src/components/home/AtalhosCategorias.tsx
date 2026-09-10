@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { PRINCIPAIS } from "@/components/Header";
 import IconeCategoria from "@/components/IconeCategoria";
+import { categoriasParaVitrine } from "@/lib/catalogo";
+import type { TemaLoja } from "@/lib/tema";
 
 /**
  * Atalhos redondos de categoria, na primeira tela.
@@ -11,21 +13,27 @@ import IconeCategoria from "@/components/IconeCategoria";
  * segunda intenção, mas nomes industriais longos ("Aço de baixo e médio teor de
  * carbono") não se distinguem de relance. A foto distingue.
  *
- * Quando a categoria ainda não tem foto confiável, entra o pictograma técnico
- * da família. É mais honesto que usar uma foto aproximada e mais útil que uma
- * inicial genérica.
+ * O que acontece com categoria sem foto é decisão da loja
+ * (`tema.categoriaSemImagem`, padrão "ocultar"): ver `categoriasParaVitrine`.
+ * A regra não mora aqui de propósito; este componente só desenha o que a
+ * política deixou passar.
  */
 export default function AtalhosCategorias({
   categorias,
+  semImagem,
 }: {
   categorias: Array<{ id: string; slug: string; nome: string; imagemUrl: string | null }>;
+  semImagem: TemaLoja["categoriaSemImagem"];
 }) {
-  if (categorias.length < 3) return null;
+  const lista = categoriasParaVitrine(categorias, semImagem);
+  // Menos de três atalhos não formam uma fileira: viram dois círculos soltos
+  // ocupando espaço que o produto usaria melhor.
+  if (lista.length < 3) return null;
 
   return (
     <nav className="atalhos-cat" aria-label="Categorias em destaque">
       <div className="container-loja atalhos-cat-tira">
-        {categorias.slice(0, PRINCIPAIS).map((c) => (
+        {lista.slice(0, PRINCIPAIS).map((c) => (
           <Link key={c.id} href={`/categoria/${c.slug}`}>
             <span className="atalhos-cat-foto">
               {c.imagemUrl ? (

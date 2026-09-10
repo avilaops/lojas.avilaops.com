@@ -3,6 +3,7 @@ import type { ItemCarrinho } from "@avilaops/checkout";
 import { unstable_cache } from "next/cache";
 import { prisma } from "./db";
 import { encaixe, lerCompatibilidade, type Moto } from "./motos";
+import type { TemaLoja } from "./tema";
 
 export type ProdutoComCategoria = Produto & { categoria: Categoria | null };
 
@@ -35,6 +36,21 @@ export async function listarCategorias(tenantId: string) {
   // O desempate segue `ordem`, então duas categorias do mesmo tamanho mantêm a
   // sequência que o lojista vê no painel.
   return categorias.sort((a, b) => b._count.produtos - a._count.produtos || a.ordem - b.ordem);
+}
+
+/**
+ * Quais categorias entram nos blocos VISUAIS da home (atalhos redondos, grade
+ * de departamentos), segundo a política da loja (`tema.categoriaSemImagem`).
+ *
+ * Só esses blocos: o menu de texto e o catálogo continuam mostrando todas,
+ * porque ali a foto não é o que distingue. A regra mora aqui, e não em cada
+ * layout, para os três layouts que têm bloco visual não divergirem.
+ */
+export function categoriasParaVitrine<C extends { imagemUrl: string | null }>(
+  categorias: C[],
+  politica: TemaLoja["categoriaSemImagem"],
+): C[] {
+  return politica === "ocultar" ? categorias.filter((c) => c.imagemUrl) : categorias;
 }
 
 export type OrdemCatalogo = "relevancia" | "menor-preco" | "maior-preco" | "recentes" | "nome";
