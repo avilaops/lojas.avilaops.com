@@ -91,11 +91,46 @@ const MAPA: Record<string, PedidoStatus | undefined> = {
   estornado: "ESTORNADO",
 };
 
-export async function atualizarStatusPagamento(t: Tenant, pagamentoId: string, status: string) {
+/**
+ * Aplica ao pedido o que o gateway respondeu sobre o pagamento.
+ *
+ * `valorEmCentavos` vem da CONSULTA ao gateway, nunca do corpo da notificação,
+ * e é conferido contra o total do pedido antes de dar por pago. Sem essa
+ * conferência o vínculo seria só o id do pagamento, e um pagamento de um real
+ * confirmaria um pedido de quinhentos.
+ *
+ * A busca já filtra por `tenantId`: pagamento de uma loja não encosta no
+ * pedido de outra, mesmo que os ids coincidissem.
+ */
+export async function atualizarStatusPagamento(
+  t: Tenant,
+  pagamentoId: string,
+  status: string,
+  valorEmCentavos?: number,
+) {
   const pedido = await prisma.pedido.findFirst({ where: { tenantId: t.id, pagamentoId }, include: { itens: true } });
   if (!pedido) return;
 
   const novo = MAPA[status];
+
+  /**
+   * Valor divergente não confirma pedido.
+   *
+   * Só bloqueia a passagem para PAGO: estorno e cancelamento continuam
+   * valendo, porque o cliente não pode ficar preso a um pedido que o gateway
+   * já desfez. A divergência é registrada no `pagamentoStatus` para aparecer
+   * na conciliação, em vez de sumir num log.
+   */
+  if (novo === "PAGO" && valorEmCentavos != null && valorEmCentavos !== pedido.totalCentavos) {
+    console.error(
+      `[lojas] ${t.slug}: pagamento ${pagamentoId} veio com ${valorEmCentavos} e o pedido ${pedido.referencia} soma ${pedido.totalCentavos}. Pedido NÃO confirmado.`,
+    );
+    await prisma.pedido.update({
+      where: { id: pedido.id },
+      data: { pagamentoStatus: `divergencia:${status}:${valorEmCentavos}` },
+    });
+    return;
+  }
   // Pedido já em separação/enviado não volta para "pago" por webhook repetido.
   const avancaDeAguardando = pedido.status === "AGUARDANDO_PAGAMENTO";
   await prisma.pedido.update({

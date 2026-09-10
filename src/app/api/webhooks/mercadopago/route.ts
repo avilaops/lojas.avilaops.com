@@ -20,6 +20,7 @@ export async function POST(request: Request) {
   return criarRotaWebhook({
     provider: providerDaLoja(t),
     catalogo: { resolverItens: async () => [], resolverFretes: async () => [] },
-    aoAtualizarStatus: ({ pagamentoId, status }) => atualizarStatusPagamento(t, pagamentoId, status),
+    aoAtualizarStatus: ({ pagamentoId, status, valorEmCentavos }) =>
+      atualizarStatusPagamento(t, pagamentoId, status, valorEmCentavos),
   })(request);
 }

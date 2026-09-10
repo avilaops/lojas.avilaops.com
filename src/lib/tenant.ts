@@ -101,6 +101,25 @@ export function identidadeDa(t: Tenant): IdentidadeLoja {
   return lerIdentidade(t.identidade);
 }
 
+/**
+ * A loja está sendo servida no endereço oficial dela?
+ *
+ * Uma loja com domínio próprio continua respondendo em
+ * `<slug>.lojas.avilaops.com`, e ali ela é conteúdo duplicado do domínio de
+ * verdade. O canonical já aponta para o certo, mas canonical é sugestão: o
+ * Google pode indexar o subdomínio assim mesmo, e aí o endereço da marca passa
+ * a competir com um subdomínio nosso pela mesma busca.
+ *
+ * Quem não tem domínio próprio é servida no subdomínio por definição, e ali o
+ * subdomínio É o endereço oficial.
+ */
+export function noEnderecoOficial(t: Tenant, hostBruto: string | null): boolean {
+  if (!t.dominioPrincipal) return true;
+  const host = normalizarHost(hostBruto);
+  const oficial = normalizarHost(t.dominioPrincipal);
+  return host === oficial || host === `www.${oficial}`;
+}
+
 export function urlDaLoja(t: Tenant): string {
   const host = t.dominioPrincipal ?? `${t.slug}.${BASE}`;
   return `https://${host}`;

@@ -6,7 +6,7 @@ import { headers } from "next/headers";
 import "./globals.css";
 import "@avilaops/checkout/tokens.css";
 import "@avilaops/checkout/checkout.css";
-import { tenantAtual, tenantPublico, temaDo, urlDaLoja, enderecoDo, identidadeDa } from "@/lib/tenant";
+import { noEnderecoOficial, tenantAtual, tenantPublico, temaDo, urlDaLoja, enderecoDo, identidadeDa } from "@/lib/tenant";
 import { listarCategorias } from "@/lib/catalogo";
 import { cssDoTema, fonteGoogleHref } from "@/lib/tema";
 import { CartProvider } from "@/components/cart/CartProvider";
@@ -72,7 +72,25 @@ export async function generateMetadata(): Promise<Metadata> {
     ...iconesDa(t.faviconUrl, t.nome),
     title: { default: t.slogan ? `${t.nome} | ${t.slogan}` : t.nome, template: `%s · ${t.nome}` },
     description: t.slogan ?? `Loja virtual ${t.nome}`,
-    robots: t.status === "ATIVA" ? undefined : { index: false, follow: false },
+    /**
+     * Quem não pode ser indexado:
+     *   - loja fora do ar (provisionando, suspensa, cancelada);
+     *   - loja com domínio próprio sendo servida por OUTRO endereço, como o
+     *     subdomínio da plataforma. Ali ela é cópia do domínio de verdade, e
+     *     canonical é sugestão: sem `noindex` o subdomínio pode acabar
+     *     indexado e competir com o endereço da marca pela mesma busca.
+     *
+     * `follow` fica ligado para o Google continuar seguindo os links e chegar
+     * às páginas do domínio certo. E o robots.txt NÃO bloqueia estas URLs de
+     * propósito: página bloqueada não é rastreada, e sem rastrear o Google não
+     * lê o `noindex` que está nela.
+     */
+    robots:
+      t.status !== "ATIVA"
+        ? { index: false, follow: false }
+        : noEnderecoOficial(t, h.get("x-forwarded-host") ?? h.get("host"))
+          ? undefined
+          : { index: false, follow: true },
     openGraph: { siteName: t.nome, locale: "pt_BR", type: "website" },
     // Verificação do Search Console / Bing Webmaster, quando o lojista colar o código.
     ...(t.verificacaoGoogle || t.verificacaoBing

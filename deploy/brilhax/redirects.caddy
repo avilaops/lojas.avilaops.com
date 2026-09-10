@@ -1,121 +1,54 @@
-# Redirects de brilhax.com para a loja na plataforma.
-# PROPOSTA: não aplicar sem autorização. Gerado e validado em 2026-09-10.
-# 'permanent' é 301: é o que passa a autoridade da URL antiga para a nova.
-# A home entra por último, como coringa, para não capturar as demais.
-  redir /contato/ https://brilhax.lojas.avilaops.com/contato permanent
-  redir /politica-de-devolucao/ https://brilhax.lojas.avilaops.com/politicas/devolucao permanent
-  redir /politica-de-envio/ https://brilhax.lojas.avilaops.com/politicas/envio permanent
-  redir /politica-de-privacidade/ https://brilhax.lojas.avilaops.com/politicas/privacidade permanent
-  redir /produtos/ https://brilhax.lojas.avilaops.com/produtos permanent
-  redir /produtos/acidus-fast-500ml/ https://brilhax.lojas.avilaops.com/produtos/acidus-fast-500ml permanent
-  redir /produtos/alumax-concentrado-5l/ https://brilhax.lojas.avilaops.com/produtos/alumax-concentrado-5l permanent
-  redir /produtos/alumax-limpador-de-aluminio-e-carroceria-1-5l-vintex/ https://brilhax.lojas.avilaops.com/produtos/alumax-limpador-de-aluminio-e-carroceria-1-5l-vintex permanent
-  redir /produtos/aplicador-esp-pct-2und-2/ https://brilhax.lojas.avilaops.com/produtos/aplicador-esp-pct-2und-2 permanent
-  redir /produtos/aplicador-esp-pct-2und/ https://brilhax.lojas.avilaops.com/categoria/acessorios permanent
-  redir /produtos/aplicador-microfibra-c-encaixe-de-mao/ https://brilhax.lojas.avilaops.com/produtos/aplicador-microfibra-c-encaixe-de-mao permanent
-  redir /produtos/aroma-carro-novo-vintex-1-5l/ https://brilhax.lojas.avilaops.com/produtos/aroma-carro-novo-vintex-1-5l permanent
-  redir /produtos/aroma-carro-novo/ https://brilhax.lojas.avilaops.com/produtos/aroma-carro-novo permanent
-  redir /produtos/arominha-carro-novo-scent/ https://brilhax.lojas.avilaops.com/produtos/arominha-carro-novo-scent permanent
-  redir /produtos/blend-spray-500ml/ https://brilhax.lojas.avilaops.com/produtos/blend-spray-500ml permanent
-  redir /produtos/blende-blck-500ml/ https://brilhax.lojas.avilaops.com/produtos/blende-blck-500ml permanent
-  redir /produtos/boina-arctic-wool-133mm-ventilado/ https://brilhax.lojas.avilaops.com/produtos/boina-arctic-wool-133mm-ventilado permanent
-  redir /produtos/boina-arctic-wool-152mm-ventilado/ https://brilhax.lojas.avilaops.com/produtos/boina-arctic-wool-152mm-ventilado permanent
-  redir /produtos/boina-arctic-wool-c-interface-de-espuma-133mm-5-25pol-ventilado/ https://brilhax.lojas.avilaops.com/produtos/boina-arctic-wool-c-interface-de-espuma-133mm-5-25pol-ventilado permanent
-  redir /produtos/boina-arctic-wool-c-interface-de-espuma-152mm-6pol-ventilado/ https://brilhax.lojas.avilaops.com/produtos/boina-arctic-wool-c-interface-de-espuma-152mm-6pol-ventilado permanent
-  redir /produtos/boina-golden-wool-133mm-ventilado/ https://brilhax.lojas.avilaops.com/produtos/boina-golden-wool-133mm-ventilado permanent
-  redir /produtos/boina-golden-wool-152mm-ventilado/ https://brilhax.lojas.avilaops.com/produtos/boina-golden-wool-152mm-ventilado permanent
-  redir /produtos/boina-golden-wool-c-interface-de-espuma-133mm-5-25pol-ventilado/ https://brilhax.lojas.avilaops.com/produtos/boina-golden-wool-c-interface-de-espuma-133mm-5-25pol-ventilado permanent
-  redir /produtos/boina-golden-wool-c-interface-de-espuma-152mm-6pol-ventilado/ https://brilhax.lojas.avilaops.com/produtos/boina-golden-wool-c-interface-de-espuma-152mm-6pol-ventilado permanent
-  redir /produtos/boina-micro-wolf-133mm-5-25pol-ventilado/ https://brilhax.lojas.avilaops.com/produtos/boina-micro-wolf-133mm-5-25pol-ventilado permanent
-  redir /produtos/boina-micro-wolf-152mm-6pol-ventilado/ https://brilhax.lojas.avilaops.com/produtos/boina-micro-wolf-152mm-6pol-ventilado permanent
-  redir /produtos/canhao-de-espuma-bico-vermelho/ https://brilhax.lojas.avilaops.com/produtos/canhao-de-espuma-bico-vermelho permanent
-  redir /produtos/carnauba-hybrid-wax-240ml/ https://brilhax.lojas.avilaops.com/produtos/carnauba-hybrid-wax-240ml permanent
-  redir /produtos/carnauba-tok-final-500ml/ https://brilhax.lojas.avilaops.com/produtos/carnauba-tok-final-500ml permanent
-  redir /produtos/categoria/ https://brilhax.lojas.avilaops.com/produtos permanent
-  redir /produtos/categoria/acessorios/ https://brilhax.lojas.avilaops.com/categoria/acessorios permanent
-  redir /produtos/categoria/kits/ https://brilhax.lojas.avilaops.com/categoria/kits-completos permanent
-  redir /produtos/categoria/lavagem/ https://brilhax.lojas.avilaops.com/categoria/lavagem permanent
-  redir /produtos/categoria/moto/ https://brilhax.lojas.avilaops.com/categoria/produtos-para-moto permanent
-  redir /produtos/categoria/polimento/ https://brilhax.lojas.avilaops.com/categoria/polimento permanent
-  redir /produtos/categoria/protecao/ https://brilhax.lojas.avilaops.com/categoria/protecao permanent
-  redir /produtos/categoria/vitrificacao/ https://brilhax.lojas.avilaops.com/categoria/vitrificacao permanent
-  redir /produtos/cera-blend-cleaner-carnauba/ https://brilhax.lojas.avilaops.com/produtos/cera-blend-cleaner-carnauba permanent
-  redir /produtos/cera-luster-500ml-vonixx/ https://brilhax.lojas.avilaops.com/categoria/protecao permanent
-  redir /produtos/darker-500ml/ https://brilhax.lojas.avilaops.com/produtos/darker-500ml permanent
-  redir /produtos/delet-500ml/ https://brilhax.lojas.avilaops.com/produtos/delet-500ml permanent
-  redir /produtos/delet-vonixx-5l/ https://brilhax.lojas.avilaops.com/produtos/delet-vonixx-5l permanent
-  redir /produtos/escova-caixa-de-roda-cabo-curto-detailer/ https://brilhax.lojas.avilaops.com/produtos/escova-caixa-de-roda-cabo-curto-detailer permanent
-  redir /produtos/escova-grande-microfibra-angular-para-limpeza-de-roda-vonixx/ https://brilhax.lojas.avilaops.com/produtos/escova-grande-microfibra-angular-para-limpeza-de-roda-vonixx permanent
-  redir /produtos/escova-para-lavagem-de-pneus/ https://brilhax.lojas.avilaops.com/produtos/escova-para-lavagem-de-pneus permanent
-  redir /produtos/espuma-celeste-medium-azul-foam-pads-133mm-5-25pol-ventilado/ https://brilhax.lojas.avilaops.com/produtos/espuma-celeste-medium-azul-foam-pads-133mm-5-25pol-ventilado permanent
-  redir /produtos/espuma-celeste-medium-azul-pads-152mm-6pol-ventilado/ https://brilhax.lojas.avilaops.com/produtos/espuma-celeste-medium-azul-pads-152mm-6pol-ventilado permanent
-  redir /produtos/espuma-laranja-one-step-foan-pads-133mm-5-25pol-ventilado/ https://brilhax.lojas.avilaops.com/produtos/espuma-laranja-one-step-foan-pads-133mm-5-25pol-ventilado permanent
-  redir /produtos/espuma-laranja-one-step-pad-152mm-6pol-ventilado/ https://brilhax.lojas.avilaops.com/produtos/espuma-laranja-one-step-pad-152mm-6pol-ventilado permanent
-  redir /produtos/espuma-preta-soft-foam-pads-133mm-5-25pol-ventilado/ https://brilhax.lojas.avilaops.com/produtos/espuma-preta-soft-foam-pads-133mm-5-25pol-ventilado permanent
-  redir /produtos/espuma-preta-soft-pad-152mm-6pol-ventilado/ https://brilhax.lojas.avilaops.com/produtos/espuma-preta-soft-pad-152mm-6pol-ventilado permanent
-  redir /produtos/extractus-desengraxante/ https://brilhax.lojas.avilaops.com/produtos/extractus-desengraxante permanent
-  redir /produtos/flexus-500ml/ https://brilhax.lojas.avilaops.com/produtos/flexus-500ml permanent
-  redir /produtos/focus-240ml/ https://brilhax.lojas.avilaops.com/produtos/focus-240ml permanent
-  redir /produtos/glazy-500ml/ https://brilhax.lojas.avilaops.com/produtos/glazy-500ml permanent
-  redir /produtos/glazy-anti-fog-500ml/ https://brilhax.lojas.avilaops.com/produtos/glazy-anti-fog-500ml permanent
-  redir /produtos/hidracouro-500ml/ https://brilhax.lojas.avilaops.com/produtos/hidracouro-500ml permanent
-  redir /produtos/higicouro-500ml/ https://brilhax.lojas.avilaops.com/produtos/higicouro-500ml permanent
-  redir /produtos/hydrox-fast-500ml-vonix/ https://brilhax.lojas.avilaops.com/produtos/hydrox-fast-500ml-vonix permanent
-  redir /produtos/impact-1-5l/ https://brilhax.lojas.avilaops.com/produtos/impact-1-5l permanent
-  redir /produtos/intense-500ml/ https://brilhax.lojas.avilaops.com/produtos/intense-500ml permanent
-  redir /produtos/izer-500ml/ https://brilhax.lojas.avilaops.com/produtos/izer-500ml permanent
-  redir /produtos/kit-alicate-para-instalacao-de-gaxetas-hidraulica/ https://brilhax.lojas.avilaops.com/categoria/kits-completos permanent
-  redir /produtos/kit-escova-drill-detailer/ https://brilhax.lojas.avilaops.com/produtos/kit-escova-drill-detailer permanent
-  redir /produtos/lamax-limpador-multiuso/ https://brilhax.lojas.avilaops.com/produtos permanent
-  redir /produtos/lamax/ https://brilhax.lojas.avilaops.com/produtos/lamax permanent
-  redir /produtos/lava-autos-500ml/ https://brilhax.lojas.avilaops.com/categoria/lavagem permanent
-  redir /produtos/makker-500ml/ https://brilhax.lojas.avilaops.com/produtos/makker-500ml permanent
-  redir /produtos/massa-de-polir-vintex-1-8k/ https://brilhax.lojas.avilaops.com/produtos/massa-de-polir-vintex-1-8k permanent
-  redir /produtos/massa-de-polir-vintex-500ml/ https://brilhax.lojas.avilaops.com/produtos/massa-de-polir-vintex-500ml permanent
-  redir /produtos/moto-v-lava-motos-500ml/ https://brilhax.lojas.avilaops.com/produtos/moto-v-lava-motos-500ml permanent
-  redir /produtos/ox-pro-500ml/ https://brilhax.lojas.avilaops.com/produtos permanent
-  redir /produtos/pano-de-micro-fibra-azul-escuro-37x57/ https://brilhax.lojas.avilaops.com/categoria/acessorios permanent
-  redir /produtos/pano-de-microfibra-sem-costura-40x40-vinixx/ https://brilhax.lojas.avilaops.com/categoria/acessorios permanent
-  redir /produtos/pano-micro-fibra-azul-escuro-47x77-230gsm/ https://brilhax.lojas.avilaops.com/categoria/acessorios permanent
-  redir /produtos/pincel-det-externo-14-zacs/ https://brilhax.lojas.avilaops.com/produtos/pincel-det-externo-14-zacs permanent
-  redir /produtos/pincel-det-medio-interno-14-zacs/ https://brilhax.lojas.avilaops.com/produtos/pincel-det-medio-interno-14-zacs permanent
-  redir /produtos/pincel-externo-n14-cerdas-medias-vonixx/ https://brilhax.lojas.avilaops.com/categoria/acessorios permanent
-  redir /produtos/pincel-interno-cerdas-medias-vonixx-detalhamento-automotivo/ https://brilhax.lojas.avilaops.com/categoria/acessorios permanent
-  redir /produtos/plus-cera-carnauba-de-limpeza-cleaner-waz-500ml/ https://brilhax.lojas.avilaops.com/produtos/plus-cera-carnauba-de-limpeza-cleaner-waz-500ml permanent
-  redir /produtos/prizm-1-5/ https://brilhax.lojas.avilaops.com/categoria/protecao permanent
-  redir /produtos/prizm-500ml/ https://brilhax.lojas.avilaops.com/produtos/prizm-500ml permanent
-  redir /produtos/rejuvex-400g/ https://brilhax.lojas.avilaops.com/produtos/rejuvex-400g permanent
-  redir /produtos/removex-vintex-1-5l/ https://brilhax.lojas.avilaops.com/produtos/removex-vintex-1-5l permanent
-  redir /produtos/restaurax-1-5l/ https://brilhax.lojas.avilaops.com/produtos/restaurax-1-5l permanent
-  redir /produtos/restaurax-500ml/ https://brilhax.lojas.avilaops.com/produtos/restaurax-500ml permanent
-  redir /produtos/revelax-revelador-de-hologramas-surface-vonixx/ https://brilhax.lojas.avilaops.com/produtos/revelax-revelador-de-hologramas-surface-vonixx permanent
-  redir /produtos/revox-selante-sintetico-para-pneus-500ml-vonixx/ https://brilhax.lojas.avilaops.com/produtos/revox-selante-sintetico-para-pneus-500ml-vonixx permanent
-  redir /produtos/selante-sintetico-v-80-vonixx-240ml/ https://brilhax.lojas.avilaops.com/produtos/selante-sintetico-v-80-vonixx-240ml permanent
-  redir /produtos/shampoo-v-floc-1-5l-vonixx/ https://brilhax.lojas.avilaops.com/produtos/shampoo-v-floc-1-5l-vonixx permanent
-  redir /produtos/sinergy-vonixx-500ml/ https://brilhax.lojas.avilaops.com/produtos/sinergy-vonixx-500ml permanent
-  redir /produtos/sintra-1-5l/ https://brilhax.lojas.avilaops.com/produtos/sintra-1-5l permanent
-  redir /produtos/sintra-5-litros/ https://brilhax.lojas.avilaops.com/categoria/lavagem permanent
-  redir /produtos/sintra-fast-500ml/ https://brilhax.lojas.avilaops.com/produtos/sintra-fast-500ml permanent
-  redir /produtos/sio2-vonixx-500ml/ https://brilhax.lojas.avilaops.com/produtos/sio2-vonixx-500ml permanent
-  redir /produtos/snow-foan-bico-amarelo-furacao-1-3/ https://brilhax.lojas.avilaops.com/categoria/lavagem permanent
-  redir /produtos/snow-foan-manual/ https://brilhax.lojas.avilaops.com/categoria/lavagem permanent
-  redir /produtos/speel-car-500ml/ https://brilhax.lojas.avilaops.com/categoria/lavagem permanent
-  redir /produtos/strike-1-5l/ https://brilhax.lojas.avilaops.com/produtos/strike-1-5l permanent
-  redir /produtos/strike-500ml/ https://brilhax.lojas.avilaops.com/produtos/strike-500ml permanent
-  redir /produtos/teste/ https://brilhax.lojas.avilaops.com/produtos permanent
-  redir /produtos/tryon-finalizador-restaurador-de-plastico-3-em-1/ https://brilhax.lojas.avilaops.com/produtos/tryon-finalizador-restaurador-de-plastico-3-em-1 permanent
-  redir /produtos/v-cut-polidor-de-cortes-premium/ https://brilhax.lojas.avilaops.com/categoria/polimento permanent
-  redir /produtos/v-eco-fast-500ml/ https://brilhax.lojas.avilaops.com/produtos/v-eco-fast-500ml permanent
-  redir /produtos/v-floc-1-5/ https://brilhax.lojas.avilaops.com/categoria/lavagem permanent
-  redir /produtos/v-floc-3l/ https://brilhax.lojas.avilaops.com/categoria/lavagem permanent
-  redir /produtos/v-floc-500ml/ https://brilhax.lojas.avilaops.com/produtos/v-floc-500ml permanent
-  redir /produtos/v-floc-5l/ https://brilhax.lojas.avilaops.com/produtos/v-floc-5l permanent
-  redir /produtos/v-mol-1-5l/ https://brilhax.lojas.avilaops.com/produtos/v-mol-1-5l permanent
-  redir /produtos/v-mol-5-litros/ https://brilhax.lojas.avilaops.com/categoria/lavagem permanent
-  redir /produtos/v-mol-500ml/ https://brilhax.lojas.avilaops.com/categoria/lavagem permanent
-  redir /produtos/v40-4em1-500ml/ https://brilhax.lojas.avilaops.com/produtos/v40-4em1-500ml permanent
-  redir /produtos/vexus-1-5l-vonixx/ https://brilhax.lojas.avilaops.com/produtos/vexus-1-5l-vonixx permanent
-  redir /produtos/vexus-500ml/ https://brilhax.lojas.avilaops.com/produtos/vexus-500ml permanent
-  redir /sobre/ https://brilhax.lojas.avilaops.com/sobre permanent
-  redir /termos-de-uso/ https://brilhax.lojas.avilaops.com/politicas/termos permanent
-  redir / https://brilhax.lojas.avilaops.com/ permanent
+# Redirects de brilhax.com depois da virada para a plataforma.
+#
+# A primeira versão usava `redir /produtos/categoria/* ... {path.1}` e mandava
+# TODAS as categorias para `/categoria/categoria`, porque `path.1` é o segundo
+# segmento ("categoria"), não o terceiro. O erro só apareceu porque a regra foi
+# executada de verdade; conferir a lista de destinos não o teria encontrado.
+# NÃO APLICADO. Entra no bloco de brilhax.com no dia da virada, com
+# autorização. Testado numa instância isolada do Caddy em 10/09/2026.
+#
+# Cobre 12 das 117 URLs do sitemap antigo. As outras 105 NÃO levam redirect de
+# propósito: o domínio continua brilhax.com e o caminho é o mesmo, então só a
+# barra final muda e a própria aplicação devolve 308. Redirect que aponta para
+# a mesma URL é ruído que o Google trata como soft 404.
+brilhax.com {
+	# --- categorias -------------------------------------------------------
+	# Os dois slugs que mudaram vêm ANTES do caso geral: a plataforma gera o
+	# slug a partir do nome ("Kits Completos" -> kits-completos) e o Medusa
+	# guardava um mais curto.
+	@kits path /produtos/categoria/kits /produtos/categoria/kits/
+	redir @kits /categoria/kits-completos{http.request.uri.prefixed_query} permanent
+
+	@moto path /produtos/categoria/moto /produtos/categoria/moto/
+	redir @moto /categoria/produtos-para-moto{http.request.uri.prefixed_query} permanent
+
+	# Caso geral: só UM segmento depois de /produtos/categoria/, e a barra
+	# final opcional. `/produtos/categoria/lavagem/extra` não casa e cai no
+	# 404 da aplicação, que é o certo: aquela URL nunca existiu.
+	@categoria path_regexp cat ^/produtos/categoria/([^/]+)/?$
+	redir @categoria /categoria/{http.regexp.cat.1}{http.request.uri.prefixed_query} permanent
+
+	@indiceCategorias path /produtos/categoria /produtos/categoria/
+	redir @indiceCategorias /produtos permanent
+
+	# --- políticas --------------------------------------------------------
+	@envio path /politica-de-envio /politica-de-envio/
+	redir @envio /politicas/envio permanent
+
+	@devolucao path /politica-de-devolucao /politica-de-devolucao/
+	redir @devolucao /politicas/devolucao permanent
+
+	@privacidade path /politica-de-privacidade /politica-de-privacidade/
+	redir @privacidade /politicas/privacidade permanent
+
+	@termos path /termos-de-uso /termos-de-uso/
+	redir @termos /politicas/termos permanent
+
+	# Tudo o mais segue para a aplicação, sem redirect: é a decisão para 105
+	# das 117 URLs. Inclui o 308 que tira a barra final, que o Next já faz.
+	#
+	# O import abaixo é o mesmo do resto das lojas com domínio próprio; o
+	# bloco real sai do caddy-sync.sh, e este arquivo é só a parte de
+	# redirects que precisa ser somada a ele.
+	# import lojas_upstream
+}
