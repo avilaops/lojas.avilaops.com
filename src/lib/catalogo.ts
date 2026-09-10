@@ -1,5 +1,6 @@
 import type { Prisma, Produto, Categoria } from "@prisma/client";
 import type { ItemCarrinho } from "@avilaops/checkout";
+import { unstable_cache } from "next/cache";
 import { prisma } from "./db";
 import { encaixe, lerCompatibilidade, type Moto } from "./motos";
 
@@ -48,6 +49,11 @@ export interface FiltroCatalogo {
   /** Deixa de fora este id (ex.: "relacionados" na página do produto). */
   excetoId?: string;
   limite?: number;
+  /**
+   * Quantos pular antes de começar a devolver. Com `limite`, é a paginação
+   * do catálogo público: a página 3 de 48 em 48 pede `pular: 96, limite: 48`.
+   */
+  pular?: number;
   /**
    * Moto do comprador (segmento motopecas): o que serve vem primeiro, o
    * universal (sem compatibilidade) vem depois, o que não serve some.
@@ -153,8 +159,9 @@ export async function listarProdutos(tenantId: string, filtro?: FiltroCatalogo) 
     include: { categoria: true },
     orderBy: ORDENS[filtro?.ordem ?? "relevancia"],
     // Com moto ou medida escolhida o corte é feito depois, então o limite também.
-    ...(filtro?.limite && !filtro.moto && !filtro.medidas ? { take: filtro.limite } : {}),
+    ...(filtro?.limite && !filtro.moto && !filtro.medidas ? { take: filtro.limite, skip: filtro.pular ?? 0 } : {}),
   });
+  const janela = <T>(lista: T[]) => (filtro?.limite ? lista.slice(filtro.pular ?? 0, (filtro.pular ?? 0) + filtro.limite) : lista);
 
   // Medida vive em `atributos` (JSON), que o Prisma não sabe comparar por
   // faixa. Filtrar aqui segue o mesmo caminho já usado pela compatibilidade de
@@ -178,12 +185,11 @@ export async function listarProdutos(tenantId: string, filtro?: FiltroCatalogo) 
     });
   }
 
-  if (!filtro?.moto) return filtro?.limite && filtro.medidas ? lista.slice(0, filtro.limite) : lista;
+  if (!filtro?.moto) return filtro?.medidas ? janela(lista) : lista;
   const moto = filtro.moto;
   const servem = lista.filter((p) => encaixe(p.compatibilidade, moto) === "serve");
   const universais = lista.filter((p) => encaixe(p.compatibilidade, moto) === "universal");
-  const ordenada = [...servem, ...universais];
-  return filtro.limite ? ordenada.slice(0, filtro.limite) : ordenada;
+  return janela([...servem, ...universais]);
 }
 
 /**
@@ -248,6 +254,14 @@ export async function vitrineDaLoja(tenantId: string, opcoes: { moto?: Moto | nu
  * ganha a navegação sozinha.
  */
 export async function medidasDaLoja(tenantId: string) {
+  // Cinco minutos em memória, por loja. Esta função lê o JSON de atributos de
+  // TODOS os produtos ativos a cada visita ao catálogo, só para desenhar três
+  // faixas de formulário que mudam quando o lojista importa planilha, não a
+  // cada pedido de página. Na Vedashow são 5.591 linhas por visita.
+  return unstable_cache(medidasDaLojaSemCache, ["medidas-da-loja"], { revalidate: 300 })(tenantId);
+}
+
+async function medidasDaLojaSemCache(tenantId: string) {
   const linhas = await prisma.produto.findMany({ where: { tenantId, ativo: true }, select: { atributos: true } });
   const valores = new Map<ChaveDeMedida, number[]>();
   for (const l of linhas) {

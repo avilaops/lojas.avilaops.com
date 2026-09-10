@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import PaginacaoLoja, { POR_PAGINA, paginaDaUrl } from "@/components/PaginacaoLoja";
 import { exigirTenant, lojaVende } from "@/lib/tenant";
 import { listarCategorias, listarProdutos, medidasDaLoja, type ChaveDeMedida, type OrdemCatalogo } from "@/lib/catalogo";
 import ProductCard from "@/components/ProductCard";
@@ -49,13 +50,20 @@ export default async function Produtos({ searchParams }: { searchParams: Promise
   const ordem = ORDENS.has(sp.ordem as OrdemCatalogo) ? (sp.ordem as OrdemCatalogo) : "relevancia";
   const moto = t.segmento === "motopecas" ? await minhaMoto(sp) : null;
   const medidas = faixasDaUrl(sp);
-  const [categorias, produtos, temMedida] = await Promise.all([
+  // Paginado, e pedindo um a mais do que mostra: é assim que se sabe se há
+  // "Próxima" sem contar o catálogo (contagem é informação de estoque, não
+  // de compra). Antes esta página mandava os 5.591 cards da Vedashow de uma
+  // vez: 5 s até o primeiro byte e um HTML que o celular não segurava.
+  const pagina = paginaDaUrl(sp);
+  const [categorias, lote, temMedida] = await Promise.all([
     listarCategorias(t.id),
-    listarProdutos(t.id, { busca: sp.q?.trim() || undefined, categoriaSlug: sp.categoria || undefined, ordem, minCentavos: reais(sp.min), maxCentavos: reais(sp.max), moto, medidas }),
+    listarProdutos(t.id, { busca: sp.q?.trim() || undefined, categoriaSlug: sp.categoria || undefined, ordem, minCentavos: reais(sp.min), maxCentavos: reais(sp.max), moto, medidas, limite: POR_PAGINA + 1, pular: (pagina - 1) * POR_PAGINA }),
     // O filtro de medida só aparece onde faz sentido: loja de roupa não tem
     // diâmetro interno, e campo que nunca filtra nada é ruído no formulário.
     medidasDaLoja(t.id),
   ]);
+  const produtos = lote.slice(0, POR_PAGINA);
+  const temProxima = lote.length > POR_PAGINA;
   const vende = lojaVende(t);
   const categoriaAtual = categorias.find((c) => c.slug === sp.categoria);
   const titulo = sp.q ? `Resultados para “${sp.q}”` : categoriaAtual ? categoriaAtual.nome : moto ? `Peças para ${nomeDaMoto(moto)}` : "Todos os produtos";
@@ -81,6 +89,7 @@ export default async function Produtos({ searchParams }: { searchParams: Promise
           ))}
         </div>
       )}
+      <PaginacaoLoja base="/produtos" sp={sp} pagina={pagina} temProxima={temProxima} />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import CapaCategoria from "@/components/CapaCategoria";
 import { exigirTenant, lojaVende, urlDaLoja } from "@/lib/tenant";
 import { listarProdutos } from "@/lib/catalogo";
+import PaginacaoLoja, { POR_PAGINA, paginaDaUrl } from "@/components/PaginacaoLoja";
 import ProductCard from "@/components/ProductCard";
 import { minhaMoto } from "@/lib/minha-moto";
 import { nomeDaMoto } from "@/lib/motos";
@@ -12,7 +13,7 @@ import Trilha from "@/components/Trilha";
 
 type Props = {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ marca?: string; modelo?: string; ano?: string; moto?: string }>;
+  searchParams: Promise<{ marca?: string; modelo?: string; ano?: string; moto?: string; pagina?: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -42,7 +43,12 @@ export default async function Categoria({ params, searchParams }: Props) {
   const categoria = await buscarCategoriaPublica(t.id, slug);
   if (!categoria) notFound();
   const moto = t.segmento === "motopecas" ? await minhaMoto(sp) : null;
-  const produtos = await listarProdutos(t.id, { categoriaSlug: slug, moto });
+  // Paginado como /produtos: "Retentores" na Vedashow são 2.003 cards, e
+  // mandar todos de uma vez é o que fazia a página demorar segundos.
+  const pagina = paginaDaUrl(sp);
+  const lote = await listarProdutos(t.id, { categoriaSlug: slug, moto, limite: POR_PAGINA + 1, pular: (pagina - 1) * POR_PAGINA });
+  const produtos = lote.slice(0, POR_PAGINA);
+  const temProxima = lote.length > POR_PAGINA;
   const vende = lojaVende(t);
 
   return (
@@ -86,6 +92,7 @@ export default async function Categoria({ params, searchParams }: Props) {
           ))}
         </div>
       )}
+      <PaginacaoLoja base={`/categoria/${categoria.slug}`} sp={sp} pagina={pagina} temProxima={temProxima} />
     </main>
   );
 }
