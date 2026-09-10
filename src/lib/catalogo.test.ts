@@ -136,3 +136,16 @@ test("esgotado não entra", () => {
 test("inativo não entra", () => {
   assert.equal(entraNoCheckout({ ativo: false, disponibilidade: "in_stock", precoCentavos: 1890 }), false);
 });
+
+test("plural acha o singular do cadastro", () => {
+  // Substring: "retentor" já achava "retentores", mas "retentores" não
+  // achava "Retentor 20x47x7". Quem digita no plural procura o departamento.
+  assert.deepEqual(termosDeBusca("retentores"), ["retentor"]);
+  assert.deepEqual(termosDeBusca("rolamentos de esfera"), ["rolamento", "de", "esfera"]);
+  assert.deepEqual(termosDeBusca("correias dentadas"), ["correia", "dentada"]);
+});
+
+test("código nunca perde o s final", () => {
+  assert.deepEqual(termosDeBusca("6205 2rs"), ["6205", "2rs"]);
+  assert.deepEqual(termosDeBusca("abs"), ["abs"]);
+});

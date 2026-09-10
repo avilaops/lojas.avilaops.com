@@ -160,7 +160,24 @@ export function termosDeBusca(texto: string): string[] {
     // "35x52x8" tem uma medida de um dígito, e descartá-la traria todo
     // retentor 35x52 em vez do que a pessoa pediu.
     .filter((t) => t.length > 1 || /\d/.test(t))
+    .map(singular)
     .slice(0, 6);
+}
+
+/**
+ * "retentores" tem que achar "Retentor 20x47x7".
+ *
+ * A busca é por substring, então o singular já acha o plural de graça
+ * ("retentor" ⊂ "retentores"), mas o contrário não. Quem digita no plural é
+ * quem procura o departamento, e recebia "nenhum produto" numa loja com dois
+ * mil deles. O corte é o mínimo: -es depois de r/z/n (retentor, motor,
+ * raiz), e -s no resto. Só palavra, nunca código: "2rs" e "abs" ficam como
+ * estão, e o resultado precisa manter tamanho para não virar letra solta.
+ */
+function singular(t: string): string {
+  if (!/^[a-z]{5,}$/.test(t)) return t;
+  const cortado = t.replace(/([rzn])es$/, "$1").replace(/s$/, "");
+  return cortado.length >= 4 ? cortado : t;
 }
 
 export async function listarProdutos(tenantId: string, filtro?: FiltroCatalogo) {

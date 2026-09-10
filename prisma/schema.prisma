@@ -280,6 +280,10 @@ model Produto {
   @@unique([tenantId, slug])
   @@index([tenantId, ativo, destaque])
   @@index([tenantId, busca])
+  /// Trigramas para `busca LIKE '%termo%'`: o btree acima só resolve prefixo.
+  /// Ver 20260910200000_busca_trgm_e_categoria.
+  @@index([busca(ops: raw("gin_trgm_ops"))], type: Gin, map: "Produto_busca_trgm_idx")
+  @@index([tenantId, categoriaId, destaque, nome])
 }
 
 enum PedidoStatus {
