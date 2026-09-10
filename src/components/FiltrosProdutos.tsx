@@ -43,7 +43,7 @@ export default function FiltrosProdutos({
           </>
         )}
         {valores.moto === "todas" && <input type="hidden" name="moto" value="todas" />}
-        <input name="q" defaultValue={valores.q ?? ""} placeholder="Buscar" className="h-10 rounded-lg border border-border bg-background px-3 text-sm" />
+        <input name="q" type="search" aria-label="Buscar produtos" defaultValue={valores.q ?? ""} placeholder="Buscar" className="h-10 rounded-lg border border-border bg-background px-3 text-sm" />
         {/* Categoria, preço e ordem empilhavam no celular e empurravam o
             primeiro produto para quase uma tela inteira de rolagem (medido em
             0,95 tela). Aqui eles vão para uma gaveta que só existe no celular:
@@ -52,13 +52,13 @@ export default function FiltrosProdutos({
         <input type="checkbox" id="filtros-mais" className="filtros-gaveta" defaultChecked={!!(valores.categoria || valores.min || valores.max || valores.ordem)} />
         <label htmlFor="filtros-mais" className="filtros-abrir">Categoria, preço e ordem</label>
         <div className="filtros-campos contents">
-          <select name="categoria" defaultValue={valores.categoria ?? ""} className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
+          <select name="categoria" aria-label="Categoria" defaultValue={valores.categoria ?? ""} className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
             <option value="">Todas as categorias</option>
             {categorias.map((c) => <option key={c.id} value={c.slug}>{c.nome}</option>)}
           </select>
           <input name="min" defaultValue={valores.min ?? ""} placeholder="R$ mín." inputMode="decimal" className="h-10 rounded-lg border border-border bg-background px-3 text-sm sm:w-24" />
           <input name="max" defaultValue={valores.max ?? ""} placeholder="R$ máx." inputMode="decimal" className="h-10 rounded-lg border border-border bg-background px-3 text-sm sm:w-24" />
-          <select name="ordem" defaultValue={valores.ordem ?? "relevancia"} className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
+          <select name="ordem" aria-label="Ordenar por" defaultValue={valores.ordem ?? "relevancia"} className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
             <option value="relevancia">Relevância</option>
             <option value="menor-preco">Menor preço</option>
             <option value="maior-preco">Maior preço</option>
