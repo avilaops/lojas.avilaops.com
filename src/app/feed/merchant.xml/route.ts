@@ -1,4 +1,5 @@
 import { tenantAtual, urlDaLoja } from "@/lib/tenant";
+import { disponibilidadeMerchant, elegivelMerchant } from "@/lib/produto-regras";
 import { prisma } from "@/lib/db";
 import { categoriaGoogle } from "@/lib/categoria-google";
 
@@ -27,11 +28,13 @@ export async function GET() {
    * saída, todos boinas e espumas de polimento que ainda não têm foto.
    */
   const produtos = (await prisma.produto.findMany({ where: { tenantId: t.id, ativo: true }, include: { categoria: true, variantes: { where: { ativo: true } } }, orderBy: { nome: "asc" } }))
-    .filter((p) => p.imagens.length > 0 || p.variantes.some((v) => v.imagem));
+    // A régua do Google mora em produto-regras: imagem e preço, senão o item é
+    // reprovado. Sob consulta (preço zero) fica fora do feed de propósito.
+    .filter((p) => elegivelMerchant(p, p.variantes.some((v) => Boolean(v.imagem))));
 
   const itens: string[] = [];
   for (const p of produtos) {
-    const comum = (id: string, titulo: string, precoCentavos: number, disponivel: boolean, imagem: string | undefined, extra = "") => `
+    const comum = (id: string, titulo: string, precoCentavos: number, disponibilidade: string, imagem: string | undefined, extra = "") => `
     <item>
       <g:id>${esc(id)}</g:id>
       <g:title>${esc(titulo.slice(0, 150))}</g:title>
@@ -39,7 +42,7 @@ export async function GET() {
       <g:link>${esc(`${base}/produtos/${p.slug}`)}</g:link>
       ${imagem ? `<g:image_link>${esc(imagem)}</g:image_link>` : ""}
       ${p.imagens.slice(1, 10).map((i) => `<g:additional_image_link>${esc(i)}</g:additional_image_link>`).join("")}
-      <g:availability>${disponivel ? "in_stock" : p.disponibilidade === "backorder" ? "backorder" : "out_of_stock"}</g:availability>
+      <g:availability>${disponibilidade}</g:availability>
       <g:price>${preco(p.precoDeCentavos && p.precoDeCentavos > precoCentavos ? p.precoDeCentavos : precoCentavos)}</g:price>
       ${p.precoDeCentavos && p.precoDeCentavos > precoCentavos ? `<g:sale_price>${preco(precoCentavos)}</g:sale_price>` : ""}
       <g:condition>new</g:condition>
@@ -60,10 +63,11 @@ export async function GET() {
           const chave = /tamanho|size/i.test(o) ? "g:size" : /cor|color/i.test(o) ? "g:color" : /material/i.test(o) ? "g:material" : null;
           return chave && valores[o] ? `<${chave}>${esc(valores[o])}</${chave}>` : "";
         }).join("");
-        itens.push(comum(`${p.id}:${v.id}`, `${p.nome} · ${v.nome}`, v.precoCentavos ?? p.precoCentavos, (v.estoque == null || v.estoque > 0) && p.disponibilidade !== "out_of_stock", v.imagem ?? p.imagens[0], extra));
+        // A variação tem estoque próprio; o "esgotado" marcado no produto vale para todas.
+        itens.push(comum(`${p.id}:${v.id}`, `${p.nome} · ${v.nome}`, v.precoCentavos ?? p.precoCentavos, disponibilidadeMerchant({ disponibilidade: p.disponibilidade, estoque: v.estoque }), v.imagem ?? p.imagens[0], extra));
       }
     } else {
-      itens.push(comum(p.id, p.nome, p.precoCentavos, p.disponibilidade !== "out_of_stock" && (p.estoque == null || p.estoque > 0), p.imagens[0]));
+      itens.push(comum(p.id, p.nome, p.precoCentavos, disponibilidadeMerchant(p), p.imagens[0]));
     }
   }
 

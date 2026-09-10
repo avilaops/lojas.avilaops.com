@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import FichaTecnica from "@/components/FichaTecnica";
 import { exigirTenant, lojaVende, urlDaLoja } from "@/lib/tenant";
-import { buscarProduto, formatarBRL, listarProdutos, produtoPublicavel, resumoAvaliacoes } from "@/lib/catalogo";
+import { buscarProduto, formatarBRL, listarProdutos, resumoAvaliacoes } from "@/lib/catalogo";
+import * as regras from "@/lib/produto-regras";
 import AvisoEstoque from "@/components/AvisoEstoque";
 import EstoqueBaixo from "@/components/EstoqueBaixo";
 import AddToCartButton from "@/components/cart/AddToCartButton";
@@ -31,7 +32,7 @@ export async function generateMetadata({ params }: Props) {
     openGraph: { images: p.imagens.slice(0, 1) },
     // A mesma régua do sitemap: o que fica fora dele também pede para não ser
     // indexado, senão o Google chega pelo link interno e indexa do mesmo jeito.
-    ...(produtoPublicavel(p) ? {} : { robots: { index: false, follow: true } }),
+    ...(regras.publicavel(p) ? {} : { robots: { index: false, follow: true } }),
   };
 }
 
@@ -44,8 +45,10 @@ export default async function ProdutoPage({ params }: Props) {
   // Preço zero é "ainda não precificado", não "de graça": item de referência
   // vindo do ERP entra no catálogo para ser encontrado, e o preço vem por
   // consulta. Ver ProductCard, que aplica a mesma regra na vitrine.
-  const sobConsulta = p.precoCentavos <= 0;
-  const disponivel = !sobConsulta && p.disponibilidade !== "out_of_stock";
+  // Mesma régua do card: antes a página ignorava `estoque` e oferecia
+  // "Comprar" para peça zerada, que o checkout recusava em seguida.
+  const sobConsulta = regras.sobConsulta(p);
+  const disponivel = regras.compravel(p);
   const moto = t.segmento === "motopecas" ? await minhaMoto() : null;
   const [avaliacoes, resumo, relacionados] = await Promise.all([
     prisma.avaliacao.findMany({ where: { produtoId: p.id, aprovada: true }, orderBy: { criadoEm: "desc" }, take: 20 }),
@@ -71,7 +74,7 @@ export default async function ProdutoPage({ params }: Props) {
       url: `${urlDaLoja(t)}/produtos/${p.slug}`,
       priceCurrency: "BRL",
       price: (p.precoCentavos / 100).toFixed(2),
-      availability: `https://schema.org/${p.disponibilidade === "in_stock" ? "InStock" : p.disponibilidade === "backorder" ? "BackOrder" : "OutOfStock"}`,
+      availability: `https://schema.org/${regras.disponibilidadeSchema(p)}`,
       seller: { "@id": `${urlDaLoja(t)}/#organization` },
     },
   };

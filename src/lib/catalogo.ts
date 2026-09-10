@@ -5,6 +5,7 @@ import { unstable_cache } from "next/cache";
 import { prisma } from "./db";
 import { encaixe, lerCompatibilidade, type Moto } from "./motos";
 import type { TemaLoja } from "./tema";
+import { publicavel, WHERE_COMPLETO, WHERE_COMPRAVEL } from "./produto-regras";
 
 export type ProdutoComCategoria = Produto & { categoria: Categoria | null };
 
@@ -229,20 +230,8 @@ export async function listarProdutos(tenantId: string, filtro?: FiltroCatalogo) 
   return janela([...servem, ...universais]);
 }
 
-/**
- * Um produto tem o que mostrar para quem chega de fora?
- *
- * Sem foto e sem preço, a página é um nome e uma ficha: o Google não tem o
- * que exibir e o comprador não tem como decidir. É cadastro de referência, e
- * cadastro de referência fica fora do sitemap e da primeira vitrine. Continua
- * acessível pela busca da loja, que é onde quem sabe o código vai procurá-lo.
- *
- * Foto OU preço basta: "sob consulta" com foto é oferta; preço sem foto
- * também, desde que o card diga o que é.
- */
-export function produtoPublicavel(p: Pick<Produto, "ativo" | "imagens" | "precoCentavos">): boolean {
-  return p.ativo && (p.imagens.length > 0 || p.precoCentavos > 0);
-}
+/** A régua do sitemap, do noindex e da primeira vitrine. Mora em produto-regras. */
+export const produtoPublicavel = publicavel;
 
 /**
  * A prateleira da primeira tela, quando o lojista não marcou destaques.
@@ -266,7 +255,7 @@ export async function vitrineDaLoja(tenantId: string, opcoes: { moto?: Moto | nu
   }
 
   const completos = await prisma.produto.findMany({
-    where: { tenantId, ativo: true, imagens: { isEmpty: false }, precoCentavos: { gt: 0 } },
+    where: { tenantId, ...WHERE_COMPLETO },
     include: { categoria: true },
     orderBy: ORDENS.relevancia,
     take: limite,
@@ -401,7 +390,7 @@ export async function resolverItensDoCatalogo(
     // oferece carrinho para ele, mas a trava tem que estar aqui — é esta
     // função que decide o preço que o cliente paga, e o carrinho vem do
     // navegador. Sem isso, um id forjado compraria a peça por R$ 0,00.
-    where: { tenantId, id: { in: pares.map((p) => p.produtoId) }, ativo: true, disponibilidade: { not: "out_of_stock" }, precoCentavos: { gt: 0 } },
+    where: { tenantId, id: { in: pares.map((p) => p.produtoId) }, ...WHERE_COMPRAVEL },
     include: { variantes: { where: { ativo: true } } },
   });
   const porId = new Map(produtos.map((p) => [p.id, p]));

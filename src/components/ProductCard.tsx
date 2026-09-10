@@ -1,4 +1,5 @@
 import Link from "next/link";
+import * as regras from "@/lib/produto-regras";
 import type { Produto } from "@prisma/client";
 import { formatarBRL } from "@/lib/catalogo";
 import AddToCartButton from "@/components/cart/AddToCartButton";
@@ -15,10 +16,12 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null }: {
   // Preço zero é "ainda não precificado", não "de graça". Catálogo importado
   // de ERP traz item de referência sem preço, e mostrar "R$ 0,00" com botão de
   // comprar faz a loja parecer quebrada — ou pior, promete o que não existe.
-  const sobConsulta = produto.precoCentavos <= 0;
-  const disponivel = !sobConsulta && produto.disponibilidade !== "out_of_stock" && (produto.estoque == null || produto.estoque > 0);
-  const esgotado = produto.disponibilidade === "out_of_stock" || produto.estoque === 0;
-  const estoqueBaixo = produto.estoque != null && produto.estoque > 0 && produto.estoque <= 3;
+  // As regras moram em produto-regras: o card, a página e o feed respondem
+  // a mesma coisa para o mesmo produto.
+  const sobConsulta = regras.sobConsulta(produto);
+  const disponivel = regras.compravel(produto);
+  const esgotado = regras.esgotado(produto);
+  const estoqueBaixo = regras.estoqueBaixo(produto);
 
   const percentualDesconto =
     produto.precoDeCentavos && produto.precoDeCentavos > produto.precoCentavos
