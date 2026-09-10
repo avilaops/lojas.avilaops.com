@@ -1,0 +1,470 @@
+[
+ {
+  "de": "/",
+  "para": "/"
+ },
+ {
+  "de": "/contato/",
+  "para": "/contato"
+ },
+ {
+  "de": "/politica-de-devolucao/",
+  "para": "/politicas/devolucao"
+ },
+ {
+  "de": "/politica-de-envio/",
+  "para": "/politicas/envio"
+ },
+ {
+  "de": "/politica-de-privacidade/",
+  "para": "/politicas/privacidade"
+ },
+ {
+  "de": "/produtos/",
+  "para": "/produtos"
+ },
+ {
+  "de": "/produtos/acidus-fast-500ml/",
+  "para": "/produtos/acidus-fast-500ml"
+ },
+ {
+  "de": "/produtos/alumax-concentrado-5l/",
+  "para": "/produtos/alumax-concentrado-5l"
+ },
+ {
+  "de": "/produtos/alumax-limpador-de-aluminio-e-carroceria-1-5l-vintex/",
+  "para": "/produtos/alumax-limpador-de-aluminio-e-carroceria-1-5l-vintex"
+ },
+ {
+  "de": "/produtos/aplicador-esp-pct-2und-2/",
+  "para": "/produtos/aplicador-esp-pct-2und-2"
+ },
+ {
+  "de": "/produtos/aplicador-esp-pct-2und/",
+  "para": "/categoria/acessorios"
+ },
+ {
+  "de": "/produtos/aplicador-microfibra-c-encaixe-de-mao/",
+  "para": "/produtos/aplicador-microfibra-c-encaixe-de-mao"
+ },
+ {
+  "de": "/produtos/aroma-carro-novo-vintex-1-5l/",
+  "para": "/produtos/aroma-carro-novo-vintex-1-5l"
+ },
+ {
+  "de": "/produtos/aroma-carro-novo/",
+  "para": "/produtos/aroma-carro-novo"
+ },
+ {
+  "de": "/produtos/arominha-carro-novo-scent/",
+  "para": "/produtos/arominha-carro-novo-scent"
+ },
+ {
+  "de": "/produtos/blend-spray-500ml/",
+  "para": "/produtos/blend-spray-500ml"
+ },
+ {
+  "de": "/produtos/blende-blck-500ml/",
+  "para": "/produtos/blende-blck-500ml"
+ },
+ {
+  "de": "/produtos/boina-arctic-wool-133mm-ventilado/",
+  "para": "/produtos/boina-arctic-wool-133mm-ventilado"
+ },
+ {
+  "de": "/produtos/boina-arctic-wool-152mm-ventilado/",
+  "para": "/produtos/boina-arctic-wool-152mm-ventilado"
+ },
+ {
+  "de": "/produtos/boina-arctic-wool-c-interface-de-espuma-133mm-5-25pol-ventilado/",
+  "para": "/produtos/boina-arctic-wool-c-interface-de-espuma-133mm-5-25pol-ventilado"
+ },
+ {
+  "de": "/produtos/boina-arctic-wool-c-interface-de-espuma-152mm-6pol-ventilado/",
+  "para": "/produtos/boina-arctic-wool-c-interface-de-espuma-152mm-6pol-ventilado"
+ },
+ {
+  "de": "/produtos/boina-golden-wool-133mm-ventilado/",
+  "para": "/produtos/boina-golden-wool-133mm-ventilado"
+ },
+ {
+  "de": "/produtos/boina-golden-wool-152mm-ventilado/",
+  "para": "/produtos/boina-golden-wool-152mm-ventilado"
+ },
+ {
+  "de": "/produtos/boina-golden-wool-c-interface-de-espuma-133mm-5-25pol-ventilado/",
+  "para": "/produtos/boina-golden-wool-c-interface-de-espuma-133mm-5-25pol-ventilado"
+ },
+ {
+  "de": "/produtos/boina-golden-wool-c-interface-de-espuma-152mm-6pol-ventilado/",
+  "para": "/produtos/boina-golden-wool-c-interface-de-espuma-152mm-6pol-ventilado"
+ },
+ {
+  "de": "/produtos/boina-micro-wolf-133mm-5-25pol-ventilado/",
+  "para": "/produtos/boina-micro-wolf-133mm-5-25pol-ventilado"
+ },
+ {
+  "de": "/produtos/boina-micro-wolf-152mm-6pol-ventilado/",
+  "para": "/produtos/boina-micro-wolf-152mm-6pol-ventilado"
+ },
+ {
+  "de": "/produtos/canhao-de-espuma-bico-vermelho/",
+  "para": "/produtos/canhao-de-espuma-bico-vermelho"
+ },
+ {
+  "de": "/produtos/carnauba-hybrid-wax-240ml/",
+  "para": "/produtos/carnauba-hybrid-wax-240ml"
+ },
+ {
+  "de": "/produtos/carnauba-tok-final-500ml/",
+  "para": "/produtos/carnauba-tok-final-500ml"
+ },
+ {
+  "de": "/produtos/categoria/",
+  "para": "/produtos"
+ },
+ {
+  "de": "/produtos/categoria/acessorios/",
+  "para": "/categoria/acessorios"
+ },
+ {
+  "de": "/produtos/categoria/kits/",
+  "para": "/categoria/kits-completos"
+ },
+ {
+  "de": "/produtos/categoria/lavagem/",
+  "para": "/categoria/lavagem"
+ },
+ {
+  "de": "/produtos/categoria/moto/",
+  "para": "/categoria/produtos-para-moto"
+ },
+ {
+  "de": "/produtos/categoria/polimento/",
+  "para": "/categoria/polimento"
+ },
+ {
+  "de": "/produtos/categoria/protecao/",
+  "para": "/categoria/protecao"
+ },
+ {
+  "de": "/produtos/categoria/vitrificacao/",
+  "para": "/categoria/vitrificacao"
+ },
+ {
+  "de": "/produtos/cera-blend-cleaner-carnauba/",
+  "para": "/produtos/cera-blend-cleaner-carnauba"
+ },
+ {
+  "de": "/produtos/cera-luster-500ml-vonixx/",
+  "para": "/categoria/protecao"
+ },
+ {
+  "de": "/produtos/darker-500ml/",
+  "para": "/produtos/darker-500ml"
+ },
+ {
+  "de": "/produtos/delet-500ml/",
+  "para": "/produtos/delet-500ml"
+ },
+ {
+  "de": "/produtos/delet-vonixx-5l/",
+  "para": "/produtos/delet-vonixx-5l"
+ },
+ {
+  "de": "/produtos/escova-caixa-de-roda-cabo-curto-detailer/",
+  "para": "/produtos/escova-caixa-de-roda-cabo-curto-detailer"
+ },
+ {
+  "de": "/produtos/escova-grande-microfibra-angular-para-limpeza-de-roda-vonixx/",
+  "para": "/produtos/escova-grande-microfibra-angular-para-limpeza-de-roda-vonixx"
+ },
+ {
+  "de": "/produtos/escova-para-lavagem-de-pneus/",
+  "para": "/produtos/escova-para-lavagem-de-pneus"
+ },
+ {
+  "de": "/produtos/espuma-celeste-medium-azul-foam-pads-133mm-5-25pol-ventilado/",
+  "para": "/produtos/espuma-celeste-medium-azul-foam-pads-133mm-5-25pol-ventilado"
+ },
+ {
+  "de": "/produtos/espuma-celeste-medium-azul-pads-152mm-6pol-ventilado/",
+  "para": "/produtos/espuma-celeste-medium-azul-pads-152mm-6pol-ventilado"
+ },
+ {
+  "de": "/produtos/espuma-laranja-one-step-foan-pads-133mm-5-25pol-ventilado/",
+  "para": "/produtos/espuma-laranja-one-step-foan-pads-133mm-5-25pol-ventilado"
+ },
+ {
+  "de": "/produtos/espuma-laranja-one-step-pad-152mm-6pol-ventilado/",
+  "para": "/produtos/espuma-laranja-one-step-pad-152mm-6pol-ventilado"
+ },
+ {
+  "de": "/produtos/espuma-preta-soft-foam-pads-133mm-5-25pol-ventilado/",
+  "para": "/produtos/espuma-preta-soft-foam-pads-133mm-5-25pol-ventilado"
+ },
+ {
+  "de": "/produtos/espuma-preta-soft-pad-152mm-6pol-ventilado/",
+  "para": "/produtos/espuma-preta-soft-pad-152mm-6pol-ventilado"
+ },
+ {
+  "de": "/produtos/extractus-desengraxante/",
+  "para": "/produtos/extractus-desengraxante"
+ },
+ {
+  "de": "/produtos/flexus-500ml/",
+  "para": "/produtos/flexus-500ml"
+ },
+ {
+  "de": "/produtos/focus-240ml/",
+  "para": "/produtos/focus-240ml"
+ },
+ {
+  "de": "/produtos/glazy-500ml/",
+  "para": "/produtos/glazy-500ml"
+ },
+ {
+  "de": "/produtos/glazy-anti-fog-500ml/",
+  "para": "/produtos/glazy-anti-fog-500ml"
+ },
+ {
+  "de": "/produtos/hidracouro-500ml/",
+  "para": "/produtos/hidracouro-500ml"
+ },
+ {
+  "de": "/produtos/higicouro-500ml/",
+  "para": "/produtos/higicouro-500ml"
+ },
+ {
+  "de": "/produtos/hydrox-fast-500ml-vonix/",
+  "para": "/produtos/hydrox-fast-500ml-vonix"
+ },
+ {
+  "de": "/produtos/impact-1-5l/",
+  "para": "/produtos/impact-1-5l"
+ },
+ {
+  "de": "/produtos/intense-500ml/",
+  "para": "/produtos/intense-500ml"
+ },
+ {
+  "de": "/produtos/izer-500ml/",
+  "para": "/produtos/izer-500ml"
+ },
+ {
+  "de": "/produtos/kit-alicate-para-instalacao-de-gaxetas-hidraulica/",
+  "para": "/categoria/kits-completos"
+ },
+ {
+  "de": "/produtos/kit-escova-drill-detailer/",
+  "para": "/produtos/kit-escova-drill-detailer"
+ },
+ {
+  "de": "/produtos/lamax-limpador-multiuso/",
+  "para": "/produtos"
+ },
+ {
+  "de": "/produtos/lamax/",
+  "para": "/produtos/lamax"
+ },
+ {
+  "de": "/produtos/lava-autos-500ml/",
+  "para": "/categoria/lavagem"
+ },
+ {
+  "de": "/produtos/makker-500ml/",
+  "para": "/produtos/makker-500ml"
+ },
+ {
+  "de": "/produtos/massa-de-polir-vintex-1-8k/",
+  "para": "/produtos/massa-de-polir-vintex-1-8k"
+ },
+ {
+  "de": "/produtos/massa-de-polir-vintex-500ml/",
+  "para": "/produtos/massa-de-polir-vintex-500ml"
+ },
+ {
+  "de": "/produtos/moto-v-lava-motos-500ml/",
+  "para": "/produtos/moto-v-lava-motos-500ml"
+ },
+ {
+  "de": "/produtos/ox-pro-500ml/",
+  "para": "/produtos"
+ },
+ {
+  "de": "/produtos/pano-de-micro-fibra-azul-escuro-37x57/",
+  "para": "/categoria/acessorios"
+ },
+ {
+  "de": "/produtos/pano-de-microfibra-sem-costura-40x40-vinixx/",
+  "para": "/categoria/acessorios"
+ },
+ {
+  "de": "/produtos/pano-micro-fibra-azul-escuro-47x77-230gsm/",
+  "para": "/categoria/acessorios"
+ },
+ {
+  "de": "/produtos/pincel-det-externo-14-zacs/",
+  "para": "/produtos/pincel-det-externo-14-zacs"
+ },
+ {
+  "de": "/produtos/pincel-det-medio-interno-14-zacs/",
+  "para": "/produtos/pincel-det-medio-interno-14-zacs"
+ },
+ {
+  "de": "/produtos/pincel-externo-n14-cerdas-medias-vonixx/",
+  "para": "/categoria/acessorios"
+ },
+ {
+  "de": "/produtos/pincel-interno-cerdas-medias-vonixx-detalhamento-automotivo/",
+  "para": "/categoria/acessorios"
+ },
+ {
+  "de": "/produtos/plus-cera-carnauba-de-limpeza-cleaner-waz-500ml/",
+  "para": "/produtos/plus-cera-carnauba-de-limpeza-cleaner-waz-500ml"
+ },
+ {
+  "de": "/produtos/prizm-1-5/",
+  "para": "/categoria/protecao"
+ },
+ {
+  "de": "/produtos/prizm-500ml/",
+  "para": "/produtos/prizm-500ml"
+ },
+ {
+  "de": "/produtos/rejuvex-400g/",
+  "para": "/produtos/rejuvex-400g"
+ },
+ {
+  "de": "/produtos/removex-vintex-1-5l/",
+  "para": "/produtos/removex-vintex-1-5l"
+ },
+ {
+  "de": "/produtos/restaurax-1-5l/",
+  "para": "/produtos/restaurax-1-5l"
+ },
+ {
+  "de": "/produtos/restaurax-500ml/",
+  "para": "/produtos/restaurax-500ml"
+ },
+ {
+  "de": "/produtos/revelax-revelador-de-hologramas-surface-vonixx/",
+  "para": "/produtos/revelax-revelador-de-hologramas-surface-vonixx"
+ },
+ {
+  "de": "/produtos/revox-selante-sintetico-para-pneus-500ml-vonixx/",
+  "para": "/produtos/revox-selante-sintetico-para-pneus-500ml-vonixx"
+ },
+ {
+  "de": "/produtos/selante-sintetico-v-80-vonixx-240ml/",
+  "para": "/produtos/selante-sintetico-v-80-vonixx-240ml"
+ },
+ {
+  "de": "/produtos/shampoo-v-floc-1-5l-vonixx/",
+  "para": "/produtos/shampoo-v-floc-1-5l-vonixx"
+ },
+ {
+  "de": "/produtos/sinergy-vonixx-500ml/",
+  "para": "/produtos/sinergy-vonixx-500ml"
+ },
+ {
+  "de": "/produtos/sintra-1-5l/",
+  "para": "/produtos/sintra-1-5l"
+ },
+ {
+  "de": "/produtos/sintra-5-litros/",
+  "para": "/categoria/lavagem"
+ },
+ {
+  "de": "/produtos/sintra-fast-500ml/",
+  "para": "/produtos/sintra-fast-500ml"
+ },
+ {
+  "de": "/produtos/sio2-vonixx-500ml/",
+  "para": "/produtos/sio2-vonixx-500ml"
+ },
+ {
+  "de": "/produtos/snow-foan-bico-amarelo-furacao-1-3/",
+  "para": "/categoria/lavagem"
+ },
+ {
+  "de": "/produtos/snow-foan-manual/",
+  "para": "/categoria/lavagem"
+ },
+ {
+  "de": "/produtos/speel-car-500ml/",
+  "para": "/categoria/lavagem"
+ },
+ {
+  "de": "/produtos/strike-1-5l/",
+  "para": "/produtos/strike-1-5l"
+ },
+ {
+  "de": "/produtos/strike-500ml/",
+  "para": "/produtos/strike-500ml"
+ },
+ {
+  "de": "/produtos/teste/",
+  "para": "/produtos"
+ },
+ {
+  "de": "/produtos/tryon-finalizador-restaurador-de-plastico-3-em-1/",
+  "para": "/produtos/tryon-finalizador-restaurador-de-plastico-3-em-1"
+ },
+ {
+  "de": "/produtos/v-cut-polidor-de-cortes-premium/",
+  "para": "/categoria/polimento"
+ },
+ {
+  "de": "/produtos/v-eco-fast-500ml/",
+  "para": "/produtos/v-eco-fast-500ml"
+ },
+ {
+  "de": "/produtos/v-floc-1-5/",
+  "para": "/categoria/lavagem"
+ },
+ {
+  "de": "/produtos/v-floc-3l/",
+  "para": "/categoria/lavagem"
+ },
+ {
+  "de": "/produtos/v-floc-500ml/",
+  "para": "/produtos/v-floc-500ml"
+ },
+ {
+  "de": "/produtos/v-floc-5l/",
+  "para": "/produtos/v-floc-5l"
+ },
+ {
+  "de": "/produtos/v-mol-1-5l/",
+  "para": "/produtos/v-mol-1-5l"
+ },
+ {
+  "de": "/produtos/v-mol-5-litros/",
+  "para": "/categoria/lavagem"
+ },
+ {
+  "de": "/produtos/v-mol-500ml/",
+  "para": "/categoria/lavagem"
+ },
+ {
+  "de": "/produtos/v40-4em1-500ml/",
+  "para": "/produtos/v40-4em1-500ml"
+ },
+ {
+  "de": "/produtos/vexus-1-5l-vonixx/",
+  "para": "/produtos/vexus-1-5l-vonixx"
+ },
+ {
+  "de": "/produtos/vexus-500ml/",
+  "para": "/produtos/vexus-500ml"
+ },
+ {
+  "de": "/sobre/",
+  "para": "/sobre"
+ },
+ {
+  "de": "/termos-de-uso/",
+  "para": "/politicas/termos"
+ }
+]
