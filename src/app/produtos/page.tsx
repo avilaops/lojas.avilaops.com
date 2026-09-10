@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { notFound } from "next/navigation";
+import { metadataDeListagem } from "@/lib/seo-listagem";
 import PaginacaoLoja, { POR_PAGINA, paginaDaUrl } from "@/components/PaginacaoLoja";
 import { exigirTenant, lojaVende } from "@/lib/tenant";
 import { listarCategorias, listarProdutos, medidasDaLoja, type ChaveDeMedida, type OrdemCatalogo } from "@/lib/catalogo";
@@ -8,7 +10,17 @@ import FiltrosProdutos from "@/components/FiltrosProdutos";
 import { minhaMoto } from "@/lib/minha-moto";
 import { nomeDaMoto } from "@/lib/motos";
 
-export const metadata: Metadata = { title: "Produtos" };
+type SP = Record<string, string | undefined>;
+
+/**
+ * Só a listagem limpa e as suas páginas entram no índice. Busca, faixa de
+ * preço, medida e ordenação são estado de quem está olhando: noindex, com
+ * follow para os produtos dentro continuarem sendo descobertos.
+ */
+export async function generateMetadata({ searchParams }: { searchParams: Promise<SP> }): Promise<Metadata> {
+  const sp = await searchParams;
+  return metadataDeListagem({ base: "/produtos", sp, pagina: paginaDaUrl(sp), title: sp.q ? `Busca: ${sp.q}` : "Produtos" });
+}
 
 const ORDENS = new Set<OrdemCatalogo>(["relevancia", "menor-preco", "maior-preco", "recentes", "nome"]);
 const reais = (v?: string) => {
@@ -64,6 +76,9 @@ export default async function Produtos({ searchParams }: { searchParams: Promise
   ]);
   const produtos = lote.slice(0, POR_PAGINA);
   const temProxima = lote.length > POR_PAGINA;
+  // Página além do fim é 404, não "nada encontrado" com 200: senão qualquer
+  // ?pagina=999999 vira uma URL válida a mais para o Google guardar.
+  if (produtos.length === 0 && pagina > 1) notFound();
   const vende = lojaVende(t);
   const categoriaAtual = categorias.find((c) => c.slug === sp.categoria);
   const titulo = sp.q ? `Resultados para “${sp.q}”` : categoriaAtual ? categoriaAtual.nome : moto ? `Peças para ${nomeDaMoto(moto)}` : "Todos os produtos";
