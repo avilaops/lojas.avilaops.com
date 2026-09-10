@@ -11,8 +11,9 @@ import IconeCategoria from "@/components/IconeCategoria";
  * segunda intenção, mas nomes industriais longos ("Aço de baixo e médio teor de
  * carbono") não se distinguem de relance. A foto distingue.
  *
- * Só aparece com foto de verdade: círculo com a inicial da categoria seria
- * enfeite ocupando a área mais cara da página.
+ * Quando a categoria ainda não tem foto confiável, entra o pictograma técnico
+ * da família. É mais honesto que usar uma foto aproximada e mais útil que uma
+ * inicial genérica.
  */
 export default function AtalhosCategorias({
   categorias,
@@ -27,7 +28,6 @@ export default function AtalhosCategorias({
         {categorias.slice(0, PRINCIPAIS).map((c) => (
           <Link key={c.id} href={`/categoria/${c.slug}`}>
             <span className="atalhos-cat-foto">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               {c.imagemUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={c.imagemUrl} alt="" loading="eager" />
