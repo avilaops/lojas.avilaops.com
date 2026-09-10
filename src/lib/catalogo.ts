@@ -1,7 +1,7 @@
 import type { Prisma, Produto, Categoria } from "@prisma/client";
 import type { ItemCarrinho } from "@avilaops/checkout";
 import { cache } from "react";
-import { unstable_cache } from "next/cache";
+import { revalidateTag, unstable_cache } from "next/cache";
 import { prisma } from "./db";
 import { encaixe, lerCompatibilidade, type Moto } from "./motos";
 import type { TemaLoja } from "./tema";
@@ -56,6 +56,21 @@ export function categoriasParaVitrine<C extends { imagemUrl: string | null }>(
   politica: TemaLoja["categoriaSemImagem"],
 ): C[] {
   return politica === "ocultar" ? categorias.filter((c) => c.imagemUrl) : categorias;
+}
+
+/**
+ * O que fica guardado por loja (faixas de medida, motos) cai quando o
+ * catálogo muda, e não só quando os cinco minutos vencem.
+ *
+ * Quem escreve produto chama `invalidarCatalogo`. Sem isso, o lojista
+ * importa a planilha nova e o filtro de medidas mostra a faixa antiga por
+ * até cinco minutos, e a primeira pergunta no suporte seria "importei e não
+ * apareceu".
+ */
+const etiquetaDoCatalogo = (tenantId: string) => `catalogo:${tenantId}`;
+
+export function invalidarCatalogo(tenantId: string): void {
+  revalidateTag(etiquetaDoCatalogo(tenantId), "max");
 }
 
 export type OrdemCatalogo = "relevancia" | "menor-preco" | "maior-preco" | "recentes" | "nome";
@@ -284,7 +299,7 @@ export async function medidasDaLoja(tenantId: string) {
   // TODOS os produtos ativos a cada visita ao catálogo, só para desenhar três
   // faixas de formulário que mudam quando o lojista importa planilha, não a
   // cada pedido de página. Na Vedashow são 5.591 linhas por visita.
-  return unstable_cache(medidasDaLojaSemCache, ["medidas-da-loja"], { revalidate: 300 })(tenantId);
+  return unstable_cache(medidasDaLojaSemCache, ["medidas-da-loja"], { revalidate: 300, tags: [etiquetaDoCatalogo(tenantId)] })(tenantId);
 }
 
 async function medidasDaLojaSemCache(tenantId: string) {
@@ -332,7 +347,7 @@ export async function motosDaLoja(tenantId: string) {
   // Cinco minutos por loja, como `medidasDaLoja`: lê o JSON de compatibilidade
   // de todos os produtos ativos para montar um seletor que muda quando o
   // lojista cadastra peça, não a cada visita.
-  return unstable_cache(motosDaLojaSemCache, ["motos-da-loja"], { revalidate: 300 })(tenantId);
+  return unstable_cache(motosDaLojaSemCache, ["motos-da-loja"], { revalidate: 300, tags: [etiquetaDoCatalogo(tenantId)] })(tenantId);
 }
 
 async function motosDaLojaSemCache(tenantId: string) {

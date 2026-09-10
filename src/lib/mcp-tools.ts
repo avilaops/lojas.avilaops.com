@@ -8,6 +8,7 @@ import { gerarRascunhoSeoCategoria, publicarSeoCategoria } from "@/lib/seo-categ
 import { avisarBuscadores } from "@/lib/indexnow";
 import { emitir } from "@/lib/eventos";
 import type { Tenant, PedidoStatus } from "@prisma/client";
+import { invalidarCatalogo } from "./catalogo";
 
 export interface McpTool {
   name: string;
@@ -276,6 +277,7 @@ export const MCP_TOOLS: McpTool[] = [
           opcoes: Array.isArray(args.opcoes) ? args.opcoes : [],
         },
       });
+      invalidarCatalogo(tenant.id);
 
       return {
         sucesso: true,
@@ -328,6 +330,7 @@ export const MCP_TOOLS: McpTool[] = [
           ...(args.imagens !== undefined ? { imagens: args.imagens } : {}),
         },
       });
+      invalidarCatalogo(tenant.id);
 
       return {
         sucesso: true,

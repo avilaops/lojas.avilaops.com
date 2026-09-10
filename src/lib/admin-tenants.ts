@@ -4,6 +4,7 @@ import { cifrar } from "./cofre";
 import { slugificar } from "./catalogo";
 import { esquecerTenantEmCache } from "./tenant";
 import type { ProdutoEntrada, TenantEntrada } from "./admin-schemas";
+import { invalidarCatalogo } from "./catalogo";
 
 function dadosDoTenant(entrada: Partial<TenantEntrada>): Prisma.TenantUpdateInput {
   const { mercadoPago, tema, identidade, endereco, tabelaFrete, ...resto } = entrada;
@@ -148,6 +149,9 @@ export async function importarProdutos(tenantId: string, produtos: ProdutoEntrad
       criados++;
     }
   }
+  // A planilha mudou o catálogo: as faixas de medida e as motos guardadas
+  // por loja caem agora, não daqui a cinco minutos.
+  invalidarCatalogo(tenantId);
 
   return { criados, atualizados };
 }

@@ -7,6 +7,7 @@ import { exigir } from "@/lib/operadores";
 import { avisarBuscadores, caminhosDoProduto } from "@/lib/indexnow";
 import { slugificar } from "@/lib/catalogo";
 import type { Prisma } from "@prisma/client";
+import { invalidarCatalogo } from "@/lib/catalogo";
 
 /** PUT — importa/atualiza em lote (CSV ou um único produto do formulário). */
 export async function PUT(request: Request) {
@@ -31,6 +32,7 @@ export async function DELETE(request: Request) {
   const p = await prisma.produto.findFirst({ where: { id, tenantId: loja.id } });
   if (!p) return Response.json({ erro: "Produto não encontrado." }, { status: 404 });
   await prisma.produto.update({ where: { id }, data: { ativo: false } });
+  invalidarCatalogo(loja.id);
   return Response.json({ ok: true });
 }
 
@@ -70,6 +72,7 @@ export async function PATCH(request: Request) {
     where: { id },
     data: { ...campos, ...(slug ? { slug: slugificar(slug) } : {}), ...(categoriaId !== undefined ? { categoriaId } : {}), ...(atributos ? { atributos: atributos as Prisma.InputJsonValue } : {}), ...(compatibilidade ? { compatibilidade: compatibilidade as unknown as Prisma.InputJsonValue } : {}) },
   });
+  invalidarCatalogo(loja.id);
   void avisarBuscadores(loja, caminhosDoProduto(atualizado.slug, categoria ?? undefined));
   return Response.json({ id: atualizado.id, slug: atualizado.slug });
 }
