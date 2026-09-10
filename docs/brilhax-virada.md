@@ -113,9 +113,13 @@ Brilhax antes de valer como documento. Não inclui prazo de garantia próprio,
 política de erro de preço além do mínimo legal, nem foro: se a Brilhax tiver
 regra própria nesses pontos, ela precisa ser dita.
 
-**Boleto.** Hoje o checkout aceita cartão e Pix. Boleto leva de um a três dias
-úteis para compensar e nesse meio tempo o produto sai do estoque sem o dinheiro
-entrar. É decisão comercial.
+**Boleto está LIGADO na loja nova.** O checkout da plataforma oferece Pix,
+cartão e boleto; o do site antigo, por decisão de 09/09, oferecia só Pix e
+cartão. Boleto compensa em até três dias úteis e nesse intervalo o produto sai
+do estoque sem o dinheiro ter entrado. Se a Brilhax não quiser conviver com
+isso, é preciso desligar antes da virada. Verificado na tela em 10/09: "PIX ·
+aprovação em segundos", "Cartão de crédito · parcelamento sem juros", "Boleto
+bancário · compensa em até 3 dias úteis".
 
 ## Riscos antes da virada
 
