@@ -10,7 +10,7 @@ export default async function Pagina() {
   return (
     <>
       <CabecalhoSecao titulo="Produtos" descricao="Catálogo da loja: cadastro, planilha e edição." />
-      <PainelLoja secao="Produtos" {...(await dadosDoPainel())} />
+      <PainelLoja secao="Produtos" {...(await dadosDoPainel("Produtos"))} />
     </>
   );
 }

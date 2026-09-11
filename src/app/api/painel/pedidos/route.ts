@@ -3,12 +3,57 @@ import { prisma } from "@/lib/db";
 import { lojistaAtual } from "@/lib/sessao";
 import { emitir } from "@/lib/eventos";
 import { urlDaLoja } from "@/lib/tenant";
+import { filtroDePedidos, paginaValida, POR_PAGINA_PEDIDOS } from "@/lib/pedidos-painel";
 
 const Entrada = z.object({
   id: z.string(),
   status: z.enum(["EM_SEPARACAO", "ENVIADO", "ENTREGUE", "CANCELADO"]).optional(),
   rastreio: z.string().trim().max(60).nullable().optional(),
 });
+
+/**
+ * GET — a lista de pedidos, com filtro e página no banco.
+ *
+ * A tela recebia os 200 mais recentes com itens e filtrava no navegador. Com
+ * catálogo grande vem loja grande, e 200 deixa de ser "todos": o pedido 201
+ * simplesmente não existia para o lojista. O filtro mora em
+ * `lib/pedidos-painel.ts`, que é testado sem banco e garante o tenant em toda
+ * consulta.
+ */
+export async function GET(request: Request) {
+  const loja = await lojistaAtual();
+  if (!loja) return Response.json({ erro: "Sessão expirada." }, { status: 401 });
+
+  const url = new URL(request.url);
+  const where = filtroDePedidos({ tenantId: loja.id, q: url.searchParams.get("q"), situacao: url.searchParams.get("situacao") });
+  const pagina = paginaValida(url.searchParams.get("pagina"));
+  const POR_PAGINA = POR_PAGINA_PEDIDOS;
+
+  const [total, itens, porSituacao] = await Promise.all([
+    prisma.pedido.count({ where }),
+    prisma.pedido.findMany({
+      where,
+      select: {
+        id: true, numero: true, referencia: true, status: true, clienteNome: true, clienteTelefone: true,
+        totalCentavos: true, criadoEm: true, rastreio: true,
+        _count: { select: { itens: true } },
+      },
+      orderBy: { criadoEm: "desc" },
+      skip: (pagina - 1) * POR_PAGINA,
+      take: POR_PAGINA,
+    }),
+    prisma.pedido.groupBy({ by: ["status"], where: { tenantId: loja.id }, _count: { _all: true } }),
+  ]);
+
+  return Response.json({
+    total,
+    pagina,
+    porPagina: POR_PAGINA,
+    paginas: Math.max(1, Math.ceil(total / POR_PAGINA)),
+    resumo: Object.fromEntries(porSituacao.map((g) => [g.status, g._count._all])) as Record<string, number>,
+    itens: itens.map((p) => ({ ...p, criadoEm: p.criadoEm.toISOString(), itens: p._count.itens })),
+  });
+}
 
 /** PATCH — o lojista avança o pedido. Pagamento só muda pelo webhook. */
 export async function PATCH(request: Request) {

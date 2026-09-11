@@ -10,7 +10,7 @@ export default async function Pagina() {
   return (
     <>
       <CabecalhoSecao titulo="IA (Claude)" descricao="Ligue a loja ao Claude para cuidar do catálogo conversando." />
-      <PainelLoja secao="IA (Claude)" {...(await dadosDoPainel())} />
+      <PainelLoja secao="IA (Claude)" {...(await dadosDoPainel("IA (Claude)"))} />
     </>
   );
 }

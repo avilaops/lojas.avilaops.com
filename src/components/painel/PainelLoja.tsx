@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LAYOUTS, type TemaLoja } from "@/lib/tema";
 import { criarDirecaoVisual, PERSONALIDADES, SEGMENTOS, type IdentidadeLoja } from "@/lib/identidade";
@@ -54,12 +53,10 @@ export interface LojaView {
   mpConfigurado: boolean;
   assinatura: { status: string; isenta: boolean; precoCentavos: number; planoNome: string; ultimoPagamentoEm: string | null; setupPagoEm: string | null; criadoEm: string; faturas: Array<{ id: string; centavos: number; status: string; pagaEm: string | null; criadoEm: string }> };
 }
-export interface ProdutoView { id: string; nome: string; sku: string | null; precoCentavos: number; ativo: boolean; destaque: boolean; categoria: string | null; imagem: string | null; disponibilidade: string; estoque: number | null; opcoes: string[]; variantes: number; temEmbalagem: boolean }
 export interface EnderecoEntregaView { logradouro: string; numero: string; complemento?: string | null; bairro: string; cidade: string; uf: string; cep: string }
 export interface PedidoView { id: string; numero: number; referencia: string; status: string; clienteNome: string; clienteEmail: string; clienteTelefone: string; clienteDocumento: string; totalCentavos: number; subtotalCentavos: number; freteCentavos: number; descontoCentavos: number; cupomCodigo: string | null; meioPagamento: string; freteNome: string; rastreio: string | null; entrega: EnderecoEntregaView | null; etiqueta: { status: string; codigoObjeto: string | null; pdf: string | null; custoCentavos: number } | null; criadoEm: string; itens: Array<{ nome: string; quantidade: number; sku: string | null; precoUnitarioCentavos: number }> }
 
 const STATUS: Record<string, string> = { ATIVA: "No ar", PROVISIONANDO: "Configurando", SUSPENSA: "Suspensa", CANCELADA: "Cancelada" };
-const PEDIDO: Record<string, string> = { AGUARDANDO_PAGAMENTO: "Aguardando pagamento", PAGO: "Pago, separar", EM_SEPARACAO: "Em separação", ENVIADO: "Enviado", ENTREGUE: "Entregue", CANCELADO: "Cancelado", ESTORNADO: "Estornado" };
 /**
  * Cada seção é um endereço.
  *
@@ -95,7 +92,7 @@ const ASSINATURA: Record<string, { rotulo: string; classe: string }> = {
   CANCELADA: { rotulo: "Cancelada", classe: "bg-red-100 text-red-800" },
 };
 
-export default function PainelLoja({ secao, loja, contagens, produtos, pedidos, cupons, categorias, avaliacoes, vendas, catalogo, espera, postagem }: { secao: SecaoPainel; loja: LojaView; contagens: { semEmbalagem: number; ativos: number; semFoto: number }; produtos: ProdutoView[]; pedidos: PedidoView[]; cupons: CupomView[]; categorias: CategoriaView[]; avaliacoes: AvaliacaoPainelView[]; vendas: ResumoVendas; catalogo: DiagnosticoFeed; espera: Array<{ produto: string; pessoas: number }>; postagem: { etiquetas: number; custoCentavos: number; limiteCentavos: number } }) {
+export default function PainelLoja({ secao, loja, contagens, cupons, categorias, avaliacoes, vendas, catalogo, espera, postagem }: { secao: SecaoPainel; loja: LojaView; contagens: { semEmbalagem: number; ativos: number; semFoto: number; pedidos: number }; cupons: CupomView[]; categorias: CategoriaView[]; avaliacoes: AvaliacaoPainelView[]; vendas: ResumoVendas; catalogo: DiagnosticoFeed; espera: Array<{ produto: string; pessoas: number }>; postagem: { etiquetas: number; custoCentavos: number; limiteCentavos: number } }) {
   const router = useRouter();
   // A seção vem da URL, não do estado: quem manda na tela é o endereço.
   const aba = secao;
@@ -117,23 +114,10 @@ export default function PainelLoja({ secao, loja, contagens, produtos, pedidos, 
   // ── estado dos formulários ──
   const [novo, setNovo] = useState({ nome: "", preco: "", precoDe: "", categoria: "", sku: "", descricaoCurta: "", imagem: "", destaque: false, pesoKg: "", estoque: "" });
   const [csv, setCsv] = useState<{ nome: string; produtos: Array<Record<string, unknown>>; erros: string[] } | null>(null);
-  const [rastreio, setRastreio] = useState<Record<string, string>>({});
   const [tema, setTema] = useState({ corPrimaria: loja.tema.corPrimaria, modo: loja.tema.modo, fonte: loja.tema.fonte, raio: loja.tema.raio, layout: loja.tema.layout, categoriaSemImagem: loja.tema.categoriaSemImagem });
   const [segmento, setSegmento] = useState(loja.segmento);
   const [identidade, setIdentidade] = useState(loja.identidade);
   const [limiteEstoque, setLimiteEstoque] = useState(String(loja.estoqueBaixoEm));
-  // Produto sem embalagem cadastrada cota pela caixa padrão da loja, que
-  // costuma ser maior — frete mais caro do que precisava, e é na tela do frete
-  // que mais se desiste da compra.
-  const semEmbalagem = produtos.filter((p) => p.ativo && !p.temEmbalagem);
-  // Inventário lista só quem tem contagem: "∞" numa tabela de estoque é ruído.
-  const comEstoque = produtos.filter((p) => p.estoque != null && !p.opcoes.length);
-
-  // Sai dos produtos que o painel já carregou: nenhuma consulta a mais.
-  const acabando = produtos
-    .filter((p) => p.ativo && p.variantes === 0 && p.estoque != null && p.estoque <= loja.estoqueBaixoEm)
-    .sort((a, b) => (a.estoque ?? 0) - (b.estoque ?? 0))
-    .slice(0, 12);
   const [empresa, setEmpresa] = useState({ razaoSocial: loja.razaoSocial ?? "", cnpj: loja.cnpj ?? "" });
   const [contato, setContato] = useState({ avisoTopo: loja.avisoTopo ?? "", slogan: loja.slogan ?? "", whatsapp: loja.whatsapp ?? "", emailContato: loja.emailContato ?? "", logoUrl: loja.logoUrl ?? "", bannerUrl: loja.bannerUrl ?? "", dominioPrincipal: loja.dominioPrincipal ?? "" });
   const [entrega, setEntrega] = useState({ retiradaNaLoja: loja.retiradaNaLoja, despachoDiasUteis: loja.despachoDiasUteis, freteGratisAcima: loja.freteGratisAcima != null ? String(loja.freteGratisAcima / 100).replace(".", ",") : "", tabela: loja.tabelaFrete.map((f) => ({ ufs: f.ufs.join(","), preco: String(f.preco / 100).replace(".", ","), prazo: String(f.prazoDiasUteis), nome: f.nome ?? "" })) });
@@ -167,12 +151,6 @@ export default function PainelLoja({ secao, loja, contagens, produtos, pedidos, 
       categoria: novo.categoria || undefined, sku: novo.sku || undefined, descricaoCurta: novo.descricaoCurta || undefined,
       imagens: novo.imagem ? [novo.imagem] : undefined, destaque: novo.destaque, ...(novo.pesoKg ? { pesoKg: Number.parseFloat(novo.pesoKg.replace(",", ".")) } : {}), ...(novo.estoque.trim() ? { estoque: Number(novo.estoque) } : {}),
     }], "Produto salvo.").then(() => setNovo({ nome: "", preco: "", precoDe: "", categoria: "", sku: "", descricaoCurta: "", imagem: "", destaque: false, pesoKg: "", estoque: "" }));
-  }
-
-  function avancar(p: PedidoView) {
-    if (p.status === "PAGO") return chamar("/api/painel/pedidos", "PATCH", { id: p.id, status: "EM_SEPARACAO" }, "Pedido em separação.");
-    if (p.status === "EM_SEPARACAO") return chamar("/api/painel/pedidos", "PATCH", { id: p.id, status: "ENVIADO", rastreio: rastreio[p.id] || null }, "Pedido enviado.");
-    if (p.status === "ENVIADO") return chamar("/api/painel/pedidos", "PATCH", { id: p.id, status: "ENTREGUE" }, "Pedido entregue.");
   }
 
   return (
@@ -229,7 +207,7 @@ export default function PainelLoja({ secao, loja, contagens, produtos, pedidos, 
             </button>
             <button onClick={() => irPara("Pedidos")}>
               <small>Pedidos</small>
-              <strong>{pedidos.length}</strong>
+              <strong>{contagens.pedidos.toLocaleString("pt-BR")}</strong>
               <span>Ver pedidos →</span>
             </button>
             <a href={loja.url} target="_blank" rel="noopener">
@@ -383,7 +361,7 @@ export default function PainelLoja({ secao, loja, contagens, produtos, pedidos, 
         )}
         {/* Lista com busca, filtro e uma acao principal por pedido. Antes
             eram sete colunas com ate quatro botoes de 36px na ultima. */}
-        <Pedidos pedidos={pedidos} chamar={chamar} ocupado={ocupado} />
+        <Pedidos chamar={chamar} ocupado={ocupado} />
         </>
       )}
 

@@ -3,53 +3,83 @@ import { prisma } from "@/lib/db";
 import { lojistaAtual } from "@/lib/sessao";
 import { urlDaLoja, temaDo, identidadeDa } from "@/lib/tenant";
 import { NOME_PLANO, PRECO_PLANO } from "@/lib/assinatura";
-import { resumoDeVendas } from "@/lib/relatorio";
-import { diagnosticoDoFeed } from "@/lib/catalogo";
+import { resumoDeVendas, type ResumoVendas } from "@/lib/relatorio";
+import { diagnosticoDoFeed, type DiagnosticoFeed } from "@/lib/catalogo";
 import { filaDeEspera } from "@/lib/estoque-avisos";
 import { postagemAAcertar } from "@/lib/postagem";
+import type { SecaoPainel } from "@/components/painel/PainelLoja";
 
 /**
- * Os dados que o painel do lojista mostra.
+ * Os dados que o painel do lojista mostra, por seção.
  *
- * Isto era o corpo de uma página só, com treze abas dentro. Agora cada seção é
- * uma rota, e todas passam por aqui: o carregamento continua num lugar só,
- * enquanto o endereço passa a dizer onde o lojista está.
+ * Era uma carga só para todas as rotas: 500 produtos com categoria, 200
+ * pedidos com itens, cupons, categorias, 200 avaliações, resumo de vendas e
+ * diagnóstico do feed, em qualquer tela, inclusive em Marca e Promoções, que
+ * não tocam em nada disso. Medido em 11/09/2026 contra o banco de produção:
+ * 3,6 s e 974 KB serializados por rota na Vedashow, 787 ms na Brilhax.
  *
- * Ainda é uma carga larga (catálogo, pedidos, avaliações, faturas) para
- * qualquer seção. É de propósito por enquanto: primeiro a navegação, depois o
- * corte por rota. Vale medir antes de cortar, porque a loja típica tem
- * dezenas de produtos, não milhares.
+ * Agora cada seção declara o que precisa em `PRECISA`, e o resto não é
+ * consultado. O que toda seção carrega é só a loja (com faturas, que a
+ * Assinatura mostra e é barata): uma consulta.
+ *
+ * `produtos` saiu de vez: Catálogo e Inventário buscam pela API paginada, e
+ * nenhuma seção lia o array. Pedidos também: a lista tem API própria com
+ * filtro e página no banco (`/api/painel/pedidos`).
  */
-export async function dadosDoPainel() {
+
+type Precisa = { cupons?: true; categorias?: true; avaliacoes?: true; vendas?: true; catalogo?: true; postagem?: true; contagens?: true };
+
+const PRECISA: Record<SecaoPainel, Precisa> = {
+  "Visão geral": { vendas: true, contagens: true },
+  "Pedidos": { postagem: true },
+  "Produtos": { categorias: true, contagens: true },
+  "Categorias": { categorias: true },
+  "Inventário": {},
+  "Cupons": { cupons: true },
+  "Avaliações": { avaliacoes: true },
+  "Buscadores": {},
+  "Anúncios": { catalogo: true },
+  "IA (Claude)": {},
+  "Marca": {},
+  "Entrega": {},
+  "Recebimento": {},
+  "Assinatura": {},
+  "Conta": {},
+};
+
+// O que uma seção recebe quando não pediu: o formato certo, zerado. A tela
+// que não usa não desenha; a tipagem continua a mesma para todas.
+const VAZIO_VENDAS: ResumoVendas = { receitaCentavos: 0, pedidos: 0, ticketMedioCentavos: 0, variacao: null, serie: [], top: [], aguardandoPagamento: 0, aSeparar: 0, carrinhosAbertos: 0 };
+const VAZIO_CATALOGO: DiagnosticoFeed = { total: 0, prontos: 0, problemas: [] };
+
+export async function dadosDoPainel(secao: SecaoPainel) {
   const loja = await lojistaAtual();
   if (!loja) redirect("/entrar");
+  const p = PRECISA[secao];
+  const id = loja.id;
 
-  const [produtos, semEmbalagemTotal, ativosTotal, semFotoTotal, pedidos, faturas, cupons, categorias, avaliacoes, vendas, catalogo, espera, postagem] = await Promise.all([
-    prisma.produto.findMany({ where: { tenantId: loja.id }, include: { categoria: true, _count: { select: { variantes: { where: { ativo: true } } } } }, orderBy: [{ ativo: "desc" }, { nome: "asc" }], take: 500 }),
-    // Contagens do catálogo inteiro, e não da fatia de 500 carregada acima.
-    //
-    // O aviso de embalagem dizia "e mais 488" numa loja com 5.591 produtos sem
-    // medida: ele contava dentro da fatia. Número errado numa tela onde o
-    // lojista decide o que arrumar primeiro é pior que número nenhum.
-    prisma.produto.count({ where: { tenantId: loja.id, ativo: true, OR: [{ pesoKg: null }, { alturaCm: null }, { larguraCm: null }, { comprimentoCm: null }] } }),
-    prisma.produto.count({ where: { tenantId: loja.id, ativo: true } }),
-    // Sem foto e o problema mais caro de um catalogo grande, e e o que a Visao
-    // geral aponta como proximo passo.
-    prisma.produto.count({ where: { tenantId: loja.id, ativo: true, imagens: { isEmpty: true } } }),
-    prisma.pedido.findMany({ where: { tenantId: loja.id }, include: { itens: true, postagem: true }, orderBy: { criadoEm: "desc" }, take: 200 }),
-    prisma.fatura.findMany({ where: { tenantId: loja.id }, orderBy: { criadoEm: "desc" }, take: 24 }),
-    prisma.cupom.findMany({ where: { tenantId: loja.id }, orderBy: { criadoEm: "desc" } }),
-    prisma.categoria.findMany({ where: { tenantId: loja.id }, orderBy: [{ ordem: "asc" }, { nome: "asc" }], include: { _count: { select: { produtos: true } } } }),
-    prisma.avaliacao.findMany({ where: { tenantId: loja.id }, orderBy: { criadoEm: "desc" }, take: 200, include: { produto: { select: { nome: true } } } }),
-    resumoDeVendas(loja.id),
-    diagnosticoDoFeed(loja.id),
-    filaDeEspera(loja.id),
-    postagemAAcertar(loja.id),
+  const [faturas, semEmbalagemTotal, ativosTotal, semFotoTotal, pedidosTotal, cupons, categorias, avaliacoes, vendas, catalogo, espera, postagem] = await Promise.all([
+    prisma.fatura.findMany({ where: { tenantId: id }, orderBy: { criadoEm: "desc" }, take: 24 }),
+    // Contagens do catálogo inteiro. O aviso de embalagem dizia "e mais 488"
+    // numa loja com 5.591 produtos sem medida, porque contava dentro de uma
+    // fatia. Número errado numa tela onde o lojista decide o que arrumar
+    // primeiro é pior que número nenhum.
+    p.contagens ? prisma.produto.count({ where: { tenantId: id, ativo: true, OR: [{ pesoKg: null }, { alturaCm: null }, { larguraCm: null }, { comprimentoCm: null }] } }) : 0,
+    p.contagens ? prisma.produto.count({ where: { tenantId: id, ativo: true } }) : 0,
+    p.contagens ? prisma.produto.count({ where: { tenantId: id, ativo: true, imagens: { isEmpty: true } } }) : 0,
+    p.contagens ? prisma.pedido.count({ where: { tenantId: id } }) : 0,
+    p.cupons ? prisma.cupom.findMany({ where: { tenantId: id }, orderBy: { criadoEm: "desc" } }) : [],
+    p.categorias ? prisma.categoria.findMany({ where: { tenantId: id }, orderBy: [{ ordem: "asc" }, { nome: "asc" }], include: { _count: { select: { produtos: true } } } }) : [],
+    p.avaliacoes ? prisma.avaliacao.findMany({ where: { tenantId: id }, orderBy: { criadoEm: "desc" }, take: 200, include: { produto: { select: { nome: true } } } }) : [],
+    p.vendas ? resumoDeVendas(id) : VAZIO_VENDAS,
+    p.catalogo ? diagnosticoDoFeed(id) : VAZIO_CATALOGO,
+    p.vendas ? filaDeEspera(id) : [],
+    p.postagem ? postagemAAcertar(id) : { etiquetas: 0, custoCentavos: 0 },
   ]);
 
   return {
     /** Contagens do catálogo inteiro, para a tela não afirmar número de uma fatia. */
-    contagens: { semEmbalagem: semEmbalagemTotal, ativos: ativosTotal, semFoto: semFotoTotal },
+    contagens: { semEmbalagem: semEmbalagemTotal, ativos: ativosTotal, semFoto: semFotoTotal, pedidos: pedidosTotal },
     loja: {
       slug: loja.slug,
       nome: loja.nome,
@@ -90,7 +120,6 @@ export async function dadosDoPainel() {
         faturas: faturas.map((f) => ({ id: f.id, centavos: f.centavos, status: f.status, pagaEm: f.pagaEm?.toISOString() ?? null, criadoEm: f.criadoEm.toISOString() })),
       },
     },
-    produtos: produtos.map((p) => ({ id: p.id, nome: p.nome, sku: p.sku, precoCentavos: p.precoCentavos, ativo: p.ativo, destaque: p.destaque, categoria: p.categoria?.nome ?? null, imagem: p.imagens[0] ?? null, disponibilidade: p.disponibilidade, estoque: p.estoque, opcoes: p.opcoes, variantes: p._count.variantes, temEmbalagem: p.alturaCm != null && p.larguraCm != null && p.comprimentoCm != null })),
     categorias: categorias.map((c) => ({
       id: c.id,
       nome: c.nome,
@@ -115,6 +144,5 @@ export async function dadosDoPainel() {
     postagem: { etiquetas: postagem.etiquetas, custoCentavos: postagem.custoCentavos, limiteCentavos: loja.limitePostagemCentavos },
     avaliacoes: avaliacoes.map((a) => ({ id: a.id, produtoNome: a.produto.nome, nome: a.nome, nota: a.nota, texto: a.texto, aprovada: a.aprovada, criadoEm: a.criadoEm.toISOString() })),
     cupons: cupons.map((c) => ({ id: c.id, codigo: c.codigo, tipo: c.tipo, valor: c.valor, minimoCentavos: c.minimoCentavos, usosMax: c.usosMax, usos: c.usos, validoAte: c.validoAte?.toISOString() ?? null, ativo: c.ativo })),
-    pedidos: pedidos.map((p) => ({ id: p.id, numero: p.numero, referencia: p.referencia, status: p.status, clienteNome: p.clienteNome, clienteEmail: p.clienteEmail, clienteTelefone: p.clienteTelefone, clienteDocumento: p.clienteDocumento, totalCentavos: p.totalCentavos, subtotalCentavos: p.subtotalCentavos, freteCentavos: p.freteCentavos, descontoCentavos: p.descontoCentavos, cupomCodigo: p.cupomCodigo, meioPagamento: p.meioPagamento, freteNome: p.freteNome, rastreio: p.rastreio, etiqueta: p.postagem ? { status: p.postagem.status, codigoObjeto: p.postagem.codigoObjeto, pdf: p.postagem.pdfEtiqueta, custoCentavos: p.postagem.custoCentavos } : null, entrega: (p.entrega as { logradouro: string; numero: string; complemento?: string | null; bairro: string; cidade: string; uf: string; cep: string } | null) ?? null, criadoEm: p.criadoEm.toISOString(), itens: p.itens.map((i) => ({ nome: i.nome, quantidade: i.quantidade, sku: i.sku, precoUnitarioCentavos: i.precoUnitarioCentavos })) })),
   };
 }

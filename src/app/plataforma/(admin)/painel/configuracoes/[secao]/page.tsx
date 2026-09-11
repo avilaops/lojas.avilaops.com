@@ -11,6 +11,7 @@ import { prisma } from "@/lib/db";
 import { lojistaAtual, sessaoDoPainel } from "@/lib/sessao";
 import { listarOperadores, permite } from "@/lib/operadores";
 import { dadosDoPainel } from "@/lib/painel-dados";
+import { urlDaLoja } from "@/lib/tenant";
 
 /** Endereço legível para o lojista, seção interna para o componente. */
 const SECAO: Record<string, SecaoPainel> = {
@@ -106,11 +107,12 @@ export default async function Pagina({ params, searchParams }: {
   // Domínio não é uma seção do PainelLoja: é tela própria, com verificação de
   // DNS, e não precisa do catálogo nem dos pedidos para desenhar.
   if (secao === "dominio") {
-    const { loja } = await dadosDoPainel();
-    return <div className="grid gap-6"><Dominio loja={{ slug: loja.slug, url: loja.url, dominioPrincipal: loja.dominioPrincipal, plano: loja.plano }} /></div>;
+    const loja = await lojistaAtual();
+    if (!loja) notFound();
+    return <div className="grid gap-6"><Dominio loja={{ slug: loja.slug, url: urlDaLoja(loja), dominioPrincipal: loja.dominioPrincipal, plano: loja.plano }} /></div>;
   }
 
   const alvo = SECAO[secao];
   if (!alvo) notFound();
-  return <PainelLoja secao={alvo} {...(await dadosDoPainel())} />;
+  return <PainelLoja secao={alvo} {...(await dadosDoPainel(alvo))} />;
 }

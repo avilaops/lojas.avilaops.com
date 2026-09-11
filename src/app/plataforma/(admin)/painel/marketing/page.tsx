@@ -10,7 +10,7 @@ export default async function Pagina() {
   return (
     <>
       <CabecalhoSecao titulo="Buscadores" descricao="Como Google e Bing enxergam a loja." />
-      <PainelLoja secao="Buscadores" {...(await dadosDoPainel())} />
+      <PainelLoja secao="Buscadores" {...(await dadosDoPainel("Buscadores"))} />
     </>
   );
 }

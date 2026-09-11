@@ -10,7 +10,7 @@ export default async function Pagina() {
   return (
     <>
       <CabecalhoSecao titulo="Inventário" descricao="Quantidade por produto e aviso de estoque baixo." />
-      <PainelLoja secao="Inventário" {...(await dadosDoPainel())} />
+      <PainelLoja secao="Inventário" {...(await dadosDoPainel("Inventário"))} />
     </>
   );
 }

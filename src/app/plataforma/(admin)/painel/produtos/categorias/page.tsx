@@ -10,7 +10,7 @@ export default async function Pagina() {
   return (
     <>
       <CabecalhoSecao titulo="Categorias" descricao="As seções que organizam a vitrine e o SEO de cada uma." />
-      <PainelLoja secao="Categorias" {...(await dadosDoPainel())} />
+      <PainelLoja secao="Categorias" {...(await dadosDoPainel("Categorias"))} />
     </>
   );
 }

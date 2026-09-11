@@ -10,7 +10,7 @@ export default async function Pagina() {
   return (
     <>
       <CabecalhoSecao titulo="Promoções" descricao="Cupons de desconto e as regras de cada um." />
-      <PainelLoja secao="Cupons" {...(await dadosDoPainel())} />
+      <PainelLoja secao="Cupons" {...(await dadosDoPainel("Cupons"))} />
     </>
   );
 }
