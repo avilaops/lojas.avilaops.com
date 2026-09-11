@@ -73,6 +73,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  /* 44px: alvo mínimo de toque. Os itens tinham 36. */
+  min-height: 44px;
   padding: 8px 10px;
   border-radius: 9px;
   color: var(--padm-suave);
@@ -83,6 +85,9 @@
 
 .pnav-item:hover { background: rgba(255, 255, 255, 0.05); color: var(--padm-texto); }
 .pnav-item-ativo { background: rgba(255, 255, 255, 0.09); color: white; font-weight: 650; }
+/* O único padrão de "ativo" do menu: fundo, branco e peso 650. Filho ativo
+   usa os mesmos dois últimos; nenhum item usa borda ou cor própria. */
+.pnav-item-botao { width: 100%; border: 0; cursor: pointer; font: inherit; text-align: left; }
 
 .pnav-filhos {
   display: flex;
@@ -107,37 +112,6 @@
   border-top: 1px solid var(--padm-linha);
 }
 
-.pnav-conta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 6px;
-  padding: 8px 10px;
-}
-
-.pnav-conta-nome {
-  flex: 1;
-  overflow: hidden;
-  color: var(--padm-texto);
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.pnav-conta-acao {
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  color: var(--padm-suave);
-  background: transparent;
-  border: 0;
-  cursor: pointer;
-}
-
-.pnav-conta-acao:hover { background: rgba(255, 255, 255, 0.07); color: white; }
 
 /* ── barra do topo e folha (celular) ───────────────────────────────────── */
 
@@ -148,8 +122,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  height: 54px;
-  padding: 0 8px;
+  height: calc(54px + env(safe-area-inset-top));
+  padding: env(safe-area-inset-top) 8px 0;
   border-bottom: 1px solid var(--padm-linha);
   background: var(--padm-fundo);
   color: var(--padm-texto);
@@ -188,12 +162,24 @@
   position: absolute;
   inset: 0 auto 0 0;
   display: flex;
-  width: min(86vw, 320px);
+  /* 84vw deixa uma tira do conteúdo à mostra em 360, 390 e 430: é o que diz
+     "isto é uma camada por cima", e é onde o dedo toca para fechar. */
+  width: min(84vw, 360px);
   flex-direction: column;
+  /* Dynamic Island em cima, barra do Safari embaixo: o menu e o "Sair" não
+     podem ficar atrás de nenhum dos dois. */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
   background: var(--padm-fundo);
   color: var(--padm-texto);
   box-shadow: 0 0 60px rgba(0, 0, 0, 0.5);
   animation: pnav-entrar 0.18s ease-out;
+  /* Só a lista rola; o topo e o rodapé ficam presos. */
+  overflow: hidden;
+}
+/* Quem já pediu menos movimento não ganha a folha deslizando. */
+@media (prefers-reduced-motion: reduce) {
+  .pnav-folha-painel { animation: none; }
 }
 
 @keyframes pnav-entrar {

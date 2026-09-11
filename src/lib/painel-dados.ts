@@ -39,7 +39,7 @@ const PRECISA: Record<SecaoPainel, Precisa> = {
   "Avaliações": { avaliacoes: true },
   "Buscadores": {},
   "Anúncios": { catalogo: true },
-  "IA (Claude)": {},
+  "IA": {},
   "Marca": {},
   "Entrega": {},
   "Recebimento": {},

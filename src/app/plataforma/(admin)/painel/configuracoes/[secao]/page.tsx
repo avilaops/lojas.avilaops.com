@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import PainelLoja, { type SecaoPainel } from "@/components/painel/PainelLoja";
 import Dominio from "@/components/painel/Dominio";
@@ -114,5 +115,11 @@ export default async function Pagina({ params, searchParams }: {
 
   const alvo = SECAO[secao];
   if (!alvo) notFound();
-  return <PainelLoja secao={alvo} {...(await dadosDoPainel(alvo))} />;
+  // Marca lê `?bloco=` no cliente (useSearchParams): precisa de Suspense para
+  // a rota não cair inteira em renderização no navegador.
+  return (
+    <Suspense fallback={null}>
+      <PainelLoja secao={alvo} {...(await dadosDoPainel(alvo))} />
+    </Suspense>
+  );
 }

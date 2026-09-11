@@ -6,7 +6,7 @@ import NavConfiguracoes from "@/components/painel/NavConfiguracoes";
 
 /** O nome de cada seção, para o topo dizer onde a pessoa está. */
 const NOME: Record<string, { titulo: string; descricao: string }> = {
-  marca: { titulo: "Marca", descricao: "Nome, logo, cores e texto de apresentação." },
+  marca: { titulo: "Marca", descricao: "Direção, identidade visual, vitrine e contato." },
   dominio: { titulo: "Domínio", descricao: "O endereço próprio da sua loja." },
   entrega: { titulo: "Entrega", descricao: "Frete por CEP, prazo de envio e retirada." },
   recebimento: { titulo: "Recebimento", descricao: "Pix, cartão e boleto." },

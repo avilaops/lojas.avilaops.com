@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { LAYOUTS, type TemaLoja } from "@/lib/tema";
-import { criarDirecaoVisual, PERSONALIDADES, SEGMENTOS, type IdentidadeLoja } from "@/lib/identidade";
-import { Campo, FONTES, Secao, brl, inputClasse, lerCsvProdutos } from "./campos";
-import EnviarImagem from "./EnviarImagem";
+import type { IdentidadeLoja } from "@/lib/identidade";
+import type { TemaLoja } from "@/lib/tema";
+import { Campo, Secao, brl, inputClasse, lerCsvProdutos } from "./campos";
+import Marca from "./Marca";
 import Cupons, { type CupomView } from "./Cupons";
 import Categorias, { type CategoriaView } from "./Categorias";
 import AvaliacoesPainel, { type AvaliacaoPainelView } from "./AvaliacoesPainel";
@@ -75,7 +75,7 @@ export const ROTA_DA_SECAO = {
   "Avaliações": "/painel/avaliacoes",
   "Buscadores": "/painel/marketing",
   "Anúncios": "/painel/marketing/anuncios",
-  "IA (Claude)": "/painel/ia",
+  "IA": "/painel/ia",
   "Marca": "/painel/configuracoes/marca",
   "Entrega": "/painel/configuracoes/entrega",
   "Recebimento": "/painel/configuracoes/recebimento",
@@ -114,33 +114,17 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
   // ── estado dos formulários ──
   const [novo, setNovo] = useState({ nome: "", preco: "", precoDe: "", categoria: "", sku: "", descricaoCurta: "", imagem: "", destaque: false, pesoKg: "", estoque: "" });
   const [csv, setCsv] = useState<{ nome: string; produtos: Array<Record<string, unknown>>; erros: string[] } | null>(null);
-  const [tema, setTema] = useState({ corPrimaria: loja.tema.corPrimaria, modo: loja.tema.modo, fonte: loja.tema.fonte, raio: loja.tema.raio, layout: loja.tema.layout, categoriaSemImagem: loja.tema.categoriaSemImagem });
-  const [segmento, setSegmento] = useState(loja.segmento);
-  const [identidade, setIdentidade] = useState(loja.identidade);
   const [limiteEstoque, setLimiteEstoque] = useState(String(loja.estoqueBaixoEm));
   const [empresa, setEmpresa] = useState({ razaoSocial: loja.razaoSocial ?? "", cnpj: loja.cnpj ?? "" });
-  const [contato, setContato] = useState({ avisoTopo: loja.avisoTopo ?? "", slogan: loja.slogan ?? "", whatsapp: loja.whatsapp ?? "", emailContato: loja.emailContato ?? "", logoUrl: loja.logoUrl ?? "", bannerUrl: loja.bannerUrl ?? "", dominioPrincipal: loja.dominioPrincipal ?? "" });
   const [entrega, setEntrega] = useState({ retiradaNaLoja: loja.retiradaNaLoja, despachoDiasUteis: loja.despachoDiasUteis, freteGratisAcima: loja.freteGratisAcima != null ? String(loja.freteGratisAcima / 100).replace(".", ",") : "", tabela: loja.tabelaFrete.map((f) => ({ ufs: f.ufs.join(","), preco: String(f.preco / 100).replace(".", ","), prazo: String(f.prazoDiasUteis), nome: f.nome ?? "" })) });
   const [mp, setMp] = useState({ publicKey: loja.mpPublicKey ?? "", accessToken: "", webhookSecret: "" });
   // Diagnóstico do recebimento: credencial errada só dava erro na primeira
   // venda, com o comprador esperando. Aqui o lojista confere antes.
   const [diagnostico, setDiagnostico] = useState<{ ok: boolean; mensagem: string; conta?: { apelido: string | null; email: string | null }; avisos: string[] } | null>(null);
   const [senha, setSenha] = useState({ atual: "", nova: "" });
-  const [jsonIdentidade, setJsonIdentidade] = useState("");
 
   const centavos = (v: string) => Math.round(Number.parseFloat(v.replace(/[^\d,.-]/g, "").replace(",", ".")) * 100);
 
-  function recriarMarca() {
-    const nova = criarDirecaoVisual({
-      segmento: identidade.segmento, publico: identidade.publico, diferencial: identidade.diferencial,
-      personalidade: identidade.personalidade, tomDeVoz: identidade.tomDeVoz,
-      objetivo: identidade.objetivo, estiloFotografico: identidade.estiloFotografico,
-    }, loja.nome);
-    setIdentidade(nova.identidade);
-    setTema({ corPrimaria: nova.tema.corPrimaria, modo: nova.tema.modo, fonte: nova.tema.fonte, raio: nova.tema.raio, layout: nova.tema.layout, categoriaSemImagem: nova.tema.categoriaSemImagem });
-    setContato((c) => ({ ...c, slogan: c.slogan || nova.identidade.assinatura }));
-    setOk("Nova direção gerada. Revise e salve para publicar.");
-  }
 
   function salvarProduto() {
     const preco = centavos(novo.preco);
@@ -342,7 +326,7 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
 
       {aba === "Anúncios" && <Anuncios pixels={loja.pixels} catalogo={catalogo} feedUrl={`${loja.url}/feed/merchant.xml`} chamar={chamar} ocupado={ocupado} />}
 
-      {aba === "IA (Claude)" && <McpPainel lojaPlano={loja.plano} lojaSlug={loja.slug} aoIrParaAssinatura={() => irPara("Assinatura")} />}
+      {aba === "IA" && <McpPainel lojaPlano={loja.plano} lojaSlug={loja.slug} aoIrParaAssinatura={() => irPara("Assinatura")} />}
 
       {aba === "Pedidos" && (
         <>
@@ -365,95 +349,7 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
         </>
       )}
 
-      {aba === "Marca" && (
-        <Secao titulo="Direção de marca" descricao="A essência orienta a identidade visual. Você pode regenerar a direção e ainda ajustar os detalhes antes de publicar.">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Campo label="Segmento"><select className={inputClasse} value={identidade.segmento} onChange={(e) => setIdentidade({ ...identidade, segmento: e.target.value as IdentidadeLoja["segmento"] })}>{SEGMENTOS.map(([v,n]) => <option value={v} key={v}>{n}</option>)}</select></Campo>
-            <Campo label="Tom de voz"><select className={inputClasse} value={identidade.tomDeVoz} onChange={(e) => setIdentidade({ ...identidade, tomDeVoz: e.target.value as IdentidadeLoja["tomDeVoz"] })}><option value="direto">Direto</option><option value="proximo">Próximo</option><option value="especialista">Especialista</option><option value="inspirador">Inspirador</option></select></Campo>
-          </div>
-          <Campo label="Público"><textarea className={`${inputClasse} h-20 py-2`} value={identidade.publico} onChange={(e) => setIdentidade({ ...identidade, publico: e.target.value })} /></Campo>
-          <Campo label="Diferencial"><textarea className={`${inputClasse} h-20 py-2`} value={identidade.diferencial} onChange={(e) => setIdentidade({ ...identidade, diferencial: e.target.value })} /></Campo>
-          <Campo label="Personalidade" ajuda="A primeira opção selecionada conduz a direção visual.">
-            <div className="brand-choice-grid three">{PERSONALIDADES.map(([v,n]) => <button type="button" key={v} className={identidade.personalidade.includes(v) ? "selecionado" : ""} onClick={() => setIdentidade({ ...identidade, personalidade: identidade.personalidade.includes(v) ? (identidade.personalidade.length > 1 ? identidade.personalidade.filter((x) => x !== v) : identidade.personalidade) : [...identidade.personalidade, v].slice(-3) })}><strong>{n}</strong></button>)}</div>
-          </Campo>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Campo label="Fotografia"><select className={inputClasse} value={identidade.estiloFotografico} onChange={(e) => setIdentidade({ ...identidade, estiloFotografico: e.target.value as IdentidadeLoja["estiloFotografico"] })}><option value="produto">Produto</option><option value="editorial">Editorial</option><option value="lifestyle">Em uso</option><option value="natural">Natural</option><option value="tecnico">Técnica</option></select></Campo>
-            <Campo label="Objetivo"><select className={inputClasse} value={identidade.objetivo} onChange={(e) => setIdentidade({ ...identidade, objetivo: e.target.value as IdentidadeLoja["objetivo"] })}><option value="vender">Vender</option><option value="posicionar">Posicionar</option><option value="captar">Captar contatos</option><option value="lancar">Lançar novidade</option></select></Campo>
-          </div>
-          <button type="button" className="btn-secundario w-fit" onClick={recriarMarca}>Gerar nova direção</button>
-          <div className="painel-brand-brief">
-            <div><small>Assinatura sugerida</small><strong>{identidade.assinatura || "Preencha público e diferencial para gerar."}</strong></div>
-            <div><small>Direção fotográfica</small><strong>{identidade.direcaoFotografica || "Escolha um estilo e gere a direção."}</strong></div>
-            <div><small>Paleta</small><p><i style={{ background: tema.corPrimaria }} /><i style={{ background: identidade.corApoio }} /></p></div>
-          </div>
-          <hr className="border-border" />
-          <h3 className="text-sm font-semibold">Refinamento visual</h3>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Campo label="Cor principal"><div className="flex gap-2"><input type="color" value={tema.corPrimaria} onChange={(e) => setTema({ ...tema, corPrimaria: e.target.value })} className="h-11 w-14 rounded-lg border border-border" /><input className={inputClasse} value={tema.corPrimaria} onChange={(e) => setTema({ ...tema, corPrimaria: e.target.value })} /></div></Campo>
-            <Campo label="Modo"><select className={inputClasse} value={tema.modo} onChange={(e) => setTema({ ...tema, modo: e.target.value as "claro" | "escuro" })}><option value="claro">Claro</option><option value="escuro">Escuro</option></select></Campo>
-            <Campo label="Fonte"><select className={inputClasse} value={tema.fonte} onChange={(e) => setTema({ ...tema, fonte: e.target.value as typeof tema.fonte })}>{FONTES.map((x) => <option key={x.valor} value={x.valor}>{x.rotulo}</option>)}</select></Campo>
-            <Campo label="Cantos"><select className={inputClasse} value={tema.raio} onChange={(e) => setTema({ ...tema, raio: e.target.value as typeof tema.raio })}><option value="reto">Retos</option><option value="suave">Suaves</option><option value="redondo">Redondos</option></select></Campo>
-            <Campo label="Categoria sem foto" ajuda="Vale para os atalhos e departamentos da página inicial. No menu e no catálogo todas aparecem.">
-              <select className={inputClasse} value={tema.categoriaSemImagem} onChange={(e) => setTema({ ...tema, categoriaSemImagem: e.target.value as typeof tema.categoriaSemImagem })}>
-                <option value="ocultar">Fica fora da página inicial</option>
-                <option value="icone">Entra com um ícone</option>
-              </select>
-            </Campo>
-          </div>
-          <Campo label="Ramo da loja" ajuda="Peças e acessórios para motos liga a garagem: o cliente escolhe a moto e a loja mostra só o que serve. A compatibilidade é cadastrada em cada produto.">
-            <select className={inputClasse} value={segmento} onChange={(e) => setSegmento(e.target.value)}>
-              <option value="geral">Loja geral</option>
-              <option value="motopecas">Peças e acessórios para motos</option>
-            </select>
-          </Campo>
-          <Campo label="Layout da página inicial" ajuda="Composições prontas dos mesmos blocos. Troque e veja na loja na hora.">
-            <div className="grid gap-2 sm:grid-cols-2">
-              {LAYOUTS.map((l) => (
-                <button key={l.valor} type="button" onClick={() => setTema({ ...tema, layout: l.valor })} className={`rounded-xl border p-3 text-left text-sm ${tema.layout === l.valor ? "border-primary" : "border-border"}`}>
-                  <span className="block font-semibold">{l.rotulo}</span>
-                  <span className="text-xs text-muted-foreground">{l.descricao}</span>
-                </button>
-              ))}
-            </div>
-          </Campo>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Campo label="Slogan"><input className={inputClasse} value={contato.slogan} onChange={(e) => setContato({ ...contato, slogan: e.target.value })} /></Campo>
-            <Campo label="Banner da página inicial" ajuda="Imagem larga (ex.: 1600×600). Fica atrás do slogan.">
-              <div className="flex items-center gap-2">
-                <input className={inputClasse} value={contato.bannerUrl} onChange={(e) => setContato({ ...contato, bannerUrl: e.target.value })} placeholder="URL ou envie um arquivo" />
-                <EnviarImagem aoEnviar={(url) => setContato((c) => ({ ...c, bannerUrl: url }))} rotulo="Enviar banner" />
-              </div>
-            </Campo>
-            <Campo label="Logo">
-              <div className="flex items-center gap-2">
-                <input className={inputClasse} value={contato.logoUrl} onChange={(e) => setContato({ ...contato, logoUrl: e.target.value })} placeholder="URL ou envie um arquivo" />
-                <EnviarImagem aoEnviar={(url) => setContato((c) => ({ ...c, logoUrl: url }))} rotulo="Enviar logo" />
-              </div>
-            </Campo>
-            <Campo label="Barra de avisos" ajuda="Uma linha acima do cabeçalho, em toda a loja. Deixe vazio para não mostrar."><input className={inputClasse} value={contato.avisoTopo} onChange={(e) => setContato({ ...contato, avisoTopo: e.target.value })} placeholder="Frete grátis acima de R$ 199 · entrega em todo o Brasil" /></Campo>
-            <Campo label="WhatsApp"><input className={inputClasse} value={contato.whatsapp} onChange={(e) => setContato({ ...contato, whatsapp: e.target.value })} /></Campo>
-            <Campo label="E-mail de contato"><input className={inputClasse} value={contato.emailContato} onChange={(e) => setContato({ ...contato, emailContato: e.target.value })} /></Campo>
-            <Campo label="Domínio próprio" ajuda="Depois de salvar, clique em “Configurar DNS e e-mail”."><input className={inputClasse} value={contato.dominioPrincipal} onChange={(e) => setContato({ ...contato, dominioPrincipal: e.target.value })} placeholder="sualoja.com.br" /></Campo>
-          </div>
-          <Campo label="Colar identidade (JSON)" ajuda="Para quem monta a identidade fora daqui (designer, ChatGPT): cole o JSON do docs/IDENTIDADE-VISUAL.md. Só as chaves presentes mudam.">
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <textarea className={`${inputClasse} h-24 py-2 font-mono text-xs`} value={jsonIdentidade} onChange={(e) => setJsonIdentidade(e.target.value)} placeholder='{"tema":{"corPrimaria":"#c62828","layout":"editorial"},"slogan":"…"}' />
-              <button className="btn-secundario" disabled={ocupado || !jsonIdentidade.trim()} onClick={() => {
-                let corpo: unknown;
-                try { corpo = JSON.parse(jsonIdentidade); } catch { setErro("JSON inválido."); return; }
-                chamar("/api/painel/loja", "PATCH", corpo, "Identidade aplicada.").then((d) => { if (d) setJsonIdentidade(""); });
-              }}>Aplicar</button>
-            </div>
-          </Campo>
-          <div className="flex flex-wrap gap-2">
-            <button className="btn-primario" disabled={ocupado} onClick={() => chamar("/api/painel/loja", "PATCH", { tema, identidade, segmento, ...Object.fromEntries(Object.entries(contato).filter(([, v]) => v !== "")), avisoTopo: contato.avisoTopo.trim() || null, bannerUrl: contato.bannerUrl || null }, "Marca publicada.")}>Publicar identidade</button>
-            <button className="btn-secundario" disabled={ocupado} onClick={() => chamar("/api/painel/loja", "POST", undefined, "Configuração reexecutada.")}>Configurar DNS e e-mail</button>
-          </div>
-          {Object.keys(loja.provisionamento).length > 0 && (
-            <ul className="text-xs text-muted-foreground">{Object.entries(loja.provisionamento).map(([k, v]) => <li key={k}><strong className="uppercase">{k}</strong>: {v}</li>)}</ul>
-          )}
-        </Secao>
-      )}
+      {aba === "Marca" && <Marca loja={loja} chamar={chamar} ocupado={ocupado} />}
 
       {aba === "Entrega" && (
         <Secao titulo="Entrega e frete" descricao="Sem tabela, o cliente vê apenas retirada na loja (ou frete a combinar).">

@@ -6,6 +6,14 @@ import NavPainel from "@/components/painel/NavPainel";
 import BuscaPainel from "@/components/painel/BuscaPainel";
 import "../plataforma.css";
 import "./painel.css";
+import type { Viewport } from "next";
+
+/**
+ * `viewport-fit=cover` é o que faz `env(safe-area-inset-*)` valer algo no
+ * iPhone: sem ele os insets são zero e a barra do topo encosta na Dynamic
+ * Island. Só no painel, que é onde há chrome escuro colado nas bordas.
+ */
+export const viewport: Viewport = { width: "device-width", initialScale: 1, viewportFit: "cover" };
 
 /**
  * O painel tem chrome próprio.

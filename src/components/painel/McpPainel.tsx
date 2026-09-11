@@ -99,7 +99,7 @@ export default function McpPainel({
   if (!ePlanoPro) {
     return (
       <Secao
-        titulo="Conector IA & Claude (MCP)"
+        titulo="Conector de IA (MCP)"
         descricao="Gerencie seu e-commerce conversando em linguagem natural com o Claude, ChatGPT ou bots de WhatsApp."
       >
         <div className="relative overflow-hidden rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-card to-background p-6 sm:p-8">
@@ -169,7 +169,7 @@ export default function McpPainel({
 
   return (
     <Secao
-      titulo="Conector IA & Claude (MCP)"
+      titulo="Conector de IA (MCP)"
       descricao="Sua loja possui acesso total ao protocolo MCP. Conecte o Claude ou seus agentes através da sua Chave de API exclusiva."
     >
       {erro && <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-4 text-xs text-red-600 dark:text-red-400">{erro}</div>}

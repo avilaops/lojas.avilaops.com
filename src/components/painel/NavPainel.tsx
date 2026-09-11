@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Bot, ExternalLink, LayoutDashboard, LogOut, Megaphone, Menu, Package, Settings,
   Search, ShoppingCart, Star, Tags, Ticket, Users, Warehouse, X,
@@ -61,7 +61,7 @@ export const SECOES: ItemNav[] = [
       { rotulo: "Anúncios", href: "/painel/marketing/anuncios" },
     ],
   },
-  { rotulo: "IA (Claude)", href: "/painel/ia", icone: "ia" },
+  { rotulo: "IA", href: "/painel/ia", icone: "ia" },
 ];
 
 /** Ativo por prefixo, para a rota de detalhe acender a seção que a contém. */
@@ -104,22 +104,27 @@ function Lista({ pathname, aoNavegar, aSeparar }: { pathname: string; aoNavegar?
   );
 }
 
-function Rodape({ pathname, aoNavegar, nome, urlLoja }: { pathname: string; aoNavegar?: () => void; nome: string; urlLoja: string }) {
+function Rodape({ pathname, aoNavegar, urlLoja }: { pathname: string; aoNavegar?: () => void; urlLoja: string }) {
   const emConfig = ativo(pathname, "/painel/configuracoes");
+  // O nome da loja fica só no topo. Aqui embaixo ficam as três ações que não
+  // são seção: configurar, abrir a loja e sair, todas com texto. "Abrir a
+  // loja" era um ícone de 14px que só se descobria tentando.
   return (
     <div className="pnav-rodape">
-      <Link href="/painel/configuracoes/marca" onClick={aoNavegar} className={`pnav-item${emConfig ? " pnav-item-ativo" : ""}`}>
+      <Link href="/painel/configuracoes" onClick={aoNavegar} className={`pnav-item${emConfig ? " pnav-item-ativo" : ""}`} aria-current={emConfig ? "page" : undefined}>
         <Settings size={16} aria-hidden="true" />
         <span>Configurações</span>
       </Link>
-      <div className="pnav-conta">
-        <span className="pnav-avatar" aria-hidden="true">{nome.trim().charAt(0).toUpperCase() || "L"}</span>
-        <span className="pnav-conta-nome">{nome}</span>
-        <a href={urlLoja} target="_blank" rel="noopener" title="Abrir a loja" className="pnav-conta-acao"><ExternalLink size={14} /></a>
-        <form action="/api/painel/sair" method="post">
-          <button title="Sair" aria-label="Sair" className="pnav-conta-acao"><LogOut size={14} /></button>
-        </form>
-      </div>
+      <a href={urlLoja} target="_blank" rel="noopener" className="pnav-item">
+        <ExternalLink size={16} aria-hidden="true" />
+        <span>Ver loja</span>
+      </a>
+      <form action="/api/painel/sair" method="post">
+        <button className="pnav-item pnav-item-botao">
+          <LogOut size={16} aria-hidden="true" />
+          <span>Sair</span>
+        </button>
+      </form>
     </div>
   );
 }
@@ -127,6 +132,23 @@ function Rodape({ pathname, aoNavegar, nome, urlLoja }: { pathname: string; aoNa
 export default function NavPainel({ nome, urlLoja, aSeparar = 0 }: { nome: string; urlLoja: string; aSeparar?: number }) {
   const pathname = usePathname();
   const [aberto, setAberto] = useState(false);
+  const botaoMenu = useRef<HTMLButtonElement>(null);
+  const primeiroItem = useRef<HTMLDivElement>(null);
+
+  // Folha aberta: o fundo não rola (senão o dedo que arrasta o menu arrasta a
+  // página atrás), o foco entra na folha e, ao fechar, volta para o botão que
+  // a abriu, que é o que um leitor de tela espera de um diálogo.
+  useEffect(() => {
+    if (!aberto) return;
+    const anterior = document.body.style.overflow;
+    const botao = botaoMenu.current;
+    document.body.style.overflow = "hidden";
+    primeiroItem.current?.querySelector<HTMLElement>("a, button")?.focus();
+    return () => {
+      document.body.style.overflow = anterior;
+      botao?.focus();
+    };
+  }, [aberto]);
 
   // Quem fecha a folha é o próprio link (aoNavegar), não um efeito olhando a
   // rota: fechar dentro de useEffect obriga a uma segunda renderização só para
@@ -155,11 +177,11 @@ export default function NavPainel({ nome, urlLoja, aSeparar = 0 }: { nome: strin
           <kbd>⌘K</kbd>
         </button>
         <Lista pathname={pathname} aSeparar={aSeparar} />
-        <Rodape pathname={pathname} nome={nome} urlLoja={urlLoja} />
+        <Rodape pathname={pathname} urlLoja={urlLoja} />
       </aside>
 
       <header className="pnav-barra">
-        <button onClick={() => setAberto(true)} aria-label="Abrir menu" className="pnav-botao"><Menu size={20} /></button>
+        <button ref={botaoMenu} onClick={() => setAberto(true)} aria-label="Abrir menu" aria-expanded={aberto} aria-controls="pnav-folha" className="pnav-botao"><Menu size={20} /></button>
         <strong>{secaoAtual}</strong>
         {aSeparar > 0 && pathname !== "/painel/pedidos" && (
           <Link href="/painel/pedidos" className="pnav-selo pnav-selo-barra" title={`${aSeparar} pedido(s) esperando separação`}>{aSeparar}</Link>
@@ -169,7 +191,7 @@ export default function NavPainel({ nome, urlLoja, aSeparar = 0 }: { nome: strin
       </header>
 
       {aberto && (
-        <div className="pnav-folha" role="dialog" aria-modal="true" aria-label="Menu do painel">
+        <div id="pnav-folha" className="pnav-folha" role="dialog" aria-modal="true" aria-label="Menu do painel">
           <button className="pnav-folha-fundo" aria-label="Fechar menu" onClick={() => setAberto(false)} />
           <div className="pnav-folha-painel">
             <div className="pnav-marca">
@@ -177,8 +199,10 @@ export default function NavPainel({ nome, urlLoja, aSeparar = 0 }: { nome: strin
               <span className="pnav-marca-nome">{nome}</span>
               <button onClick={() => setAberto(false)} aria-label="Fechar menu" className="pnav-botao pnav-fechar"><X size={18} /></button>
             </div>
-            <Lista pathname={pathname} aoNavegar={() => setAberto(false)} aSeparar={aSeparar} />
-            <Rodape pathname={pathname} nome={nome} urlLoja={urlLoja} aoNavegar={() => setAberto(false)} />
+            <div ref={primeiroItem} className="contents">
+              <Lista pathname={pathname} aoNavegar={() => setAberto(false)} aSeparar={aSeparar} />
+            </div>
+            <Rodape pathname={pathname} urlLoja={urlLoja} aoNavegar={() => setAberto(false)} />
           </div>
         </div>
       )}
