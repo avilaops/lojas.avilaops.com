@@ -334,16 +334,32 @@ infraestrutura nova por pelo menos um ano, que é a orientação do Google.
 
 ## Deploy preparado, não executado
 
-Fluxo existente: `deploy/empacotar.sh` na máquina local gera o
+Fluxo existente: `scripts/empacotar.sh` na máquina local gera o
 `standalone.tgz`, que sobe para `/opt/lojas/` e é aplicado por
 `deploy/deploy.sh`.
 
-- **Empacotar de um worktree limpo no commit desta rodada**, nunca da árvore de
-  trabalho: ela tem 16 arquivos em andamento de outra sessão.
+**Pacote pronto, esperando autorização:**
+`D:/avilaops.com/lojas-rodada-brilhax/deploy-pendente/lojas-standalone-ae1f8b0.tgz`
+(160.169.652 bytes).
+
+- Montado num worktree limpo em `ae1f8b0` (`D:/avilaops.com/lojas-rodada-brilhax`),
+  não na árvore de trabalho, que tem 16 arquivos em andamento de outra sessão.
+- `gzip -t` íntegro; 3 CSS em `.next/static`, `public/`, `prisma/schema.prisma`
+  e `server.js` presentes.
+- Conferido **dentro do `.tgz`**, no código compilado: rota
+  `api/admin/pedidos/verificar`, `Falha temporária; reenviar` (500),
+  `divergencia:` (valor) e `"recusado"===a&&m&&` (recusa uma vez só).
+- `appDir`, `relativeAppDir`, `outputFileTracingRoot` e `turbopack.root`
+  idênticos aos do pacote em produção. O nome do worktree aparece nos nomes de
+  chunk, o mesmo padrão do pacote em produção (`lojas-build_…`, 151 arquivos).
 - `packages/checkout` (a correção do 500 e do `data.id`) **não está em git
   nenhum**; entra no pacote porque o build o compila de `file:../packages/checkout`.
   Se o disco se perder, a correção se perde.
 - Depois do deploy: agendar `POST /api/admin/pedidos/verificar` no n8n.
+
+A conferência final do `empacotar.sh` usava `tar tzf` sem `--force-local`: com
+saída em `C:/…`, o tar do Git Bash toma "C:" por servidor remoto e a checagem
+falha depois de o pacote já estar gravado. Corrigido junto com este documento.
 
 ## Decisões pendentes
 

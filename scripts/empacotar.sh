@@ -69,7 +69,9 @@ echo "==> conferindo o pacote"
 # `tar tzf | grep -q` sob `set -o pipefail` faz o tar morrer de SIGPIPE quando o
 # grep fecha o pipe, e a conferência acusa ausente o que está presente.
 lista=$(mktemp)
-tar tzf "$SAIDA" > "$lista"
+# --force-local: com saída em "C:/…" o tar do Git Bash toma "C:" por servidor
+# remoto, a listagem falha e o pacote bom é dado por incompleto (11/09/2026).
+tar --force-local -tzf "$SAIDA" > "$lista"
 
 falta=0
 tem() { grep -q "$1" "$lista" || { echo "  !! $2" >&2; falta=1; }; }
