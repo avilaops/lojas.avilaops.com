@@ -146,7 +146,11 @@ export async function atualizarStatusPagamento(
       clienteNome: pedido.clienteNome, clienteEmail: pedido.clienteEmail, clienteTelefone: pedido.clienteTelefone,
       itens, itensTexto: itensParaTexto(itens), ...lojista(t),
     });
-  } else if (status === "recusado") {
+  } else if (status === "recusado" && avancaDeAguardando) {
+    // Só quando a recusa MUDA o pedido. Sem a condição, cada reenvio da mesma
+    // notificação (o Mercado Pago reenvia até receber 2xx) mandava de novo
+    // "pagamento recusado" ao cliente, e uma recusa atrasada chegando depois do
+    // pagamento aprovado avisava recusa de um pedido já pago.
     await emitir({ tipo: "pedido.recusado", slug: t.slug, referencia: pedido.referencia, clienteNome: pedido.clienteNome, clienteEmail: pedido.clienteEmail, clienteTelefone: pedido.clienteTelefone, ...lojista(t) });
   }
 }

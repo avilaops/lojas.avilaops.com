@@ -30,12 +30,12 @@ const MAPA: Record<string, string | undefined> = {
 function decidir(
   pedido: { status: string; totalCentavos: number },
   gateway: { status: string; valorEmCentavos?: number },
-): { novoStatus?: string; baixaEstoque: boolean; divergencia: boolean } {
+): { novoStatus?: string; baixaEstoque: boolean; divergencia: boolean; avisaRecusa: boolean } {
   const novo = MAPA[gateway.status];
   const avancaDeAguardando = pedido.status === "AGUARDANDO_PAGAMENTO";
 
   if (novo === "PAGO" && gateway.valorEmCentavos != null && gateway.valorEmCentavos !== pedido.totalCentavos) {
-    return { baixaEstoque: false, divergencia: true };
+    return { baixaEstoque: false, divergencia: true, avisaRecusa: false };
   }
 
   const aplica = novo && (avancaDeAguardando || novo === "ESTORNADO");
@@ -43,6 +43,9 @@ function decidir(
     novoStatus: aplica ? novo : undefined,
     baixaEstoque: novo === "PAGO" && avancaDeAguardando,
     divergencia: false,
+    // Cópia da condição corrigida em 11/09: só avisa recusa quando ela muda o
+    // pedido. Antes era só `status === "recusado"`.
+    avisaRecusa: gateway.status === "recusado" && avancaDeAguardando,
   };
 }
 
@@ -113,4 +116,15 @@ test("sem valor informado, a conferência não bloqueia (compatibilidade)", () =
   const r = decidir(AGUARDANDO, { status: "aprovado" });
   assert.equal(r.novoStatus, "PAGO");
   assert.equal(r.divergencia, false);
+});
+
+test("recusa avisa o cliente uma vez só, na primeira notificação", () => {
+  assert.equal(decidir(AGUARDANDO, { status: "recusado" }).avisaRecusa, true);
+  const jaCancelado = { status: "CANCELADO", totalCentavos: 4200 };
+  assert.equal(decidir(jaCancelado, { status: "recusado" }).avisaRecusa, false, "reenvio do MP não reenvia o e-mail");
+});
+
+test("recusa atrasada não avisa recusa de pedido já pago", () => {
+  const pago = { status: "PAGO", totalCentavos: 4200 };
+  assert.equal(decidir(pago, { status: "recusado" }).avisaRecusa, false);
 });

@@ -82,6 +82,7 @@ Todos os POST abaixo vão com `Authorization: Bearer $LOJAS_ADMIN_TOKEN`.
 |---|---|---|
 | a cada hora | `POST /api/admin/carrinhos/verificar` | marca carrinho parado há 45 min e emite `carrinho.abandonado` |
 | a cada hora | `POST /api/admin/estoque/avisos` | avisa quem esperava produto que voltou |
+| a cada hora | `POST /api/admin/pedidos/verificar` | confere no gateway os pedidos aguardando pagamento (Pix, boleto) dos últimos 7 dias. Rede de segurança do webhook; **ainda não agendado** (11/09/2026) |
 | diário, 3h | `POST /api/admin/seo/categorias` | gera e publica SEO pendente em lote, sem IA no acesso público |
 | diário | `POST /api/admin/cobranca/verificar` | suspende quem passou da tolerância |
 | segunda 7h | `POST /api/admin/relatorios/semanal` | emite `loja.relatorio-semanal` por loja com movimento |

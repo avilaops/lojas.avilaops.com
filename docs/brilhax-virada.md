@@ -1,283 +1,366 @@
 # Brilhax: checklist da virada de domínio
 
 Complementa `migracao-brilhax.md`, que tem o plano. Este é o documento da
-troca. Revisado em 10/09/2026, segunda auditoria.
+troca. Revisado em 11/09/2026, terceira auditoria.
 
-**Nada aqui foi executado.** `brilhax.com` segue no ar, intocado; os redirects
-estão prontos e **não aplicados**; nenhum pagamento real foi feito.
+**Nada aqui foi executado.** `brilhax.com` segue no ar, intocado. Os redirects
+estão prontos e **não aplicados**. Nenhum pagamento real foi feito. As
+correções desta rodada estão commitadas e **não publicadas**.
 
 > **A virada está BLOQUEADA.** Ver "Bloqueadores" no fim.
 
-## O que a segunda auditoria mudou
+## Estado verificado em 11/09
 
-Três conclusões da primeira rodada estavam erradas e foram corrigidas.
+| | Evidência |
+|---|---|
+| Repositório | `main` sincronizado com `origin/main`; `categoriaSemImagem` preservado em `tema.ts` |
+| Commits 435661b, 6000cd3, bc15b22 | existem; depois deles vieram 40cd8ee (meu) e ab9f83a (outra sessão) |
+| Versão publicada | standalone de 10/09 22:49, depois de 40cd8ee |
+| 40cd8ee está no ar? | **sim**: `vedashow.lojas.avilaops.com` devolve `noindex, follow`, `vedashow.com.br` segue indexável, e `divergencia:` e `valorEmCentavos` estão em `.next/server/chunks/lojas-build_18z0akv._.js` |
+| WIP de outra sessão | 16 arquivos do painel alterados e não commitados. **Não entram no meu commit nem no pacote de deploy** |
 
-**O mapa de redirects tinha 117 regras e devia ter 12.** O plano mantém
-`brilhax.com` como endereço definitivo: a plataforma passa a atender o mesmo
-domínio. Isso é troca de infraestrutura sob a mesma URL, não mudança de
-endereço. `brilhax.com/produtos/glazy-500ml/` e `/produtos/glazy-500ml` são o
-mesmo endereço menos a barra, e o Next já devolve 308. As 105 regras a mais
-apontavam para o subdomínio de homologação, o que **moveria o site para lá**.
+## O que esta rodada mudou
 
-**"145 produtos vieram sem preço" era 224 − 79, não uma consulta.** São 142 sem
-preço e 3 que têm preço e vieram como rascunho do Medusa.
+### Erros meus, de rodadas anteriores
 
-**"79 ativos com preço e imagem" também estava errado.** São 79 com preço, dos
-quais 62 com imagem e 17 sem. Os 17 são exatamente os que ficam fora do feed.
+**O teste da falha temporária afirmava o comportamento errado.** Eu tinha
+escrito que o webhook devolver 200 quando a consulta ao gateway falha era o
+certo. Não é. A documentação do Mercado Pago: o integrador responde 200 ou 201
+em até 22 segundos; sem isso, o MP reenvia a cada 15 minutos. Com 200 ele dá a
+notificação por entregue e nunca mais tenta. E nada mais na plataforma consulta
+pagamento de pedido. Pedido pago ficaria aguardando para sempre.
+
+**Documentei errado o boleto.** Escrevi que "o produto sai do estoque sem o
+dinheiro ter entrado". É o contrário: o estoque só baixa quando o pedido vira
+PAGO. Ver "Boleto".
+
+**Escrevi que o webhook de produção recebeu o teste do painel em 09/09.** Aquele
+evento foi para o Medusa. A plataforma nunca recebeu evento real.
+
+### Defeitos anteriores a esta migração
+
+Todos existiam antes do meu trabalho; a evidência é o código de `main`.
+
+| Defeito | Efeito | Correção |
+|---|---|---|
+| `pedido.recusado` emitido em todo webhook de recusa | reenvio do MP repetia o e-mail de recusa; recusa atrasada avisava recusa de pedido já pago | só emite quando o pedido sai de AGUARDANDO_PAGAMENTO |
+| webhook respondia 200 quando a consulta falhava | pagamento aprovado se perdia sem reenvio | responde 500; reprocessar é seguro |
+| `data.id` lido do corpo antes da query | a documentação monta o manifesto com o da query | query primeiro; query e corpo divergentes, recusa |
+| nenhuma rotina conferia pedido aguardando pagamento | Pix e boleto dependiam 100% do webhook | `POST /api/admin/pedidos/verificar` |
+| meta description de produto só com `descricaoCurta` | **nenhum** produto da Brilhax tinha description; o site antigo tem em todos | cai para a descrição completa, resumida |
+| `metadataDeListagem` gravava `description: undefined` | `/produtos` e a busca saíam sem description | só grava quando existe |
+| JSON-LD com a descrição crua | HTML literal no rich result | texto puro |
+
+Todas são **mudanças compartilhadas por todas as lojas**, com regressão:
+`pedidos-webhook.test.ts` (12 casos), `mercadopago-webhook.test.ts` (13) e
+`seo-texto.test.ts` (9).
 
 ## Catálogo reconciliado
 
-Tabela por produto em `deploy/brilhax/catalogo-reconciliado.csv` (224 linhas,
-com id, slug, status de origem e atual, preço, estoque, imagem, feed, motivo de
-exclusão e presença no sitemap antigo).
+Tabela por produto em `deploy/brilhax/catalogo-reconciliado.csv` (224 linhas).
+Os números que circularam nos relatórios, explicados:
 
-| Conjunto | Quantos | Como se explica |
-|---|---|---|
-| Importados | 224 | 225 do Medusa menos o produto "teste" |
-| Ativos | 79 | têm preço |
-| … com imagem | 62 | **entram no feed** |
-| … sem imagem | 17 | fora do feed: `image_link` é obrigatório no Merchant |
-| Inativos | 145 | 142 sem preço + 3 rascunhos com preço |
-| No sitemap antigo | 100 | 79 hoje ativos + 21 hoje inativos |
+| Número | O que é, conferido no banco |
+|---|---|
+| 224 importados | 225 do Medusa menos "teste" |
+| 79 ativos | têm preço |
+| 62 no feed | os 79 ativos **com imagem** |
+| 17 sem imagem | os 79 ativos **sem imagem**: fora do feed porque `image_link` é obrigatório |
+| 145 inativos | 142 sem preço + 3 rascunhos do Medusa com preço. **Não é 224 − 79 por suposição**: é consulta |
+| "21 publicados sem preço" | os 21 produtos do sitemap antigo hoje inativos. **Todos sem preço; 20 com imagem** |
+| "22 em redirects" | esses 21 mais "teste": as URLs de produto do sitemap antigo que dariam 404 |
+| "19 indexados" | **não reproduzível e sem fonte.** Descartado |
 
-**Indexação pelo Google: NÃO VERIFICADO.** A conta de serviço só alcança
-`sorroche.beauty`, `saudepet.app.br` e `brasamineira.com.br`; `brilhax.com` não
-está entre as propriedades. Onde este documento diz "indexado", leia "publicado
-no sitemap antigo", que é outra coisa.
+**Indexação pelo Google: não verificado.** A conta de serviço alcança só
+`sorroche.beauty`, `saudepet.app.br` e `brasamineira.com.br`. "Estar no sitemap
+antigo" é o que o site ofereceu ao Google, não o que o Google indexou.
+
+**Nada mudou depois da importação.** Comparando Medusa e plataforma produto a
+produto: 0 preços divergentes e 0 produtos alterados no Medusa depois de
+09/09. O único que existe só no Medusa é "teste".
+
+### Os 21 do sitemap antigo hoje inativos
+
+Todos com preço zero. Se reativados como "sob consulta" (`sobConsulta()`, que é
+como o site antigo os mostra), 20 viram página publicável; o que não tem foto
+fica `noindex` pela regra `publicavel()`.
+
+`aplicador-esp-pct-2und`, `cera-luster-500ml-vonixx`,
+`kit-alicate-para-instalacao-de-gaxetas-hidraulica`, `lava-autos-500ml`,
+`ox-pro-500ml`, `pano-de-micro-fibra-azul-escuro-37x57`,
+`pano-de-microfibra-sem-costura-40x40-vinixx`,
+`pano-micro-fibra-azul-escuro-47x77-230gsm`,
+`pincel-externo-n14-cerdas-medias-vonixx`,
+`pincel-interno-cerdas-medias-vonixx-detalhamento-automotivo`, `prizm-1-5`,
+`sintra-5-litros`, `snow-foan-bico-amarelo-furacao-1-3`, `snow-foan-manual`,
+`v-cut-polidor-de-cortes-premium`, `v-floc-1-5`, `v-floc-3l`, `v-mol-5-litros`,
+`v-mol-500ml`, e dois que foram **testes de cadastro de 03/09**:
+`lamax-limpador-multiuso` (sem foto) e `speel-car-500ml`.
+
+**Não reativei nenhum.** Proposta para a decisão: os 19 de catálogo como "sob
+consulta"; os 2 testes e "teste" em 404. O 404 fica em vez de 410 porque a
+aplicação não devolve 410 sem mudança de código, e o Google trata os dois como
+remoção.
 
 ## Redirects
 
-`deploy/brilhax/redirects.caddy` — **12 regras**, testadas numa instância
-isolada do Caddy (porta 8899, container próprio, removido depois).
+`deploy/brilhax/redirects.caddy`: 12 regras, testadas em 10/09 numa instância
+isolada do Caddy (porta 8899, container próprio, removido depois). **O arquivo
+não mudou desde então** (`git diff HEAD` vazio).
 
-| Origem | Status | Location | Saltos | Por quê |
-|---|---|---|---|---|
-| `/produtos/categoria/lavagem/` | 301 | `/categoria/lavagem` | 1 | a plataforma serve categoria na raiz |
-| `/produtos/categoria/kits/` | 301 | `/categoria/kits-completos` | 1 | slug mudou: a plataforma gera pelo nome |
-| `/produtos/categoria/moto/` | 301 | `/categoria/produtos-para-moto` | 1 | idem |
-| `/produtos/categoria/lavagem/?pagina=2` | 301 | `/categoria/lavagem?pagina=2` | 1 | parâmetro preservado |
-| `/politica-de-envio/` | 301 | `/politicas/envio` | 1 | políticas agrupadas |
-| `/termos-de-uso/` | 301 | `/politicas/termos` | 1 | idem |
-| `/produtos/glazy-500ml/` | — | — | 0 | **sem redirect**: mesma URL |
-| `/`, `/sobre/`, `/contato/` | — | — | 0 | idem |
-| `/produtos/categoria/lavagem/extra/` | — | — | 0 | nunca existiu: 404 da aplicação |
+Como o domínio definitivo continua `brilhax.com`, só leva redirect o que muda
+de caminho. O resto é a mesma URL, e a aplicação já responde.
 
-O teste isolado achou um erro que a conferência de destinos não acharia: a
-regra `redir /produtos/categoria/* … {path.1}` mandava **todas** as categorias
-para `/categoria/categoria`, porque `path.1` é o segundo segmento. Só apareceu
-porque a regra foi executada.
+| Origem | Quem responde | Status | Location | Saltos | Final | Por quê |
+|---|---|---|---|---|---|---|
+| `/produtos/categoria/lavagem/` | Caddy | 301 | `/categoria/lavagem` | 1 | 200 | categoria mudou de lugar |
+| `/produtos/categoria/kits/` | Caddy | 301 | `/categoria/kits-completos` | 1 | 200 | a plataforma gera o slug pelo nome "Kits Completos" |
+| `/produtos/categoria/moto/` | Caddy | 301 | `/categoria/produtos-para-moto` | 1 | 200 | idem, "Produtos para Moto" |
+| `/produtos/categoria/lavagem/?pagina=2` | Caddy | 301 | `/categoria/lavagem?pagina=2` | 1 | 200 | query preservada |
+| `/politica-de-envio/`, `-devolucao/`, `-privacidade/` | Caddy | 301 | `/politicas/<tipo>` | 1 | 200 | políticas agrupadas |
+| `/termos-de-uso/` | Caddy | 301 | `/politicas/termos` | 1 | 200 | idem |
+| `/produtos/acidus-fast-500ml/` | aplicação | 308 | `/produtos/acidus-fast-500ml` | 1 | 200 | mesma URL sem a barra |
+| `/produtos/?marca=Vonixx` | aplicação | 308 | `/produtos?marca=Vonixx` | 1 | 200 | query preservada; o filtro existe |
+| `/sobre/`, `/contato/` | aplicação | 308 | sem a barra | 1 | 200 | idem |
+| `/produtos/lava-autos-500ml` | aplicação | 404 | | 0 | 404 | inativo; depende da decisão acima |
+| `/produtos/teste` | aplicação | 404 | | 0 | 404 | removido sem substituto |
+| `/produtos/categoria/lavagem/extra/` | aplicação | 404 | | 0 | 404 | nunca existiu |
+| `/pedido/?id=order_123` | aplicação | 308 | `/pedido?id=…` | 1 | 404 | pedido do Medusa não existe aqui; os 3 que existem são de teste |
 
-### O que NÃO foi decidido: os 21 produtos
-
-21 URLs publicadas no sitemap antigo apontam para produto hoje inativo. A
-versão anterior os mandava para a categoria. **Isso foi revertido**, por dois
-motivos:
-
-1. Produto temporariamente sem preço não é produto descontinuado. Redirect de
-   massa para categoria é o padrão que o Google trata como soft 404.
-2. **A plataforma já sabe lidar com isso.** `src/lib/produto-regras.ts` tem
-   `sobConsulta()`: produto sem preço tem página, mostra "Preço sob consulta" e
-   negocia pelo WhatsApp. É exatamente o que o site antigo faz hoje, e o que os
-   termos antigos descrevem ("Produto sem preço exibido é produto cujo valor é
-   consultado").
-
-A decisão de importá-los como **inativos** foi minha, na Fase 2, e é o que os
-tira do ar. Reativá-los como "sob consulta" preservaria as 21 páginas e
-deixaria a loja abrir com 224 produtos visíveis em vez de 79.
-
-**Não reativei nada.** É decisão comercial: ver "Decisões pendentes".
-
-## Pagamento
-
-### Testado, e o que cada teste prova
-
-11 testes automatizados novos em
-`packages/checkout/src/providers/mercadopago-webhook.test.ts` e 10 em
-`lojas.avilaops.com/src/lib/pedidos-webhook.test.ts`. **Todos locais, sem
-rede.** O provedor do Mercado Pago não tinha teste nenhum: PayPal e Éfi tinham.
-
-| O que se queria saber | Como foi provado |
-|---|---|
-| Assinatura válida é aceita | HMAC-SHA256 do manifesto do MP; aceita |
-| Assinatura de outra loja é recusada | segredo trocado devolve `null` |
-| Corpo adulterado é recusado | assinatura de `111` com corpo `999` recusada |
-| Confirma pelo gateway, não pelo corpo | a rota chama `consultar()` e usa a resposta |
-| Assinatura inválida não consulta nem grava | 401, sem chamar consultar nem atualizar |
-| Duplicado não baixa estoque duas vezes | `avancaDeAguardando` bloqueia |
-| Evento fora de ordem não regride | pedido `ENVIADO` não volta a `PAGO` |
-| Estorno vale mesmo depois de enviado | `ESTORNADO` é aplicado sempre |
-| Pendente, recusado, cancelado, expirado | cada status chega sem tradução |
-| Falha temporária não confirma às cegas | erro em `consultar()` devolve 200 e não altera |
-| Isolamento entre lojas | busca filtra `tenantId`; segredo é por loja |
-| Segredos não vazam | resposta não contém o token nem o segredo |
-
-### O que foi corrigido, e é sério
-
-**O valor não era conferido.** O webhook confirmava o pedido só pelo id do
-pagamento: um pagamento de um real fecharia um pedido de quinhentos. Agora
-`criarRotaWebhook` repassa `valorEmCentavos` vindo da consulta ao gateway, e
-`atualizarStatusPagamento` recusa a confirmação quando ele diverge do total,
-gravando `divergencia:<status>:<valor>` para aparecer na conciliação.
-
-Estorno e cancelamento seguem valendo mesmo com valor divergente: o cliente não
-pode ficar preso a um pedido que o gateway já desfez.
-
-**Mudança compartilhada por todas as lojas**, com regressão nos 10 testes de
-`pedidos-webhook.test.ts`.
-
-### O que NÃO foi testado
-
-- **Sandbox do Mercado Pago**: não usado. Trocar as credenciais de produção por
-  credenciais de teste foi proibido nesta rodada, e a conta não tem par de
-  teste configurado.
-- **Pagamento real**: nenhum. Mostrar Pix, cartão e boleto na tela não prova
-  que os três funcionam.
-- **Webhook em produção com evento real**: o único evento que chegou foi o
-  teste do painel do Mercado Pago, em 09/09, que respondeu 200.
-
-### Roteiro da compra real — PARA APROVAÇÃO, não executado
-
-| Item | Proposta |
-|---|---|
-| Produto | AROMINHA CARRO NOVO SCENT |
-| Valor | R$ 15,00 (o menor do catálogo ativo) |
-| Meios | um pedido em Pix, outro em cartão |
-| Quem paga | Nicolas, conta pessoal |
-| Recebedor | BRILHAXCAR (conta do cliente) |
-| Estoque | o produto não controla estoque; nada a repor |
-| Conferir | pedido `PAGO` no painel, valor idêntico, pagamento na conta MP |
-| Estorno | pelo painel do MP, mesmo dia, **exige autorização à parte** |
-| Risco | R$ 30 em dois pedidos, estornáveis |
-
-## Conteúdo institucional (Fase 4)
-
-| | Técnico | Aprovação |
-|---|---|---|
-| Sobre | pronto | conteúdo vem do cadastro |
-| Contato | pronto | idem |
-| Envio e retirada | pronto | gerado do cadastro |
-| Trocas e devoluções | pronto | base no art. 49 do CDC |
-| Privacidade | pronto | base na LGPD |
-| **Termos de uso** | **publicado** | **NÃO REVISADO** |
-| Canonical, sitemap, robots | pronto | — |
-
-**Os termos estão implementados e publicados, não revisados.** Texto gerado e
-referência ao CDC não são adequação jurídica. Quem responde pela Brilhax
-precisa ler antes de a loja vender no domínio da marca, e decidir sobre o que
-não está lá: prazo de garantia próprio, política de erro de preço além do
-mínimo legal e foro.
+Sem cadeia: as regras do Caddy apontam direto para o caminho final, sem barra,
+então a aplicação não emenda um 308 depois do 301.
 
 ## SEO: pré e pós virada
 
-`urlDaLoja()` usa `dominioPrincipal` quando existe. Hoje é nulo, então
-canonical, sitemap e feed apontam para o subdomínio; ao definir
-`dominioPrincipal = "brilhax.com"`, os três passam a apontar para o domínio
-final sozinhos. **Conferir depois da virada, não presumir.**
+**Pré-virada (hoje, medido):** `brilhax.lojas.avilaops.com` é o endereço
+oficial da loja (sem `dominioPrincipal`), então é indexável, e canonical,
+sitemap e feed apontam para ele. Correto até a virada.
 
-**Corrigido nesta rodada:** loja com domínio próprio servida por outro endereço
-passa a devolver `noindex, follow`. Sem isso o subdomínio da plataforma
-competiria com o domínio da marca — a Vedashow está nessa situação hoje.
-`follow` fica ligado, e o robots.txt **não** bloqueia essas URLs de propósito:
-página bloqueada não é rastreada, e sem rastrear o Google não lê o `noindex`.
-Isso não substitui autenticação: carrinho, checkout e API seguem com as
-próprias barreiras.
+**Pós-virada (medido no análogo):** a Vedashow já tem domínio próprio. Em
+`vedashow.com.br`, canonical da home, primeira URL do sitemap, primeiro link do
+feed, linha `Sitemap:` do robots e `url` do JSON-LD apontam todos para
+`vedashow.com.br`, e o subdomínio devolve `noindex, follow`. As 6 menções a
+`lojas.avilaops.com` na página de produto são o logo servido de `/uploads`:
+hospedagem de arquivo, não link interno nem canonical.
 
-Antes da virada a homologação continua indexável, porque ali o subdomínio é o
-endereço oficial da loja. Oito testes em `endereco-oficial.test.ts` cobrem os
-dois sentidos: marcar a loja de verdade como `noindex` a tiraria do Google
-inteira.
+**Para a Brilhax, conferir depois do `PATCH`, não presumir.**
+
+`noindex` e `robots.txt` não se atrapalham: as páginas do subdomínio não são
+bloqueadas no robots, então o Google rastreia e lê o `noindex`. Carrinho,
+checkout e API seguem com as próprias barreiras; `noindex` não é autenticação.
+
+## Pagamento
+
+### Resultados separados por ambiente
+
+**Local (testes automatizados, sem rede): 227 passando** na suíte de
+`lojas.avilaops.com` mais `packages/checkout`.
+
+| O que se queria saber | Resultado |
+|---|---|
+| Evento com assinatura válida aceito | aceito |
+| Assinatura de outra loja, corpo adulterado, query e corpo divergentes | recusados |
+| Consulta ao gateway antes de confirmar | a rota chama `consultar()` e usa a resposta, nunca o corpo |
+| Valor divergente do total | não confirma; grava `divergencia:` |
+| Evento duplicado | não baixa estoque de novo nem repete aviso |
+| Evento fora de ordem | pedido pago ou enviado não regride; estorno vale sempre |
+| Pendente, aprovado, recusado, cancelado, estornado | cada um chega intacto; Pix expirado chega como `cancelled` |
+| Falha temporária | 500, e o MP reenvia; o pedido não muda |
+| Isolamento entre lojas | busca por `tenantId`; segredo e token por loja |
+| Segredos nas respostas | ausentes |
+
+**Sandbox: não usado.** Trocar credencial de produção por credencial de teste
+estava proibido, e a conta não tem par de teste configurado.
+
+**Produção (leitura, sem transação):**
+
+| | Evidência |
+|---|---|
+| Token e segredo do webhook da Brilhax salvos | `psql`: `brilhax\|t\|t` (só presença) |
+| A loja vende | checkout mostra "Finalizar compra", produto "Adicionar ao carrinho" |
+| Token exposto pela API de admin | não: nenhum campo devolve o token |
+| Webhook já processou evento real | **nunca**: nenhum pedido, em nenhuma loja, tem `pagamentoId` |
+
+### O que continua desconhecido, e importa
+
+A documentação trata a assinatura `x-signature` para os webhooks configurados
+no painel. A plataforma não usa o do painel: manda `notification_url` em cada
+cobrança. **Não há prova de que essas notificações chegam assinadas.** Se não
+chegarem, o webhook devolve 401 e nenhum Pix se confirma por ele.
+
+Cartão não depende disso: aprovado na hora, o pedido já nasce PAGO. Pix e
+boleto dependem. A mitigação é a rotina `pedidos/verificar`, que confere no
+gateway independente de webhook; **ela ainda não está agendada no n8n**. A
+compra de teste em Pix responde a pergunta.
+
+**Recebedor e moeda:** `consultar()` usa o token da loja, e pagamento de outra
+conta não é visível com ele, então o recebedor é conferido de forma implícita.
+A moeda não é conferida; contas brasileiras só operam BRL, e isso fica como
+risco residual anotado, não como defeito.
+
+### Roteiro da compra real (PARA APROVAÇÃO, não executado)
+
+| Item | Proposta |
+|---|---|
+| Produto | AROMINHA CARRO NOVO SCENT, R$ 15,00 (o menor preço ativo) |
+| Pedidos | 2: um em Pix, um em cartão. Boleto fica de fora (compensa em dias) |
+| Quem paga | Nicolas, conta pessoal |
+| Recebedor | BRILHAXCAR, conta do cliente |
+| Estoque | o produto não controla estoque; nada a baixar nem repor |
+| Conferir no cartão | pedido nasce PAGO, valor igual ao cobrado |
+| Conferir no Pix | pedido vira PAGO **pelo webhook** (log sem 401) em minutos; se não virar, rodar `pedidos/verificar` e registrar que a assinatura não chegou |
+| Conferir em ambos | pagamento na conta MP da Brilhax, e-mail de confirmação uma vez só |
+| Estorno | pelo painel do MP, no mesmo dia. **Autorização separada** |
+| Custo | R$ 30, estornáveis |
+
+## Boleto
+
+Habilitado no cadastro da loja (`meiosPagamento: pix, cartao, boleto`), não só
+na tela. Funcionamento, lido no código:
+
+- **Reserva:** não há. O estoque só baixa quando o pedido vira PAGO. Dois
+  clientes podem gerar boleto para a última unidade e os dois pagarem.
+- **Expiração:** o MP cancela o boleto vencido; o pedido vira CANCELADO sem
+  mexer em estoque, porque nada foi baixado.
+- **Hoje:** nenhum produto da Brilhax controla estoque, então o risco acima não
+  existe enquanto for assim.
+
+**Não mexi.** Manter ou desligar é decisão do cliente.
+
+## Conteúdo institucional (Fase 4)
+
+| Página | Conclusão técnica | Aprovação do conteúdo |
+|---|---|---|
+| Sobre | publicada, canonical, description | vem do cadastro; **não revisado** pela Brilhax |
+| Contato | idem | idem |
+| Envio e retirada | idem | gerado do cadastro; **não revisado** |
+| Trocas e devoluções | idem | base no art. 49 do CDC; **não revisado** |
+| Privacidade | idem | base na LGPD; **não revisado** |
+| Termos de uso | publicada | **não revisado** |
+| Canonical, sitemap, robots | medidos em desktop e celular | não se aplica |
+
+"Implementado e publicado" não é "revisado pelo responsável", e referência ao
+CDC não é adequação jurídica. Faltam, nos termos, decisões que só a Brilhax
+toma: garantia própria, erro de preço além do mínimo legal e foro.
+
+## Merchant Center
+
+Não verificável. A chamada à Merchant API com a conta de serviço responde que o
+projeto GCP não está registrado em conta Merchant nenhuma, o que não diz nada
+sobre a Brilhax ter ou não conta própria. Titularidade, acesso e pendências
+dependem de alguém da Brilhax entrar no painel. **Nada foi criado nem enviado.**
 
 ## Dados além do catálogo
 
-Levantado no banco do Medusa:
-
-| | Quantos | O que são |
+| No Medusa | Quantos | O que são |
 |---|---|---|
-| Pedidos | 3 | todos de teste: `teste.deploy@`, `nicolasrosaab@`, `ecommerce@` |
-| Pagamentos | 3 | todos `pp_system_default` ("combinar com a loja"), **nenhum capturado** |
-| Clientes | 21 | 6 internos e 15 `@storebotmail.joonix.net`, que é robô de teste do Google |
+| Pedidos | 3 | todos de teste |
+| Pagamentos | 3 | `pp_system_default`, nenhum capturado |
+| Clientes | 21 | 6 internos e 15 `@storebotmail.joonix.net`, robô de teste do Google |
 | Carrinhos abertos | 28 | do período de testes |
 
-**A loja nunca vendeu.** Não há pedido, pagamento nem cliente real para migrar,
-e é isso que torna a virada de baixo risco. Se alguma venda acontecer entre
-hoje e a virada, este levantamento precisa ser refeito.
-
-**Estoque:** duas variantes controlam estoque no Medusa; na plataforma nenhum
-produto controla (`estoque: null`). Enquanto o legado não vender, não há
-divergência possível. Depois da virada só uma operação vende, porque o domínio
-aponta para um lugar só.
+**O que migra:** o catálogo, já migrado e sem divergência. **O que fica no
+legado:** os 3 pedidos e os carrinhos, todos de teste, que não migram. Clientes
+não migram: nenhum é real. Se houver venda até a virada, refazer este
+levantamento.
 
 ## O dia da virada
 
-1. **Backup, com restauração verificada**
-   - [ ] Dump do banco `lojas` e **restaurar num banco descartável** para
-         provar que o dump presta. Dump não testado não é backup.
+1. **Backup com restauração verificada**
+   - [ ] Dump do banco `lojas` restaurado num banco descartável, com contagem de
+         produtos da Brilhax igual à de produção.
    - [ ] Dump de `medusa_store`, idem.
    - [ ] `/opt/brilhax-stack/.env` e `/opt/lojas/.env`.
-   - [ ] Guardar o `standalone.tgz` no ar hoje.
+   - [ ] Guardar o `standalone.tgz` que estiver no ar.
 
-2. **DNS e TLS**
+2. **Uma operação vendendo por vez**
+   - [ ] Antes de apontar o DNS: tirar o Mercado Pago da região Brasil no
+         Medusa, para a API antiga não fechar pedido pago enquanto o DNS
+         propaga.
+   - [ ] Preço e estoque: rodar de novo a comparação Medusa x plataforma. Hoje:
+         0 divergências.
+
+3. **DNS, TLS e identificação**
    - [ ] `brilhax.com` e `www` para o servidor da plataforma, sem proxy laranja.
    - [ ] `PATCH` no tenant com `dominioPrincipal` e `dominios`.
-   - [ ] **Certificado emitido antes de mandar tráfego.**
-   - [ ] Conferir que o domínio serve a loja certa (e não outra do servidor).
-   - [ ] **Não tocar no MX.** O e-mail da Brilhax fica onde está.
+   - [ ] Certificado emitido antes de mandar tráfego.
+   - [ ] O domínio serve a Brilhax, e não outra loja do servidor.
+   - [ ] **Não tocar em MX, SPF, DKIM nem DMARC.** O e-mail da Brilhax fica onde
+         está. Tirar print dos registros antes de mexer em qualquer coisa.
 
-3. **Redirects**
+4. **Webhooks**
+   - [ ] A plataforma recebe pela `notification_url` de cada cobrança; o
+         endereço cadastrado no painel do MP aponta para o Medusa e não precisa
+         mudar para a plataforma funcionar.
+   - [ ] Pedidos antigos: nenhum real, então não há webhook de pedido antigo a
+         preservar.
+   - [ ] `pedidos/verificar` agendado de hora em hora no n8n **antes** da virada.
+
+5. **Redirects**
    - [ ] Aplicar as 12 regras no bloco do domínio.
-   - [ ] Conferir a tabela acima, incluindo os casos que **não** redirecionam.
+   - [ ] Conferir a tabela acima, inclusive os casos que **não** redirecionam.
 
-4. **Depois de virar, conferir o que só existe no domínio final**
-   - [ ] Canonical apontando para `brilhax.com`.
-   - [ ] Sitemap e feed com URLs de `brilhax.com`.
-   - [ ] Subdomínio de homologação servindo `noindex`.
-   - [ ] Search Console: mudança de endereço e sitemap novo.
+6. **Depois de virar**
+   - [ ] Canonical, sitemap, feed e JSON-LD em `brilhax.com`.
+   - [ ] Subdomínio servindo `noindex, follow`.
+   - [ ] Search Console: sitemap novo. **Não** usar "mudança de endereço": o
+         endereço não muda.
 
 ## Monitorar por 14 dias
 
-404 vindo de URL antiga · 5xx · pedidos e pagamentos conferidos um a um contra
-o painel do MP · páginas indexadas.
+404 vindo de URL antiga · 5xx · 401 no webhook · pedidos em AGUARDANDO há mais
+de uma hora · cada pagamento conferido contra o painel do MP · indexação.
 
 **Os 14 dias são janela de observação, não autorização automática para
 desligar.**
 
 ## Voltar atrás
 
-Enquanto o stack antigo estiver de pé, a volta é DNS. **Mas pedido recebido
-depois da virada mora na plataforma**: voltar o DNS não os apaga, e eles
-precisam continuar sendo atendidos de lá. O rollback é do site, nunca dos
-pedidos.
+Enquanto o stack antigo estiver de pé, a volta é DNS. **Pedido recebido depois
+da virada mora na plataforma**: voltar o DNS não os apaga, e eles continuam
+sendo atendidos pelo painel da plataforma, que segue em
+`brilhax.lojas.avilaops.com`. O rollback é do site, nunca dos pedidos. Se a
+volta acontecer, religar o MP na região do Medusa só depois de exportar a
+lista de pedidos da plataforma.
 
 ## Desligar o legado
 
-Só com todos: 14 dias completos · zero 404 de URL antiga · indexação estável ·
-ao menos um pedido pago conferido · cliente ciente de que a volta deixa de ser
-rápida.
+Só com todos: 14 dias completos · zero 404 de URL antiga · zero 401 no webhook
+· ao menos um pedido pago conferido · cliente ciente de que a volta deixa de
+ser rápida · **autorização explícita**.
 
 **Desligar o Medusa não remove os redirects.** As 12 regras ficam na
-infraestrutura nova, por pelo menos um ano, que é a orientação do Google.
+infraestrutura nova por pelo menos um ano, que é a orientação do Google.
 
-## Decisões pendentes (comerciais e de conteúdo)
+## Deploy preparado, não executado
 
-1. **Os 145 inativos.** Manter fora (loja abre com 79) ou reativar como "sob
-   consulta" (abre com 224, preserva 21 URLs). A plataforma suporta os dois; a
-   escolha é de quem vende.
-2. **Boleto.** Está habilitado no cadastro (`meiosPagamento: pix, cartao,
-   boleto`), não só na tela. Compensa em até 3 dias úteis, e nesse intervalo o
-   produto sai do estoque sem o dinheiro ter entrado — hoje sem impacto,
-   porque nenhum produto controla estoque. Manter ou desligar é decisão do
-   cliente; **não mexi**.
-3. **Termos de uso**: revisão de quem responde pela Brilhax.
-4. **Merchant Center**: não existe conta no CNPJ da Brilhax até onde consigo
-   verificar, e não criei nenhuma. Sem ela o feed não é lido.
-5. **17 produtos sem foto** e **142 sem preço**: trabalho de catálogo.
+Fluxo existente: `deploy/empacotar.sh` na máquina local gera o
+`standalone.tgz`, que sobe para `/opt/lojas/` e é aplicado por
+`deploy/deploy.sh`.
+
+- **Empacotar de um worktree limpo no commit desta rodada**, nunca da árvore de
+  trabalho: ela tem 16 arquivos em andamento de outra sessão.
+- `packages/checkout` (a correção do 500 e do `data.id`) **não está em git
+  nenhum**; entra no pacote porque o build o compila de `file:../packages/checkout`.
+  Se o disco se perder, a correção se perde.
+- Depois do deploy: agendar `POST /api/admin/pedidos/verificar` no n8n.
+
+## Decisões pendentes
+
+1. **Os 21 inativos do sitemap antigo**: proposta acima (19 sob consulta, 2 em
+   404). E os outros 124 inativos: manter fora ou "sob consulta".
+2. **Boleto**: manter ou desligar.
+3. **Termos e demais políticas**: revisão de quem responde pela Brilhax.
+4. **Merchant Center**: a Brilhax confirmar se tem conta e dar acesso.
+5. **17 produtos ativos sem foto**: trabalho de catálogo.
 
 ## Bloqueadores da virada
 
 | # | Bloqueador | Quem resolve |
 |---|---|---|
-| 1 | Nenhum pagamento real testado | autorização para a compra de teste |
-| 2 | Termos não revisados juridicamente | Brilhax |
-| 3 | Destino dos 145 inativos não decidido | Brilhax |
-| 4 | Correção do valor no webhook ainda **não publicada** | autorização de deploy |
-| 5 | Indexação no Google não verificável | acesso ao Search Console de brilhax.com |
+| 1 | Pix nunca confirmado de ponta a ponta; assinatura da `notification_url` não provada | autorização da compra de teste |
+| 2 | Correções desta rodada não publicadas | autorização de deploy |
+| 3 | `pedidos/verificar` não agendado | depois do deploy |
+| 4 | Conteúdo institucional e termos não revisados | Brilhax |
+| 5 | Destino dos 21 inativos do sitemap antigo | Brilhax |
+| 6 | Indexação e Merchant não verificáveis | acesso da Brilhax ao Search Console e ao Merchant |

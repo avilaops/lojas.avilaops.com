@@ -18,6 +18,7 @@ import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
 import Compatibilidade from "@/components/Compatibilidade";
 import { minhaMoto } from "@/lib/minha-moto";
 import { lerCompatibilidade } from "@/lib/motos";
+import { descricaoDoProduto, textoPuro } from "@/lib/seo-texto";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -26,11 +27,14 @@ export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
   const p = await buscarProduto(t.id, slug);
   if (!p) return { title: "Produto" };
+  // Catálogo importado quase nunca traz descrição curta: sem o fallback para a
+  // longa, a página ficava sem meta description. Ver lib/seo-texto.
+  const description = descricaoDoProduto(p);
   return {
     title: p.nome,
-    description: p.descricaoCurta ?? undefined,
+    ...(description ? { description } : {}),
     alternates: { canonical: `/produtos/${p.slug}` },
-    openGraph: { images: p.imagens.slice(0, 1) },
+    openGraph: { images: p.imagens.slice(0, 1), ...(description ? { description } : {}) },
     // A mesma régua do sitemap: o que fica fora dele também pede para não ser
     // indexado, senão o Google chega pelo link interno e indexa do mesmo jeito.
     ...(regras.publicavel(p) ? {} : { robots: { index: false, follow: true } }),
@@ -69,7 +73,9 @@ export default async function ProdutoPage({ params }: Props) {
     ...(p.codigoOriginal ? { mpn: p.codigoOriginal } : {}),
     ...(compat.length ? { isAccessoryOrSparePartFor: compat.map((c) => ({ "@type": "Vehicle", name: `${c.marca} ${c.modelo}`, brand: { "@type": "Brand", name: c.marca }, model: c.modelo })) } : {}),
     image: p.imagens,
-    description: p.descricaoCurta ?? p.descricao ?? undefined,
+    // Texto puro: a descrição importada vem com HTML, e tag dentro do JSON-LD
+    // aparece literal no rich result.
+    description: textoPuro(p.descricaoCurta ?? p.descricao) || undefined,
     ...(p.categoria ? { category: p.categoria.nome } : {}),
     // As medidas e características que a ficha visível mostra, como
     // PropertyValue: o mesmo dado, legível por máquina. Nada aqui é inventado;
