@@ -1,0 +1,5253 @@
+{
+ "name": "Lojas - Onboarding e Pedidos",
+ "nodes": [
+  {
+   "id": "48c4d7cd-1342-4110-8f06-5c256e303e99",
+   "name": "Sticky Note 02ca9dd8",
+   "type": "n8n-nodes-base.stickyNote",
+   "typeVersion": 1,
+   "position": [
+    112,
+    -48
+   ],
+   "parameters": {
+    "content": "## Lojas - onboarding e pedidos\n\nRecebe os eventos de **lojas.avilaops.com** (`N8N_WEBHOOK_URL` = URL deste webhook, `N8N_WEBHOOK_TOKEN` = valor da credencial Header Auth, cabeçalho `authorization` com prefixo `Bearer `). Contrato v1 e regras em `lojas.avilaops.com/docs/ROTINAS-N8N.md`.\n\n### Entrada (antes de qualquer envio)\nReceber → **Validar Contrato** (campos obrigatórios por tipo; inválido vira tarefa, nada sai) → **Reivindicar Evento** (`POST /api/admin/automacoes/eventos/reivindicar`: trava de idempotência pelo `eventId`, duplicado para aqui) → Normalizar → Rotear. Todo ramo termina em **Encerrar: Processado/Ignorado** (PATCH do estado do evento).\n\n- `loja.criada` → WhatsApp + e-mail de treinamento + tarefa \"Aprovar loja\"\n- `loja.ativada` (uma vez, ao virar ATIVA) → 3 dias → consulta a loja → se continua ATIVA, pede 2 indicações\n- `loja.provisionada` → WhatsApp \"loja configurada\" · `loja.provisionamento-falhou` → tarefa no Todoist\n- `loja.identidade-atualizada` → revisão visual no Todoist\n- `pedido.criado` (PIX) → 30 min → `GET /api/admin/pedidos/:referencia/status` → se aguardando, lembra o comprador\n- `pedido.pago` → WhatsApp ao lojista + e-mail ao comprador (`itensTexto`, `totalReais` vem de `totalCentavos`)\n- `pedido.recusado` → oferece PIX · `pedido.enviado` → e-mail com rastreio\n- `carrinho.abandonado` → e-mail + WhatsApp (rotina de hora em hora)\n- `avaliacao.recebida`, `loja.relatorio-semanal`, `loja.voltou-ao-estoque` → e-mail\n- `loja.suspensa` / `loja.mensalidade-recusada` / `-paga` / `loja.reativada` → e-mail (+ WhatsApp/tarefa)\n- tipo desconhecido → fallback do switch → Encerrar: Ignorado\n\n### WhatsApp = API oficial da Meta (Cloud API), sem Twilio\nOs envios são HTTP Request para `graph.facebook.com/v21.0/1165155426689680/messages`, credencial **WhatsApp Cloud API (Meta)**, sempre `type: template` (fora da janela de 24 h só template aprovado passa).\n\n**Pendência:** o app da Meta foi apagado (erro 190) - criar app novo, gerar token de System User permanente, atualizar a credencial e conferir o `phone_number_id` na URL dos nós. Templates a aprovar: `loja_no_ar`, `loja_indicacoes`, `loja_configurada`, `pix_pendente`, `pedido_pago_lojista`, `pagamento_recusado`, `carrinho_abandonado`, `loja_suspensa`, `mensalidade_recusada` - textos em `lojas.avilaops.com/docs/WHATSAPP-TEMPLATES.md`.\n\n**Publicar esta versão só depois do deploy da plataforma** (endpoints `/api/admin/automacoes/*` e `/api/admin/pedidos/:referencia/status` + migração `AutomacaoEvento`).",
+    "height": 200,
+    "width": 300,
+    "color": 4
+   }
+  },
+  {
+   "id": "1a9414a0-ef7e-4391-9f33-4cbb04a5d84c",
+   "name": "Receber Evento da Plataforma",
+   "webhookId": "d45f5c3f-9844-463c-96a8-971127db2907",
+   "type": "n8n-nodes-base.webhook",
+   "typeVersion": 2.1,
+   "position": [
+    0,
+    576
+   ],
+   "parameters": {
+    "httpMethod": "POST",
+    "path": "lojas-eventos",
+    "authentication": "headerAuth",
+    "options": {}
+   },
+   "credentials": {
+    "httpHeaderAuth": {
+     "id": "VxuGVdeaqgS2Cs1o",
+     "name": "Lojas Webhook Auth"
+    }
+   }
+  },
+  {
+   "id": "9265e2f2-a7da-4e5b-b610-8aa79e205db4",
+   "name": "Normalizar Evento",
+   "type": "n8n-nodes-base.set",
+   "typeVersion": 3.5,
+   "position": [
+    944,
+    576
+   ],
+   "parameters": {
+    "mode": "manual",
+    "includeOtherFields": false,
+    "assignments": {
+     "assignments": [
+      {
+       "id": "eventId",
+       "name": "eventId",
+       "value": "={{ $('Receber Evento da Plataforma').first().json.body?.eventId ?? \"\" }}",
+       "type": "string"
+      },
+      {
+       "id": "tipo",
+       "name": "tipo",
+       "value": "={{ $('Receber Evento da Plataforma').first().json.body?.tipo ?? \"\" }}",
+       "type": "string"
+      },
+      {
+       "id": "slug",
+       "name": "slug",
+       "value": "={{ $('Receber Evento da Plataforma').first().json.body?.slug ?? \"\" }}",
+       "type": "string"
+      },
+      {
+       "id": "nome",
+       "name": "nome",
+       "value": "={{ $('Receber Evento da Plataforma').first().json.body?.nome ?? $('Receber Evento da Plataforma').first().json.body?.lojaNome ?? \"\" }}",
+       "type": "string"
+      },
+      {
+       "id": "url",
+       "name": "url",
+       "value": "={{ $('Receber Evento da Plataforma').first().json.body?.url ?? $('Receber Evento da Plataforma').first().json.body?.lojaUrl ?? \"\" }}",
+       "type": "string"
+      },
+      {
+       "id": "lojistaWhatsapp",
+       "name": "lojistaWhatsapp",
+       "value": "={{ $('Receber Evento da Plataforma').first().json.body?.whatsapp ?? $('Receber Evento da Plataforma').first().json.body?.lojistaWhatsapp ?? \"\" }}",
+       "type": "string"
+      },
+      {
+       "id": "lojistaEmail",
+       "name": "lojistaEmail",
+       "value": "={{ $('Receber Evento da Plataforma').first().json.body?.emailContato ?? $('Receber Evento da Plataforma').first().json.body?.lojistaEmail ?? \"\" }}",
+       "type": "string"
+      },
+      {
+       "id": "emailRemetente",
+       "name": "emailRemetente",
+       "value": "={{ $('Receber Evento da Plataforma').first().json.body?.emailRemetente ?? \"\" }}",
+       "type": "string"
+      },
+      {
+       "id": "referencia",
+       "name": "referencia",
+       "value": "={{ $('Receber Evento da Plataforma').first().json.body?.referencia ?? \"\" }}",
+       "type": "string"
+      },
+      {
+       "id": "numero",
+       "name": "numero",
+       "value": "={{ $('Receber Evento da Plataforma').first().json.body?.numero ?? \"\" }}",
+       "type": "string"
+      },
+      {
+       "id": "totalCentavos",
+       "name": "totalCentavos",
+       "value": "={{ Number($('Receber Evento da Plataforma').first().json.body?.totalCentavos ?? $('Receber Evento da Plataforma').first().json.body?.total ?? 0) }}",
+       "type": "number"
+      },
+      {
+       "id": "totalReais",
+       "name": "totalReais",
+       "value": "={{ ((Number($('Receber Evento da Plataforma').first().json.body?.totalCentavos ?? $('Receber Evento da Plataforma').first().json.body?.total ?? 0)) / 100).toFixed(2).replace(\".\", \",\") }}",
+       "type": "string"
+      },
+      {
+       "id": "meioPagamento",
+       "name": "meioPagamento",
+       "value": "={{ $('Receber Evento da Plataforma').first().json.body?.meioPagamento ?? \"\" }}",
+       "type": "string"
+      },
+      {
+       "id": "clienteNome",
+       "name": "clienteNome",
+       "value": "={{ $('Receber Evento da Plataforma').first().json.body?.clienteNome ?? \"\" }}",
+       "type": "string"
+      },
+      {
+       "id": "clienteEmail",
+       "name": "clienteEmail",
+       "value": "={{ $('Receber Evento da Plataforma').first().json.body?.clienteEmail ?? \"\" }}",
+       "type": "string"
+      },
+      {
+       "id": "clienteTelefone",
+       "name": "clienteTelefone",
+       "value": "={{ $('Receber Evento da Plataforma').first().json.body?.clienteTelefone ?? \"\" }}",
+       "type": "string"
+      },
+      {
+       "id": "itens",
+       "name": "itens",
+       "value": "={{ Array.isArray($('Receber Evento da Plataforma').first().json.body?.itens) ? $('Receber Evento da Plataforma').first().json.body.itens : [] }}",
+       "type": "array"
+      },
+      {
+       "id": "itensTexto",
+       "name": "itensTexto",
+       "value": "={{ $('Receber Evento da Plataforma').first().json.body?.itensTexto ?? (Array.isArray($('Receber Evento da Plataforma').first().json.body?.itens) ? $('Receber Evento da Plataforma').first().json.body.itens.map(function (i) { return i.quantidade + \"x \" + i.nome; }).join(\", \") : String($('Receber Evento da Plataforma').first().json.body?.itens ?? \"\")) }}",
+       "type": "string"
+      },
+      {
+       "id": "passosTexto",
+       "name": "passosTexto",
+       "value": "={{ Object.entries($('Receber Evento da Plataforma').first().json.body?.passos ?? {}).map(function (par) { return par[0] + \": \" + par[1]; }).join(\"\\n\") }}",
+       "type": "string"
+      },
+      {
+       "id": "link",
+       "name": "link",
+       "value": "={{ $('Receber Evento da Plataforma').first().json.body?.link ?? \"\" }}",
+       "type": "string"
+      },
+      {
+       "id": "email",
+       "name": "email",
+       "value": "={{ $('Receber Evento da Plataforma').first().json.body?.email ?? \"\" }}",
+       "type": "string"
+      },
+      {
+       "id": "personalidade",
+       "name": "personalidade",
+       "value": "={{ $('Receber Evento da Plataforma').first().json.body?.personalidade ?? \"\" }}",
+       "type": "string"
+      },
+      {
+       "id": "direcaoFotografica",
+       "name": "direcaoFotografica",
+       "value": "={{ $('Receber Evento da Plataforma').first().json.body?.direcaoFotografica ?? \"\" }}",
+       "type": "string"
+      },
+      {
+       "id": "linkCarrinho",
+       "name": "linkCarrinho",
+       "value": "={{ $('Receber Evento da Plataforma').first().json.body?.linkCarrinho ?? \"\" }}",
+       "type": "string"
+      },
+      {
+       "id": "produtoNome",
+       "name": "produtoNome",
+       "value": "={{ $('Receber Evento da Plataforma').first().json.body?.produtoNome ?? \"\" }}",
+       "type": "string"
+      },
+      {
+       "id": "nota",
+       "name": "nota",
+       "value": "={{ $('Receber Evento da Plataforma').first().json.body?.nota ?? \"\" }}",
+       "type": "string"
+      },
+      {
+       "id": "autor",
+       "name": "autor",
+       "value": "={{ $('Receber Evento da Plataforma').first().json.body?.autor ?? \"\" }}",
+       "type": "string"
+      },
+      {
+       "id": "periodo",
+       "name": "periodo",
+       "value": "={{ $('Receber Evento da Plataforma').first().json.body?.periodo ?? \"\" }}",
+       "type": "string"
+      },
+      {
+       "id": "pedidosPagos",
+       "name": "pedidosPagos",
+       "value": "={{ $('Receber Evento da Plataforma').first().json.body?.pedidosPagos ?? 0 }}",
+       "type": "string"
+      },
+      {
+       "id": "receitaReais",
+       "name": "receitaReais",
+       "value": "={{ (($('Receber Evento da Plataforma').first().json.body?.receitaCentavos ?? 0) / 100).toFixed(2).replace(\".\", \",\") }}",
+       "type": "string"
+      },
+      {
+       "id": "ticketReais",
+       "name": "ticketReais",
+       "value": "={{ (($('Receber Evento da Plataforma').first().json.body?.ticketMedioCentavos ?? 0) / 100).toFixed(2).replace(\".\", \",\") }}",
+       "type": "string"
+      },
+      {
+       "id": "topProdutos",
+       "name": "topProdutos",
+       "value": "={{ $('Receber Evento da Plataforma').first().json.body?.topProdutos ?? \"\" }}",
+       "type": "string"
+      },
+      {
+       "id": "carrinhosAbandonados",
+       "name": "carrinhosAbandonados",
+       "value": "={{ $('Receber Evento da Plataforma').first().json.body?.carrinhosAbandonados ?? 0 }}",
+       "type": "string"
+      },
+      {
+       "id": "novasAvaliacoes",
+       "name": "novasAvaliacoes",
+       "value": "={{ $('Receber Evento da Plataforma').first().json.body?.novasAvaliacoes ?? 0 }}",
+       "type": "string"
+      },
+      {
+       "id": "destinatario",
+       "name": "destinatario",
+       "value": "={{ $('Receber Evento da Plataforma').first().json.body?.destinatario ?? \"\" }}",
+       "type": "string"
+      },
+      {
+       "id": "precoReais",
+       "name": "precoReais",
+       "value": "={{ (($('Receber Evento da Plataforma').first().json.body?.precoCentavos ?? 0) / 100).toFixed(2).replace(\".\", \",\") }}",
+       "type": "string"
+      },
+      {
+       "id": "motivo",
+       "name": "motivo",
+       "value": "={{ $('Receber Evento da Plataforma').first().json.body?.motivo ?? \"\" }}",
+       "type": "string"
+      },
+      {
+       "id": "tentativas",
+       "name": "tentativas",
+       "value": "={{ Number($('Receber Evento da Plataforma').first().json.body?.tentativas ?? 0) }}",
+       "type": "number"
+      },
+      {
+       "id": "diasRestantes",
+       "name": "diasRestantes",
+       "value": "={{ Number($('Receber Evento da Plataforma').first().json.body?.diasRestantes ?? 0) }}",
+       "type": "number"
+      },
+      {
+       "id": "valorReais",
+       "name": "valorReais",
+       "value": "={{ (($('Receber Evento da Plataforma').first().json.body?.centavos ?? 0) / 100).toFixed(2).replace(\".\", \",\") }}",
+       "type": "string"
+      }
+     ]
+    },
+    "options": {}
+   }
+  },
+  {
+   "id": "951db2f9-df4e-4225-a568-d1b05af3be99",
+   "name": "Rotear por Tipo de Evento",
+   "type": "n8n-nodes-base.switch",
+   "typeVersion": 3.4,
+   "position": [
+    1136,
+    528
+   ],
+   "parameters": {
+    "rules": {
+     "values": [
+      {
+       "conditions": {
+        "options": {
+         "caseSensitive": false,
+         "leftValue": "",
+         "typeValidation": "strict",
+         "version": 1
+        },
+        "conditions": [
+         {
+          "leftValue": "={{ $json.tipo }}",
+          "operator": {
+           "type": "string",
+           "operation": "equals"
+          },
+          "rightValue": "loja.criada"
+         }
+        ],
+        "combinator": "and"
+       }
+      },
+      {
+       "conditions": {
+        "options": {
+         "caseSensitive": false,
+         "leftValue": "",
+         "typeValidation": "strict",
+         "version": 1
+        },
+        "conditions": [
+         {
+          "leftValue": "={{ $json.tipo }}",
+          "operator": {
+           "type": "string",
+           "operation": "equals"
+          },
+          "rightValue": "loja.provisionada"
+         }
+        ],
+        "combinator": "and"
+       }
+      },
+      {
+       "conditions": {
+        "options": {
+         "caseSensitive": false,
+         "leftValue": "",
+         "typeValidation": "strict",
+         "version": 1
+        },
+        "conditions": [
+         {
+          "leftValue": "={{ $json.tipo }}",
+          "operator": {
+           "type": "string",
+           "operation": "equals"
+          },
+          "rightValue": "pedido.criado"
+         }
+        ],
+        "combinator": "and"
+       }
+      },
+      {
+       "conditions": {
+        "options": {
+         "caseSensitive": false,
+         "leftValue": "",
+         "typeValidation": "strict",
+         "version": 1
+        },
+        "conditions": [
+         {
+          "leftValue": "={{ $json.tipo }}",
+          "operator": {
+           "type": "string",
+           "operation": "equals"
+          },
+          "rightValue": "pedido.pago"
+         }
+        ],
+        "combinator": "and"
+       }
+      },
+      {
+       "conditions": {
+        "options": {
+         "caseSensitive": false,
+         "leftValue": "",
+         "typeValidation": "strict",
+         "version": 1
+        },
+        "conditions": [
+         {
+          "leftValue": "={{ $json.tipo }}",
+          "operator": {
+           "type": "string",
+           "operation": "equals"
+          },
+          "rightValue": "pedido.recusado"
+         }
+        ],
+        "combinator": "and"
+       }
+      },
+      {
+       "conditions": {
+        "options": {
+         "caseSensitive": false,
+         "leftValue": "",
+         "typeValidation": "strict",
+         "version": 1
+        },
+        "conditions": [
+         {
+          "leftValue": "={{ $json.tipo }}",
+          "operator": {
+           "type": "string",
+           "operation": "equals"
+          },
+          "rightValue": "lojista.recuperar-senha"
+         }
+        ],
+        "combinator": "and"
+       }
+      },
+      {
+       "conditions": {
+        "options": {
+         "caseSensitive": false,
+         "leftValue": "",
+         "typeValidation": "strict",
+         "version": 1
+        },
+        "conditions": [
+         {
+          "leftValue": "={{ $json.tipo }}",
+          "operator": {
+           "type": "string",
+           "operation": "equals"
+          },
+          "rightValue": "loja.suspensa"
+         }
+        ],
+        "combinator": "and"
+       }
+      },
+      {
+       "conditions": {
+        "options": {
+         "caseSensitive": false,
+         "leftValue": "",
+         "typeValidation": "strict",
+         "version": 1
+        },
+        "conditions": [
+         {
+          "leftValue": "={{ $json.tipo }}",
+          "operator": {
+           "type": "string",
+           "operation": "equals"
+          },
+          "rightValue": "loja.mensalidade-recusada"
+         }
+        ],
+        "combinator": "and"
+       }
+      },
+      {
+       "conditions": {
+        "options": {
+         "caseSensitive": false,
+         "leftValue": "",
+         "typeValidation": "strict",
+         "version": 1
+        },
+        "conditions": [
+         {
+          "leftValue": "={{ $json.tipo }}",
+          "operator": {
+           "type": "string",
+           "operation": "equals"
+          },
+          "rightValue": "loja.identidade-atualizada"
+         }
+        ],
+        "combinator": "and"
+       }
+      },
+      {
+       "conditions": {
+        "options": {
+         "caseSensitive": false,
+         "leftValue": "",
+         "typeValidation": "strict",
+         "version": 1
+        },
+        "conditions": [
+         {
+          "leftValue": "={{ $json.tipo }}",
+          "operator": {
+           "type": "string",
+           "operation": "equals"
+          },
+          "rightValue": "carrinho.abandonado"
+         }
+        ],
+        "combinator": "and"
+       }
+      },
+      {
+       "conditions": {
+        "options": {
+         "caseSensitive": false,
+         "leftValue": "",
+         "typeValidation": "strict",
+         "version": 1
+        },
+        "conditions": [
+         {
+          "leftValue": "={{ $json.tipo }}",
+          "operator": {
+           "type": "string",
+           "operation": "equals"
+          },
+          "rightValue": "avaliacao.recebida"
+         }
+        ],
+        "combinator": "and"
+       }
+      },
+      {
+       "conditions": {
+        "options": {
+         "caseSensitive": false,
+         "leftValue": "",
+         "typeValidation": "strict",
+         "version": 1
+        },
+        "conditions": [
+         {
+          "leftValue": "={{ $json.tipo }}",
+          "operator": {
+           "type": "string",
+           "operation": "equals"
+          },
+          "rightValue": "loja.relatorio-semanal"
+         }
+        ],
+        "combinator": "and"
+       }
+      },
+      {
+       "conditions": {
+        "options": {
+         "caseSensitive": false,
+         "leftValue": "",
+         "typeValidation": "strict",
+         "version": 1
+        },
+        "conditions": [
+         {
+          "leftValue": "={{ $json.tipo }}",
+          "operator": {
+           "type": "string",
+           "operation": "equals"
+          },
+          "rightValue": "loja.voltou-ao-estoque"
+         }
+        ],
+        "combinator": "and"
+       }
+      },
+      {
+       "conditions": {
+        "options": {
+         "caseSensitive": false,
+         "leftValue": "",
+         "typeValidation": "strict",
+         "version": 1
+        },
+        "conditions": [
+         {
+          "leftValue": "={{ $json.tipo }}",
+          "operator": {
+           "type": "string",
+           "operation": "equals"
+          },
+          "rightValue": "loja.mensalidade-paga"
+         }
+        ],
+        "combinator": "and"
+       }
+      },
+      {
+       "conditions": {
+        "options": {
+         "caseSensitive": false,
+         "leftValue": "",
+         "typeValidation": "strict",
+         "version": 1
+        },
+        "conditions": [
+         {
+          "leftValue": "={{ $json.tipo }}",
+          "operator": {
+           "type": "string",
+           "operation": "equals"
+          },
+          "rightValue": "loja.reativada"
+         }
+        ],
+        "combinator": "and"
+       }
+      },
+      {
+       "conditions": {
+        "options": {
+         "caseSensitive": false,
+         "leftValue": "",
+         "typeValidation": "strict",
+         "version": 1
+        },
+        "conditions": [
+         {
+          "leftValue": "={{ $json.tipo }}",
+          "operator": {
+           "type": "string",
+           "operation": "equals"
+          },
+          "rightValue": "pedido.enviado"
+         }
+        ],
+        "combinator": "and"
+       }
+      },
+      {
+       "conditions": {
+        "options": {
+         "caseSensitive": false,
+         "leftValue": "",
+         "typeValidation": "strict",
+         "version": 1
+        },
+        "conditions": [
+         {
+          "leftValue": "={{ $json.tipo }}",
+          "operator": {
+           "type": "string",
+           "operation": "equals"
+          },
+          "rightValue": "loja.provisionamento-falhou"
+         }
+        ],
+        "combinator": "and"
+       }
+      },
+      {
+       "conditions": {
+        "options": {
+         "caseSensitive": false,
+         "leftValue": "",
+         "typeValidation": "strict",
+         "version": 1
+        },
+        "conditions": [
+         {
+          "leftValue": "={{ $json.tipo }}",
+          "operator": {
+           "type": "string",
+           "operation": "equals"
+          },
+          "rightValue": "loja.ativada"
+         }
+        ],
+        "combinator": "and"
+       }
+      },
+      {
+       "conditions": {
+        "options": {
+         "caseSensitive": false,
+         "leftValue": "",
+         "typeValidation": "strict",
+         "version": 1
+        },
+        "conditions": [
+         {
+          "leftValue": "={{ $json.tipo }}",
+          "operator": {
+           "type": "string",
+           "operation": "equals"
+          },
+          "rightValue": "categoria.seo-pendente"
+         }
+        ],
+        "combinator": "and"
+       }
+      },
+      {
+       "conditions": {
+        "options": {
+         "caseSensitive": false,
+         "leftValue": "",
+         "typeValidation": "strict",
+         "version": 1
+        },
+        "conditions": [
+         {
+          "leftValue": "={{ $json.tipo }}",
+          "operator": {
+           "type": "string",
+           "operation": "equals"
+          },
+          "rightValue": "categoria.seo-publicado"
+         }
+        ],
+        "combinator": "and"
+       }
+      },
+      {
+       "conditions": {
+        "options": {
+         "caseSensitive": false,
+         "leftValue": "",
+         "typeValidation": "strict",
+         "version": 1
+        },
+        "conditions": [
+         {
+          "leftValue": "={{ $json.tipo }}",
+          "operator": {
+           "type": "string",
+           "operation": "equals"
+          },
+          "rightValue": "pedido.em-separacao"
+         }
+        ],
+        "combinator": "and"
+       }
+      },
+      {
+       "conditions": {
+        "options": {
+         "caseSensitive": false,
+         "leftValue": "",
+         "typeValidation": "strict",
+         "version": 1
+        },
+        "conditions": [
+         {
+          "leftValue": "={{ $json.tipo }}",
+          "operator": {
+           "type": "string",
+           "operation": "equals"
+          },
+          "rightValue": "pedido.entregue"
+         }
+        ],
+        "combinator": "and"
+       }
+      },
+      {
+       "conditions": {
+        "options": {
+         "caseSensitive": false,
+         "leftValue": "",
+         "typeValidation": "strict",
+         "version": 1
+        },
+        "conditions": [
+         {
+          "leftValue": "={{ $json.tipo }}",
+          "operator": {
+           "type": "string",
+           "operation": "equals"
+          },
+          "rightValue": "pedido.cancelado"
+         }
+        ],
+        "combinator": "and"
+       }
+      }
+     ]
+    },
+    "options": {
+     "fallbackOutput": "extra"
+    }
+   }
+  },
+  {
+   "id": "eebeee54-490e-4722-9e87-bc4b400a9df7",
+   "name": "E-mail: Treinamento em Vídeo",
+   "type": "n8n-nodes-base.executeWorkflow",
+   "typeVersion": 1.3,
+   "executeOnce": true,
+   "onError": "continueRegularOutput",
+   "position": [
+    896,
+    0
+   ],
+   "parameters": {
+    "workflowId": {
+     "__rl": true,
+     "mode": "id",
+     "value": "QG7wbU8SfM9ldM8E",
+     "cachedResultName": "Conector: e-mail padrão"
+    },
+    "mode": "each",
+    "workflowInputs": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "para": "={{ $(\"Normalizar Evento\").item.json.lojistaEmail }}",
+      "assunto": "=Sua loja {{ $(\"Normalizar Evento\").item.json.nome }} está no ar - 3 vídeos de 1 minuto",
+      "titulo": "",
+      "corpo": "=<p>Olá!</p><p>Sua loja <strong>{{ $(\"Normalizar Evento\").item.json.nome }}</strong> já responde em <a href=\"{{ $(\"Normalizar Evento\").item.json.url }}\">{{ $(\"Normalizar Evento\").item.json.url }}</a>.</p><p>Três vídeos curtos para você dominar o painel:</p><ol><li><a href=\"https://docs.avilaops.com/lojas/cadastrar-produtos\">Cadastrar produtos pela planilha</a></li><li><a href=\"https://docs.avilaops.com/lojas/pedidos\">Acompanhar e enviar pedidos</a></li><li><a href=\"https://docs.avilaops.com/lojas/aparencia\">Trocar cores, logo e domínio</a></li></ol><p>Painel: <a href=\"https://lojas.avilaops.com/painel\">lojas.avilaops.com/painel</a></p><p>- Avila Ops</p>",
+      "botao_texto": "",
+      "botao_url": "",
+      "remetente_nome": "Avila Ops",
+      "responder_para": "",
+      "empresa": "lojas",
+      "origem": "Lojas - Onboarding e Pedidos",
+      "rodape": "",
+      "copia": "",
+      "copia_oculta": ""
+     },
+     "schema": [
+      {
+       "id": "para",
+       "displayName": "para",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "assunto",
+       "displayName": "assunto",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "titulo",
+       "displayName": "titulo",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "corpo",
+       "displayName": "corpo",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "botao_texto",
+       "displayName": "botao_texto",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "botao_url",
+       "displayName": "botao_url",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "remetente_nome",
+       "displayName": "remetente_nome",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "responder_para",
+       "displayName": "responder_para",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "empresa",
+       "displayName": "empresa",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "origem",
+       "displayName": "origem",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "rodape",
+       "displayName": "rodape",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "copia",
+       "displayName": "copia",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "copia_oculta",
+       "displayName": "copia_oculta",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "6fe95317-a963-41bd-ab70-fc4d8d85a049",
+   "name": "Todoist: Aprovar Loja em 48h",
+   "type": "n8n-nodes-base.todoist",
+   "typeVersion": 2.2,
+   "executeOnce": true,
+   "onError": "continueRegularOutput",
+   "position": [
+    1120,
+    0
+   ],
+   "parameters": {
+    "project": {
+     "__rl": true,
+     "mode": "id",
+     "value": "6hGQhVMXmQmv23hG"
+    },
+    "content": "=Aprovar loja {{ $(\"Normalizar Evento\").item.json.nome }} ({{ $(\"Normalizar Evento\").item.json.slug }}) com o cliente",
+    "options": {
+     "description": "={{ $(\"Normalizar Evento\").item.json.url }}\nWhatsApp: {{ $(\"Normalizar Evento\").item.json.lojistaWhatsapp }}\nE-mail: {{ $(\"Normalizar Evento\").item.json.lojistaEmail }}",
+     "dueLang": "pt",
+     "dueString": "em 2 dias",
+     "priority": 3
+    },
+    "authentication": "oAuth2"
+   },
+   "credentials": {
+    "todoistOAuth2Api": {
+     "id": "HjSrKt2tqWYpxU8I",
+     "name": "Todoist OAuth2 (app da casa) - conectar no navegador"
+    }
+   }
+  },
+  {
+   "id": "47d97f9c-7abc-4c99-be39-9a935793a322",
+   "name": "Esperar 3 Dias",
+   "webhookId": "07e3d9ed-1c33-4629-8bb2-1d3d2173b2a0",
+   "type": "n8n-nodes-base.wait",
+   "typeVersion": 1.1,
+   "position": [
+    1344,
+    -160
+   ],
+   "parameters": {
+    "amount": 3,
+    "unit": "days"
+   }
+  },
+  {
+   "id": "8b5bbd6d-66d7-429c-97eb-d4d75df263de",
+   "name": "Todoist: Corrigir Provisionamento",
+   "type": "n8n-nodes-base.todoist",
+   "typeVersion": 2.2,
+   "executeOnce": true,
+   "position": [
+    896,
+    192
+   ],
+   "parameters": {
+    "project": {
+     "__rl": true,
+     "mode": "id",
+     "value": "6hGQhVMXmQmv23hG"
+    },
+    "content": "=Provisionamento com erro: loja {{ $json.slug }}",
+    "options": {
+     "description": "={{ $json.passosTexto }}\n\nReexecutar: POST /api/admin/tenants/{{ $json.slug }}/provisionar",
+     "dueLang": "pt",
+     "dueString": "hoje",
+     "priority": 4
+    },
+    "authentication": "oAuth2"
+   },
+   "credentials": {
+    "todoistOAuth2Api": {
+     "id": "HjSrKt2tqWYpxU8I",
+     "name": "Todoist OAuth2 (app da casa) - conectar no navegador"
+    }
+   }
+  },
+  {
+   "id": "2c605a19-d20f-4754-ad86-f6310d157fbe",
+   "name": "Pedido é PIX?",
+   "type": "n8n-nodes-base.if",
+   "typeVersion": 2.3,
+   "position": [
+    672,
+    576
+   ],
+   "parameters": {
+    "conditions": {
+     "options": {
+      "caseSensitive": false,
+      "leftValue": "",
+      "typeValidation": "strict",
+      "version": 1
+     },
+     "conditions": [
+      {
+       "leftValue": "={{ $json.meioPagamento }}",
+       "operator": {
+        "type": "string",
+        "operation": "equals"
+       },
+       "rightValue": "pix"
+      }
+     ],
+     "combinator": "and"
+    },
+    "options": {}
+   }
+  },
+  {
+   "id": "1dd8004e-650e-4fd1-826c-252c74ba847e",
+   "name": "Esperar 30 Minutos",
+   "webhookId": "3c057869-81d2-483f-a158-60260e0c3b57",
+   "type": "n8n-nodes-base.wait",
+   "typeVersion": 1.1,
+   "position": [
+    896,
+    576
+   ],
+   "parameters": {
+    "amount": 30,
+    "unit": "minutes"
+   }
+  },
+  {
+   "id": "29d09752-f04c-4fee-8987-268e8088e403",
+   "name": "Consultar Pedido",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.5,
+   "executeOnce": true,
+   "onError": "continueRegularOutput",
+   "position": [
+    1120,
+    576
+   ],
+   "parameters": {
+    "url": "=https://lojas.avilaops.com/api/admin/pedidos/{{ $('Normalizar Evento').first().json.referencia }}/status",
+    "authentication": "genericCredentialType",
+    "genericAuthType": "httpBearerAuth",
+    "options": {}
+   },
+   "credentials": {
+    "httpBearerAuth": {
+     "id": "BIftJgoyPwxr2d55",
+     "name": "Lojas Admin Token"
+    }
+   }
+  },
+  {
+   "id": "9795c50b-5295-44a7-8b0a-4339447c57d9",
+   "name": "Ainda Aguardando Pagamento?",
+   "type": "n8n-nodes-base.if",
+   "typeVersion": 2.3,
+   "position": [
+    1344,
+    576
+   ],
+   "parameters": {
+    "conditions": {
+     "options": {
+      "caseSensitive": true,
+      "leftValue": "",
+      "typeValidation": "loose",
+      "version": 1
+     },
+     "conditions": [
+      {
+       "leftValue": "={{ $json.aguardandoPagamento }}",
+       "operator": {
+        "type": "boolean",
+        "operation": "true"
+       },
+       "rightValue": ""
+      }
+     ],
+     "combinator": "and"
+    },
+    "options": {}
+   }
+  },
+  {
+   "id": "e52a842e-078c-43ef-86d6-7929a382b0dc",
+   "name": "E-mail: Confirmação ao Comprador",
+   "type": "n8n-nodes-base.executeWorkflow",
+   "typeVersion": 1.3,
+   "executeOnce": true,
+   "onError": "continueRegularOutput",
+   "position": [
+    896,
+    768
+   ],
+   "parameters": {
+    "workflowId": {
+     "__rl": true,
+     "mode": "id",
+     "value": "QG7wbU8SfM9ldM8E",
+     "cachedResultName": "Conector: e-mail padrão"
+    },
+    "mode": "each",
+    "workflowInputs": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "para": "={{ $(\"Normalizar Evento\").item.json.clienteEmail }}",
+      "assunto": "=Pedido #{{ $(\"Normalizar Evento\").item.json.numero }} confirmado - {{ $(\"Normalizar Evento\").item.json.nome }}",
+      "titulo": "",
+      "corpo": "=<p>Olá, {{ $('Normalizar Evento').first().json.clienteNome }}!</p><p>Recebemos o pagamento do seu pedido <strong>#{{ $('Normalizar Evento').first().json.numero }}</strong> (R$ {{ $('Normalizar Evento').first().json.totalReais }}).</p><p>Itens: {{ $('Normalizar Evento').first().json.itensTexto }}</p><p>Acompanhe em <a href=\"{{ $('Normalizar Evento').first().json.url }}/pedido/{{ $('Normalizar Evento').first().json.referencia }}\">{{ $('Normalizar Evento').first().json.url }}/pedido/{{ $('Normalizar Evento').first().json.referencia }}</a>.</p><p>{{ $('Normalizar Evento').first().json.nome }}</p>",
+      "botao_texto": "",
+      "botao_url": "",
+      "remetente_nome": "={{ $(\"Normalizar Evento\").item.json.nome }}",
+      "responder_para": "={{ $(\"Normalizar Evento\").item.json.lojistaEmail }}",
+      "empresa": "lojas",
+      "origem": "Lojas - Onboarding e Pedidos",
+      "rodape": "",
+      "copia": "",
+      "copia_oculta": ""
+     },
+     "schema": [
+      {
+       "id": "para",
+       "displayName": "para",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "assunto",
+       "displayName": "assunto",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "titulo",
+       "displayName": "titulo",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "corpo",
+       "displayName": "corpo",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "botao_texto",
+       "displayName": "botao_texto",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "botao_url",
+       "displayName": "botao_url",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "remetente_nome",
+       "displayName": "remetente_nome",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "responder_para",
+       "displayName": "responder_para",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "empresa",
+       "displayName": "empresa",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "origem",
+       "displayName": "origem",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "rodape",
+       "displayName": "rodape",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "copia",
+       "displayName": "copia",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "copia_oculta",
+       "displayName": "copia_oculta",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "212945cd-d782-46af-b6ee-bb717e02afec",
+   "name": "E-mail: Redefinir Senha",
+   "type": "n8n-nodes-base.executeWorkflow",
+   "typeVersion": 1.3,
+   "executeOnce": true,
+   "onError": "continueRegularOutput",
+   "position": [
+    672,
+    1104
+   ],
+   "parameters": {
+    "workflowId": {
+     "__rl": true,
+     "mode": "id",
+     "value": "QG7wbU8SfM9ldM8E",
+     "cachedResultName": "Conector: e-mail padrão"
+    },
+    "mode": "each",
+    "workflowInputs": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "para": "={{ $json.email }}",
+      "assunto": "=Redefinir a senha do painel - {{ $json.nome }}",
+      "titulo": "",
+      "corpo": "=<p>Olá!</p><p>Recebemos um pedido para redefinir a senha do painel da loja <strong>{{ $json.nome }}</strong>.</p><p><a href=\"{{ $json.link }}\">Clique aqui para definir uma nova senha</a> - o link vale por 1 hora.</p><p>Se não foi você, ignore este e-mail: nada muda.</p><p>- Avila Ops</p>",
+      "botao_texto": "",
+      "botao_url": "",
+      "remetente_nome": "Avila Ops",
+      "responder_para": "",
+      "empresa": "lojas",
+      "origem": "Lojas - Onboarding e Pedidos",
+      "rodape": "",
+      "copia": "",
+      "copia_oculta": ""
+     },
+     "schema": [
+      {
+       "id": "para",
+       "displayName": "para",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "assunto",
+       "displayName": "assunto",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "titulo",
+       "displayName": "titulo",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "corpo",
+       "displayName": "corpo",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "botao_texto",
+       "displayName": "botao_texto",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "botao_url",
+       "displayName": "botao_url",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "remetente_nome",
+       "displayName": "remetente_nome",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "responder_para",
+       "displayName": "responder_para",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "empresa",
+       "displayName": "empresa",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "origem",
+       "displayName": "origem",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "rodape",
+       "displayName": "rodape",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "copia",
+       "displayName": "copia",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "copia_oculta",
+       "displayName": "copia_oculta",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "0cf35367-8dde-4d24-a583-809de1db156b",
+   "name": "Todo Dia às 6h",
+   "type": "n8n-nodes-base.scheduleTrigger",
+   "typeVersion": 1.2,
+   "position": [
+    0,
+    1408
+   ],
+   "parameters": {
+    "rule": {
+     "interval": [
+      {
+       "field": "cronExpression",
+       "expression": "0 6 * * *"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "a37e68ac-23b5-4c5f-be50-670ecedb58f7",
+   "name": "Verificar Inadimplência",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.5,
+   "position": [
+    224,
+    1408
+   ],
+   "parameters": {
+    "method": "POST",
+    "url": "https://lojas.avilaops.com/api/admin/cobranca/verificar",
+    "authentication": "genericCredentialType",
+    "genericAuthType": "httpBearerAuth",
+    "options": {}
+   },
+   "credentials": {
+    "httpBearerAuth": {
+     "id": "BIftJgoyPwxr2d55",
+     "name": "Lojas Admin Token"
+    }
+   }
+  },
+  {
+   "id": "7c436df9-c449-4192-91d9-22122a43abed",
+   "name": "E-mail: Loja Suspensa",
+   "type": "n8n-nodes-base.executeWorkflow",
+   "typeVersion": 1.3,
+   "executeOnce": true,
+   "retryOnFail": true,
+   "onError": "continueRegularOutput",
+   "position": [
+    688,
+    1264
+   ],
+   "parameters": {
+    "workflowId": {
+     "__rl": true,
+     "mode": "id",
+     "value": "QG7wbU8SfM9ldM8E",
+     "cachedResultName": "Conector: e-mail padrão"
+    },
+    "mode": "each",
+    "workflowInputs": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "para": "={{ $json.lojistaEmail }}",
+      "assunto": "=Sua loja {{ $json.nome }} foi pausada - vamos resolver?",
+      "titulo": "",
+      "corpo": "=<p>Olá!</p><p>A loja <strong>{{ $json.nome }}</strong> ficou pausada: a vitrine continua no ar, mas o carrinho e o pagamento foram desligados.</p><p>Motivo: {{ $json.motivo || 'mensalidade em aberto' }}.</p><p>Para reativar na hora, atualize a cobrança em <a href=\"{{ $json.link || 'https://lojas.avilaops.com/painel?aba=assinatura' }}\">seu painel</a>. Se preferir, responda este e-mail que a gente resolve junto.</p><p>- Avila Ops</p>",
+      "botao_texto": "",
+      "botao_url": "",
+      "remetente_nome": "Avila Ops",
+      "responder_para": "",
+      "empresa": "lojas",
+      "origem": "Lojas - Onboarding e Pedidos",
+      "rodape": "",
+      "copia": "",
+      "copia_oculta": ""
+     },
+     "schema": [
+      {
+       "id": "para",
+       "displayName": "para",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "assunto",
+       "displayName": "assunto",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "titulo",
+       "displayName": "titulo",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "corpo",
+       "displayName": "corpo",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "botao_texto",
+       "displayName": "botao_texto",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "botao_url",
+       "displayName": "botao_url",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "remetente_nome",
+       "displayName": "remetente_nome",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "responder_para",
+       "displayName": "responder_para",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "empresa",
+       "displayName": "empresa",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "origem",
+       "displayName": "origem",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "rodape",
+       "displayName": "rodape",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "copia",
+       "displayName": "copia",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "copia_oculta",
+       "displayName": "copia_oculta",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "473534b4-b53f-462f-aca6-543b00feec8e",
+   "name": "Todoist: Cobrar Mensalidade",
+   "type": "n8n-nodes-base.todoist",
+   "typeVersion": 2.2,
+   "executeOnce": true,
+   "retryOnFail": true,
+   "maxTries": 3,
+   "waitBetweenTries": 2000,
+   "onError": "continueRegularOutput",
+   "position": [
+    1480,
+    1440
+   ],
+   "parameters": {
+    "project": {
+     "__rl": true,
+     "mode": "id",
+     "value": "6hGQhVMXmQmv23hG"
+    },
+    "content": "=Cobranca recusada {{ $json.tentativas }}x: loja {{ $json.nome }} ({{ $json.slug }})",
+    "options": {
+     "description": "=WhatsApp: {{ $json.lojistaWhatsapp }}\nE-mail: {{ $json.lojistaEmail }}\nTentativas: {{ $json.tentativas }} · pausa automatica em {{ $json.diasRestantes }} dias.\nO lojista ja recebeu e-mail e WhatsApp. Ligar antes de deixar suspender.",
+     "dueLang": "pt",
+     "dueString": "hoje",
+     "priority": "={{ $json.diasRestantes <= 3 ? 4 : 3 }}"
+    },
+    "authentication": "oAuth2"
+   },
+   "credentials": {
+    "todoistOAuth2Api": {
+     "id": "HjSrKt2tqWYpxU8I",
+     "name": "Todoist OAuth2 (app da casa) - conectar no navegador"
+    }
+   }
+  },
+  {
+   "id": "dce43aa4-5fcd-478f-944d-67ba6bcfb1d5",
+   "name": "Todoist: Revisar Presença Visual",
+   "type": "n8n-nodes-base.todoist",
+   "typeVersion": 2.2,
+   "executeOnce": true,
+   "onError": "continueRegularOutput",
+   "position": [
+    672,
+    1456
+   ],
+   "parameters": {
+    "project": {
+     "__rl": true,
+     "mode": "id",
+     "value": "6hGQhVMXmQmv23hG"
+    },
+    "content": "=Revisar identidade publicada: {{ $json.nome }}",
+    "options": {
+     "description": "=Loja: {{ $json.url }}\nPersonalidade: {{ $json.personalidade }}\nDireção fotográfica: {{ $json.direcaoFotografica }}\n\nValidar logo, banner, contraste e fotos reais do catálogo.",
+     "dueLang": "pt",
+     "dueString": "amanhã",
+     "priority": 3
+    },
+    "authentication": "oAuth2"
+   },
+   "credentials": {
+    "todoistOAuth2Api": {
+     "id": "HjSrKt2tqWYpxU8I",
+     "name": "Todoist OAuth2 (app da casa) - conectar no navegador"
+    }
+   }
+  },
+  {
+   "id": "e5e79568-173d-40e7-a550-ae740bd70cc4",
+   "name": "E-mail: Carrinho Abandonado",
+   "type": "n8n-nodes-base.executeWorkflow",
+   "typeVersion": 1.3,
+   "executeOnce": true,
+   "onError": "continueRegularOutput",
+   "position": [
+    672,
+    1552
+   ],
+   "parameters": {
+    "workflowId": {
+     "__rl": true,
+     "mode": "id",
+     "value": "QG7wbU8SfM9ldM8E",
+     "cachedResultName": "Conector: e-mail padrão"
+    },
+    "mode": "each",
+    "workflowInputs": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "para": "={{ $json.clienteEmail }}",
+      "assunto": "=Seu carrinho na {{ $json.nome }} ainda está esperando",
+      "titulo": "",
+      "corpo": "=<p>Oi, {{ $json.clienteNome.split(\" \")[0] }}!</p><p>Você deixou no carrinho: {{ $json.itensTexto }} (R$ {{ $json.totalReais }}).</p><p><a href=\"{{ $json.linkCarrinho }}\">Finalizar minha compra</a> - PIX aprova na hora.</p><p>Qualquer dúvida, responda este e-mail.</p><p>{{ $json.nome }}</p>",
+      "botao_texto": "",
+      "botao_url": "",
+      "remetente_nome": "={{ $json.nome }}",
+      "responder_para": "={{ $json.lojistaEmail }}",
+      "empresa": "lojas",
+      "origem": "Lojas - Onboarding e Pedidos",
+      "rodape": "",
+      "copia": "",
+      "copia_oculta": ""
+     },
+     "schema": [
+      {
+       "id": "para",
+       "displayName": "para",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "assunto",
+       "displayName": "assunto",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "titulo",
+       "displayName": "titulo",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "corpo",
+       "displayName": "corpo",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "botao_texto",
+       "displayName": "botao_texto",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "botao_url",
+       "displayName": "botao_url",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "remetente_nome",
+       "displayName": "remetente_nome",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "responder_para",
+       "displayName": "responder_para",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "empresa",
+       "displayName": "empresa",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "origem",
+       "displayName": "origem",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "rodape",
+       "displayName": "rodape",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "copia",
+       "displayName": "copia",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "copia_oculta",
+       "displayName": "copia_oculta",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "0a221771-1d78-4020-b244-ec8446436b0c",
+   "name": "E-mail: Nova Avaliação",
+   "type": "n8n-nodes-base.executeWorkflow",
+   "typeVersion": 1.3,
+   "executeOnce": true,
+   "onError": "continueRegularOutput",
+   "position": [
+    672,
+    1664
+   ],
+   "parameters": {
+    "workflowId": {
+     "__rl": true,
+     "mode": "id",
+     "value": "QG7wbU8SfM9ldM8E",
+     "cachedResultName": "Conector: e-mail padrão"
+    },
+    "mode": "each",
+    "workflowInputs": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "para": "={{ $json.lojistaEmail }}",
+      "assunto": "=Nova avaliação ({{ $json.nota }}★) em {{ $json.produtoNome }}",
+      "titulo": "",
+      "corpo": "=<p>{{ $json.autor }} avaliou <strong>{{ $json.produtoNome }}</strong> com {{ $json.nota }} estrela(s).</p><p>Aprove ou oculte em <a href=\"https://lojas.avilaops.com/painel\">lojas.avilaops.com/painel</a> → Avaliações.</p>",
+      "botao_texto": "",
+      "botao_url": "",
+      "remetente_nome": "Avila Ops",
+      "responder_para": "",
+      "empresa": "lojas",
+      "origem": "Lojas - Onboarding e Pedidos",
+      "rodape": "",
+      "copia": "",
+      "copia_oculta": ""
+     },
+     "schema": [
+      {
+       "id": "para",
+       "displayName": "para",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "assunto",
+       "displayName": "assunto",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "titulo",
+       "displayName": "titulo",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "corpo",
+       "displayName": "corpo",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "botao_texto",
+       "displayName": "botao_texto",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "botao_url",
+       "displayName": "botao_url",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "remetente_nome",
+       "displayName": "remetente_nome",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "responder_para",
+       "displayName": "responder_para",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "empresa",
+       "displayName": "empresa",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "origem",
+       "displayName": "origem",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "rodape",
+       "displayName": "rodape",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "copia",
+       "displayName": "copia",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "copia_oculta",
+       "displayName": "copia_oculta",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "511e0e49-4e39-46f7-85b6-f76e8cacfb42",
+   "name": "E-mail: Relatório Semanal",
+   "type": "n8n-nodes-base.executeWorkflow",
+   "typeVersion": 1.3,
+   "executeOnce": true,
+   "onError": "continueRegularOutput",
+   "position": [
+    672,
+    1808
+   ],
+   "parameters": {
+    "workflowId": {
+     "__rl": true,
+     "mode": "id",
+     "value": "QG7wbU8SfM9ldM8E",
+     "cachedResultName": "Conector: e-mail padrão"
+    },
+    "mode": "each",
+    "workflowInputs": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "para": "={{ $json.lojistaEmail }}",
+      "assunto": "=Sua semana na {{ $json.nome }}: {{ $json.pedidosPagos }} pedido(s), R$ {{ $json.receitaReais }}",
+      "titulo": "",
+      "corpo": "=<p>Olá!</p><p>Resumo de <strong>{{ $json.periodo }}</strong> da loja <strong>{{ $json.nome }}</strong>:</p><ul><li>Pedidos pagos: <strong>{{ $json.pedidosPagos }}</strong></li><li>Receita: <strong>R$ {{ $json.receitaReais }}</strong></li><li>Ticket médio: R$ {{ $json.ticketReais }}</li><li>Mais vendidos: {{ $json.topProdutos }}</li><li>Carrinhos abandonados: {{ $json.carrinhosAbandonados }}</li><li>Novas avaliações: {{ $json.novasAvaliacoes }}</li></ul><p>Painel: <a href=\"https://lojas.avilaops.com/painel\">lojas.avilaops.com/painel</a></p><p>- Avila Ops</p>",
+      "botao_texto": "",
+      "botao_url": "",
+      "remetente_nome": "Avila Ops",
+      "responder_para": "",
+      "empresa": "lojas",
+      "origem": "Lojas - Onboarding e Pedidos",
+      "rodape": "",
+      "copia": "",
+      "copia_oculta": ""
+     },
+     "schema": [
+      {
+       "id": "para",
+       "displayName": "para",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "assunto",
+       "displayName": "assunto",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "titulo",
+       "displayName": "titulo",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "corpo",
+       "displayName": "corpo",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "botao_texto",
+       "displayName": "botao_texto",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "botao_url",
+       "displayName": "botao_url",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "remetente_nome",
+       "displayName": "remetente_nome",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "responder_para",
+       "displayName": "responder_para",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "empresa",
+       "displayName": "empresa",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "origem",
+       "displayName": "origem",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "rodape",
+       "displayName": "rodape",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "copia",
+       "displayName": "copia",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "copia_oculta",
+       "displayName": "copia_oculta",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "70809cdf-ba72-4f26-aaa5-4b4a2b442a5a",
+   "name": "A Cada Hora",
+   "type": "n8n-nodes-base.scheduleTrigger",
+   "typeVersion": 1.2,
+   "position": [
+    0,
+    1904
+   ],
+   "parameters": {
+    "rule": {
+     "interval": [
+      {
+       "field": "cronExpression",
+       "expression": "15 * * * *"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "a669aade-9280-4fdf-aebd-33d17dcc630a",
+   "name": "Verificar Carrinhos Abandonados",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.5,
+   "position": [
+    224,
+    1776
+   ],
+   "parameters": {
+    "method": "POST",
+    "url": "https://lojas.avilaops.com/api/admin/carrinhos/verificar",
+    "authentication": "genericCredentialType",
+    "genericAuthType": "httpBearerAuth",
+    "options": {}
+   },
+   "credentials": {
+    "httpBearerAuth": {
+     "id": "BIftJgoyPwxr2d55",
+     "name": "Lojas Admin Token"
+    }
+   }
+  },
+  {
+   "id": "8a9567cd-06ec-4cfd-bc96-0004b759026b",
+   "name": "Segunda às 7h",
+   "type": "n8n-nodes-base.scheduleTrigger",
+   "typeVersion": 1.2,
+   "position": [
+    0,
+    2064
+   ],
+   "parameters": {
+    "rule": {
+     "interval": [
+      {
+       "field": "cronExpression",
+       "expression": "0 7 * * 1"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "f8a37b08-2a8c-4c86-8a3c-13afee615fd3",
+   "name": "Emitir Relatórios Semanais",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.5,
+   "position": [
+    224,
+    2256
+   ],
+   "parameters": {
+    "method": "POST",
+    "url": "https://lojas.avilaops.com/api/admin/relatorios/semanal",
+    "authentication": "genericCredentialType",
+    "genericAuthType": "httpBearerAuth",
+    "options": {}
+   },
+   "credentials": {
+    "httpBearerAuth": {
+     "id": "BIftJgoyPwxr2d55",
+     "name": "Lojas Admin Token"
+    }
+   }
+  },
+  {
+   "id": "09d173a6-3b7b-44f3-b26d-f8c22e977d32",
+   "name": "WhatsApp: Boas-vindas ao Lojista",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.5,
+   "executeOnce": true,
+   "onError": "continueRegularOutput",
+   "position": [
+    672,
+    0
+   ],
+   "parameters": {
+    "method": "POST",
+    "url": "https://graph.facebook.com/v21.0/1165155426689680/messages",
+    "authentication": "genericCredentialType",
+    "genericAuthType": "httpHeaderAuth",
+    "sendBody": true,
+    "specifyBody": "json",
+    "jsonBody": "={{ JSON.stringify({ messaging_product: \"whatsapp\", to: $json.lojistaWhatsapp, type: \"template\", template: { name: \"loja_no_ar\", language: { code: \"pt_BR\" }, components: [{ type: \"body\", parameters: [{ type: \"text\", text: $json.nome }, { type: \"text\", text: $json.url }] }] } }) }}",
+    "options": {}
+   },
+   "credentials": {
+    "httpHeaderAuth": {
+     "id": "x13AR6SjVCgewvPw",
+     "name": "WhatsApp Cloud API (Meta)"
+    }
+   }
+  },
+  {
+   "id": "bb2628b4-ba56-489c-8024-ee076b64ae2a",
+   "name": "WhatsApp: Pedir 2 Indicações",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.5,
+   "executeOnce": true,
+   "onError": "continueRegularOutput",
+   "position": [
+    2016,
+    -160
+   ],
+   "parameters": {
+    "method": "POST",
+    "url": "https://graph.facebook.com/v21.0/1165155426689680/messages",
+    "authentication": "genericCredentialType",
+    "genericAuthType": "httpHeaderAuth",
+    "sendBody": true,
+    "specifyBody": "json",
+    "jsonBody": "={{ JSON.stringify({ messaging_product: \"whatsapp\", to: $(\"Normalizar Evento\").item.json.lojistaWhatsapp, type: \"template\", template: { name: \"loja_indicacoes\", language: { code: \"pt_BR\" }, components: [{ type: \"body\", parameters: [{ type: \"text\", text: $(\"Normalizar Evento\").item.json.nome }] }] } }) }}",
+    "options": {}
+   },
+   "credentials": {
+    "httpHeaderAuth": {
+     "id": "x13AR6SjVCgewvPw",
+     "name": "WhatsApp Cloud API (Meta)"
+    }
+   }
+  },
+  {
+   "id": "b9fc3dbb-50d0-494d-a1d7-13ac0e7c860d",
+   "name": "WhatsApp: Loja Configurada",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.5,
+   "executeOnce": true,
+   "onError": "continueRegularOutput",
+   "position": [
+    896,
+    384
+   ],
+   "parameters": {
+    "method": "POST",
+    "url": "https://graph.facebook.com/v21.0/1165155426689680/messages",
+    "authentication": "genericCredentialType",
+    "genericAuthType": "httpHeaderAuth",
+    "sendBody": true,
+    "specifyBody": "json",
+    "jsonBody": "={{ JSON.stringify({ messaging_product: \"whatsapp\", to: $json.lojistaWhatsapp, type: \"template\", template: { name: \"loja_configurada\", language: { code: \"pt_BR\" }, components: [{ type: \"body\", parameters: [{ type: \"text\", text: $json.nome }, { type: \"text\", text: $json.url }] }] } }) }}",
+    "options": {}
+   },
+   "credentials": {
+    "httpHeaderAuth": {
+     "id": "x13AR6SjVCgewvPw",
+     "name": "WhatsApp Cloud API (Meta)"
+    }
+   }
+  },
+  {
+   "id": "ec755940-8c90-4b98-9bf2-96289eadb5ed",
+   "name": "WhatsApp: Lembrete de PIX",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.5,
+   "executeOnce": true,
+   "onError": "continueRegularOutput",
+   "position": [
+    1568,
+    576
+   ],
+   "parameters": {
+    "method": "POST",
+    "url": "https://graph.facebook.com/v21.0/1165155426689680/messages",
+    "authentication": "genericCredentialType",
+    "genericAuthType": "httpHeaderAuth",
+    "sendBody": true,
+    "specifyBody": "json",
+    "jsonBody": "={{ JSON.stringify({ messaging_product: \"whatsapp\", to: $(\"Normalizar Evento\").item.json.clienteTelefone, type: \"template\", template: { name: \"pix_pendente\", language: { code: \"pt_BR\" }, components: [{ type: \"body\", parameters: [{ type: \"text\", text: $(\"Normalizar Evento\").item.json.clienteNome.split(\" \")[0] }, { type: \"text\", text: $(\"Normalizar Evento\").item.json.nome }, { type: \"text\", text: $(\"Normalizar Evento\").item.json.totalReais }] }] } }) }}",
+    "options": {}
+   },
+   "credentials": {
+    "httpHeaderAuth": {
+     "id": "x13AR6SjVCgewvPw",
+     "name": "WhatsApp Cloud API (Meta)"
+    }
+   }
+  },
+  {
+   "id": "7d0b6db4-148e-4733-968c-de64f5f2400c",
+   "name": "WhatsApp: Pedido Pago (Lojista)",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.5,
+   "executeOnce": true,
+   "onError": "continueRegularOutput",
+   "position": [
+    672,
+    720
+   ],
+   "parameters": {
+    "method": "POST",
+    "url": "https://graph.facebook.com/v21.0/1165155426689680/messages",
+    "authentication": "genericCredentialType",
+    "genericAuthType": "httpHeaderAuth",
+    "sendBody": true,
+    "specifyBody": "json",
+    "jsonBody": "={{ JSON.stringify({ messaging_product: \"whatsapp\", to: $json.lojistaWhatsapp, type: \"template\", template: { name: \"pedido_pago_lojista\", language: { code: \"pt_BR\" }, components: [{ type: \"body\", parameters: [{ type: \"text\", text: String($json.numero) }, { type: \"text\", text: $json.totalReais }, { type: \"text\", text: $json.clienteNome }, { type: \"text\", text: $json.itensTexto }] }] } }) }}",
+    "options": {}
+   },
+   "credentials": {
+    "httpHeaderAuth": {
+     "id": "x13AR6SjVCgewvPw",
+     "name": "WhatsApp Cloud API (Meta)"
+    }
+   }
+  },
+  {
+   "id": "dbda4bf6-4e8b-4831-a5fa-7339c766683f",
+   "name": "WhatsApp: Pagamento Recusado",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.5,
+   "executeOnce": true,
+   "onError": "continueRegularOutput",
+   "position": [
+    672,
+    912
+   ],
+   "parameters": {
+    "method": "POST",
+    "url": "https://graph.facebook.com/v21.0/1165155426689680/messages",
+    "authentication": "genericCredentialType",
+    "genericAuthType": "httpHeaderAuth",
+    "sendBody": true,
+    "specifyBody": "json",
+    "jsonBody": "={{ JSON.stringify({ messaging_product: \"whatsapp\", to: $json.clienteTelefone, type: \"template\", template: { name: \"pagamento_recusado\", language: { code: \"pt_BR\" }, components: [{ type: \"body\", parameters: [{ type: \"text\", text: $json.clienteNome.split(\" \")[0] }, { type: \"text\", text: $json.nome }, { type: \"text\", text: $json.url + \"/carrinho\" }] }] } }) }}",
+    "options": {}
+   },
+   "credentials": {
+    "httpHeaderAuth": {
+     "id": "x13AR6SjVCgewvPw",
+     "name": "WhatsApp Cloud API (Meta)"
+    }
+   }
+  },
+  {
+   "id": "b1dacec2-0dd7-4863-8807-6197b977b27b",
+   "name": "WhatsApp: Carrinho Abandonado",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.5,
+   "executeOnce": true,
+   "onError": "continueRegularOutput",
+   "position": [
+    960,
+    1520
+   ],
+   "parameters": {
+    "method": "POST",
+    "url": "https://graph.facebook.com/v21.0/1165155426689680/messages",
+    "authentication": "genericCredentialType",
+    "genericAuthType": "httpHeaderAuth",
+    "sendBody": true,
+    "specifyBody": "json",
+    "jsonBody": "={{ JSON.stringify({ messaging_product: \"whatsapp\", to: $json.clienteTelefone, type: \"template\", template: { name: \"carrinho_abandonado\", language: { code: \"pt_BR\" }, components: [{ type: \"body\", parameters: [{ type: \"text\", text: $json.clienteNome.split(\" \")[0] }, { type: \"text\", text: $json.nome }, { type: \"text\", text: $json.itensTexto }, { type: \"text\", text: $json.totalReais }, { type: \"text\", text: $json.linkCarrinho }] }] } }) }}",
+    "options": {}
+   },
+   "credentials": {
+    "httpHeaderAuth": {
+     "id": "x13AR6SjVCgewvPw",
+     "name": "WhatsApp Cloud API (Meta)"
+    }
+   }
+  },
+  {
+   "id": "24cb0fb8-6298-4802-8008-1d09a6650c49",
+   "name": "E-mail: Voltou ao Estoque",
+   "notes": "Fila de espera de estoque. Cada pessoa e avisada uma vez por produto - quem controla isso e o campo avisadoEm na plataforma.",
+   "type": "n8n-nodes-base.executeWorkflow",
+   "typeVersion": 1.3,
+   "position": [
+    672,
+    1984
+   ],
+   "parameters": {
+    "workflowId": {
+     "__rl": true,
+     "mode": "id",
+     "value": "QG7wbU8SfM9ldM8E",
+     "cachedResultName": "Conector: e-mail padrão"
+    },
+    "mode": "each",
+    "workflowInputs": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "para": "={{ $json.destinatario }}",
+      "assunto": "={{ $json.produtoNome }} voltou para a loja",
+      "titulo": "",
+      "corpo": "=<p>Oi!</p><p>Voce pediu para ser avisado: <strong>{{ $json.produtoNome }}</strong> voltou ao estoque da {{ $json.nome }} por R$ {{ $json.precoReais }}.</p><p><a href=\"{{ $json.url }}\">Ver o produto</a></p><p>Como a quantidade e limitada, pode acabar de novo.</p><p>{{ $json.nome }}</p>",
+      "botao_texto": "",
+      "botao_url": "",
+      "remetente_nome": "={{ $json.nome }}",
+      "responder_para": "={{ $json.lojistaEmail }}",
+      "empresa": "lojas",
+      "origem": "Lojas - Onboarding e Pedidos",
+      "rodape": "",
+      "copia": "",
+      "copia_oculta": ""
+     },
+     "schema": [
+      {
+       "id": "para",
+       "displayName": "para",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "assunto",
+       "displayName": "assunto",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "titulo",
+       "displayName": "titulo",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "corpo",
+       "displayName": "corpo",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "botao_texto",
+       "displayName": "botao_texto",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "botao_url",
+       "displayName": "botao_url",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "remetente_nome",
+       "displayName": "remetente_nome",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "responder_para",
+       "displayName": "responder_para",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "empresa",
+       "displayName": "empresa",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "origem",
+       "displayName": "origem",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "rodape",
+       "displayName": "rodape",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "copia",
+       "displayName": "copia",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "copia_oculta",
+       "displayName": "copia_oculta",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "90c19cd9-b1f6-459a-b76d-c65f9aebe583",
+   "name": "Verificar Fila de Estoque",
+   "notes": "Procura quem esperava produto que voltou ao estoque e emite loja.voltou-ao-estoque. Idempotente: rodar de novo nao avisa ninguem duas vezes.",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.5,
+   "position": [
+    224,
+    2000
+   ],
+   "parameters": {
+    "method": "POST",
+    "url": "https://lojas.avilaops.com/api/admin/estoque/avisos",
+    "authentication": "genericCredentialType",
+    "genericAuthType": "httpBearerAuth",
+    "options": {}
+   },
+   "credentials": {
+    "httpBearerAuth": {
+     "id": "BIftJgoyPwxr2d55",
+     "name": "Lojas Admin Token"
+    }
+   }
+  },
+  {
+   "id": "946ee802-89dc-4ad4-968e-0c8e76dd4209",
+   "name": "Primeira Recusa?",
+   "notes": "tentativas <= 1 segue pelo caminho suave. A partir da 2a a mensagem muda de tom e o Nicolas entra no circuito.",
+   "type": "n8n-nodes-base.if",
+   "typeVersion": 2.2,
+   "position": [
+    1000,
+    1360
+   ],
+   "parameters": {
+    "conditions": {
+     "options": {
+      "caseSensitive": true,
+      "leftValue": "",
+      "typeValidation": "loose",
+      "version": 1
+     },
+     "conditions": [
+      {
+       "id": "tent",
+       "leftValue": "={{ $json.tentativas }}",
+       "rightValue": 1,
+       "operator": {
+        "type": "number",
+        "operation": "lte"
+       }
+      }
+     ],
+     "combinator": "and"
+    }
+   }
+  },
+  {
+   "id": "2af63271-35b2-42e0-8039-6eb9195cdbe4",
+   "name": "E-mail: Cartao Recusado",
+   "notes": "Primeira recusa. Tom leve: quase sempre e cartao vencido ou limite, e o MP ainda vai tentar de novo sozinho.",
+   "type": "n8n-nodes-base.executeWorkflow",
+   "typeVersion": 1.3,
+   "retryOnFail": true,
+   "position": [
+    1240,
+    1264
+   ],
+   "parameters": {
+    "workflowId": {
+     "__rl": true,
+     "mode": "id",
+     "value": "QG7wbU8SfM9ldM8E",
+     "cachedResultName": "Conector: e-mail padrão"
+    },
+    "mode": "each",
+    "workflowInputs": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "para": "={{ $json.lojistaEmail }}",
+      "assunto": "=Nao conseguimos cobrar a mensalidade da {{ $json.nome }}",
+      "titulo": "",
+      "corpo": "=<p>Ola!</p><p>A cobranca da mensalidade da <strong>{{ $json.nome }}</strong> foi recusada pelo banco. Costuma ser cartao vencido, limite ou uma bloqueio automatico do emissor &mdash; nada grave.</p><p>O Mercado Pago ainda vai tentar de novo automaticamente. Se quiser resolver agora, atualize o cartao em <a href=\"{{ $json.link || 'https://lojas.avilaops.com/painel?aba=assinatura' }}\">seu painel</a>.</p><p>Sua loja continua no ar normalmente{{ $json.diasRestantes > 0 ? ' - voce tem ' + $json.diasRestantes + ' dias antes de qualquer pausa' : '' }}.</p><p>Qualquer duvida, e so responder este e-mail.</p><p>&mdash; Avila Ops</p>",
+      "botao_texto": "",
+      "botao_url": "",
+      "remetente_nome": "Avila Ops",
+      "responder_para": "nicolas@avilaops.com",
+      "empresa": "lojas",
+      "origem": "Lojas - Onboarding e Pedidos",
+      "rodape": "",
+      "copia": "",
+      "copia_oculta": ""
+     },
+     "schema": [
+      {
+       "id": "para",
+       "displayName": "para",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "assunto",
+       "displayName": "assunto",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "titulo",
+       "displayName": "titulo",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "corpo",
+       "displayName": "corpo",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "botao_texto",
+       "displayName": "botao_texto",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "botao_url",
+       "displayName": "botao_url",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "remetente_nome",
+       "displayName": "remetente_nome",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "responder_para",
+       "displayName": "responder_para",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "empresa",
+       "displayName": "empresa",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "origem",
+       "displayName": "origem",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "rodape",
+       "displayName": "rodape",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "copia",
+       "displayName": "copia",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "copia_oculta",
+       "displayName": "copia_oculta",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "ecb994a7-6e21-4353-8de7-88ece435fb73",
+   "name": "E-mail: Mensalidade em Atraso",
+   "notes": "Segunda recusa em diante. Diz o prazo real e o que acontece na pausa, sem rodeio.",
+   "type": "n8n-nodes-base.executeWorkflow",
+   "typeVersion": 1.3,
+   "retryOnFail": true,
+   "position": [
+    1240,
+    1440
+   ],
+   "parameters": {
+    "workflowId": {
+     "__rl": true,
+     "mode": "id",
+     "value": "QG7wbU8SfM9ldM8E",
+     "cachedResultName": "Conector: e-mail padrão"
+    },
+    "mode": "each",
+    "workflowInputs": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "para": "={{ $json.lojistaEmail }}",
+      "assunto": "={{ $json.nome }}: {{ $json.tentativas }}a tentativa de cobranca recusada",
+      "titulo": "",
+      "corpo": "=<p>Ola!</p><p>Ja sao <strong>{{ $json.tentativas }} tentativas</strong> de cobranca recusadas na mensalidade da <strong>{{ $json.nome }}</strong>. Enquanto isso nao se resolve, a assinatura segue em aberto.</p><p><strong>{{ $json.diasRestantes > 0 ? 'Faltam ' + $json.diasRestantes + ' dias' : 'O prazo acabou' }}</strong> antes da loja ser pausada automaticamente. Pausada, a vitrine continua no ar, mas o carrinho e o pagamento sao desligados &mdash; ou seja, voce para de vender.</p><p><a href=\"{{ $json.link || 'https://lojas.avilaops.com/painel?aba=assinatura' }}\">Atualizar o cartao agora</a></p><p>Se o problema nao for o cartao, responda este e-mail que a gente resolve junto &mdash; da pra trocar a forma de pagamento.</p><p>&mdash; Avila Ops</p>",
+      "botao_texto": "",
+      "botao_url": "",
+      "remetente_nome": "Avila Ops",
+      "responder_para": "nicolas@avilaops.com",
+      "empresa": "lojas",
+      "origem": "Lojas - Onboarding e Pedidos",
+      "rodape": "",
+      "copia": "",
+      "copia_oculta": ""
+     },
+     "schema": [
+      {
+       "id": "para",
+       "displayName": "para",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "assunto",
+       "displayName": "assunto",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "titulo",
+       "displayName": "titulo",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "corpo",
+       "displayName": "corpo",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "botao_texto",
+       "displayName": "botao_texto",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "botao_url",
+       "displayName": "botao_url",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "remetente_nome",
+       "displayName": "remetente_nome",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "responder_para",
+       "displayName": "responder_para",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "empresa",
+       "displayName": "empresa",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "origem",
+       "displayName": "origem",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "rodape",
+       "displayName": "rodape",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "copia",
+       "displayName": "copia",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "copia_oculta",
+       "displayName": "copia_oculta",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "d6d7d646-509d-4268-ac39-a4360befe26b",
+   "name": "WhatsApp: Cartao Recusado",
+   "notes": "Template 'mensalidade_recusada' precisa ser aprovado na Meta (3 variaveis: loja, dias restantes, link). Ate la este no falha sozinho e o e-mail segue.",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "onError": "continueRegularOutput",
+   "position": [
+    1000,
+    1560
+   ],
+   "parameters": {
+    "method": "POST",
+    "url": "https://graph.facebook.com/v21.0/1165155426689680/messages",
+    "authentication": "genericCredentialType",
+    "genericAuthType": "httpHeaderAuth",
+    "sendBody": true,
+    "specifyBody": "json",
+    "jsonBody": "={{ JSON.stringify({ messaging_product: \"whatsapp\", to: $json.lojistaWhatsapp, type: \"template\", template: { name: \"mensalidade_recusada\", language: { code: \"pt_BR\" }, components: [{ type: \"body\", parameters: [{ type: \"text\", text: $json.nome }, { type: \"text\", text: String($json.diasRestantes) }, { type: \"text\", text: $json.link || \"https://lojas.avilaops.com/painel?aba=assinatura\" }] }] } }) }}",
+    "options": {}
+   },
+   "credentials": {
+    "httpHeaderAuth": {
+     "id": "x13AR6SjVCgewvPw",
+     "name": "WhatsApp Cloud API (Meta)"
+    }
+   }
+  },
+  {
+   "id": "5d6f538b-a3f6-49bb-a68c-43e5e5a4c35f",
+   "name": "E-mail: Mensalidade Paga",
+   "notes": "Recibo curto. Fecha o ciclo de quem passou pela regua e pagou: sem isso o lojista fica sem saber se resolveu.",
+   "type": "n8n-nodes-base.executeWorkflow",
+   "typeVersion": 1.3,
+   "retryOnFail": true,
+   "position": [
+    1240,
+    1700
+   ],
+   "parameters": {
+    "workflowId": {
+     "__rl": true,
+     "mode": "id",
+     "value": "QG7wbU8SfM9ldM8E",
+     "cachedResultName": "Conector: e-mail padrão"
+    },
+    "mode": "each",
+    "workflowInputs": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "para": "={{ $json.lojistaEmail }}",
+      "assunto": "=Mensalidade da {{ $json.nome }} confirmada",
+      "titulo": "",
+      "corpo": "=<p>Ola!</p><p>Recebemos o pagamento de <strong>R$ {{ $json.valorReais }}</strong> da mensalidade da <strong>{{ $json.nome }}</strong>. Esta tudo certo por mais um mes.</p><p>As faturas ficam guardadas em <a href=\"{{ $json.link || 'https://lojas.avilaops.com/painel?aba=assinatura' }}\">seu painel</a>.</p><p>&mdash; Avila Ops</p>",
+      "botao_texto": "",
+      "botao_url": "",
+      "remetente_nome": "Avila Ops",
+      "responder_para": "nicolas@avilaops.com",
+      "empresa": "lojas",
+      "origem": "Lojas - Onboarding e Pedidos",
+      "rodape": "",
+      "copia": "",
+      "copia_oculta": ""
+     },
+     "schema": [
+      {
+       "id": "para",
+       "displayName": "para",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "assunto",
+       "displayName": "assunto",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "titulo",
+       "displayName": "titulo",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "corpo",
+       "displayName": "corpo",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "botao_texto",
+       "displayName": "botao_texto",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "botao_url",
+       "displayName": "botao_url",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "remetente_nome",
+       "displayName": "remetente_nome",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "responder_para",
+       "displayName": "responder_para",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "empresa",
+       "displayName": "empresa",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "origem",
+       "displayName": "origem",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "rodape",
+       "displayName": "rodape",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "copia",
+       "displayName": "copia",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "copia_oculta",
+       "displayName": "copia_oculta",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "c48d2466-eda6-4638-8518-7ce58a092b92",
+   "name": "E-mail: Loja Reativada",
+   "notes": "Sai quando a loja volta de uma pausa. E o unico aviso de que o checkout voltou a funcionar.",
+   "type": "n8n-nodes-base.executeWorkflow",
+   "typeVersion": 1.3,
+   "retryOnFail": true,
+   "position": [
+    1240,
+    1840
+   ],
+   "parameters": {
+    "workflowId": {
+     "__rl": true,
+     "mode": "id",
+     "value": "QG7wbU8SfM9ldM8E",
+     "cachedResultName": "Conector: e-mail padrão"
+    },
+    "mode": "each",
+    "workflowInputs": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "para": "={{ $json.lojistaEmail }}",
+      "assunto": "={{ $json.nome }} esta vendendo de novo",
+      "titulo": "",
+      "corpo": "=<p>Boa noticia!</p><p>A <strong>{{ $json.nome }}</strong> foi reativada: o carrinho e o pagamento voltaram a funcionar normalmente.</p><p><a href=\"{{ $json.url || 'https://lojas.avilaops.com' }}\">Ver a loja</a></p><p>&mdash; Avila Ops</p>",
+      "botao_texto": "",
+      "botao_url": "",
+      "remetente_nome": "Avila Ops",
+      "responder_para": "nicolas@avilaops.com",
+      "empresa": "lojas",
+      "origem": "Lojas - Onboarding e Pedidos",
+      "rodape": "",
+      "copia": "",
+      "copia_oculta": ""
+     },
+     "schema": [
+      {
+       "id": "para",
+       "displayName": "para",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "assunto",
+       "displayName": "assunto",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "titulo",
+       "displayName": "titulo",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "corpo",
+       "displayName": "corpo",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "botao_texto",
+       "displayName": "botao_texto",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "botao_url",
+       "displayName": "botao_url",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "remetente_nome",
+       "displayName": "remetente_nome",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "responder_para",
+       "displayName": "responder_para",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "empresa",
+       "displayName": "empresa",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "origem",
+       "displayName": "origem",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "rodape",
+       "displayName": "rodape",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "copia",
+       "displayName": "copia",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "copia_oculta",
+       "displayName": "copia_oculta",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "02fc1ea4-f94b-4294-ad4d-7388fc8f890c",
+   "name": "WhatsApp: Loja Suspensa",
+   "notes": "Template 'loja_suspensa' precisa de aprovacao na Meta (2 variaveis: loja, link). Ate la falha sozinho sem derrubar o e-mail.",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "onError": "continueRegularOutput",
+   "position": [
+    1000,
+    1060
+   ],
+   "parameters": {
+    "method": "POST",
+    "url": "https://graph.facebook.com/v21.0/1165155426689680/messages",
+    "authentication": "genericCredentialType",
+    "genericAuthType": "httpHeaderAuth",
+    "sendBody": true,
+    "specifyBody": "json",
+    "jsonBody": "={{ JSON.stringify({ messaging_product: \"whatsapp\", to: $json.lojistaWhatsapp, type: \"template\", template: { name: \"loja_suspensa\", language: { code: \"pt_BR\" }, components: [{ type: \"body\", parameters: [{ type: \"text\", text: $json.nome }, { type: \"text\", text: $json.link || \"https://lojas.avilaops.com/painel?aba=assinatura\" }] }] } }) }}",
+    "options": {}
+   },
+   "credentials": {
+    "httpHeaderAuth": {
+     "id": "x13AR6SjVCgewvPw",
+     "name": "WhatsApp Cloud API (Meta)"
+    }
+   }
+  },
+  {
+   "id": "5a96d300-de9f-4ac2-88ab-1e9c3fa2c421",
+   "name": "Todoist: Loja Suspensa",
+   "notes": "Loja pausada e cliente que parou de vender. Prioridade 4 (urgente) sempre.",
+   "type": "n8n-nodes-base.todoist",
+   "typeVersion": 2.2,
+   "retryOnFail": true,
+   "maxTries": 3,
+   "waitBetweenTries": 2000,
+   "onError": "continueRegularOutput",
+   "position": [
+    1240,
+    1060
+   ],
+   "parameters": {
+    "project": {
+     "__rl": true,
+     "mode": "id",
+     "value": "6hGQhVMXmQmv23hG"
+    },
+    "content": "=Loja PAUSADA: {{ $json.nome }} ({{ $json.slug }})",
+    "options": {
+     "description": "=Motivo: {{ $json.motivo }}\nWhatsApp: {{ $json.lojistaWhatsapp }}\nE-mail: {{ $json.lojistaEmail }}\nO checkout esta desligado - o cliente parou de vender. Ligar hoje.",
+     "dueLang": "pt",
+     "dueString": "hoje",
+     "priority": 4
+    },
+    "authentication": "oAuth2"
+   },
+   "credentials": {
+    "todoistOAuth2Api": {
+     "id": "HjSrKt2tqWYpxU8I",
+     "name": "Todoist OAuth2 (app da casa) - conectar no navegador"
+    }
+   }
+  },
+  {
+   "id": "49d4318d-294d-4752-9a27-1b040953a6b2",
+   "name": "E-mail: Pedido Enviado",
+   "notes": "Sai uma vez so, na virada para ENVIADO (a plataforma controla). Transportadora, rastreio e linkPedido vem direto do corpo do webhook em vez do Normalizar Evento: campo exclusivo de um ramo nao precisa crescer o Set compartilhado, que e onde um erro de digitacao derrubaria todos os outros e-mails.",
+   "type": "n8n-nodes-base.executeWorkflow",
+   "typeVersion": 1.3,
+   "position": [
+    672,
+    2160
+   ],
+   "parameters": {
+    "workflowId": {
+     "__rl": true,
+     "mode": "id",
+     "value": "QG7wbU8SfM9ldM8E",
+     "cachedResultName": "Conector: e-mail padrão"
+    },
+    "mode": "each",
+    "workflowInputs": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "para": "={{ $json.clienteEmail }}",
+      "assunto": "=Pedido #{{ $json.numero }} enviado - {{ $json.nome }}",
+      "titulo": "",
+      "corpo": "=<p>Oi, {{ $json.clienteNome.split(\" \")[0] }}!</p><p>Seu pedido <strong>#{{ $json.numero }}</strong> saiu para entrega por <strong>{{ $('Receber Evento da Plataforma').item.json.body.transportadora }}</strong>.</p>{{ $('Receber Evento da Plataforma').item.json.body.rastreio ? '<p>Código de rastreio: <strong>' + $('Receber Evento da Plataforma').item.json.body.rastreio + '</strong></p>' : '' }}<p><a href=\"{{ $('Receber Evento da Plataforma').item.json.body.linkPedido }}\">Acompanhar o pedido</a></p><p>Qualquer dúvida, responda este e-mail.</p><p>{{ $json.nome }}</p>",
+      "botao_texto": "",
+      "botao_url": "",
+      "remetente_nome": "={{ $json.nome }}",
+      "responder_para": "={{ $json.lojistaEmail }}",
+      "empresa": "lojas",
+      "origem": "Lojas - Onboarding e Pedidos",
+      "rodape": "",
+      "copia": "",
+      "copia_oculta": ""
+     },
+     "schema": [
+      {
+       "id": "para",
+       "displayName": "para",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "assunto",
+       "displayName": "assunto",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "titulo",
+       "displayName": "titulo",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "corpo",
+       "displayName": "corpo",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "botao_texto",
+       "displayName": "botao_texto",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "botao_url",
+       "displayName": "botao_url",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "remetente_nome",
+       "displayName": "remetente_nome",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "responder_para",
+       "displayName": "responder_para",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "empresa",
+       "displayName": "empresa",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "origem",
+       "displayName": "origem",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "rodape",
+       "displayName": "rodape",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "copia",
+       "displayName": "copia",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "copia_oculta",
+       "displayName": "copia_oculta",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "21a59a60-30a5-4d4a-9af6-369be1084526",
+   "name": "Validar Contrato",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    176,
+    576
+   ],
+   "parameters": {
+    "jsCode": "const item = $input.first().json;\nconst b = item.body ?? {};\n// Campos obrigatórios por tipo. Faltou algum: o evento não segue - vira tarefa, não mensagem vazia.\nconst obrig = {\n  'loja.criada': ['slug','nome','url'],\n  'loja.provisionada': ['slug','nome','url','passos'],\n  'loja.provisionamento-falhou': ['slug','nome','url','passos'],\n  'loja.ativada': ['slug','nome','url'],\n  'loja.identidade-atualizada': ['slug','nome','url'],\n  'pedido.criado': ['slug','referencia','totalCentavos','meioPagamento','clienteNome','clienteTelefone','lojaNome'],\n  'pedido.pago': ['slug','referencia','numero','totalCentavos','clienteNome','clienteEmail','itensTexto','lojaNome','lojaUrl'],\n  'pedido.recusado': ['slug','referencia','clienteNome','clienteTelefone','lojaNome','lojaUrl'],\n  'lojista.recuperar-senha': ['slug','nome','email','link'],\n  'loja.suspensa': ['slug','nome','emailContato'],\n  'loja.reativada': ['slug','nome','emailContato'],\n  'loja.mensalidade-paga': ['slug','nome','centavos','emailContato'],\n  'loja.mensalidade-recusada': ['slug','nome','tentativas','emailContato'],\n  'carrinho.abandonado': ['slug','referencia','clienteNome','clienteEmail','itensTexto','totalCentavos','linkCarrinho','lojaNome'],\n  'avaliacao.recebida': ['slug','nome','produtoNome','nota','emailContato'],\n  'pedido.enviado': ['slug','referencia','numero','clienteNome','clienteEmail','transportadora','linkPedido','lojaNome'],\n  'loja.voltou-ao-estoque': ['slug','nome','url','destinatario','produtoNome','precoCentavos'],\n  'loja.relatorio-semanal': ['slug','nome','emailContato','periodo'],\n  'pedido.em-separacao': ['slug','referencia','numero','clienteNome','clienteEmail','linkPedido','lojaNome'],\n  'pedido.entregue': ['slug','referencia','numero','clienteNome','clienteEmail','linkPedido','lojaNome'],\n  'pedido.cancelado': ['slug','referencia','numero','clienteNome','clienteEmail','linkPedido','lojaNome'],\n};\nconst erros = [];\nif (!b.eventId) erros.push('eventId ausente');\nif (Number(b.versao ?? 1) !== 1) erros.push('versao ' + b.versao + ' desconhecida');\nif (!b.tipo || !b.slug) erros.push('tipo/slug ausentes');\n// Tipo que o fluxo não conhece não é inválido: passa, cai no fallback do switch e é encerrado como IGNORADO.\nfor (const c of (obrig[b.tipo] ?? [])) { const v = b[c]; if (v === undefined || v === null || v === '') erros.push(c + ' obrigatório'); }\nreturn [{ json: { ...item, contratoValido: erros.length === 0, contratoErros: erros } }];"
+   }
+  },
+  {
+   "id": "fc914a17-c2aa-4d79-bbb5-fd5fc3709872",
+   "name": "Contrato Válido?",
+   "type": "n8n-nodes-base.if",
+   "typeVersion": 2.3,
+   "position": [
+    368,
+    576
+   ],
+   "parameters": {
+    "conditions": {
+     "options": {
+      "caseSensitive": true,
+      "leftValue": "",
+      "typeValidation": "loose",
+      "version": 1
+     },
+     "conditions": [
+      {
+       "leftValue": "={{ $json.contratoValido }}",
+       "operator": {
+        "type": "boolean",
+        "operation": "true"
+       },
+       "rightValue": ""
+      }
+     ],
+     "combinator": "and"
+    },
+    "options": {}
+   }
+  },
+  {
+   "id": "ea1e3917-9987-482b-9168-c10a36f0db75",
+   "name": "Todoist: Evento Inválido",
+   "type": "n8n-nodes-base.todoist",
+   "typeVersion": 2.2,
+   "position": [
+    560,
+    760
+   ],
+   "parameters": {
+    "project": {
+     "__rl": true,
+     "mode": "id",
+     "value": "6hGQhVMXmQmv23hG"
+    },
+    "content": "=Evento inválido: {{ $json.body?.tipo }} ({{ $json.body?.slug }})",
+    "options": {
+     "description": "=eventId: {{ $json.body?.eventId }}\nErros: {{ ($json.contratoErros ?? []).join('; ') }}\n\nA plataforma emitiu um evento fora do contrato v1 - nada foi enviado. Conferir src/lib/eventos.ts.",
+     "dueLang": "pt",
+     "dueString": "hoje",
+     "priority": 3
+    },
+    "authentication": "oAuth2"
+   },
+   "credentials": {
+    "todoistOAuth2Api": {
+     "id": "HjSrKt2tqWYpxU8I",
+     "name": "Todoist OAuth2 (app da casa) - conectar no navegador"
+    }
+   }
+  },
+  {
+   "id": "5ecc08dc-ba2f-4b68-b391-c0e06e7755ac",
+   "name": "Reivindicar Evento",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.5,
+   "retryOnFail": true,
+   "maxTries": 3,
+   "waitBetweenTries": 2000,
+   "position": [
+    560,
+    576
+   ],
+   "parameters": {
+    "method": "POST",
+    "url": "https://lojas.avilaops.com/api/admin/automacoes/eventos/reivindicar",
+    "authentication": "genericCredentialType",
+    "genericAuthType": "httpBearerAuth",
+    "sendBody": true,
+    "specifyBody": "json",
+    "jsonBody": "={{ JSON.stringify({ eventId: $json.body.eventId, tipo: $json.body.tipo, slug: $json.body.slug, versao: $json.body.versao ?? 1, correlationId: $json.body.correlationId ?? null }) }}",
+    "options": {}
+   },
+   "credentials": {
+    "httpBearerAuth": {
+     "id": "BIftJgoyPwxr2d55",
+     "name": "Lojas Admin Token"
+    }
+   }
+  },
+  {
+   "id": "e90af5f3-ffdf-4d3a-b1c8-4bd35f296e98",
+   "name": "Evento Novo?",
+   "type": "n8n-nodes-base.if",
+   "typeVersion": 2.3,
+   "position": [
+    752,
+    576
+   ],
+   "parameters": {
+    "conditions": {
+     "options": {
+      "caseSensitive": true,
+      "leftValue": "",
+      "typeValidation": "loose",
+      "version": 1
+     },
+     "conditions": [
+      {
+       "leftValue": "={{ $json.duplicado }}",
+       "operator": {
+        "type": "boolean",
+        "operation": "false"
+       },
+       "rightValue": ""
+      }
+     ],
+     "combinator": "and"
+    },
+    "options": {}
+   }
+  },
+  {
+   "id": "84c38720-d5b0-4a0b-8411-581c2912a2c0",
+   "name": "Consultar Loja",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.5,
+   "onError": "continueRegularOutput",
+   "position": [
+    1568,
+    -160
+   ],
+   "parameters": {
+    "method": "GET",
+    "url": "=https://lojas.avilaops.com/api/admin/tenants/{{ $('Normalizar Evento').first().json.slug }}",
+    "authentication": "genericCredentialType",
+    "genericAuthType": "httpBearerAuth",
+    "options": {}
+   },
+   "credentials": {
+    "httpBearerAuth": {
+     "id": "BIftJgoyPwxr2d55",
+     "name": "Lojas Admin Token"
+    }
+   }
+  },
+  {
+   "id": "b1279bfd-707b-4154-b3ae-79d80d936fe0",
+   "name": "Loja Continua Ativa?",
+   "type": "n8n-nodes-base.if",
+   "typeVersion": 2.3,
+   "position": [
+    1792,
+    -160
+   ],
+   "parameters": {
+    "conditions": {
+     "options": {
+      "caseSensitive": true,
+      "leftValue": "",
+      "typeValidation": "strict",
+      "version": 1
+     },
+     "conditions": [
+      {
+       "leftValue": "={{ $json.status }}",
+       "operator": {
+        "type": "string",
+        "operation": "equals"
+       },
+       "rightValue": "ATIVA"
+      }
+     ],
+     "combinator": "and"
+    },
+    "options": {}
+   }
+  },
+  {
+   "id": "61a02331-3561-4b6c-97ec-c4eb17ed7ba8",
+   "name": "Encerrar: Processado",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.5,
+   "executeOnce": true,
+   "onError": "continueRegularOutput",
+   "position": [
+    2400,
+    900
+   ],
+   "parameters": {
+    "method": "PATCH",
+    "url": "=https://lojas.avilaops.com/api/admin/automacoes/eventos/{{ $('Normalizar Evento').first().json.eventId }}",
+    "authentication": "genericCredentialType",
+    "genericAuthType": "httpBearerAuth",
+    "sendBody": true,
+    "specifyBody": "json",
+    "jsonBody": "={{ JSON.stringify({ status: \"PROCESSADO\" }) }}",
+    "options": {}
+   },
+   "credentials": {
+    "httpBearerAuth": {
+     "id": "BIftJgoyPwxr2d55",
+     "name": "Lojas Admin Token"
+    }
+   }
+  },
+  {
+   "id": "08d3e993-d516-4aac-a91c-dfd7557d86cc",
+   "name": "Encerrar: Ignorado",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.5,
+   "executeOnce": true,
+   "onError": "continueRegularOutput",
+   "position": [
+    2400,
+    1100
+   ],
+   "parameters": {
+    "method": "PATCH",
+    "url": "=https://lojas.avilaops.com/api/admin/automacoes/eventos/{{ $('Normalizar Evento').first().json.eventId }}",
+    "authentication": "genericCredentialType",
+    "genericAuthType": "httpBearerAuth",
+    "sendBody": true,
+    "specifyBody": "json",
+    "jsonBody": "={{ JSON.stringify({ status: \"IGNORADO\", detalhe: \"sem ação nesta ramificação\" }) }}",
+    "options": {}
+   },
+   "credentials": {
+    "httpBearerAuth": {
+     "id": "BIftJgoyPwxr2d55",
+     "name": "Lojas Admin Token"
+    }
+   }
+  },
+  {
+   "id": "4fbe3629-ee3d-4fe3-8a7d-03e1d74198d5",
+   "name": "Varrer Eventos Presos",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.5,
+   "onError": "continueRegularOutput",
+   "position": [
+    224,
+    2112
+   ],
+   "parameters": {
+    "method": "POST",
+    "url": "https://lojas.avilaops.com/api/admin/automacoes/eventos/varrer",
+    "authentication": "genericCredentialType",
+    "genericAuthType": "httpBearerAuth",
+    "options": {}
+   },
+   "credentials": {
+    "httpBearerAuth": {
+     "id": "BIftJgoyPwxr2d55",
+     "name": "Lojas Admin Token"
+    }
+   }
+  },
+  {
+   "id": "ba9b4ec1-664d-4121-917b-192d05a7cc3c",
+   "name": "Todo Dia às 3h",
+   "type": "n8n-nodes-base.scheduleTrigger",
+   "typeVersion": 1.2,
+   "position": [
+    0,
+    2320
+   ],
+   "parameters": {
+    "rule": {
+     "interval": [
+      {
+       "field": "cronExpression",
+       "expression": "0 3 * * *"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "6a717f9f-9242-4223-854d-1a10f4343ca9",
+   "name": "Gerar SEO de Categorias",
+   "notes": "Lote diário do SEO de categorias (docs/ROTINAS-N8N.md, seção SEO de categorias V1). Idempotente: trava de 15 min por categoria no servidor.",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.5,
+   "onError": "continueRegularOutput",
+   "position": [
+    224,
+    2320
+   ],
+   "parameters": {
+    "method": "POST",
+    "url": "https://lojas.avilaops.com/api/admin/seo/categorias",
+    "authentication": "genericCredentialType",
+    "genericAuthType": "httpBearerAuth",
+    "sendBody": true,
+    "specifyBody": "json",
+    "jsonBody": "{\"limite\": 10}",
+    "options": {}
+   },
+   "credentials": {
+    "httpBearerAuth": {
+     "id": "BIftJgoyPwxr2d55",
+     "name": "Lojas Admin Token"
+    }
+   }
+  },
+  {
+   "id": "cab12b02-9fa0-40e1-80a0-2ce10920b352",
+   "name": "SEO com Falha?",
+   "type": "n8n-nodes-base.if",
+   "typeVersion": 2.3,
+   "position": [
+    448,
+    2320
+   ],
+   "parameters": {
+    "conditions": {
+     "options": {
+      "caseSensitive": true,
+      "leftValue": "",
+      "typeValidation": "loose",
+      "version": 1
+     },
+     "conditions": [
+      {
+       "leftValue": "={{ ($json.falhas ?? []).length > 0 || $json.error !== undefined }}",
+       "operator": {
+        "type": "boolean",
+        "operation": "true"
+       },
+       "rightValue": ""
+      }
+     ],
+     "combinator": "and"
+    },
+    "options": {}
+   }
+  },
+  {
+   "id": "b0539420-af7a-4183-8843-a2769b65210c",
+   "name": "Todoist: SEO de Categoria Falhou",
+   "type": "n8n-nodes-base.todoist",
+   "typeVersion": 2.2,
+   "onError": "continueRegularOutput",
+   "position": [
+    672,
+    2320
+   ],
+   "parameters": {
+    "project": {
+     "__rl": true,
+     "mode": "id",
+     "value": "6hGQhVMXmQmv23hG"
+    },
+    "content": "=Lojas: SEO de categoria falhou em {{ ($json.falhas ?? []).length }} de {{ $json.encontradas ?? 0 }} categoria(s)",
+    "options": {
+     "description": "=Rotina diária das 3h (POST /api/admin/seo/categorias, limite 10).\nProcessadas: {{ ($json.processadas ?? []).length }} · Falhas: {{ ($json.falhas ?? []).length }}\n{{ ($json.falhas ?? []).map(f => '- ' + f.id + ': ' + f.erro).join('\\n') }}{{ $json.error ? '\\nErro HTTP: ' + JSON.stringify($json.error) : '' }}\nExecução n8n: {{ $execution.id }} (workflow ruVn7ddvPQB949p9)\nA categoria continua pendente e entra no lote de amanhã; consertar a causa em src/lib/seo-categorias.ts.\n\n- Dev · rotina diária de SEO",
+     "dueLang": "pt",
+     "dueString": "hoje",
+     "priority": 3
+    },
+    "authentication": "oAuth2"
+   },
+   "credentials": {
+    "todoistOAuth2Api": {
+     "id": "HjSrKt2tqWYpxU8I",
+     "name": "Todoist OAuth2 (app da casa) - conectar no navegador"
+    }
+   }
+  },
+  {
+   "id": "171e370f-0dcf-425e-9229-26365200e10e",
+   "name": "E-mail: Pedido em Separação",
+   "notes": "Sai uma vez so, na virada para EM_SEPARACAO (a plataforma controla). Mesmo conector de e-mail dos outros avisos ao comprador.",
+   "type": "n8n-nodes-base.executeWorkflow",
+   "typeVersion": 1.3,
+   "position": [
+    672,
+    2320
+   ],
+   "parameters": {
+    "workflowId": {
+     "__rl": true,
+     "mode": "id",
+     "value": "QG7wbU8SfM9ldM8E",
+     "cachedResultName": "Conector: e-mail padrão"
+    },
+    "mode": "each",
+    "workflowInputs": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "para": "={{ $json.clienteEmail }}",
+      "assunto": "=Pedido #{{ $json.numero }} em separação - {{ $json.nome }}",
+      "titulo": "",
+      "corpo": "=<p>Oi, {{ $json.clienteNome.split(\" \")[0] }}!</p><p>Seu pedido <strong>#{{ $json.numero }}</strong> foi pago e já está sendo separado. Assim que sair para entrega, avisamos por aqui com o código de rastreio.</p><p><a href=\"{{ $('Receber Evento da Plataforma').item.json.body.linkPedido }}\">Acompanhar o pedido</a></p><p>{{ $json.nome }}</p>",
+      "botao_texto": "",
+      "botao_url": "",
+      "remetente_nome": "={{ $json.nome }}",
+      "responder_para": "={{ $json.lojistaEmail }}",
+      "empresa": "lojas",
+      "origem": "Lojas - Onboarding e Pedidos",
+      "rodape": "",
+      "copia": "",
+      "copia_oculta": ""
+     },
+     "schema": [
+      {
+       "id": "para",
+       "displayName": "para",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "assunto",
+       "displayName": "assunto",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "titulo",
+       "displayName": "titulo",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "corpo",
+       "displayName": "corpo",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "botao_texto",
+       "displayName": "botao_texto",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "botao_url",
+       "displayName": "botao_url",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "remetente_nome",
+       "displayName": "remetente_nome",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "responder_para",
+       "displayName": "responder_para",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "empresa",
+       "displayName": "empresa",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "origem",
+       "displayName": "origem",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "rodape",
+       "displayName": "rodape",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "copia",
+       "displayName": "copia",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "copia_oculta",
+       "displayName": "copia_oculta",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "9631629e-1c1d-487a-985a-2e30dfaee9e0",
+   "name": "E-mail: Pedido Entregue",
+   "notes": "Sai uma vez so, na virada para ENTREGUE. Nao pede avaliacao aqui: o pedido de avaliacao e outro fluxo, com prazo.",
+   "type": "n8n-nodes-base.executeWorkflow",
+   "typeVersion": 1.3,
+   "position": [
+    672,
+    2480
+   ],
+   "parameters": {
+    "workflowId": {
+     "__rl": true,
+     "mode": "id",
+     "value": "QG7wbU8SfM9ldM8E",
+     "cachedResultName": "Conector: e-mail padrão"
+    },
+    "mode": "each",
+    "workflowInputs": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "para": "={{ $json.clienteEmail }}",
+      "assunto": "=Pedido #{{ $json.numero }} entregue - {{ $json.nome }}",
+      "titulo": "",
+      "corpo": "=<p>Oi, {{ $json.clienteNome.split(\" \")[0] }}!</p><p>Seu pedido <strong>#{{ $json.numero }}</strong> foi marcado como entregue. Se algo não chegou como esperado, é só responder este e-mail.</p><p><a href=\"{{ $('Receber Evento da Plataforma').item.json.body.linkPedido }}\">Ver o pedido</a></p><p>{{ $json.nome }}</p>",
+      "botao_texto": "",
+      "botao_url": "",
+      "remetente_nome": "={{ $json.nome }}",
+      "responder_para": "={{ $json.lojistaEmail }}",
+      "empresa": "lojas",
+      "origem": "Lojas - Onboarding e Pedidos",
+      "rodape": "",
+      "copia": "",
+      "copia_oculta": ""
+     },
+     "schema": [
+      {
+       "id": "para",
+       "displayName": "para",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "assunto",
+       "displayName": "assunto",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "titulo",
+       "displayName": "titulo",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "corpo",
+       "displayName": "corpo",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "botao_texto",
+       "displayName": "botao_texto",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "botao_url",
+       "displayName": "botao_url",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "remetente_nome",
+       "displayName": "remetente_nome",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "responder_para",
+       "displayName": "responder_para",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "empresa",
+       "displayName": "empresa",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "origem",
+       "displayName": "origem",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "rodape",
+       "displayName": "rodape",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "copia",
+       "displayName": "copia",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "copia_oculta",
+       "displayName": "copia_oculta",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "17a48fc8-19a5-4ba1-a28f-b73120187df4",
+   "name": "E-mail: Pedido Cancelado",
+   "notes": "Sai uma vez so, na virada para CANCELADO feita pela loja. Cancelamento por pagamento recusado ja tem o proprio aviso (pedido.recusado).",
+   "type": "n8n-nodes-base.executeWorkflow",
+   "typeVersion": 1.3,
+   "position": [
+    672,
+    2640
+   ],
+   "parameters": {
+    "workflowId": {
+     "__rl": true,
+     "mode": "id",
+     "value": "QG7wbU8SfM9ldM8E",
+     "cachedResultName": "Conector: e-mail padrão"
+    },
+    "mode": "each",
+    "workflowInputs": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "para": "={{ $json.clienteEmail }}",
+      "assunto": "=Pedido #{{ $json.numero }} cancelado - {{ $json.nome }}",
+      "titulo": "",
+      "corpo": "=<p>Oi, {{ $json.clienteNome.split(\" \")[0] }}.</p><p>Seu pedido <strong>#{{ $json.numero }}</strong> foi cancelado{{ $('Receber Evento da Plataforma').item.json.body.motivo ? ' (' + $('Receber Evento da Plataforma').item.json.body.motivo + ')' : '' }}.</p><p>Se houve pagamento, o estorno segue pelo mesmo meio em que foi feito. Qualquer dúvida, responda este e-mail.</p><p>{{ $json.nome }}</p>",
+      "botao_texto": "",
+      "botao_url": "",
+      "remetente_nome": "={{ $json.nome }}",
+      "responder_para": "={{ $json.lojistaEmail }}",
+      "empresa": "lojas",
+      "origem": "Lojas - Onboarding e Pedidos",
+      "rodape": "",
+      "copia": "",
+      "copia_oculta": ""
+     },
+     "schema": [
+      {
+       "id": "para",
+       "displayName": "para",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "assunto",
+       "displayName": "assunto",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "titulo",
+       "displayName": "titulo",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "corpo",
+       "displayName": "corpo",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "botao_texto",
+       "displayName": "botao_texto",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "botao_url",
+       "displayName": "botao_url",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "remetente_nome",
+       "displayName": "remetente_nome",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "responder_para",
+       "displayName": "responder_para",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "empresa",
+       "displayName": "empresa",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "origem",
+       "displayName": "origem",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "rodape",
+       "displayName": "rodape",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "copia",
+       "displayName": "copia",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      },
+      {
+       "id": "copia_oculta",
+       "displayName": "copia_oculta",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "canBeUsedToMatch": true
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "d605ff7e-22c3-433b-a401-dcb52331ac42",
+   "name": "Verificar Pagamentos Pendentes",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.5,
+   "position": [
+    224,
+    1960
+   ],
+   "parameters": {
+    "method": "POST",
+    "url": "https://lojas.avilaops.com/api/admin/pedidos/verificar",
+    "authentication": "genericCredentialType",
+    "genericAuthType": "httpBearerAuth",
+    "options": {}
+   },
+   "credentials": {
+    "httpBearerAuth": {
+     "id": "BIftJgoyPwxr2d55",
+     "name": "Lojas Admin Token"
+    }
+   },
+   "notes": "Rede de seguranca do webhook do Mercado Pago: Pix e boleto que pagaram sem a notificacao chegar. O endpoint e idempotente (consulta o gateway e so muda o que mudou la).",
+   "onError": "continueRegularOutput"
+  }
+ ],
+ "connections": {
+  "Normalizar Evento": {
+   "main": [
+    [
+     {
+      "node": "Rotear por Tipo de Evento",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Rotear por Tipo de Evento": {
+   "main": [
+    [
+     {
+      "node": "WhatsApp: Boas-vindas ao Lojista",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "WhatsApp: Loja Configurada",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Pedido é PIX?",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "WhatsApp: Pedido Pago (Lojista)",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "WhatsApp: Pagamento Recusado",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "E-mail: Redefinir Senha",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "E-mail: Loja Suspensa",
+      "type": "main",
+      "index": 0
+     },
+     {
+      "node": "WhatsApp: Loja Suspensa",
+      "type": "main",
+      "index": 0
+     },
+     {
+      "node": "Todoist: Loja Suspensa",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Primeira Recusa?",
+      "type": "main",
+      "index": 0
+     },
+     {
+      "node": "WhatsApp: Cartao Recusado",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Todoist: Revisar Presença Visual",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "E-mail: Carrinho Abandonado",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "E-mail: Nova Avaliação",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "E-mail: Relatório Semanal",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "E-mail: Voltou ao Estoque",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "E-mail: Mensalidade Paga",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "E-mail: Loja Reativada",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "E-mail: Pedido Enviado",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Todoist: Corrigir Provisionamento",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Esperar 3 Dias",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Encerrar: Processado",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Encerrar: Processado",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "E-mail: Pedido em Separação",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "E-mail: Pedido Entregue",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "E-mail: Pedido Cancelado",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Encerrar: Ignorado",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "E-mail: Treinamento em Vídeo": {
+   "main": [
+    [
+     {
+      "node": "Todoist: Aprovar Loja em 48h",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Pedido é PIX?": {
+   "main": [
+    [
+     {
+      "node": "Esperar 30 Minutos",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Encerrar: Ignorado",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Esperar 30 Minutos": {
+   "main": [
+    [
+     {
+      "node": "Consultar Pedido",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Todo Dia às 6h": {
+   "main": [
+    [
+     {
+      "node": "Verificar Inadimplência",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "A Cada Hora": {
+   "main": [
+    [
+     {
+      "node": "Verificar Carrinhos Abandonados",
+      "type": "main",
+      "index": 0
+     },
+     {
+      "node": "Verificar Fila de Estoque",
+      "type": "main",
+      "index": 0
+     },
+     {
+      "node": "Varrer Eventos Presos",
+      "type": "main",
+      "index": 0
+     },
+     {
+      "node": "Verificar Pagamentos Pendentes",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Segunda às 7h": {
+   "main": [
+    [
+     {
+      "node": "Emitir Relatórios Semanais",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "WhatsApp: Boas-vindas ao Lojista": {
+   "main": [
+    [
+     {
+      "node": "E-mail: Treinamento em Vídeo",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Ainda Aguardando Pagamento?": {
+   "main": [
+    [
+     {
+      "node": "WhatsApp: Lembrete de PIX",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Encerrar: Ignorado",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "WhatsApp: Pedido Pago (Lojista)": {
+   "main": [
+    [
+     {
+      "node": "E-mail: Confirmação ao Comprador",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "E-mail: Carrinho Abandonado": {
+   "main": [
+    [
+     {
+      "node": "WhatsApp: Carrinho Abandonado",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Primeira Recusa?": {
+   "main": [
+    [
+     {
+      "node": "E-mail: Cartao Recusado",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "E-mail: Mensalidade em Atraso",
+      "type": "main",
+      "index": 0
+     },
+     {
+      "node": "Todoist: Cobrar Mensalidade",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Consultar Pedido": {
+   "main": [
+    [
+     {
+      "node": "Ainda Aguardando Pagamento?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Receber Evento da Plataforma": {
+   "main": [
+    [
+     {
+      "node": "Validar Contrato",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Validar Contrato": {
+   "main": [
+    [
+     {
+      "node": "Contrato Válido?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Contrato Válido?": {
+   "main": [
+    [
+     {
+      "node": "Reivindicar Evento",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Todoist: Evento Inválido",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Reivindicar Evento": {
+   "main": [
+    [
+     {
+      "node": "Evento Novo?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Evento Novo?": {
+   "main": [
+    [
+     {
+      "node": "Normalizar Evento",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Esperar 3 Dias": {
+   "main": [
+    [
+     {
+      "node": "Consultar Loja",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Consultar Loja": {
+   "main": [
+    [
+     {
+      "node": "Loja Continua Ativa?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Loja Continua Ativa?": {
+   "main": [
+    [
+     {
+      "node": "WhatsApp: Pedir 2 Indicações",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Encerrar: Ignorado",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Todoist: Aprovar Loja em 48h": {
+   "main": [
+    [
+     {
+      "node": "Encerrar: Processado",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "WhatsApp: Pedir 2 Indicações": {
+   "main": [
+    [
+     {
+      "node": "Encerrar: Processado",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Todoist: Corrigir Provisionamento": {
+   "main": [
+    [
+     {
+      "node": "Encerrar: Processado",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "WhatsApp: Loja Configurada": {
+   "main": [
+    [
+     {
+      "node": "Encerrar: Processado",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "WhatsApp: Lembrete de PIX": {
+   "main": [
+    [
+     {
+      "node": "Encerrar: Processado",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "E-mail: Confirmação ao Comprador": {
+   "main": [
+    [
+     {
+      "node": "Encerrar: Processado",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "WhatsApp: Pagamento Recusado": {
+   "main": [
+    [
+     {
+      "node": "Encerrar: Processado",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "E-mail: Redefinir Senha": {
+   "main": [
+    [
+     {
+      "node": "Encerrar: Processado",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Todoist: Loja Suspensa": {
+   "main": [
+    [
+     {
+      "node": "Encerrar: Processado",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "E-mail: Cartao Recusado": {
+   "main": [
+    [
+     {
+      "node": "Encerrar: Processado",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Todoist: Cobrar Mensalidade": {
+   "main": [
+    [
+     {
+      "node": "Encerrar: Processado",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Todoist: Revisar Presença Visual": {
+   "main": [
+    [
+     {
+      "node": "Encerrar: Processado",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "WhatsApp: Carrinho Abandonado": {
+   "main": [
+    [
+     {
+      "node": "Encerrar: Processado",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "E-mail: Nova Avaliação": {
+   "main": [
+    [
+     {
+      "node": "Encerrar: Processado",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "E-mail: Relatório Semanal": {
+   "main": [
+    [
+     {
+      "node": "Encerrar: Processado",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "E-mail: Voltou ao Estoque": {
+   "main": [
+    [
+     {
+      "node": "Encerrar: Processado",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "E-mail: Mensalidade Paga": {
+   "main": [
+    [
+     {
+      "node": "Encerrar: Processado",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "E-mail: Loja Reativada": {
+   "main": [
+    [
+     {
+      "node": "Encerrar: Processado",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "E-mail: Pedido Enviado": {
+   "main": [
+    [
+     {
+      "node": "Encerrar: Processado",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Todo Dia às 3h": {
+   "main": [
+    [
+     {
+      "node": "Gerar SEO de Categorias",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Gerar SEO de Categorias": {
+   "main": [
+    [
+     {
+      "node": "SEO com Falha?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "SEO com Falha?": {
+   "main": [
+    [
+     {
+      "node": "Todoist: SEO de Categoria Falhou",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "E-mail: Pedido em Separação": {
+   "main": [
+    [
+     {
+      "node": "Encerrar: Processado",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "E-mail: Pedido Entregue": {
+   "main": [
+    [
+     {
+      "node": "Encerrar: Processado",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "E-mail: Pedido Cancelado": {
+   "main": [
+    [
+     {
+      "node": "Encerrar: Processado",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  }
+ },
+ "settings": {
+  "errorWorkflow": "dtk7UwKorqvDIqfu",
+  "executionOrder": "v1"
+ },
+ "staticData": {
+  "node:Todo Dia às 6h": {
+   "recurrenceRules": [
+    null
+   ],
+   "recurrenceRuleSignatures": [
+    null
+   ]
+  },
+  "node:A Cada Hora": {
+   "recurrenceRules": [
+    null
+   ],
+   "recurrenceRuleSignatures": [
+    null
+   ]
+  },
+  "node:Segunda às 7h": {
+   "recurrenceRules": [
+    null
+   ],
+   "recurrenceRuleSignatures": [
+    null
+   ]
+  },
+  "node:Todo Dia às 3h": {
+   "recurrenceRules": [
+    null
+   ],
+   "recurrenceRuleSignatures": [
+    null
+   ]
+  }
+ }
+}

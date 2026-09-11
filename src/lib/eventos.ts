@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 
 /**
@@ -71,9 +72,24 @@ export type EventoPlataforma =
   | { tipo: "avaliacao.recebida"; slug: string; nome: string; produtoNome: string; nota: number; autor: string; emailContato: string | null; whatsapp: string | null }
   | ({ tipo: "pedido.enviado"; slug: string; referencia: string; numero: number; clienteNome: string; clienteEmail: string; clienteTelefone: string; transportadora: string; rastreio: string | null; linkPedido: string } & Lojista)
   | { tipo: "loja.voltou-ao-estoque"; slug: string; nome: string; url: string; emailRemetente: string | null; emailContato: string | null; destinatario: string; telefone: string | null; produtoNome: string; precoCentavos: number }
-  | { tipo: "loja.relatorio-semanal"; slug: string; nome: string; url: string; emailContato: string | null; whatsapp: string | null; periodo: string; pedidosPagos: number; receitaCentavos: number; ticketMedioCentavos: number; topProdutos: string; carrinhosAbandonados: number; novasAvaliacoes: number };
+  | { tipo: "loja.relatorio-semanal"; slug: string; nome: string; url: string; emailContato: string | null; whatsapp: string | null; periodo: string; pedidosPagos: number; receitaCentavos: number; ticketMedioCentavos: number; topProdutos: string; carrinhosAbandonados: number; novasAvaliacoes: number }
+  | ({ tipo: "pedido.em-separacao"; slug: string; referencia: string; numero: number; clienteNome: string; clienteEmail: string; clienteTelefone: string; linkPedido: string } & Lojista)
+  | ({ tipo: "pedido.entregue"; slug: string; referencia: string; numero: number; clienteNome: string; clienteEmail: string; clienteTelefone: string; linkPedido: string } & Lojista)
+  | ({ tipo: "pedido.cancelado"; slug: string; referencia: string; numero: number; clienteNome: string; clienteEmail: string; clienteTelefone: string; totalCentavos: number; motivo: string; linkPedido: string } & Lojista);
 
 export type TipoEvento = EventoPlataforma["tipo"];
+
+/**
+ * O que amarra os eventos de uma mesma história. Pedido tem referência; o
+ * resto é a loja. O n8n devolve o mesmo valor, e a tela do painel agrupa
+ * por ele ("tudo o que aconteceu com o pedido 1042").
+ */
+function correlacaoDe(evento: EventoPlataforma): string {
+  return "referencia" in evento && typeof evento.referencia === "string" ? `pedido:${evento.referencia}` : `loja:${evento.slug}`;
+}
+
+/** Depois disto, reenviar é decisão de gente, não de máquina. */
+export const REENVIOS_MAXIMOS = 3;
 
 /** "2x Retentor XPTO, 1x Rolamento ABC" — o texto que vai em WhatsApp e e-mail. */
 export function itensParaTexto(itens: ItemEvento[]): string {
@@ -85,23 +101,30 @@ export function novoEventId(): string {
 }
 
 export async function emitir(evento: EventoPlataforma): Promise<void> {
-  const url = process.env.N8N_WEBHOOK_URL;
-  if (!url) return;
-
   const eventId = novoEventId();
-  const envelope = { eventId, versao: VERSAO_CONTRATO, ocorridoEm: new Date().toISOString(), origem: "lojas.avilaops.com", ...evento };
+  const correlationId = correlacaoDe(evento);
+  const envelope = { eventId, versao: VERSAO_CONTRATO, ocorridoEm: new Date().toISOString(), origem: "lojas.avilaops.com", correlationId, ...evento };
 
-  // Registrar antes de enviar: se o n8n nunca reivindicar, fica EMITIDO e dá
-  // para achar o que se perdeu. Se o banco falhar aqui, o evento ainda sai —
-  // a reivindicação cria a linha na hora.
+  // Registrar antes de enviar, com o corpo inteiro: se o n8n nunca reivindicar,
+  // fica EMITIDO e dá para achar o que se perdeu; se falhar, dá para reenviar
+  // o mesmo corpo. Se o banco falhar aqui, o evento ainda sai: a reivindicação
+  // cria a linha na hora.
   try {
-    await prisma.automacaoEvento.create({ data: { eventId, tipo: evento.tipo, slug: evento.slug, versao: VERSAO_CONTRATO } });
+    await prisma.automacaoEvento.create({
+      data: { eventId, tipo: evento.tipo, slug: evento.slug, versao: VERSAO_CONTRATO, correlationId, payload: envelope as unknown as Prisma.InputJsonValue },
+    });
   } catch (erro) {
     console.error("[eventos] não registrou", eventId, erro);
   }
 
+  await entregar(envelope, eventId, evento.tipo);
+}
+
+async function entregar(envelope: Record<string, unknown>, eventId: string, tipo: string): Promise<boolean> {
+  const url = process.env.N8N_WEBHOOK_URL;
+  if (!url) return false;
   try {
-    await fetch(url, {
+    const r = await fetch(url, {
       method: "POST",
       headers: {
         "content-type": "application/json",
@@ -110,7 +133,44 @@ export async function emitir(evento: EventoPlataforma): Promise<void> {
       body: JSON.stringify(envelope),
       signal: AbortSignal.timeout(5000),
     });
+    return r.ok;
   } catch (erro) {
-    console.error("[eventos] n8n indisponível:", evento.tipo, eventId, erro);
+    console.error("[eventos] n8n indisponível:", tipo, eventId, erro);
+    return false;
   }
+}
+
+export type ResultadoReenvio =
+  | { ok: true; eventId: string; novoEventId: string }
+  | { ok: false; motivo: "nao-encontrado" | "sem-payload" | "nao-falhou" | "limite" | "outra-loja" };
+
+/**
+ * Reenvia um evento que FALHOU, com o mesmo corpo e um eventId novo.
+ *
+ * eventId novo porque o antigo já está gasto na trava de idempotência do n8n
+ * (`reivindicar` recusa repetido). O corpo é o mesmo, então o efeito é o
+ * mesmo: nada é inventado na hora do reenvio. A linha antiga fica como
+ * histórico; a nova nasce EMITIDO e segue o ciclo normal.
+ *
+ * `slug` é o da sessão: um lojista só reenvia o que é da loja dele.
+ */
+export async function reenviar(eventId: string, slug: string): Promise<ResultadoReenvio> {
+  const e = await prisma.automacaoEvento.findUnique({ where: { eventId } });
+  if (!e) return { ok: false, motivo: "nao-encontrado" };
+  if (e.slug !== slug) return { ok: false, motivo: "outra-loja" };
+  if (e.status !== "FALHOU") return { ok: false, motivo: "nao-falhou" };
+  if (!e.payload || typeof e.payload !== "object") return { ok: false, motivo: "sem-payload" };
+  if (e.tentativas >= REENVIOS_MAXIMOS) return { ok: false, motivo: "limite" };
+
+  const novo = novoEventId();
+  const envelope = { ...(e.payload as Record<string, unknown>), eventId: novo, ocorridoEm: new Date().toISOString(), reenvioDe: eventId };
+
+  await prisma.$transaction([
+    prisma.automacaoEvento.update({ where: { eventId }, data: { tentativas: { increment: 1 }, detalhe: `${e.detalhe ?? ""} · reenviado como ${novo}`.trim() } }),
+    prisma.automacaoEvento.create({
+      data: { eventId: novo, tipo: e.tipo, slug: e.slug, versao: e.versao, correlationId: e.correlationId, payload: envelope as unknown as Prisma.InputJsonValue, tentativas: e.tentativas + 1 },
+    }),
+  ]);
+  await entregar(envelope, novo, e.tipo);
+  return { ok: true, eventId, novoEventId: novo };
 }

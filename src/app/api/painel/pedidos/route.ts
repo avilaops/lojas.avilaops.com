@@ -71,27 +71,29 @@ export async function PATCH(request: Request) {
     where: { id: pedido.id },
     data: { ...(r.data.status ? { status: r.data.status } : {}), ...(r.data.rastreio !== undefined ? { rastreio: r.data.rastreio } : {}) },
   });
-  // Quem pagou some do mapa até o pacote chegar, se ninguém avisar. O aviso sai
-  // uma vez só, na virada para ENVIADO: salvar o rastreio de novo, ou marcar
-  // entregue depois, não pode gerar um segundo e-mail.
-  if (r.data.status === "ENVIADO" && pedido.status !== "ENVIADO") {
-    await emitir({
-      tipo: "pedido.enviado",
+  // Toda virada de situação avisa uma vez só: salvar o rastreio de novo, ou
+  // marcar entregue depois, não pode gerar um segundo e-mail. O que o n8n faz
+  // com cada uma é decisão do fluxo; aqui só se registra que aconteceu.
+  const mudou = r.data.status && r.data.status !== pedido.status;
+  if (mudou) {
+    const comum = {
       slug: loja.slug,
       referencia: a.referencia,
       numero: a.numero,
       clienteNome: a.clienteNome,
       clienteEmail: a.clienteEmail,
       clienteTelefone: a.clienteTelefone,
-      transportadora: a.freteNome,
-      rastreio: a.rastreio,
       linkPedido: `${urlDaLoja(loja)}/pedido/${a.referencia}`,
       lojaNome: loja.nome,
       lojaUrl: urlDaLoja(loja),
       lojistaEmail: loja.loginEmail ?? loja.emailContato,
       lojistaWhatsapp: loja.whatsapp,
       emailRemetente: loja.emailRemetente,
-    });
+    };
+    if (r.data.status === "EM_SEPARACAO") await emitir({ tipo: "pedido.em-separacao", ...comum });
+    if (r.data.status === "ENVIADO") await emitir({ tipo: "pedido.enviado", transportadora: a.freteNome, rastreio: a.rastreio, ...comum });
+    if (r.data.status === "ENTREGUE") await emitir({ tipo: "pedido.entregue", ...comum });
+    if (r.data.status === "CANCELADO") await emitir({ tipo: "pedido.cancelado", totalCentavos: a.totalCentavos, motivo: "cancelado pela loja", ...comum });
   }
 
   return Response.json({ id: a.id, status: a.status, rastreio: a.rastreio });

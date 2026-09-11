@@ -32,6 +32,8 @@ export default function Pagina() {
           titulo: "Vender em outros lugares",
           itens: [
             { href: "/painel/configuracoes/canais", titulo: "Canais", descricao: "Mercado Livre e outros marketplaces" },
+            { href: "/painel/configuracoes/descoberta", titulo: "Descoberta", descricao: "Google, Bing e assistentes de IA" },
+            { href: "/painel/configuracoes/automacoes", titulo: "Automações", descricao: "Avisos por WhatsApp e e-mail: o que saiu e o que falhou" },
           ],
         },
         {

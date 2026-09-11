@@ -576,9 +576,18 @@ model AutomacaoEvento {
   emitidoEm      DateTime              @default(now())
   reivindicadoEm DateTime?
   concluidoEm    DateTime?
+  /// O envelope inteiro, como saiu. É o que torna o reenvio possível sem
+  /// reconstruir o evento: FALHOU vira EMITIDO de novo com o mesmo corpo.
+  payload        Json?
+  /// Amarra os eventos de um mesmo pedido/loja numa só linha de investigação
+  /// (referência do pedido, slug da loja). O n8n devolve o mesmo valor.
+  correlationId  String?
+  /// Quantas vezes já foi reenviado. Teto em `REENVIOS_MAXIMOS`.
+  tentativas     Int                   @default(0)
 
   @@index([slug, tipo])
   @@index([status, emitidoEm])
+  @@index([correlationId])
 }
 
 /// O anúncio de um produto nosso no Mercado Livre.

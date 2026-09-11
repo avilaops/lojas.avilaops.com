@@ -20,13 +20,14 @@ const Schema = z.object({
   tipo: z.string().min(1).max(80),
   slug: z.string().min(1).max(80),
   versao: z.coerce.number().int().min(1).default(1),
+  correlationId: z.string().max(120).nullable().optional(),
 });
 
 export async function POST(request: Request) {
   if (!autorizado(request)) return naoAutorizado();
   const r = Schema.safeParse(await request.json().catch(() => null));
   if (!r.success) return Response.json({ erro: "dados inválidos", detalhes: r.error.flatten() }, { status: 422 });
-  const { eventId, tipo, slug, versao } = r.data;
+  const { eventId, tipo, slug, versao, correlationId } = r.data;
   const agora = new Date();
 
   const virou = await prisma.automacaoEvento.updateMany({
@@ -36,7 +37,7 @@ export async function POST(request: Request) {
   if (virou.count === 1) return Response.json({ eventId, duplicado: false });
 
   try {
-    await prisma.automacaoEvento.create({ data: { eventId, tipo, slug, versao, status: "PROCESSANDO", reivindicadoEm: agora } });
+    await prisma.automacaoEvento.create({ data: { eventId, tipo, slug, versao, status: "PROCESSANDO", reivindicadoEm: agora, correlationId: correlationId ?? null } });
     return Response.json({ eventId, duplicado: false, registradoAgora: true });
   } catch (erro) {
     if (erro instanceof Prisma.PrismaClientKnownRequestError && erro.code === "P2002") {

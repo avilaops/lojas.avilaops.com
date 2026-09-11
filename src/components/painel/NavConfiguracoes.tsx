@@ -23,6 +23,7 @@ const SUB = [
   { slug: "recebimento", rotulo: "Recebimento" },
   { slug: "canais", rotulo: "Canais" },
   { slug: "descoberta", rotulo: "Descoberta" },
+  { slug: "automacoes", rotulo: "Automações" },
   { slug: "equipe", rotulo: "Equipe" },
   { slug: "assinatura", rotulo: "Assinatura" },
   { slug: "conta", rotulo: "Dados da empresa" },

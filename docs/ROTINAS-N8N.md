@@ -2,7 +2,7 @@
 
 A plataforma nunca manda e-mail nem WhatsApp por conta própria: ela emite o
 evento e expõe o endpoint. Quem executa é o fluxo **Lojas, Onboarding e
-Pedidos** (`ruVn7ddvPQB949p9`). **O fluxo vivo é a fonte da verdade** — não
+Pedidos** (`p063mxq8dQijjBDL`). **O fluxo vivo é a fonte da verdade** — não
 existe mais cópia em código dele neste repositório (a que existia ficou fora
 de sincronia e induziu uma revisão inteira a erro).
 
@@ -70,7 +70,7 @@ listava os 200 pedidos da loja para achar um.
 O fluxo novo depende dos endpoints novos. Ordem obrigatória:
 
 1. deploy da plataforma + `prisma migrate deploy` (`20260829000000_automacao_evento`);
-2. só então **publicar** a versão em rascunho do fluxo `ruVn7ddvPQB949p9`
+2. só então **publicar** a versão em rascunho do fluxo `p063mxq8dQijjBDL`
    ("Hardening: contrato v1, idempotência, PIX por referência, ciclo fechado").
 
 Publicar antes do deploy faz `Reivindicar Evento` receber 404 e nenhum aviso
@@ -82,7 +82,7 @@ Todos os POST abaixo vão com `Authorization: Bearer $LOJAS_ADMIN_TOKEN`.
 |---|---|---|
 | a cada hora | `POST /api/admin/carrinhos/verificar` | marca carrinho parado há 45 min e emite `carrinho.abandonado` |
 | a cada hora | `POST /api/admin/estoque/avisos` | avisa quem esperava produto que voltou |
-| a cada hora | `POST /api/admin/pedidos/verificar` | confere no gateway os pedidos aguardando pagamento (Pix, boleto) dos últimos 7 dias. Rede de segurança do webhook; **ainda não agendado** (11/09/2026) |
+| a cada hora | `POST /api/admin/pedidos/verificar` | confere no gateway os pedidos aguardando pagamento (Pix, boleto) dos últimos 7 dias. Rede de segurança do webhook; agendado no `A Cada Hora` em 12/09/2026 |
 | diário, 3h | `POST /api/admin/seo/categorias` | gera e publica SEO pendente em lote, sem IA no acesso público |
 | diário | `POST /api/admin/cobranca/verificar` | suspende quem passou da tolerância |
 | segunda 7h | `POST /api/admin/relatorios/semanal` | emite `loja.relatorio-semanal` por loja com movimento |
@@ -105,7 +105,7 @@ informa `pendentes`, `processando`, `comErro` e `maisAntigaEm`. O evento
 continua sendo a rede de segurança. Depois da publicação sai
 `categoria.seo-publicado`.
 
-**Ligado em 29/08/2026** no fluxo `ruVn7ddvPQB949p9`: `Todo Dia às 3h` → `Gerar SEO de
+**Ligado em 29/08/2026** no fluxo `p063mxq8dQijjBDL`: `Todo Dia às 3h` → `Gerar SEO de
 Categorias` (`{"limite": 10}`, credencial Lojas Admin Token, `onError` continua) →
 `SEO com Falha?` → `Todoist: SEO de Categoria Falhou` (número, motivo, id da
 execução, regra 12 do QUADRO). Primeira rodada manual em 29/08 processou `drones`

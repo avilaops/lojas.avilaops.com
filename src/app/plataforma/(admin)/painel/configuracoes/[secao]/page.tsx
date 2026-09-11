@@ -5,6 +5,7 @@ import PainelLoja, { type SecaoPainel } from "@/components/painel/PainelLoja";
 import Dominio from "@/components/painel/Dominio";
 import Canais from "@/components/painel/Canais";
 import Descoberta from "@/components/painel/Descoberta";
+import Automacoes from "@/components/painel/Automacoes";
 import { estadoDescoberta } from "@/lib/descoberta";
 import { headers } from "next/headers";
 import Equipe from "@/components/painel/Equipe";
@@ -103,6 +104,18 @@ export default async function Pagina({ params, searchParams }: {
     if (!loja) notFound();
     const h = await headers();
     return <div className="grid gap-6"><Descoberta estado={estadoDescoberta(loja, h.get("x-forwarded-host") ?? h.get("host"))} /></div>;
+  }
+
+  // Automações: o outbox da loja, lido pela API paginada (useSearchParams →
+  // Suspense). Não passa pelo PainelLoja: não precisa de catálogo nem pedidos.
+  if (secao === "automacoes") {
+    const s = await sessaoDoPainel();
+    if (!s) notFound();
+    return (
+      <Suspense fallback={null}>
+        <div className="grid gap-6"><Automacoes /></div>
+      </Suspense>
+    );
   }
 
   // Domínio não é uma seção do PainelLoja: é tela própria, com verificação de
