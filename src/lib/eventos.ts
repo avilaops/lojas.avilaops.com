@@ -142,7 +142,7 @@ async function entregar(envelope: Record<string, unknown>, eventId: string, tipo
 
 export type ResultadoReenvio =
   | { ok: true; eventId: string; novoEventId: string }
-  | { ok: false; motivo: "nao-encontrado" | "sem-payload" | "nao-falhou" | "limite" | "outra-loja" };
+  | { ok: false; motivo: "nao-encontrado" | "sem-payload" | "nao-falhou" | "limite" | "outra-loja" | "ja-reenviado" };
 
 /**
  * Reenvia um evento que FALHOU, com o mesmo corpo e um eventId novo.
@@ -153,11 +153,17 @@ export type ResultadoReenvio =
  * histórico; a nova nasce EMITIDO e segue o ciclo normal.
  *
  * `slug` é o da sessão: um lojista só reenvia o que é da loja dele.
+ *
+ * Cada FALHOU só reabre uma vez: depois do reenvio a linha original vira
+ * REENVIADO e sai da fila. Se o novo também falhar, é o novo que se reenvia.
+ * Sem isto, apertar o botão três vezes mandava três avisos iguais ao
+ * comprador (provado em 12/09/2026); o teto de tentativas conta a cadeia.
  */
 export async function reenviar(eventId: string, slug: string): Promise<ResultadoReenvio> {
   const e = await prisma.automacaoEvento.findUnique({ where: { eventId } });
   if (!e) return { ok: false, motivo: "nao-encontrado" };
   if (e.slug !== slug) return { ok: false, motivo: "outra-loja" };
+  if (e.status === "REENVIADO") return { ok: false, motivo: "ja-reenviado" };
   if (e.status !== "FALHOU") return { ok: false, motivo: "nao-falhou" };
   if (!e.payload || typeof e.payload !== "object") return { ok: false, motivo: "sem-payload" };
   if (e.tentativas >= REENVIOS_MAXIMOS) return { ok: false, motivo: "limite" };
@@ -165,12 +171,17 @@ export async function reenviar(eventId: string, slug: string): Promise<Resultado
   const novo = novoEventId();
   const envelope = { ...(e.payload as Record<string, unknown>), eventId: novo, ocorridoEm: new Date().toISOString(), reenvioDe: eventId };
 
-  await prisma.$transaction([
-    prisma.automacaoEvento.update({ where: { eventId }, data: { tentativas: { increment: 1 }, detalhe: `${e.detalhe ?? ""} · reenviado como ${novo}`.trim() } }),
-    prisma.automacaoEvento.create({
-      data: { eventId: novo, tipo: e.tipo, slug: e.slug, versao: e.versao, correlationId: e.correlationId, payload: envelope as unknown as Prisma.InputJsonValue, tentativas: e.tentativas + 1 },
-    }),
-  ]);
+  // A virada FALHOU → REENVIADO é condicional: dois cliques ao mesmo tempo só
+  // passam um. O segundo vê count 0 e sai como "já reenviado".
+  const reaberto = await prisma.automacaoEvento.updateMany({
+    where: { eventId, status: "FALHOU" },
+    data: { status: "REENVIADO", detalhe: `${e.detalhe ?? ""} · reenviado como ${novo}`.trim(), concluidoEm: new Date() },
+  });
+  if (reaberto.count === 0) return { ok: false, motivo: "ja-reenviado" };
+
+  await prisma.automacaoEvento.create({
+    data: { eventId: novo, tipo: e.tipo, slug: e.slug, versao: e.versao, correlationId: e.correlationId, payload: envelope as unknown as Prisma.InputJsonValue, tentativas: e.tentativas + 1 },
+  });
   await entregar(envelope, novo, e.tipo);
   return { ok: true, eventId, novoEventId: novo };
 }

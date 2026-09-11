@@ -561,6 +561,7 @@ enum AutomacaoEventoStatus {
   PROCESSADO
   FALHOU
   IGNORADO // válido, mas sem ação (ex.: PIX pago antes do lembrete)
+  REENVIADO // falhou e foi reaberto como outro eventId; sai da fila
 }
 
 /// Um registro por evento emitido ao n8n. É a trava de idempotência (o n8n

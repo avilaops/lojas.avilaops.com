@@ -23,7 +23,7 @@ import Vazio from "@/components/aplicacao/Vazio";
 type Item = {
   eventId: string;
   tipo: string;
-  status: "EMITIDO" | "PROCESSANDO" | "PROCESSADO" | "FALHOU" | "IGNORADO";
+  status: "EMITIDO" | "PROCESSANDO" | "PROCESSADO" | "FALHOU" | "IGNORADO" | "REENVIADO";
   detalhe: string | null;
   emitidoEm: string;
   concluidoEm: string | null;
@@ -66,6 +66,7 @@ const SITUACAO: Record<Item["status"], { rotulo: string; classe: string }> = {
   PROCESSADO: { rotulo: "Feito", classe: "text-emerald-700" },
   FALHOU: { rotulo: "Falhou", classe: "text-red-700" },
   IGNORADO: { rotulo: "Sem ação necessária", classe: "text-muted-foreground" },
+  REENVIADO: { rotulo: "Reenviado", classe: "text-muted-foreground" },
 };
 
 const FICHAS: Array<{ valor: string; rotulo: string }> = [

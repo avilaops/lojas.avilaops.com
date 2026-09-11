@@ -56,7 +56,8 @@ n8n:        Validar Contrato → Reivindicar (EMITIDO→PROCESSANDO, único UPDA
             → duplicado? fim : efeito externo → Encerrar PROCESSADO | IGNORADO
 rotina:     A Cada Hora → Varrer: EMITIDO >15 min ou PROCESSANDO >5 dias → FALHOU
 painel:     Configurações → Automações lista por loja; FALHOU tem "Reenviar"
-reenvio:    mesmo payload, eventId novo, tentativas+1, teto 3 (REENVIOS_MAXIMOS)
+reenvio:    mesmo payload, eventId novo, tentativas+1, teto 3 (REENVIOS_MAXIMOS);
+            o FALHOU original vira REENVIADO e sai da fila (um FALHOU reabre uma vez)
 ```
 
 O reenvio nunca reconstrói o evento: reabre o corpo guardado. Um evento FALHOU

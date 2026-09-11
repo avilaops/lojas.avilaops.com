@@ -22,7 +22,7 @@ export async function GET(request: Request) {
   const pagina = Math.max(1, Math.trunc(Number(url.searchParams.get("pagina") ?? 1)) || 1);
   const where = {
     slug: s.tenant.slug,
-    ...(["EMITIDO", "PROCESSANDO", "PROCESSADO", "FALHOU", "IGNORADO"].includes(status) ? { status: status as never } : {}),
+    ...(["EMITIDO", "PROCESSANDO", "PROCESSADO", "FALHOU", "IGNORADO", "REENVIADO"].includes(status) ? { status: status as never } : {}),
   };
 
   const [total, itens, porStatus] = await Promise.all([
@@ -68,6 +68,7 @@ export async function POST(request: Request) {
       "nao-falhou": "Só o que falhou pode ser reenviado.",
       "sem-payload": "Este aviso é antigo e não guardou o conteúdo; não dá para reenviar.",
       "limite": "Este aviso já foi reenviado três vezes. Fale com o suporte.",
+      "ja-reenviado": "Este aviso já foi reenviado. Acompanhe o novo na lista.",
     };
     return Response.json({ erro: msg[resultado.motivo] }, { status: 409 });
   }
