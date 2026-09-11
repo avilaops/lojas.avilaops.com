@@ -51,7 +51,7 @@
         "setup": 497,
         "comissaoSobreVenda": 0,
         "paraQuem": "distribuidor, atacado e quem já vende volume",
-        "inclui": ["tudo da Loja", "domínio próprio da marca", "chave de API e assistente de IA (MCP)", "cotação B2B pelo WhatsApp", "5 e-mails profissionais", "prioridade de suporte"]
+        "inclui": ["tudo da Loja", "domínio próprio da marca", "chave de API e assistente de IA (MCP)", "cotação B2B pelo WhatsApp", "prioridade de suporte"]
       }
     ],
     "condicoesComerciais": {

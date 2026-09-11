@@ -65,7 +65,7 @@ const PLANOS = [
     preco: 497,
     descricao: "Para distribuidor e atacado: domínio próprio, prioridade no atendimento e conversa com o sistema que você já usa.",
     destaque: false,
-    itens: ["Tudo da Loja", "Domínio próprio da sua marca", "Cotação para revenda pelo WhatsApp", "Integração com o seu sistema", "5 e-mails profissionais", "Prioridade de suporte"],
+    itens: ["Tudo da Loja", "Domínio próprio da sua marca", "Cotação para revenda pelo WhatsApp", "Integração com o seu sistema", "Prioridade de suporte"],
   },
 ] as const;
 

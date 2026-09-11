@@ -25,7 +25,7 @@ Verificado em 24/08/2026 nos sites chiarodesign.com.br e infomaq.com.br:
 | Frete por CEP + retirada na loja | | ✔ | ✔ |
 | Aviso de pedido pago no WhatsApp do lojista | | ✔ | ✔ |
 | Automações (carrinho abandonado, reposição, cupom, pós-venda) | | | ✔ |
-| Relatórios semanais + 5 caixas de e-mail + NF-e | | | ✔ |
+| Relatórios semanais + NF-e | | | ✔ |
 
 Condição do setup promocional: 2 indicações após a aprovação (igual à deles
 funciona). Sem desconto por logo no rodapé: o "Loja por Avila Ops" é fixo.

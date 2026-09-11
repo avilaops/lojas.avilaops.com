@@ -34,7 +34,7 @@ Pequenas empresas e operações comerciais que precisam vender online sem montar
 
 - Site, R$ 110/mês: vitrine, catálogo, contato, pedidos pelo WhatsApp, domínio, SSL, hospedagem e e-mail profissional.
 - Loja, R$ 269/mês (o mais escolhido): tudo do Site + carrinho, Pix na hora, cartão e boleto no próprio checkout, frete por CEP e retirada, cupons, variações, estoque, feed do Google Shopping, carrinho abandonado, avaliações e relatório semanal. Sem comissão sobre venda.
-- Loja Pro, R$ 497/mês: tudo da Loja + domínio próprio, chave de API e assistente de IA, cotação B2B pelo WhatsApp, 5 e-mails e prioridade de suporte.
+- Loja Pro, R$ 497/mês: tudo da Loja + domínio próprio, chave de API e assistente de IA, cotação B2B pelo WhatsApp e prioridade de suporte.
 - Setup único: R$ 497. 14 dias de teste. Mensalidade começa quando a loja entra no ar.
 
 ## Pagamentos
