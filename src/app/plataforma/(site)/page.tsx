@@ -19,11 +19,11 @@ import ModelosInterativos from "@/components/plataforma/ModelosInterativos";
 export const metadata: Metadata = {
   title: "Lojas Avila Ops | a loja virtual com a cara do seu negócio",
   description:
-    "Sua marca, suas cores, suas fotos: loja virtual pronta em um dia, com Pix na hora, frete por CEP, WhatsApp e e-mail profissional por R$ 119 fixos no mês. O dinheiro cai na conta da sua empresa.",
+    "Sua marca, suas cores, suas fotos: loja virtual pronta em um dia, com Pix na hora, frete por CEP, WhatsApp e e-mail profissional por R$ 269 fixos no mês. O dinheiro cai na conta da sua empresa.",
   alternates: { canonical: "https://lojas.avilaops.com" },
   openGraph: {
     title: "Lojas Avila Ops | a loja virtual com a cara do seu negócio",
-    description: "Sua marca, suas cores, suas fotos. R$ 119 fixos no mês, sem comissão.",
+    description: "Sua marca, suas cores, suas fotos. R$ 269 fixos no mês, sem comissão.",
     url: "https://lojas.avilaops.com",
     siteName: "Lojas Avila Ops",
     locale: "pt_BR",
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Lojas Avila Ops | a loja virtual com a cara do seu negócio",
-    description: "Sua marca, suas cores, suas fotos. R$ 119 fixos no mês, sem comissão.",
+    description: "Sua marca, suas cores, suas fotos. R$ 269 fixos no mês, sem comissão.",
     images: ["/plataforma/opengraph-image"],
   },
 };
@@ -44,7 +44,7 @@ const PLANOS = [
     id: "SITE",
     nome: "Site",
     rotulo: "Para quem vende pelo WhatsApp",
-    preco: 79,
+    preco: 110,
     descricao: "Catálogo com preço no ar e pedido pelo WhatsApp, sem responder \"quanto é?\" o dia inteiro.",
     destaque: false,
     itens: ["Vitrine e catálogo com preço", "Pedido pelo WhatsApp", "Domínio, SSL e hospedagem", "E-mail profissional", "Painel simples"],
@@ -53,7 +53,7 @@ const PLANOS = [
     id: "LOJA",
     nome: "Loja",
     rotulo: "O mais escolhido",
-    preco: 119,
+    preco: 269,
     destaque: true,
     descricao: "A loja completa: o cliente escolhe, paga na hora e você só vê o pedido chegar.",
     itens: ["Tudo do Site", "Carrinho e checkout na sua loja", "Pix na hora, cartão e boleto", "Frete por CEP e retirada na loja", "Cupons, variações e estoque", "Google Shopping, carrinho abandonado e avaliações", "Relatório semanal no e-mail"],
@@ -62,7 +62,7 @@ const PLANOS = [
     id: "LOJA_PRO",
     nome: "Loja Pro",
     rotulo: "Para quem já vende muito",
-    preco: 349,
+    preco: 497,
     descricao: "Para distribuidor e atacado: domínio próprio, prioridade no atendimento e conversa com o sistema que você já usa.",
     destaque: false,
     itens: ["Tudo da Loja", "Domínio próprio da sua marca", "Cotação para revenda pelo WhatsApp", "Integração com o seu sistema", "5 e-mails profissionais", "Prioridade de suporte"],
@@ -196,7 +196,7 @@ export default function LandingPlataforma() {
             <h1>A loja com a cara<br />do <span>seu</span> negócio.</h1>
             <p>
               Sua cor, sua letra, suas fotos, e o cliente comprando pelo celular sem
-              perguntar preço. No ar em um dia por <strong>R$ 119 fixos no mês</strong>,
+              perguntar preço. No ar em um dia por <strong>R$ 269 fixos no mês</strong>,
               com o dinheiro caindo na conta da sua empresa.
             </p>
             <div className="pl-acoes">
@@ -362,7 +362,7 @@ export default function LandingPlataforma() {
             <Link href="/criar" className="pl-botao pl-botao-claro">Criar minha loja <ArrowRight size={17} /></Link>
           </div>
           <dl className="pl-fechamento-numeros">
-            <div><dt>R$ 119</dt><dd>fixos por mês</dd></div>
+            <div><dt>R$ 269</dt><dd>fixos por mês</dd></div>
             <div><dt>0%</dt><dd>de comissão</dd></div>
             <div><dt>1 dia</dt><dd>para entrar no ar</dd></div>
           </dl>

@@ -18,7 +18,7 @@ Verificado em 24/08/2026 nos sites chiarodesign.com.br e infomaq.com.br:
 | | **Site** | **Loja** ← âncora | **Loja Pro** |
 |---|---|---|---|
 | Setup | R$ 497 (12x R$ 49,70) | R$ 497 (12x R$ 49,70) | R$ 1.490 |
-| Mensal | R$ 79 | **R$ 119** | R$ 349 |
+| Mensal | R$ 110 | **R$ 269** | R$ 497 |
 | Hospedagem, domínio, SSL, e-mail profissional (1 caixa), painel, treinamento em vídeo | ✔ | ✔ | ✔ |
 | Catálogo + botão de WhatsApp | ✔ | ✔ | ✔ |
 | Carrinho + checkout PIX / cartão / boleto na própria loja | | ✔ | ✔ |

@@ -26,7 +26,7 @@
       {
         "id": "SITE",
         "nome": "Site",
-        "mensalidade": 79,
+        "mensalidade": 110,
         "setup": 497,
         "comissaoSobreVenda": 0,
         "paraQuem": "quem vende pelo WhatsApp e só quer catálogo com preço no ar",
@@ -37,7 +37,7 @@
       {
         "id": "LOJA",
         "nome": "Loja",
-        "mensalidade": 119,
+        "mensalidade": 269,
         "setup": 497,
         "comissaoSobreVenda": 0,
         "ancora": true,
@@ -47,7 +47,7 @@
       {
         "id": "LOJA_PRO",
         "nome": "Loja Pro",
-        "mensalidade": 349,
+        "mensalidade": 497,
         "setup": 497,
         "comissaoSobreVenda": 0,
         "paraQuem": "distribuidor, atacado e quem já vende volume",
@@ -141,7 +141,7 @@
         "gatilhoDeEntrada": "demo montada",
         "quemAge": "comercial, lembrado pela automação",
         "roteiro": {
-          "primeiraMensagem": "montei a sua loja com os seus produtos, olha aqui [link]; se gostar, fica no ar por R$ 119 no mês, Pix na hora e sem comissão; posso passar aí para te mostrar no celular?",
+          "primeiraMensagem": "montei a sua loja com os seus produtos, olha aqui [link]; se gostar, fica no ar por R$ 269 no mês, Pix na hora e sem comissão; posso passar aí para te mostrar no celular?",
           "tresPerguntasNaVisita": ["quantos pedidos por dia chegam pelo WhatsApp", "quanto tempo você gasta respondendo preço", "o que acontece com o pedido de quem manda mensagem fora do horário"],
           "fechamento": "o setup eu cadastro o resto dos produtos hoje; a loja já está no ar; Pix ou cartão para o setup?"
         },

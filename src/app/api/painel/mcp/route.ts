@@ -30,7 +30,7 @@ export async function POST() {
   if (loja.plano !== "LOJA_PRO") {
     return Response.json(
       {
-        erro: "O conector MCP para Claude / IA é um recurso exclusivo do plano Loja Pro (R$ 349/mês). Faça o upgrade na aba Assinatura para ativar.",
+        erro: "O conector MCP para Claude / IA é um recurso exclusivo do plano Loja Pro (R$ 497/mês). Faça o upgrade na aba Assinatura para ativar.",
         upgradeNecessario: true,
       },
       { status: 403 },

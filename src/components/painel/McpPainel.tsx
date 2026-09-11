@@ -148,7 +148,7 @@ export default function McpPainel({
           <div className="mt-8 flex flex-wrap items-center gap-4 pt-4 border-t border-border/60">
             <div>
               <span className="text-xs text-muted-foreground">Plano Loja Pro:</span>
-              <p className="text-xl font-black text-foreground">R$ 349 <span className="text-xs font-normal text-muted-foreground">/mês</span></p>
+              <p className="text-xl font-black text-foreground">R$ 497 <span className="text-xs font-normal text-muted-foreground">/mês</span></p>
             </div>
 
             <button

@@ -17,7 +17,7 @@ import { alterarPreapproval, atualizarValorPreapproval, buscarCobrancasDaAssinat
  * pagamento a loja fica SUSPENSA (vitrine no ar, checkout some). Pagou de
  * novo → ATIVA na hora.
  */
-export const PRECO_PLANO: Record<Plano, number> = { SITE: 7900, LOJA: 11900, LOJA_PRO: 34900 };
+export const PRECO_PLANO: Record<Plano, number> = { SITE: 11000, LOJA: 26900, LOJA_PRO: 49700 };
 export const NOME_PLANO: Record<Plano, string> = { SITE: "Site", LOJA: "Loja", LOJA_PRO: "Loja Pro" };
 const DIAS_TOLERANCIA = Number(process.env.LOJAS_DIAS_TOLERANCIA ?? 7);
 const BASE = process.env.LOJAS_BASE_DOMAIN ?? "lojas.avilaops.com";

@@ -82,7 +82,7 @@ export async function autenticarMcp(request: Request): Promise<McpAuthResult> {
   // Regra de Ouro: Exclusivo do plano LOJA_PRO
   if (tenant.plano !== "LOJA_PRO") {
     throw new McpAuthError(
-      `O conector MCP / Claude é um recurso exclusivo do plano Loja Pro (R$ 349/mês). A loja "${tenant.nome}" está no plano ${tenant.plano}. Faça upgrade no painel para conectar sua IA.`,
+      `O conector MCP / Claude é um recurso exclusivo do plano Loja Pro (R$ 497/mês). A loja "${tenant.nome}" está no plano ${tenant.plano}. Faça upgrade no painel para conectar sua IA.`,
       403,
       true,
     );
