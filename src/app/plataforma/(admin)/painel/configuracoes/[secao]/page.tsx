@@ -68,16 +68,39 @@ export default async function Pagina({ params, searchParams }: {
   if (secao === "canais") {
     const [loja, sp] = await Promise.all([lojistaAtual(), searchParams]);
     if (!loja) notFound();
-    const porEstado = await prisma.anuncioMercadoLivre.groupBy({
-      by: ["estado"],
-      where: { tenantId: loja.id },
-      _count: { _all: true },
-    });
+    const [porEstado, candidatos] = await Promise.all([
+      prisma.anuncioMercadoLivre.groupBy({
+        by: ["estado"],
+        where: { tenantId: loja.id },
+        _count: { _all: true },
+      }),
+      prisma.anuncioMercadoLivre.findMany({
+        where: {
+          tenantId: loja.id,
+          preparoEstado: "PRONTO",
+          mlbId: null,
+          estado: { in: ["rascunho", "recusado"] },
+        },
+        select: {
+          produtoId: true,
+          produto: { select: { nome: true, precoCentavos: true, estoque: true, imagens: true } },
+        },
+        orderBy: { preparadoEm: "desc" },
+        take: 50,
+      }),
+    ]);
     const conta = (e: string) => porEstado.find((p) => p.estado === e)?._count._all ?? 0;
     return (
       <div className="grid gap-6">
         <Canais
           loja={{ slug: loja.slug, nome: loja.nome }}
+          candidatos={candidatos.map(({ produtoId, produto }) => ({
+            produtoId,
+            nome: produto.nome,
+            preco: new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(produto.precoCentavos / 100),
+            estoque: produto.estoque ?? 0,
+            imagem: produto.imagens[0] ?? null,
+          }))}
           retorno={sp.ml}
           ml={{
             conectado: Boolean(loja.mlAccessTokenEnc && loja.mlRefreshTokenEnc),
@@ -86,6 +109,7 @@ export default async function Pagina({ params, searchParams }: {
             conectadoEm: loja.mlConectadoEm?.toISOString() ?? null,
             expiraEm: loja.mlExpiraEm?.toISOString() ?? null,
             anuncios: {
+              aprovado: conta("aprovado"),
               publicado: conta("publicado"),
               rascunho: conta("rascunho"),
               recusado: conta("recusado"),

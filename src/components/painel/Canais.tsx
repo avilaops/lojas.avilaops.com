@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, Check, ExternalLink, Link2, RefreshCw, Unlink } from "lucide-react";
+import { AlertTriangle, Check, ExternalLink, Link2, RefreshCw, Send, Unlink } from "lucide-react";
 import { Secao } from "./campos";
 
 export type CanalMl = {
@@ -12,7 +12,15 @@ export type CanalMl = {
   conectadoEm: string | null;
   expiraEm: string | null;
   /** Anúncios por estado, para o lojista saber o que está de pé. */
-  anuncios: { publicado: number; rascunho: number; recusado: number; pausado: number };
+  anuncios: { aprovado: number; publicado: number; rascunho: number; recusado: number; pausado: number };
+};
+
+export type CandidatoMl = {
+  produtoId: string;
+  nome: string;
+  preco: string;
+  estoque: number;
+  imagem: string | null;
 };
 
 const dataHora = (iso: string) =>
@@ -37,14 +45,16 @@ const RETORNO: Record<string, { tom: "ok" | "erro"; texto: string }> = {
  * de pagamento não carrega permissão de venda. Por isso são dois botões em
  * telas diferentes, e não um só.
  */
-export default function Canais({ loja, ml, retorno }: {
+export default function Canais({ loja, ml, candidatos, retorno }: {
   loja: { slug: string; nome: string };
   ml: CanalMl;
+  candidatos: CandidatoMl[];
   retorno?: string;
 }) {
   const router = useRouter();
   const [ocupado, setOcupado] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [selecionados, setSelecionados] = useState<string[]>([]);
   const aviso = retorno ? RETORNO[retorno] : undefined;
 
   async function desconectar() {
@@ -62,7 +72,28 @@ export default function Canais({ loja, ml, retorno }: {
     }
   }
 
-  const total = ml.anuncios.publicado + ml.anuncios.rascunho + ml.anuncios.recusado + ml.anuncios.pausado;
+  async function aprovar() {
+    if (selecionados.length === 0) return;
+    setErro(null);
+    setOcupado(true);
+    try {
+      const r = await fetch("/api/painel/canais/mercadolivre/anuncios", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ produtoIds: selecionados }),
+      });
+      const resposta = (await r.json().catch(() => ({}))) as { erro?: string; aprovados?: number };
+      if (!r.ok) throw new Error(resposta.erro ?? "Não consegui aprovar os produtos.");
+      setSelecionados([]);
+      router.refresh();
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Falha inesperada.");
+    } finally {
+      setOcupado(false);
+    }
+  }
+
+  const total = ml.anuncios.aprovado + ml.anuncios.publicado + ml.anuncios.rascunho + ml.anuncios.recusado + ml.anuncios.pausado;
 
   return (
     <>
@@ -98,8 +129,9 @@ export default function Canais({ loja, ml, retorno }: {
                 Nenhum produto anunciado ainda. O próximo passo é escolher o que vai para o Mercado Livre.
               </p>
             ) : (
-              <div className="grid gap-3 sm:grid-cols-4">
+              <div className="grid gap-3 sm:grid-cols-5">
                 {([
+                  ["Na fila", ml.anuncios.aprovado],
                   ["Publicados", ml.anuncios.publicado],
                   ["Rascunhos", ml.anuncios.rascunho],
                   ["Recusados", ml.anuncios.recusado],
@@ -110,6 +142,42 @@ export default function Canais({ loja, ml, retorno }: {
                     <strong className="block text-xl">{n}</strong>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {candidatos.length > 0 && (
+              <div className="grid gap-3 rounded-xl border border-border p-4">
+                <div>
+                  <h3 className="font-medium">Prontos para anunciar</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Selecione os produtos que você autoriza publicar. O n8n valida tudo no Mercado Livre e mantém preço e estoque sincronizados.
+                  </p>
+                </div>
+                <div className="grid max-h-96 gap-1 overflow-auto">
+                  {candidatos.map((produto) => {
+                    const marcado = selecionados.includes(produto.produtoId);
+                    return (
+                      <label key={produto.produtoId} className="flex cursor-pointer items-center gap-3 rounded-lg border border-border p-2.5 hover:bg-muted/40">
+                        <input
+                          type="checkbox"
+                          checked={marcado}
+                          onChange={() => setSelecionados((atuais) => marcado ? atuais.filter((id) => id !== produto.produtoId) : [...atuais, produto.produtoId])}
+                        />
+                        {produto.imagem ? <img src={produto.imagem} alt="" className="h-10 w-10 rounded-md object-cover" /> : <span className="h-10 w-10 rounded-md bg-muted" />}
+                        <span className="min-w-0 flex-1 text-sm">
+                          <b className="block truncate">{produto.nome}</b>
+                          <span className="text-xs text-muted-foreground">{produto.preco} · {produto.estoque} em estoque</span>
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+                <div>
+                  <button className="btn-primario inline-flex items-center gap-2" disabled={ocupado || selecionados.length === 0} onClick={aprovar}>
+                    {ocupado ? <RefreshCw size={15} className="animate-spin" /> : <Send size={15} />}
+                    Aprovar {selecionados.length || ""} para publicar
+                  </button>
+                </div>
               </div>
             )}
           </>

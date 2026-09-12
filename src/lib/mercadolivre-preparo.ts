@@ -387,10 +387,18 @@ export async function prepararProduto({ produto, grupo }: EntradaPreparo): Promi
  */
 export async function prepararCatalogo(
   tenantId: string,
-  opcoes: { limite?: number; aoAndar?: (feitos: number, total: number) => void } = {},
+  opcoes: {
+    limite?: number;
+    somenteSemAnuncio?: boolean;
+    aoAndar?: (feitos: number, total: number) => void;
+  } = {},
 ): Promise<{ pronto: number; revisao: number; bloqueado: number; total: number }> {
   const produtos = await prisma.produto.findMany({
-    where: { tenantId, ativo: true },
+    where: {
+      tenantId,
+      ativo: true,
+      ...(opcoes.somenteSemAnuncio ? { anunciosMl: { none: {} } } : {}),
+    },
     select: {
       id: true,
       nome: true,

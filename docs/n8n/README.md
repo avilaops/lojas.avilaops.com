@@ -79,6 +79,19 @@ Token`, `BIftJgoyPwxr2d55`):
 | `POST /api/admin/cobranca/verificar` | diário 6h |
 | `POST /api/admin/seo/categorias` | diário 3h |
 | `POST /api/admin/relatorios/semanal` | segunda 7h |
+| `POST /api/admin/canais/mercadolivre/rodar` | a cada 15 min, prepara catálogo, publica aprovados e sincroniza anúncios |
+
+## Mercado Livre
+
+O fluxo separado `Lojas - Mercado Livre - Publicar e sincronizar` é o coração
+da rotina do canal. A plataforma guarda os tokens cifrados, mostra ao lojista
+os produtos prontos e exige aprovação humana. O n8n chama o endpoint
+administrativo a cada 15 minutos; o endpoint valida o anúncio na API oficial,
+publica somente os aprovados e confere preço e estoque depois de cada alteração.
+
+Sem conta conectada ou produto aprovado, a execução é segura e não publica
+nada. Respostas com falhas fazem o fluxo falhar de propósito para cair no
+Handler de Erro Central, com o detalhe por loja e produto.
 
 ## Credenciais que o fluxo usa (sem valor aqui)
 
@@ -127,4 +140,5 @@ primeiro, PUT do fluxo depois**.
 | reenvio | endpoint + botão no painel |
 | tela Configurações → Automações | no ar |
 | Todoist OAuth | credencial precisa ser reconectada no navegador (perdida em 08/09) |
-| Mercado Livre sync, cotação de frete | já são síncronos no backend (CepCerto, ML API); não passam pelo n8n de propósito: precisam responder no checkout |
+| Mercado Livre | aprovação no painel; publicação e sincronização orquestradas a cada 15 min pelo fluxo próprio do n8n |
+| cotação de frete | síncrona no backend (CepCerto), porque precisa responder no checkout |
