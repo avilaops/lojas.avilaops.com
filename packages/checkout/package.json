@@ -1,0 +1,30 @@
+{
+  "name": "@avilaops/checkout",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Checkout reutilizável da Avila Ops , tela própria, gateway plugável, Mercado Pago incluso",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./ui": "./src/ui/index.ts",
+    "./server": "./src/server/index.ts",
+    "./tokens.css": "./src/ui/tokens.css",
+    "./checkout.css": "./src/ui/checkout.css"
+  },
+  "files": [
+    "src"
+  ],
+  "peerDependencies": {
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "@types/react": "^19.2.18",
+    "typescript": "^5.9.3"
+  },
+  "scripts": {
+    "test": "node --test \"src/**/*.test.ts\"",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  }
+}

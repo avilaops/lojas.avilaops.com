@@ -4,3 +4,7 @@
 **/.env.local
 **/.env.production
 **/.git
+
+**/.env*
+uploads
+*.tgz
