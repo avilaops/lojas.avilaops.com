@@ -1,83 +1,14 @@
 import { tenantAtual, urlDaLoja } from "@/lib/tenant";
-import { disponibilidadeMerchant, elegivelMerchant } from "@/lib/produto-regras";
 import { prisma } from "@/lib/db";
-import { categoriaGoogle } from "@/lib/categoria-google";
+import { INCLUIR_CATALOGO } from "@/lib/catalogo-qualidade";
+import { gerarFeedMerchant } from "@/lib/catalogo-merchant";
 
-/**
- * Feed de produtos para o Google Merchant Center (RSS 2.0 + namespace g:),
- * por loja: https://<loja>/feed/merchant.xml. O lojista cadastra essa URL
- * uma vez no Merchant Center e passa a aparecer no Google Shopping sem custo.
- * Produtos com variações viram um item por variação (item_group_id = produto).
- */
 export const dynamic = "force-dynamic";
 
-const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-const preco = (c: number) => `${(c / 100).toFixed(2)} BRL`;
-
+/** Exportar o feed não comprova envio nem aprovação do canal. */
 export async function GET() {
   const t = await tenantAtual();
   if (!t || t.status !== "ATIVA") return new Response("não", { status: 404 });
-  const base = urlDaLoja(t);
-  /**
-   * Produto sem foto fica de fora, e não é rigor nosso: `image_link` é campo
-   * obrigatório do Merchant Center. Mandar assim mesmo não faz o item aparecer
-   * no Shopping — faz ele ser reprovado, e conta com muita reprovação passa a
-   * ser olhada com desconfiança pelo Google.
-   *
-   * Sem este filtro a Brilhax estrearia com 17 dos 79 itens reprovados de
-   * saída, todos boinas e espumas de polimento que ainda não têm foto.
-   */
-  const produtos = (await prisma.produto.findMany({ where: { tenantId: t.id, ativo: true }, include: { categoria: true, variantes: { where: { ativo: true } } }, orderBy: { nome: "asc" } }))
-    // A régua do Google mora em produto-regras: imagem e preço, senão o item é
-    // reprovado. Sob consulta (preço zero) fica fora do feed de propósito.
-    .filter((p) => elegivelMerchant(p, p.variantes.some((v) => Boolean(v.imagem))));
-
-  const itens: string[] = [];
-  for (const p of produtos) {
-    const comum = (id: string, titulo: string, precoCentavos: number, disponibilidade: string, imagem: string | undefined, extra = "") => `
-    <item>
-      <g:id>${esc(id)}</g:id>
-      <g:title>${esc(titulo.slice(0, 150))}</g:title>
-      <g:description>${esc((p.descricaoCurta ?? p.descricao ?? p.nome).slice(0, 5000))}</g:description>
-      <g:link>${esc(`${base}/produtos/${p.slug}`)}</g:link>
-      ${imagem ? `<g:image_link>${esc(imagem)}</g:image_link>` : ""}
-      ${p.imagens.slice(1, 10).map((i) => `<g:additional_image_link>${esc(i)}</g:additional_image_link>`).join("")}
-      <g:availability>${disponibilidade}</g:availability>
-      <g:price>${preco(p.precoDeCentavos && p.precoDeCentavos > precoCentavos ? p.precoDeCentavos : precoCentavos)}</g:price>
-      ${p.precoDeCentavos && p.precoDeCentavos > precoCentavos ? `<g:sale_price>${preco(precoCentavos)}</g:sale_price>` : ""}
-      <g:condition>new</g:condition>
-      ${p.marca ? `<g:brand>${esc(p.marca)}</g:brand>` : ""}
-      ${p.gtin ? `<g:gtin>${esc(p.gtin)}</g:gtin>` : ""}
-      ${p.codigoOriginal ? `<g:mpn>${esc(p.codigoOriginal)}</g:mpn>` : ""}
-      ${!p.gtin && !p.codigoOriginal ? "<g:identifier_exists>no</g:identifier_exists>" : ""}
-      ${p.categoria ? `<g:product_type>${esc(p.categoria.nome)}</g:product_type>` : ""}
-      ${categoriaGoogle(p.categoria?.nome) ? `<g:google_product_category>${categoriaGoogle(p.categoria?.nome)}</g:google_product_category>` : ""}
-      ${p.pesoKg != null ? `<g:shipping_weight>${p.pesoKg} kg</g:shipping_weight>` : ""}
-      ${extra}
-    </item>`;
-
-    if (p.opcoes.length && p.variantes.length) {
-      for (const v of p.variantes) {
-        const valores = v.valores as Record<string, string>;
-        const extra = `<g:item_group_id>${esc(p.id)}</g:item_group_id>` + p.opcoes.map((o) => {
-          const chave = /tamanho|size/i.test(o) ? "g:size" : /cor|color/i.test(o) ? "g:color" : /material/i.test(o) ? "g:material" : null;
-          return chave && valores[o] ? `<${chave}>${esc(valores[o])}</${chave}>` : "";
-        }).join("");
-        // A variação tem estoque próprio; o "esgotado" marcado no produto vale para todas.
-        itens.push(comum(`${p.id}:${v.id}`, `${p.nome} · ${v.nome}`, v.precoCentavos ?? p.precoCentavos, disponibilidadeMerchant({ disponibilidade: p.disponibilidade, estoque: v.estoque }), v.imagem ?? p.imagens[0], extra));
-      }
-    } else {
-      itens.push(comum(p.id, p.nome, p.precoCentavos, disponibilidadeMerchant(p), p.imagens[0]));
-    }
-  }
-
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">
-  <channel>
-    <title>${esc(t.nome)}</title>
-    <link>${esc(base)}</link>
-    <description>${esc(t.slogan ?? `Produtos da ${t.nome}`)}</description>${itens.join("")}
-  </channel>
-</rss>`;
-  return new Response(xml, { headers: { "content-type": "application/xml; charset=utf-8", "cache-control": "public, max-age=900" } });
+  const produtos = await prisma.produto.findMany({ where: { tenantId:t.id, ativo:true }, include:INCLUIR_CATALOGO, orderBy:{nome:"asc"} });
+  return new Response(gerarFeedMerchant(t,urlDaLoja(t),produtos),{headers:{"content-type":"application/xml; charset=utf-8","cache-control":"no-store"}});
 }

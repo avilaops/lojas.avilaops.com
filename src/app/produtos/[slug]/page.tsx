@@ -19,8 +19,10 @@ import Compatibilidade from "@/components/Compatibilidade";
 import { minhaMoto } from "@/lib/minha-moto";
 import { lerCompatibilidade } from "@/lib/motos";
 import { descricaoDoProduto, textoPuro } from "@/lib/seo-texto";
+import { ofertaDaVariante,gtinValido } from "@/lib/catalogo-oferta";
+import { midiasDaOferta } from "@/lib/catalogo-qualidade";
 
-type Props = { params: Promise<{ slug: string }> };
+type Props = { params: Promise<{ slug: string }>; searchParams:Promise<{variante?:string}> };
 
 export async function generateMetadata({ params }: Props) {
   const t = await exigirTenant();
@@ -41,11 +43,16 @@ export async function generateMetadata({ params }: Props) {
   };
 }
 
-export default async function ProdutoPage({ params }: Props) {
+export default async function ProdutoPage({ params,searchParams }: Props) {
   const t = await exigirTenant();
   const { slug } = await params;
   const p = await buscarProduto(t.id, slug);
   if (!p) notFound();
+  const {variante:varianteId}=await searchParams;
+  const ofertas=p.variantes.filter(v=>v.ativo).map(ofertaDaVariante);
+  const escolhida=ofertas.find(v=>v.id===varianteId)??ofertas.find(v=>v.padrao);
+  if(varianteId&&!ofertas.some(v=>v.id===varianteId))notFound();
+  if(escolhida)Object.assign(p,{precoCentavos:escolhida.precoCentavos,precoDeCentavos:escolhida.precoDeCentavos,estoque:escolhida.estoque,sku:escolhida.sku,gtin:escolhida.gtin,disponibilidade:escolhida.disponibilidade,imagens:midiasDaOferta(p,escolhida.id).map(m=>m.url)});
   const vende = lojaVende(t);
   // Preço zero é "ainda não precificado", não "de graça": item de referência
   // vindo do ERP entra no catálogo para ser encontrado, e o preço vem por
@@ -69,8 +76,8 @@ export default async function ProdutoPage({ params }: Props) {
     name: p.nome,
     ...(p.marca ? { brand: { "@type": "Brand", name: p.marca } } : {}),
     ...(p.sku ? { sku: p.sku } : {}),
-    ...(p.gtin ? { gtin: p.gtin } : {}),
-    ...(p.codigoOriginal ? { mpn: p.codigoOriginal } : {}),
+    ...(gtinValido(p.gtin) ? { gtin: p.gtin } : {}),
+    ...(escolhida?.mpn ? { mpn: escolhida.mpn } : {}),
     ...(compat.length ? { isAccessoryOrSparePartFor: compat.map((c) => ({ "@type": "Vehicle", name: `${c.marca} ${c.modelo}`, brand: { "@type": "Brand", name: c.marca }, model: c.modelo })) } : {}),
     image: p.imagens,
     // Texto puro: a descrição importada vem com HTML, e tag dentro do JSON-LD
@@ -91,19 +98,31 @@ export default async function ProdutoPage({ params }: Props) {
         }
       : {}),
     ...(resumo.media != null ? { aggregateRating: { "@type": "AggregateRating", ratingValue: resumo.media, reviewCount: resumo.total } } : {}),
-    offers: {
+    offers: escolhida && p.precoCentavos > 0 ? {
       "@type": "Offer",
-      url: `${urlDaLoja(t)}/produtos/${p.slug}`,
+      url: `${urlDaLoja(t)}/produtos/${p.slug}${escolhida&&!escolhida.padrao?`?variante=${encodeURIComponent(escolhida.id)}`:""}`,
       priceCurrency: "BRL",
       price: (p.precoCentavos / 100).toFixed(2),
       availability: `https://schema.org/${regras.disponibilidadeSchema(p)}`,
       seller: { "@id": `${urlDaLoja(t)}/#organization` },
-    },
+    } : ofertas.some(v=>v.precoCentavos>0) ? {
+      "@type": "AggregateOffer",
+      priceCurrency: "BRL",
+      lowPrice: (Math.min(...ofertas.filter(v=>v.precoCentavos>0).map(v=>v.precoCentavos))/100).toFixed(2),
+      highPrice: (Math.max(...ofertas.map(v=>v.precoCentavos))/100).toFixed(2),
+      offerCount: ofertas.filter(v=>v.precoCentavos>0).length,
+      offers: ofertas.filter(v=>v.precoCentavos>0).map(v=>({
+        "@type":"Offer",sku:v.sku??undefined,
+        url:`${urlDaLoja(t)}/produtos/${p.slug}?variante=${encodeURIComponent(v.id)}`,
+        priceCurrency:"BRL",price:(v.precoCentavos/100).toFixed(2),
+        availability:`https://schema.org/${regras.disponibilidadeSchema({...p,...v})}`,
+      })),
+    } : undefined,
   };
 
   return (
     <div className="container-loja py-8">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g,"\\u003c") }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
         "@context": "https://schema.org",
         "@type": "BreadcrumbList",
@@ -136,9 +155,11 @@ export default async function ProdutoPage({ params }: Props) {
             <div className="mt-5 max-w-sm">
               {p.precoDeCentavos && p.precoDeCentavos > p.precoCentavos && <p className="text-sm text-muted-foreground line-through">{formatarBRL(p.precoDeCentavos)}</p>}
               <SeletorVariante
+                key={escolhida?.id??p.id}
+                varianteInicial={escolhida?.id}
                 produto={{ id: p.id, slug: p.slug, nome: p.nome, precoCentavos: p.precoCentavos, imagem: p.imagens[0] }}
                 opcoes={p.opcoes}
-                variantes={p.variantes.map((v) => ({ id: v.id, nome: v.nome, valores: v.valores as Record<string, string>, precoCentavos: v.precoCentavos, estoque: v.estoque, imagem: v.imagem }))}
+                variantes={ofertas.filter(v=>!v.padrao).map((v) => ({ id: v.id, nome: v.nome, valores: v.valores as Record<string, string>, precoCentavos: v.precoCentavos, estoque: v.estoque, imagem: v.imagem, disponivel:v.compravel }))}
                 vende={vende}
               />
             </div>
@@ -169,7 +190,7 @@ export default async function ProdutoPage({ params }: Props) {
             ) : !disponivel || (p.estoque != null && p.estoque <= 0) ? (
               <AvisoEstoque produtoId={p.id} />
             ) : vende ? (
-              <AddToCartButton item={{ id: p.id, slug: p.slug, nome: p.nome, precoCentavos: p.precoCentavos, imagem: p.imagens[0] }} disponivel irParaCarrinho />
+              <AddToCartButton item={{ id: escolhida?`${p.id}:${escolhida.id}`:p.id, slug: p.slug, nome: p.nome, precoCentavos: p.precoCentavos, imagem: p.imagens[0] }} disponivel irParaCarrinho />
             ) : t.whatsapp ? (
               <a className="btn-primario w-full" href={linkWhatsApp(t.whatsapp, `Olá! Tenho interesse em: ${p.nome}`)} target="_blank" rel="noopener">
                 Pedir pelo WhatsApp

@@ -1,0 +1,48 @@
+{
+  "verificadoEm": "2026-09-12T04:31:50.908Z",
+  "produtosConferidos": 224,
+  "produtosAlterados": 102,
+  "produtosAntesSemFotoComFoto": 47,
+  "arquivosConferidosPublicamente": 47,
+  "antes": {
+    "total": 224,
+    "semFoto": 142,
+    "umaFoto": 55,
+    "maisDeUmaFoto": 27,
+    "ativos": 79,
+    "ativosSemFoto": 17,
+    "semDescricao": 153,
+    "semDescricaoCurta": 224,
+    "semGtin": 156,
+    "semMarca": 1,
+    "precoZerado": 142,
+    "estoqueNaoControlado": 224,
+    "semPeso": 224,
+    "semDimensoes": 224
+  },
+  "depois": {
+    "total": 224,
+    "semFoto": 95,
+    "umaFoto": 101,
+    "maisDeUmaFoto": 28,
+    "ativos": 79,
+    "ativosSemFoto": 0,
+    "semDescricao": 107,
+    "semDescricaoCurta": 122,
+    "semGtin": 146,
+    "semMarca": 0,
+    "precoZerado": 142,
+    "estoqueNaoControlado": 224,
+    "semPeso": 224,
+    "semDimensoes": 224
+  },
+  "alteracoesPorCampo": {
+    "gtin": 10,
+    "marca": 4,
+    "imagens": 47,
+    "atributos": 102,
+    "descricao": 64,
+    "descricaoCurta": 102
+  },
+  "divergencias": 0
+}

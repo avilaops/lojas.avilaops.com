@@ -3,12 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { Campo, inputClasse } from "./campos";
 
-interface Linha { id?: string; valores: Record<string, string>; sku: string; preco: string; estoque: string; pesoKg: string; imagem: string }
+interface Linha { id?: string; valores: Record<string, string>; sku: string; gtin: string; mpn: string; preco: string; estoque: string; pesoKg: string; alturaCm: string; larguraCm: string; comprimentoCm: string; imagem: string }
 
 /**
  * Grade de variações de um produto: até 3 opções (Tamanho, Cor…), valores
  * separados por vírgula; a grade é gerada por combinação e cada linha tem
- * SKU, preço (vazio = preço do produto), estoque (vazio = não controla).
+ * SKU, preço próprio obrigatório e estoque físico (vazio = não controla).
  */
 export default function GradeVariantes({ produtoId, produtoNome, aoFechar, aoSalvar }: { produtoId: string; produtoNome: string; aoFechar: () => void; aoSalvar: (msg: string) => void }) {
   const [opcoes, setOpcoes] = useState<Array<{ nome: string; valores: string }>>([{ nome: "Tamanho", valores: "" }]);
@@ -16,16 +16,18 @@ export default function GradeVariantes({ produtoId, produtoNome, aoFechar, aoSal
   const [erro, setErro] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
   const [carregado, setCarregado] = useState(false);
+  const [versao, setVersao] = useState<number>();
 
   useEffect(() => {
     fetch(`/api/painel/variantes?produtoId=${produtoId}`).then((r) => r.json()).then((d) => {
+      setVersao(d.versaoCatalogo);
       if (d?.opcoes?.length) {
         const vals: Record<string, Set<string>> = {};
         for (const o of d.opcoes) vals[o] = new Set();
         for (const v of d.variantes) for (const o of d.opcoes) if (v.valores?.[o]) vals[o].add(v.valores[o]);
         setOpcoes(d.opcoes.map((o: string) => ({ nome: o, valores: Array.from(vals[o]).join(", ") })));
-        setLinhas(d.variantes.map((v: { id: string; valores: Record<string, string>; sku: string | null; precoCentavos: number | null; estoque: number | null; pesoKg: number | null; imagem: string | null }) => ({
-          id: v.id, valores: v.valores, sku: v.sku ?? "", preco: v.precoCentavos != null ? (v.precoCentavos / 100).toFixed(2).replace(".", ",") : "", estoque: v.estoque != null ? String(v.estoque) : "", pesoKg: v.pesoKg != null ? String(v.pesoKg) : "", imagem: v.imagem ?? "",
+        setLinhas(d.variantes.map((v: { id: string; valores: Record<string, string>; sku: string | null; gtin: string|null; mpn:string|null; alturaCm:number|null; larguraCm:number|null; comprimentoCm:number|null; precoCentavos: number | null; estoque: number | null; pesoKg: number | null; imagem: string | null }) => ({
+          id: v.id, valores: v.valores, gtin:v.gtin??"", mpn:v.mpn??"", alturaCm:v.alturaCm!=null?String(v.alturaCm):"", larguraCm:v.larguraCm!=null?String(v.larguraCm):"", comprimentoCm:v.comprimentoCm!=null?String(v.comprimentoCm):"", sku: v.sku ?? "", preco: v.precoCentavos != null ? (v.precoCentavos / 100).toFixed(2).replace(".", ",") : "", estoque: v.estoque != null ? String(v.estoque) : "", pesoKg: v.pesoKg != null ? String(v.pesoKg) : "", imagem: v.imagem ?? "",
         })));
       }
       setCarregado(true);
@@ -39,7 +41,7 @@ export default function GradeVariantes({ produtoId, produtoNome, aoFechar, aoSal
     const combos: Record<string, string>[] = opcoesValidas.reduce<Record<string, string>[]>((acc, o) => acc.flatMap((c) => o.valores.map((v) => ({ ...c, [o.nome]: v }))), [{}]);
     const chave = (v: Record<string, string>) => opcoesValidas.map((o) => v[o.nome]).join("|");
     const existentes = new Map(linhas.map((l) => [chave(l.valores), l]));
-    setLinhas(combos.map((c) => existentes.get(chave(c)) ?? { valores: c, sku: "", preco: "", estoque: "", pesoKg: "", imagem: "" }));
+    setLinhas(combos.map((c) => existentes.get(chave(c)) ?? { valores: c, sku: "", gtin:"", mpn:"", preco: "", estoque: "", pesoKg: "", alturaCm:"", larguraCm:"", comprimentoCm:"", imagem: "" }));
     setErro(null);
   }
 
@@ -48,9 +50,9 @@ export default function GradeVariantes({ produtoId, produtoNome, aoFechar, aoSal
     try {
       const centavos = (v: string) => (v.trim() ? Math.round(Number.parseFloat(v.replace(/[^\d,.-]/g, "").replace(",", ".")) * 100) : null);
       const corpo = {
-        produtoId,
-        opcoes: opcoesValidas.map((o) => o.nome),
-        variantes: linhas.map((l) => ({ id: l.id, valores: l.valores, sku: l.sku || null, precoCentavos: centavos(l.preco), estoque: l.estoque.trim() ? Number(l.estoque) : null, pesoKg: l.pesoKg.trim() ? Number.parseFloat(l.pesoKg.replace(",", ".")) : null, imagem: l.imagem || null })),
+        produtoId, versaoCatalogo:versao,
+        opcoes: linhas.length?opcoesValidas.map((o) => o.nome):[],
+        variantes: linhas.map((l) => ({ id: l.id, valores: l.valores, sku: l.sku || null, gtin:l.gtin||null, mpn:l.mpn||null, alturaCm:l.alturaCm?Number(l.alturaCm.replace(",", ".")):null, larguraCm:l.larguraCm?Number(l.larguraCm.replace(",", ".")):null, comprimentoCm:l.comprimentoCm?Number(l.comprimentoCm.replace(",", ".")):null, precoCentavos: centavos(l.preco), estoque: l.estoque.trim() ? Number(l.estoque) : null, pesoKg: l.pesoKg.trim() ? Number.parseFloat(l.pesoKg.replace(",", ".")) : null, imagem: l.imagem || null })),
       };
       const r = await fetch("/api/painel/variantes", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(corpo) });
       const d = await r.json();
@@ -94,15 +96,18 @@ export default function GradeVariantes({ produtoId, produtoNome, aoFechar, aoSal
           {linhas.length > 0 && (
             <div className="mt-4 overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="text-left text-xs uppercase text-muted-foreground"><tr><th className="py-2">Variação</th><th>SKU</th><th>Preço (R$)</th><th>Estoque</th><th>Peso (kg)</th><th>Foto (URL)</th></tr></thead>
+                <thead className="text-left text-xs uppercase text-muted-foreground"><tr><th className="py-2">Variação</th><th>SKU</th><th>GTIN</th><th>MPN</th><th>Preço (R$)</th><th>Estoque</th><th>Peso (kg)</th><th>Embalagem A × L × C (cm)</th><th>Foto (URL)</th></tr></thead>
                 <tbody>
                   {linhas.map((l, i) => (
                     <tr key={i} className="border-t border-border">
                       <td className="py-1 pr-2 font-medium">{opcoesValidas.map((o) => l.valores[o.nome]).join(" / ")}</td>
                       <td><input className={`${inputClasse} h-9`} value={l.sku} onChange={(e) => atualizar(i, "sku", e.target.value)} /></td>
-                      <td><input className={`${inputClasse} h-9`} placeholder="= produto" value={l.preco} onChange={(e) => atualizar(i, "preco", e.target.value)} /></td>
+                      <td><input aria-label="GTIN da variação" className={`${inputClasse} h-9`} value={l.gtin} onChange={e=>atualizar(i,"gtin",e.target.value)} /></td>
+                      <td><input aria-label="MPN da variação" className={`${inputClasse} h-9`} value={l.mpn} onChange={e=>atualizar(i,"mpn",e.target.value)} /></td>
+                      <td><input className={`${inputClasse} h-9`} placeholder="Obrigatório" value={l.preco} onChange={(e) => atualizar(i, "preco", e.target.value)} /></td>
                       <td><input className={`${inputClasse} h-9`} placeholder="∞" value={l.estoque} onChange={(e) => atualizar(i, "estoque", e.target.value)} inputMode="numeric" /></td>
                       <td><input className={`${inputClasse} h-9`} value={l.pesoKg} onChange={(e) => atualizar(i, "pesoKg", e.target.value)} /></td>
+                      <td><div className="flex min-w-40 gap-1">{(["alturaCm","larguraCm","comprimentoCm"] as const).map(k=><input key={k} aria-label={k} className={`${inputClasse} h-9 min-w-12`} value={l[k]} onChange={e=>atualizar(i,k,e.target.value)} />)}</div></td>
                       <td><input className={`${inputClasse} h-9`} value={l.imagem} onChange={(e) => atualizar(i, "imagem", e.target.value)} /></td>
                     </tr>
                   ))}
@@ -116,7 +121,7 @@ export default function GradeVariantes({ produtoId, produtoNome, aoFechar, aoSal
             <button className="btn-primario" disabled={ocupado} onClick={salvar}>Salvar grade</button>
             {linhas.length > 0 && <button className="btn-secundario" disabled={ocupado} onClick={() => { setLinhas([]); }}>Limpar (produto simples)</button>}
           </div>
-          <Campo label="" ajuda="Salvar com a grade vazia volta o produto para “simples” (estoque no próprio produto)."><span /></Campo>
+          <Campo label="" ajuda="Salvar com a grade vazia reativa a apresentação única anterior. Os estoques das variações não são somados."><span /></Campo>
         </>
       )}
     </div>

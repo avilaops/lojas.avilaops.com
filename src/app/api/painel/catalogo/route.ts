@@ -51,7 +51,7 @@ export async function GET(request: Request) {
     prisma.produto.count({ where }),
     prisma.produto.findMany({
       where,
-      include: { categoria: { select: { nome: true } }, _count: { select: { variantes: { where: { ativo: true } } } } },
+      include: { categoria: { select: { nome: true } }, _count: { select: { variantes: { where: { ativo: true, padrao: false } } } } },
       orderBy: [{ ativo: "desc" }, { nome: "asc" }],
       skip: (pagina - 1) * POR_PAGINA,
       take: POR_PAGINA,

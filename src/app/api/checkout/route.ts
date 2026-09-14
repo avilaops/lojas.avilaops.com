@@ -1,4 +1,7 @@
-import { criarRotaPagamento, type ResolucaoCatalogo } from "@avilaops/checkout/server";
+import { montarPedidoSeguro, PedidoInvalidoError, type ResolucaoCatalogo, type PayloadCheckout } from "@avilaops/checkout/server";
+import { reservarEstoque, liberarReservas } from "@/lib/catalogo-reservas";
+import { ErroCatalogo } from "@/lib/catalogo-oferta";
+import { prisma } from "@/lib/db";
 import { lojaVende, tenantAtual } from "@/lib/tenant";
 import { resolverItensDoCatalogo } from "@/lib/catalogo";
 import { cotarFrete } from "@/lib/frete";
@@ -54,14 +57,31 @@ export async function POST(request: Request) {
   // Comprador logado: o pedido entra no histórico dele e o endereço fica salvo.
   const comprador = await compradorAtual(t);
 
-  const handler = criarRotaPagamento({
-    provider,
-    catalogo,
-    aoCriarPagamento: async ({ referencia, pagamentoId, status, total }) => {
-      const corpo = await copia.clone().json();
-      const c = await cupom([]);
-      await registrarPedido(t, { referencia, pagamentoId, status, total, payload: corpo, catalogo, cupomCodigo: c ? c.codigo : null, compradorId: comprador?.id ?? null });
-    },
-  });
-  return handler(copia);
+  let reservou = false;
+  let referencia = "";
+  let iniciouCobranca = false;
+  try {
+    const corpo = await copia.json() as PayloadCheckout;
+    const { pedido, total } = await montarPedidoSeguro(corpo, catalogo);
+    referencia = pedido.referencia;
+    await reservarEstoque(t.id, referencia, pedido.itens);
+    reservou = true;
+    iniciouCobranca = true;
+    const resultado = await provider.cobrar(pedido, total);
+    await prisma.tentativaCatalogo.update({ where: { tenantId_referencia: { tenantId:t.id,referencia } }, data:{estado:"COBRANCA_CRIADA",pagamentoId:resultado.id} });
+    const c = await cupom([]);
+    await registrarPedido(t, { referencia, pagamentoId:resultado.id, status:resultado.status, total, payload:corpo, catalogo, pedidoResolvido:pedido, cupomCodigo:c?.codigo, compradorId:comprador?.id });
+    return Response.json(resultado);
+  } catch(e) {
+    if(reservou && !iniciouCobranca) await liberarReservas(t.id,referencia);
+    if(iniciouCobranca) {
+      // Timeout pode significar cobrança criada. Não liberar estoque nem prometer ausência de cobrança.
+      await prisma.tentativaCatalogo.updateMany({where:{tenantId:t.id,referencia,estado:{not:"CONFIRMADA"}},data:{estado:"INCERTA"}});
+      console.error("[checkout] cobrança a reconciliar",referencia,e);
+      return Response.json({erro:"Estamos confirmando o pagamento. Consulte o pedido antes de tentar novamente.",codigo:"pagamento_a_confirmar",referencia},{status:503});
+    }
+    if(e instanceof ErroCatalogo) return Response.json({erro:e.message},{status:e.status});
+    if(e instanceof PedidoInvalidoError) return Response.json({erro:e.message,codigo:e.codigo},{status:422});
+    throw e;
+  }
 }

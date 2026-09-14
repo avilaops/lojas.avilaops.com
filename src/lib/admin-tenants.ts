@@ -5,6 +5,7 @@ import { slugificar } from "./catalogo";
 import { esquecerTenantEmCache } from "./tenant";
 import type { ProdutoEntrada, TenantEntrada } from "./admin-schemas";
 import { invalidarCatalogo } from "./catalogo-cache";
+import { salvarProdutoNoCatalogo } from "./catalogo-escrita";
 
 function dadosDoTenant(entrada: Partial<TenantEntrada>): Prisma.TenantUpdateInput {
   const { mercadoPago, tema, identidade, endereco, tabelaFrete, ...resto } = entrada;
@@ -121,7 +122,7 @@ export async function importarProdutos(tenantId: string, produtos: ProdutoEntrad
     }
 
     const desejado = p.slug ? slugificar(p.slug) : slugificar(p.nome);
-    const { categoria: _c, compatibilidade, ...campos } = p;
+    const { categoria: _c, compatibilidade, atributos, ...campos } = p;
     void _c;
     const existente = p.sku
       ? await prisma.produto.findFirst({ where: { tenantId, sku: p.sku } })
@@ -137,15 +138,15 @@ export async function importarProdutos(tenantId: string, produtos: ProdutoEntrad
       // atualizar preço ou foto: aconteceu com 872 retentores em 02/09/2026,
       // que sumiram do menu sem erro nenhum aparecer.
       ...(p.categoria ? { categoriaId } : {}),
-      atributos: (p.atributos ?? {}) as Prisma.InputJsonValue,
+      ...(atributos !== undefined ? { atributos: atributos as Prisma.InputJsonValue } : {}),
       ...(compatibilidade ? { compatibilidade: compatibilidade as unknown as Prisma.InputJsonValue } : {}),
     };
 
     if (existente) {
-      await prisma.produto.update({ where: { id: existente.id }, data: dados });
+      await salvarProdutoNoCatalogo(tenantId, existente.id, dados, { origem: "importacao" });
       atualizados++;
     } else {
-      await prisma.produto.create({ data: { ...dados, tenantId } });
+      await salvarProdutoNoCatalogo(tenantId, null, dados, { origem: "importacao" });
       criados++;
     }
   }

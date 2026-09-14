@@ -9,6 +9,7 @@ import { avisarBuscadores } from "@/lib/indexnow";
 import { emitir } from "@/lib/eventos";
 import type { Tenant, PedidoStatus } from "@prisma/client";
 import { invalidarCatalogo } from "./catalogo-cache";
+import { salvarProdutoNoCatalogo } from "./catalogo-escrita";
 
 export interface McpTool {
   name: string;
@@ -258,9 +259,7 @@ export const MCP_TOOLS: McpTool[] = [
         categoriaId = cat.id;
       }
 
-      const produto = await prisma.produto.create({
-        data: {
-          tenantId: tenant.id,
+      const produto = await salvarProdutoNoCatalogo(tenant.id, null, {
           slug,
           nome: args.nome,
           precoCentavos,
@@ -275,8 +274,7 @@ export const MCP_TOOLS: McpTool[] = [
           destaque: Boolean(args.destaque),
           pesoKg: args.pesoKg ? Number(args.pesoKg) : null,
           opcoes: Array.isArray(args.opcoes) ? args.opcoes : [],
-        },
-      });
+      }, { origem: "mcp" });
       invalidarCatalogo(tenant.id);
 
       return {
@@ -316,9 +314,7 @@ export const MCP_TOOLS: McpTool[] = [
       });
       if (!p) throw new Error("Produto não encontrado nesta loja.");
 
-      const atualizado = await prisma.produto.update({
-        where: { id: args.id },
-        data: {
+      const atualizado = await salvarProdutoNoCatalogo(tenant.id, args.id, {
           ...(args.nome ? { nome: args.nome } : {}),
           ...(args.precoReais !== undefined ? { precoCentavos: Math.round(Number(args.precoReais) * 100) } : {}),
           ...(args.precoDeReais !== undefined ? { precoDeCentavos: args.precoDeReais ? Math.round(Number(args.precoDeReais) * 100) : null } : {}),
@@ -328,8 +324,7 @@ export const MCP_TOOLS: McpTool[] = [
           ...(args.descricaoCurta !== undefined ? { descricaoCurta: args.descricaoCurta } : {}),
           ...(args.descricao !== undefined ? { descricao: args.descricao } : {}),
           ...(args.imagens !== undefined ? { imagens: args.imagens } : {}),
-        },
-      });
+      }, { origem: "mcp" });
       invalidarCatalogo(tenant.id);
 
       return {

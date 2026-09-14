@@ -24,6 +24,7 @@ export function chaveIndexNow(slug: string): string {
 
 /** Avisa os buscadores sobre URLs que nasceram ou mudaram. */
 export async function avisarBuscadores(t: Tenant, caminhos: string[] = ["/"]): Promise<void> {
+  if (process.env.LOJAS_INDEXNOW_ENABLED === "false") return;
   if (t.status !== "ATIVA") return;
   const base = urlDaLoja(t);
   const host = base.replace(/^https?:\/\//, "");

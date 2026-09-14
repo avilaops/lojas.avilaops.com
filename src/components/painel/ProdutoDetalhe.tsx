@@ -6,6 +6,7 @@ import { useState } from "react";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import EditarProduto from "./EditarProduto";
 import GradeVariantes from "./GradeVariantes";
+import QualidadeProduto from "./QualidadeProduto";
 
 /**
  * O produto numa página, e não numa camada por cima da lista.
@@ -26,6 +27,7 @@ export default function ProdutoDetalhe({ id, nome, urlNaLoja, temVariacoes }: {
   const router = useRouter();
   const [grade, setGrade] = useState(false);
   const [ok, setOk] = useState<string | null>(null);
+  const [revisao, setRevisao] = useState(0);
 
   return (
     <div className="grid gap-6">
@@ -44,20 +46,22 @@ export default function ProdutoDetalhe({ id, nome, urlNaLoja, temVariacoes }: {
       </div>
 
       {ok && <p className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-700">{ok}</p>}
+      <QualidadeProduto produtoId={id} revisao={revisao} aoAbrirVariantes={()=>setGrade(true)} />
 
       {grade && (
         <GradeVariantes
           produtoId={id}
           produtoNome={nome}
           aoFechar={() => setGrade(false)}
-          aoSalvar={(m) => { setOk(m); setGrade(false); router.refresh(); }}
+          aoSalvar={(m) => { setOk(m); setGrade(false); setRevisao(r=>r+1); router.refresh(); }}
         />
       )}
 
       <EditarProduto
+        key={revisao}
         produtoId={id}
         aoFechar={() => router.push("/painel/produtos")}
-        aoSalvar={(m) => { setOk(m); router.refresh(); }}
+        aoSalvar={(m) => { setOk(m); setRevisao(r=>r+1); router.refresh(); }}
       />
     </div>
   );

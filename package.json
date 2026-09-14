@@ -14,11 +14,11 @@
     "seed:demo": "tsx scripts/seed-demo.ts",
     "loja:criar": "tsx scripts/criar-loja.ts",
     "loja:publicacao": "tsx scripts/conferir-publicacao.ts",
-    "test": "tsx --test src/lib/*.test.ts ../packages/checkout/src/core/*.test.ts ../packages/checkout/src/server/*.test.ts ../packages/checkout/src/providers/*.test.ts"
+    "test": "tsx --test src/lib/*.test.ts ../ferramentas/packages/checkout/src/core/*.test.ts ../ferramentas/packages/checkout/src/server/*.test.ts ../ferramentas/packages/checkout/src/providers/*.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",
-    "@avilaops/checkout": "file:../packages/checkout",
+    "@avilaops/checkout": "file:../ferramentas/packages/checkout",
     "@google/genai": "^2.19.0",
     "@prisma/client": "^6",
     "lucide-react": "^0.477.0",

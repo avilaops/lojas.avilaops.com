@@ -7,17 +7,17 @@ import { useCart } from "@/components/cart/CartProvider";
 import { adicionarAoCarrinho } from "@/lib/eventos-loja";
 import { formatarBRL } from "@/lib/catalogo";
 
-export interface VarianteView { id: string; nome: string; valores: Record<string, string>; precoCentavos: number | null; estoque: number | null; imagem: string | null }
+export interface VarianteView { id: string; nome: string; valores: Record<string, string>; precoCentavos: number | null; estoque: number | null; imagem: string | null; disponivel?: boolean }
 
 /**
  * Seleção de variação na página do produto: um grupo de botões por opção
  * (Tamanho, Cor…). Combinação sem estoque fica desabilitada; o preço e a
  * foto seguem a variação escolhida. O carrinho recebe `<produtoId>:<varianteId>`.
  */
-export default function SeletorVariante({ produto, opcoes, variantes, vende }: { produto: { id: string; slug: string; nome: string; precoCentavos: number; imagem?: string }; opcoes: string[]; variantes: VarianteView[]; vende: boolean }) {
+export default function SeletorVariante({ produto, opcoes, variantes, vende, varianteInicial }: { varianteInicial?:string; produto: { id: string; slug: string; nome: string; precoCentavos: number; imagem?: string }; opcoes: string[]; variantes: VarianteView[]; vende: boolean }) {
   const { adicionar } = useCart();
   const router = useRouter();
-  const [escolha, setEscolha] = useState<Record<string, string>>({});
+  const [escolha, setEscolha] = useState<Record<string, string>>(variantes.find(v=>v.id===varianteInicial)?.valores??{});
   const [ok, setOk] = useState(false);
 
   const valoresPorOpcao = useMemo(() => {
@@ -28,7 +28,7 @@ export default function SeletorVariante({ produto, opcoes, variantes, vende }: {
 
   const selecionada = variantes.find((v) => opcoes.every((o) => v.valores[o] === escolha[o]));
   const completa = opcoes.every((o) => escolha[o]);
-  const disponivel = (v: VarianteView) => v.estoque == null || v.estoque > 0;
+  const disponivel = (v: VarianteView) => v.disponivel !== false && (v.precoCentavos??0)>0 && (v.estoque == null || v.estoque > 0);
   const preco = selecionada?.precoCentavos ?? produto.precoCentavos;
 
   function valorDisponivel(opcao: string, valor: string) {
@@ -46,7 +46,7 @@ export default function SeletorVariante({ produto, opcoes, variantes, vende }: {
               const ativo = escolha[o] === valor;
               const pode = valorDisponivel(o, valor);
               return (
-                <button key={valor} type="button" disabled={!pode} onClick={() => setEscolha((e) => ({ ...e, [o]: valor }))}
+                <button key={valor} type="button" disabled={!pode} onClick={() => { const nova={...escolha,[o]:valor}; setEscolha(nova); const v=variantes.find(v=>opcoes.every(k=>v.valores[k]===nova[k])); if(v)router.replace(`/produtos/${produto.slug}?variante=${encodeURIComponent(v.id)}`,{scroll:false}); }}
                   className={`h-10 min-w-10 rounded-lg border px-3 text-sm ${ativo ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card"} ${pode ? "" : "opacity-40 line-through"}`}>
                   {valor}
                 </button>

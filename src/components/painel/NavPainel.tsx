@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
-  Bot, ExternalLink, LayoutDashboard, LogOut, Megaphone, Menu, Package, Settings,
+  BarChart3, Bot, ExternalLink, LayoutDashboard, LogOut, Megaphone, Menu, Package, Settings,
   Search, ShoppingCart, Star, Tags, Ticket, Users, Warehouse, X,
 } from "lucide-react";
 import { abrirBusca } from "./BuscaPainel";
@@ -24,6 +24,7 @@ export type ItemNav = { rotulo: string; href: string; icone: keyof typeof ICONES
 
 const ICONES = {
   visao: LayoutDashboard,
+  analises: BarChart3,
   pedidos: ShoppingCart,
   produtos: Package,
   estoque: Warehouse,
@@ -38,6 +39,7 @@ const ICONES = {
 
 export const SECOES: ItemNav[] = [
   { rotulo: "Visão geral", href: "/painel", icone: "visao" },
+  { rotulo: "Análises", href: "/painel/analises", icone: "analises" },
   { rotulo: "Pedidos", href: "/painel/pedidos", icone: "pedidos" },
   {
     rotulo: "Produtos",

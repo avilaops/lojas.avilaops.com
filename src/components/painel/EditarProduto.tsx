@@ -9,7 +9,7 @@ import { ANO_MAX, ANO_MIN, MOTOS_BRASIL, lerCompatibilidade, type Compatibilidad
 const medida = (chave: string, valor: string) =>
   valor.trim() ? { [chave]: Number.parseFloat(valor.replace(",", ".")) } : {};
 
-interface Form { nome: string; categoria: string; marca: string; sku: string; gtin: string; preco: string; precoDe: string; descricaoCurta: string; descricao: string; imagens: string[]; destaque: boolean; ativo: boolean; disponibilidade: string; estoque: string; pesoKg: string; alturaCm: string; larguraCm: string; comprimentoCm: string; codigoOriginal: string; codigosEquivalentes: string; compatibilidade: LinhaCompat[] }
+interface Form { versaoCatalogo:number; temVariacoes:boolean; mpn:string; identificadoresEstado:string; nome: string; categoria: string; marca: string; sku: string; gtin: string; preco: string; precoDe: string; descricaoCurta: string; descricao: string; imagens: string[]; destaque: boolean; ativo: boolean; disponibilidade: string; estoque: string; pesoKg: string; alturaCm: string; larguraCm: string; comprimentoCm: string; codigoOriginal: string; codigosEquivalentes: string; compatibilidade: LinhaCompat[] }
 /** Linha do editor de compatibilidade: texto livre até salvar (ano vazio = sem limite). */
 interface LinhaCompat { marca: string; modelo: string; anoDe: string; anoAte: string }
 
@@ -33,6 +33,7 @@ export default function EditarProduto({ produtoId, aoFechar, aoSalvar }: { produ
     fetch(`/api/painel/produtos?id=${produtoId}`).then((r) => r.json()).then((p) => {
       if (p?.erro) return setErro(p.erro);
       setF({
+        versaoCatalogo:p.versaoCatalogo, temVariacoes:p.opcoes.length>0, mpn:p.mpn??"", identificadoresEstado:p.identificadoresEstado??"desconhecido",
         nome: p.nome, categoria: p.categoria ?? "", marca: p.marca ?? "", sku: p.sku ?? "", gtin: p.gtin ?? "",
         preco: (p.precoCentavos / 100).toFixed(2).replace(".", ","), precoDe: p.precoDeCentavos != null ? (p.precoDeCentavos / 100).toFixed(2).replace(".", ",") : "",
         descricaoCurta: p.descricaoCurta ?? "", descricao: p.descricao ?? "", imagens: p.imagens ?? [], destaque: p.destaque, ativo: p.ativo,
@@ -55,10 +56,10 @@ export default function EditarProduto({ produtoId, aoFechar, aoSalvar }: { produ
       const r = await fetch("/api/painel/produtos", {
         method: "PATCH", headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          id: produtoId, nome: f.nome, categoria: f.categoria, marca: f.marca || undefined, sku: f.sku || undefined, gtin: f.gtin.replace(/\D/g, "") || undefined, precoCentavos: preco,
-          ...(precoDe !== undefined && Number.isFinite(precoDe) ? { precoDeCentavos: precoDe } : {}),
+          id: produtoId, versaoCatalogo:f.versaoCatalogo, mpn:f.temVariacoes?undefined:(f.mpn||null), identificadoresEstado:f.temVariacoes?undefined:f.identificadoresEstado, nome: f.nome, categoria: f.categoria, marca: f.marca || undefined, sku: f.temVariacoes?undefined:f.sku, gtin:f.temVariacoes?undefined:f.gtin.trim(), precoCentavos:f.temVariacoes?undefined:preco,
+          ...(!f.temVariacoes ? { precoDeCentavos: precoDe ?? null } : {}),
           descricaoCurta: f.descricaoCurta || undefined, descricao: f.descricao || undefined, imagens: f.imagens, destaque: f.destaque, ativo: f.ativo,
-          disponibilidade: f.disponibilidade, ...(f.estoque.trim() ? { estoque: Number(f.estoque) } : {}), ...(f.pesoKg.trim() ? { pesoKg: Number.parseFloat(f.pesoKg.replace(",", ".")) } : {}),
+          disponibilidade:f.temVariacoes?undefined:f.disponibilidade, ...(!f.temVariacoes ? { estoque:f.estoque.trim()?Number(f.estoque):null } : {}), ...(f.pesoKg.trim() ? { pesoKg: Number.parseFloat(f.pesoKg.replace(",", ".")) } : {}),
         ...medida("alturaCm", f.alturaCm), ...medida("larguraCm", f.larguraCm), ...medida("comprimentoCm", f.comprimentoCm),
           codigoOriginal: f.codigoOriginal.trim() || null,
           codigosEquivalentes: f.codigosEquivalentes.split(/[,;\n]/).map((c) => c.trim()).filter(Boolean),
@@ -85,26 +86,29 @@ export default function EditarProduto({ produtoId, aoFechar, aoSalvar }: { produ
         <button className="btn-secundario h-9 px-3 text-xs" onClick={aoFechar}>Fechar</button>
       </div>
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
-        <Campo label="Nome"><input className={inputClasse} value={f.nome} onChange={(e) => set("nome", e.target.value)} /></Campo>
-        <Campo label="Categoria"><input className={inputClasse} value={f.categoria} onChange={(e) => set("categoria", e.target.value)} /></Campo>
+        {f.temVariacoes && <p className="sm:col-span-2 text-sm text-muted-foreground">Identificação, preço, estoque e embalagem são definidos por apresentação. Use “Grade de variações” para editar esses dados.</p>}
+        <Campo label="Nome"><input id="catalogo-nome" className={inputClasse} value={f.nome} onChange={(e) => set("nome", e.target.value)} /></Campo>
+        <Campo label="Categoria"><input id="catalogo-categoria" className={inputClasse} value={f.categoria} onChange={(e) => set("categoria", e.target.value)} /></Campo>
         <Campo label="Marca"><input className={inputClasse} value={f.marca} onChange={(e) => set("marca", e.target.value)} /></Campo>
-        <Campo label="SKU"><input className={inputClasse} value={f.sku} onChange={(e) => set("sku", e.target.value)} /></Campo>
+        <Campo label="SKU"><input id="catalogo-sku" readOnly={f.temVariacoes} className={inputClasse} value={f.sku} onChange={(e) => set("sku", e.target.value)} /></Campo>
         {/* O GTIN é o que faz o Google e o Mercado Livre reconhecerem que a
             peça é a mesma que o concorrente anuncia. Sem ele o produto fica
             fora do catálogo unificado do ML e perde alcance no Shopping.
             Quem emite é o fabricante: vem na caixa ou com o fornecedor. */}
-        <Campo label="GTIN / código de barras" ajuda="Os 13 dígitos impressos na caixa (EAN). Sem ele o produto não entra no catálogo do Mercado Livre.">
-          <input className={inputClasse} value={f.gtin} onChange={(e) => set("gtin", e.target.value)} inputMode="numeric" placeholder="7891234567895" maxLength={14} />
+        <Campo label="GTIN / código de barras" ajuda="Código atribuído pelo fabricante: GTIN-8, UPC-12, EAN-13 ou GTIN-14. Confira na embalagem.">
+          <input id="catalogo-gtin" readOnly={f.temVariacoes} className={inputClasse} value={f.gtin} onChange={(e) => set("gtin", e.target.value)} inputMode="numeric" placeholder="7891234567895" maxLength={14} />
         </Campo>
-        <Campo label="Preço (R$)"><input className={inputClasse} value={f.preco} onChange={(e) => set("preco", e.target.value)} inputMode="decimal" /></Campo>
-        <Campo label="Preço “de” (R$)"><input className={inputClasse} value={f.precoDe} onChange={(e) => set("precoDe", e.target.value)} inputMode="decimal" /></Campo>
-        <Campo label="Estoque" ajuda="Vazio = não controla"><input className={inputClasse} value={f.estoque} onChange={(e) => set("estoque", e.target.value)} inputMode="numeric" /></Campo>
-        <Campo label="Peso (kg)" ajuda="Do produto embalado"><input className={inputClasse} value={f.pesoKg} onChange={(e) => set("pesoKg", e.target.value)} inputMode="decimal" /></Campo>
-        <Campo label="Altura da embalagem (cm)"><input className={inputClasse} value={f.alturaCm} onChange={(e) => set("alturaCm", e.target.value)} inputMode="decimal" /></Campo>
-        <Campo label="Largura da embalagem (cm)"><input className={inputClasse} value={f.larguraCm} onChange={(e) => set("larguraCm", e.target.value)} inputMode="decimal" /></Campo>
-        <Campo label="Comprimento da embalagem (cm)"><input className={inputClasse} value={f.comprimentoCm} onChange={(e) => set("comprimentoCm", e.target.value)} inputMode="decimal" /></Campo>
+        <Campo label="MPN / código do fabricante" ajuda="Código do item vendido, sem confundir com referência de compatibilidade."><input className={inputClasse} readOnly={f.temVariacoes} value={f.mpn} onChange={e=>set("mpn",e.target.value)} /></Campo>
+        <Campo label="Identificadores"><select className={inputClasse} disabled={f.temVariacoes} value={f.identificadoresEstado} onChange={e=>set("identificadoresEstado",e.target.value)}><option value="desconhecido">Ainda não confirmado</option><option value="informado">Informado no cadastro</option><option value="sem_identificador">Fabricante não atribuiu identificador</option></select></Campo>
+        <Campo label="Preço (R$)"><input id="catalogo-preco" readOnly={f.temVariacoes} className={inputClasse} value={f.preco} onChange={(e) => set("preco", e.target.value)} inputMode="decimal" /></Campo>
+        <Campo label="Preço “de” (R$)"><input id="catalogo-precoDe" readOnly={f.temVariacoes} className={inputClasse} value={f.precoDe} onChange={(e) => set("precoDe", e.target.value)} inputMode="decimal" /></Campo>
+        <Campo label="Estoque físico" ajuda="Quantidade física; as reservas são descontadas automaticamente. Vazio = não controla."><input id="catalogo-estoque" readOnly={f.temVariacoes} className={inputClasse} value={f.estoque} onChange={(e) => set("estoque", e.target.value)} inputMode="numeric" /></Campo>
+        <Campo label="Peso (kg)" ajuda="Do produto embalado"><input id="catalogo-pesoKg" readOnly={f.temVariacoes} className={inputClasse} value={f.pesoKg} onChange={(e) => set("pesoKg", e.target.value)} inputMode="decimal" /></Campo>
+        <Campo label="Altura da embalagem (cm)"><input id="catalogo-alturaCm" readOnly={f.temVariacoes} className={inputClasse} value={f.alturaCm} onChange={(e) => set("alturaCm", e.target.value)} inputMode="decimal" /></Campo>
+        <Campo label="Largura da embalagem (cm)"><input id="catalogo-larguraCm" readOnly={f.temVariacoes} className={inputClasse} value={f.larguraCm} onChange={(e) => set("larguraCm", e.target.value)} inputMode="decimal" /></Campo>
+        <Campo label="Comprimento da embalagem (cm)"><input id="catalogo-comprimentoCm" readOnly={f.temVariacoes} className={inputClasse} value={f.comprimentoCm} onChange={(e) => set("comprimentoCm", e.target.value)} inputMode="decimal" /></Campo>
         <Campo label="Disponibilidade">
-          <select className={inputClasse} value={f.disponibilidade} onChange={(e) => set("disponibilidade", e.target.value)}><option value="in_stock">Em estoque</option><option value="backorder">Sob encomenda</option><option value="out_of_stock">Esgotado</option></select>
+          <select id="catalogo-disponibilidade" disabled={f.temVariacoes} className={inputClasse} value={f.disponibilidade} onChange={(e) => set("disponibilidade", e.target.value)}><option value="in_stock">Em estoque</option><option value="backorder">Sob encomenda</option><option value="out_of_stock">Esgotado</option></select>
         </Campo>
         <div className="flex items-end gap-4 text-sm">
           <label className="flex items-center gap-2"><input type="checkbox" checked={f.destaque} onChange={(e) => set("destaque", e.target.checked)} /> Destaque</label>
@@ -113,7 +117,7 @@ export default function EditarProduto({ produtoId, aoFechar, aoSalvar }: { produ
       </div>
       <div className="mt-4 grid gap-4">
         <Campo label="Descrição curta" ajuda="Aparece no card e no Google"><input className={inputClasse} value={f.descricaoCurta} onChange={(e) => set("descricaoCurta", e.target.value)} maxLength={300} /></Campo>
-        <Campo label="Descrição completa" ajuda="Parágrafos separados por linha em branco"><textarea className={`${inputClasse} h-32 py-2`} value={f.descricao} onChange={(e) => set("descricao", e.target.value)} /></Campo>
+        <Campo label="Descrição completa" ajuda="Parágrafos separados por linha em branco"><textarea id="catalogo-descricao" className={`${inputClasse} h-32 py-2`} value={f.descricao} onChange={(e) => set("descricao", e.target.value)} /></Campo>
         <Campo label="Compatibilidade (peças por moto)" ajuda="Em que motos esta peça serve. Vazio = universal (capacete, óleo, serviço). Anos vazios = todos.">
           <div className="grid gap-2">
             {f.compatibilidade.map((l, i) => (
@@ -131,10 +135,10 @@ export default function EditarProduto({ produtoId, aoFechar, aoSalvar }: { produ
           </div>
         </Campo>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Campo label="Código original (OEM)" ajuda="Código da peça no fabricante da moto. Entra na busca e no Google Shopping (mpn)."><input className={inputClasse} value={f.codigoOriginal} onChange={(e) => set("codigoOriginal", e.target.value)} placeholder="15410-MCJ-505" /></Campo>
+          <Campo label="Código original (OEM)" ajuda="Referência de aplicação na moto. Não é automaticamente o MPN da peça vendida."><input className={inputClasse} value={f.codigoOriginal} onChange={(e) => set("codigoOriginal", e.target.value)} placeholder="15410-MCJ-505" /></Campo>
           <Campo label="Códigos equivalentes" ajuda="Separados por vírgula. O cliente que busca pelo código do concorrente acha esta peça."><input className={inputClasse} value={f.codigosEquivalentes} onChange={(e) => set("codigosEquivalentes", e.target.value)} placeholder="HF204, PH6017A" /></Campo>
         </div>
-        <Campo label="Fotos" ajuda="A primeira é a principal. Arraste não; use os botões.">
+        <div id="catalogo-imagens" tabIndex={-1} /><Campo label="Fotos" ajuda="A primeira é a principal. Arraste não; use os botões.">
           <div className="flex flex-wrap gap-2">
             {f.imagens.map((url, i) => (
               <div key={url} className="relative">

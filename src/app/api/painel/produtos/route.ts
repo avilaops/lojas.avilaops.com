@@ -8,6 +8,7 @@ import { avisarBuscadores, caminhosDoProduto } from "@/lib/indexnow";
 import { slugificar } from "@/lib/catalogo";
 import type { Prisma } from "@prisma/client";
 import { invalidarCatalogo } from "@/lib/catalogo-cache";
+import { salvarProdutoNoCatalogo, respostaErroCatalogo } from "@/lib/catalogo-escrita";
 
 /** PUT — importa/atualiza em lote (CSV ou um único produto do formulário). */
 export async function PUT(request: Request) {
@@ -16,7 +17,8 @@ export async function PUT(request: Request) {
   const loja = s.tenant;
   const r = z.array(ProdutoEntradaSchema).min(1).max(2000).safeParse(await request.json().catch(() => null));
   if (!r.success) return Response.json({ erro: "Dados inválidos.", detalhes: r.error.flatten() }, { status: 422 });
-  const resultado = await importarProdutos(loja.id, r.data);
+  let resultado;
+  try { resultado = await importarProdutos(loja.id, r.data); } catch (e) { return respostaErroCatalogo(e); }
   // Indexação garantida: produto novo ou alterado é avisado aos buscadores.
   const recentes = await prisma.produto.findMany({ where: { tenantId: loja.id, ativo: true }, include: { categoria: true }, orderBy: { atualizadoEm: "desc" }, take: 50 });
   void avisarBuscadores(loja, recentes.flatMap((p) => caminhosDoProduto(p.slug, p.categoria?.slug)));
@@ -31,7 +33,7 @@ export async function DELETE(request: Request) {
   const id = new URL(request.url).searchParams.get("id") ?? "";
   const p = await prisma.produto.findFirst({ where: { id, tenantId: loja.id } });
   if (!p) return Response.json({ erro: "Produto não encontrado." }, { status: 404 });
-  await prisma.produto.update({ where: { id }, data: { ativo: false } });
+  await salvarProdutoNoCatalogo(loja.id, id, { ativo: false }, { origem: "painel" });
   invalidarCatalogo(loja.id);
   return Response.json({ ok: true });
 }
@@ -41,12 +43,13 @@ export async function GET(request: Request) {
   const loja = await lojistaAtual();
   if (!loja) return Response.json({ erro: "Sessão expirada." }, { status: 401 });
   const id = new URL(request.url).searchParams.get("id") ?? "";
-  const p = await prisma.produto.findFirst({ where: { id, tenantId: loja.id }, include: { categoria: true } });
+  const p = await prisma.produto.findFirst({ where: { id, tenantId: loja.id }, include: { categoria: true, variantes: { where: { padrao:true,ativo:true },include:{saldos:true} } } });
   if (!p) return Response.json({ erro: "Produto não encontrado." }, { status: 404 });
-  return Response.json({ ...p, categoria: p.categoria?.nome ?? null });
+  const simples=p.variantes[0];
+  return Response.json({ ...p, estoque:simples?.saldos.find(s=>s.local==="principal")?.fisico ?? p.estoque, mpn:simples?.mpn??null, identificadoresEstado:simples?.identificadoresEstado??"desconhecido", categoria: p.categoria?.nome ?? null });
 }
 
-const Edicao = conferirImagem(ProdutoEntradaSchema.partial().extend({ id: z.string() }));
+const Edicao = conferirImagem(ProdutoEntradaSchema.partial().extend({ id: z.string(), versaoCatalogo: z.number().int().positive().optional() }));
 
 /** PATCH — edita um produto (qualquer campo; categoria por nome, criada se não existir). */
 export async function PATCH(request: Request) {
@@ -55,7 +58,7 @@ export async function PATCH(request: Request) {
   const loja = s.tenant;
   const r = Edicao.safeParse(await request.json().catch(() => null));
   if (!r.success) return Response.json({ erro: "Dados inválidos.", detalhes: r.error.flatten() }, { status: 422 });
-  const { id, categoria, atributos, slug, compatibilidade, ...campos } = r.data;
+  const { id, categoria, atributos, slug, compatibilidade, versaoCatalogo, ...campos } = r.data;
   const p = await prisma.produto.findFirst({ where: { id, tenantId: loja.id } });
   if (!p) return Response.json({ erro: "Produto não encontrado." }, { status: 404 });
 
@@ -68,11 +71,10 @@ export async function PATCH(request: Request) {
       categoriaId = c.id;
     }
   }
-  const atualizado = await prisma.produto.update({
-    where: { id },
-    data: { ...campos, ...(slug ? { slug: slugificar(slug) } : {}), ...(categoriaId !== undefined ? { categoriaId } : {}), ...(atributos ? { atributos: atributos as Prisma.InputJsonValue } : {}), ...(compatibilidade ? { compatibilidade: compatibilidade as unknown as Prisma.InputJsonValue } : {}) },
-  });
+  let atualizado;
+  try { atualizado = await salvarProdutoNoCatalogo(loja.id, id, { ...campos, ...(slug ? { slug: slugificar(slug) } : {}), ...(categoriaId !== undefined ? { categoriaId } : {}), ...(atributos ? { atributos: atributos as Prisma.InputJsonValue } : {}), ...(compatibilidade ? { compatibilidade: compatibilidade as unknown as Prisma.InputJsonValue } : {}) }, { origem: "painel", versao: versaoCatalogo });
+  } catch(e) { return respostaErroCatalogo(e); }
   invalidarCatalogo(loja.id);
   void avisarBuscadores(loja, caminhosDoProduto(atualizado.slug, categoria ?? undefined));
-  return Response.json({ id: atualizado.id, slug: atualizado.slug });
+  return Response.json({ id: atualizado.id, slug: atualizado.slug, versaoCatalogo: atualizado.versaoCatalogo });
 }

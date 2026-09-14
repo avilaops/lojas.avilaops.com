@@ -3,9 +3,10 @@ import type { ItemCarrinho } from "@avilaops/checkout";
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import { prisma } from "./db";
+import { INCLUIR_CATALOGO } from "./catalogo-qualidade";
 import { encaixe, lerCompatibilidade, type Moto } from "./motos";
 import type { TemaLoja } from "./tema";
-import { publicavel, WHERE_COMPLETO, WHERE_COMPRAVEL } from "./produto-regras";
+import { publicavel, WHERE_COMPLETO } from "./produto-regras";
 
 export type ProdutoComCategoria = Produto & { categoria: Categoria | null };
 
@@ -381,7 +382,7 @@ export async function resumoAvaliacoes(produtoId: string) {
 }
 
 export async function buscarProduto(tenantId: string, slug: string) {
-  return prisma.produto.findFirst({ where: { tenantId, slug, ativo: true }, include: { categoria: true, variantes: { where: { ativo: true }, orderBy: { ordem: "asc" } } } });
+  return prisma.produto.findFirst({ where: { tenantId, slug, ativo: true }, include: INCLUIR_CATALOGO });
 }
 
 /**
@@ -395,57 +396,8 @@ export async function resolverItensDoCatalogo(
   tenantId: string,
   pedidos: Array<{ id: string; quantidade: number }>,
 ): Promise<ItemCarrinho[]> {
-  // O id do carrinho é `<produtoId>` ou `<produtoId>:<varianteId>`.
-  const pares = pedidos.map((p) => ({ ...p, produtoId: p.id.split(":")[0], varianteId: p.id.split(":")[1] ?? null }));
-  const produtos = await prisma.produto.findMany({
-    // `precoCentavos > 0` fecha a porta do item sob consulta: ele existe no
-    // catálogo para ser encontrado, não para ser comprado. A vitrine já não
-    // oferece carrinho para ele, mas a trava tem que estar aqui — é esta
-    // função que decide o preço que o cliente paga, e o carrinho vem do
-    // navegador. Sem isso, um id forjado compraria a peça por R$ 0,00.
-    where: { tenantId, id: { in: pares.map((p) => p.produtoId) }, ...WHERE_COMPRAVEL },
-    include: { variantes: { where: { ativo: true } } },
-  });
-  const porId = new Map(produtos.map((p) => [p.id, p]));
-  const itens: ItemCarrinho[] = [];
-  for (const p of pares) {
-    const prod = porId.get(p.produtoId);
-    if (!prod) continue;
-    if (prod.opcoes.length > 0) {
-      // Produto com variações só entra com uma variação válida e com estoque.
-      const v = prod.variantes.find((x) => x.id === p.varianteId);
-      if (!v) continue;
-      if (v.estoque != null && v.estoque < p.quantidade) continue;
-      itens.push({
-        id: `${prod.id}:${v.id}`,
-        nome: `${prod.nome} · ${v.nome}`,
-        quantidade: p.quantidade,
-        precoUnitario: v.precoCentavos ?? prod.precoCentavos,
-        imagem: v.imagem ?? prod.imagens[0],
-        sku: v.sku ?? prod.sku ?? undefined,
-        pesoGramas: (v.pesoKg ?? prod.pesoKg) != null ? Math.round((v.pesoKg ?? prod.pesoKg)! * 1000) : undefined,
-        // Variação não tem medida própria: a embalagem é a do produto.
-        alturaCm: prod.alturaCm ?? undefined,
-        larguraCm: prod.larguraCm ?? undefined,
-        comprimentoCm: prod.comprimentoCm ?? undefined,
-      });
-      continue;
-    }
-    if (prod.estoque != null && prod.estoque < p.quantidade) continue;
-    itens.push({
-      id: prod.id,
-      nome: prod.nome,
-      quantidade: p.quantidade,
-      precoUnitario: prod.precoCentavos,
-      imagem: prod.imagens[0],
-      sku: prod.sku ?? undefined,
-      pesoGramas: prod.pesoKg != null ? Math.round(prod.pesoKg * 1000) : undefined,
-      alturaCm: prod.alturaCm ?? undefined,
-      larguraCm: prod.larguraCm ?? undefined,
-      comprimentoCm: prod.comprimentoCm ?? undefined,
-    });
-  }
-  return itens;
+  const { resolverItensPadronizados } = await import("./catalogo-resolver");
+  return resolverItensPadronizados(tenantId, pedidos);
 }
 
 export function formatarBRL(centavos: number): string {
@@ -483,31 +435,26 @@ export interface DiagnosticoFeed {
  * Aqui o lojista vê a lista antes de subir o catálogo.
  */
 export async function diagnosticoDoFeed(tenantId: string): Promise<DiagnosticoFeed> {
-  const produtos = await prisma.produto.findMany({
-    where: { tenantId, ativo: true },
-    select: { nome: true, imagens: true, descricao: true, descricaoCurta: true, precoCentavos: true, marca: true, gtin: true, categoriaId: true },
-    orderBy: { nome: "asc" },
-    take: 1000,
-  });
-
+  const { diagnosticarProduto } = await import("./catalogo-qualidade");
   const problemas: ProblemaDeFeed[] = [];
-  let prontos = 0;
-  for (const p of produtos) {
-    const bloqueios: string[] = [];
-    const avisos: string[] = [];
-    if (!p.imagens.length) bloqueios.push("foto");
-    if (!(p.descricaoCurta ?? p.descricao)) bloqueios.push("descrição");
-    if (p.precoCentavos <= 0) bloqueios.push("preço");
-    if (!p.marca) avisos.push("marca");
-    if (!p.categoriaId) avisos.push("categoria");
-    if (!p.gtin) avisos.push("código de barras");
-    if (!bloqueios.length) prontos++;
-    if (bloqueios.length || avisos.length) problemas.push({ nome: p.nome, bloqueios, avisos });
-  }
-
-  // Quem trava o catálogo aparece primeiro; a lista é para agir, não para ler inteira.
-  problemas.sort((a, b) => b.bloqueios.length - a.bloqueios.length);
-  return { total: produtos.length, prontos, problemas: problemas.slice(0, 12) };
+  let total=0, prontos=0, cursor:string|undefined;
+  do {
+    const produtos=await prisma.produto.findMany({where:{tenantId,ativo:true},include:INCLUIR_CATALOGO,orderBy:{id:"asc"},take:200,...(cursor?{cursor:{id:cursor},skip:1}:{})});
+    for(const p of produtos) {
+      total++;
+      const ocorrencias=diagnosticarProduto(p);
+      const bloqueios=[...new Set(ocorrencias.filter(o=>o.severidade==="erro").map(o=>o.mensagem))];
+      const avisos=[...new Set(ocorrencias.filter(o=>o.severidade==="aviso").map(o=>o.mensagem))];
+      if(!bloqueios.length)prontos++;
+      if(bloqueios.length||avisos.length) {
+        problemas.push({nome:p.nome,bloqueios,avisos});
+        problemas.sort((a,b)=>b.bloqueios.length-a.bloqueios.length);
+        problemas.splice(12);
+      }
+    }
+    cursor=produtos.length===200?produtos.at(-1)!.id:undefined;
+  } while(cursor);
+  return {total,prontos,problemas};
 }
 
 export interface ProvaSocial {

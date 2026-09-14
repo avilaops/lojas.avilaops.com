@@ -66,25 +66,25 @@ model Tenant {
   sobre      String? // texto da página "Sobre"
 
   // ── Contato e operação ───────────────────────────────────────────────
-  whatsapp        String? // só dígitos, com DDI
-  telefone        String?
-  emailContato    String?
-  instagram       String?
+  whatsapp             String? // só dígitos, com DDI
+  telefone             String?
+  emailContato         String?
+  instagram            String?
   /// Identificação do fornecedor — Decreto 7.962/2013, art. 2º. Toda loja na
   /// internet tem que exibir razão social, CNPJ e endereço em destaque; aqui
   /// isso é campo do tenant e vai para o rodapé sozinho, sem depender de o
   /// lojista lembrar de escrever numa página solta.
-  razaoSocial     String?
-  cnpj            String? // 14 dígitos, sem máscara
-  endereco        Json? // { logradouro, numero, bairro, cidade, uf, cep }
+  razaoSocial          String?
+  cnpj                 String? // 14 dígitos, sem máscara
+  endereco             Json? // { logradouro, numero, bairro, cidade, uf, cep }
   /// Exibir o endereço no site (rodapé, contato, JSON-LD). Falso por padrão:
   /// loja só online não expõe onde fica o estoque.
-  enderecoPublico Boolean @default(false)
+  enderecoPublico      Boolean @default(false)
   /// Deixa crawlers de TREINAMENTO (GPTBot, Google-Extended, ClaudeBot, CCBot)
   /// lerem a loja. Não tem relação com aparecer na busca do Google, do Bing ou
   /// do ChatGPT, que é sempre liberada em loja ativa. Ver src/lib/descoberta.ts.
   permiteTreinamentoIa Boolean @default(false)
-  horario         String?
+  horario              String?
 
   // ── Entrega ──────────────────────────────────────────────────────────
   cepOrigem              String?
@@ -177,9 +177,10 @@ model Tenant {
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
-  categorias Categoria[]
-  produtos   Produto[]
-  pedidos    Pedido[]
+  categorias        Categoria[]
+  produtos          Produto[]
+  pedidos           Pedido[]
+  pesquisasCatalogo PesquisaCatalogoExecucao[]
 
   @@index([status])
 }
@@ -268,20 +269,27 @@ model Produto {
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
-  tenant     Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  categoria  Categoria?   @relation(fields: [categoriaId], references: [id], onDelete: SetNull)
-  itens      PedidoItem[]
-  variantes  Variante[]
-  avaliacoes Avaliacao[]
+  /// Controle de concorrência do catálogo. Campos comerciais acima são projeções.
+  versaoCatalogo Int @default(1)
+
+  tenant            Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  categoria         Categoria?          @relation(fields: [categoriaId], references: [id], onDelete: SetNull)
+  itens             PedidoItem[]
+  variantes         Variante[]
+  midias            MidiaProduto[]
+  historicoCatalogo HistoricoCatalogo[]
+  avaliacoes        Avaliacao[]
   /// Texto normalizado (minúsculas, sem acento) de nome + marca + sku +
   /// descrição curta. Mantido por gatilho no banco — ver a migração
   /// 20260826200000_busca_sem_acento. Nunca escrever por aqui.
-  busca      String       @default("")
+  busca             String              @default("")
 
-  avisosEstoque AvisoEstoque[]
-  anunciosMl    AnuncioMercadoLivre[]
+  avisosEstoque            AvisoEstoque[]
+  anunciosMl               AnuncioMercadoLivre[]
+  correspondenciasPesquisa CorrespondenciaPesquisaProduto[]
 
   @@unique([tenantId, slug])
+  @@unique([tenantId, id])
   @@index([tenantId, ativo, destaque])
   @@index([tenantId, busca])
   /// Trigramas para `busca LIKE '%termo%'`: o btree acima só resolve prefixo.
@@ -341,26 +349,302 @@ model Pedido {
   @@index([pagamentoId])
 }
 
-/// Variação de um produto (P/Azul, 500ml…). O que o carrinho envia é
-/// `<produtoId>:<varianteId>`; preço nulo herda o do produto.
+/// Unidade vendável. Produto simples tem uma variante padrao interna.
+/// precoCentavos/estoque são projeções de PrecoVariante/SaldoEstoque.
 model Variante {
-  id            String  @id @default(cuid())
-  produtoId     String
+  id                    String  @id @default(cuid())
+  tenantId              String
+  produtoId             String
+  padrao                Boolean @default(false)
   /// Valores na ordem de Produto.opcoes: { "Tamanho": "P", "Cor": "Azul" }
-  valores       Json
-  nome          String // "P / Azul" — derivado, para exibir e para o pedido
-  sku           String?
-  precoCentavos Int?
-  estoque       Int? // null = não controla
-  pesoKg        Float?
-  imagem        String?
-  ativo         Boolean @default(true)
-  ordem         Int     @default(0)
+  valores               Json
+  nome                  String // "P / Azul" — derivado, para exibir e para o pedido
+  sku                   String?
+  gtin                  String?
+  mpn                   String?
+  /// desconhecido | informado | sem_identificador. Informado não significa verificado externamente.
+  identificadoresEstado String  @default("desconhecido")
+  disponibilidade       String  @default("in_stock")
+  precoCentavos         Int?
+  estoque               Int? // null = não controla
+  pesoKg                Float?
+  alturaCm              Float?
+  larguraCm             Float?
+  comprimentoCm         Float?
+  imagem                String?
+  ativo                 Boolean @default(true)
+  ordem                 Int     @default(0)
 
-  produto Produto      @relation(fields: [produtoId], references: [id], onDelete: Cascade)
-  itens   PedidoItem[]
+  produto     Produto            @relation(fields: [tenantId, produtoId], references: [tenantId, id], onDelete: Cascade)
+  itens       PedidoItem[]
+  preco       PrecoVariante?
+  saldos      SaldoEstoque[]
+  midias      MidiaProduto[]
+  publicacoes PublicacaoCanal[]
+  reservas    ReservaEstoque[]
+  movimentos  MovimentoEstoque[]
 
+  @@unique([tenantId, id])
+  @@unique([tenantId, produtoId, id])
+  @@unique([tenantId, sku])
   @@index([produtoId, ativo])
+}
+
+/// BRL em centavos. Comparação é o antigo preço "de", sem presumir promoção.
+model PrecoVariante {
+  varianteId         String   @id
+  tenantId           String
+  moeda              String   @default("BRL")
+  valorCentavos      Int
+  comparacaoCentavos Int?
+  atualizadoEm       DateTime @default(now()) @updatedAt
+  variante           Variante @relation(fields: [tenantId, varianteId], references: [tenantId, id], onDelete: Cascade)
+
+  @@unique([tenantId, varianteId])
+}
+
+/// Disponível = físico menos reservado. Nulo preserva estoque não controlado.
+model SaldoEstoque {
+  id           String   @id @default(cuid())
+  tenantId     String
+  varianteId   String
+  local        String   @default("principal")
+  fisico       Int?
+  reservado    Int      @default(0)
+  atualizadoEm DateTime @default(now()) @updatedAt
+  variante     Variante @relation(fields: [tenantId, varianteId], references: [tenantId, id], onDelete: Cascade)
+
+  @@unique([tenantId, varianteId, local])
+}
+
+model ReservaEstoque {
+  id           String   @id @default(cuid())
+  tenantId     String
+  referencia   String
+  varianteId   String
+  quantidade   Int
+  estado       String   @default("ATIVA")
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @default(now()) @updatedAt
+  variante     Variante @relation(fields: [tenantId, varianteId], references: [tenantId, id], onDelete: Restrict)
+
+  @@unique([tenantId, referencia, varianteId])
+  @@index([tenantId, estado])
+}
+
+model TentativaCatalogo {
+  id           String   @id @default(cuid())
+  tenantId     String
+  referencia   String
+  resumoHash   String
+  estado       String   @default("RESERVADA")
+  pagamentoId  String?
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @default(now()) @updatedAt
+
+  @@unique([tenantId, referencia])
+  @@unique([referencia])
+}
+
+model MovimentoEstoque {
+  id         String   @id @default(cuid())
+  tenantId   String
+  varianteId String
+  chave      String
+  quantidade Int
+  motivo     String
+  criadoEm   DateTime @default(now())
+  variante   Variante @relation(fields: [tenantId, varianteId], references: [tenantId, id], onDelete: Restrict)
+
+  @@unique([tenantId, chave])
+}
+
+/// Acervo por arquivo; varianteId nulo significa mídia compartilhada do produto.
+model MidiaProduto {
+  id               String    @id @default(cuid())
+  tenantId         String
+  produtoId        String
+  varianteId       String?
+  escopo           String    @default("produto")
+  url              String
+  tipo             String    @default("imagem")
+  finalidade       String    @default("galeria")
+  ordem            Int       @default(0)
+  origem           String    @default("propria")
+  familia          String?
+  textoAlternativo String?
+  fonte            String?
+  correspondencia  String    @default("nao_confirmada")
+  larguraPx        Int?
+  alturaPx         Int?
+  criadoEm         DateTime  @default(now())
+  produto          Produto   @relation(fields: [tenantId, produtoId], references: [tenantId, id], onDelete: Cascade)
+  variante         Variante? @relation(fields: [tenantId, produtoId, varianteId], references: [tenantId, produtoId, id], onDelete: Cascade)
+
+  @@unique([produtoId, escopo, url])
+  @@index([tenantId, produtoId, ordem])
+}
+
+/// Envio e resultado externo independentes. Sem consulta externa, NÃO_CONSULTADO.
+model PublicacaoCanal {
+  id               String    @id @default(cuid())
+  tenantId         String
+  varianteId       String
+  canal            String
+  contaExterna     String    @default("")
+  idExterno        String
+  versaoEnviada    Int?
+  estadoEnvio      String    @default("NAO_ENVIADO")
+  resultadoExterno String    @default("NAO_CONSULTADO")
+  enviadoEm        DateTime?
+  consultadoEm     DateTime?
+  problemas        Json      @default("[]")
+  variante         Variante  @relation(fields: [tenantId, varianteId], references: [tenantId, id], onDelete: Cascade)
+
+  @@unique([tenantId, varianteId, canal, contaExterna])
+  @@unique([tenantId, canal, contaExterna, idExterno])
+}
+
+model HistoricoCatalogo {
+  id        String   @id @default(cuid())
+  tenantId  String
+  produtoId String
+  versao    Int
+  origem    String
+  campos    String[]
+  antes     Json
+  depois    Json
+  criadoEm  DateTime @default(now())
+  produto   Produto  @relation(fields: [tenantId, produtoId], references: [tenantId, id], onDelete: Cascade)
+
+  @@unique([produtoId, versao])
+}
+
+/// Outbox gravada na transação do catálogo; o n8n consome pela API autenticada.
+model EventoCatalogo {
+  id           String    @id @default(cuid())
+  tenantId     String
+  produtoId    String
+  versao       Int
+  tipo         String    @default("catalogo.alterado")
+  criadoEm     DateTime  @default(now())
+  processadoEm DateTime?
+
+  @@unique([produtoId, versao])
+  @@index([tenantId, processadoEm, criadoEm])
+}
+
+/// Uma execução rastreável de pesquisa externa. O resultado bruto nunca é
+/// publicado automaticamente no catálogo.
+model PesquisaCatalogoExecucao {
+  id               String                           @id @default(cuid())
+  tenantId         String
+  escopo           String
+  estado           String                           @default("EM_ANDAMENTO")
+  iniciadoPor      String
+  parametros       Json                             @default("{}")
+  iniciadoEm       DateTime                         @default(now())
+  concluidoEm      DateTime?
+  tenant           Tenant                           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  fontes           FontePesquisaCatalogo[]
+  correspondencias CorrespondenciaPesquisaProduto[]
+
+  @@index([tenantId, estado, iniciadoEm])
+}
+
+/// Página consultada em uma pesquisa; preserva a URL da evidência.
+model FontePesquisaCatalogo {
+  id           String                      @id @default(cuid())
+  execucaoId   String
+  url          String
+  titulo       String?
+  dominio      String
+  tipo         String                      @default("pagina_produto")
+  coletadoEm   DateTime                    @default(now())
+  conteudoHash String?
+  execucao     PesquisaCatalogoExecucao    @relation(fields: [execucaoId], references: [id], onDelete: Cascade)
+  referencias  ReferenciaPesquisaProduto[]
+  fatos        FatoPesquisaProduto[]
+  imagens      ImagemCandidataProduto[]
+
+  @@unique([execucaoId, url])
+}
+
+/// Hipótese auditável de que a pesquisa se refere ao produto da loja.
+model CorrespondenciaPesquisaProduto {
+  id          String                      @id @default(cuid())
+  execucaoId  String
+  tenantId    String
+  produtoId   String
+  regra       String
+  confianca   String
+  confirmada  Boolean?
+  revisadoPor String?
+  revisadoEm  DateTime?
+  observacao  String?
+  criadoEm    DateTime                    @default(now())
+  execucao    PesquisaCatalogoExecucao    @relation(fields: [execucaoId], references: [id], onDelete: Cascade)
+  produto     Produto                     @relation(fields: [tenantId, produtoId], references: [tenantId, id], onDelete: Cascade)
+  referencias ReferenciaPesquisaProduto[]
+  fatos       FatoPesquisaProduto[]
+  imagens     ImagemCandidataProduto[]
+
+  @@unique([execucaoId, produtoId])
+  @@index([tenantId, produtoId, confirmada])
+}
+
+model ReferenciaPesquisaProduto {
+  id                String                         @id @default(cuid())
+  correspondenciaId String
+  fonteId           String
+  tipo              String
+  valor             String
+  marca             String?
+  evidencia         String?
+  criadoEm          DateTime                       @default(now())
+  correspondencia   CorrespondenciaPesquisaProduto @relation(fields: [correspondenciaId], references: [id], onDelete: Cascade)
+  fonte             FontePesquisaCatalogo          @relation(fields: [fonteId], references: [id], onDelete: Cascade)
+
+  @@unique([correspondenciaId, fonteId, tipo, valor])
+  @@index([tipo, valor])
+}
+
+model FatoPesquisaProduto {
+  id                String                         @id @default(cuid())
+  correspondenciaId String
+  fonteId           String
+  campo             String
+  valor             Json
+  confianca         String
+  evidencia         String?
+  criadoEm          DateTime                       @default(now())
+  correspondencia   CorrespondenciaPesquisaProduto @relation(fields: [correspondenciaId], references: [id], onDelete: Cascade)
+  fonte             FontePesquisaCatalogo          @relation(fields: [fonteId], references: [id], onDelete: Cascade)
+
+  @@unique([correspondenciaId, fonteId, campo])
+}
+
+model ImagemCandidataProduto {
+  id                   String                         @id @default(cuid())
+  correspondenciaId    String
+  fonteId              String
+  urlOriginal          String
+  urlArmazenada        String?
+  sha256               String?
+  mime                 String?
+  larguraPx            Int?
+  alturaPx             Int?
+  direitoUso           String                         @default("DESCONHECIDO")
+  correspondenciaExata Boolean                        @default(false)
+  estado               String                         @default("PENDENTE")
+  promovidaUrl         String?
+  promovidaEm          DateTime?
+  criadoEm             DateTime                       @default(now())
+  correspondencia      CorrespondenciaPesquisaProduto @relation(fields: [correspondenciaId], references: [id], onDelete: Cascade)
+  fonte                FontePesquisaCatalogo          @relation(fields: [fonteId], references: [id], onDelete: Cascade)
+
+  @@unique([correspondenciaId, urlOriginal])
+  @@index([estado, criadoEm])
 }
 
 /// Cupom de desconto da loja.

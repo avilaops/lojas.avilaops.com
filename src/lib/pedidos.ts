@@ -1,6 +1,7 @@
 import type { PedidoStatus, Prisma, Tenant } from "@prisma/client";
 import { montarPedidoSeguro, type PayloadCheckout, type ResolucaoCatalogo } from "@avilaops/checkout/server";
-import { calcularTotais } from "@avilaops/checkout";
+import { calcularTotais, type PedidoCheckout } from "@avilaops/checkout";
+import { liberarReservas } from "./catalogo-reservas";
 import { prisma } from "./db";
 import { emitir, itensParaTexto } from "./eventos";
 import { baixarEstoqueDoPedido } from "./estoque";
@@ -17,13 +18,14 @@ function lojista(t: Tenant) {
  */
 export async function registrarPedido(
   t: Tenant,
-  dados: { referencia: string; pagamentoId: string; status: string; total: number; payload: PayloadCheckout; catalogo: ResolucaoCatalogo; cupomCodigo?: string | null; compradorId?: string | null },
+  dados: { referencia: string; pagamentoId: string; status: string; total: number; payload: PayloadCheckout; catalogo: ResolucaoCatalogo; cupomCodigo?: string | null; compradorId?: string | null; pedidoResolvido?: PedidoCheckout },
 ) {
-  const { pedido } = await montarPedidoSeguro(dados.payload, dados.catalogo);
+  // O snapshot usado para cobrar é o que se grava; a reserva já reduziu a oferta pública.
+  const pedido = dados.pedidoResolvido ?? (await montarPedidoSeguro(dados.payload, dados.catalogo)).pedido;
   const totais = calcularTotais({ itens: pedido.itens, frete: pedido.frete, desconto: pedido.desconto ?? 0 });
 
   const salvo = await prisma.pedido.upsert({
-    where: { referencia: pedido.referencia },
+    where: { referencia: pedido.referencia, tenantId: t.id },
     update: { pagamentoId: dados.pagamentoId, pagamentoStatus: dados.status },
     create: {
       tenantId: t.id,
@@ -55,6 +57,7 @@ export async function registrarPedido(
   });
 
   if (dados.status === "aprovado") await baixarEstoqueDoPedido(salvo.id);
+  if (["recusado", "cancelado"].includes(dados.status)) await liberarReservas(t.id, pedido.referencia);
 
   // Comprador logado que digitou um endereço novo: guarda para a próxima compra.
   if (dados.compradorId && pedido.entrega) {
@@ -138,7 +141,7 @@ export async function atualizarStatusPagamento(
     data: { pagamentoStatus: status, ...(novo && (avancaDeAguardando || novo === "ESTORNADO") ? { status: novo } : {}) },
   });
 
-  if (novo === "PAGO" && avancaDeAguardando) {
+  if (novo === "PAGO" && !pedido.estoqueBaixado) {
     await baixarEstoqueDoPedido(pedido.id);
     const itens = pedido.itens.map((i) => ({ nome: i.nome, quantidade: i.quantidade, precoCentavos: i.precoUnitarioCentavos }));
     await emitir({
@@ -146,11 +149,12 @@ export async function atualizarStatusPagamento(
       clienteNome: pedido.clienteNome, clienteEmail: pedido.clienteEmail, clienteTelefone: pedido.clienteTelefone,
       itens, itensTexto: itensParaTexto(itens), ...lojista(t),
     });
-  } else if (status === "recusado" && avancaDeAguardando) {
+  } else if (["recusado", "cancelado"].includes(status) && avancaDeAguardando) {
+    await liberarReservas(t.id, pedido.referencia);
     // Só quando a recusa MUDA o pedido. Sem a condição, cada reenvio da mesma
     // notificação (o Mercado Pago reenvia até receber 2xx) mandava de novo
     // "pagamento recusado" ao cliente, e uma recusa atrasada chegando depois do
     // pagamento aprovado avisava recusa de um pedido já pago.
-    await emitir({ tipo: "pedido.recusado", slug: t.slug, referencia: pedido.referencia, clienteNome: pedido.clienteNome, clienteEmail: pedido.clienteEmail, clienteTelefone: pedido.clienteTelefone, ...lojista(t) });
+    if (status === "recusado") await emitir({ tipo: "pedido.recusado", slug: t.slug, referencia: pedido.referencia, clienteNome: pedido.clienteNome, clienteEmail: pedido.clienteEmail, clienteTelefone: pedido.clienteTelefone, ...lojista(t) });
   }
 }
