@@ -1,0 +1,63 @@
+/*
+ * Tokens do checkout.
+ *
+ * O pacote é usado por clientes diferentes, então nenhuma cor é escrita nos
+ * componentes , eles só consomem estas variáveis. Personalizar é redefinir os
+ * tokens no app que consome, sem fork do componente e sem prop de cor
+ * atravessando dez níveis de árvore.
+ *
+ * Na Brilhax, por exemplo, basta apontar --ck-accent para o vermelho da marca.
+ */
+
+:root {
+  /* Superfícies */
+  --ck-bg: #ffffff;
+  --ck-surface: #ffffff;
+  --ck-surface-muted: #f6f6f7;
+  --ck-border: #e4e4e7;
+
+  /* Texto */
+  --ck-fg: #18181b;
+  --ck-fg-muted: #71717a;
+
+  /* Marca , é isto que cada cliente troca */
+  --ck-accent: #2563eb;
+  --ck-accent-fg: #ffffff;
+  --ck-accent-soft: color-mix(in srgb, var(--ck-accent) 10%, transparent);
+
+  /* Estado */
+  --ck-danger: #dc2626;
+  --ck-success: #16a34a;
+
+  /* Forma */
+  --ck-radius: 0.625rem;
+  --ck-gap: 1rem;
+  --ck-font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  /* Altura de toque: 44px é o mínimo confortável no celular, onde a maior
+     parte deste checkout vai rodar. Campo menor que isso aumenta erro de
+     digitação justamente no passo de pagamento. */
+  --ck-control-height: 2.75rem;
+}
+
+/* O tema escuro segue o do app hospedeiro: redefine só o que muda, para o
+   cliente que já tem dark mode não precisar reescrever a paleta inteira. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-ck-theme="light"]) {
+    --ck-bg: #0b0b0c;
+    --ck-surface: #141416;
+    --ck-surface-muted: #1c1c1f;
+    --ck-border: #2a2a2e;
+    --ck-fg: #fafafa;
+    --ck-fg-muted: #a1a1aa;
+  }
+}
+
+:root[data-ck-theme="dark"] {
+  --ck-bg: #0b0b0c;
+  --ck-surface: #141416;
+  --ck-surface-muted: #1c1c1f;
+  --ck-border: #2a2a2e;
+  --ck-fg: #fafafa;
+  --ck-fg-muted: #a1a1aa;
+}

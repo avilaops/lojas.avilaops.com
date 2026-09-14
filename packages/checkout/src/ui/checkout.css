@@ -1,0 +1,353 @@
+/*
+ * Estilos do checkout. Classes puras, sem Tailwind.
+ *
+ * O pacote roda em apps com configurações de build diferentes; depender do
+ * Tailwind do hospedeiro significaria exigir que cada cliente registre o
+ * caminho do pacote no content, e uma classe fora dessa lista simplesmente não
+ * é gerada , o checkout chegaria sem estilo em produção, e passando no dev.
+ * Toda cor vem dos tokens em tokens.css.
+ */
+
+.ck-root {
+  font-family: var(--ck-font);
+  color: var(--ck-fg);
+  background: var(--ck-bg);
+  display: grid;
+  gap: calc(var(--ck-gap) * 2);
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+
+@media (min-width: 60rem) {
+  .ck-root {
+    grid-template-columns: minmax(0, 1.4fr) minmax(20rem, 0.6fr);
+  }
+  /* O resumo acompanha a rolagem: em pedido com muitos itens o cliente perde o
+     total de vista justamente enquanto decide pagar. */
+  .ck-summary {
+    position: sticky;
+    top: var(--ck-gap);
+  }
+}
+
+/* ── Passos ─────────────────────────────────────────────────────────────── */
+
+.ck-steps {
+  display: flex;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0 0 calc(var(--ck-gap) * 1.5);
+  padding: 0;
+}
+
+.ck-step {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ck-fg-muted);
+  padding-top: 0.75rem;
+  border-top: 3px solid var(--ck-border);
+}
+
+.ck-step[data-state="atual"] {
+  color: var(--ck-fg);
+  border-top-color: var(--ck-accent);
+}
+
+.ck-step[data-state="concluido"] {
+  color: var(--ck-fg-muted);
+  border-top-color: var(--ck-accent);
+}
+
+.ck-step-num {
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 999px;
+  background: var(--ck-surface-muted);
+  font-size: 0.75rem;
+}
+
+.ck-step[data-state="atual"] .ck-step-num,
+.ck-step[data-state="concluido"] .ck-step-num {
+  background: var(--ck-accent);
+  color: var(--ck-accent-fg);
+}
+
+/* ── Blocos ─────────────────────────────────────────────────────────────── */
+
+.ck-card {
+  background: var(--ck-surface);
+  border: 1px solid var(--ck-border);
+  border-radius: var(--ck-radius);
+  padding: calc(var(--ck-gap) * 1.25);
+}
+
+.ck-card + .ck-card {
+  margin-top: var(--ck-gap);
+}
+
+.ck-title {
+  margin: 0 0 var(--ck-gap);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.ck-grid {
+  display: grid;
+  gap: 0.875rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ck-field--full {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 40rem) {
+  .ck-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ── Campos ─────────────────────────────────────────────────────────────── */
+
+.ck-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  min-width: 0;
+}
+
+.ck-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ck-fg-muted);
+}
+
+.ck-input,
+.ck-select {
+  height: var(--ck-control-height);
+  padding: 0 0.75rem;
+  border: 1px solid var(--ck-border);
+  border-radius: calc(var(--ck-radius) * 0.7);
+  background: var(--ck-bg);
+  color: var(--ck-fg);
+  font: inherit;
+  font-size: 0.9375rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.ck-input:focus-visible,
+.ck-select:focus-visible {
+  outline: 2px solid var(--ck-accent);
+  outline-offset: 1px;
+  border-color: var(--ck-accent);
+}
+
+/* O estado de erro não é só a borda vermelha: quem não distingue vermelho
+   precisa do texto, e é ele que o leitor de tela anuncia via aria-describedby. */
+.ck-input[aria-invalid="true"] {
+  border-color: var(--ck-danger);
+}
+
+.ck-error {
+  font-size: 0.75rem;
+  color: var(--ck-danger);
+}
+
+.ck-hint {
+  font-size: 0.75rem;
+  color: var(--ck-fg-muted);
+}
+
+/* ── Opções (frete e pagamento) ─────────────────────────────────────────── */
+
+.ck-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.ck-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem;
+  border: 1px solid var(--ck-border);
+  border-radius: calc(var(--ck-radius) * 0.7);
+  cursor: pointer;
+  background: var(--ck-surface);
+}
+
+.ck-option:has(input:checked) {
+  border-color: var(--ck-accent);
+  background: var(--ck-accent-soft);
+}
+
+.ck-option:has(input:focus-visible) {
+  outline: 2px solid var(--ck-accent);
+  outline-offset: 1px;
+}
+
+.ck-option-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.ck-option-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.ck-option-sub {
+  font-size: 0.75rem;
+  color: var(--ck-fg-muted);
+}
+
+.ck-option-price {
+  font-size: 0.875rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* ── Resumo ─────────────────────────────────────────────────────────────── */
+
+.ck-summary-item {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.625rem 0;
+  border-bottom: 1px solid var(--ck-border);
+}
+
+.ck-summary-thumb {
+  width: 3rem;
+  height: 3rem;
+  border-radius: calc(var(--ck-radius) * 0.5);
+  object-fit: cover;
+  background: var(--ck-surface-muted);
+  flex-shrink: 0;
+}
+
+.ck-summary-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.3125rem 0;
+  font-size: 0.875rem;
+  color: var(--ck-fg-muted);
+}
+
+.ck-summary-total {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 0.75rem;
+  margin-top: 0.5rem;
+  border-top: 1px solid var(--ck-border);
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--ck-fg);
+}
+
+/* ── Ações ──────────────────────────────────────────────────────────────── */
+
+.ck-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: calc(var(--ck-gap) * 1.25);
+}
+
+.ck-btn {
+  height: var(--ck-control-height);
+  padding: 0 1.25rem;
+  border-radius: calc(var(--ck-radius) * 0.7);
+  border: 1px solid transparent;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ck-btn--primary {
+  background: var(--ck-accent);
+  color: var(--ck-accent-fg);
+  flex: 1;
+}
+
+.ck-btn--ghost {
+  background: transparent;
+  color: var(--ck-fg-muted);
+  border-color: var(--ck-border);
+}
+
+.ck-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ── PIX ────────────────────────────────────────────────────────────────── */
+
+.ck-pix {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ck-gap);
+  text-align: center;
+}
+
+.ck-pix-qr {
+  width: 15rem;
+  height: 15rem;
+  border: 1px solid var(--ck-border);
+  border-radius: var(--ck-radius);
+  /* O QR é lido por câmera: fundo branco sempre, mesmo no tema escuro, senão a
+     leitura falha no celular do cliente. */
+  background: #fff;
+  padding: 0.5rem;
+  box-sizing: border-box;
+}
+
+.ck-pix-code {
+  width: 100%;
+  font-family: ui-monospace, monospace;
+  font-size: 0.6875rem;
+  word-break: break-all;
+  background: var(--ck-surface-muted);
+  border-radius: calc(var(--ck-radius) * 0.5);
+  padding: 0.625rem;
+  color: var(--ck-fg-muted);
+}
+
+.ck-alert {
+  padding: 0.875rem;
+  border-radius: calc(var(--ck-radius) * 0.7);
+  font-size: 0.875rem;
+  border: 1px solid;
+}
+
+.ck-alert--erro {
+  color: var(--ck-danger);
+  border-color: var(--ck-danger);
+  background: color-mix(in srgb, var(--ck-danger) 8%, transparent);
+}
+
+.ck-alert--ok {
+  color: var(--ck-success);
+  border-color: var(--ck-success);
+  background: color-mix(in srgb, var(--ck-success) 8%, transparent);
+}
+
+/* Respeita quem pediu menos movimento no sistema. */
+@media (prefers-reduced-motion: reduce) {
+  .ck-root * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

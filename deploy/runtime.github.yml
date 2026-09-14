@@ -1,0 +1,12 @@
+services:
+  lojas:
+    command: ["node", "server.js"]
+    volumes: !override
+      - /opt/lojas/uploads:/app/uploads
+    environment:
+      UPLOADS_DIR: /app/uploads
+      FUNDO_MODELOS_DIR: /app/modelos
+      FUNDO_MODELO: u2netp
+      FUNDO_URL: ""
+      FUNDO_TOKEN: ""
+      PRISMA_QUERY_ENGINE_LIBRARY: /app/node_modules/.prisma/client/libquery_engine-debian-openssl-3.0.x.so.node
