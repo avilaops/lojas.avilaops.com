@@ -4,17 +4,17 @@ import path from "node:path";
 /**
  * Processamento de imagem com o `sharp` (já vem com o Next). Sem ele
  * disponível (ex.: binário da plataforma ausente), tudo cai no "sem
- * processamento": a imagem original é servida — nunca falha o upload.
+ * processamento": a imagem original é servida , nunca falha o upload.
  *
  * Produção: o Dockerfile de runtime instala o sharp para linux-x64.
  */
-type Sharp = typeof import("sharp");
+type Sharp = typeof import("sharp").default;
 let sharpMod: Sharp | null | undefined;
 
 async function sharp(): Promise<Sharp | null> {
   if (sharpMod !== undefined) return sharpMod;
   try {
-    sharpMod = (await import("sharp")).default as unknown as Sharp;
+    sharpMod = (await import("sharp")).default;
   } catch {
     console.warn("[imagens] sharp indisponível: imagens sem otimização");
     sharpMod = null;
