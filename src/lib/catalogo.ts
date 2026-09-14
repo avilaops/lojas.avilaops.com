@@ -77,6 +77,7 @@ export type OrdemCatalogo = "relevancia" | "menor-preco" | "maior-preco" | "rece
 export interface FiltroCatalogo {
   categoriaSlug?: string;
   busca?: string;
+  fabricante?: string;
   destaque?: boolean;
   minCentavos?: number;
   maxCentavos?: number;
@@ -201,6 +202,7 @@ export async function listarProdutos(tenantId: string, filtro?: FiltroCatalogo) 
       tenantId,
       ativo: true,
       ...(filtro?.destaque ? { destaque: true } : {}),
+      ...(filtro?.fabricante ? { marca: { equals: filtro.fabricante, mode: "insensitive" } } : {}),
       ...(filtro?.categoriaSlug ? { categoria: { slug: filtro.categoriaSlug } } : {}),
       ...(filtro?.excetoId ? { id: { not: filtro.excetoId } } : {}),
       ...(filtro?.minCentavos != null || filtro?.maxCentavos != null

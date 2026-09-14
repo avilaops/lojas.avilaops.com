@@ -2,6 +2,7 @@ import { exigirTenant, identidadeDa, lojaVende, temaDo } from "@/lib/tenant";
 import { listarCategorias, listarProdutos, marcasDaLoja, motosDaLoja, provaSocialDa, vitrineDaLoja } from "@/lib/catalogo";
 import { minhaMoto } from "@/lib/minha-moto";
 import Automotivo from "@/components/home/Automotivo";
+import HomePremium from "@/components/templates/automotivo-premium/Home";
 import Garagem from "@/components/home/Garagem";
 import Classico from "@/components/home/Classico";
 import Vitrine from "@/components/home/Vitrine";
@@ -49,7 +50,8 @@ export default async function Home() {
   const dados = { t, identidade: identidadeDa(t), categorias, vitrine, temDestaques: destaques.length > 0, vende: lojaVende(t), moto };
 
   const layout =
-    temaDo(t).layout === "spotlight" ? <Spotlight {...dados} />
+    temaDo(t).layout === "automotivo-premium" ? <HomePremium {...dados} />
+    : temaDo(t).layout === "spotlight" ? <Spotlight {...dados} />
     : temaDo(t).layout === "mercado" ? <Mercado {...dados} />
     : temaDo(t).layout === "distribuidora" ? <Distribuidora {...dados} />
     : temaDo(t).layout === "automotivo" ? <Automotivo {...dados} />

@@ -1,12 +1,9 @@
 import { z } from "zod";
 
 /**
- * Tema de uma loja = tokens, nunca layout.
- *
- * É a fronteira do produto: o cliente escolhe cor, fonte, raio e modo. O que
- * ele não escolhe é onde fica o menu, quantas colunas tem a vitrine ou como é
- * o checkout — isso é igual em todas as lojas, e é o que mantém o custo de
- * criação em minutos e o de manutenção em zero.
+ * Tema = tokens e uma experiência de vitrine versionada. Templates podem
+ * compor cabeçalho, navegação, home, produto e carrinho; catálogo, identidade,
+ * preço e checkout continuam compartilhados. Nenhuma condição por loja.
  */
 export const TemaSchema = z.object({
   corPrimaria: z.string().regex(/^#[0-9a-f]{6}$/i).default("#2563eb"),
@@ -21,7 +18,26 @@ export const TemaSchema = z.object({
    * (banner, categorias, destaques, sobre) — o lojista escolhe uma, não
    * desenha. É o limite entre "personalizar" e "customizar".
    */
-  layout: z.enum(["spotlight", "mercado", "distribuidora", "automotivo", "conversao", "classico", "vitrine", "editorial", "minimal"]).default("classico"),
+  layout: z.enum(["spotlight", "mercado", "distribuidora", "automotivo", "automotivo-premium", "conversao", "classico", "vitrine", "editorial", "minimal"]).default("classico"),
+  premium: z.object({
+    heroTitulo: z.string().max(120).optional(),
+    heroTexto: z.string().max(300).optional(),
+    heroSelo: z.string().max(90).optional(),
+    buscaTitulo: z.string().max(120).optional(),
+    buscaExemplo: z.string().max(100).optional(),
+    editorialImagem: z.string().max(1000).regex(/^(https:\/\/|\/(?!\/))[^<>"\\]*$/).optional(),
+    editorialImagemSecundaria: z.string().max(1000).regex(/^(https:\/\/|\/(?!\/))[^<>"\\]*$/).optional(),
+    editorialTitulo: z.string().max(120).optional(),
+    editorialTexto: z.string().max(400).optional(),
+    logoEscuroUrl: z.string().max(1000).regex(/^(https:\/\/|\/(?!\/))[^<>"\\]*$/).optional(),
+    mostrarNome: z.boolean().optional(),
+    etapas: z.array(z.object({
+      categoria: z.string().regex(/^[a-z0-9-]+$/).max(100),
+      titulo: z.string().max(60),
+      texto: z.string().max(180),
+      icone: z.enum(["lavagem", "polimento", "protecao", "vitrificacao", "acessorios", "kits", "moto"]),
+    })).max(8).optional(),
+  }).optional(),
   /**
    * O que a vitrine faz com categoria que não tem foto.
    *
@@ -41,6 +57,7 @@ export const TemaSchema = z.object({
 });
 
 export const LAYOUTS: Array<{ valor: TemaLoja["layout"]; rotulo: string; descricao: string }> = [
+  { valor: "automotivo-premium", rotulo: "Automotivo Premium", descricao: "Experiência completa: navegação fotográfica, banner editorial, galeria ampliada e carrinho lateral. Mantém a identidade da marca em toda a compra." },
   { valor: "spotlight", rotulo: "Spotlight", descricao: "Hero de alto impacto, produto principal e navegação visual. Ideal para performance e marca." },
   { valor: "mercado", rotulo: "Mercado", descricao: "Catálogo denso, departamentos e mais produtos por tela. Ideal para distribuidoras." },
   { valor: "distribuidora", rotulo: "Distribuidora", descricao: "O catálogo denso do Mercado com a sua imagem de banner na abertura. Para distribuidora que já tem arte de marca." },

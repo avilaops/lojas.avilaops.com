@@ -349,7 +349,7 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
         </>
       )}
 
-      {aba === "Marca" && <Marca loja={loja} chamar={chamar} ocupado={ocupado} />}
+      {aba === "Marca" && <Marca loja={loja} categorias={categorias} chamar={chamar} ocupado={ocupado} />}
 
       {aba === "Entrega" && (
         <Secao titulo="Entrega e frete" descricao="Sem tabela, o cliente vê apenas retirada na loja (ou frete a combinar).">

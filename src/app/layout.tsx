@@ -12,6 +12,9 @@ import { cssDoTema, fonteGoogleHref } from "@/lib/tema";
 import { CartProvider } from "@/components/cart/CartProvider";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import CabecalhoPremium from "@/components/templates/automotivo-premium/Cabecalho";
+import CarrinhoLateral from "@/components/templates/automotivo-premium/CarrinhoLateral";
+import "@/components/templates/automotivo-premium/premium.css";
 import WhatsAppFlutuante from "@/components/WhatsAppFlutuante";
 import LojaNaoEncontrada from "@/components/LojaNaoEncontrada";
 import AvisoSuspensa from "@/components/AvisoSuspensa";
@@ -124,6 +127,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   }
 
   const tema = temaDo(t);
+  const premium = tema.layout === "automotivo-premium";
   const identidade = identidadeDa(t);
   const fonte = fonteGoogleHref(tema);
   const categorias = await listarCategorias(t.id);
@@ -174,10 +178,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   };
 
   return (
-    <html lang="pt-BR" data-ck-theme={tema.modo === "escuro" ? "dark" : "light"}>
+    <html lang="pt-BR" data-ck-theme={tema.modo === "escuro" ? "dark" : "light"} data-template={premium ? "automotivo-premium" : undefined} data-modo={tema.modo} suppressHydrationWarning={premium}>
       <head>
         {fonte && <link rel="stylesheet" href={fonte} />}
         <style dangerouslySetInnerHTML={{ __html: `${cssDoTema(tema)}:root{--brand-support:${identidade.corApoio}}` }} />
+        {premium && <script dangerouslySetInnerHTML={{ __html: `try{var m=localStorage.getItem(${JSON.stringify(`loja:${t.slug}:modo`).replace(/</g,"\\u003c")});if(m==='claro'||m==='escuro'){document.documentElement.dataset.modo=m;document.documentElement.dataset.ckTheme=m==='escuro'?'dark':'light'}}catch(e){}` }}/ >}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSite) }} />
         {/* Descoberta do llms.txt pela especificação v2 (llmstxt.org, ago/2026):
@@ -187,15 +192,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body className="flex min-h-screen flex-col">
         <Pixels p={pixels} />
-        <CartProvider slug={t.slug}>
+        <CartProvider slug={t.slug} painelHabilitado={premium}>
           {t.status === "SUSPENSA" && <AvisoSuspensa />}
-          {t.avisoTopo && (
+          {t.avisoTopo && !premium && (
             <p className="barra-aviso" role="status">{t.avisoTopo}</p>
           )}
-          <Header loja={publico} logoUrl={t.logoUrl} categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} exemploBusca={exemploBusca} />
+          {premium ? <CabecalhoPremium loja={publico} logo={t.logoUrl} logoEscuro={tema.premium?.logoEscuroUrl} mostrarNome={tema.premium?.mostrarNome} categorias={[...categorias].sort((a,b)=>a.ordem-b.ordem).map(c=>({slug:c.slug,nome:c.nome}))} modo={tema.modo}/> : <Header loja={publico} logoUrl={t.logoUrl} categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} exemploBusca={exemploBusca} />}
           {t.segmento === "motopecas" && <BarraGaragem tenantId={t.id} />}
-          <main className="flex-1">{children}</main>
+          <main id="conteudo-loja" className="flex-1">{children}</main>
           <Footer tenant={t} categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} />
+          {premium && <CarrinhoLateral/>}
           {t.whatsapp && <WhatsAppFlutuante numero={t.whatsapp} nome={t.nome} />}
           <Consentimento ativo={temRastreio(pixels)} />
         </CartProvider>
