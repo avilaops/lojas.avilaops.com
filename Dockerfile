@@ -17,7 +17,9 @@ COPY --from=build /app/.next/static ./.next/static
 COPY --from=build /app/public ./public
 COPY --from=build /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=build /app/node_modules/@prisma/client ./node_modules/@prisma/client
+COPY --from=build /app/node_modules/onnxruntime-node ./node_modules/onnxruntime-node
 COPY --from=build /app/prisma ./prisma
 COPY --from=build /app/modelos ./modelos
+RUN node -e "require('onnxruntime-node').InferenceSession.create('/app/modelos/u2netp.onnx', {executionProviders:['cpu'],intraOpNumThreads:1,interOpNumThreads:1}).then(s=>s.release()).catch(e=>{console.error(e.message);process.exit(1)})"
 EXPOSE 3080
 CMD ["node", "server.js"]

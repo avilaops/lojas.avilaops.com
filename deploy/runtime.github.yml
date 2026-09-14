@@ -9,3 +9,4 @@ services:
       FUNDO_MODELO: u2netp
       FUNDO_URL: ""
       FUNDO_TOKEN: ""
+      PRISMA_QUERY_ENGINE_LIBRARY: /app/node_modules/.prisma/client/libquery_engine-debian-openssl-3.0.x.so.node
