@@ -25,6 +25,10 @@ export interface ItemLocal {
 export interface CupomLocal { codigo: string; tipo: string; desconto: number }
 
 interface CartValue {
+  painelHabilitado: boolean;
+  aberto: boolean;
+  abrir: () => void;
+  fechar: () => void;
   itens: ItemLocal[];
   quantidade: number;
   subtotal: number;
@@ -45,7 +49,10 @@ export function useCart() {
   return v;
 }
 
-export function CartProvider({ slug, children }: { slug: string; children: React.ReactNode }) {
+export function CartProvider({ slug, children, painelHabilitado = false }: { slug: string; children: React.ReactNode; painelHabilitado?: boolean }) {
+  const [aberto, setAberto] = useState(false);
+  const abrir = useCallback(() => setAberto(true), []);
+  const fechar = useCallback(() => setAberto(false), []);
   const chave = `loja:${slug}:carrinho`;
   const [itens, setItens] = useState<ItemLocal[]>([]);
   const [cupom, setCupom] = useState<CupomLocal | null>(null);
@@ -79,6 +86,7 @@ export function CartProvider({ slug, children }: { slug: string; children: React
   const aplicarCupom = useCallback((c: CupomLocal | null) => setCupom(c), []);
 
   const adicionar = useCallback<CartValue["adicionar"]>((item, quantidade = 1) => {
+    if (painelHabilitado) setAberto(true);
     setItens((atual) => {
       const i = atual.findIndex((x) => x.id === item.id);
       if (i === -1) return [...atual, { ...item, quantidade }];
@@ -86,7 +94,7 @@ export function CartProvider({ slug, children }: { slug: string; children: React
       copia[i] = { ...copia[i], quantidade: copia[i].quantidade + quantidade };
       return copia;
     });
-  }, []);
+  }, [painelHabilitado]);
 
   const alterar = useCallback<CartValue["alterar"]>((id, quantidade) => {
     setItens((atual) => (quantidade <= 0 ? atual.filter((x) => x.id !== id) : atual.map((x) => (x.id === id ? { ...x, quantidade } : x))));
@@ -100,6 +108,7 @@ export function CartProvider({ slug, children }: { slug: string; children: React
 
   const value = useMemo<CartValue>(
     () => ({
+      painelHabilitado, aberto, abrir, fechar,
       itens,
       quantidade: itens.reduce((s, i) => s + i.quantidade, 0),
       subtotal: itens.reduce((s, i) => s + i.precoCentavos * i.quantidade, 0),
@@ -111,7 +120,7 @@ export function CartProvider({ slug, children }: { slug: string; children: React
       limpar,
       pronto,
     }),
-    [itens, cupom, aplicarCupom, adicionar, alterar, remover, limpar, pronto],
+    [itens, cupom, aplicarCupom, adicionar, alterar, remover, limpar, pronto, painelHabilitado, aberto, abrir, fechar],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

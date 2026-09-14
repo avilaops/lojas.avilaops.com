@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import CapaCategoria from "@/components/CapaCategoria";
-import { exigirTenant, lojaVende, urlDaLoja } from "@/lib/tenant";
-import { listarProdutos } from "@/lib/catalogo";
+import { exigirTenant, lojaVende, urlDaLoja, temaDo } from "@/lib/tenant";
+import { listarProdutos, listarCategorias } from "@/lib/catalogo";
+import CategoriasPremium from "@/components/templates/automotivo-premium/Categorias";
 import PaginacaoLoja, { POR_PAGINA, paginaDaUrl } from "@/components/PaginacaoLoja";
 import ProductCard from "@/components/ProductCard";
 import { minhaMoto } from "@/lib/minha-moto";
@@ -59,7 +60,8 @@ export default async function Categoria({ params, searchParams }: Props) {
   const vende = lojaVende(t);
 
   return (
-    <main className="container-loja py-8">
+    <div className="container-loja py-8 ap-catalogo">
+      {temaDo(t).layout === "automotivo-premium" && <CategoriasPremium categorias={(await listarCategorias(t.id)).sort((a,b)=>a.ordem-b.ordem)} atual={categoria.slug}/>}
       <Trilha base={urlDaLoja(t)} itens={[{ nome: "Produtos", href: "/produtos" }, { nome: categoria.nome }]} />
       <CapaCategoria
         nome={categoria.nome}
@@ -100,6 +102,6 @@ export default async function Categoria({ params, searchParams }: Props) {
         </div>
       )}
       <PaginacaoLoja base={`/categoria/${categoria.slug}`} sp={sp} pagina={pagina} temProxima={temProxima} />
-    </main>
+    </div>
   );
 }

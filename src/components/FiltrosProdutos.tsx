@@ -26,10 +26,12 @@ export default function FiltrosProdutos({
   categorias,
   valores,
   medidas = [],
+  fabricantes = [],
 }: {
   categorias: Categoria[];
   valores: Record<string, string | undefined>;
   medidas?: MedidaDisponivel[];
+  fabricantes?: string[];
 }) {
   const usandoMedida = medidas.some((m) => valores[`${PREFIXO[m.campo]}_de`] || valores[`${PREFIXO[m.campo]}_ate`]);
   return (
@@ -49,9 +51,10 @@ export default function FiltrosProdutos({
             0,95 tela). Aqui eles vão para uma gaveta que só existe no celular:
             a partir de 640px o CSS a dissolve e os campos voltam para a linha.
             A busca continua sempre visível, que é por onde a maioria chega. */}
-        <input type="checkbox" id="filtros-mais" className="filtros-gaveta" defaultChecked={!!(valores.categoria || valores.min || valores.max || valores.ordem)} />
+        <input type="checkbox" id="filtros-mais" className="filtros-gaveta" defaultChecked={!!(valores.categoria || valores.min || valores.max || valores.ordem || valores.fabricante)} />
         <label htmlFor="filtros-mais" className="filtros-abrir">Categoria, preço e ordem</label>
         <div className="filtros-campos contents">
+          {fabricantes.length > 0 && <select name="fabricante" aria-label="Marca do produto" defaultValue={valores.fabricante ?? ""} className="h-10 rounded-lg border border-border bg-background px-3 text-sm"><option value="">Todas as marcas</option>{fabricantes.map(m => <option key={m}>{m}</option>)}</select>}
           <select name="categoria" aria-label="Categoria" defaultValue={valores.categoria ?? ""} className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
             <option value="">Todas as categorias</option>
             {categorias.map((c) => <option key={c.id} value={c.slug}>{c.nome}</option>)}

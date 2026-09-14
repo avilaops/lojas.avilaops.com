@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import FichaTecnica from "@/components/FichaTecnica";
-import { exigirTenant, lojaVende, urlDaLoja } from "@/lib/tenant";
+import { exigirTenant, lojaVende, urlDaLoja, temaDo } from "@/lib/tenant";
+import GaleriaPremium from "@/components/templates/automotivo-premium/Galeria";
 import { buscarProduto, formatarBRL, listarProdutos, resumoAvaliacoes } from "@/lib/catalogo";
 import * as regras from "@/lib/produto-regras";
 import { fichaDoProduto } from "@/lib/ficha";
@@ -102,7 +103,7 @@ export default async function ProdutoPage({ params }: Props) {
   };
 
   return (
-    <div className="container-loja py-8">
+    <div className="container-loja py-8 ap-produto">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
         "@context": "https://schema.org",
@@ -124,10 +125,10 @@ export default async function ProdutoPage({ params }: Props) {
         )}
       </nav>
 
-      <div className="grid gap-8 md:grid-cols-2">
-        <GaleriaProduto imagens={p.imagens} alt={p.nome} origem={p.imagemOrigem} />
+      <div className="grid gap-8 md:grid-cols-2 ap-produto-grade">
+        {temaDo(t).layout === "automotivo-premium" ? <GaleriaPremium imagens={p.imagens} alt={p.nome} origem={p.imagemOrigem}/> : <GaleriaProduto imagens={p.imagens} alt={p.nome} origem={p.imagemOrigem} />}
 
-        <div>
+        <div className="ap-produto-info">
           {p.marca && <p className="text-xs uppercase tracking-wide text-muted-foreground">{p.marca}</p>}
           <h1 className="mt-1 text-2xl font-bold">{p.nome}</h1>
           {p.descricaoCurta && <p className="mt-2 text-sm text-muted-foreground">{p.descricaoCurta}</p>}

@@ -3,8 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { metadataDeListagem } from "@/lib/seo-listagem";
 import PaginacaoLoja, { POR_PAGINA, paginaDaUrl } from "@/components/PaginacaoLoja";
-import { exigirTenant, lojaVende } from "@/lib/tenant";
-import { listarCategorias, listarProdutos, medidasDaLoja, type ChaveDeMedida, type OrdemCatalogo } from "@/lib/catalogo";
+import { exigirTenant, lojaVende, temaDo } from "@/lib/tenant";
+import CategoriasPremium from "@/components/templates/automotivo-premium/Categorias";
+import { listarCategorias, listarProdutos, marcasDaLoja, medidasDaLoja, type ChaveDeMedida, type OrdemCatalogo } from "@/lib/catalogo";
 import ProductCard from "@/components/ProductCard";
 import FiltrosProdutos from "@/components/FiltrosProdutos";
 import { minhaMoto } from "@/lib/minha-moto";
@@ -58,6 +59,7 @@ function faixasDaUrl(sp: Record<string, string | undefined>) {
 
 export default async function Produtos({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const t = await exigirTenant();
+  const premium = temaDo(t).layout === "automotivo-premium";
   const sp = await searchParams;
   const ordem = ORDENS.has(sp.ordem as OrdemCatalogo) ? (sp.ordem as OrdemCatalogo) : "relevancia";
   const moto = t.segmento === "motopecas" ? await minhaMoto(sp) : null;
@@ -67,12 +69,13 @@ export default async function Produtos({ searchParams }: { searchParams: Promise
   // de compra). Antes esta página mandava os 5.591 cards da Vedashow de uma
   // vez: 5 s até o primeiro byte e um HTML que o celular não segurava.
   const pagina = paginaDaUrl(sp);
-  const [categorias, lote, temMedida] = await Promise.all([
+  const [categorias, lote, temMedida, fabricantes] = await Promise.all([
     listarCategorias(t.id),
-    listarProdutos(t.id, { busca: sp.q?.trim() || undefined, categoriaSlug: sp.categoria || undefined, ordem, minCentavos: reais(sp.min), maxCentavos: reais(sp.max), moto, medidas, limite: POR_PAGINA + 1, pular: (pagina - 1) * POR_PAGINA }),
+    listarProdutos(t.id, { busca: sp.q?.trim() || undefined, fabricante: sp.fabricante?.trim() || undefined, categoriaSlug: sp.categoria || undefined, ordem, minCentavos: reais(sp.min), maxCentavos: reais(sp.max), moto, medidas, limite: POR_PAGINA + 1, pular: (pagina - 1) * POR_PAGINA }),
     // O filtro de medida só aparece onde faz sentido: loja de roupa não tem
     // diâmetro interno, e campo que nunca filtra nada é ruído no formulário.
     medidasDaLoja(t.id),
+    premium ? marcasDaLoja(t.id) : [],
   ]);
   const produtos = lote.slice(0, POR_PAGINA);
   const temProxima = lote.length > POR_PAGINA;
@@ -84,7 +87,8 @@ export default async function Produtos({ searchParams }: { searchParams: Promise
   const titulo = sp.q ? `Resultados para “${sp.q}”` : categoriaAtual ? categoriaAtual.nome : moto ? `Peças para ${nomeDaMoto(moto)}` : "Todos os produtos";
 
   return (
-    <div className="container-loja py-8">
+    <div className="container-loja py-8 ap-catalogo">
+      {premium && <CategoriasPremium categorias={[...categorias].sort((a,b)=>a.ordem-b.ordem)} atual={sp.categoria ?? "todas"}/>}
       <h1 className="mb-1 text-2xl font-bold">{titulo}</h1>
       <p className="mb-4 text-sm text-muted-foreground">
         {/* Sem contagem: o número de itens é informação de estoque, não de
@@ -92,7 +96,7 @@ export default async function Produtos({ searchParams }: { searchParams: Promise
         {moto && (sp.q || categoriaAtual) && <>Mostrando o que serve na {nomeDaMoto(moto)}</>}
         {moto && <> · <Link href="/produtos?moto=todas" className="underline">ver catálogo completo</Link></>}
       </p>
-      <FiltrosProdutos categorias={categorias} valores={sp} medidas={temMedida} />
+      <FiltrosProdutos categorias={categorias} valores={sp} medidas={temMedida} fabricantes={fabricantes} />
       {produtos.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
           Nada encontrado com esses filtros. <Link href="/produtos" className="underline">Limpar filtros</Link>

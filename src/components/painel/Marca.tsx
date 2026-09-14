@@ -8,6 +8,7 @@ import { LAYOUTS, type TemaLoja } from "@/lib/tema";
 import { criarDirecaoVisual, PERSONALIDADES, SEGMENTOS, type IdentidadeLoja } from "@/lib/identidade";
 import { Campo, FONTES, Secao, inputClasse } from "./campos";
 import EnviarImagem from "./EnviarImagem";
+import EditorEtapas from "@/components/templates/automotivo-premium/EditorEtapas";
 import type { LojaView } from "./PainelLoja";
 
 /**
@@ -50,10 +51,12 @@ export default function Marca({
   loja,
   chamar,
   ocupado,
+  categorias,
 }: {
   loja: LojaView;
   chamar: (c: string, m: string, b?: unknown, s?: string) => Promise<unknown>;
   ocupado: boolean;
+  categorias: {slug: string; nome: string}[];
 }) {
   const router = useRouter();
   const caminho = usePathname();
@@ -215,7 +218,7 @@ export default function Marca({
       <>
         {cabecalho}
         <Secao titulo={BLOCOS.vitrine.titulo} descricao="Como a página inicial se monta.">
-          <Campo label="Layout da página inicial" ajuda="Composições prontas dos mesmos blocos.">
+          <Campo label="Template da loja" ajuda="O Automotivo Premium personaliza toda a experiência, da navegação ao carrinho.">
             <div className="grid gap-2 sm:grid-cols-2">
               {LAYOUTS.map((l) => (
                 <button key={l.valor} type="button" aria-pressed={tema.layout === l.valor} onClick={() => setTema({ ...tema, layout: l.valor })} className={`min-h-[44px] rounded-xl border p-3 text-left text-sm ${tema.layout === l.valor ? "border-foreground bg-muted" : "border-border"}`}>
@@ -252,6 +255,19 @@ export default function Marca({
               </div>
             </Campo>
           </div>
+          {tema.layout === "automotivo-premium" && <fieldset className="mt-6 grid gap-4 rounded-xl border border-border p-4 sm:grid-cols-2">
+            <legend className="px-2 text-sm font-semibold">Conteúdo do Automotivo Premium</legend>
+            {([
+              ["heroSelo", "Assinatura acima do título"], ["heroTitulo", "Título do banner"],
+              ["heroTexto", "Texto do banner"], ["buscaTitulo", "Pergunta da busca"],
+              ["buscaExemplo", "Exemplo no campo de busca"], ["editorialTitulo", "Título da seção editorial"],
+              ["editorialTexto", "Texto da seção editorial"], ["editorialImagemSecundaria", "Imagem editorial complementar"],
+            ] as const).map(([chave, label]) => <Campo key={chave} label={label}><input className={inputClasse} value={tema.premium?.[chave] ?? ""} onChange={e => setTema({ ...tema, premium: { ...tema.premium, [chave]: e.target.value } })}/></Campo>)}
+            <Campo label="Imagem editorial" ajuda="Imagem de contexto; não substitui fotos reais dos produtos."><div className="flex gap-2"><input className={inputClasse} value={tema.premium?.editorialImagem ?? ""} onChange={e => setTema({...tema,premium:{...tema.premium,editorialImagem:e.target.value || undefined}})}/><EnviarImagem aoEnviar={url => setTema(v => ({...v,premium:{...v.premium,editorialImagem:url}}))} rotulo="Enviar editorial"/></div></Campo>
+            <Campo label="Logo para o modo escuro"><div className="flex gap-2"><input className={inputClasse} value={tema.premium?.logoEscuroUrl ?? ""} onChange={e => setTema({...tema,premium:{...tema.premium,logoEscuroUrl:e.target.value || undefined}})}/><EnviarImagem aoEnviar={url => setTema(v => ({...v,premium:{...v.premium,logoEscuroUrl:url}}))} rotulo="Enviar logo escuro"/></div></Campo>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={tema.premium?.mostrarNome ?? false} onChange={e => setTema({...tema,premium:{...tema.premium,mostrarNome:e.target.checked}})}/> Mostrar o nome ao lado do símbolo</label>
+            <EditorEtapas etapas={tema.premium?.etapas ?? []} categorias={categorias} aoAlterar={etapas => setTema({...tema,premium:{...tema.premium,etapas}})}/>
+          </fieldset>}
           {rodape(() => salvar({ tema, segmento, slogan: vitrine.slogan, ...(vitrine.logoUrl ? { logoUrl: vitrine.logoUrl } : {}), bannerUrl: vitrine.bannerUrl || null }, "Vitrine salva."))}
         </Secao>
       </>
