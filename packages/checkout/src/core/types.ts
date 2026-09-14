@@ -24,6 +24,10 @@ export interface ItemCarrinho {
   sku?: string;
   /** Peso em gramas, quando o frete for calculado por peso. */
   pesoGramas?: number;
+  /** Dimensoes da embalagem usadas para cotar o frete. */
+  alturaCm?: number;
+  larguraCm?: number;
+  comprimentoCm?: number;
 }
 
 export interface Cliente {

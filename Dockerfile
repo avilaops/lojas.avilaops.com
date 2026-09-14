@@ -7,15 +7,17 @@ COPY packages ./packages
 COPY prisma ./prisma
 RUN npm ci
 COPY . .
-ENV NEXT_TELEMETRY_DISABLED=1
+ENV NEXT_TELEMETRY_DISABLED=1 FUNDO_MODELOS_DIR=/app/modelos
+RUN node --input-type=module -e "import { baixarModelo } from './packages/removedor-de-fundo/src/modelo.ts'; await baixarModelo('u2netp')"
 RUN npx prisma generate && npm run typecheck && npm test && npm run build
 FROM base AS runtime
-ENV NODE_ENV=production PORT=3080 HOSTNAME=0.0.0.0
+ENV NODE_ENV=production PORT=3080 HOSTNAME=0.0.0.0 FUNDO_MODELOS_DIR=/app/modelos
 COPY --from=build /app/.next/standalone ./
 COPY --from=build /app/.next/static ./.next/static
 COPY --from=build /app/public ./public
 COPY --from=build /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=build /app/node_modules/@prisma/client ./node_modules/@prisma/client
 COPY --from=build /app/prisma ./prisma
+COPY --from=build /app/modelos ./modelos
 EXPOSE 3080
 CMD ["node", "server.js"]

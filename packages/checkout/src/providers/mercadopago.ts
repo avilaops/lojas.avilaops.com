@@ -46,6 +46,8 @@ export interface MercadoPagoConfig {
   descritorFatura?: string;
   /** Minutos até a cobrança PIX expirar. */
   pixExpiraEmMinutos?: number;
+  /** URL do webhook da loja para esta cobranca. */
+  notificationUrl?: string;
 }
 
 /**
@@ -210,6 +212,7 @@ export class MercadoPagoProvider implements PaymentProvider {
       transaction_amount: Number((totalEmCentavos / 100).toFixed(2)),
       description: this.descricao(pedido),
       external_reference: pedido.referencia,
+      notification_url: this.config.notificationUrl,
       statement_descriptor: this.config.descritorFatura,
       payer: {
         email: pedido.cliente.email,

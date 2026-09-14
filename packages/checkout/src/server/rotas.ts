@@ -28,6 +28,7 @@ export interface OpcoesRotas {
   aoAtualizarStatus?: (dados: {
     pagamentoId: string;
     status: string;
+    valorEmCentavos: number;
   }) => Promise<void>;
 }
 
@@ -148,6 +149,7 @@ export function criarRotaWebhook({ provider, aoAtualizarStatus }: OpcoesRotas) {
       await aoAtualizarStatus?.({
         pagamentoId: resultado.id,
         status: resultado.status,
+        valorEmCentavos: resultado.valor,
       });
     } catch (erro) {
       console.error("[checkout] falha ao processar webhook:", erro);
