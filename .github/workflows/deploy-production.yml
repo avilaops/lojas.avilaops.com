@@ -44,3 +44,10 @@ jobs:
         with:
           node-version: 22
       - run: node scripts/smoke-publicacao.mjs "${{ vars.SMOKE_URL || 'https://lojas.avilaops.com' }}"
+      # O domínio da plataforma não tem /uploads, então a conferência da foto
+      # só mede alguma coisa contra uma loja. O endereço é variável de CI e não
+      # código: domínio de cliente não entra no repositório. Sem a variável,
+      # este passo não roda — e a conferência da foto fica sem efeito, o que
+      # está dito no README para ninguém contar com o que não está ligado.
+      - if: vars.SMOKE_LOJA_URL != ''
+        run: node scripts/smoke-publicacao.mjs "${{ vars.SMOKE_LOJA_URL }}"

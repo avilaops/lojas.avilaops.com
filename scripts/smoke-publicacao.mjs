@@ -2,11 +2,17 @@
 // Smoke HTTP da versão publicada: responde, responde com banco, e responde
 // com a folha de estilo que o navegador vai buscar.
 //
-// O terceiro item é o motivo de o script existir. Em 02/09/2026 subiu um
+// A folha de estilo é o motivo de o script existir. Em 02/09/2026 subiu um
 // pacote sem `.next/static`: todas as páginas responderam 200, o healthcheck
 // ficou verde e a loja apareceu sem CSS nenhum (a história está em
 // `scripts/empacotar.sh`). `/api/health` não sabe se a folha existe; quem
 // sabe é quem baixa o HTML e segue o <link> como o navegador segue.
+//
+// A foto do produto entrou pelo mesmo raciocínio, com um risco diferente: ela
+// não vem do pacote, vem do volume `/uploads` montado no servidor. Volume não
+// montado, remontado vazio ou com dono errado depois do `chown` do deploy não
+// derruba nada — a loja sobe inteira, responde 200 em tudo e mostra um
+// catálogo de imagens quebradas. Nenhuma verificação anterior via isso.
 //
 //   node scripts/smoke-publicacao.mjs https://lojas.avilaops.com
 //   node scripts/smoke-publicacao.mjs            # usa SMOKE_URL ou o local
@@ -87,10 +93,69 @@ async function vitrineComEstilo() {
     if (texto.length < 1000) falhar(`a folha ${href} veio com ${texto.length} bytes; o build não terminou`);
     ok(`${href} servida com ${Math.round(texto.length / 1024)} kB de CSS`);
   }
+  return html;
+}
+
+/**
+ * A primeira foto de produto que a vitrine referencia.
+ *
+ * Três cuidados que a primeira versão não tinha, e sem os quais isto seria
+ * decorativo ou, pior, ruidoso:
+ *
+ * 1. **Só `<img>`.** Pegar qualquer `src`/`href` com `/uploads/` alcançava o
+ *    `<link rel="manifest">` e os ícones, que o Next emite antes do corpo:
+ *    numa loja com favicon enviado, o smoke reprovava um deploy saudável por
+ *    `application/manifest+json` não ser imagem.
+ * 2. **O caminho, não a URL.** O upload é gravado absoluto para o domínio da
+ *    plataforma (`src/lib/uploads.ts`), então seguir o endereço como está
+ *    mediria o site público em vez do alvo — e um container novo, com o
+ *    volume desmontado, passaria.
+ * 3. **Furar o cache.** `/uploads` responde `max-age=31536000, immutable`;
+ *    `cache: "no-store"` do Node vira `no-cache` na rede, que a borda ignora.
+ *    Sem o parâmetro, um 200 guardado esconde origem vazia — o mesmo buraco
+ *    que `saude()` evita pedindo `no-store` ao aplicativo.
+ *
+ * Só falha quando a vitrine **referencia** uma foto e ela não vem: loja sem
+ * catálogo publicado, ou domínio da plataforma (que não tem `/uploads`),
+ * passa sem reclamar. Inventar exigência onde não há foto transformaria o
+ * smoke num alarme que todo mundo aprende a ignorar.
+ */
+async function fotosDaVitrine(html) {
+  const candidatos = [...html.matchAll(/<img\b[^>]*>/gi)]
+    .map((m) => m[0].match(/\bsrc="([^"]+)"/i)?.[1] ?? "")
+    .map((href) => href.replace(/&amp;/g, "&"))
+    .map((href) => {
+      if (!href.includes("/_next/image")) return href;
+      try {
+        return new URL(href, base).searchParams.get("url") ?? "";
+      } catch {
+        return "";
+      }
+    })
+    .filter((href) => href.includes("/uploads/"));
+
+  if (!candidatos.length) return console.log("  --  a vitrine não referencia foto em /uploads (nada a conferir aqui)");
+
+  let caminho = candidatos[0];
+  try {
+    caminho = new URL(candidatos[0], base).pathname;
+  } catch {
+    /* já é caminho */
+  }
+  const foto = await buscar(`${caminho}?smoke=${Date.now()}`);
+  if (!foto.ok) falhar(`a foto ${caminho} devolveu ${foto.status}: o volume de uploads não está servindo, e a loja está com o catálogo quebrado`);
+  const tipo = foto.headers.get("content-type") ?? "";
+  if (!tipo.startsWith("image/")) falhar(`a foto ${caminho} veio como ${tipo}, não como imagem`);
+  const bytes = Number(foto.headers.get("content-length") ?? 0) || (await foto.arrayBuffer()).byteLength;
+  // Piso baixo de propósito: SVG enviado pelo lojista não passa pelo
+  // otimizador e um ícone legítimo cabe em poucas centenas de bytes. O que
+  // não existe é imagem de 60 bytes.
+  if (bytes < 64) falhar(`a foto ${caminho} veio com ${bytes} bytes; é arquivo vazio ou truncado`);
+  ok(`${caminho} servida com ${Math.round(bytes / 1024) || 1} kB de ${tipo.replace("image/", "")}`);
 }
 
 console.log(`==> smoke em ${base}`);
 await saude();
 await sinalDeVida();
-await vitrineComEstilo();
+await fotosDaVitrine(await vitrineComEstilo());
 console.log(`\n==> ${verdes.length} verificação(ões) verdes em ${base}`);

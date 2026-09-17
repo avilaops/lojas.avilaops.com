@@ -115,11 +115,21 @@ limite é 15%); rever o prazo de despacho costuma resolver mais que correr com
 a postagem". Os limites ficam num só lugar (`LIMITES`), porque a régua do ML
 muda sem avisar.
 
-Duas regras de silêncio, testadas: **conta nova não recebe alerta** (sem
-métrica medida, dizer "suas reclamações estão altas" é inventar problema), e
-**o limite é teto aceito, não começo de problema** — métrica exatamente no
-limite não alerta. Falha na leitura da reputação não derruba publicação nem
-estoque: ela é a última coisa do ciclo, dentro do próprio try.
+Três regras de silêncio, testadas:
+
+1. **Conta nova não recebe alerta.** Sem métrica medida, dizer "suas
+   reclamações estão altas" é inventar problema.
+2. **O limite é teto aceito, não começo de problema** — métrica exatamente no
+   limite não alerta.
+3. **Não ter selo de Mercado Líder não é alerta.** É o estado normal de quase
+   toda conta, e o selo vem de volume, reputação verde e tempo: nada que se
+   conserte hoje. Um alerta que nunca sai da tela é um alerta que se aprende a
+   ignorar — e junto com ele iriam os três de cima, que são de verdade e têm
+   caminho. O selo continua sendo dado: a tela o mostra ao lado do nível, e
+   onde ele falta diz de onde ele vem, em texto neutro.
+
+Falha na leitura da reputação não derruba publicação nem estoque: ela é a
+última coisa do ciclo, dentro do próprio try.
 
 ## O que a integração não inventa
 
