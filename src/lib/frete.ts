@@ -14,6 +14,10 @@ import { FRETE_RETIRADA_ID, type ItemCarrinho, type OpcaoFrete } from "@avilaops
  *   - CepCerto configurada e respondeu → cotação real (mais retirada, se houver)
  *   - senão → tabela por UF do tenant (mais retirada)
  *   - senão → só retirada, ou nada (o checkout mostra "frete a combinar")
+ *
+ * A entrega própria da loja (motoboy, frota) roda em paralelo a isso: é faixa
+ * de CEP no tenant, entra sempre que o destino bate, e concorre em preço com a
+ * transportadora.
  */
 
 /**
@@ -30,6 +34,7 @@ const ENDPOINT = "https://cepcerto.com/api-cotacao-frete/";
 
 interface Caixa { altura: number; largura: number; comprimento: number }
 interface FaixaTabela { ufs: string[]; preco: number; prazoDiasUteis: number; nome?: string }
+interface FaixaLocal { prefixos: string[]; nome: string; preco: number; prazoDiasUteis: number; gratisAcima?: number | null }
 
 function numero(v: unknown): number | undefined {
   if (typeof v === "number") return v;
@@ -178,6 +183,57 @@ async function cotarTabela(t: Tenant, cep: string): Promise<OpcaoFrete[]> {
     }));
 }
 
+/**
+ * Entrega feita pela própria loja, por faixa de CEP.
+ *
+ * Existe porque o balcão não cobre o meio-termo: quem está na mesma cidade não
+ * quer esperar três dias pelo PAC, mas também não vai buscar. A loja que tem
+ * motoboy ou frota resolve isso hoje por fora do site, no WhatsApp; aqui vira
+ * opção cotada, com preço e prazo, dentro do checkout.
+ *
+ * É **dado do tenant**, não código por loja:
+ *
+ *     [{ "prefixos": ["14"], "nome": "Motoboy Ribeirão", "preco": 1500,
+ *        "prazoDiasUteis": 0, "gratisAcima": 19900 }]
+ *
+ * Não depende de rede: o prefixo do CEP já diz se o destino está na faixa.
+ * Por isso continua aparecendo quando a CepCerto está fora do ar — é
+ * justamente a opção que a loja consegue cumprir sozinha.
+ *
+ * Prefixo vazio é descartado de propósito: `"".startsWith` casa com todo CEP
+ * do Brasil, e uma faixa mal preenchida no painel passaria a prometer motoboy
+ * em Manaus. Preferimos a faixa sumir a ela valer para o país inteiro.
+ */
+export function entregaLocal(t: Tenant, cepBruto: string, subtotalCentavos: number): OpcaoFrete[] {
+  const cep = (cepBruto ?? "").replace(/\D/g, "");
+  if (cep.length !== 8) return [];
+
+  const faixas = (t.entregaLocal as FaixaLocal[] | null) ?? [];
+  const opcoes: OpcaoFrete[] = [];
+
+  faixas.forEach((f, i) => {
+    const prefixos = (f.prefixos ?? []).map((p) => String(p).replace(/\D/g, "")).filter((p) => p.length > 0 && p.length <= 8);
+    if (!prefixos.some((p) => cep.startsWith(p))) return;
+
+    // A coluna é JSON: o schema do painel garante número, mas uma carga feita
+    // direto no banco não. Preço NaN viraria "R$ NaN" no checkout e um total
+    // NaN no pedido — a faixa some em vez de cobrar isso.
+    const preco = Math.round(Number(f.preco));
+    const prazo = Math.round(Number(f.prazoDiasUteis));
+    if (!Number.isFinite(preco) || preco < 0 || !Number.isFinite(prazo) || prazo < 0) return;
+
+    const gratis = f.gratisAcima != null && subtotalCentavos >= f.gratisAcima;
+    opcoes.push({
+      id: `local:${i}`,
+      nome: gratis ? `${f.nome} · grátis` : f.nome,
+      preco: gratis ? 0 : preco,
+      prazoDiasUteis: prazo,
+    });
+  });
+
+  return opcoes.sort((a, b) => a.preco - b.preco);
+}
+
 function retirada(t: Tenant): OpcaoFrete[] {
   if (!t.retiradaNaLoja) return [];
   return [{ id: FRETE_RETIRADA_ID, nome: "Retirar na loja", preco: 0, prazoDiasUteis: t.despachoDiasUteis }];
@@ -187,11 +243,20 @@ export async function cotarFrete(t: Tenant, cepBruto: string | null, itens: Item
   const cep = (cepBruto ?? "").replace(/\D/g, "");
   if (cep.length !== 8) return retirada(t);
 
-  let opcoes = (await cotarCepCerto(t, cep, itens)) ?? (await cotarTabela(t, cep));
+  const subtotal = itens.reduce((s, i) => s + i.precoUnitario * i.quantidade, 0);
+
+  // A entrega própria entra na mesma lista da transportadora, ordenada por
+  // preço: se o motoboy é mais barato que o PAC, ele aparece primeiro — e é
+  // ele que o "frete grátis acima de X" zera, não o PAC. Zerar sempre o
+  // Correios daria de brinde o envio mais caro que a loja tinha.
+  let opcoes = [...entregaLocal(t, cep, subtotal), ...((await cotarCepCerto(t, cep, itens)) ?? (await cotarTabela(t, cep)))]
+    .sort((a, b) => a.preco - b.preco);
 
   if (t.freteGratisAcima != null || opcoesExtra.freteGratisCupom) {
-    const subtotal = itens.reduce((s, i) => s + i.precoUnitario * i.quantidade, 0);
-    if ((opcoesExtra.freteGratisCupom || (t.freteGratisAcima != null && subtotal >= t.freteGratisAcima)) && opcoes.length) {
+    const temDireito = opcoesExtra.freteGratisCupom || (t.freteGratisAcima != null && subtotal >= t.freteGratisAcima);
+    // `preco > 0`: a faixa local pode ter zerado sozinha pelo próprio
+    // `gratisAcima`, e "Motoboy · grátis · grátis" é o rótulo que sai daí.
+    if (temDireito && opcoes.length && opcoes[0].preco > 0) {
       const maisBarata = opcoes[0];
       opcoes = [{ ...maisBarata, id: `gratis:${maisBarata.id}`, nome: `${maisBarata.nome} · grátis`, preco: 0 }, ...opcoes.slice(1)];
     }
