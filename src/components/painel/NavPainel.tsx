@@ -39,7 +39,15 @@ const ICONES = {
 
 export const SECOES: ItemNav[] = [
   { rotulo: "Visão geral", href: "/painel", icone: "visao" },
-  { rotulo: "Análises", href: "/painel/analises", icone: "analises" },
+  {
+    rotulo: "Análises",
+    href: "/painel/analises",
+    icone: "analises",
+    filhos: [
+      { rotulo: "Visão de vendas", href: "/painel/analises" },
+      { rotulo: "Atribuição", href: "/painel/analises/atribuicao" },
+    ],
+  },
   { rotulo: "Pedidos", href: "/painel/pedidos", icone: "pedidos" },
   {
     rotulo: "Produtos",

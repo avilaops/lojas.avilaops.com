@@ -865,3 +865,25 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
 .ficha-video h2 { margin-bottom: 12px; font-size: 1.05rem; font-weight: 700; }
 .ficha-video-moldura { position: relative; aspect-ratio: 16 / 9; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--muted); }
 .ficha-video-moldura iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+
+/* Gráfico de sessões por canal (Painel › Análises › Atribuição).
+   As cores das séries ficam no componente, não aqui: a sequência foi
+   conferida para daltonismo e contraste, e ter a lista em dois lugares
+   convidaria a mexer num só. */
+.graf-canais { margin: 0; }
+.graf-svg { display: block; width: 100%; height: auto; }
+.graf-grade { stroke: var(--border); stroke-width: 1; }
+.graf-eixo-texto { fill: var(--muted-foreground); font-size: 11px; }
+.graf-legenda { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 12px; font-size: .8rem; color: var(--muted-foreground); }
+.graf-legenda span { display: inline-flex; align-items: center; gap: 6px; }
+.graf-legenda i { width: 10px; height: 10px; flex: none; border-radius: 3px; }
+
+/* Tabela de canais e de campanhas. Rolagem horizontal própria: em 393px cinco
+   colunas não cabem, e deixar a página rolar de lado estraga o resto da tela. */
+.atr-tabela-rolagem { overflow-x: auto; margin-inline: -4px; }
+.atr-tabela { width: 100%; min-width: 520px; border-collapse: collapse; font-size: .875rem; }
+.atr-tabela th, .atr-tabela td { padding: 10px 8px; text-align: right; border-bottom: 1px solid var(--border); }
+.atr-tabela thead th { font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--muted-foreground); }
+.atr-tabela tbody th { text-align: left; font-weight: 600; }
+.atr-tabela tbody th small { display: block; margin-top: 2px; font-weight: 400; font-size: .72rem; color: var(--muted-foreground); }
+.atr-tabela tbody tr:last-child th, .atr-tabela tbody tr:last-child td { border-bottom: 0; }

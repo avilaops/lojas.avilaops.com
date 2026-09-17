@@ -13,14 +13,16 @@ import { ChevronLeft } from "lucide-react";
  *   e cada seção é uma página, com "voltar" no topo. A barra horizontal de sete
  *   abas terminava cortada em 393px, e para trocar de seção a pessoa arrastava
  *   uma navegação que não dá sinal de que continua.
- * - **No computador** vira coluna lateral, onde as sete opções cabem e ver
- *   todas de uma vez ajuda.
+ * - **No computador** vira coluna lateral, onde todas cabem e ver a lista
+ *   inteira de uma vez ajuda.
  */
 const SUB = [
   { slug: "marca", rotulo: "Marca" },
   { slug: "dominio", rotulo: "Domínio" },
   { slug: "entrega", rotulo: "Entrega" },
   { slug: "recebimento", rotulo: "Recebimento" },
+  { slug: "politicas", rotulo: "Políticas" },
+  { slug: "campos", rotulo: "Campos do produto" },
   { slug: "canais", rotulo: "Canais" },
   { slug: "descoberta", rotulo: "Descoberta" },
   { slug: "automacoes", rotulo: "Automações" },
@@ -45,7 +47,7 @@ export default function NavConfiguracoes() {
         </Link>
       )}
 
-      {/* Computador: as sete de uma vez. */}
+      {/* Computador: todas de uma vez. */}
       <nav className="padm-subnav hidden sm:flex" aria-label="Configurações">
         {SUB.map((s) => {
           const href = `/painel/configuracoes/${s.slug}`;

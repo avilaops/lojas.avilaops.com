@@ -3,7 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { exigirTenant, urlDaLoja } from "@/lib/tenant";
-import { dataLegivel, emParagrafos, minutosDeLeitura, publicacaoPorSlug } from "@/lib/publicacoes";
+import { dataLegivel, emParagrafos, minutosDeLeitura } from "@/lib/publicacoes";
+import { publicacaoPorSlug } from "@/lib/publicacoes-consulta";
 
 export const dynamic = "force-dynamic";
 

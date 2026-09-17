@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { tenantAtual, urlDaLoja } from "@/lib/tenant";
 import { listarCategorias, listarProdutos, produtoPublicavel } from "@/lib/catalogo";
 import { postsPublicados } from "@/lib/blog";
-import { listarPublicadas } from "@/lib/publicacoes";
+import { listarPublicadas } from "@/lib/publicacoes-consulta";
 import { politicasPublicadas } from "@/lib/politicas";
 
 export const dynamic = "force-dynamic";

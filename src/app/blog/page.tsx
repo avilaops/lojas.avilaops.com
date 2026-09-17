@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { exigirTenant } from "@/lib/tenant";
-import { dataLegivel, listarPublicadas } from "@/lib/publicacoes";
+import { dataLegivel } from "@/lib/publicacoes";
+import { listarPublicadas } from "@/lib/publicacoes-consulta";
 
 /**
  * Blog da loja.

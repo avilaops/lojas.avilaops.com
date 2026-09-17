@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
+import MedirSessao from "@/components/MedirSessao";
 import Pixels from "@/components/Pixels";
 import Consentimento from "@/components/Consentimento";
 import { pixelsDo, temRastreio } from "@/lib/pixels";
@@ -192,6 +194,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body className="flex min-h-screen flex-col">
         <Pixels p={pixels} />
+        {/* Medição da própria vitrine, no próprio domínio. `useSearchParams`
+            obriga o Suspense: sem ele a página inteira cairia em renderização
+            no navegador só por causa da medição. */}
+        <Suspense fallback={null}>
+          <MedirSessao />
+        </Suspense>
         <CartProvider slug={t.slug} painelHabilitado={premium}>
           {t.status === "SUSPENSA" && <AvisoSuspensa />}
           {t.avisoTopo && !premium && (

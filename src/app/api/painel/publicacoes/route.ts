@@ -2,7 +2,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { exigir } from "@/lib/operadores";
 import { avisarBuscadores } from "@/lib/indexnow";
-import { slugLivre } from "@/lib/publicacoes";
+import { slugLivre } from "@/lib/publicacoes-consulta";
 
 /**
  * As publicações do blog da loja.

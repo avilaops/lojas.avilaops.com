@@ -1,5 +1,5 @@
 import type { Tenant } from "@prisma/client";
-import { enderecoDo } from "./tenant";
+import type { Endereco } from "./tenant";
 import { mascararDocumento } from "@avilaops/checkout";
 
 /**
@@ -146,7 +146,10 @@ function canalDeContato(t: Tenant): string {
  * que o lojista terá de cumprir sem nunca ter feito.
  */
 export function modeloDePolitica(t: Tenant, tipo: TipoPolitica): string[] {
-  const e = enderecoDo(t);
+  // `enderecoDo` de tenant.ts faria o mesmo, mas aquele módulo importa
+  // `next/headers`: bastaria essa linha para o painel arrastar código de
+  // servidor inteiro para o navegador, já que a tela de Políticas é cliente.
+  const e = (t.endereco as Endereco | null) ?? {};
   const cidade = e.cidade ? `${e.cidade}${e.uf ? "/" + e.uf : ""}` : "nossa loja";
   const contato = canalDeContato(t);
   const regras = lerRegrasDevolucao(t.regrasDevolucao);

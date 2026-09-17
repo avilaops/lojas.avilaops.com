@@ -1,9 +1,12 @@
 import type { PublicacaoLoja } from "@prisma/client";
-import { prisma } from "./db";
-import { slugificar } from "./catalogo";
 
 /**
- * Blog da loja.
+ * Blog da loja — o que é texto puro.
+ *
+ * Este módulo não toca no banco de propósito: a tela de publicações do painel
+ * é componente de cliente e lê `resumoDe` e `minutosDeLeitura` daqui. Se a
+ * consulta morasse junto, importar o resumo arrastaria o Prisma para o
+ * navegador e o build pararia. As consultas estão em `publicacoes-consulta.ts`.
  *
  * Não confundir com `src/lib/blog.ts`, que é o blog da plataforma: aquele é
  * arquivo em disco, escrito por nós, e vive em lojas.avilaops.com/blog. Este é
@@ -80,27 +83,10 @@ export function minutosDeLeitura(corpo: string): number {
   return Math.max(1, Math.round(palavras / 200));
 }
 
-/**
- * Título → slug livre nesta loja.
- *
- * O sufixo numérico existe porque dois posts com o mesmo título são comuns
- * ("Novidades de dezembro"), e a alternativa — recusar o segundo — obrigaria o
- * lojista a inventar título para agradar o banco.
- */
-export async function slugLivre(tenantId: string, titulo: string, ignorarId: string | null = null): Promise<string> {
-  const base = slugificar(titulo) || "publicacao";
-  for (let n = 0; n < 50; n++) {
-    const tentativa = n === 0 ? base : `${base}-${n + 1}`;
-    const existe = await prisma.publicacaoLoja.findFirst({
-      where: { tenantId, slug: tentativa, ...(ignorarId ? { NOT: { id: ignorarId } } : {}) },
-      select: { id: true },
-    });
-    if (!existe) return tentativa;
-  }
-  return `${base}-${Date.now()}`;
+/** Data como a loja mostra: "17 de setembro de 2026". */
+export function dataLegivel(d: Date): string {
+  return new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "long", year: "numeric", timeZone: "America/Sao_Paulo" }).format(d);
 }
-
-// ── Leitura pública ─────────────────────────────────────────────────────
 
 /**
  * O filtro que a vitrine usa, escrito uma vez.
@@ -109,38 +95,10 @@ export async function slugLivre(tenantId: string, titulo: string, ignorarId: str
  * amanhã está publicado do ponto de vista do lojista e ainda não existe para o
  * cliente. Ter a condição em dois lugares (listagem e página) seria ter duas
  * verdades sobre quando um texto vai ao ar.
+ *
+ * Objeto simples, sem importar o Prisma: é o que permite a regra morar no
+ * módulo puro, junto do resto do que o blog significa.
  */
-function noAr(tenantId: string) {
+export function filtroNoAr(tenantId: string) {
   return { tenantId, estado: "publicada", publicadoEm: { not: null, lte: new Date() } } as const;
-}
-
-export async function listarPublicadas(tenantId: string, limite = 20, pular = 0): Promise<PublicacaoResumo[]> {
-  const posts = await prisma.publicacaoLoja.findMany({
-    where: noAr(tenantId),
-    orderBy: { publicadoEm: "desc" },
-    take: limite,
-    skip: pular,
-    select: { slug: true, titulo: true, resumo: true, corpo: true, capaUrl: true, autor: true, publicadoEm: true },
-  });
-  return posts.map((p) => ({
-    slug: p.slug,
-    titulo: p.titulo,
-    resumo: resumoDe(p),
-    capaUrl: p.capaUrl,
-    autor: p.autor,
-    publicadoEm: p.publicadoEm!,
-  }));
-}
-
-export async function contarPublicadas(tenantId: string): Promise<number> {
-  return prisma.publicacaoLoja.count({ where: noAr(tenantId) });
-}
-
-export async function publicacaoPorSlug(tenantId: string, slug: string): Promise<PublicacaoLoja | null> {
-  return prisma.publicacaoLoja.findFirst({ where: { ...noAr(tenantId), slug } });
-}
-
-/** Data como a loja mostra: "17 de setembro de 2026". */
-export function dataLegivel(d: Date): string {
-  return new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "long", year: "numeric", timeZone: "America/Sao_Paulo" }).format(d);
 }
