@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { TemaSchema, lerTema, LAYOUTS } from "./tema";
 
 test("o premium é selecionável sem trocar o padrão das outras lojas",()=>{
@@ -9,8 +9,14 @@ test("o premium é selecionável sem trocar o padrão das outras lojas",()=>{
   assert.equal(lerTema({layout:"automotivo-premium"}).layout,"automotivo-premium");
   assert.equal(lerTema({layout:"automotivo"}).layout,"automotivo");
 });
-test("conteúdo completo da identidade Brilhax passa pelo schema",()=>{
-  const plano=JSON.parse(readFileSync("output/premium/plano-identidade.json","utf8"));
+// Projeção do tenant real, tirada de dentro do container por
+// `scripts/premium-ler-producao.cjs`. Traz CNPJ e e-mail de contato, então não
+// entra no repositório: quem não gerou o arquivo não roda esta conferência, em
+// vez de vê-la falhar por um artefato que nunca deveria estar versionado.
+const PLANO="output/premium/plano-identidade.json";
+
+test("conteúdo completo da identidade Brilhax passa pelo schema",{skip:existsSync(PLANO)?false:`sem ${PLANO}; gere com scripts/premium-ler-producao.cjs`},()=>{
+  const plano=JSON.parse(readFileSync(PLANO,"utf8"));
   assert.deepEqual(TemaSchema.parse(plano.campos.tema),plano.campos.tema);
 });
 test("URLs e slugs de conteúdo rejeitam execução e injeção",()=>{
