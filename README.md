@@ -139,9 +139,10 @@ seguindo no ar. O `deploy/deploy.sh` reconstrói a base se faltar, confere o
 healthcheck e limpa só imagens dangling; foi escrito depois de isso acontecer
 em 26/08/2026.
 
-**Verificação antes e depois de publicar (17/09/2026):** o pipeline
-(`.github/workflows/deploy-production.yml`) roda `npm run typecheck` e `npm test`
-antes de assar a imagem, e depois do deploy roda
+**Verificação depois de publicar (17/09/2026):** tipos, testes e build já
+rodam dentro do `Dockerfile` (estágio `build`), inclusive em pull request. O
+que faltava era depois: o pipeline
+(`.github/workflows/deploy-production.yml`) roda, ao fim do deploy,
 `node scripts/smoke-publicacao.mjs https://lojas.avilaops.com` — que confere
 `/api/health` (com banco e `no-store`), `/v1/health` e **a folha de estilo
 seguida a partir do HTML da vitrine**. O `deploy/deploy.sh` faz a mesma

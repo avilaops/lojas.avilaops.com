@@ -8,24 +8,9 @@ on:
 permissions:
   contents: read
 jobs:
-  # Antes de assar imagem: tipos e testes. O pipeline publicava sem rodar
-  # nenhum dos dois, então um erro de contrato só aparecia no servidor.
-  verificacao:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      # --ignore-scripts: sharp e onnxruntime baixam binário próprio e não são
-      # necessários para tipos nem testes. O cliente do Prisma, sim.
-      - run: npm ci --ignore-scripts
-      - run: npx prisma generate
-      - run: npm run typecheck
-      - run: npm test
+  # Tipos, testes e build já rodam dentro do `Dockerfile` (estágio `build`),
+  # em pull request também — não há gate a acrescentar antes da imagem.
   image:
-    needs: verificacao
     permissions:
       contents: read
       packages: write

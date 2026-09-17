@@ -18,10 +18,13 @@ O smoke não se limita ao healthcheck porque `/api/health` não sabe se a folha
 de estilo existe: ele baixa o HTML da vitrine e segue o `<link>`, que é a
 falha real de 02/09/2026 (pacote sem `.next/static`, tudo 200, loja sem CSS).
 
-O pipeline também passou a rodar `npm run typecheck` e `npm test` antes de
-assar a imagem. `npm run lint` ficou de fora do bloqueio enquanto os 20 erros
-herdados (scripts `.cjs` na raiz, `packages/checkout/src/ui`) não forem
-limpos — gate que nasce vermelho é gate que alguém desliga.
+Antes de publicar não faltava nada: `npx prisma generate && npm run typecheck
+&& npm test && npm run build` já roda no estágio `build` do `Dockerfile`, e
+em pull request também (a imagem é construída e não publicada). Um job
+separado para os mesmos comandos seria a mesma verificação duas vezes, sem
+ganho de tempo — o build já falha em cerca de um minuto quando um teste cai.
+`npm run lint` continua fora do bloqueio enquanto os erros herdados (scripts
+`.cjs` na raiz, `packages/checkout/src/ui`) não forem limpos.
 
 ## Tranche 2 — fábrica de templates
 
