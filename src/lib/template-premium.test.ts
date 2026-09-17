@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { TemaSchema, lerTema, LAYOUTS } from "./tema";
 
 test("o premium é selecionável sem trocar o padrão das outras lojas",()=>{
@@ -9,15 +9,13 @@ test("o premium é selecionável sem trocar o padrão das outras lojas",()=>{
   assert.equal(lerTema({layout:"automotivo-premium"}).layout,"automotivo-premium");
   assert.equal(lerTema({layout:"automotivo"}).layout,"automotivo");
 });
-// Projeção do tenant real, tirada de dentro do container por
-// `scripts/premium-ler-producao.cjs`. Traz CNPJ e e-mail de contato, então não
-// entra no repositório: quem não gerou o arquivo não roda esta conferência, em
-// vez de vê-la falhar por um artefato que nunca deveria estar versionado.
-const PLANO="output/premium/plano-identidade.json";
-
-test("conteúdo completo da identidade Brilhax passa pelo schema",{skip:existsSync(PLANO)?false:`sem ${PLANO}; gere com scripts/premium-ler-producao.cjs`},()=>{
-  const plano=JSON.parse(readFileSync(PLANO,"utf8"));
-  assert.deepEqual(TemaSchema.parse(plano.campos.tema),plano.campos.tema);
+/* A fixture é versionada de propósito: a versão antiga lia
+ * `output/premium/plano-identidade.json`, gerado na máquina de quem montou a
+ * primeira loja premium, e o teste falhava em qualquer checkout limpo. */
+test("um tema premium preenchido inteiro atravessa o schema sem perder campo",()=>{
+  const tema=JSON.parse(readFileSync("tests/fixtures/tema-premium-completo.json","utf8"));
+  assert.deepEqual(TemaSchema.parse(tema),tema);
+  assert.equal(Object.keys(tema.premium).length,12,"a fixture tem que cobrir todo o bloco premium");
 });
 test("URLs e slugs de conteúdo rejeitam execução e injeção",()=>{
   for(const url of ['javascript:alert(1)','data:text/html,foo','//externo.com/foto','/foto\"><script>']){
