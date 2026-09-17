@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { slugificar, formatarBRL } from "@/lib/catalogo";
 import { emitirEtiqueta } from "@/lib/postagem";
 import { urlDaLoja, temaDo } from "@/lib/tenant";
+import { VALORES_LAYOUT, mesclarTema, type TemaLoja } from "@/lib/tema";
 import { resumoDeVendas } from "@/lib/relatorio";
 import { gerarRascunhoSeoCategoria, publicarSeoCategoria } from "@/lib/seo-categorias";
 import { avisarBuscadores } from "@/lib/indexnow";
@@ -63,13 +64,13 @@ export const MCP_TOOLS: McpTool[] = [
   // 2. Atualizar Marca e Layout
   {
     name: "atualizar_marca",
-    description: "Atualiza o layout da loja (dentre os 7 modelos: spotlight, mercado, conversao, classico, vitrine, editorial, minimal), cores, slogan, modo e avisos.",
+    description: `Atualiza o layout da loja (dentre os ${VALORES_LAYOUT.length} modelos: ${VALORES_LAYOUT.join(", ")}), cores, slogan, modo e avisos.`,
     inputSchema: {
       type: "object",
       properties: {
         layout: {
           type: "string",
-          enum: ["spotlight", "mercado", "distribuidora", "automotivo", "conversao", "classico", "vitrine", "editorial", "minimal"],
+          enum: VALORES_LAYOUT,
           description: "Modelo visual da página inicial da loja.",
         },
         corPrimaria: { type: "string", description: "Cor primária em formato hexadecimal (ex: #2563eb ou #c62828)." },
@@ -80,14 +81,16 @@ export const MCP_TOOLS: McpTool[] = [
       },
     },
     handler: async (args, { tenant }) => {
-      const temaAtual = temaDo(tenant);
-      const novoTema = {
-        ...temaAtual,
-        ...(args.layout ? { layout: args.layout } : {}),
-        ...(args.corPrimaria ? { corPrimaria: args.corPrimaria } : {}),
-        ...(args.modo ? { modo: args.modo } : {}),
-        ...(args.fonte ? { fonte: args.fonte } : {}),
-      };
+      // O enum acima é o que a ferramenta anuncia; validar de novo é o que
+      // impede um cliente MCP distraído de gravar um tema que a leitura
+      // seguinte descarta inteiro.
+      const novoTema = mesclarTema(temaDo(tenant), {
+        ...(args.layout ? { layout: args.layout as TemaLoja["layout"] } : {}),
+        ...(args.corPrimaria ? { corPrimaria: args.corPrimaria as string } : {}),
+        ...(args.modo ? { modo: args.modo as TemaLoja["modo"] } : {}),
+        ...(args.fonte ? { fonte: args.fonte as TemaLoja["fonte"] } : {}),
+      });
+      if (!novoTema) throw new Error(`Tema inválido. Layouts: ${VALORES_LAYOUT.join(", ")}. Cor em hexadecimal (#rrggbb).`);
 
       const atualizado = await prisma.tenant.update({
         where: { id: tenant.id },

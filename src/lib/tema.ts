@@ -71,6 +71,26 @@ export const LAYOUTS: Array<{ valor: TemaLoja["layout"]; rotulo: string; descric
 
 export type TemaLoja = z.infer<typeof TemaSchema>;
 
+/**
+ * Os layouts que existem, na ordem em que o painel oferece. Quem precisa da
+ * lista (o MCP, a landing) lê daqui em vez de repetir: em 17/09/2026 havia
+ * quatro contagens diferentes no repositório — dez no schema, "sete" na
+ * landing, "oito" num comentário e sete na descrição do MCP, cujo enum
+ * aceitava nove e deixava o Automotivo Premium fora do alcance de um agente.
+ */
+export const VALORES_LAYOUT = LAYOUTS.map((l) => l.valor);
+
+/**
+ * Aplica mudanças sobre o tema atual e devolve null se o resultado não for
+ * válido. Existe porque escrever tema sem validar não falha na hora: falha
+ * na leitura seguinte, e `lerTema` troca o tema inteiro pelo padrão — um
+ * layout inexistente vindo de fora apagaria cor, fonte e cantos da loja.
+ */
+export function mesclarTema(atual: TemaLoja, mudancas: Partial<TemaLoja>): TemaLoja | null {
+  const r = TemaSchema.safeParse({ ...atual, ...mudancas });
+  return r.success ? r.data : null;
+}
+
 const FONTES: Record<TemaLoja["fonte"], { family: string; google?: string }> = {
   sistema: { family: 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' },
   inter: { family: "Inter, system-ui, sans-serif", google: "Inter:wght@400;600;800" },

@@ -3,7 +3,14 @@
 import Image from "next/image";
 import { useState } from "react";
 
-/** Os oito layouts de `LAYOUTS` em src/lib/tema.ts, na ordem em que o painel oferece. */
+/**
+ * As composições de `LAYOUTS` (src/lib/tema.ts) que a landing mostra, na ordem
+ * em que o painel oferece. Fica de fora o `automotivo-premium`: ele não é uma
+ * home diferente, é a loja inteira (cabeçalho, categorias, galeria e carrinho
+ * lateral), e uma miniatura de home não diria o que ele é. Quem mudar esta
+ * lista mexe também no número escrito na landing — `layouts-vitrine.test.ts`
+ * cobra os dois.
+ */
 type Modelo = "classico" | "vitrine" | "editorial" | "minimal" | "spotlight" | "mercado" | "distribuidora" | "automotivo" | "conversao";
 
 const MODELOS: Array<{ id: Modelo; nome: string; resumo: string }> = [
