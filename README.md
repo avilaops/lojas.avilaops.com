@@ -152,7 +152,14 @@ seguida a partir do HTML da vitrine** e **a primeira foto de produto que a
 vitrine referencia** — essa última porque a foto não vem do pacote, vem do
 volume `/uploads`: volume não montado, remontado vazio ou com dono errado
 depois do `chown` do deploy deixa a loja de pé, respondendo 200 em tudo, com
-o catálogo inteiro de imagens quebradas. O `deploy/deploy.sh` faz a mesma
+o catálogo inteiro de imagens quebradas. A foto é buscada pelo **caminho**,
+no alvo do smoke (a URL gravada é absoluta para o domínio da plataforma, e
+segui-la mediria o site público), e com parâmetro que fura o cache, porque
+`/uploads` responde `immutable` e um 200 de borda esconderia origem vazia.
+**Essa conferência só mede algo contra uma loja**: o domínio da plataforma
+não tem `/uploads`. Defina a variável de CI `SMOKE_LOJA_URL` com o endereço
+de uma loja no ar para o pipeline rodar o smoke também contra ela; sem a
+variável, a conferência da foto não tem efeito no deploy. O `deploy/deploy.sh` faz a mesma
 conferência de CSS contra `127.0.0.1:3080` antes de declarar sucesso, e volta
 para a versão anterior se ela falhar: em 02/09/2026 subiu um pacote sem
 `.next/static`, tudo respondeu 200 e a loja ficou no ar sem CSS nenhum. O

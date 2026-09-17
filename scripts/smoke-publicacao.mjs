@@ -99,18 +99,31 @@ async function vitrineComEstilo() {
 /**
  * A primeira foto de produto que a vitrine referencia.
  *
- * Só falha quando a página **referencia** uma foto e ela não vem: loja sem
+ * Três cuidados que a primeira versão não tinha, e sem os quais isto seria
+ * decorativo ou, pior, ruidoso:
+ *
+ * 1. **Só `<img>`.** Pegar qualquer `src`/`href` com `/uploads/` alcançava o
+ *    `<link rel="manifest">` e os ícones, que o Next emite antes do corpo:
+ *    numa loja com favicon enviado, o smoke reprovava um deploy saudável por
+ *    `application/manifest+json` não ser imagem.
+ * 2. **O caminho, não a URL.** O upload é gravado absoluto para o domínio da
+ *    plataforma (`src/lib/uploads.ts`), então seguir o endereço como está
+ *    mediria o site público em vez do alvo — e um container novo, com o
+ *    volume desmontado, passaria.
+ * 3. **Furar o cache.** `/uploads` responde `max-age=31536000, immutable`;
+ *    `cache: "no-store"` do Node vira `no-cache` na rede, que a borda ignora.
+ *    Sem o parâmetro, um 200 guardado esconde origem vazia — o mesmo buraco
+ *    que `saude()` evita pedindo `no-store` ao aplicativo.
+ *
+ * Só falha quando a vitrine **referencia** uma foto e ela não vem: loja sem
  * catálogo publicado, ou domínio da plataforma (que não tem `/uploads`),
  * passa sem reclamar. Inventar exigência onde não há foto transformaria o
  * smoke num alarme que todo mundo aprende a ignorar.
  */
 async function fotosDaVitrine(html) {
-  // Não dá para procurar "/uploads/" direto no HTML: o Next serve a foto
-  // otimizada como `/_next/image?url=%2Fuploads%2F…`, com o caminho
-  // percent-encoded, e é essa a forma mais comum na vitrine. Primeiro se
-  // colhe toda referência, depois se resolve o que o Next embrulhou.
-  const caminhos = [...html.matchAll(/(?:src|href)="([^"]+)"/g)]
-    .map((m) => m[1].replace(/&amp;/g, "&"))
+  const candidatos = [...html.matchAll(/<img\b[^>]*>/gi)]
+    .map((m) => m[0].match(/\bsrc="([^"]+)"/i)?.[1] ?? "")
+    .map((href) => href.replace(/&amp;/g, "&"))
     .map((href) => {
       if (!href.includes("/_next/image")) return href;
       try {
@@ -121,16 +134,24 @@ async function fotosDaVitrine(html) {
     })
     .filter((href) => href.includes("/uploads/"));
 
-  if (!caminhos.length) return console.log("  --  a vitrine não referencia foto em /uploads (nada a conferir aqui)");
+  if (!candidatos.length) return console.log("  --  a vitrine não referencia foto em /uploads (nada a conferir aqui)");
 
-  const alvo = caminhos[0];
-  const foto = await buscar(alvo.startsWith("http") ? alvo : alvo.startsWith("/") ? alvo : `/${alvo}`);
-  if (!foto.ok) falhar(`a foto ${alvo} devolveu ${foto.status}: o volume de uploads não está servindo, e a loja está com o catálogo quebrado`);
+  let caminho = candidatos[0];
+  try {
+    caminho = new URL(candidatos[0], base).pathname;
+  } catch {
+    /* já é caminho */
+  }
+  const foto = await buscar(`${caminho}?smoke=${Date.now()}`);
+  if (!foto.ok) falhar(`a foto ${caminho} devolveu ${foto.status}: o volume de uploads não está servindo, e a loja está com o catálogo quebrado`);
   const tipo = foto.headers.get("content-type") ?? "";
-  if (!tipo.startsWith("image/")) falhar(`a foto ${alvo} veio como ${tipo}, não como imagem`);
+  if (!tipo.startsWith("image/")) falhar(`a foto ${caminho} veio como ${tipo}, não como imagem`);
   const bytes = Number(foto.headers.get("content-length") ?? 0) || (await foto.arrayBuffer()).byteLength;
-  if (bytes < 1000) falhar(`a foto ${alvo} veio com ${bytes} bytes; é arquivo truncado, não imagem`);
-  ok(`${alvo} servida com ${Math.round(bytes / 1024)} kB de ${tipo.replace("image/", "")}`);
+  // Piso baixo de propósito: SVG enviado pelo lojista não passa pelo
+  // otimizador e um ícone legítimo cabe em poucas centenas de bytes. O que
+  // não existe é imagem de 60 bytes.
+  if (bytes < 64) falhar(`a foto ${caminho} veio com ${bytes} bytes; é arquivo vazio ou truncado`);
+  ok(`${caminho} servida com ${Math.round(bytes / 1024) || 1} kB de ${tipo.replace("image/", "")}`);
 }
 
 console.log(`==> smoke em ${base}`);
