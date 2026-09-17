@@ -15,7 +15,7 @@ async function main() {
     const data={...categoria,...campos};
     await db.categoria.upsert({where:{id:data.id},create:data,update:data});
   }
-  const produtos=JSON.parse(readFileSync("../lojas.avilaops.com/output/catalogo-padrao/brilhax-catalogo-final.json","utf8"));
+  const produtos=JSON.parse(readFileSync("output/catalogo-padrao/brilhax-catalogo-final.json","utf8"));
   for(const p of produtos){
     const {busca:_busca,...data}=p;
     void _busca;

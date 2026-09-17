@@ -9,9 +9,13 @@ test("o premium é selecionável sem trocar o padrão das outras lojas",()=>{
   assert.equal(lerTema({layout:"automotivo-premium"}).layout,"automotivo-premium");
   assert.equal(lerTema({layout:"automotivo"}).layout,"automotivo");
 });
-test("conteúdo completo da identidade Brilhax passa pelo schema",()=>{
-  const plano=JSON.parse(readFileSync("output/premium/plano-identidade.json","utf8"));
-  assert.deepEqual(TemaSchema.parse(plano.campos.tema),plano.campos.tema);
+/* A fixture é versionada de propósito: a versão antiga lia
+ * `output/premium/plano-identidade.json`, gerado na máquina de quem montou a
+ * primeira loja premium, e o teste falhava em qualquer checkout limpo. */
+test("um tema premium preenchido inteiro atravessa o schema sem perder campo",()=>{
+  const tema=JSON.parse(readFileSync("tests/fixtures/tema-premium-completo.json","utf8"));
+  assert.deepEqual(TemaSchema.parse(tema),tema);
+  assert.equal(Object.keys(tema.premium).length,12,"a fixture tem que cobrir todo o bloco premium");
 });
 test("URLs e slugs de conteúdo rejeitam execução e injeção",()=>{
   for(const url of ['javascript:alert(1)','data:text/html,foo','//externo.com/foto','/foto\"><script>']){

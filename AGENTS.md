@@ -15,6 +15,12 @@
   (hoje só `motopecas`: garagem, compatibilidade, código original). O que o
   bloco mostra vem do catálogo (`Produto.compatibilidade`), nunca de uma lista
   por loja. Ver `src/lib/motos.ts`.
+- **Template compõe, não personaliza.** `Tenant.tema.layout` escolhe a
+  composição; o texto e as imagens do template são campos do tema
+  (`tema.premium` no Automotivo Premium), editados no painel. Nenhum slug de
+  categoria escrito no componente: o que aponta para o catálogo se resolve pelo
+  catálogo (`src/lib/etapas-premium.ts`, `src/lib/trilha-automotiva.ts`) e some
+  quando a loja não tem aquilo.
 - **Automação é n8n.** Código emite evento (`src/lib/eventos.ts`); o que fazer
   com ele é fluxo.
 - **Português nos nomes e comentários**, como no resto do monorepo.
