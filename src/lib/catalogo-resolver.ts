@@ -1,6 +1,7 @@
 import type { ItemCarrinho } from "@avilaops/checkout";
 import { prisma } from "./db";
 import { INCLUIR_OFERTA, ofertaDaVariante } from "./catalogo-oferta";
+import { dispensavelADistancia } from "./produto-regras";
 
 /** IDs antigos de produtos simples continuam aceitos; a saída sempre identifica a variante. */
 export async function resolverItensPadronizados(tenantId: string, pedidos: Array<{ id: string; quantidade: number }>): Promise<ItemCarrinho[]> {
@@ -17,7 +18,10 @@ export async function resolverItensPadronizados(tenantId: string, pedidos: Array
     return { item, p, v };
   });
   return resolvidos.flatMap(r=>{
-    if (!r || !r.v.compravel || (r.v.estoque!=null && r.v.estoque < quantidades.get(r.v.id)!)) return [];
+    // Controle especial nunca entra no carrinho, venha o id de onde vier:
+    // a vitrine já não oferece o botão, e aqui é onde isso deixa de ser
+    // aparência. Ver dispensavelADistancia em produto-regras.
+    if (!r || !r.v.compravel || !dispensavelADistancia(r.p) || (r.v.estoque!=null && r.v.estoque < quantidades.get(r.v.id)!)) return [];
     const { p,v,item } = r;
     return [{ id: `${p.id}:${v.id}`, nome: v.padrao ? p.nome : `${p.nome} · ${v.nome}`, quantidade: item.quantidade,
       precoUnitario: v.precoCentavos, sku: v.sku ?? undefined, imagem: v.imagem ?? p.imagens[0],

@@ -5,6 +5,7 @@ import { formatarBRL } from "@/lib/catalogo";
 import AddToCartButton from "@/components/cart/AddToCartButton";
 import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
 import { encaixe, lerCompatibilidade, type Moto } from "@/lib/motos";
+import { exigeReceita, lerMedicamento, vendaRemotaProibida } from "@/lib/farmacia";
 
 export default function ProductCard({ produto, vende, whatsapp, moto = null }: { produto: Produto; vende: boolean; whatsapp: string | null; moto?: Moto | null }) {
   const serve = moto != null && encaixe(produto.compatibilidade, moto) === "serve";
@@ -22,6 +23,13 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null }: {
   const disponivel = regras.compravel(produto);
   const esgotado = regras.esgotado(produto);
   const estoqueBaixo = regras.estoqueBaixo(produto);
+  // Farmácia: a tarja decide se o item pode sair pela internet. Medicamento sob
+  // controle especial continua na vitrine — quem procura tem que achar e ver o
+  // preço — mas sem botão de comprar, porque a RDC 44/2009 proíbe a dispensação
+  // a distância dele, não a sua exibição. Ver src/lib/farmacia.ts.
+  const medicamento = lerMedicamento(produto);
+  const somenteNaLoja = vendaRemotaProibida(medicamento.tarja);
+  const pedeReceita = exigeReceita(medicamento.tarja);
 
   const percentualDesconto =
     produto.precoDeCentavos && produto.precoDeCentavos > produto.precoCentavos
@@ -80,6 +88,15 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null }: {
               Esgotado
             </span>
           )}
+          {somenteNaLoja ? (
+            <span className="rounded-md bg-zinc-900 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
+              Só na loja física
+            </span>
+          ) : pedeReceita ? (
+            <span className="rounded-md bg-red-700 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
+              Receita
+            </span>
+          ) : null}
         </div>
       </Link>
       <div className="flex flex-1 flex-col gap-2 p-4">
@@ -104,7 +121,14 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null }: {
             <p className="text-xl font-black tracking-tight text-foreground">{formatarBRL(produto.precoCentavos)}</p>
           )}
         </div>
-        {sobConsulta ? (
+        {somenteNaLoja ? (
+          // Sem carrinho e sem WhatsApp: o que a norma veda é a venda a
+          // distância, e oferecer o pedido por mensagem seria a mesma infração
+          // por outro meio. O caminho é a página, que explica, e a loja física.
+          <Link href={`/produtos/${produto.slug}`} className="btn-secundario w-full text-xs">
+            Ver informações
+          </Link>
+        ) : sobConsulta ? (
           // Sem preço não há carrinho: o caminho é falar com a loja. É assim
           // que peça de catálogo técnico é comprada mesmo quando tem preço.
           whatsapp ? (

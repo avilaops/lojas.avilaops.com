@@ -30,6 +30,7 @@ export default async function Pagina({ params }: { params: Promise<{ id: string 
         id={produto.id}
         nome={produto.nome}
         temVariacoes={produto.opcoes.length > 0}
+        segmento={loja.segmento}
         urlNaLoja={produto.ativo ? `${urlDaLoja(loja)}/produtos/${produto.slug}` : null}
       />
     </>

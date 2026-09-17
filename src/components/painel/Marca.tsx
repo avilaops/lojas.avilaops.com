@@ -68,6 +68,15 @@ export default function Marca({
   const [identidade, setIdentidade] = useState<IdentidadeLoja>(loja.identidade);
   const [tema, setTema] = useState<TemaLoja>({ ...loja.tema });
   const [segmento, setSegmento] = useState(loja.segmento);
+  // Responsável técnico: exigência da RDC 44/2009 para farmácia virtual, e o
+  // que o rodapé da loja exibe. Fica no mesmo bloco do ramo porque é o ramo que
+  // o torna obrigatório.
+  const [farmacia, setFarmacia] = useState({
+    farmaceuticoResponsavel: loja.farmaceuticoResponsavel ?? "",
+    farmaceuticoCrf: loja.farmaceuticoCrf ?? "",
+    licencaSanitaria: loja.licencaSanitaria ?? "",
+    autorizacaoAnvisa: loja.autorizacaoAnvisa ?? "",
+  });
   const [vitrine, setVitrine] = useState({ slogan: loja.slogan ?? "", logoUrl: loja.logoUrl ?? "", bannerUrl: loja.bannerUrl ?? "" });
   const [contato, setContato] = useState({ avisoTopo: loja.avisoTopo ?? "", whatsapp: loja.whatsapp ?? "", emailContato: loja.emailContato ?? "", dominioPrincipal: loja.dominioPrincipal ?? "" });
   const [jsonIdentidade, setJsonIdentidade] = useState("");
@@ -229,10 +238,11 @@ export default function Marca({
             </div>
           </Campo>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Campo label="Ramo da loja" ajuda="Peças para motos liga a garagem: o cliente escolhe a moto e vê só o que serve.">
+            <Campo label="Ramo da loja" ajuda="Peças para motos liga a garagem: o cliente escolhe a moto e vê só o que serve. Farmácia liga tarja, princípio ativo e o farmacêutico responsável no rodapé.">
               <select className={inputClasse} value={segmento} onChange={(e) => setSegmento(e.target.value)}>
                 <option value="geral">Loja geral</option>
                 <option value="motopecas">Peças e acessórios para motos</option>
+                <option value="farmacia">Farmácia e drogaria</option>
               </select>
             </Campo>
             <Campo label="Categoria sem foto" ajuda="Vale para os atalhos da página inicial. No menu e no catálogo todas aparecem.">
@@ -268,7 +278,36 @@ export default function Marca({
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={tema.premium?.mostrarNome ?? false} onChange={e => setTema({...tema,premium:{...tema.premium,mostrarNome:e.target.checked}})}/> Mostrar o nome ao lado do símbolo</label>
             <EditorEtapas etapas={tema.premium?.etapas ?? []} categorias={categorias} aoAlterar={etapas => setTema({...tema,premium:{...tema.premium,etapas}})}/>
           </fieldset>}
-          {rodape(() => salvar({ tema, segmento, slogan: vitrine.slogan, ...(vitrine.logoUrl ? { logoUrl: vitrine.logoUrl } : {}), bannerUrl: vitrine.bannerUrl || null }, "Vitrine salva."))}
+          {segmento === "farmacia" && (
+            <fieldset className="mt-6 grid gap-4 rounded-xl border border-border p-4 sm:grid-cols-2">
+              <legend className="px-2 text-sm font-semibold">Responsável técnico</legend>
+              <p className="sm:col-span-2 text-xs text-muted-foreground">
+                Farmácia que dispensa a distância precisa exibir o farmacêutico responsável e o CRF
+                (RDC 44/2009). Estes dados aparecem no rodapé de toda página da loja. Sem eles, o
+                rodapé mostra apenas o aviso legal — nunca um nome que não foi informado.
+              </p>
+              <Campo label="Farmacêutico(a) responsável">
+                <input className={inputClasse} value={farmacia.farmaceuticoResponsavel} onChange={(e) => setFarmacia({ ...farmacia, farmaceuticoResponsavel: e.target.value })} placeholder="Maria Souza" />
+              </Campo>
+              <Campo label="CRF">
+                <input className={inputClasse} value={farmacia.farmaceuticoCrf} onChange={(e) => setFarmacia({ ...farmacia, farmaceuticoCrf: e.target.value })} placeholder="CRF-SP 12345" />
+              </Campo>
+              <Campo label="Licença sanitária" ajuda="Número do alvará da vigilância sanitária local.">
+                <input className={inputClasse} value={farmacia.licencaSanitaria} onChange={(e) => setFarmacia({ ...farmacia, licencaSanitaria: e.target.value })} />
+              </Campo>
+              <Campo label="AFE (Anvisa)" ajuda="Autorização de Funcionamento de Empresa, se a loja tiver.">
+                <input className={inputClasse} value={farmacia.autorizacaoAnvisa} onChange={(e) => setFarmacia({ ...farmacia, autorizacaoAnvisa: e.target.value })} />
+              </Campo>
+            </fieldset>
+          )}
+          {rodape(() => salvar({ tema, segmento,
+            ...(segmento === "farmacia" ? {
+              farmaceuticoResponsavel: farmacia.farmaceuticoResponsavel.trim() || null,
+              farmaceuticoCrf: farmacia.farmaceuticoCrf.trim() || null,
+              licencaSanitaria: farmacia.licencaSanitaria.trim() || null,
+              autorizacaoAnvisa: farmacia.autorizacaoAnvisa.trim() || null,
+            } : {}),
+            slogan: vitrine.slogan, ...(vitrine.logoUrl ? { logoUrl: vitrine.logoUrl } : {}), bannerUrl: vitrine.bannerUrl || null }, "Vitrine salva."))}
         </Secao>
       </>
     );

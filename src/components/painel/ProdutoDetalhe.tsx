@@ -18,11 +18,13 @@ import QualidadeProduto from "./QualidadeProduto";
  * A grade de variações continua aparecendo por cima, porque ali o lojista está
  * no meio de uma edição e voltar para a lista perderia o contexto.
  */
-export default function ProdutoDetalhe({ id, nome, urlNaLoja, temVariacoes }: {
+export default function ProdutoDetalhe({ id, nome, urlNaLoja, temVariacoes, segmento }: {
   id: string;
   nome: string;
   urlNaLoja: string | null;
   temVariacoes: boolean;
+  /** Ramo da loja: decide se o formulário mostra os campos do medicamento. */
+  segmento: string;
 }) {
   const router = useRouter();
   const [grade, setGrade] = useState(false);
@@ -60,6 +62,7 @@ export default function ProdutoDetalhe({ id, nome, urlNaLoja, temVariacoes }: {
       <EditarProduto
         key={revisao}
         produtoId={id}
+        segmento={segmento}
         aoFechar={() => router.push("/painel/produtos")}
         aoSalvar={(m) => { setOk(m); setRevisao(r=>r+1); router.refresh(); }}
       />

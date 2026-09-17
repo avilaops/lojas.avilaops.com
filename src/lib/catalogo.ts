@@ -7,6 +7,7 @@ import { INCLUIR_CATALOGO } from "./catalogo-qualidade";
 import { encaixe, lerCompatibilidade, type Moto } from "./motos";
 import type { TemaLoja } from "./tema";
 import { publicavel, WHERE_COMPLETO } from "./produto-regras";
+import { equivalentes as equivalentesFarmacia } from "./farmacia";
 
 export type ProdutoComCategoria = Produto & { categoria: Categoria | null };
 
@@ -487,4 +488,40 @@ export async function provaSocialDa(tenantId: string): Promise<ProvaSocial> {
     total: resumo._count._all,
     avaliacoes: avaliacoes.map((a) => ({ id: a.id, nome: a.nome, nota: a.nota, texto: a.texto ?? "", produtoNome: a.produto.nome, produtoSlug: a.produto.slug, criadoEm: a.criadoEm })),
   };
+}
+
+/**
+ * As outras caixas com o mesmo princípio ativo (segmento "farmacia").
+ *
+ * A consulta é por igualdade insensível a caixa, que o índice
+ * `Produto_tenantId_principioAtivo_idx` atende, e o refinamento fino (acento,
+ * grafia do sal, mesma apresentação) acontece em memória sobre esse punhado de
+ * linhas — não sobre o catálogo inteiro. Numa drogaria de dez mil itens a
+ * diferença entre as duas coisas é a página do produto abrir ou não.
+ *
+ * O `equals` pega "Dipirona" e "dipirona"; o `equivalentes` de farmacia.ts
+ * resolve "Dipirona Monoidratada" vs "dipirona mono-hidratada", que é o que os
+ * ERPs de fato entregam. Quem escreveu a substância de um jeito muito diferente
+ * simplesmente não aparece — e é melhor faltar um equivalente do que sugerir a
+ * dose errada.
+ */
+export async function equivalentesDoProduto(
+  tenantId: string,
+  produto: { id: string; principioAtivo: string | null; apresentacao: string | null },
+  limite = 6,
+) {
+  if (!produto.principioAtivo) return [];
+  const candidatos = await prisma.produto.findMany({
+    where: {
+      tenantId,
+      ativo: true,
+      id: { not: produto.id },
+      principioAtivo: { equals: produto.principioAtivo, mode: "insensitive" },
+    },
+    select: { id: true, slug: true, nome: true, marca: true, precoCentavos: true, principioAtivo: true, apresentacao: true, tarja: true, tipoMedicamento: true, registroAnvisa: true },
+    // Mais barato primeiro: é a pergunta que traz a pessoa até aqui.
+    orderBy: [{ precoCentavos: "asc" }],
+    take: 50,
+  });
+  return equivalentesFarmacia(produto, candidatos).slice(0, limite);
 }

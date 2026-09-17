@@ -4,6 +4,7 @@ import { enderecoCompleto } from "@/lib/tenant";
 import { PreferenciasCookies } from "@/components/Consentimento";
 import { pixelsDo, temRastreio } from "@/lib/pixels";
 import { mascararDocumento } from "@avilaops/checkout";
+import { AVISO_MEDICAMENTO, lerResponsavel, responsavelCompleto } from "@/lib/farmacia";
 
 /**
  * Rodapé. O "Loja por Avila Ops" não é opcional nem negociável por desconto
@@ -17,6 +18,19 @@ export default function Footer({ tenant, categorias }: { tenant: Tenant; categor
   // o Decreto 7.962/2013 exige endereço físico de quem vende pela internet.
   const endereco = tenant.enderecoPublico ? enderecoCompleto(tenant) : "";
   const enderecoLegal = enderecoCompleto(tenant);
+  /**
+   * Farmácia virtual não é uma loja com produtos de farmácia: é um
+   * estabelecimento regulado. A RDC 44/2009 (art. 55) exige que o site exiba o
+   * farmacêutico responsável com o CRF e a licença sanitária, e a Lei 9.294/96
+   * pede o aviso de medicamento em qualquer peça que os anuncie.
+   *
+   * Fica aqui, no rodapé que toda página monta, pelo mesmo motivo que o CNPJ
+   * já fica: depender de o lojista escrever isso numa página "sobre" é depender
+   * de ele lembrar, e quem descobre o esquecimento é a fiscalização.
+   */
+  const farmacia = tenant.segmento === "farmacia";
+  const responsavel = lerResponsavel(tenant);
+
   const identificacao = [
     tenant.razaoSocial ?? tenant.nome,
     tenant.cnpj ? `CNPJ ${mascararDocumento(tenant.cnpj)}` : "",
@@ -60,6 +74,25 @@ export default function Footer({ tenant, categorias }: { tenant: Tenant; categor
           </ul>
         </div>
       </div>
+      {farmacia && (
+        <div className="rodape-farmacia border-t border-border">
+          <div className="container-loja py-5 text-xs text-muted-foreground">
+            {responsavelCompleto(responsavel) ? (
+              <p>
+                Farmacêutico(a) responsável: <strong>{responsavel.nome}</strong> · {responsavel.crf}
+                {responsavel.licencaSanitaria && <> · Licença sanitária {responsavel.licencaSanitaria}</>}
+                {responsavel.autorizacaoAnvisa && <> · AFE {responsavel.autorizacaoAnvisa}</>}
+              </p>
+            ) : (
+              // Sem responsável cadastrado o rodapé não inventa um nome nem
+              // finge que está tudo certo: fica o aviso legal, que vale sempre,
+              // e o painel cobra o resto de quem pode preencher.
+              null
+            )}
+            <p className="rodape-farmacia-aviso">{AVISO_MEDICAMENTO}</p>
+          </div>
+        </div>
+      )}
       <div className="border-t border-border">
         <div className="container-loja flex flex-col items-center justify-between gap-2 py-4 text-xs text-muted-foreground sm:flex-row">
           <span>

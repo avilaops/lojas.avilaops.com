@@ -60,8 +60,13 @@ export const TenantEntradaSchema = z.object({
   tema: TemaSchema.partial().optional(),
   identidade: IdentidadeSchema.partial().optional(),
   slogan: z.string().max(140).optional(),
-  /** "geral" ou "motopecas" (garagem, compatibilidade, código original). Ver src/lib/motos.ts. */
-  segmento: z.enum(["geral", "motopecas"]).optional(),
+  /**
+   * O ramo, que liga blocos de vitrine específicos sem código por loja:
+   * "motopecas" (garagem, compatibilidade, código original — src/lib/motos.ts)
+   * e "farmacia" (tarja, princípio ativo, equivalentes, responsável técnico —
+   * src/lib/farmacia.ts). "geral" é a loja comum.
+   */
+  segmento: z.enum(["geral", "motopecas", "farmacia"]).optional(),
   avisoTopo: z.string().trim().max(120).nullable().optional(),
   sobre: z.string().max(4000).optional(),
   /** Crawlers de treinamento de IA. Não muda nada na busca; ver descoberta.ts. */
@@ -80,6 +85,14 @@ export const TenantEntradaSchema = z.object({
     .refine(validarCnpj, "CNPJ inválido")
     .nullable()
     .optional(),
+  /**
+   * Responsável técnico da farmácia (RDC 44/2009, art. 55). Sem ele o rodapé
+   * da loja de farmácia mostra só o aviso legal — nunca um nome inventado.
+   */
+  farmaceuticoResponsavel: z.string().trim().min(2).max(120).nullable().optional(),
+  farmaceuticoCrf: z.string().trim().min(3).max(40).nullable().optional(),
+  licencaSanitaria: z.string().trim().min(2).max(60).nullable().optional(),
+  autorizacaoAnvisa: z.string().trim().min(2).max(40).nullable().optional(),
   instagram: z.string().url().optional(),
   endereco: EnderecoSchema.optional(),
   horario: z.string().max(140).optional(),
@@ -145,6 +158,24 @@ export const ProdutoEntradaSchema = z.object({
   larguraCm: z.number().positive().optional(),
   comprimentoCm: z.number().positive().optional(),
   atributos: z.record(z.string(), z.unknown()).optional(),
+  // Farmácia (segmento farmacia). Ver src/lib/farmacia.ts.
+  //
+  // A tarja é o único campo aqui que restringe a venda, e por isso é enum
+  // fechado: "vermelha-retencao" e "preta" tiram o item do carrinho em toda a
+  // vitrine. Um typo de importação vira "nenhuma" e o painel cobra o acerto —
+  // ver `pendenciasDe`.
+  tarja: z.enum(["nenhuma", "livre", "vermelha", "vermelha-retencao", "preta"]).optional(),
+  principioAtivo: z.string().trim().max(160).nullable().optional(),
+  apresentacao: z.string().trim().max(120).nullable().optional(),
+  /// 13 dígitos; guardado sem máscara, como o CNPJ.
+  registroAnvisa: z
+    .string()
+    .transform((v) => v.replace(/\D/g, ""))
+    .refine((v) => v === "" || v.length === 13, "Registro Anvisa tem 13 dígitos")
+    .transform((v) => (v === "" ? null : v))
+    .nullable()
+    .optional(),
+  tipoMedicamento: z.enum(["referencia", "generico", "similar", "novo", "fitoterapico", "manipulado"]).nullable().optional(),
   // Peças por moto (segmento motopecas). Vazio = universal.
   codigoOriginal: z.string().trim().max(60).nullable().optional(),
   codigosEquivalentes: z.array(z.string().trim().min(1).max(60)).max(30).optional(),

@@ -1,4 +1,5 @@
 import type { Prisma } from "@prisma/client";
+import { lerTarja, vendaRemotaProibida } from "./farmacia";
 
 /**
  * O que um produto pode fazer na vitrine: as regras, num lugar só.
@@ -11,13 +12,14 @@ import type { Prisma } from "@prisma/client";
  * produtos essas diferenças deixam de ser detalhe: viram o produto que o
  * Google anuncia e a loja não vende.
  *
- * Cinco perguntas, cada uma com uma resposta:
+ * Seis perguntas, cada uma com uma resposta:
  *
- *   sobConsulta       não tem preço; existe para ser encontrado e negociado
- *   emEstoque         a loja diz que tem
- *   compravel         entra no carrinho (ativo, com preço, com estoque)
- *   publicavel        vale uma página pública, no sitemap e sem noindex
- *   elegivelMerchant  o Google aceitaria (foto e preço são obrigatórios lá)
+ *   sobConsulta           não tem preço; existe para ser encontrado e negociado
+ *   emEstoque             a loja diz que tem
+ *   compravel             entra no carrinho (ativo, com preço, com estoque)
+ *   publicavel            vale uma página pública, no sitemap e sem noindex
+ *   elegivelMerchant      o Google aceitaria (foto e preço são obrigatórios lá)
+ *   dispensavelADistancia a lei deixa sair pela internet (farmácia)
  *
  * Tudo puro, sem Prisma e sem React: serve ao servidor, ao card e ao teste.
  * Os fragmentos `WHERE_*` são a mesma regra na forma que o banco entende,
@@ -85,6 +87,22 @@ export function disponibilidadeMerchant(p: Pick<ProdutoRegras, "disponibilidade"
 export function disponibilidadeSchema(p: Pick<ProdutoRegras, "disponibilidade" | "estoque">): "InStock" | "BackOrder" | "OutOfStock" {
   const d = disponibilidadeMerchant(p);
   return d === "in_stock" ? "InStock" : d === "backorder" ? "BackOrder" : "OutOfStock";
+}
+
+/**
+ * Pode ser dispensado a distância?
+ *
+ * Medicamento sob controle especial (tarja preta, tarja vermelha com retenção)
+ * não pode: RDC 44/2009, art. 62. É a única regra daqui que não fala de
+ * estoque nem de preço — fala do que a lei permite —, e por isso vale nos dois
+ * lados. A tela esconde o botão; o servidor recusa o item mesmo que alguém
+ * poste o id direto no checkout, que é onde esconder o botão não adianta.
+ *
+ * Fica separada de `compravel` de propósito: um item barrado aqui continua
+ * ativo, com preço e com estoque. O que ele não pode é sair pela internet.
+ */
+export function dispensavelADistancia(p: { tarja?: string | null }): boolean {
+  return !vendaRemotaProibida(lerTarja(p.tarja));
 }
 
 /** `compravel`, na forma que o Prisma entende (sem a quantidade). */

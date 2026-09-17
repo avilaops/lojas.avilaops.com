@@ -808,3 +808,53 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
    borda direita já diz isso melhor. */
 .nav-loja-tira { scrollbar-width: none; -ms-overflow-style: none; }
 .nav-loja-tira::-webkit-scrollbar { display: none; }
+
+/* ── Farmácia e drogaria (layout "farmacia" e segmento "farmacia") ─────────
+   A cor das tarjas não vem do tema da loja: vermelho e preto são o que a
+   embalagem usa e o que o comprador reconhece de longe. Uma farmácia de
+   identidade azul não pode ter tarja azul. */
+.farmacia-abertura { padding: clamp(2.5rem, 6vw, 4rem) 0 2rem; background: color-mix(in srgb, var(--primary) 6%, var(--background)); }
+.farmacia-abertura h1 { margin-top: .5rem; font-size: clamp(1.75rem, 4vw, 2.5rem); font-weight: 800; letter-spacing: -.02em; }
+.farmacia-abertura > div > p:not(.home-selo) { max-width: 38rem; margin-top: .75rem; line-height: 1.6; color: var(--muted-foreground); }
+.farmacia-busca { display: flex; align-items: center; gap: .5rem; max-width: 34rem; margin-top: 1.5rem; padding: .375rem .375rem .375rem .875rem; border: 1px solid var(--border); border-radius: 999px; background: var(--card); }
+.farmacia-busca svg { width: 1.05rem; height: 1.05rem; flex: none; color: var(--muted-foreground); }
+.farmacia-busca input { flex: 1; min-width: 0; height: 2.5rem; border: 0; background: transparent; font-size: .9375rem; outline: none; color: var(--foreground); }
+.farmacia-busca .btn-primario { height: 2.5rem; padding-inline: 1.125rem; border-radius: 999px; font-size: .8125rem; }
+.farmacia-necessidades { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
+.farmacia-necessidades a { display: inline-flex; align-items: center; height: 2.125rem; padding-inline: .875rem; border: 1px solid var(--border); border-radius: 999px; background: var(--card); font-size: .8125rem; font-weight: 600; transition: border-color .2s, background .2s; }
+.farmacia-necessidades a:hover { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 10%, var(--card)); }
+.farmacia-responsavel-topo { display: flex; align-items: center; gap: .4rem; margin-top: 1.25rem; font-size: .8125rem; color: var(--muted-foreground); }
+.farmacia-responsavel-topo svg { width: .95rem; height: .95rem; flex: none; }
+.farmacia-orientacao { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; margin-top: 3rem; padding: 1.25rem 1.5rem; border: 1px solid var(--border); border-radius: calc(var(--radius) * 1.5); background: var(--card); }
+.farmacia-orientacao > svg { width: 1.75rem; height: 1.75rem; flex: none; color: var(--primary); }
+.farmacia-orientacao > div { flex: 1 1 18rem; }
+.farmacia-orientacao h2 { font-size: 1rem; font-weight: 700; }
+.farmacia-orientacao p { margin-top: .25rem; font-size: .8125rem; line-height: 1.55; color: var(--muted-foreground); }
+
+.medicamento-tarja { border-radius: calc(var(--radius) * 1.2); padding: .75rem .875rem; font-size: .8125rem; line-height: 1.5; margin-bottom: 1rem; border-left: 4px solid currentColor; }
+.medicamento-tarja-livre { background: color-mix(in srgb, #0ea5e9 10%, var(--card)); color: #0369a1; }
+[data-ck-theme="dark"] .medicamento-tarja-livre { color: #7dd3fc; }
+.medicamento-tarja-vermelha { background: color-mix(in srgb, #dc2626 10%, var(--card)); color: #b91c1c; }
+[data-ck-theme="dark"] .medicamento-tarja-vermelha { color: #fca5a5; }
+.medicamento-tarja-vermelha-retencao, .medicamento-tarja-preta { background: color-mix(in srgb, #18181b 10%, var(--card)); color: #18181b; }
+[data-ck-theme="dark"] .medicamento-tarja-vermelha-retencao, [data-ck-theme="dark"] .medicamento-tarja-preta { color: #e4e4e7; }
+.medicamento-ficha { display: grid; gap: .5rem; font-size: .8125rem; }
+.medicamento-ficha > div { display: grid; grid-template-columns: 9rem 1fr; gap: .75rem; padding-block: .375rem; border-top: 1px solid var(--border); }
+.medicamento-ficha dt { color: var(--muted-foreground); }
+.medicamento-ficha a { font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.medicamento-presencial { border-radius: calc(var(--radius) * 1.2); border: 1px solid var(--border); padding: .875rem 1rem; font-size: .8125rem; line-height: 1.55; color: var(--muted-foreground); }
+.medicamento-equivalentes { margin-top: 1.5rem; }
+.medicamento-equivalentes h3 { font-size: .9375rem; font-weight: 700; }
+.medicamento-equivalentes-nota { margin-top: .25rem; font-size: .75rem; line-height: 1.5; color: var(--muted-foreground); }
+.medicamento-equivalentes ul { display: grid; gap: .375rem; margin-top: .75rem; }
+.medicamento-equivalentes a { display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem; padding: .625rem .75rem; border: 1px solid var(--border); border-radius: calc(var(--radius) * 1.2); background: var(--card); font-size: .8125rem; transition: border-color .2s; }
+.medicamento-equivalentes a:hover { border-color: var(--primary); }
+.medicamento-eq-nome { flex: 1 1 12rem; font-weight: 600; }
+.medicamento-eq-nome em { margin-left: .4rem; font-style: normal; font-size: .66rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted-foreground); }
+.medicamento-eq-apresentacao { color: var(--muted-foreground); }
+.medicamento-eq-preco { margin-left: auto; font-weight: 700; white-space: nowrap; }
+.medicamento-eq-preco strong { margin-left: .4rem; color: #15803d; }
+[data-ck-theme="dark"] .medicamento-eq-preco strong { color: #4ade80; }
+
+.rodape-farmacia p { line-height: 1.6; }
+.rodape-farmacia-aviso { margin-top: .5rem; font-size: .6875rem; letter-spacing: .04em; }

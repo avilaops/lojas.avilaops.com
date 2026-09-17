@@ -59,6 +59,20 @@ model Tenant {
    * e busca por código original. "geral" é a loja comum.
    */
   segmento   String  @default("geral")
+  /**
+   * Responsável técnico da farmácia (segmento "farmacia").
+   *
+   * RDC 44/2009, art. 55: farmácia que dispensa a distância só existe
+   * legalmente com farmacêutico responsável identificado, CRF visível e
+   * licença sanitária declarada. É campo do tenant, e não texto solto numa
+   * página "sobre", pelo mesmo motivo que o CNPJ já é: o rodapé monta
+   * sozinho e ninguém pode esquecer de escrever.
+   */
+  farmaceuticoResponsavel String?
+  farmaceuticoCrf         String? // "CRF-SP 12345"
+  licencaSanitaria        String? // nº do alvará/licença da vigilância sanitária
+  autorizacaoAnvisa       String? // AFE — Autorização de Funcionamento de Empresa
+
   /// Barra fina acima do cabeçalho. Um texto curto, o mesmo em toda a loja:
   /// é o lugar de "frete grátis acima de X" e de aviso de prazo em data
   /// especial, sem ninguém pedir uma página nova.
@@ -262,6 +276,26 @@ model Produto {
   codigoOriginal      String? // código OEM do fabricante da moto
   codigosEquivalentes String[] @default([]) // cross-reference: outras marcas/códigos
   compatibilidade     Json     @default("[]") // [{ marca, modelo, anoDe?, anoAte? }]
+  // Farmácia e drogaria (segmento "farmacia"). Ver src/lib/farmacia.ts.
+  //
+  // A tarja é o único destes campos que muda o que a loja PODE fazer: tarja
+  // preta e vermelha com retenção são substâncias sob controle especial, e a
+  // venda pela internet delas é proibida (RDC 44/2009, art. 62). Por isso o
+  // padrão é "nenhuma" — a esmagadora maioria do catálogo de uma drogaria
+  // (fralda, shampoo, dermocosmético) não é medicamento e não restringe nada.
+  /// nenhuma | livre | vermelha | vermelha-retencao | preta
+  tarja               String   @default("nenhuma")
+  /// Substância, como está na caixa: "Dipirona monoidratada". É por ela que o
+  /// comprador acha o genérico do que o médico receitou.
+  principioAtivo      String?
+  /// Dose e quantidade: "500 mg · 20 comprimidos". Junto com o princípio
+  /// ativo, é o que permite afirmar que dois itens são intercambiáveis.
+  apresentacao        String?
+  /// Registro do medicamento na Anvisa, 13 dígitos, sem máscara.
+  registroAnvisa      String?
+  /// referencia | generico | similar | novo | fitoterapico | manipulado
+  tipoMedicamento     String?
+
   /// Nomes das opções de variação, na ordem de exibição: ["Tamanho", "Cor"].
   /// Vazio = produto simples (estoque no próprio produto).
   opcoes              String[] @default([])
@@ -296,6 +330,10 @@ model Produto {
   /// Ver 20260910200000_busca_trgm_e_categoria.
   @@index([busca(ops: raw("gin_trgm_ops"))], type: Gin, map: "Produto_busca_trgm_idx")
   @@index([tenantId, categoriaId, destaque, nome])
+  /// Equivalentes por substância: a página do produto pergunta "quem mais tem
+  /// este princípio ativo?" a cada visita, e sem índice isso vira varredura do
+  /// catálogo inteiro numa drogaria de dez mil itens.
+  @@index([tenantId, principioAtivo])
 }
 
 enum PedidoStatus {
