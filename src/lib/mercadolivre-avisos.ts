@@ -2,6 +2,7 @@ import type { Tenant } from "@prisma/client";
 import { prisma } from "./db";
 import { chamarMl, MercadoLivreNaoConectado } from "./mercadolivre";
 import { registrarPedidoMl } from "./mercadolivre-pedidos";
+import { registrarPerguntaMl } from "./mercadolivre-perguntas";
 
 /**
  * A fila de avisos do Mercado Livre, processada.
@@ -29,6 +30,7 @@ export interface ResumoAvisosMl {
   pedidos: number;
   anuncios: number;
   envios: number;
+  perguntas: number;
   ignorados: number;
   falhas: number;
   detalhes: Array<{ loja: string; topico: string; resultado: string }>;
@@ -116,7 +118,7 @@ export async function processarAvisosMl(opcoes: { limite?: number } = {}): Promi
     orderBy: { emitidoEm: "asc" },
     take: limite,
   });
-  const resumo: ResumoAvisosMl = { lidos: 0, pedidos: 0, anuncios: 0, envios: 0, ignorados: 0, falhas: 0, detalhes: [] };
+  const resumo: ResumoAvisosMl = { lidos: 0, pedidos: 0, anuncios: 0, envios: 0, perguntas: 0, ignorados: 0, falhas: 0, detalhes: [] };
 
   for (const evento of pendentes) {
     // Reivindicar antes de agir: duas execuções simultâneas não podem baixar
@@ -143,8 +145,12 @@ export async function processarAvisosMl(opcoes: { limite?: number } = {}): Promi
         await atualizarAnuncio(loja, aviso.id, resumo);
       } else if (aviso.topico === "shipments") {
         await atualizarEnvio(loja, aviso.id, resumo);
+      } else if (aviso.topico === "questions") {
+        const r = await registrarPerguntaMl(loja, aviso.id);
+        resumo.perguntas++;
+        if (r.nova) resumo.detalhes.push({ loja: loja.slug, topico: "questions", resultado: "pergunta nova aguardando resposta" });
       } else {
-        // Tópico que a plataforma ainda não trata (perguntas, mensagens,
+        // Tópico que a plataforma ainda não trata (mensagens do pós-venda,
         // reclamações). IGNORADO é honesto: ninguém vai agir sobre ele.
         await prisma.automacaoEvento.update({
           where: { eventId: evento.eventId },

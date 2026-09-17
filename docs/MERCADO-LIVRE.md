@@ -14,7 +14,8 @@ Integração de canal: a loja publica no ML e o ML devolve as vendas.
 | **Sincronizar conteúdo (título, fotos e descrição)** | idem, `conteudoDoAnuncio` | pronto (17/09/2026) |
 | **Receber a venda como pedido da loja** | `src/lib/mercadolivre-pedidos.ts` | pronto (17/09/2026) |
 | **Processar a fila de notificações** | `src/lib/mercadolivre-avisos.ts`, rotina `avisos` | pronto (17/09/2026) |
-| Perguntas e mensagens do comprador | — | não tratado: o aviso é marcado `IGNORADO` com o motivo |
+| **Perguntas do comprador** | `src/lib/mercadolivre-perguntas.ts`, painel → Canais | pronto (17/09/2026) |
+| Mensagens do pós-venda | — | não tratado: o aviso é marcado `IGNORADO` com o motivo |
 | Faturamento (nota fiscal), catálogo do ML, Mercado Envios Flex, métricas de reputação | — | não começado |
 
 ## A venda voltando
@@ -70,6 +71,35 @@ Duas regras do ML que o código respeita em vez de ignorar:
 - **Descrição é texto puro.** HTML mandado cru aparece como texto na tela do
   comprador, então sai daqui limpo — inclusive sem o espaço antes da
   pontuação que a limpeza de tags deixava para trás.
+
+## Perguntas
+
+No Mercado Livre quem pergunta costuma estar decidindo naquele minuto, e a
+pergunta aparece na página do anúncio para todo mundo ver. Até 17/09/2026 o
+aviso `questions` caía na fila e virava `IGNORADO`: o lojista só via a
+pergunta se abrisse o app do ML.
+
+Agora ela entra no banco da loja (`PerguntaMercadoLivre`), emite
+`canal.pergunta-recebida` — o n8n avisa o lojista — e aparece no painel, em
+Configurações → Canais, com a mais antiga no topo e **o tempo desde que
+chegou** em vez da data: "há 3 h" cobra o que "17/09 09:12" não cobra.
+
+O prefixo do evento é `canal.` e não `mercadolivre.` de propósito: esse outro
+prefixo é da fila de **entrada** que o webhook grava, e um evento de saída com
+ele seria reprocessado como se fosse aviso do ML.
+
+### A resposta é validada aqui, antes de ir
+
+O ML recusa resposta com telefone, e-mail, link ou convite para conversar
+fora da plataforma — e devolve um erro genérico, que não ensina nada a quem
+escreveu. A validação acontece antes da chamada: o lojista lê *"o Mercado
+Livre recusa resposta com um telefone"* em vez de *"400 Bad Request"*, e não
+gasta a tentativa. O limite de 2.000 caracteres é cobrado no mesmo lugar.
+
+Resposta dada pelo app do ML não é sobrescrita: a pergunta chega com
+`ANSWERED` e o painel para de cobrá-la. Quem responde pelo painel fica
+registrado — numa loja com operadores, "quem respondeu isso" é a primeira
+pergunta quando a resposta sai errada.
 
 ## O que a integração não inventa
 

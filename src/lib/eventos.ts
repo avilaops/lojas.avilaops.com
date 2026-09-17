@@ -82,6 +82,17 @@ export type EventoPlataforma =
   | { tipo: "loja.relatorio-semanal"; slug: string; nome: string; url: string; emailContato: string | null; whatsapp: string | null; periodo: string; pedidosPagos: number; receitaCentavos: number; ticketMedioCentavos: number; topProdutos: string; carrinhosAbandonados: number; novasAvaliacoes: number }
   | ({ tipo: "pedido.em-separacao"; slug: string; referencia: string; numero: number; clienteNome: string; clienteEmail: string; clienteTelefone: string; linkPedido: string } & Lojista)
   | ({ tipo: "pedido.entregue"; slug: string; referencia: string; numero: number; clienteNome: string; clienteEmail: string; clienteTelefone: string; linkPedido: string } & Lojista)
+  /**
+   * Pergunta de comprador num canal externo (hoje só o Mercado Livre). O
+   * prefixo é `canal.` e não `mercadolivre.` de propósito: esse outro prefixo
+   * é da fila de **entrada**, gravada pelo webhook, e um evento de saída com
+   * ele seria reprocessado como se fosse aviso do ML.
+   *
+   * Não leva contato de quem perguntou: o canal não entrega, e a conversa
+   * acontece lá dentro. O que o lojista precisa é saber que existe e abrir o
+   * painel — responder rápido é o que converte no Mercado Livre.
+   */
+  | ({ tipo: "canal.pergunta-recebida"; slug: string; canal: string; perguntaId: string; produtoNome: string; texto: string; linkPainel: string } & Lojista)
   | ({ tipo: "pedido.cancelado"; slug: string; referencia: string; numero: number; clienteNome: string; clienteEmail: string; clienteTelefone: string; totalCentavos: number; motivo: string; linkPedido: string } & Lojista);
 
 export type TipoEvento = EventoPlataforma["tipo"];
