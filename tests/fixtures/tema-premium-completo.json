@@ -1,0 +1,29 @@
+{
+  "corPrimaria": "#0f172a",
+  "corPrimariaTexto": "#ffffff",
+  "corFundo": "#f7f7f5",
+  "corTexto": "#111111",
+  "modo": "claro",
+  "fonte": "montserrat",
+  "raio": "suave",
+  "layout": "automotivo-premium",
+  "categoriaSemImagem": "icone",
+  "premium": {
+    "heroSelo": "Cuidado automotivo",
+    "heroTitulo": "O acabamento que dura a temporada inteira.",
+    "heroTexto": "Produtos escolhidos por etapa, do primeiro banho à proteção que sela o resultado.",
+    "buscaTitulo": "O que você procura para o seu carro?",
+    "buscaExemplo": "Produto, marca ou aplicação…",
+    "editorialTitulo": "Seu carro merece uma escolha bem feita.",
+    "editorialTexto": "Cada etapa tem o produto certo. Fale com a equipe quando a dúvida for técnica.",
+    "editorialImagem": "/media/automotivo-premium/editorial-cuidado-v1.webp",
+    "editorialImagemSecundaria": "https://exemplo.test/editorial/acessorios.webp",
+    "logoEscuroUrl": "/uploads/exemplo/simbolo-escuro.webp",
+    "mostrarNome": true,
+    "etapas": [
+      { "categoria": "lavagem", "titulo": "Lavar", "texto": "Tira a sujeira solta sem riscar a pintura.", "icone": "lavagem" },
+      { "categoria": "polimento", "titulo": "Corrigir", "texto": "Apaga risco e marca de lavagem antes de proteger.", "icone": "polimento" },
+      { "categoria": "vitrificacao", "titulo": "Proteger", "texto": "Sela o resultado e faz durar meses, não dias.", "icone": "vitrificacao" }
+    ]
+  }
+}
