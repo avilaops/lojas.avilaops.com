@@ -69,15 +69,45 @@ export function lerIdentidade(bruto: unknown): IdentidadeLoja {
   return r.success ? r.data : IdentidadeSchema.parse({});
 }
 
+/**
+ * Assinatura e slogan são a mesma frase vista de dois lugares: o wizard manda a
+ * assinatura gerada como `slogan` da loja, e ali cabem 140 caracteres.
+ *
+ * A assinatura nasce do diferencial, que aceita 300. Gerar sem teto fazia a
+ * criação morrer em 422 ("String must contain at most 140 character(s)") num
+ * texto que a pessoa nem digitou — e o campo citado era o slogan, que ela
+ * deixou vazio de propósito. Um limite só, aqui, para os dois lados.
+ */
+export const LIMITE_SLOGAN = 140;
+
+function cortarNaPalavra(texto: string, limite: number): string {
+  if (texto.length <= limite) return texto;
+  const corte = texto.slice(0, limite - 1);
+  const espaco = corte.lastIndexOf(" ");
+  const base = espaco > limite * 0.6 ? corte.slice(0, espaco) : corte;
+  return `${base.replace(/[\s,;:.!?-]+$/, "")}…`;
+}
+
+export function assinaturaDaMarca(nome: string, diferencial: string, personalidadePrincipal: string): string {
+  const marca = nome.trim() || "Sua marca";
+  const base = diferencial.trim();
+  if (!base) return cortarNaPalavra(`${marca}, uma experiência ${personalidadePrincipal} feita para o seu público.`, LIMITE_SLOGAN);
+  // Só a primeira frase do diferencial: o resto é explicação, não assinatura.
+  const frase = base.split(/(?<=[.!?])\s+/)[0].replace(/[.!?]+$/, "");
+  const comMarca = `${marca}: ${frase}.`;
+  if (comMarca.length <= LIMITE_SLOGAN) return comMarca;
+  // Sem espaço para os dois, a frase do lojista vale mais que repetir o nome —
+  // que já aparece no cabeçalho, no rodapé e no título da página.
+  return cortarNaPalavra(`${frase}.`, LIMITE_SLOGAN);
+}
+
 export function criarDirecaoVisual(diagnostico: DiagnosticoMarca, nome = "Sua marca"): { identidade: IdentidadeLoja; tema: TemaLoja } {
   const principal = diagnostico.personalidade[0] ?? "sofisticada";
   const receita = RECEITAS[principal];
   const corPrimaria = SEGMENTO_COR[diagnostico.segmento] ?? receita.corPrimaria;
   const personalidade = diagnostico.personalidade.map((x) => x.replace(/^./, (c) => c.toUpperCase()));
   const palavrasChave = Array.from(new Set([...personalidade, diagnostico.segmento, diagnostico.tomDeVoz])).slice(0, 8);
-  const assinatura = diagnostico.diferencial
-    ? `${nome}: ${diagnostico.diferencial.replace(/[.!?]+$/, "")}.`
-    : `${nome}, uma experiência ${principal} feita para o seu público.`;
+  const assinatura = assinaturaDaMarca(nome, diagnostico.diferencial ?? "", principal);
   const identidade = IdentidadeSchema.parse({
     ...diagnostico,
     corApoio: receita.apoio,

@@ -21,6 +21,7 @@ const Entrada = TenantEntradaSchema.omit({ slug: true, mercadoPago: true }).exte
 
 const rotulos: Record<string, string> = {
   nome: "Nome da loja",
+  slogan: "Slogan",
   emailContato: "E-mail",
   whatsapp: "WhatsApp",
   instagram: "Instagram",
@@ -38,6 +39,7 @@ function detalhesDaValidacao(error: z.ZodError) {
     const campo = issue.path.join(".");
     const mensagensEspecificas: Record<string, string> = {
       nome: "Informe o nome da loja com pelo menos 2 caracteres.",
+      slogan: "O slogan precisa caber em 140 caracteres. Escreva uma frase mais curta na primeira etapa.",
       emailContato: "Informe um e-mail válido.",
       whatsapp: "Informe DDD + número, por exemplo: (16) 99999-0000.",
       instagram: "Informe o link completo do Instagram, começando por https://.",

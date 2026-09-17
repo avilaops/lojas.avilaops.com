@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { validarCnpj } from "@avilaops/checkout";
 import { TemaSchema } from "./tema";
-import { IdentidadeSchema } from "./identidade";
+import { IdentidadeSchema, LIMITE_SLOGAN } from "./identidade";
 
 /**
  * Contratos da API administrativa. É o que o formulário de onboarding do
@@ -59,7 +59,7 @@ export const TenantEntradaSchema = z.object({
   bannerUrl: z.string().url().nullable().optional(),
   tema: TemaSchema.partial().optional(),
   identidade: IdentidadeSchema.partial().optional(),
-  slogan: z.string().max(140).optional(),
+  slogan: z.string().max(LIMITE_SLOGAN).optional(),
   /**
    * O ramo, que liga blocos de vitrine específicos sem código por loja:
    * "motopecas" (garagem, compatibilidade, código original — src/lib/motos.ts)
