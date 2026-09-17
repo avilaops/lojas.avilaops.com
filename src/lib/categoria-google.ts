@@ -23,6 +23,12 @@
  *
  * Categoria que não casar com nada não recebe o campo, e isso é de propósito:
  * deixar o Google adivinhar é melhor do que afirmar a prateleira errada.
+ *
+ * Há nomes que só dizem a prateleira depois de se saber o ramo da loja.
+ * "Acessórios" e "Moto" são os dois casos no catálogo de hoje: numa loja de
+ * estética automotiva são pincel e lava-motos; numa de beleza ou numa pet são
+ * outra coisa inteiramente. Para esses, ver `prateleirasDaLoja`, que lê o ramo
+ * nas OUTRAS categorias da mesma loja antes de decidir.
  */
 
 /** Ramo por ramo, na ordem em que as regras são testadas. */
@@ -59,6 +65,32 @@ const REGRAS: Array<{ termos: RegExp; id: number; prateleira: string }> = [
 ];
 
 /**
+ * Termos que praticamente só aparecem em loja de estética automotiva, e por
+ * isso servem de prova do ramo. São de propósito mais estreitos que as REGRAS:
+ * aqui um falso positivo não erra uma categoria, erra a loja inteira. Ficam de
+ * fora os genéricos que qualquer ramo usa — "kit", "cera" (vela), "proteção".
+ */
+const SINAL_DO_RAMO = /vitrifica|coating|polimento|boina|automotiv|limpa[\s-]?rodas|snow\s*foam|descontamina/i;
+
+/**
+ * Regras que só valem com o ramo já provado pelo SINAL_DO_RAMO. Sozinhos,
+ * estes nomes não dizem nada: toda loja tem "Acessórios".
+ */
+const REGRAS_DO_RAMO: Array<{ termos: RegExp; id: number; prateleira: string }> = [
+  {
+    termos: /acess[óo]rio/i,
+    id: 2894,
+    prateleira: "Escovas para limpeza de carro",
+  },
+  {
+    // \bmotos?\b não casa com "automotivo" nem com "motor".
+    termos: /\bmotos?\b|motocicl/i,
+    id: 2895,
+    prateleira: "Limpeza de veículos",
+  },
+];
+
+/**
  * Devolve o id da prateleira do Google para a categoria, ou `undefined`.
  *
  * @param nomeDaCategoria nome como o lojista cadastrou ("Lavagem", "Boinas e
@@ -67,4 +99,24 @@ const REGRAS: Array<{ termos: RegExp; id: number; prateleira: string }> = [
 export function categoriaGoogle(nomeDaCategoria: string | null | undefined): number | undefined {
   if (!nomeDaCategoria) return undefined;
   return REGRAS.find((r) => r.termos.test(nomeDaCategoria))?.id;
+}
+
+/**
+ * Resolvedor para uma loja inteira, com as categorias dela como contexto.
+ *
+ * Chamar uma vez por feed e reusar: o ramo é da loja, não do produto. As
+ * categorias de nome próprio continuam valendo por si; as genéricas só recebem
+ * prateleira se as vizinhas provarem o ramo.
+ *
+ * @param nomes nomes de TODAS as categorias da loja (repetição não atrapalha).
+ */
+export function prateleirasDaLoja(nomes: Array<string | null | undefined>): (nomeDaCategoria: string | null | undefined) => number | undefined {
+  const automotiva = nomes.some((n) => !!n && SINAL_DO_RAMO.test(n));
+  return (nomeDaCategoria) => {
+    if (!nomeDaCategoria) return undefined;
+    const direta = categoriaGoogle(nomeDaCategoria);
+    if (direta !== undefined) return direta;
+    if (!automotiva) return undefined;
+    return REGRAS_DO_RAMO.find((r) => r.termos.test(nomeDaCategoria))?.id;
+  };
 }

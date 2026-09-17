@@ -2,6 +2,11 @@
 
 Levantamento e plano de execução. Escrito em 09/09/2026.
 
+> **Plano cumprido.** As seis fases foram executadas e `brilhax.com` serve a
+> plataforma desde a virada. O texto abaixo fica como registro da decisão e do
+> desenho; para o estado de hoje e o que ainda está aberto, ver
+> `brilhax-virada.md`.
+
 A Brilhax roda hoje em pilha própria: Medusa v2 como backend de e-commerce e um
 Next.js estático como vitrine, cinco containers no servidor de produção. A
 proposta é trazê-la para a plataforma de Lojas como mais um tenant, e transformar

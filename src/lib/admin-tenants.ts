@@ -8,12 +8,13 @@ import { invalidarCatalogo } from "./catalogo-cache";
 import { salvarProdutoNoCatalogo } from "./catalogo-escrita";
 
 function dadosDoTenant(entrada: Partial<TenantEntrada>): Prisma.TenantUpdateInput {
-  const { mercadoPago, tema, identidade, endereco, tabelaFrete, ...resto } = entrada;
+  const { mercadoPago, tema, identidade, endereco, tabelaFrete, entregaLocal, ...resto } = entrada;
   const dados: Prisma.TenantUpdateInput = { ...resto };
   if (tema) dados.tema = tema;
   if (identidade) dados.identidade = identidade;
   if (endereco) dados.endereco = endereco;
   if (tabelaFrete) dados.tabelaFrete = tabelaFrete;
+  if (entregaLocal) dados.entregaLocal = entregaLocal;
   if (mercadoPago) {
     dados.mpPublicKey = mercadoPago.publicKey;
     dados.mpAccessTokenEnc = cifrar(mercadoPago.accessToken);

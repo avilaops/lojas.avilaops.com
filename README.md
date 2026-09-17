@@ -24,6 +24,7 @@ padrão não é "ajuste", é o plano Pro ou um projeto à parte.
 | Carrinho local (sem servidor de carrinho) | novo, `src/components/cart` | pronto |
 | Checkout transparente PIX/cartão/boleto | `packages/checkout` (Mercado Pago) | pronto |
 | Frete por CEP (CepCerto no servidor, uma conta para todas) + tabela por UF + retirada | `Websites/brilhax.com/src/lib/frete.ts`, generalizado | pronto |
+| **Entrega da própria loja** por faixa de CEP (motoboy, frota): `Tenant.entregaLocal`, com preço, prazo e grátis-acima próprios; concorre em preço com a transportadora e é a única opção que continua de pé quando a cotação online cai | `src/lib/frete.ts` (`entregaLocal`), painel → Entrega | pronto (17/09/2026) |
 | Pedidos, webhook de pagamento, status | novo, `src/lib/pedidos.ts` | pronto |
 | API administrativa (criar loja, importar produtos, provisionar, listar pedidos) | novo, `src/app/api/admin` | pronto |
 | Provisionamento: zona + DNS na Cloudflare, domínio + caixa no `mail.avilaops.com`, evento n8n | novo, `src/lib/provisionar.ts` | pronto, sem teste em produção |
@@ -139,6 +140,19 @@ falhar tentando baixá-la do Docker Hub, em silêncio, com o container antigo
 seguindo no ar. O `deploy/deploy.sh` reconstrói a base se faltar, confere o
 healthcheck e limpa só imagens dangling; foi escrito depois de isso acontecer
 em 26/08/2026.
+
+**Verificação depois de publicar (17/09/2026):** tipos, testes e build já
+rodam dentro do `Dockerfile` (estágio `build`), inclusive em pull request. O
+que faltava era depois: o pipeline
+(`.github/workflows/deploy-production.yml`) roda, ao fim do deploy,
+`node scripts/smoke-publicacao.mjs https://lojas.avilaops.com` — que confere
+`/api/health` (com banco e `no-store`), `/v1/health` e **a folha de estilo
+seguida a partir do HTML da vitrine**. O `deploy/deploy.sh` faz a mesma
+conferência de CSS contra `127.0.0.1:3080` antes de declarar sucesso, e volta
+para a versão anterior se ela falhar: em 02/09/2026 subiu um pacote sem
+`.next/static`, tudo respondeu 200 e a loja ficou no ar sem CSS nenhum. O
+script roda com o node do sistema, sem instalar nada, e aceita qualquer URL
+(`node scripts/smoke-publicacao.mjs https://brilhax.com`).
 
 **Cloudflare (29/08/2026):** o apex `lojas.avilaops.com` (landing, `/criar`, `/painel`, webhooks) passou a ser **proxied** — o TTFB do Brasil caiu de ~0,9 s para ~0,4 s. O `*.lojas` continua DNS-only (o Universal SSL não cobre dois níveis). Zona `ssl=full`, `always_use_https=on`.
 

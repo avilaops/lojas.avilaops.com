@@ -1,0 +1,55 @@
+# Roadmap da plataforma Lojas
+
+Documento vivo para evoluir a plataforma multi-tenant sem criar exceções por
+loja. A regra é: comportamento de cliente vira dado em `Tenant`, `Produto` ou
+configuração; o código continua compartilhado.
+
+## Tranche 1 — fundação (concluída em 17/09/2026)
+
+- [x] Consolidar o template `automotivo-premium` e seus assets na árvore principal.
+- [x] Manter o template selecionável por `Tenant.tema.layout`.
+- [x] Expor healthcheck sem cache, com estado do banco e latência para o deploy
+  (`src/lib/saude.ts`, `/api/health`, contrato preso em `src/lib/saude.test.ts`).
+- [x] Adicionar smoke test HTTP do healthcheck no pipeline
+  (`scripts/smoke-publicacao.mjs`, job `fumaca`), e a mesma conferência de CSS
+  dentro do `deploy/deploy.sh`, onde ela ainda dá tempo de reverter.
+
+O smoke não se limita ao healthcheck porque `/api/health` não sabe se a folha
+de estilo existe: ele baixa o HTML da vitrine e segue o `<link>`, que é a
+falha real de 02/09/2026 (pacote sem `.next/static`, tudo 200, loja sem CSS).
+
+Antes de publicar não faltava nada: `npx prisma generate && npm run typecheck
+&& npm test && npm run build` já roda no estágio `build` do `Dockerfile`, e
+em pull request também (a imagem é construída e não publicada). Um job
+separado para os mesmos comandos seria a mesma verificação duas vezes, sem
+ganho de tempo — o build já falha em cerca de um minuto quando um teste cai.
+`npm run lint` continua fora do bloqueio enquanto os erros herdados (scripts
+`.cjs` na raiz, `packages/checkout/src/ui`) não forem limpos.
+
+## Tranche 2 — fábrica de templates
+
+- [ ] Extrair tokens e blocos comuns (cabeçalho, hero, categorias, produto,
+  carrinho e rodapé) para contratos de template versionados.
+- [ ] Criar o template `catalogo-tecnico` reutilizando dados de compatibilidade,
+  medidas e código original, sem lista de lojas no código.
+- [ ] Criar preview seguro no painel, com dados de demonstração e sem alterar a
+  loja publicada até salvar. O tema premium preenchido inteiro já está em
+  `tests/fixtures/tema-premium-completo.json`, e serve de ponto de partida.
+- [ ] Validar cada template em viewport móvel, desktop, tema claro/escuro e
+  preferência de movimento reduzido.
+
+## Tranche 3 — infraestrutura para o cliente
+
+- [ ] Onboarding orientado por checklist: identidade, domínio, catálogo,
+  recebimento, entrega e publicação.
+- [ ] Instrumentar métricas por tenant (latência, erros, conversão e pedidos),
+  sem registrar tokens ou dados sensíveis.
+- [ ] Melhorar isolamento operacional: limites de upload, timeout de integrações,
+  idempotência e alertas n8n acionáveis.
+- [ ] Backup, migração e rollback documentados como rotina verificável do deploy.
+
+## Critérios de entrega
+
+Toda tranche precisa de `npm run typecheck`, testes relevantes e verificação
+visual/HTTP proporcional ao risco. Publicação e funcionamento em produção só
+serão declarados após evidência no ambiente correspondente.

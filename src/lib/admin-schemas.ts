@@ -92,6 +92,18 @@ export const TenantEntradaSchema = z.object({
   tabelaFrete: z
     .array(z.object({ ufs: z.array(z.string()), preco: z.number().int().nonnegative(), prazoDiasUteis: z.number().int().positive(), nome: z.string().optional() }))
     .optional(),
+  // Prefixo de CEP: 1 a 8 dígitos. O mínimo de 1 é o que impede uma faixa de
+  // motoboy de valer para o Brasil inteiro — ver entregaLocal() em lib/frete.
+  // Prazo aceita zero: entrega local costuma ser no mesmo dia.
+  entregaLocal: z
+    .array(z.object({
+      prefixos: z.array(z.string().regex(/^\d{1,8}$/)).min(1),
+      nome: z.string().trim().min(2).max(60),
+      preco: z.number().int().nonnegative(),
+      prazoDiasUteis: z.number().int().min(0).max(30),
+      gratisAcima: z.number().int().nonnegative().nullable().optional(),
+    }))
+    .optional(),
   freteGratisAcima: z.number().int().nonnegative().nullable().optional(),
   meiosPagamento: z.array(z.enum(["pix", "cartao", "boleto"])).min(1).optional(),
   gtmId: z.string().regex(/^GTM-[A-Z0-9]+$/).nullable().optional(),
