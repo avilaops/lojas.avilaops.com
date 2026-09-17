@@ -116,6 +116,11 @@ model Tenant {
   /// Tabela própria por UF, usada quando a cotação por API não está disponível.
   /// [{ "ufs": ["SP"], "preco": 1990, "prazoDiasUteis": 3, "nome": "Sedex" }]
   tabelaFrete            Json    @default("[]")
+  /// Entrega feita pela própria loja (motoboy, frota), por prefixo de CEP. Não
+  /// substitui a transportadora: concorre com ela em preço no mesmo checkout.
+  /// [{ "prefixos": ["14"], "nome": "Motoboy Ribeirão", "preco": 1500,
+  ///    "prazoDiasUteis": 0, "gratisAcima": 19900 }]
+  entregaLocal           Json    @default("[]")
   freteGratisAcima       Int? // centavos
 
   // ── Pagamento (tokens cifrados com LOJAS_SECRET) ──────────────────────

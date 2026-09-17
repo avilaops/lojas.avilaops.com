@@ -54,6 +54,7 @@ export interface LojaView {
   despachoDiasUteis: number;
   estoqueBaixoEm: number;
   tabelaFrete: Array<{ ufs: string[]; preco: number; prazoDiasUteis: number; nome?: string }>;
+  entregaLocal: Array<{ prefixos: string[]; nome: string; preco: number; prazoDiasUteis: number; gratisAcima?: number | null }>;
   /** Já tem credencial salva: o checkout aparece na loja. */
   mpConfigurado: boolean;
   assinatura: { status: string; isenta: boolean; precoCentavos: number; planoNome: string; ultimoPagamentoEm: string | null; setupPagoEm: string | null; criadoEm: string; faturas: Array<{ id: string; centavos: number; status: string; pagaEm: string | null; criadoEm: string }> };
@@ -121,7 +122,7 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
   const [csv, setCsv] = useState<{ nome: string; produtos: Array<Record<string, unknown>>; erros: string[] } | null>(null);
   const [limiteEstoque, setLimiteEstoque] = useState(String(loja.estoqueBaixoEm));
   const [empresa, setEmpresa] = useState({ razaoSocial: loja.razaoSocial ?? "", cnpj: loja.cnpj ?? "" });
-  const [entrega, setEntrega] = useState({ retiradaNaLoja: loja.retiradaNaLoja, despachoDiasUteis: loja.despachoDiasUteis, freteGratisAcima: loja.freteGratisAcima != null ? String(loja.freteGratisAcima / 100).replace(".", ",") : "", tabela: loja.tabelaFrete.map((f) => ({ ufs: f.ufs.join(","), preco: String(f.preco / 100).replace(".", ","), prazo: String(f.prazoDiasUteis), nome: f.nome ?? "" })) });
+  const [entrega, setEntrega] = useState({ retiradaNaLoja: loja.retiradaNaLoja, despachoDiasUteis: loja.despachoDiasUteis, freteGratisAcima: loja.freteGratisAcima != null ? String(loja.freteGratisAcima / 100).replace(".", ",") : "", tabela: loja.tabelaFrete.map((f) => ({ ufs: f.ufs.join(","), preco: String(f.preco / 100).replace(".", ","), prazo: String(f.prazoDiasUteis), nome: f.nome ?? "" })), local: loja.entregaLocal.map((f) => ({ prefixos: f.prefixos.join(","), nome: f.nome, preco: String(f.preco / 100).replace(".", ","), prazo: String(f.prazoDiasUteis), gratis: f.gratisAcima != null ? String(f.gratisAcima / 100).replace(".", ",") : "" })) });
   const [mp, setMp] = useState({ publicKey: loja.mpPublicKey ?? "", accessToken: "", webhookSecret: "" });
   // Diagnóstico do recebimento: credencial errada só dava erro na primeira
   // venda, com o comprador esperando. Aqui o lojista confere antes.
@@ -373,12 +374,34 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
               <button className="btn-secundario" onClick={() => setEntrega({ ...entrega, tabela: entrega.tabela.filter((_, j) => j !== i) })}>×</button>
             </div>
           ))}
+          <button className="btn-secundario self-start" onClick={() => setEntrega({ ...entrega, tabela: [...entrega.tabela, { ufs: "*", preco: "", prazo: "7", nome: "Entrega" }] })}>+ faixa</button>
+
+          {/* Entrega da própria loja. Fica separada da tabela por UF porque não
+              é transportadora: ela concorre com o PAC no mesmo checkout e é a
+              única que continua de pé se a cotação online cair. */}
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Você mesmo entrega (motoboy, frota) — primeiros dígitos do CEP, separados por vírgula</p>
+          {entrega.local.map((f, i) => (
+            <div key={i} className="grid gap-2 sm:grid-cols-[1fr_1fr_1fr_1fr_1fr_auto]">
+              <input className={inputClasse} placeholder="14,15" value={f.prefixos} onChange={(e) => setEntrega({ ...entrega, local: entrega.local.map((x, j) => (j === i ? { ...x, prefixos: e.target.value } : x)) })} />
+              <input className={inputClasse} placeholder="Nome (Motoboy…)" value={f.nome} onChange={(e) => setEntrega({ ...entrega, local: entrega.local.map((x, j) => (j === i ? { ...x, nome: e.target.value } : x)) })} />
+              <input className={inputClasse} placeholder="Preço R$" value={f.preco} onChange={(e) => setEntrega({ ...entrega, local: entrega.local.map((x, j) => (j === i ? { ...x, preco: e.target.value } : x)) })} />
+              <input className={inputClasse} placeholder="Prazo (0 = hoje)" value={f.prazo} onChange={(e) => setEntrega({ ...entrega, local: entrega.local.map((x, j) => (j === i ? { ...x, prazo: e.target.value } : x)) })} />
+              <input className={inputClasse} placeholder="Grátis acima de R$" value={f.gratis} onChange={(e) => setEntrega({ ...entrega, local: entrega.local.map((x, j) => (j === i ? { ...x, gratis: e.target.value } : x)) })} />
+              <button className="btn-secundario" onClick={() => setEntrega({ ...entrega, local: entrega.local.filter((_, j) => j !== i) })}>×</button>
+            </div>
+          ))}
           <div className="flex gap-2">
-            <button className="btn-secundario" onClick={() => setEntrega({ ...entrega, tabela: [...entrega.tabela, { ufs: "*", preco: "", prazo: "7", nome: "Entrega" }] })}>+ faixa</button>
+            <button className="btn-secundario" onClick={() => setEntrega({ ...entrega, local: [...entrega.local, { prefixos: "", nome: "Entrega local", preco: "", prazo: "0", gratis: "" }] })}>+ faixa local</button>
             <button className="btn-primario" disabled={ocupado} onClick={() => chamar("/api/painel/loja", "PATCH", {
               retiradaNaLoja: entrega.retiradaNaLoja, despachoDiasUteis: entrega.despachoDiasUteis,
               freteGratisAcima: entrega.freteGratisAcima ? centavos(entrega.freteGratisAcima) : null,
               tabelaFrete: entrega.tabela.filter((f) => f.ufs && f.preco).map((f) => ({ ufs: f.ufs.split(",").map((u) => u.trim()).filter(Boolean), preco: centavos(f.preco), prazoDiasUteis: Number(f.prazo) || 7, nome: f.nome || undefined })),
+              // Faixa sem prefixo é descartada aqui e ignorada na cotação: sem
+              // isso ela valeria para todo CEP do país.
+              entregaLocal: entrega.local
+                .map((f) => ({ ...f, prefixos: f.prefixos.split(",").map((p) => p.replace(/\D/g, "")).filter(Boolean) }))
+                .filter((f) => f.prefixos.length > 0 && f.nome.trim().length >= 2)
+                .map((f) => ({ prefixos: f.prefixos, nome: f.nome.trim(), preco: f.preco ? centavos(f.preco) : 0, prazoDiasUteis: Number(f.prazo) || 0, gratisAcima: f.gratis ? centavos(f.gratis) : null })),
             })}>Salvar</button>
           </div>
         </Secao>

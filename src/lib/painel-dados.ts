@@ -113,6 +113,7 @@ export async function dadosDoPainel(secao: SecaoPainel) {
       despachoDiasUteis: loja.despachoDiasUteis,
       estoqueBaixoEm: loja.estoqueBaixoEm,
       tabelaFrete: (loja.tabelaFrete as Array<{ ufs: string[]; preco: number; prazoDiasUteis: number; nome?: string }>) ?? [],
+      entregaLocal: (loja.entregaLocal as Array<{ prefixos: string[]; nome: string; preco: number; prazoDiasUteis: number; gratisAcima?: number | null }>) ?? [],
       assinatura: {
         status: loja.assinaturaStatus,
         isenta: loja.cobrancaIsenta,
