@@ -5,6 +5,7 @@ import PainelLoja, { type SecaoPainel } from "@/components/painel/PainelLoja";
 import Dominio from "@/components/painel/Dominio";
 import Canais from "@/components/painel/Canais";
 import PerguntasMl from "@/components/painel/PerguntasMl";
+import ReputacaoMl from "@/components/painel/ReputacaoMl";
 import { perguntasPendentes } from "@/lib/mercadolivre-perguntas";
 import { Secao } from "@/components/painel/campos";
 import Descoberta from "@/components/painel/Descoberta";
@@ -75,7 +76,7 @@ export default async function Pagina({ params, searchParams }: {
   if (secao === "canais") {
     const [loja, sp] = await Promise.all([lojistaAtual(), searchParams]);
     if (!loja) notFound();
-    const [porEstado, candidatos, perguntas] = await Promise.all([
+    const [porEstado, candidatos, perguntas, reputacao] = await Promise.all([
       prisma.anuncioMercadoLivre.groupBy({
         by: ["estado"],
         where: { tenantId: loja.id },
@@ -96,6 +97,7 @@ export default async function Pagina({ params, searchParams }: {
         take: 50,
       }),
       perguntasPendentes(loja.id),
+      prisma.reputacaoMercadoLivre.findUnique({ where: { tenantId: loja.id } }),
     ]);
     const conta = (e: string) => porEstado.find((p) => p.estado === e)?._count._all ?? 0;
     return (
@@ -125,6 +127,28 @@ export default async function Pagina({ params, searchParams }: {
             },
           }}
         />
+        {reputacao && (
+          <Secao
+            titulo="Saúde da conta no Mercado Livre"
+            descricao="É o Mercado Livre quem calcula. O que a loja faz é mostrar o número junto do que muda ele."
+          >
+            <ReputacaoMl
+              r={{
+                nivel: reputacao.nivel,
+                selo: reputacao.selo,
+                transacoes: reputacao.transacoes,
+                concluidas: reputacao.concluidas,
+                canceladas: reputacao.canceladas,
+                reclamacoes: reputacao.reclamacoes,
+                atrasos: reputacao.atrasos,
+                cancelamentos: reputacao.cancelamentos,
+                positivas: reputacao.positivas,
+                alertas: Array.isArray(reputacao.alertas) ? (reputacao.alertas as string[]) : [],
+                medidoEm: reputacao.medidoEm.toISOString(),
+              }}
+            />
+          </Secao>
+        )}
         {perguntas.length > 0 && (
           <Secao
             titulo={`Perguntas do Mercado Livre (${perguntas.length})`}
