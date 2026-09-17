@@ -184,6 +184,7 @@ model Tenant {
   cupons           Cupom[]
   compradores      Comprador[]
   anunciosMl       AnuncioMercadoLivre[]
+  perguntasMl      PerguntaMercadoLivre[]
   checkoutsAbertos CheckoutAberto[]
   avaliacoes       Avaliacao[]
   avisosEstoque    AvisoEstoque[]
@@ -325,6 +326,7 @@ model Produto {
 
   avisosEstoque            AvisoEstoque[]
   anunciosMl               AnuncioMercadoLivre[]
+  perguntasMl              PerguntaMercadoLivre[]
   correspondenciasPesquisa CorrespondenciaPesquisaProduto[]
 
   @@unique([tenantId, slug])
@@ -938,6 +940,47 @@ model AutomacaoEvento {
 /// `motivoErro` existe porque o ML recusa por atributo obrigatório faltando, e
 /// sem guardar a resposta o lojista fica com um anúncio que "não subiu" sem
 /// saber o que corrigir.
+/// Pergunta de comprador no Mercado Livre.
+///
+/// Fica aqui, e não só no ML, por dois motivos: no ML a pergunta se perde na
+/// caixa de entrada de quem tem muitos anúncios, e responder rápido é o que
+/// converte — a loja precisa poder cobrar a resposta e medir o tempo dela.
+model PerguntaMercadoLivre {
+  id       String @id @default(cuid())
+  tenantId String
+  /// Id da pergunta no ML. Único: o aviso chega repetido.
+  mlId     String @unique
+
+  mlbId     String
+  anuncioId String?
+  produtoId String?
+
+  texto String
+  /// Apelido de quem perguntou. O ML não entrega contato, e não se inventa.
+  autor String?
+
+  /// UNANSWERED | ANSWERED | CLOSED_UNANSWERED | UNDER_REVIEW | BANNED | DELETED
+  statusMl     String  @default("UNANSWERED")
+  resposta     String?
+  /// Quem respondeu daqui: operador da loja. Resposta que veio do app do ML
+  /// entra sem operador, e é assim que se distingue uma da outra.
+  respondidaPor String?
+  respondidaEm DateTime?
+  /// Motivo da recusa do ML (pergunta banida, resposta com contato, etc.).
+  motivoErro   String?
+
+  perguntadaEm DateTime
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  tenant  Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  anuncio AnuncioMercadoLivre?  @relation(fields: [anuncioId], references: [id], onDelete: SetNull)
+  produto Produto?              @relation(fields: [produtoId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, statusMl, perguntadaEm])
+  @@index([tenantId, mlbId])
+}
+
 model AnuncioMercadoLivre {
   id        String @id @default(cuid())
   tenantId  String
@@ -976,8 +1019,9 @@ model AnuncioMercadoLivre {
   criadoEm       DateTime  @default(now())
   atualizadoEm   DateTime  @updatedAt
 
-  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  produto Produto @relation(fields: [produtoId], references: [id], onDelete: Cascade)
+  tenant    Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  produto   Produto               @relation(fields: [produtoId], references: [id], onDelete: Cascade)
+  perguntas PerguntaMercadoLivre[]
 
   @@unique([tenantId, produtoId])
   @@index([tenantId, estado])

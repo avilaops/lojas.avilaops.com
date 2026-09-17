@@ -4,6 +4,9 @@ import { notFound } from "next/navigation";
 import PainelLoja, { type SecaoPainel } from "@/components/painel/PainelLoja";
 import Dominio from "@/components/painel/Dominio";
 import Canais from "@/components/painel/Canais";
+import PerguntasMl from "@/components/painel/PerguntasMl";
+import { perguntasPendentes } from "@/lib/mercadolivre-perguntas";
+import { Secao } from "@/components/painel/campos";
 import Descoberta from "@/components/painel/Descoberta";
 import Automacoes from "@/components/painel/Automacoes";
 import { estadoDescoberta } from "@/lib/descoberta";
@@ -68,7 +71,7 @@ export default async function Pagina({ params, searchParams }: {
   if (secao === "canais") {
     const [loja, sp] = await Promise.all([lojistaAtual(), searchParams]);
     if (!loja) notFound();
-    const [porEstado, candidatos] = await Promise.all([
+    const [porEstado, candidatos, perguntas] = await Promise.all([
       prisma.anuncioMercadoLivre.groupBy({
         by: ["estado"],
         where: { tenantId: loja.id },
@@ -88,6 +91,7 @@ export default async function Pagina({ params, searchParams }: {
         orderBy: { preparadoEm: "desc" },
         take: 50,
       }),
+      perguntasPendentes(loja.id),
     ]);
     const conta = (e: string) => porEstado.find((p) => p.estado === e)?._count._all ?? 0;
     return (
@@ -117,6 +121,24 @@ export default async function Pagina({ params, searchParams }: {
             },
           }}
         />
+        {perguntas.length > 0 && (
+          <Secao
+            titulo={`Perguntas do Mercado Livre (${perguntas.length})`}
+            descricao="Quem pergunta está decidindo agora. Responder rápido é o que converte no canal — e a resposta vai direto para o anúncio."
+          >
+            <PerguntasMl
+              perguntas={perguntas.map((p) => ({
+                id: p.id,
+                texto: p.texto,
+                autor: p.autor,
+                mlbId: p.mlbId,
+                perguntadaEm: p.perguntadaEm.toISOString(),
+                motivoErro: p.motivoErro,
+                produtoNome: p.produto?.nome ?? null,
+              }))}
+            />
+          </Secao>
+        )}
       </div>
     );
   }
