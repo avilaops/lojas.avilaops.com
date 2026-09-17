@@ -9,6 +9,7 @@ import { slugificar } from "@/lib/catalogo";
 import type { Prisma } from "@prisma/client";
 import { invalidarCatalogo } from "@/lib/catalogo-cache";
 import { salvarProdutoNoCatalogo, respostaErroCatalogo } from "@/lib/catalogo-escrita";
+import { ErroCampo, lerDefinicoes, normalizarValores } from "@/lib/campos-personalizados";
 
 /** PUT — importa/atualiza em lote (CSV ou um único produto do formulário). */
 export async function PUT(request: Request) {
@@ -46,7 +47,9 @@ export async function GET(request: Request) {
   const p = await prisma.produto.findFirst({ where: { id, tenantId: loja.id }, include: { categoria: true, variantes: { where: { padrao:true,ativo:true },include:{saldos:true} } } });
   if (!p) return Response.json({ erro: "Produto não encontrado." }, { status: 404 });
   const simples=p.variantes[0];
-  return Response.json({ ...p, estoque:simples?.saldos.find(s=>s.local==="principal")?.fisico ?? p.estoque, mpn:simples?.mpn??null, identificadoresEstado:simples?.identificadoresEstado??"desconhecido", categoria: p.categoria?.nome ?? null });
+  // As definições de campo vêm junto do produto para o formulário não precisar
+  // de uma segunda chamada só para saber que perguntas fazer.
+  return Response.json({ ...p, estoque:simples?.saldos.find(s=>s.local==="principal")?.fisico ?? p.estoque, mpn:simples?.mpn??null, identificadoresEstado:simples?.identificadoresEstado??"desconhecido", categoria: p.categoria?.nome ?? null, definicoesCampos: lerDefinicoes(loja.camposPersonalizados) });
 }
 
 const Edicao = conferirImagem(ProdutoEntradaSchema.partial().extend({ id: z.string(), versaoCatalogo: z.number().int().positive().optional() }));
@@ -58,7 +61,7 @@ export async function PATCH(request: Request) {
   const loja = s.tenant;
   const r = Edicao.safeParse(await request.json().catch(() => null));
   if (!r.success) return Response.json({ erro: "Dados inválidos.", detalhes: r.error.flatten() }, { status: 422 });
-  const { id, categoria, atributos, slug, compatibilidade, versaoCatalogo, ...campos } = r.data;
+  const { id, categoria, atributos, slug, compatibilidade, versaoCatalogo, camposPersonalizados, ...campos } = r.data;
   const p = await prisma.produto.findFirst({ where: { id, tenantId: loja.id } });
   if (!p) return Response.json({ erro: "Produto não encontrado." }, { status: 404 });
 
@@ -71,8 +74,21 @@ export async function PATCH(request: Request) {
       categoriaId = c.id;
     }
   }
+  // Os valores dos campos personalizados passam pelas definições da loja: é
+  // ali que "12,5" vira número, que a lista de opções é conferida e que um
+  // `javascript:` colado num campo de link é recusado. Campo que a loja apagou
+  // não fica pendurado no produto.
+  let valoresCampos: Record<string, string> | undefined;
+  if (camposPersonalizados) {
+    try {
+      valoresCampos = normalizarValores(lerDefinicoes(loja.camposPersonalizados), camposPersonalizados);
+    } catch (e) {
+      return Response.json({ erro: e instanceof ErroCampo ? e.message : "Campo personalizado inválido." }, { status: 422 });
+    }
+  }
+
   let atualizado;
-  try { atualizado = await salvarProdutoNoCatalogo(loja.id, id, { ...campos, ...(slug ? { slug: slugificar(slug) } : {}), ...(categoriaId !== undefined ? { categoriaId } : {}), ...(atributos ? { atributos: atributos as Prisma.InputJsonValue } : {}), ...(compatibilidade ? { compatibilidade: compatibilidade as unknown as Prisma.InputJsonValue } : {}) }, { origem: "painel", versao: versaoCatalogo });
+  try { atualizado = await salvarProdutoNoCatalogo(loja.id, id, { ...campos, ...(valoresCampos ? { camposPersonalizados: valoresCampos as unknown as Prisma.InputJsonValue } : {}), ...(slug ? { slug: slugificar(slug) } : {}), ...(categoriaId !== undefined ? { categoriaId } : {}), ...(atributos ? { atributos: atributos as Prisma.InputJsonValue } : {}), ...(compatibilidade ? { compatibilidade: compatibilidade as unknown as Prisma.InputJsonValue } : {}) }, { origem: "painel", versao: versaoCatalogo });
   } catch(e) { return respostaErroCatalogo(e); }
   invalidarCatalogo(loja.id);
   void avisarBuscadores(loja, caminhosDoProduto(atualizado.slug, categoria ?? undefined));

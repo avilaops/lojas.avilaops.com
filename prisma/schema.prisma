@@ -43,25 +43,24 @@ model Tenant {
   dominioPrincipal String?
 
   // ── Identidade visual (só tokens; layout é um só) ─────────────────────
-  logoUrl    String?
-  bannerUrl  String? // imagem de fundo do topo da home
+  logoUrl                 String?
+  bannerUrl               String? // imagem de fundo do topo da home
   /// Ícone da aba. Vazio = a plataforma desenha a inicial do nome sobre a cor
   /// primária (ver src/app/icon.tsx), que é o padrão e serve a maioria. Quem
   /// tem símbolo próprio aponta o arquivo aqui: o logo do cabeçalho não serve,
   /// porque é horizontal e some em 16 px.
-  faviconUrl String?
-  tema       Json    @default("{}") // TemaLoja em src/lib/tema.ts
-  identidade Json    @default("{}") // diagnóstico, voz e direção fotográfica
-  slogan     String?
+  faviconUrl              String?
+  tema                    Json    @default("{}") // TemaLoja em src/lib/tema.ts
+  identidade              Json    @default("{}") // diagnóstico, voz e direção fotográfica
+  slogan                  String?
   /**
    * Segmento da loja. Liga blocos de vitrine específicos do ramo sem código
    * por loja: "motopecas" ativa a garagem (peças por moto), compatibilidade
    * e busca por código original. "geral" é a loja comum.
    */
-  segmento   String  @default("geral")
+  segmento                String  @default("geral")
   /**
    * Responsável técnico da farmácia (segmento "farmacia").
-   *
    * RDC 44/2009, art. 55: farmácia que dispensa a distância só existe
    * legalmente com farmacêutico responsável identificado, CRF visível e
    * licença sanitária declarada. É campo do tenant, e não texto solto numa
@@ -76,8 +75,8 @@ model Tenant {
   /// Barra fina acima do cabeçalho. Um texto curto, o mesmo em toda a loja:
   /// é o lugar de "frete grátis acima de X" e de aviso de prazo em data
   /// especial, sem ninguém pedir uma página nova.
-  avisoTopo  String?
-  sobre      String? // texto da página "Sobre"
+  avisoTopo String?
+  sobre     String? // texto da página "Sobre"
 
   // ── Contato e operação ───────────────────────────────────────────────
   whatsapp             String? // só dígitos, com DDI
@@ -147,6 +146,38 @@ model Tenant {
   // ── E-mail (mail.avilaops.com) ────────────────────────────────────────
   emailRemetente String? // pedidos@dominio — de onde saem as notificações
 
+  // ── Políticas da loja ─────────────────────────────────────────────────
+  /**
+   * /**
+   * Políticas escritas pelo lojista, por tipo ("envio", "devolucao",
+   * "privacidade", "termos", "aviso-legal").
+   * Chave ausente = a loja publica o modelo da plataforma, que é o
+   * comportamento de sempre e o que garante CDC e LGPD em loja nova sem
+   * ninguém escrever nada. O lojista só grava aqui quando quer o texto dele,
+   * e o painel oferece o modelo como ponto de partida.
+   * { "envio": { "corpo": "...", "atualizadoEm": "2026-09-17T..." } }
+   */
+  politicas       Json @default("{}")
+  /**
+   * Regras de devolução e cancelamento. Número, não prosa: é o que a
+   * plataforma consegue conferir e escrever na política sozinha.
+   * Ver RegrasDevolucao em src/lib/politicas.ts.
+   */
+  regrasDevolucao Json @default("{}")
+
+  // ── Campos personalizados do catálogo ─────────────────────────────────
+  /**
+   * /**
+   * Definições de campo que esta loja acrescenta ao produto. Lista, porque a
+   * ordem é a de exibição na ficha.
+   * Existe porque `atributos` é um saco livre: serve para gravar, não para
+   * pedir. Sem definição, o painel não sabe que rótulo mostrar, que tipo
+   * validar nem o que publicar; com ela, a loja de tinta cadastra "Rendimento
+   * por litro" e a de vinho "Safra" sem nenhuma das duas virar código.
+   * Ver CampoPersonalizado em src/lib/campos-personalizados.ts.
+   */
+  camposPersonalizados Json @default("[]")
+
   // ── Analytics, anúncios e buscadores ──────────────────────────────────
   gtmId                 String?
   /// Pixels da loja. Cada um é opcional; sem id, o script nem é carregado.
@@ -200,6 +231,8 @@ model Tenant {
   produtos          Produto[]
   pedidos           Pedido[]
   pesquisasCatalogo PesquisaCatalogoExecucao[]
+  publicacoes       PublicacaoLoja[]
+  sessoesVitrine    SessaoVitrine[]
 
   @@index([status])
 }
@@ -235,20 +268,20 @@ model Categoria {
 }
 
 model Produto {
-  id              String   @id @default(cuid())
-  tenantId        String
-  categoriaId     String?
-  slug            String
-  nome            String
-  marca           String?
-  sku             String?
-  gtin            String?
+  id                   String   @id @default(cuid())
+  tenantId             String
+  categoriaId          String?
+  slug                 String
+  nome                 String
+  marca                String?
+  sku                  String?
+  gtin                 String?
   /// Centavos. Nunca float — ver packages/checkout/src/core/types.ts.
-  precoCentavos   Int
-  precoDeCentavos Int? // "de R$ X por R$ Y"
-  descricaoCurta  String?
-  descricao       String?
-  imagens         String[] @default([])
+  precoCentavos        Int
+  precoDeCentavos      Int? // "de R$ X por R$ Y"
+  descricaoCurta       String?
+  descricao            String?
+  imagens              String[] @default([])
   /**
    * De onde a imagem veio, e o quanto ela é deste item:
    * `propria`        foto do SKU exato (própria ou do fabricante com código
@@ -261,20 +294,28 @@ model Produto {
    * imagem: gera compra errada, devolução e desconfiança. Quem escreve a
    * imagem declara o que ela é; a vitrine só obedece.
    */
-  imagemOrigem    String   @default("propria")
+  imagemOrigem         String   @default("propria")
   /// Família visual da imagem representativa ("6200", "UCP"), para auditoria:
   /// permite achar todo item que herdou uma foto quando ela for substituída.
-  imagemFamilia   String?
-  destaque        Boolean  @default(false)
-  ativo           Boolean  @default(true)
-  disponibilidade String   @default("in_stock") // in_stock | out_of_stock | backorder
-  estoque         Int?
+  imagemFamilia        String?
+  destaque             Boolean  @default(false)
+  ativo                Boolean  @default(true)
+  disponibilidade      String   @default("in_stock") // in_stock | out_of_stock | backorder
+  estoque              Int?
   /// Peso em kg e medidas em cm. Sem eles, o frete usa a caixa padrão do tenant.
-  pesoKg          Float?
-  alturaCm        Float?
-  larguraCm       Float?
-  comprimentoCm   Float?
-  atributos       Json     @default("{}") // livre: { "volumeMl": 500, "cor": "azul" }
+  pesoKg               Float?
+  alturaCm             Float?
+  larguraCm            Float?
+  comprimentoCm        Float?
+  atributos            Json     @default("{}") // livre: { "volumeMl": 500, "cor": "azul" }
+  /**
+   * Valores dos campos que a loja definiu em `Tenant.camposPersonalizados`,
+   * indexados pela chave da definição: { "rendimento-por-litro": "12" }.
+   * Separado de `atributos` de propósito: `atributos` é bagagem de
+   * importação, que ninguém prometeu exibir; isto aqui tem definição, tipo e
+   * rótulo, e a ficha do produto publica.
+   */
+  camposPersonalizados Json     @default("{}")
 
   // Peças e acessórios (segmento "motopecas"): a que veículos o item serve.
   // Vazio = universal (capacete, óleo, serviço). Ver src/lib/motos.ts.
@@ -303,7 +344,7 @@ model Produto {
 
   /// Nomes das opções de variação, na ordem de exibição: ["Tamanho", "Cor"].
   /// Vazio = produto simples (estoque no próprio produto).
-  opcoes              String[] @default([])
+  opcoes String[] @default([])
 
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
@@ -380,16 +421,26 @@ model Pedido {
   pagamentoStatus String?
   rastreio        String?
 
+  /**
+   * Sessão da vitrine em que a compra foi fechada. Nulo em pedido anterior à
+   * medição, em compra com cookie recusado e em pedido criado fora do site
+   * (marketplace, importação): a atribuição trata os três como "Direto" em
+   * vez de fingir um canal.
+   */
+  sessaoId String?
+
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
-  tenant    Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  comprador Comprador?   @relation(fields: [compradorId], references: [id], onDelete: SetNull)
+  tenant    Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  comprador Comprador?     @relation(fields: [compradorId], references: [id], onDelete: SetNull)
+  sessao    SessaoVitrine? @relation(fields: [sessaoId], references: [id], onDelete: SetNull)
   itens     PedidoItem[]
   postagem  Postagem?
 
   @@index([tenantId, status])
   @@index([pagamentoId])
+  @@index([sessaoId])
 }
 
 /// Unidade vendável. Produto simples tem uma variante padrao interna.
@@ -1011,4 +1062,90 @@ model OperadorLoja {
   /// nunca duas vezes na mesma loja.
   @@unique([tenantId, email])
   @@index([tenantId, ativo])
+}
+
+/// Publicação do blog DA LOJA (não confundir com o blog da plataforma, que é
+/// arquivo em src/lib/blog.ts). Escopo por tenant: o conteúdo de uma loja
+/// nunca aparece na outra, nem no feed, nem na busca.
+model PublicacaoLoja {
+  id       String  @id @default(cuid())
+  tenantId String
+  slug     String
+  titulo   String
+  /// Chamada curta: lista, card social e <meta description>. Sem ela, a
+  /// listagem corta o corpo, e corpo cortado no meio de uma frase é pior do
+  /// que resumo escrito.
+  resumo   String?
+  /// Corpo em texto com parágrafos separados por linha em branco. Não é HTML:
+  /// o que o lojista escreve nunca vira marcação executável na vitrine.
+  corpo    String
+  capaUrl  String?
+  autor    String?
+
+  /// rascunho | publicada. Rascunho não existe para a vitrine — nem por URL
+  /// direta, nem no sitemap.
+  estado      String    @default("rascunho")
+  publicadoEm DateTime?
+
+  seoTitle       String?
+  seoDescription String?
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, slug])
+  @@index([tenantId, estado, publicadoEm])
+}
+
+/// Visita à vitrine, com a origem que a trouxe.
+///
+/// É a base da Atribuição: sem sessão medida, "sessões por canal" e "taxa de
+/// conversão" não existem — só vendas. A medição é first-party (cookie do
+/// próprio domínio da loja, nenhum dado sai para terceiros) e não guarda IP
+/// nem identificação do visitante: `visitante` é um valor opaco sorteado no
+/// primeiro acesso, que serve para ligar a sessão de hoje à de ontem e nada
+/// mais.
+model SessaoVitrine {
+  id        String @id @default(cuid())
+  tenantId  String
+  /// Valor do cookie de sessão. Único global porque é sorteado com 128 bits.
+  chave     String @unique
+  /// Valor do cookie de visitante: liga sessões da mesma pessoa, e é o que
+  /// permite o "último clique não direto" enxergar além da sessão da compra.
+  visitante String
+
+  /// Canal resolvido a partir de utm/referrer. Ver CANAIS em src/lib/atribuicao.ts.
+  canal    String
+  /// utm_source, ou o host de quem indicou quando não há utm.
+  origem   String?
+  midia    String? // utm_medium
+  campanha String? // utm_campaign
+  termo    String? // utm_term
+  conteudo String? // utm_content
+  referrer String?
+  /// Primeira página vista nesta sessão: é o que responde "por onde entraram".
+  entrada  String
+
+  /// celular | tablet | computador. Classificado do user-agent, sem guardá-lo.
+  dispositivo String @default("computador")
+
+  /// Contadores da sessão. Ficam aqui, e não numa tabela de eventos, porque a
+  /// pergunta do painel é por sessão: quantas entraram, quantas viram produto,
+  /// quantas compraram. Guardar um registro por clique custaria muito mais
+  /// para responder exatamente a mesma coisa.
+  paginas         Int     @default(1)
+  viuProduto      Boolean @default(false)
+  iniciouCheckout Boolean @default(false)
+
+  criadoEm DateTime @default(now())
+  ultimoEm DateTime @default(now())
+
+  tenant  Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  pedidos Pedido[]
+
+  @@index([tenantId, criadoEm])
+  @@index([tenantId, canal, criadoEm])
+  @@index([tenantId, visitante, criadoEm])
 }

@@ -29,6 +29,14 @@ export default function Pagina() {
           ],
         },
         {
+          titulo: "O que a loja publica",
+          itens: [
+            { href: "/painel/configuracoes/politicas", titulo: "Políticas", descricao: "Devolução, privacidade, termos e as regras que valem para o cliente" },
+            { href: "/painel/configuracoes/campos", titulo: "Campos do produto", descricao: "O que a sua loja pergunta além do que toda loja pergunta" },
+            { href: "/painel/marketing/blog", titulo: "Blog", descricao: "Textos que trazem quem ainda está pesquisando" },
+          ],
+        },
+        {
           titulo: "Vender em outros lugares",
           itens: [
             { href: "/painel/configuracoes/canais", titulo: "Canais", descricao: "Mercado Livre e outros marketplaces" },

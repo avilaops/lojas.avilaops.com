@@ -7,6 +7,7 @@ import { emitir, itensParaTexto } from "./eventos";
 import { baixarEstoqueDoPedido } from "./estoque";
 import { marcarConvertido } from "./carrinhos";
 import { urlDaLoja } from "./tenant";
+import { COOKIE_SESSAO } from "./atribuicao";
 
 function lojista(t: Tenant) {
   return { lojaNome: t.nome, lojaUrl: urlDaLoja(t), lojistaWhatsapp: t.whatsapp, lojistaEmail: t.loginEmail ?? t.emailContato, emailRemetente: t.emailRemetente };
@@ -42,6 +43,7 @@ export async function registrarPedido(
       totalCentavos: totais.total,
       cupomCodigo: dados.cupomCodigo ?? null,
       compradorId: dados.compradorId ?? null,
+      sessaoId: await sessaoDaVitrine(t.id),
       meioPagamento: pedido.meioPagamento,
       pagamentoId: dados.pagamentoId,
       pagamentoStatus: dados.status,
@@ -156,5 +158,28 @@ export async function atualizarStatusPagamento(
     // "pagamento recusado" ao cliente, e uma recusa atrasada chegando depois do
     // pagamento aprovado avisava recusa de um pedido já pago.
     if (status === "recusado") await emitir({ tipo: "pedido.recusado", slug: t.slug, referencia: pedido.referencia, clienteNome: pedido.clienteNome, clienteEmail: pedido.clienteEmail, clienteTelefone: pedido.clienteTelefone, ...lojista(t) });
+  }
+}
+
+/**
+ * De que sessão da vitrine veio esta compra.
+ *
+ * Lê o cookie de medição no momento em que o pedido é gravado. Nulo em tudo
+ * que não veio do site (webhook, marketplace, importação), em cookie recusado
+ * e em pedido anterior à medição — e a atribuição conta esses como "Direto"
+ * em vez de inventar canal. Ver src/lib/atribuicao.ts.
+ *
+ * Falha em silêncio de propósito: `cookies()` lança fora do escopo de uma
+ * requisição, e uma venda nunca pode falhar por causa de um relatório.
+ */
+async function sessaoDaVitrine(tenantId: string): Promise<string | null> {
+  try {
+    const { cookies } = await import("next/headers");
+    const chave = (await cookies()).get(COOKIE_SESSAO)?.value;
+    if (!chave) return null;
+    const sessao = await prisma.sessaoVitrine.findFirst({ where: { chave, tenantId }, select: { id: true } });
+    return sessao?.id ?? null;
+  } catch {
+    return null;
   }
 }
