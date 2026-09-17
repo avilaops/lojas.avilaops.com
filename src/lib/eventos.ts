@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
-import type { Prisma } from "@prisma/client";
+import type { Prisma, Tenant } from "@prisma/client";
 import { prisma } from "./db";
+import { urlDaLoja } from "./tenant";
 
 /**
  * Eventos da plataforma → n8n.
@@ -92,6 +93,15 @@ function correlacaoDe(evento: EventoPlataforma): string {
 export const REENVIOS_MAXIMOS = 3;
 
 /** "2x Retentor XPTO, 1x Rolamento ABC" — o texto que vai em WhatsApp e e-mail. */
+/**
+ * Os dados do lojista que acompanham todo evento de pedido. Vive aqui, junto
+ * do contrato `Lojista`, porque agora tem mais de um emissor: o checkout
+ * próprio e o canal do Mercado Livre.
+ */
+export function lojista(t: Tenant): Lojista {
+  return { lojaNome: t.nome, lojaUrl: urlDaLoja(t), lojistaWhatsapp: t.whatsapp, lojistaEmail: t.loginEmail ?? t.emailContato, emailRemetente: t.emailRemetente };
+}
+
 export function itensParaTexto(itens: ItemEvento[]): string {
   return itens.map((i) => `${i.quantidade}x ${i.nome}`).join(", ");
 }

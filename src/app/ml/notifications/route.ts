@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 
 /**
@@ -44,6 +45,11 @@ export async function POST(request: Request) {
         tipo: `mercadolivre.${aviso.topic}`,
         slug: loja.slug,
         versao: 1,
+        // O envelope inteiro, porque é ele que diz **qual** recurso mudou.
+        // Sem isto a fila guardava só que "algo aconteceu": quem processa
+        // (`processarAvisosMl`) não teria o que buscar na API do ML.
+        payload: aviso as unknown as Prisma.InputJsonValue,
+        correlationId: `ml:${aviso.resource}`,
       },
     })
     .catch(() => {

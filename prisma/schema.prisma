@@ -380,6 +380,15 @@ model Pedido {
   pagamentoStatus String?
   rastreio        String?
 
+  /// De onde veio a venda: "loja" (checkout próprio) ou "mercadolivre".
+  /// Não é condição por loja — é fato do pedido, e o painel, o relatório e o
+  /// n8n precisam distinguir: quem compra no ML fala com o ML, não com a loja.
+  canal         String  @default("loja")
+  /// Id do pedido no canal externo (`order.id` do ML). É o que torna a
+  /// ingestão idempotente: a notificação do ML chega mais de uma vez, e o
+  /// mesmo pedido não pode virar dois.
+  canalPedidoId String?
+
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
@@ -388,6 +397,7 @@ model Pedido {
   itens     PedidoItem[]
   postagem  Postagem?
 
+  @@unique([tenantId, canal, canalPedidoId])
   @@index([tenantId, status])
   @@index([pagamentoId])
 }
