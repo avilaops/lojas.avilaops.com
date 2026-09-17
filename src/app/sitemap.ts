@@ -3,6 +3,8 @@ import { headers } from "next/headers";
 import { tenantAtual, urlDaLoja } from "@/lib/tenant";
 import { listarCategorias, listarProdutos, produtoPublicavel } from "@/lib/catalogo";
 import { postsPublicados } from "@/lib/blog";
+import { listarPublicadas } from "@/lib/publicacoes-consulta";
+import { politicasPublicadas } from "@/lib/politicas";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +31,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const t = await tenantAtual();
   if (!t || t.status !== "ATIVA") return [];
   const base = urlDaLoja(t);
-  const [categorias, produtos] = await Promise.all([listarCategorias(t.id), listarProdutos(t.id)]);
+  const [categorias, produtos, publicacoes] = await Promise.all([listarCategorias(t.id), listarProdutos(t.id), listarPublicadas(t.id, 500)]);
   return [
     { url: base, changeFrequency: "daily", priority: 1 },
     { url: `${base}/produtos`, changeFrequency: "daily", priority: 0.9 },
@@ -38,6 +40,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // com 2.100 vendáveis: o resto era nome e ficha, sem nada para exibir, e
     // milhares de páginas quase iguais derrubam as boas junto.
     ...produtos.filter(produtoPublicavel).map((p) => ({ url: `${base}/produtos/${p.slug}`, lastModified: p.atualizadoEm, changeFrequency: "weekly" as const, priority: 0.8 })),
-    ...["sobre", "contato", "politicas/envio", "politicas/devolucao", "politicas/privacidade", "politicas/termos"].map((s) => ({ url: `${base}/${s}`, priority: 0.3 })),
+    // As publicações do blog da loja: só as que já estão no ar (rascunho e
+    // post agendado não existem para o Google, como não existem na vitrine).
+    ...(publicacoes.length ? [{ url: `${base}/blog`, changeFrequency: "weekly" as const, priority: 0.5 }] : []),
+    ...publicacoes.map((p) => ({ url: `${base}/blog/${p.slug}`, lastModified: p.publicadoEm, changeFrequency: "monthly" as const, priority: 0.6 })),
+    ...["sobre", "contato"].map((s) => ({ url: `${base}/${s}`, priority: 0.3 })),
+    // Lista o que esta loja publica: o aviso legal só existe quando escrito, e
+    // apontar o Google para um 404 gasta orçamento de rastreio à toa.
+    ...politicasPublicadas(t).map((p) => ({ url: `${base}/politicas/${p.tipo}`, priority: 0.3 })),
   ];
 }

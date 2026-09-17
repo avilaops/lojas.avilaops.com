@@ -3,6 +3,7 @@ import Link from "next/link";
 import CabecalhoSecao from "@/components/painel/CabecalhoSecao";
 import { formatarBRL } from "@/lib/catalogo";
 import { analyticsDeVendas, resolverPeriodoAnalytics } from "@/lib/analytics-vendas";
+import { relatorioDeAtribuicao } from "@/lib/atribuicao";
 import { lojistaAtual } from "@/lib/sessao";
 
 export const metadata: Metadata = { title: "Análises", robots: { index: false } };
@@ -30,7 +31,7 @@ export default async function PaginaAnalises({ searchParams }: { searchParams: P
   const [loja, entrada] = await Promise.all([lojistaAtual(), searchParams]);
   if (!loja) return null;
   const periodo = resolverPeriodoAnalytics(entrada);
-  const dados = await analyticsDeVendas(loja.id, periodo);
+  const [dados, atribuicao] = await Promise.all([analyticsDeVendas(loja.id, periodo), relatorioDeAtribuicao(loja.id, periodo)]);
   const maximo = Math.max(...dados.serie.map((p) => p.receitaCentavos), 1);
   const temVendas = dados.pedidos > 0;
 
@@ -94,10 +95,28 @@ export default async function PaginaAnalises({ searchParams }: { searchParams: P
           {dados.produtos.length ? <ol className="an-ranking">{dados.produtos.map((produto, indice) => <li key={produto.produtoId ?? produto.nome}><b>{indice + 1}</b><span>{produto.nome}<small>{produto.quantidade.toLocaleString("pt-BR")} item(ns)</small></span><strong>{formatarBRL(produto.receitaCentavos)}</strong></li>)}</ol> : <p className="an-nota">Os produtos aparecem depois da primeira venda paga no período.</p>}
         </section>
 
-        <section className="an-bloco an-medicao-pendente">
-          <header><div><small>Funil</small><h2>Onde clientes desistem</h2></div></header>
-          <p><strong>A medição da vitrine ainda não começou.</strong> Pedidos históricos permitem calcular vendas, mas não sessões, visualizações e conversão retroativamente.</p>
-          <span>Próxima fase: eventos first-party → Postgres → agregações → painel.</span>
+        <section className="an-bloco">
+          <header><div><small>Origem</small><h2>De onde vem quem compra</h2><Link href="/painel/analises/atribuicao">Ver atribuição</Link></div></header>
+          {atribuicao.temMedicao ? (
+            <ol className="an-ranking">
+              {atribuicao.canais.slice(0, 5).map((c, i) => (
+                <li key={c.canal}>
+                  <b>{i + 1}</b>
+                  <span>{c.rotulo}<small>{c.sessoes.toLocaleString("pt-BR")} sessão(ões) · {c.pedidos.toLocaleString("pt-BR")} pedido(s)</small></span>
+                  <strong>{formatarBRL(c.vendasCentavos)}</strong>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            /* Sem sessão medida não há canal: o texto diz por que, em vez de
+               desenhar uma lista em zero que o lojista leria como "ninguém
+               entra na minha loja". */
+            <p className="an-nota">
+              A medição da vitrine ainda não registrou visitas nesta loja. Sessão, canal de origem e taxa de conversão
+              passam a existir a partir do primeiro acesso medido — não é possível calculá-los do histórico de pedidos,
+              como se faz com receita.
+            </p>
+          )}
         </section>
       </div>
     </>

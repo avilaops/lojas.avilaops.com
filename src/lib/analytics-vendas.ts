@@ -16,7 +16,7 @@ const DIA = 86_400_000;
 const DATA = /^\d{4}-\d{2}-\d{2}$/;
 
 /** Converte meia-noite de Sao Paulo em UTC. O Brasil nao usa horario de verao desde 2019. */
-function inicioDoDia(data: string): Date {
+export function inicioDoDia(data: string): Date {
   return new Date(`${data}T00:00:00-03:00`);
 }
 
@@ -24,7 +24,7 @@ function fimDoDia(data: string): Date {
   return new Date(`${data}T23:59:59.999-03:00`);
 }
 
-function isoLocal(data: Date): string {
+export function isoLocal(data: Date): string {
   const partes = new Intl.DateTimeFormat("en-CA", {
     timeZone: FUSO_ANALYTICS,
     year: "numeric",
@@ -35,7 +35,7 @@ function isoLocal(data: Date): string {
   return `${valor("year")}-${valor("month")}-${valor("day")}`;
 }
 
-function rotuloData(data: Date): string {
+export function rotuloData(data: Date): string {
   return new Intl.DateTimeFormat("pt-BR", { timeZone: FUSO_ANALYTICS, day: "2-digit", month: "short" }).format(data).replace(".", "");
 }
 
