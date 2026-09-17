@@ -30,9 +30,8 @@ limpos — gate que nasce vermelho é gate que alguém desliga.
 - [ ] Criar o template `catalogo-tecnico` reutilizando dados de compatibilidade,
   medidas e código original, sem lista de lojas no código.
 - [ ] Criar preview seguro no painel, com dados de demonstração e sem alterar a
-  loja publicada até salvar. A demonstração neutra do premium já existe em
-  `src/lib/tema-demonstracao.ts` (e o teste do tema cobra um valor para cada
-  campo novo do schema).
+  loja publicada até salvar. O tema premium preenchido inteiro já está em
+  `tests/fixtures/tema-premium-completo.json`, e serve de ponto de partida.
 - [ ] Validar cada template em viewport móvel, desktop, tema claro/escuro e
   preferência de movimento reduzido.
 
