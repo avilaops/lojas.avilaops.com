@@ -185,6 +185,7 @@ model Tenant {
   compradores      Comprador[]
   anunciosMl       AnuncioMercadoLivre[]
   perguntasMl      PerguntaMercadoLivre[]
+  reputacaoMl      ReputacaoMercadoLivre?
   checkoutsAbertos CheckoutAberto[]
   avaliacoes       Avaliacao[]
   avisosEstoque    AvisoEstoque[]
@@ -940,6 +941,40 @@ model AutomacaoEvento {
 /// `motivoErro` existe porque o ML recusa por atributo obrigatório faltando, e
 /// sem guardar a resposta o lojista fica com um anúncio que "não subiu" sem
 /// saber o que corrigir.
+/// Saúde da conta da loja no Mercado Livre, como o próprio ML a calcula.
+///
+/// Uma linha por loja: é retrato, não histórico. O ML já guarda o histórico
+/// dele, e o que o lojista precisa no painel é "como estou agora e o que está
+/// me puxando para baixo".
+model ReputacaoMercadoLivre {
+  tenantId String @id
+
+  /// newbie | 1_red | 2_orange | 3_yellow | 4_light_green | 5_green
+  nivel         String?
+  /// platinum | gold | silver | null — o selo de Mercado Líder.
+  selo          String?
+  transacoes    Int     @default(0)
+  concluidas    Int     @default(0)
+  canceladas    Int     @default(0)
+  /// Percentuais como o ML devolve (0 a 100), com uma casa.
+  reclamacoes   Float?
+  atrasos       Float?
+  cancelamentos Float?
+  positivas     Float?
+  neutras       Float?
+  negativas     Float?
+
+  /// O que está puxando a reputação para baixo, em português, já resolvido
+  /// contra os limites que o ML publica. Texto e não código: quem lê é o
+  /// lojista, e a régua do ML muda sem avisar.
+  alertas Json @default("[]")
+
+  medidoEm     DateTime
+  atualizadoEm DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+}
+
 /// Pergunta de comprador no Mercado Livre.
 ///
 /// Fica aqui, e não só no ML, por dois motivos: no ML a pergunta se perde na

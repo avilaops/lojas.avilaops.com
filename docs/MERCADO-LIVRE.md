@@ -16,7 +16,8 @@ Integração de canal: a loja publica no ML e o ML devolve as vendas.
 | **Processar a fila de notificações** | `src/lib/mercadolivre-avisos.ts`, rotina `avisos` | pronto (17/09/2026) |
 | **Perguntas do comprador** | `src/lib/mercadolivre-perguntas.ts`, painel → Canais | pronto (17/09/2026) |
 | Mensagens do pós-venda | — | não tratado: o aviso é marcado `IGNORADO` com o motivo |
-| Faturamento (nota fiscal), catálogo do ML, Mercado Envios Flex, métricas de reputação | — | não começado |
+| **Saúde da conta (reputação e métricas)** | `src/lib/mercadolivre-reputacao.ts`, painel → Canais | pronto (17/09/2026) |
+| Faturamento (nota fiscal), catálogo do ML, Mercado Envios Flex | — | não começado |
 
 ## A venda voltando
 
@@ -89,6 +90,25 @@ Resposta dada pelo app do ML não é sobrescrita: a pergunta chega com
 `ANSWERED` e o painel para de cobrá-la. Quem responde pelo painel fica
 registrado — numa loja com operadores, "quem respondeu isso" é a primeira
 pergunta quando a resposta sai errada.
+
+## Saúde da conta
+
+O ML classifica quem vende por reclamação, atraso no despacho e cancelamento,
+e o lojista costuma descobrir que caiu de nível quando a venda some — não
+quando a métrica passa do limite. A rotina `rodar` já fala com a API por
+outros motivos; trazer a reputação junto custa **uma chamada por ciclo**.
+
+Reputação não é calculada aqui: quem calcula é o ML. O que a plataforma faz é
+traduzir o número em frase acionável — "18% dos envios saíram com atraso (o
+limite é 15%); rever o prazo de despacho costuma resolver mais que correr com
+a postagem". Os limites ficam num só lugar (`LIMITES`), porque a régua do ML
+muda sem avisar.
+
+Duas regras de silêncio, testadas: **conta nova não recebe alerta** (sem
+métrica medida, dizer "suas reclamações estão altas" é inventar problema), e
+**o limite é teto aceito, não começo de problema** — métrica exatamente no
+limite não alerta. Falha na leitura da reputação não derruba publicação nem
+estoque: ela é a última coisa do ciclo, dentro do próprio try.
 
 ## O que a integração não inventa
 

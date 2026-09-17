@@ -5,6 +5,7 @@ import { chamarMl, MercadoLivreNaoConectado } from "./mercadolivre";
 import type { Preparo } from "./mercadolivre-preparo";
 import { prepararCatalogo } from "./mercadolivre-preparo";
 import { urlDaLoja } from "./tenant";
+import { atualizarReputacaoMl } from "./mercadolivre-reputacao";
 
 type ProdutoPublicavel = Pick<
   Produto,
@@ -356,6 +357,16 @@ export async function rodarMercadoLivre(opcoes: { slug?: string; limite?: number
       }
       await publicarAprovados(loja, limite, resumo);
       await sincronizarPublicados(loja, limite, resumo);
+      // Uma chamada por ciclo para saber como a conta está no canal. Falhar
+      // aqui não pode derrubar publicação nem estoque, que são o essencial.
+      try {
+        const reputacao = await atualizarReputacaoMl(loja);
+        if (reputacao?.alertas.length) {
+          resumo.detalhes.push({ loja: loja.slug, etapa: "reputacao", resultado: reputacao.alertas.join(" ") });
+        }
+      } catch (erro) {
+        resumo.detalhes.push({ loja: loja.slug, etapa: "reputacao", resultado: textoCurto(erro instanceof Error ? erro.message : "falha", 300) });
+      }
     } catch (erro) {
       const mensagem = textoCurto(erro instanceof MercadoLivreNaoConectado || erro instanceof Error ? erro.message : "Falha desconhecida.", 1000);
       resumo.falhas++;
