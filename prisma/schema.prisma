@@ -1045,7 +1045,10 @@ model PerguntaMercadoLivre {
   /// Apelido de quem perguntou. O ML não entrega contato, e não se inventa.
   autor String?
 
-  /// UNANSWERED | ANSWERED | CLOSED_UNANSWERED | UNDER_REVIEW | BANNED | DELETED
+  /// UNANSWERED | ANSWERED | CLOSED_UNANSWERED | UNDER_REVIEW | BANNED | DELETED,
+  /// mais `RESPONDENDO`, que é só nosso: a reivindicação entre o clique do
+  /// painel e o ML aceitar, para dois cliques não virarem duas respostas
+  /// públicas. Continua na fila do lojista, porque ainda não foi respondida.
   statusMl     String  @default("UNANSWERED")
   resposta     String?
   /// Quem respondeu daqui: operador da loja. Resposta que veio do app do ML

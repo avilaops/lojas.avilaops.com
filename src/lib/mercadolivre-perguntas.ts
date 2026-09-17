@@ -32,6 +32,12 @@ export interface PerguntaMl {
 export const LIMITE_RESPOSTA = 2000;
 
 /**
+ * Estado só nosso, entre reivindicar e o ML aceitar. Não é vocabulário do ML:
+ * lá a pergunta está respondida ou não está.
+ */
+const RESPONDENDO = "RESPONDENDO";
+
+/**
  * O ML recusa resposta com contato — a regra existe para a conversa não sair
  * da plataforma. Barrar aqui é o que transforma um erro genérico do ML numa
  * frase que o lojista entende.
@@ -86,7 +92,14 @@ export async function registrarPerguntaMl(loja: Tenant, perguntaId: string) {
   const pergunta = await prisma.perguntaMercadoLivre.upsert({
     where: { mlId: dados.mlId },
     create: { ...dados, tenantId: loja.id, anuncioId: anuncio?.id ?? null, produtoId: anuncio?.produtoId ?? null },
-    update: { statusMl: dados.statusMl, resposta: dados.resposta, respondidaEm: dados.respondidaEm },
+    update: {
+      // `UNANSWERED` nunca é escrito por cima do que já existe: é o estado
+      // inicial, e um aviso repetido chegando durante um envio devolveria a
+      // pergunta à fila com a resposta já a caminho.
+      ...(dados.statusMl === "UNANSWERED" ? {} : { statusMl: dados.statusMl }),
+      resposta: dados.resposta,
+      respondidaEm: dados.respondidaEm,
+    },
   });
 
   // Avisa só quando é pergunta nova e ainda sem resposta: quem responde pelo
@@ -119,11 +132,33 @@ export async function responderPerguntaMl(loja: Tenant, perguntaId: string, text
   const validada = validarResposta(texto);
   if (!validada.ok) throw new Error(validada.erro);
 
+  // Reivindica antes de falar com o ML. Ler o estado e escrever depois deixa
+  // dois cliques no mesmo textarea — ou dois operadores na mesma fila —
+  // mandarem duas respostas para a mesma pergunta, e no ML a resposta é
+  // pública e não se apaga. O `updateMany` condicional resolve isso numa
+  // instrução: quem perder a corrida não altera linha nenhuma.
+  const reivindicada = await prisma.perguntaMercadoLivre.updateMany({
+    where: {
+      id: pergunta.id,
+      OR: [
+        { statusMl: "UNANSWERED" },
+        // Envio que morreu no meio (o processo caiu entre a reivindicação e a
+        // resposta do ML) não pode aposentar a pergunta: depois de dois
+        // minutos ela volta a ser reivindicável.
+        { statusMl: RESPONDENDO, atualizadoEm: { lt: new Date(Date.now() - 2 * 60_000) } },
+      ],
+    },
+    data: { statusMl: RESPONDENDO, motivoErro: null },
+  });
+  if (!reivindicada.count) throw new Error("Esta pergunta já está sendo respondida ou já foi respondida.");
+
   try {
     await chamarMl(loja, "/answers", { method: "POST", body: JSON.stringify({ question_id: Number(pergunta.mlId), text: validada.texto }) });
   } catch (erro) {
     const mensagem = (erro instanceof Error ? erro.message : "Falha desconhecida.").slice(0, 500);
-    await prisma.perguntaMercadoLivre.update({ where: { id: pergunta.id }, data: { motivoErro: mensagem } });
+    // Devolve para a fila: falha de rede não pode aposentar a pergunta. Sem
+    // isto ela sairia de `perguntasPendentes` e ninguém responderia nunca.
+    await prisma.perguntaMercadoLivre.update({ where: { id: pergunta.id }, data: { statusMl: "UNANSWERED", motivoErro: mensagem } });
     throw new Error(mensagem);
   }
 
@@ -134,10 +169,15 @@ export async function responderPerguntaMl(loja: Tenant, perguntaId: string, text
   });
 }
 
-/** O que está esperando resposta, mais antiga primeiro: é a fila do lojista. */
+/**
+ * O que está esperando resposta, mais antiga primeiro: é a fila do lojista.
+ *
+ * `RESPONDENDO` entra na fila porque ele ainda **não** foi respondido: o envio
+ * está em curso, ou morreu no meio. Quem some da fila é só o que o ML aceitou.
+ */
 export async function perguntasPendentes(tenantId: string, limite = 50) {
   return prisma.perguntaMercadoLivre.findMany({
-    where: { tenantId, statusMl: "UNANSWERED" },
+    where: { tenantId, statusMl: { in: ["UNANSWERED", RESPONDENDO] } },
     orderBy: { perguntadaEm: "asc" },
     take: Math.min(Math.max(limite, 1), 200),
     select: { id: true, texto: true, autor: true, mlbId: true, perguntadaEm: true, motivoErro: true, produto: { select: { nome: true, slug: true } } },
