@@ -24,6 +24,7 @@ padrão não é "ajuste", é o plano Pro ou um projeto à parte.
 | Carrinho local (sem servidor de carrinho) | novo, `src/components/cart` | pronto |
 | Checkout transparente PIX/cartão/boleto | `packages/checkout` (Mercado Pago) | pronto |
 | Frete por CEP (CepCerto no servidor, uma conta para todas) + tabela por UF + retirada | `Websites/brilhax.com/src/lib/frete.ts`, generalizado | pronto |
+| **Entrega da própria loja** por faixa de CEP (motoboy, frota): `Tenant.entregaLocal`, com preço, prazo e grátis-acima próprios; concorre em preço com a transportadora e é a única opção que continua de pé quando a cotação online cai | `src/lib/frete.ts` (`entregaLocal`), painel → Entrega | pronto (17/09/2026) |
 | Pedidos, webhook de pagamento, status | novo, `src/lib/pedidos.ts` | pronto |
 | API administrativa (criar loja, importar produtos, provisionar, listar pedidos) | novo, `src/app/api/admin` | pronto |
 | Provisionamento: zona + DNS na Cloudflare, domínio + caixa no `mail.avilaops.com`, evento n8n | novo, `src/lib/provisionar.ts` | pronto, sem teste em produção |
