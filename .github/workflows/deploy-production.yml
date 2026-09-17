@@ -8,6 +8,8 @@ on:
 permissions:
   contents: read
 jobs:
+  # Tipos, testes e build já rodam dentro do `Dockerfile` (estágio `build`),
+  # em pull request também — não há gate a acrescentar antes da imagem.
   image:
     permissions:
       contents: read
@@ -30,3 +32,15 @@ jobs:
       DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
       DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
       DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+  # Depois do deploy, o que o navegador faria: /api/health com banco,
+  # /v1/health e a folha de estilo seguida a partir do HTML da vitrine.
+  # Sem dependência instalada — é o node do runner e `fetch`.
+  fumaca:
+    runs-on: ubuntu-latest
+    needs: deploy
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/smoke-publicacao.mjs "${{ vars.SMOKE_URL || 'https://lojas.avilaops.com' }}"

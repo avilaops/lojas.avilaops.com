@@ -76,17 +76,38 @@ docker compose up -d --force-recreate
 # do host). Sem esta ligação o nome não resolve e "Tratar com IA" fica fora.
 docker network connect odoo-avilaops_default lojas-avilaops 2>/dev/null || true
 
+# `/api/health` responde 200 com o pacote sem `.next/static`: em 02/09/2026 a
+# loja ficou no ar sem CSS nenhum e o deploy declarou sucesso. Então, antes de
+# declarar, o deploy faz o que o navegador faria: baixa o HTML da vitrine e
+# segue o <link> da folha de estilo. O mesmo par de verificações roda no
+# pipeline contra o domínio público, em `scripts/smoke-publicacao.mjs`.
+conferir_estilo() {
+  local html folha bytes
+  html=$(curl -sf -H "host: lojas.avilaops.com" http://127.0.0.1:3080/) || {
+    echo "!! a vitrine não respondeu" >&2; return 1; }
+  folha=$(printf '%s' "$html" | grep -oE '/_next/static/css/[^"]+\.css' | head -1)
+  [ -n "$folha" ] || { echo "!! a vitrine não referencia folha de estilo própria (pacote sem .next/static?)" >&2; return 1; }
+  bytes=$(curl -sf -o /dev/null -w '%{size_download}' -H "host: lojas.avilaops.com" "http://127.0.0.1:3080$folha") || {
+    echo "!! $folha não foi servida; a loja abriria sem CSS" >&2; return 1; }
+  [ "$bytes" -gt 1000 ] || { echo "!! $folha veio com $bytes bytes" >&2; return 1; }
+  echo "==> folha de estilo servida ($folha, $bytes bytes)"
+}
+
 for i in $(seq 1 30); do
   sleep 2
   if curl -sf -o /dev/null http://127.0.0.1:3080/api/health; then
     echo "==> saudável na tentativa $i"
+    if ! conferir_estilo; then
+      echo "!! respondeu, mas sem a folha de estilo; tratando como versão quebrada" >&2
+      break
+    fi
     docker image prune -f >/dev/null
     docker buildx prune -af >/dev/null 2>&1 || true
     exit 0
   fi
 done
 
-echo "!! não respondeu; voltando para a versão anterior" >&2
+echo "!! deploy não passou nas verificações; voltando para a versão anterior" >&2
 docker logs --tail 30 lojas-avilaops 2>&1 | grep -vE "^\s+at " >&2
 if [ -d app.anterior ]; then
   mv app app.falhou
