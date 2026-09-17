@@ -4,7 +4,7 @@ import { ArrowRight, Search, ShieldCheck, Stethoscope } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import BeneficiosBarra from "./BeneficiosBarra";
 import AtalhosCategorias from "./AtalhosCategorias";
-import { NECESSIDADES, lerResponsavel, responsavelCompleto } from "@/lib/farmacia";
+import { lerResponsavel, responsavelCompleto } from "@/lib/farmacia";
 import type { DadosHome } from "./tipos";
 
 /**
@@ -24,15 +24,17 @@ import type { DadosHome } from "./tipos";
  *      dos dois a loja cadastrou;
  *   2. os atalhos por necessidade, para quem não tem receita nenhuma e sabe
  *      apenas o que está sentindo. São buscas prontas (`src/lib/farmacia.ts`,
- *      `NECESSIDADES`): não inventam categoria e não exigem cadastro nenhum
- *      do lojista.
+ *      `NECESSIDADES`): não inventam categoria e não exigem que o lojista
+ *      cadastre nada de novo. Só aparecem os que o catálogo tem como atender
+ *      (`necessidadesDaLoja`) — chip que cai em "nenhum produto encontrado"
+ *      ensina o comprador que a loja não trabalha com aquilo.
  *
  * E o farmacêutico responsável aparece na primeira tela, não só no rodapé.
  * Numa drogaria isso não é selo de confiança de e-commerce, é a informação que
  * a RDC 44/2009 obriga a loja a exibir — e é também o que diferencia uma
  * farmácia de verdade de um site que vende remédio.
  */
-export default function Farmacia({ t, identidade, categorias, vitrine, temDestaques, vende }: DadosHome) {
+export default function Farmacia({ t, identidade, categorias, vitrine, temDestaques, vende, necessidades = [] }: DadosHome) {
   const responsavel = lerResponsavel(t);
   const temResponsavel = responsavelCompleto(responsavel);
 
@@ -60,13 +62,19 @@ export default function Farmacia({ t, identidade, categorias, vitrine, temDestaq
             <button type="submit" className="btn-primario">Buscar</button>
           </form>
 
-          <ul className="farmacia-necessidades">
-            {NECESSIDADES.map((n) => (
-              <li key={n.termo}>
-                <Link href={`/produtos?q=${encodeURIComponent(n.termo)}`}>{n.rotulo}</Link>
-              </li>
-            ))}
-          </ul>
+          {/* Só os atalhos que a loja tem como atender: chip que cai em
+              "nenhum produto encontrado" é beco sem saída, e quem clica conclui
+              que a loja não trabalha com aquilo. O corte é feito no catálogo
+              (`necessidadesDaLoja`), não aqui. */}
+          {necessidades.length > 0 && (
+            <ul className="farmacia-necessidades">
+              {necessidades.map((n) => (
+                <li key={n.termo}>
+                  <Link href={`/produtos?q=${encodeURIComponent(n.termo)}`}>{n.rotulo}</Link>
+                </li>
+              ))}
+            </ul>
+          )}
 
           {temResponsavel && (
             <p className="farmacia-responsavel-topo">

@@ -7,7 +7,7 @@ import { INCLUIR_CATALOGO } from "./catalogo-qualidade";
 import { encaixe, lerCompatibilidade, type Moto } from "./motos";
 import type { TemaLoja } from "./tema";
 import { publicavel, WHERE_COMPLETO } from "./produto-regras";
-import { equivalentes as equivalentesFarmacia } from "./farmacia";
+import { NECESSIDADES, equivalentes as equivalentesFarmacia } from "./farmacia";
 
 export type ProdutoComCategoria = Produto & { categoria: Categoria | null };
 
@@ -524,4 +524,35 @@ export async function equivalentesDoProduto(
     take: 50,
   });
   return equivalentesFarmacia(produto, candidatos).slice(0, limite);
+}
+
+/**
+ * Quais atalhos por necessidade a home de farmácia pode mostrar.
+ *
+ * `NECESSIDADES` é uma lista fixa de buscas prontas ("Dor e febre" → analgésico),
+ * e desenhá-la inteira levaria o comprador a um "nenhum produto encontrado" nas
+ * que a loja não trabalha. É o mesmo beco sem saída que `listarCategorias` já
+ * evita com categoria vazia, e a regra da casa é a mesma: o que aponta para o
+ * catálogo se resolve pelo catálogo e some quando a loja não tem aquilo
+ * (AGENTS.md).
+ *
+ * Uma contagem por necessidade, com `limite: 1` — não interessa quantos são,
+ * só se existe pelo menos um. Vai pelo mesmo índice trigrama da busca e fica no
+ * cache do catálogo por cinco minutos, caindo quando o lojista importa
+ * planilha, como as faixas de medida e as motos.
+ */
+export async function necessidadesDaLoja(tenantId: string) {
+  return unstable_cache(necessidadesSemCache, ["necessidades-da-loja"], { revalidate: 300, tags: [etiquetaDoCatalogo(tenantId)] })(tenantId);
+}
+
+async function necessidadesSemCache(tenantId: string) {
+  const achou = await Promise.all(
+    NECESSIDADES.map((n) =>
+      prisma.produto.findFirst({
+        where: { tenantId, ativo: true, AND: termosDeBusca(n.termo).map((t) => ({ busca: { contains: t } })) },
+        select: { id: true },
+      }),
+    ),
+  );
+  return NECESSIDADES.filter((_, i) => achou[i] !== null);
 }
