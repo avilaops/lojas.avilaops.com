@@ -286,7 +286,7 @@ export default function LandingPlataforma() {
       <section id="modelos" className="pl-modelos">
         <div className="pl-container">
           <header className="pl-cabecalho pl-cabecalho-escuro">
-            <span className="pl-kicker">Sete jeitos de mostrar a vitrine</span>
+            <span className="pl-kicker">Nove jeitos de mostrar a vitrine</span>
             <h2>Escolha a composição.<br />A cor e as fotos são suas.</h2>
             <p>Toque para ver como fica cada uma. Dá para trocar depois, quantas vezes quiser, sem refazer nada.</p>
           </header>
