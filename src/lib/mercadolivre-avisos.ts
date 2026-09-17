@@ -96,7 +96,11 @@ async function atualizarEnvio(loja: Tenant, envioId: string, resumo: ResumoAviso
     resumo.detalhes.push({ loja: loja.slug, topico: "shipments", resultado: `Envio de um pedido que ainda não chegou aqui (${envio.order_id}).` });
     return;
   }
-  const status = envio.status === "delivered" ? "ENTREGUE" : envio.status === "shipped" ? "ENVIADO" : pedido.status;
+  // O aviso de envio chega fora de ordem: o ML reenvia, e um "shipped" antigo
+  // pode chegar depois do "delivered". Entrega e cancelamento são estados
+  // finais — nenhum aviso de envio os desfaz.
+  const finalizado = pedido.status === "ENTREGUE" || pedido.status === "CANCELADO" || pedido.status === "ESTORNADO";
+  const status = finalizado ? pedido.status : envio.status === "delivered" ? "ENTREGUE" : envio.status === "shipped" ? "ENVIADO" : pedido.status;
   await prisma.pedido.update({
     where: { id: pedido.id },
     data: { rastreio: envio.tracking_number ?? undefined, status },
