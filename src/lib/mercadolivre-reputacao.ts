@@ -61,6 +61,13 @@ function porcento(valor: unknown): number | null {
  * Só entra alerta com número medido: conta nova não tem métrica, e dizer
  * "suas reclamações estão altas" para quem ainda não vendeu seria inventar
  * problema. Cada frase diz o que está acontecendo e o que mudaria isso.
+ *
+ * E só entra alerta que o lojista possa resolver. Não ter selo de Mercado
+ * Líder não é problema: é o estado normal de quase toda conta, e o selo sai de
+ * volume e tempo, que ninguém conserta hoje. Alertar sobre isso seria um
+ * alarme permanente, e alarme permanente é alarme que se aprende a ignorar —
+ * inclusive os três de cima, que são de verdade. O selo fica onde ele é
+ * informação: na tela, ao lado do nível.
  */
 export function lerReputacao(bruto: ReputacaoMl): Reputacao {
   const r = bruto.seller_reputation ?? {};
@@ -80,10 +87,6 @@ export function lerReputacao(bruto: ReputacaoMl): Reputacao {
   if (cancelamentos != null && cancelamentos > LIMITES.cancelamentos) {
     alertas.push(`${cancelamentos}% das vendas foram canceladas por você, acima de ${LIMITES.cancelamentos}%. Em geral é estoque anunciado que não existia: a sincronização de estoque evita isso.`);
   }
-  if (r.power_seller_status == null && (t.completed ?? 0) > 0) {
-    alertas.push("A conta ainda não tem selo de Mercado Líder. Ele sai de volume, reputação verde e tempo de conta — não há atalho.");
-  }
-
   return {
     nivel: r.level_id ?? null,
     selo: r.power_seller_status ?? null,

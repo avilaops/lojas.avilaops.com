@@ -46,10 +46,11 @@ test("métrica dentro do limite não vira alerta", () => {
   assert.deepEqual(r.alertas, [], "o limite é o teto aceito, não o começo do problema");
 });
 
-test("quem já vendeu e não tem selo ouve isso uma vez, sem promessa de atalho", () => {
+test("não ter selo de Mercado Líder não é alerta: é o estado normal e não se conserta hoje", () => {
+  // Alarme que não sai nunca é alarme que se aprende a ignorar — junto com os
+  // três que são de verdade. O selo continua sendo dado, e a tela o mostra.
   const r = lerReputacao({ seller_reputation: { transactions: { total: 40, completed: 40, canceled: 0 } } });
-  assert.equal(r.alertas.length, 1);
-  assert.match(r.alertas[0], /Mercado Líder/);
+  assert.deepEqual(r.alertas, []);
   assert.equal(r.selo, null);
 });
 

@@ -46,9 +46,15 @@ export default function ReputacaoMl({ r }: { r: ReputacaoMlView }) {
             {nivel.rotulo}
           </span>
         )}
-        {r.selo && (
+        {r.selo ? (
           <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs font-medium">
             <Award size={13} /> {SELO[r.selo] ?? r.selo}
+          </span>
+        ) : (
+          // Informação, não alerta: o selo sai de volume, reputação verde e
+          // tempo de conta. Não há o que fazer hoje, então não cobra nada.
+          <span className="text-xs text-muted-foreground">
+            sem selo de Mercado Líder — ele vem de volume, reputação verde e tempo de conta
           </span>
         )}
         <span className="text-xs text-muted-foreground">
