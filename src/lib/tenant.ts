@@ -129,6 +129,25 @@ export function porOndeFalarCom(t: Tenant): string {
   return "pelos nossos canais de atendimento";
 }
 
+/**
+ * A marca da loja em quadrado sólido, para usar sobre fundo colorido.
+ *
+ * O logo em si não serve: ele é arte com fundo transparente, desenhada para
+ * papel branco. Sobre a cor primária da loja ele pode sumir — na Vedashow o
+ * wordmark é `#2c2c79` e a primária é quase a mesma, então a imagem de
+ * compartilhamento saía com o logo invisível e o nome escrito do lado, isto
+ * é, a marca duplicada com uma das cópias quebrada.
+ *
+ * O `apple-touch-icon.png` do favicon resolve porque ele **é** um ladrilho:
+ * fundo sólido por especificação da Apple, margem já embutida, desenhado para
+ * ser lido pequeno e sobre qualquer coisa. Mesma pasta e mesma convenção de
+ * nomes que `iconesDa` usa em `layout.tsx`.
+ */
+export function marcaQuadradaDa(t: Tenant): string | null {
+  if (t.faviconUrl) return `${t.faviconUrl.replace(/\/+$/, "")}/apple-touch-icon.png`;
+  return t.logoUrl ?? null;
+}
+
 /** A loja tem ao menos um jeito de ser contatada? Se não, `/contato` mente. */
 export function contatoConfigurado(t: Tenant): boolean {
   return Boolean(t.whatsapp || t.telefone || t.emailContato || t.enderecoPublico);

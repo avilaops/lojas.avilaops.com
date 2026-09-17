@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type { Tenant } from "@prisma/client";
-import { contatoConfigurado, enderecoCompleto, formatarCep, lojaVende, porOndeFalarCom, prazoDeDespacho } from "./tenant";
+import { contatoConfigurado, enderecoCompleto, formatarCep, lojaVende, marcaQuadradaDa, porOndeFalarCom, prazoDeDespacho } from "./tenant";
 
 /**
  * `lojaVende` decide se a loja mostra "Finalizar compra" ou "Pedir pelo
@@ -79,4 +79,16 @@ test("loja sem canal nenhum é loja sem contato, e a página precisa saber", () 
   assert.equal(contatoConfigurado(loja({})), false);
   assert.equal(contatoConfigurado(loja({ telefone: "1633334444" })), true);
   assert.equal(contatoConfigurado(loja({ enderecoPublico: true })), true);
+});
+
+test("a marca do compartilhamento é o ladrilho do favicon, não o logo cru", () => {
+  // O logo da Vedashow é wordmark navy sobre transparente, e a cor primária da
+  // loja é quase a mesma: sobre ela o logo sumia e sobrava só o nome ao lado.
+  assert.equal(
+    marcaQuadradaDa(loja({ faviconUrl: "/uploads/vedashow/", logoUrl: "/uploads/vedashow/logo.webp" })),
+    "/uploads/vedashow/apple-touch-icon.png",
+  );
+  // Sem favicon, o logo ainda é melhor que nada.
+  assert.equal(marcaQuadradaDa(loja({ logoUrl: "/x/logo.webp" })), "/x/logo.webp");
+  assert.equal(marcaQuadradaDa(loja({})), null);
 });
