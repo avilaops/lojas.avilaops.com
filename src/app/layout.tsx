@@ -6,7 +6,7 @@ import { headers } from "next/headers";
 import "./globals.css";
 import "@avilaops/checkout/tokens.css";
 import "@avilaops/checkout/checkout.css";
-import { noEnderecoOficial, tenantAtual, tenantPublico, temaDo, urlDaLoja, enderecoDo, identidadeDa } from "@/lib/tenant";
+import { noEnderecoOficial, tenantAtual, tenantPublico, temaDo, urlDaLoja, enderecoDo, formatarCep, identidadeDa } from "@/lib/tenant";
 import { listarCategorias } from "@/lib/catalogo";
 import { cssDoTema, fonteGoogleHref } from "@/lib/tema";
 import { CartProvider } from "@/components/cart/CartProvider";
@@ -157,7 +157,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     ...(identidade.diferencial ? { description: identidade.diferencial } : {}),
     ...(t.telefone ? { telephone: t.telefone } : {}),
     ...(t.enderecoPublico && endereco.cidade
-      ? { address: { "@type": "PostalAddress", streetAddress: [endereco.logradouro, endereco.numero].filter(Boolean).join(", "), addressLocality: endereco.cidade, addressRegion: endereco.uf, postalCode: endereco.cep, addressCountry: "BR" } }
+      ? { address: { "@type": "PostalAddress", streetAddress: [endereco.logradouro, endereco.numero].filter(Boolean).join(", "), addressLocality: endereco.cidade, addressRegion: endereco.uf, postalCode: formatarCep(endereco.cep), addressCountry: "BR" } }
       : {}),
   };
 

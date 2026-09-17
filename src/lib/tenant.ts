@@ -86,9 +86,18 @@ export function enderecoDo(t: Tenant): Endereco {
   return (t.endereco as Endereco | null) ?? {};
 }
 
+/**
+ * CEP guardado é só dígito (o schema limpa na entrada). Na vitrine ele aparece
+ * do jeito que o brasileiro lê: "01001-000", e não "01001000".
+ */
+export function formatarCep(cep?: string): string {
+  const d = (cep ?? "").replace(/\D/g, "");
+  return d.length === 8 ? `${d.slice(0, 5)}-${d.slice(5)}` : (cep ?? "");
+}
+
 export function enderecoCompleto(t: Tenant): string {
   const e = enderecoDo(t);
-  return [e.logradouro && `${e.logradouro}${e.numero ? ", " + e.numero : ""}`, e.bairro, e.cidade && `${e.cidade}${e.uf ? " - " + e.uf : ""}`, e.cep]
+  return [e.logradouro && `${e.logradouro}${e.numero ? ", " + e.numero : ""}`, e.bairro, e.cidade && `${e.cidade}${e.uf ? " - " + e.uf : ""}`, formatarCep(e.cep)]
     .filter(Boolean)
     .join(" · ");
 }
