@@ -40,6 +40,13 @@ aviso. Os itens casam com o catálogo pelo `mlbId` do anúncio, e a baixa usa o
 mesmo caminho do checkout (`baixarEstoqueDoPedido`), que sabe abater sem
 reserva prévia.
 
+A **referência é sorteada** (`crypto.randomUUID()`), como a do checkout
+próprio, e não derivada do número da ordem. `/pedido/[referencia]` é página
+pública — mostra nome, e-mail, itens, total e rastreio sem pedir sessão —, e o
+que separa o comprador de um estranho é a referência ser impossível de
+adivinhar. O `order.id` do ML é um número sequencial que o comprador vê e que
+se enumera: ele vive em `canalPedidoId`, que nenhuma rota pública alcança.
+
 ## O catálogo, depois de publicado
 
 Publicar não é o fim. Até 17/09/2026 só preço e estoque subiam: quem trocava a
@@ -57,7 +64,11 @@ Duas regras do ML que o código respeita em vez de ignorar:
 
 - **Título de anúncio que já vendeu não muda.** O ML recusa, e isso não é
   falha do lojista: as fotos vão assim mesmo, e o motivo fica escrito no
-  anúncio em vez de a atualização inteira falhar.
+  anúncio em vez de a atualização inteira falhar. Como a recusa é definitiva,
+  a impressão digital é gravada mesmo assim — insistir de hora em hora
+  gastaria duas chamadas por ciclo, para sempre, contra uma resposta que não
+  muda. A pendência fica só para o que o próximo ciclo pode resolver: uma foto
+  que não subiu, uma descrição recusada.
 - **Descrição é texto puro.** HTML mandado cru aparece como texto na tela do
   comprador, então sai daqui limpo — inclusive sem o espaço antes da
   pontuação que a limpeza de tags deixava para trás.
@@ -113,13 +124,17 @@ estoque: ela é a última coisa do ciclo, dentro do próprio try.
 ## O que a integração não inventa
 
 - **Contato do comprador.** O ML não entrega mais e-mail, telefone e documento
-  na ordem. Os campos ficam vazios, e o evento sai com o canal para o n8n não
-  tentar falar por fora com quem comprou lá dentro — a conversa com esse
-  comprador acontece no ML.
+  na ordem. Os campos ficam vazios, e o `pedido.pago` sai com
+  `canal: "mercadolivre"` para o n8n não tentar falar por fora com quem
+  comprou lá dentro — a conversa com esse comprador acontece no ML. **O fluxo
+  do n8n precisa testar esse campo**: sem isso, a confirmação de compra sai
+  contra um e-mail vazio e vira automação falhada a cada venda do canal.
+  Evento sem `canal` é venda da loja, como sempre foi.
 - **Item que não casa com o catálogo.** Entra no pedido (a venda existe) com
   um aviso, e sem baixar estoque de um produto que não é dele.
 - **Entrega.** Só `delivered` fecha o pedido como entregue; etiqueta emitida
-  não é entrega.
+  não é entrega. E entrega e cancelamento são finais: o aviso de envio chega
+  fora de ordem no ML, e um `shipped` atrasado não desfaz um pedido entregue.
 
 ## Limites conhecidos
 

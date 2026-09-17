@@ -5,12 +5,13 @@ import { Campo, inputClasse } from "./campos";
 import EnviarImagem from "./EnviarImagem";
 import { ANO_MAX, ANO_MIN, MOTOS_BRASIL, lerCompatibilidade, type Compatibilidade } from "@/lib/motos";
 import { PRINCIPIOS_COMUNS, TARJAS, TIPOS_MEDICAMENTO, pendenciasDe } from "@/lib/farmacia";
+import { AJUDA_TIPO, lerDefinicoes, lerValores, type CampoPersonalizado } from "@/lib/campos-personalizados";
 
 /** Campo vazio não vira 0: sem medida, o frete usa a caixa padrão da loja. */
 const medida = (chave: string, valor: string) =>
   valor.trim() ? { [chave]: Number.parseFloat(valor.replace(",", ".")) } : {};
 
-interface Form { tarja: string; principioAtivo: string; apresentacao: string; registroAnvisa: string; tipoMedicamento: string; versaoCatalogo:number; temVariacoes:boolean; mpn:string; identificadoresEstado:string; nome: string; categoria: string; marca: string; sku: string; gtin: string; preco: string; precoDe: string; descricaoCurta: string; descricao: string; imagens: string[]; destaque: boolean; ativo: boolean; disponibilidade: string; estoque: string; pesoKg: string; alturaCm: string; larguraCm: string; comprimentoCm: string; codigoOriginal: string; codigosEquivalentes: string; compatibilidade: LinhaCompat[] }
+interface Form { tarja: string; principioAtivo: string; apresentacao: string; registroAnvisa: string; tipoMedicamento: string; versaoCatalogo:number; temVariacoes:boolean; mpn:string; identificadoresEstado:string; nome: string; categoria: string; marca: string; sku: string; gtin: string; preco: string; precoDe: string; descricaoCurta: string; descricao: string; imagens: string[]; destaque: boolean; ativo: boolean; disponibilidade: string; estoque: string; pesoKg: string; alturaCm: string; larguraCm: string; comprimentoCm: string; codigoOriginal: string; codigosEquivalentes: string; compatibilidade: LinhaCompat[]; camposPersonalizados: Record<string, string> }
 /** Linha do editor de compatibilidade: texto livre até salvar (ano vazio = sem limite). */
 interface LinhaCompat { marca: string; modelo: string; anoDe: string; anoAte: string }
 
@@ -31,13 +32,17 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoFechar,
   // já é longo. Ver src/lib/farmacia.ts.
   const farmacia = segmento === "farmacia";
   const [f, setF] = useState<Form | null>(null);
+  /** O que esta loja pergunta além do padrão. Vem junto do produto no GET. */
+  const [definicoes, setDefinicoes] = useState<CampoPersonalizado[]>([]);
   const [erro, setErro] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
 
   useEffect(() => {
     fetch(`/api/painel/produtos?id=${produtoId}`).then((r) => r.json()).then((p) => {
       if (p?.erro) return setErro(p.erro);
+      setDefinicoes(lerDefinicoes(p.definicoesCampos));
       setF({
+        camposPersonalizados: lerValores(p.camposPersonalizados),
         versaoCatalogo:p.versaoCatalogo, temVariacoes:p.opcoes.length>0, mpn:p.mpn??"", identificadoresEstado:p.identificadoresEstado??"desconhecido",
         nome: p.nome, categoria: p.categoria ?? "", marca: p.marca ?? "", sku: p.sku ?? "", gtin: p.gtin ?? "",
         preco: (p.precoCentavos / 100).toFixed(2).replace(".", ","), precoDe: p.precoDeCentavos != null ? (p.precoDeCentavos / 100).toFixed(2).replace(".", ",") : "",
@@ -71,6 +76,9 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoFechar,
           codigoOriginal: f.codigoOriginal.trim() || null,
           codigosEquivalentes: f.codigosEquivalentes.split(/[,;\n]/).map((c) => c.trim()).filter(Boolean),
           compatibilidade: paraCompat(f.compatibilidade),
+          // Só quando a loja definiu algum: enviar {} apagaria os valores de
+          // quem ainda não usa o recurso.
+          ...(definicoes.length ? { camposPersonalizados: f.camposPersonalizados } : {}),
           ...(farmacia ? {
             tarja: f.tarja,
             principioAtivo: f.principioAtivo.trim() || null,
@@ -194,6 +202,65 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoFechar,
           <Campo label="Código original (OEM)" ajuda="Referência de aplicação na moto. Não é automaticamente o MPN da peça vendida."><input className={inputClasse} value={f.codigoOriginal} onChange={(e) => set("codigoOriginal", e.target.value)} placeholder="15410-MCJ-505" /></Campo>
           <Campo label="Códigos equivalentes" ajuda="Separados por vírgula. O cliente que busca pelo código do concorrente acha esta peça."><input className={inputClasse} value={f.codigosEquivalentes} onChange={(e) => set("codigosEquivalentes", e.target.value)} placeholder="HF204, PH6017A" /></Campo>
         </div>
+        {/* Campos da loja. Só aparece quando ela definiu algum: numa loja que
+            não usa o recurso, um bloco vazio seria só ruído no formulário. */}
+        {definicoes.length > 0 && (
+          <div className="mt-6 border-t border-border pt-4">
+            <h4 className="text-sm font-semibold">Campos da loja</h4>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Definidos em Configurações › Campos do produto. Campo em rascunho é preenchido aqui e só aparece na loja
+              quando você o ativa lá.
+            </p>
+            <div className="mt-3 grid gap-4 sm:grid-cols-2">
+              {definicoes.map((c) => {
+                const valor = f.camposPersonalizados[c.chave] ?? "";
+                const mudar = (v: string) => set("camposPersonalizados", { ...f.camposPersonalizados, [c.chave]: v });
+                const rotulo = c.estado === "rascunho" ? `${c.rotulo} (rascunho)` : c.rotulo;
+                const ajuda = c.ajuda ?? AJUDA_TIPO[c.tipo];
+                if (c.tipo === "escolha") {
+                  return (
+                    <Campo key={c.chave} label={rotulo} ajuda={ajuda}>
+                      <select className={inputClasse} value={valor} onChange={(e) => mudar(e.target.value)}>
+                        <option value="">—</option>
+                        {(c.opcoes ?? []).map((o) => <option key={o} value={o}>{o}</option>)}
+                      </select>
+                    </Campo>
+                  );
+                }
+                if (c.tipo === "booleano") {
+                  return (
+                    <Campo key={c.chave} label={rotulo} ajuda={ajuda}>
+                      <select className={inputClasse} value={valor} onChange={(e) => mudar(e.target.value)}>
+                        <option value="">—</option>
+                        <option value="sim">Sim</option>
+                        <option value="nao">Não</option>
+                      </select>
+                    </Campo>
+                  );
+                }
+                if (c.tipo === "texto-longo") {
+                  return (
+                    <Campo key={c.chave} label={rotulo} ajuda={ajuda}>
+                      <textarea className={`${inputClasse} h-auto py-2`} rows={4} value={valor} onChange={(e) => mudar(e.target.value)} />
+                    </Campo>
+                  );
+                }
+                return (
+                  <Campo key={c.chave} label={rotulo} ajuda={ajuda}>
+                    <input
+                      className={inputClasse}
+                      type={c.tipo === "data" ? "date" : c.tipo === "numero" ? "text" : "text"}
+                      inputMode={c.tipo === "numero" ? "decimal" : undefined}
+                      value={valor}
+                      onChange={(e) => mudar(e.target.value)}
+                      placeholder={c.tipo === "video" ? "https://youtu.be/…" : c.tipo === "url" || c.tipo === "imagem" ? "https://…" : c.unidade ? `em ${c.unidade}` : ""}
+                    />
+                  </Campo>
+                );
+              })}
+            </div>
+          </div>
+        )}
         <div id="catalogo-imagens" tabIndex={-1} /><Campo label="Fotos" ajuda="A primeira é a principal. Arraste não; use os botões.">
           <div className="flex flex-wrap gap-2">
             {f.imagens.map((url, i) => (

@@ -5,6 +5,7 @@ import { PreferenciasCookies } from "@/components/Consentimento";
 import { pixelsDo, temRastreio } from "@/lib/pixels";
 import { mascararDocumento } from "@avilaops/checkout";
 import { AVISO_MEDICAMENTO, lerResponsavel, responsavelCompleto } from "@/lib/farmacia";
+import { politicasPublicadas } from "@/lib/politicas";
 
 /**
  * Rodapé. O "Loja por Avila Ops" não é opcional nem negociável por desconto
@@ -18,6 +19,7 @@ export default function Footer({ tenant, categorias }: { tenant: Tenant; categor
   // o Decreto 7.962/2013 exige endereço físico de quem vende pela internet.
   const endereco = tenant.enderecoPublico ? enderecoCompleto(tenant) : "";
   const enderecoLegal = enderecoCompleto(tenant);
+  const politicas = politicasPublicadas(tenant);
   /**
    * Farmácia virtual não é uma loja com produtos de farmácia: é um
    * estabelecimento regulado. A RDC 44/2009 (art. 55) exige que o site exiba o
@@ -62,10 +64,12 @@ export default function Footer({ tenant, categorias }: { tenant: Tenant; categor
           <ul className="space-y-1 text-muted-foreground">
             <li><Link href="/sobre">Sobre</Link></li>
             <li><Link href="/contato">Contato</Link></li>
-            <li><Link href="/politicas/envio">Envio e retirada</Link></li>
-            <li><Link href="/politicas/devolucao">Trocas e devoluções</Link></li>
-            <li><Link href="/politicas/privacidade">Privacidade</Link></li>
-            <li><Link href="/politicas/termos">Termos de uso</Link></li>
+            <li><Link href="/blog">Blog</Link></li>
+            {/* A lista de políticas é a que a loja realmente publica: link fixo
+                aqui viraria 404 no aviso legal, que só existe quando escrito. */}
+            {politicas.map((p) => (
+              <li key={p.tipo}><Link href={`/politicas/${p.tipo}`}>{p.titulo}</Link></li>
+            ))}
             {tenant.instagram && (
               <li>
                 <a href={tenant.instagram} target="_blank" rel="noopener">Instagram</a>

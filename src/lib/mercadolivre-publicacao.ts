@@ -153,15 +153,29 @@ export function conteudoDoAnuncio(anuncio: AnuncioParaPublicar, base: string): C
   return { title, pictures, descricao, hash };
 }
 
+/** O que sobrou de uma escrita de conteúdo: o que contar, e se vale tentar de novo. */
+type EscritaDeConteudo = {
+  avisos: string[];
+  /** `true` só quando o próximo ciclo tem chance de consertar. */
+  pendente: boolean;
+};
+
 /**
  * Manda o conteúdo para um anúncio que já existe.
  *
  * O ML recusa trocar o título de anúncio que já vendeu — e isso não é falha
  * do lojista nem motivo para abortar o resto: a foto e a descrição continuam
  * atualizáveis, e o motivo fica escrito no anúncio.
+ *
+ * E não é motivo para repetir: recusa de título em anúncio que vendeu é
+ * definitiva. Se as fotos entraram, a escrita se dá por feita — insistir de
+ * hora em hora gastaria duas chamadas por ciclo, para sempre, contra uma
+ * resposta que não vai mudar. A pendência fica para o que o próximo ciclo
+ * pode mesmo resolver: uma foto que não subiu, uma descrição recusada.
  */
-async function escreverConteudo(loja: Tenant, mlbId: string, conteudo: ConteudoMl): Promise<string[]> {
-  const problemas: string[] = [];
+async function escreverConteudo(loja: Tenant, mlbId: string, conteudo: ConteudoMl): Promise<EscritaDeConteudo> {
+  const avisos: string[] = [];
+  let pendente = false;
   try {
     await chamarMl(loja, `/items/${encodeURIComponent(mlbId)}`, {
       method: "PUT",
@@ -169,16 +183,20 @@ async function escreverConteudo(loja: Tenant, mlbId: string, conteudo: ConteudoM
     });
   } catch (erro) {
     const mensagem = textoCurto(erro instanceof Error ? erro.message : "Falha desconhecida.", 300);
-    problemas.push(`Título e fotos não foram aceitos pelo Mercado Livre: ${mensagem}`);
+    avisos.push(`Título e fotos não foram aceitos pelo Mercado Livre: ${mensagem}`);
     try {
       await chamarMl(loja, `/items/${encodeURIComponent(mlbId)}`, { method: "PUT", body: JSON.stringify({ pictures: conteudo.pictures }) });
-      problemas.push("As fotos foram atualizadas sozinhas; o título ficou como estava.");
+      avisos.push("As fotos foram atualizadas sozinhas; o título ficou como estava — anúncio com venda não troca de título.");
     } catch {
-      /* já registrado acima */
+      pendente = true;
     }
   }
-  if (conteudo.descricao) problemas.push(...(await escreverDescricao(loja, mlbId, conteudo.descricao)));
-  return problemas;
+  if (conteudo.descricao) {
+    const daDescricao = await escreverDescricao(loja, mlbId, conteudo.descricao);
+    if (daDescricao.length) pendente = true;
+    avisos.push(...daDescricao);
+  }
+  return { avisos, pendente };
 }
 
 async function escreverDescricao(loja: Tenant, mlbId: string, descricao: string): Promise<string[]> {
@@ -276,9 +294,9 @@ async function sincronizarPublicados(loja: Tenant, limite: number, resumo: Resum
       // Conteúdo antes de preço: o lojista que corrigiu a foto errada quer ver
       // a foto certa no ar, e isso não depende de o preço ter mudado.
       const conteudo = conteudoDoAnuncio(anuncio, urlDaLoja(loja));
-      const problemasDeConteudo = conteudo && conteudo.hash !== anuncio.conteudoHash
+      const escrita: EscritaDeConteudo = conteudo && conteudo.hash !== anuncio.conteudoHash
         ? await escreverConteudo(loja, anuncio.mlbId, conteudo)
-        : [];
+        : { avisos: [], pendente: false };
 
       const estoque = anuncio.produto.ativo ? Math.max(0, Math.trunc(anuncio.produto.estoque ?? 0)) : 0;
       const preco = Number((anuncio.produto.precoCentavos / 100).toFixed(2));
@@ -296,7 +314,7 @@ async function sincronizarPublicados(loja: Tenant, limite: number, resumo: Resum
       }
 
       const confirmado = await chamarMl<{ status?: string; price?: number; available_quantity?: number; permalink?: string }>(loja, `/items/${encodeURIComponent(anuncio.mlbId)}`);
-      const problemas: string[] = [...problemasDeConteudo];
+      const problemas: string[] = [...escrita.avisos];
       if (confirmado.available_quantity !== estoque) problemas.push("O Mercado Livre não confirmou o novo estoque; a conta pode usar estoque multiorigem.");
       if (anuncio.produto.precoCentavos > 0 && confirmado.price !== preco) problemas.push("O Mercado Livre não confirmou o novo preço; pode existir automação de preço ativa.");
 
@@ -308,9 +326,10 @@ async function sincronizarPublicados(loja: Tenant, limite: number, resumo: Resum
           motivoErro: problemas.length ? problemas.join(" ") : null,
           precoCentavosPublicado: confirmado.price === preco ? anuncio.produto.precoCentavos : anuncio.precoCentavosPublicado,
           estoquePublicado: confirmado.available_quantity === estoque ? estoque : anuncio.estoquePublicado,
-          // Só grava a impressão digital quando o conteúdo entrou inteiro: com
-          // problema, o próximo ciclo tenta de novo em vez de dar por feito.
-          conteudoHash: conteudo && !problemasDeConteudo.length ? conteudo.hash : anuncio.conteudoHash,
+          // Grava a impressão digital quando não sobrou nada que o próximo
+          // ciclo possa consertar. Recusa definitiva (título de anúncio que
+          // vendeu) fica só como aviso: repetir não muda a resposta.
+          conteudoHash: conteudo && !escrita.pendente ? conteudo.hash : anuncio.conteudoHash,
           sincronizadoEm: new Date(),
         },
       });

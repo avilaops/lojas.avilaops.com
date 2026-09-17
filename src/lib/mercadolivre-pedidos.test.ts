@@ -52,10 +52,18 @@ test("o item casa com o produto pelo anúncio, e o que não casa avisa em vez de
   assert.match(p.avisos.join(" "), /MLB999/);
 });
 
-test("a referência e o id de canal saem do pedido do ML, para a ingestão ser idempotente", () => {
+test("o id de canal sai do pedido do ML, para a ingestão ser idempotente", () => {
   const p = mapearPedidoMl(ORDEM, casar);
   assert.equal(p.canalPedidoId, "2000003508419013");
-  assert.equal(p.referencia, "ML-2000003508419013");
+});
+
+test("o mapeamento não carrega referência: ela é segredo e não se deriva do id do ML", () => {
+  // `/pedido/[referencia]` é público e mostra nome, e-mail, itens e rastreio.
+  // Uma referência derivada do número da ordem do ML — que o comprador vê e
+  // que se enumera — devolveria o furo que a plataforma acabou de fechar.
+  const p = mapearPedidoMl(ORDEM, casar) as unknown as Record<string, unknown>;
+  assert.equal("referencia" in p, false);
+  assert.equal(JSON.stringify(p).includes("ML-2000003508419013"), false);
 });
 
 test("só `paid` baixa estoque; o resto espera", () => {
