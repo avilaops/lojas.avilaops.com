@@ -2,11 +2,17 @@
 // Smoke HTTP da versão publicada: responde, responde com banco, e responde
 // com a folha de estilo que o navegador vai buscar.
 //
-// O terceiro item é o motivo de o script existir. Em 02/09/2026 subiu um
+// A folha de estilo é o motivo de o script existir. Em 02/09/2026 subiu um
 // pacote sem `.next/static`: todas as páginas responderam 200, o healthcheck
 // ficou verde e a loja apareceu sem CSS nenhum (a história está em
 // `scripts/empacotar.sh`). `/api/health` não sabe se a folha existe; quem
 // sabe é quem baixa o HTML e segue o <link> como o navegador segue.
+//
+// A foto do produto entrou pelo mesmo raciocínio, com um risco diferente: ela
+// não vem do pacote, vem do volume `/uploads` montado no servidor. Volume não
+// montado, remontado vazio ou com dono errado depois do `chown` do deploy não
+// derruba nada — a loja sobe inteira, responde 200 em tudo e mostra um
+// catálogo de imagens quebradas. Nenhuma verificação anterior via isso.
 //
 //   node scripts/smoke-publicacao.mjs https://lojas.avilaops.com
 //   node scripts/smoke-publicacao.mjs            # usa SMOKE_URL ou o local
@@ -87,10 +93,48 @@ async function vitrineComEstilo() {
     if (texto.length < 1000) falhar(`a folha ${href} veio com ${texto.length} bytes; o build não terminou`);
     ok(`${href} servida com ${Math.round(texto.length / 1024)} kB de CSS`);
   }
+  return html;
+}
+
+/**
+ * A primeira foto de produto que a vitrine referencia.
+ *
+ * Só falha quando a página **referencia** uma foto e ela não vem: loja sem
+ * catálogo publicado, ou domínio da plataforma (que não tem `/uploads`),
+ * passa sem reclamar. Inventar exigência onde não há foto transformaria o
+ * smoke num alarme que todo mundo aprende a ignorar.
+ */
+async function fotosDaVitrine(html) {
+  // Não dá para procurar "/uploads/" direto no HTML: o Next serve a foto
+  // otimizada como `/_next/image?url=%2Fuploads%2F…`, com o caminho
+  // percent-encoded, e é essa a forma mais comum na vitrine. Primeiro se
+  // colhe toda referência, depois se resolve o que o Next embrulhou.
+  const caminhos = [...html.matchAll(/(?:src|href)="([^"]+)"/g)]
+    .map((m) => m[1].replace(/&amp;/g, "&"))
+    .map((href) => {
+      if (!href.includes("/_next/image")) return href;
+      try {
+        return new URL(href, base).searchParams.get("url") ?? "";
+      } catch {
+        return "";
+      }
+    })
+    .filter((href) => href.includes("/uploads/"));
+
+  if (!caminhos.length) return console.log("  --  a vitrine não referencia foto em /uploads (nada a conferir aqui)");
+
+  const alvo = caminhos[0];
+  const foto = await buscar(alvo.startsWith("http") ? alvo : alvo.startsWith("/") ? alvo : `/${alvo}`);
+  if (!foto.ok) falhar(`a foto ${alvo} devolveu ${foto.status}: o volume de uploads não está servindo, e a loja está com o catálogo quebrado`);
+  const tipo = foto.headers.get("content-type") ?? "";
+  if (!tipo.startsWith("image/")) falhar(`a foto ${alvo} veio como ${tipo}, não como imagem`);
+  const bytes = Number(foto.headers.get("content-length") ?? 0) || (await foto.arrayBuffer()).byteLength;
+  if (bytes < 1000) falhar(`a foto ${alvo} veio com ${bytes} bytes; é arquivo truncado, não imagem`);
+  ok(`${alvo} servida com ${Math.round(bytes / 1024)} kB de ${tipo.replace("image/", "")}`);
 }
 
 console.log(`==> smoke em ${base}`);
 await saude();
 await sinalDeVida();
-await vitrineComEstilo();
+await fotosDaVitrine(await vitrineComEstilo());
 console.log(`\n==> ${verdes.length} verificação(ões) verdes em ${base}`);
