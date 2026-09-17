@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import type { Tenant } from "@prisma/client";
 import { prisma } from "./db";
 import { chamarMl } from "./mercadolivre";
@@ -23,6 +24,9 @@ import { emitir, itensParaTexto, lojista } from "./eventos";
  * apelido e, às vezes, um e-mail de proxy). Campo sem dado fica vazio, e o
  * evento sai com `canal` para o n8n não tentar falar com quem comprou no ML
  * por fora do ML — conversa com esse comprador acontece lá dentro.
+ *
+ * O que também não se inventa: a referência. Ela é a chave da página pública
+ * do pedido, então é sorteada, nunca derivada do id da ordem no ML.
  */
 
 /** O recorte de `GET /orders/{id}` que a plataforma usa. */
@@ -58,7 +62,6 @@ export interface ItemMapeado {
 
 export interface PedidoMlMapeado {
   canalPedidoId: string;
-  referencia: string;
   status: StatusPedido;
   clienteNome: string;
   clienteEmail: string;
@@ -163,7 +166,6 @@ export function mapearPedidoMl(
 
   return {
     canalPedidoId: String(ordem.id),
-    referencia: `ML-${ordem.id}`,
     status,
     clienteNome: nome || comprador.nickname || "Comprador do Mercado Livre",
     // Sem inventar: o ML não entrega mais contato do comprador na ordem.
@@ -216,7 +218,13 @@ export async function registrarPedidoMl(loja: Tenant, ordemId: string) {
           tenantId: loja.id,
           canal: "mercadolivre",
           canalPedidoId: mapeado.canalPedidoId,
-          referencia: mapeado.referencia,
+          // `/pedido/[referencia]` mostra nome, e-mail, itens e rastreio sem
+          // pedir sessão: a referência é o segredo que separa o comprador de
+          // um estranho. O id do pedido no ML é um número sequencial que o
+          // comprador conhece e que se enumera — ele fica em `canalPedidoId`,
+          // que ninguém alcança pela web, e a referência nasce sorteada como
+          // a do checkout próprio.
+          referencia: randomUUID(),
           status: mapeado.status,
           clienteNome: mapeado.clienteNome,
           clienteEmail: mapeado.clienteEmail,
@@ -261,6 +269,9 @@ export async function registrarPedidoMl(loja: Tenant, ordemId: string) {
       clienteTelefone: mapeado.clienteTelefone,
       itens,
       itensTexto: itensParaTexto(itens),
+      // Sem isto o n8n trataria a venda do ML como venda da loja e tentaria
+      // enviar a confirmação para um e-mail que não existe.
+      canal: "mercadolivre",
       ...lojista(loja),
     });
   }

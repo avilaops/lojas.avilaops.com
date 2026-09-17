@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import FichaTecnica from "@/components/FichaTecnica";
+import { lerDefinicoes, lerValores } from "@/lib/campos-personalizados";
 import { exigirTenant, lojaVende, urlDaLoja, temaDo } from "@/lib/tenant";
 import GaleriaPremium from "@/components/templates/automotivo-premium/Galeria";
 import { buscarProduto, equivalentesDoProduto, formatarBRL, listarProdutos, resumoAvaliacoes } from "@/lib/catalogo";
@@ -251,7 +252,11 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
             {p.sku && <li className="text-xs">SKU {p.sku}</li>}
           </ul>
 
-          <FichaTecnica atributos={(p.atributos as Record<string, unknown>) ?? {}} />
+          <FichaTecnica
+            atributos={(p.atributos as Record<string, unknown>) ?? {}}
+            definicoes={lerDefinicoes(t.camposPersonalizados)}
+            valores={lerValores(p.camposPersonalizados)}
+          />
           {p.descricao && (
             <section className="prosa mt-8 text-sm leading-relaxed">
               <h2 className="mb-2 text-base font-bold">Descrição</h2>

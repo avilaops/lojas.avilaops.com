@@ -12,6 +12,10 @@ import Automacoes from "@/components/painel/Automacoes";
 import { estadoDescoberta } from "@/lib/descoberta";
 import { headers } from "next/headers";
 import Equipe from "@/components/painel/Equipe";
+import Politicas from "@/components/painel/Politicas";
+import CamposPersonalizados from "@/components/painel/CamposPersonalizados";
+import { lerDefinicoes } from "@/lib/campos-personalizados";
+import { TIPOS_POLITICA, lerRegrasDevolucao, modeloDePolitica, politicaPublicada } from "@/lib/politicas";
 import { prisma } from "@/lib/db";
 import { lojistaAtual, sessaoDoPainel } from "@/lib/sessao";
 import { listarOperadores, permite } from "@/lib/operadores";
@@ -162,6 +166,43 @@ export default async function Pagina({ params, searchParams }: {
         <div className="grid gap-6"><Automacoes /></div>
       </Suspense>
     );
+  }
+
+  // Políticas: o que o cliente lê no rodapé da loja. Também não passa pelo
+  // PainelLoja — precisa das categorias (para marcar venda final), não do
+  // catálogo inteiro nem dos pedidos.
+  if (secao === "politicas") {
+    const loja = await lojistaAtual();
+    if (!loja) notFound();
+    const categorias = await prisma.categoria.findMany({
+      where: { tenantId: loja.id },
+      select: { slug: true, nome: true },
+      orderBy: [{ ordem: "asc" }, { nome: "asc" }],
+    });
+    return (
+      <div className="grid gap-6">
+        <Politicas
+          politicas={TIPOS_POLITICA.map((tipo) => {
+            const publicada = politicaPublicada(loja, tipo);
+            return {
+              tipo,
+              publicado: publicada?.paragrafos.join("\n\n") ?? "",
+              modelo: modeloDePolitica(loja, tipo).join("\n\n"),
+              propria: publicada?.propria ?? false,
+            };
+          })}
+          regras={lerRegrasDevolucao(loja.regrasDevolucao)}
+          categorias={categorias}
+        />
+      </div>
+    );
+  }
+
+  // Campos personalizados: a loja declara o que pergunta em cada produto.
+  if (secao === "campos") {
+    const loja = await lojistaAtual();
+    if (!loja) notFound();
+    return <CamposPersonalizados iniciais={lerDefinicoes(loja.camposPersonalizados)} />;
   }
 
   // Domínio não é uma seção do PainelLoja: é tela própria, com verificação de
