@@ -1,13 +1,49 @@
 # Brilhax: checklist da virada de domínio
 
 Complementa `migracao-brilhax.md`, que tem o plano. Este é o documento da
-troca. Revisado em 11/09/2026, terceira auditoria.
+troca. Escrito em 11/09/2026; **estado revisto em 17/09/2026**.
 
-**Nada aqui foi executado.** `brilhax.com` segue no ar, intocado. Os redirects
-estão prontos e **não aplicados**. Nenhum pagamento real foi feito. As
-correções desta rodada estão commitadas e **não publicadas**.
+> **A virada FOI EXECUTADA.** `brilhax.com` serve a plataforma. O que segue
+> abaixo do próximo bloco é o registro de como se chegou aqui, preservado
+> porque a volta atrás e o desligamento do legado ainda se apoiam nele. Onde o
+> texto antigo diz "não executado", vale o quadro de 17/09.
 
-> **A virada está BLOQUEADA.** Ver "Bloqueadores" no fim.
+## Estado em 17/09/2026, medido de fora
+
+Conferido contra o domínio no ar, sem acesso ao servidor. Cada linha é uma
+requisição feita nesta data.
+
+| O que | Medido |
+|---|---|
+| `brilhax.com` | 200, servido pela plataforma |
+| Canonical da home | `https://brilhax.com` |
+| `brilhax.lojas.avilaops.com` | `noindex, follow`, canonical para `brilhax.com` |
+| As 12 regras de redirect | aplicadas; categoria, políticas e termos devolvem 301 para o destino da tabela abaixo, sem cadeia |
+| Barra final (`/sobre/`, `/contato/`, `/produtos/<slug>/`) | 308 da aplicação, um salto |
+| `robots.txt` | carrinho, checkout, pedido, conta e API fora do rastreio |
+| Ícones e manifesto da loja | 200, com o tipo certo (o 404 de `/uploads` em `.ico`, `.svg` e `.webmanifest` saiu com o deploy) |
+| `sitemap.xml` | 94 URLs: 80 de produto, 7 de categoria, 4 de política, sobre, contato e a home |
+| `feed/merchant.xml` | 79 itens, todos com título, descrição, preço, marca e imagem |
+
+**Uma lacuna encontrada e fechada nesta rodada.** Dos 79 itens, 8 saíam sem
+`google_product_category`: 7 em "Acessórios" e 1 em "Produtos para Moto". A
+causa é a portabilidade do mapa da Brilhax para a plataforma, em que o
+reconhecimento passou de `slug` da categoria para palavra no nome, e estes dois
+nomes não têm palavra que os denuncie. Corrigido em `categoria-google.ts`:
+nomes genéricos passam a ser resolvidos pelo ramo que as OUTRAS categorias da
+mesma loja provam, então "Acessórios" vira prateleira de escova de carro na
+Brilhax e continua sem prateleira numa loja de beleza ou pet. **Vale para toda
+a plataforma** e entra no ar no próximo deploy. O nono item sem prateleira,
+LAMAX NITRO 500ML, é cadastro: está sem categoria nenhuma.
+
+**O que este quadro não prova:** não fala de pagamento real, de indexação no
+Google nem do Merchant Center. Para esses, ver os bloqueadores no fim, que
+continuam valendo naquilo que ninguém mediu de dentro.
+
+## Registro da preparação (11/09)
+
+O que vem abaixo é o documento como estava na véspera, e descreve o que ainda
+**não** tinha sido feito naquela data.
 
 ## Estado verificado em 11/09
 
@@ -370,13 +406,20 @@ falha depois de o pacote já estar gravado. Corrigido junto com este documento.
 4. **Merchant Center**: a Brilhax confirmar se tem conta e dar acesso.
 5. **17 produtos ativos sem foto**: trabalho de catálogo.
 
-## Bloqueadores da virada
+## Bloqueadores, revistos em 17/09
 
-| # | Bloqueador | Quem resolve |
-|---|---|---|
-| 1 | Pix nunca confirmado de ponta a ponta; assinatura da `notification_url` não provada | autorização da compra de teste |
-| 2 | Correções desta rodada não publicadas | autorização de deploy |
-| 3 | `pedidos/verificar` não agendado | depois do deploy |
-| 4 | Conteúdo institucional e termos não revisados | Brilhax |
-| 5 | Destino dos 21 inativos do sitemap antigo | Brilhax |
-| 6 | Indexação e Merchant não verificáveis | acesso da Brilhax ao Search Console e ao Merchant |
+Eram bloqueadores da virada. A virada aconteceu, então o que sobrou são
+pendências de operação — nenhuma impede a loja de vender, e nenhuma se resolve
+sem acesso que a Brilhax controla.
+
+| # | Pendência | Estado em 17/09 | Quem resolve |
+|---|---|---|---|
+| 1 | Pix confirmado de ponta a ponta; assinatura da `notification_url` | **aberto**, e é o de maior risco: cartão nasce PAGO, Pix depende do webhook | autorização da compra de teste |
+| 2 | Correções da rodada publicadas | **fechado**: estão no ar (ícones e manifesto respondem) | — |
+| 3 | `pedidos/verificar` agendado no n8n | **não verificável daqui**; confirmar no n8n. É a rede de proteção do item 1 | conferir no n8n |
+| 4 | Conteúdo institucional e termos revisados | **aberto**: publicado não é revisado | Brilhax |
+| 5 | Destino dos 21 inativos do sitemap antigo | **aberto** | Brilhax |
+| 6 | Indexação e Merchant | **aberto** | acesso da Brilhax ao Search Console e ao Merchant |
+
+O prazo de 14 dias de observação conta a partir da virada, e o desligamento do
+legado continua exigindo autorização explícita.
