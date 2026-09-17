@@ -11,17 +11,17 @@ const FOTOS = [["produto", "Produto"], ["editorial", "Editorial"], ["lifestyle",
 const PLANOS = [["SITE", "Site", "Presença digital essencial"], ["LOJA", "Loja", "Operação completa e escalável"], ["LOJA_PRO", "Loja Pro", "Automação e crescimento"]] as const;
 
 type Personalidade = IdentidadeLoja["personalidade"][number];
-type CampoId = "nome" | "emailContato" | "whatsapp" | "instagram" | "publico" | "diferencial" | "cep" | "uf" | "despachoDiasUteis" | "dominioPrincipal" | "senha" | "senha2" | "produtos";
+type CampoId = "nome" | "slogan" | "emailContato" | "whatsapp" | "instagram" | "publico" | "diferencial" | "cep" | "uf" | "despachoDiasUteis" | "dominioPrincipal" | "senha" | "senha2" | "produtos";
 type ErrosCampos = Partial<Record<CampoId, string>>;
 type DetalheApi = { campo?: string; rotulo?: string; mensagem?: string };
 
 const CAMPO_DO_SERVIDOR: Record<string, CampoId> = {
-  nome: "nome", emailContato: "emailContato", whatsapp: "whatsapp", instagram: "instagram",
+  nome: "nome", slogan: "slogan", emailContato: "emailContato", whatsapp: "whatsapp", instagram: "instagram",
   cepOrigem: "cep", "endereco.cep": "cep", "endereco.uf": "uf", despachoDiasUteis: "despachoDiasUteis",
   dominioPrincipal: "dominioPrincipal", senha: "senha", produtos: "produtos",
 };
 const PASSO_DO_CAMPO: Record<CampoId, number> = {
-  nome: 0, emailContato: 0, whatsapp: 0, instagram: 0, publico: 1, diferencial: 1,
+  nome: 0, slogan: 0, emailContato: 0, whatsapp: 0, instagram: 0, publico: 1, diferencial: 1,
   cep: 3, uf: 3, despachoDiasUteis: 3, dominioPrincipal: 3, senha: 4, senha2: 4, produtos: 4,
 };
 
@@ -67,9 +67,13 @@ export default function CriarLoja({ planoInicial }: { planoInicial: "SITE" | "LO
   const [origemSugestao, setOrigemSugestao] = useState<string | null>(null);
 
   /**
-   * Preenche as duas respostas de essência. O servidor usa IA quando há chave
-   * configurada e cai num rascunho local quando não há — nos dois casos o texto
-   * entra como sugestão editável, nunca como verdade sobre o negócio.
+   * Preenche as duas respostas de essência. Quem ainda não tem loja recebe um
+   * rascunho local (determinístico, sem custo); o lojista com sessão recebe o
+   * texto da IA. Nos dois casos entra como sugestão editável, nunca como
+   * verdade sobre o negócio.
+   *
+   * Falha aqui não pode ser silenciosa: o botão ficava "escrevendo…", voltava e
+   * os campos continuavam vazios, sem uma linha explicando por quê.
    */
   async function sugerirEssenciaIA() {
     if (!f.nome.trim()) return;
@@ -80,10 +84,15 @@ export default function CriarLoja({ planoInicial }: { planoInicial: "SITE" | "LO
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ nome: f.nome, segmento: f.segmento, personalidade: f.personalidade, contexto: [f.publico, f.diferencial].filter(Boolean).join(" | ") || undefined }),
       });
-      const d = await r.json();
-      if (!r.ok) return;
+      const d = await r.json().catch(() => null);
+      if (!r.ok || !d?.publico) {
+        setOrigemSugestao(d?.erro ?? "Não conseguimos escrever o rascunho agora. Responda com suas palavras e siga: dá para ajustar depois.");
+        return;
+      }
       setF((a) => ({ ...a, publico: d.publico ?? a.publico, diferencial: d.diferencial ?? a.diferencial }));
       setOrigemSugestao(d.origem === "ia" ? "Rascunho criado com IA, ajuste com suas palavras." : "Rascunho automático, ajuste com suas palavras.");
+    } catch {
+      setOrigemSugestao("Não conseguimos falar com o servidor agora. Responda com suas palavras e siga.");
     } finally {
       setSugerindo(false);
     }
@@ -103,11 +112,20 @@ export default function CriarLoja({ planoInicial }: { planoInicial: "SITE" | "LO
     });
   }
 
+  /**
+   * CEP → endereço. Quando a consulta não acha nada, o campo dizia nada: a
+   * pessoa digitava, saía do campo e ficava esperando um preenchimento que não
+   * vinha. O aviso não trava a etapa — endereço aqui é opcional.
+   */
   async function buscarCep(cep: string) {
     const limpo = cep.replace(/\D/g, "");
     if (limpo.length !== 8) return;
     const r = await fetch(`/api/cep?cep=${limpo}`).then((x) => x.ok ? x.json() : null).catch(() => null);
-    if (r) setF((a) => ({ ...a, logradouro: r.logradouro || a.logradouro, bairro: r.bairro || a.bairro, cidade: r.cidade || a.cidade, uf: r.uf || a.uf }));
+    if (!r) {
+      setErrosCampos((atuais) => ({ ...atuais, cep: "Não encontramos este CEP. Confira os números ou preencha o endereço à mão." }));
+      return;
+    }
+    setF((a) => ({ ...a, logradouro: r.logradouro || a.logradouro, bairro: r.bairro || a.bairro, cidade: r.cidade || a.cidade, uf: r.uf || a.uf }));
   }
 
   function validarEtapa(indice: number): ErrosCampos {
@@ -235,7 +253,7 @@ export default function CriarLoja({ planoInicial }: { planoInicial: "SITE" | "LO
         <Campo label="Seu e-mail" obrigatorio erro={errosCampos.emailContato} ajuda="Será seu login no estúdio da marca."><input {...propriedadesCampo("emailContato")} className={inputClasse} type="email" value={f.emailContato} onChange={(e) => set("emailContato", e.target.value)} placeholder="voce@empresa.com.br" autoComplete="email" /></Campo>
         <Campo label="WhatsApp *" erro={errosCampos.whatsapp} ajuda="É por ele que você recebe aviso de pedido pago. DDD + número; o +55 é adicionado automaticamente."><input {...propriedadesCampo("whatsapp")} className={inputClasse} type="tel" inputMode="tel" value={f.whatsapp} onChange={(e) => set("whatsapp", e.target.value)} placeholder="(16) 99999-0000" autoComplete="tel" /></Campo>
       </div>
-      <Campo label="Slogan atual" ajuda="Opcional. Se ficar vazio, criaremos uma assinatura a partir do seu diferencial."><input className={inputClasse} value={f.slogan} maxLength={140} onChange={(e) => set("slogan", e.target.value)} placeholder="Se sua marca já usa uma frase, escreva aqui" /></Campo>
+      <Campo label="Slogan atual" erro={errosCampos.slogan} ajuda="Opcional. Se ficar vazio, criaremos uma assinatura a partir do seu diferencial."><input {...propriedadesCampo("slogan")} className={inputClasse} value={f.slogan} maxLength={140} onChange={(e) => set("slogan", e.target.value)} placeholder="Se sua marca já usa uma frase, escreva aqui" /></Campo>
       <Campo label="Instagram" erro={errosCampos.instagram} ajuda="Opcional. Use o link completo do perfil."><input {...propriedadesCampo("instagram")} className={inputClasse} type="url" value={f.instagram} onChange={(e) => set("instagram", e.target.value)} placeholder="https://instagram.com/sualoja" /></Campo>
       <Campo label="Plano"><div className="brand-choice-grid three">{PLANOS.map(([v,t,d]) => <button key={v} type="button" onClick={() => set("plano",v)} className={f.plano === v ? "selecionado" : ""} aria-pressed={f.plano === v}><strong>{t}{v === "LOJA" && <i>Recomendado</i>}</strong><small>{d}</small></button>)}</div></Campo>
     </Secao>}
