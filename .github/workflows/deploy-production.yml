@@ -8,7 +8,24 @@ on:
 permissions:
   contents: read
 jobs:
+  # Antes de assar imagem: tipos e testes. O pipeline publicava sem rodar
+  # nenhum dos dois, então um erro de contrato só aparecia no servidor.
+  verificacao:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      # --ignore-scripts: sharp e onnxruntime baixam binário próprio e não são
+      # necessários para tipos nem testes. O cliente do Prisma, sim.
+      - run: npm ci --ignore-scripts
+      - run: npx prisma generate
+      - run: npm run typecheck
+      - run: npm test
   image:
+    needs: verificacao
     permissions:
       contents: read
       packages: write
@@ -30,3 +47,15 @@ jobs:
       DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
       DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
       DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+  # Depois do deploy, o que o navegador faria: /api/health com banco,
+  # /v1/health e a folha de estilo seguida a partir do HTML da vitrine.
+  # Sem dependência instalada — é o node do runner e `fetch`.
+  fumaca:
+    runs-on: ubuntu-latest
+    needs: deploy
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/smoke-publicacao.mjs "${{ vars.SMOKE_URL || 'https://lojas.avilaops.com' }}"
