@@ -957,6 +957,10 @@ model AnuncioMercadoLivre {
   /// Preço e estoque com que foi publicado, para saber o que mudou desde então.
   precoCentavosPublicado Int?
   estoquePublicado       Int?
+  /// Impressão digital do conteúdo publicado (título, fotos e descrição). O
+  /// anúncio só é reescrito quando ela muda: sem isso, ou o conteúdo da loja
+  /// nunca chegava ao anúncio, ou todo ciclo reenviaria tudo de novo.
+  conteudoHash           String?
 
   /// Preparo antes de publicar: nome enriquecido, categoria prevista, atributos
   /// conferidos e o veredito. Fica aqui e não em `Produto` porque é opinião de

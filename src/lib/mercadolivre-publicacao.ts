@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import type { Produto, Tenant } from "@prisma/client";
 import { prisma } from "./db";
 import { chamarMl, MercadoLivreNaoConectado } from "./mercadolivre";
@@ -45,6 +46,10 @@ function textoCurto(valor: unknown, limite: number): string {
   return String(valor ?? "")
     .replace(/<[^>]*>/g, " ")
     .replace(/\s+/g, " ")
+    // A tag vira espaço, e `<strong>três meses</strong>.` virava "três meses ."
+    // no anúncio publicado. Espaço antes de pontuação é erro de digitação aos
+    // olhos de quem lê — e quem lê aqui é o comprador.
+    .replace(/\s+([,.;:!?%)\]])/g, "$1")
     .trim()
     .slice(0, limite);
 }
@@ -109,6 +114,84 @@ export function corpoDaPublicacaoMl(
   };
 }
 
+export type ConteudoMl = {
+  title: string;
+  pictures: Array<{ source: string }>;
+  /** A descrição vai em `PUT /items/{id}/description`, não no corpo do item. */
+  descricao: string;
+  /** Muda quando qualquer um dos três muda. É o gatilho da reescrita. */
+  hash: string;
+};
+
+/**
+ * O conteúdo que o anúncio deveria ter agora, a partir do catálogo da loja.
+ *
+ * Existe porque publicar não é o fim: o lojista troca a foto, corrige o nome,
+ * reescreve a descrição — e, até aqui, só preço e estoque chegavam ao Mercado
+ * Livre. O anúncio ficava com o texto do dia em que nasceu.
+ *
+ * A descrição do ML é texto puro e mora em endpoint próprio. HTML entra como
+ * texto visível se for mandado cru, então sai daqui já limpo.
+ */
+export function conteudoDoAnuncio(anuncio: AnuncioParaPublicar, base: string): ConteudoMl | null {
+  const preparo = lerPreparo(anuncio.preparo);
+  if (!preparo) return null;
+  const title = textoCurto(preparo.nomeEnriquecido, 60);
+  const pictures = anuncio.produto.imagens
+    .map((imagem) => imagemAbsoluta(base, imagem))
+    .filter((imagem): imagem is string => Boolean(imagem))
+    .slice(0, 10)
+    .map((source) => ({ source }));
+  // O limite do ML é 50 000 caracteres; o corte é por segurança, não por gosto.
+  const descricao = textoCurto(anuncio.produto.descricao ?? anuncio.produto.descricaoCurta ?? "", 50_000);
+  if (!title || !pictures.length) return null;
+  const hash = createHash("sha256")
+    .update(JSON.stringify({ title, pictures: pictures.map((p) => p.source), descricao }))
+    .digest("hex")
+    .slice(0, 16);
+  return { title, pictures, descricao, hash };
+}
+
+/**
+ * Manda o conteúdo para um anúncio que já existe.
+ *
+ * O ML recusa trocar o título de anúncio que já vendeu — e isso não é falha
+ * do lojista nem motivo para abortar o resto: a foto e a descrição continuam
+ * atualizáveis, e o motivo fica escrito no anúncio.
+ */
+async function escreverConteudo(loja: Tenant, mlbId: string, conteudo: ConteudoMl): Promise<string[]> {
+  const problemas: string[] = [];
+  try {
+    await chamarMl(loja, `/items/${encodeURIComponent(mlbId)}`, {
+      method: "PUT",
+      body: JSON.stringify({ title: conteudo.title, pictures: conteudo.pictures }),
+    });
+  } catch (erro) {
+    const mensagem = textoCurto(erro instanceof Error ? erro.message : "Falha desconhecida.", 300);
+    problemas.push(`Título e fotos não foram aceitos pelo Mercado Livre: ${mensagem}`);
+    try {
+      await chamarMl(loja, `/items/${encodeURIComponent(mlbId)}`, { method: "PUT", body: JSON.stringify({ pictures: conteudo.pictures }) });
+      problemas.push("As fotos foram atualizadas sozinhas; o título ficou como estava.");
+    } catch {
+      /* já registrado acima */
+    }
+  }
+  if (conteudo.descricao) problemas.push(...(await escreverDescricao(loja, mlbId, conteudo.descricao)));
+  return problemas;
+}
+
+async function escreverDescricao(loja: Tenant, mlbId: string, descricao: string): Promise<string[]> {
+  try {
+    await chamarMl(loja, `/items/${encodeURIComponent(mlbId)}/description`, {
+      method: "PUT",
+      body: JSON.stringify({ plain_text: descricao }),
+    });
+    return [];
+  } catch (erro) {
+    return [`Descrição não aceita pelo Mercado Livre: ${textoCurto(erro instanceof Error ? erro.message : "falha", 300)}`];
+  }
+}
+
 async function publicarAprovados(loja: Tenant, limite: number, resumo: ResumoMercadoLivre) {
   const anuncios = await prisma.anuncioMercadoLivre.findMany({
     where: { tenantId: loja.id, estado: "aprovado", mlbId: null, preparoEstado: "PRONTO" },
@@ -137,6 +220,13 @@ async function publicarAprovados(loja: Tenant, limite: number, resumo: ResumoMer
         method: "POST",
         body: JSON.stringify(montado.corpo),
       });
+      // A descrição não vai no corpo do item: é endpoint próprio, e por isso
+      // os anúncios nasciam sem descrição nenhuma. Falha aqui não desfaz o
+      // anúncio — fica escrita, e o próximo ciclo tenta de novo.
+      const conteudo = conteudoDoAnuncio(anuncio, base);
+      const problemas = conteudo?.descricao
+        ? await escreverDescricao(loja, criado.id, conteudo.descricao)
+        : [];
       await prisma.anuncioMercadoLivre.update({
         where: { id: anuncio.id },
         data: {
@@ -144,7 +234,8 @@ async function publicarAprovados(loja: Tenant, limite: number, resumo: ResumoMer
           permalink: criado.permalink ?? null,
           statusMl: criado.status ?? "active",
           estado: "publicado",
-          motivoErro: null,
+          motivoErro: problemas.length ? problemas.join(" ") : null,
+          conteudoHash: problemas.length ? null : (conteudo?.hash ?? null),
           precoCentavosPublicado: anuncio.produto.precoCentavos,
           estoquePublicado: anuncio.produto.estoque ?? 0,
           sincronizadoEm: new Date(),
@@ -181,6 +272,13 @@ async function sincronizarPublicados(loja: Tenant, limite: number, resumo: Resum
         continue;
       }
 
+      // Conteúdo antes de preço: o lojista que corrigiu a foto errada quer ver
+      // a foto certa no ar, e isso não depende de o preço ter mudado.
+      const conteudo = conteudoDoAnuncio(anuncio, urlDaLoja(loja));
+      const problemasDeConteudo = conteudo && conteudo.hash !== anuncio.conteudoHash
+        ? await escreverConteudo(loja, anuncio.mlbId, conteudo)
+        : [];
+
       const estoque = anuncio.produto.ativo ? Math.max(0, Math.trunc(anuncio.produto.estoque ?? 0)) : 0;
       const preco = Number((anuncio.produto.precoCentavos / 100).toFixed(2));
       const mudouEstoque = atual.available_quantity !== estoque;
@@ -197,7 +295,7 @@ async function sincronizarPublicados(loja: Tenant, limite: number, resumo: Resum
       }
 
       const confirmado = await chamarMl<{ status?: string; price?: number; available_quantity?: number; permalink?: string }>(loja, `/items/${encodeURIComponent(anuncio.mlbId)}`);
-      const problemas: string[] = [];
+      const problemas: string[] = [...problemasDeConteudo];
       if (confirmado.available_quantity !== estoque) problemas.push("O Mercado Livre não confirmou o novo estoque; a conta pode usar estoque multiorigem.");
       if (anuncio.produto.precoCentavos > 0 && confirmado.price !== preco) problemas.push("O Mercado Livre não confirmou o novo preço; pode existir automação de preço ativa.");
 
@@ -209,6 +307,9 @@ async function sincronizarPublicados(loja: Tenant, limite: number, resumo: Resum
           motivoErro: problemas.length ? problemas.join(" ") : null,
           precoCentavosPublicado: confirmado.price === preco ? anuncio.produto.precoCentavos : anuncio.precoCentavosPublicado,
           estoquePublicado: confirmado.available_quantity === estoque ? estoque : anuncio.estoquePublicado,
+          // Só grava a impressão digital quando o conteúdo entrou inteiro: com
+          // problema, o próximo ciclo tenta de novo em vez de dar por feito.
+          conteudoHash: conteudo && !problemasDeConteudo.length ? conteudo.hash : anuncio.conteudoHash,
           sincronizadoEm: new Date(),
         },
       });
