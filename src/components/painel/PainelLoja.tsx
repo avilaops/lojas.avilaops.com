@@ -31,6 +31,11 @@ export interface LojaView {
   tema: TemaLoja;
   identidade: IdentidadeLoja;
   segmento: string;
+  /** Responsável técnico da farmácia (RDC 44/2009). Só usado no ramo farmácia. */
+  farmaceuticoResponsavel: string | null;
+  farmaceuticoCrf: string | null;
+  licencaSanitaria: string | null;
+  autorizacaoAnvisa: string | null;
   slogan: string | null;
   logoUrl: string | null;
   whatsapp: string | null;

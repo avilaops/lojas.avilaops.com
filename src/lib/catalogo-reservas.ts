@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import type { ItemCarrinho } from "@avilaops/checkout";
 import { prisma } from "./db";
 import { atualizarProjecao, permitirProjecao, travarProduto } from "./catalogo-escrita";
+import { dispensavelADistancia } from "./produto-regras";
 import { ErroCatalogo, ofertaDaVariante } from "./catalogo-oferta";
 
 type Tx = Prisma.TransactionClient;
@@ -39,6 +40,7 @@ export async function reservarEstoque(tenantId: string, referencia: string, iten
         const p = produtos.find(p=>p.id===item.produtoId);
         const original = p?.variantes.find(v=>v.id===varianteId);
         const v = original && ofertaDaVariante(original);
+        if (p && !dispensavelADistancia(p)) throw new ErroCatalogo("Este medicamento é de controle especial e só pode ser dispensado presencialmente.",422);
         if (!p?.ativo || !v?.compravel || v.precoCentavos!==item.preco || (v.estoque!=null && v.estoque<item.quantidade)) throw new ErroCatalogo("Preço ou estoque mudou. Revise o carrinho antes de pagar.",409);
         const saldo = v.saldos.find(s=>s.local==="principal");
         if (!saldo) throw new ErroCatalogo("Estoque da apresentação não cadastrado.");

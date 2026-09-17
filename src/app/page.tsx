@@ -1,7 +1,8 @@
 import { exigirTenant, identidadeDa, lojaVende, temaDo } from "@/lib/tenant";
-import { listarCategorias, listarProdutos, marcasDaLoja, motosDaLoja, provaSocialDa, vitrineDaLoja } from "@/lib/catalogo";
+import { listarCategorias, listarProdutos, marcasDaLoja, motosDaLoja, necessidadesDaLoja, provaSocialDa, vitrineDaLoja } from "@/lib/catalogo";
 import { minhaMoto } from "@/lib/minha-moto";
 import Automotivo from "@/components/home/Automotivo";
+import Farmacia from "@/components/home/Farmacia";
 import HomePremium from "@/components/templates/automotivo-premium/Home";
 import Garagem from "@/components/home/Garagem";
 import Classico from "@/components/home/Classico";
@@ -37,7 +38,7 @@ export default async function Home() {
   const t = await exigirTenant();
   const motopecas = t.segmento === "motopecas";
   const moto = motopecas ? await minhaMoto() : null;
-  const [categorias, destaques, prova, motos, marcas] = await Promise.all([
+  const [categorias, destaques, prova, motos, marcas, necessidades] = await Promise.all([
     listarCategorias(t.id),
     // Nenhum layout mostra mais de 10 destaques: pedir mais é carregar o que
     // o lojista marcou ao longo de meses para descartar na tela.
@@ -45,9 +46,10 @@ export default async function Home() {
     provaSocialDa(t.id),
     motopecas ? motosDaLoja(t.id) : null,
     motopecas ? marcasDaLoja(t.id) : [],
+    t.segmento === "farmacia" ? necessidadesDaLoja(t.id) : undefined,
   ]);
   const vitrine = destaques.length ? destaques : await vitrineDaLoja(t.id, { moto });
-  const dados = { t, identidade: identidadeDa(t), categorias, vitrine, temDestaques: destaques.length > 0, vende: lojaVende(t), moto };
+  const dados = { t, identidade: identidadeDa(t), categorias, vitrine, temDestaques: destaques.length > 0, vende: lojaVende(t), moto, necessidades };
 
   const layout =
     temaDo(t).layout === "automotivo-premium" ? <HomePremium {...dados} />
@@ -55,6 +57,7 @@ export default async function Home() {
     : temaDo(t).layout === "mercado" ? <Mercado {...dados} />
     : temaDo(t).layout === "distribuidora" ? <Distribuidora {...dados} />
     : temaDo(t).layout === "automotivo" ? <Automotivo {...dados} />
+    : temaDo(t).layout === "farmacia" ? <Farmacia {...dados} />
     : temaDo(t).layout === "conversao" ? <Conversao {...dados} />
     : temaDo(t).layout === "vitrine" ? <Vitrine {...dados} />
     : temaDo(t).layout === "editorial" ? <Editorial {...dados} />

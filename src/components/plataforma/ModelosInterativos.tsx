@@ -5,11 +5,18 @@ import { useState } from "react";
 
 /**
  * As composições de `LAYOUTS` (src/lib/tema.ts) que a landing mostra, na ordem
- * em que o painel oferece. Fica de fora o `automotivo-premium`: ele não é uma
- * home diferente, é a loja inteira (cabeçalho, categorias, galeria e carrinho
- * lateral), e uma miniatura de home não diria o que ele é. Quem mudar esta
- * lista mexe também no número escrito na landing — `layouts-vitrine.test.ts`
- * cobra os dois.
+ * em que o painel oferece. Ficam de fora dois:
+ *
+ *   - `automotivo-premium`: não é uma home diferente, é a loja inteira
+ *     (cabeçalho, categorias, galeria e carrinho lateral), e uma miniatura de
+ *     home não diria o que ele é;
+ *   - `farmacia`: a home abre pela busca da substância e pelos atalhos de
+ *     necessidade, que se resolvem contra o catálogo da própria loja — uma
+ *     miniatura genérica inventaria uma drogaria. Entra quando tiver
+ *     composição própria, como as outras têm.
+ *
+ * Quem mudar esta lista mexe também no número escrito na landing —
+ * `layouts-vitrine.test.ts` cobra os dois.
  */
 type Modelo = "classico" | "vitrine" | "editorial" | "minimal" | "spotlight" | "mercado" | "distribuidora" | "automotivo" | "conversao";
 

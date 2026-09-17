@@ -4,12 +4,13 @@ import { useEffect, useState } from "react";
 import { Campo, inputClasse } from "./campos";
 import EnviarImagem from "./EnviarImagem";
 import { ANO_MAX, ANO_MIN, MOTOS_BRASIL, lerCompatibilidade, type Compatibilidade } from "@/lib/motos";
+import { PRINCIPIOS_COMUNS, TARJAS, TIPOS_MEDICAMENTO, pendenciasDe } from "@/lib/farmacia";
 
 /** Campo vazio não vira 0: sem medida, o frete usa a caixa padrão da loja. */
 const medida = (chave: string, valor: string) =>
   valor.trim() ? { [chave]: Number.parseFloat(valor.replace(",", ".")) } : {};
 
-interface Form { versaoCatalogo:number; temVariacoes:boolean; mpn:string; identificadoresEstado:string; nome: string; categoria: string; marca: string; sku: string; gtin: string; preco: string; precoDe: string; descricaoCurta: string; descricao: string; imagens: string[]; destaque: boolean; ativo: boolean; disponibilidade: string; estoque: string; pesoKg: string; alturaCm: string; larguraCm: string; comprimentoCm: string; codigoOriginal: string; codigosEquivalentes: string; compatibilidade: LinhaCompat[] }
+interface Form { tarja: string; principioAtivo: string; apresentacao: string; registroAnvisa: string; tipoMedicamento: string; versaoCatalogo:number; temVariacoes:boolean; mpn:string; identificadoresEstado:string; nome: string; categoria: string; marca: string; sku: string; gtin: string; preco: string; precoDe: string; descricaoCurta: string; descricao: string; imagens: string[]; destaque: boolean; ativo: boolean; disponibilidade: string; estoque: string; pesoKg: string; alturaCm: string; larguraCm: string; comprimentoCm: string; codigoOriginal: string; codigosEquivalentes: string; compatibilidade: LinhaCompat[] }
 /** Linha do editor de compatibilidade: texto livre até salvar (ano vazio = sem limite). */
 interface LinhaCompat { marca: string; modelo: string; anoDe: string; anoAte: string }
 
@@ -24,7 +25,11 @@ const paraCompat = (linhas: LinhaCompat[]): Compatibilidade[] =>
     });
 
 /** Formulário completo de um produto existente: várias fotos, descrição longa, estoque, ativo/destaque. */
-export default function EditarProduto({ produtoId, aoFechar, aoSalvar }: { produtoId: string; aoFechar: () => void; aoSalvar: (msg: string) => void }) {
+export default function EditarProduto({ produtoId, segmento = "geral", aoFechar, aoSalvar }: { produtoId: string; segmento?: string; aoFechar: () => void; aoSalvar: (msg: string) => void }) {
+  // Os campos do medicamento só existem para quem é farmácia. Numa loja de
+  // roupa eles seriam cinco campos vazios que ninguém entende — e o formulário
+  // já é longo. Ver src/lib/farmacia.ts.
+  const farmacia = segmento === "farmacia";
   const [f, setF] = useState<Form | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
@@ -40,6 +45,8 @@ export default function EditarProduto({ produtoId, aoFechar, aoSalvar }: { produ
         disponibilidade: p.disponibilidade, estoque: p.estoque != null ? String(p.estoque) : "", pesoKg: p.pesoKg != null ? String(p.pesoKg) : "",
         alturaCm: p.alturaCm != null ? String(p.alturaCm) : "", larguraCm: p.larguraCm != null ? String(p.larguraCm) : "", comprimentoCm: p.comprimentoCm != null ? String(p.comprimentoCm) : "",
         codigoOriginal: p.codigoOriginal ?? "", codigosEquivalentes: (p.codigosEquivalentes ?? []).join(", "), compatibilidade: paraLinhas(p.compatibilidade),
+        tarja: p.tarja ?? "nenhuma", principioAtivo: p.principioAtivo ?? "", apresentacao: p.apresentacao ?? "",
+        registroAnvisa: p.registroAnvisa ?? "", tipoMedicamento: p.tipoMedicamento ?? "",
       });
     });
   }, [produtoId]);
@@ -64,6 +71,13 @@ export default function EditarProduto({ produtoId, aoFechar, aoSalvar }: { produ
           codigoOriginal: f.codigoOriginal.trim() || null,
           codigosEquivalentes: f.codigosEquivalentes.split(/[,;\n]/).map((c) => c.trim()).filter(Boolean),
           compatibilidade: paraCompat(f.compatibilidade),
+          ...(farmacia ? {
+            tarja: f.tarja,
+            principioAtivo: f.principioAtivo.trim() || null,
+            apresentacao: f.apresentacao.trim() || null,
+            registroAnvisa: f.registroAnvisa.trim() || null,
+            tipoMedicamento: f.tipoMedicamento || null,
+          } : {}),
         }),
       });
       const d = await r.json();
@@ -118,6 +132,48 @@ export default function EditarProduto({ produtoId, aoFechar, aoSalvar }: { produ
       <div className="mt-4 grid gap-4">
         <Campo label="Descrição curta" ajuda="Aparece no card e no Google"><input className={inputClasse} value={f.descricaoCurta} onChange={(e) => set("descricaoCurta", e.target.value)} maxLength={300} /></Campo>
         <Campo label="Descrição completa" ajuda="Parágrafos separados por linha em branco"><textarea id="catalogo-descricao" className={`${inputClasse} h-32 py-2`} value={f.descricao} onChange={(e) => set("descricao", e.target.value)} /></Campo>
+        {farmacia && (() => {
+          const pendencias = pendenciasDe({ tarja: f.tarja, principioAtivo: f.principioAtivo, apresentacao: f.apresentacao, registroAnvisa: f.registroAnvisa, tipoMedicamento: f.tipoMedicamento });
+          return (
+            <section className="rounded-xl border border-border p-4">
+              <h4 className="text-sm font-semibold">Medicamento</h4>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Deixe a tarja em “Não é medicamento” para fralda, shampoo e dermocosmético.
+                Para medicamento, a tarja é o que decide se o item pode ser vendido pela internet.
+              </p>
+              <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                <Campo label="Tarja" ajuda="Tarja preta e tarja vermelha com retenção são de controle especial: a venda pela internet é proibida (RDC 44/2009) e o item fica sem botão de comprar.">
+                  <select className={inputClasse} value={f.tarja} onChange={(e) => set("tarja", e.target.value)}>
+                    {TARJAS.map(([v, n]) => <option key={v} value={v}>{n}</option>)}
+                  </select>
+                </Campo>
+                <Campo label="Tipo">
+                  <select className={inputClasse} value={f.tipoMedicamento} onChange={(e) => set("tipoMedicamento", e.target.value)}>
+                    <option value="">Não informado</option>
+                    {TIPOS_MEDICAMENTO.map(([v, n]) => <option key={v} value={v}>{n}</option>)}
+                  </select>
+                </Campo>
+                <Campo label="Princípio ativo" ajuda="A substância, como está na caixa. É por ela que o cliente acha o genérico do que o médico receitou.">
+                  <input className={inputClasse} list="principios-ativos" value={f.principioAtivo} onChange={(e) => set("principioAtivo", e.target.value)} placeholder="Dipirona monoidratada" />
+                  <datalist id="principios-ativos">{PRINCIPIOS_COMUNS.map((x) => <option key={x} value={x} />)}</datalist>
+                </Campo>
+                <Campo label="Apresentação" ajuda="Dose e quantidade. Sem ela não dá para afirmar que um genérico equivale a este.">
+                  <input className={inputClasse} value={f.apresentacao} onChange={(e) => set("apresentacao", e.target.value)} placeholder="500 mg · 20 comprimidos" />
+                </Campo>
+                <Campo label="Registro na Anvisa" ajuda="13 dígitos, como está na caixa.">
+                  <input className={inputClasse} value={f.registroAnvisa} onChange={(e) => set("registroAnvisa", e.target.value)} inputMode="numeric" placeholder="1.0298.0123.001-5" />
+                </Campo>
+              </div>
+              {pendencias.length > 0 && (
+                // O lojista tem que ver o que falta antes de publicar, não
+                // depois de um fiscal perguntar.
+                <ul className="mt-3 list-disc space-y-1 pl-5 text-xs text-amber-700">
+                  {pendencias.map((x) => <li key={x}>{x}</li>)}
+                </ul>
+              )}
+            </section>
+          );
+        })()}
         <Campo label="Compatibilidade (peças por moto)" ajuda="Em que motos esta peça serve. Vazio = universal (capacete, óleo, serviço). Anos vazios = todos.">
           <div className="grid gap-2">
             {f.compatibilidade.map((l, i) => (

@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import FichaTecnica from "@/components/FichaTecnica";
 import { exigirTenant, lojaVende, urlDaLoja, temaDo } from "@/lib/tenant";
 import GaleriaPremium from "@/components/templates/automotivo-premium/Galeria";
-import { buscarProduto, formatarBRL, listarProdutos, resumoAvaliacoes } from "@/lib/catalogo";
+import { buscarProduto, equivalentesDoProduto, formatarBRL, listarProdutos, resumoAvaliacoes } from "@/lib/catalogo";
 import * as regras from "@/lib/produto-regras";
 import { fichaDoProduto } from "@/lib/ficha";
 import AvisoEstoque from "@/components/AvisoEstoque";
@@ -17,6 +17,8 @@ import ProductCard from "@/components/ProductCard";
 import { prisma } from "@/lib/db";
 import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
 import Compatibilidade from "@/components/Compatibilidade";
+import Medicamento from "@/components/Medicamento";
+import { ehMedicamento, exigeReceita, lerMedicamento, vendaRemotaProibida } from "@/lib/farmacia";
 import { minhaMoto } from "@/lib/minha-moto";
 import { lerCompatibilidade } from "@/lib/motos";
 import { descricaoDoProduto, textoPuro } from "@/lib/seo-texto";
@@ -63,10 +65,20 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
   const sobConsulta = regras.sobConsulta(p);
   const disponivel = regras.compravel(p);
   const moto = t.segmento === "motopecas" ? await minhaMoto() : null;
-  const [avaliacoes, resumo, relacionados] = await Promise.all([
+  // Farmácia: a tarja é o que decide se este item pode ser dispensado pela
+  // internet. Tarja preta e tarja vermelha com retenção são de controle
+  // especial, e a RDC 44/2009 (art. 62) veda a venda a distância — a página
+  // continua existindo, com preço e bula, porque quem procura precisa achar e
+  // saber que a loja tem. Ver src/lib/farmacia.ts.
+  const medicamento = lerMedicamento(p);
+  const somenteNaLoja = vendaRemotaProibida(medicamento.tarja);
+  const [avaliacoes, resumo, relacionados, equivalentes] = await Promise.all([
     prisma.avaliacao.findMany({ where: { produtoId: p.id, aprovada: true }, orderBy: { criadoEm: "desc" }, take: 20 }),
     resumoAvaliacoes(p.id),
     listarProdutos(t.id, { categoriaSlug: p.categoria?.slug, excetoId: p.id, limite: 4, moto }),
+    // Só a loja de farmácia pergunta: nas outras o campo está vazio e a
+    // consulta seria uma ida ao banco por visita para nunca devolver nada.
+    t.segmento === "farmacia" ? equivalentesDoProduto(t.id, p) : Promise.resolve([]),
   ]);
   const compat = lerCompatibilidade(p.compatibilidade);
   const ficha = fichaDoProduto((p.atributos as Record<string, unknown>) ?? {});
@@ -104,7 +116,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
       url: `${urlDaLoja(t)}/produtos/${p.slug}${escolhida&&!escolhida.padrao?`?variante=${encodeURIComponent(escolhida.id)}`:""}`,
       priceCurrency: "BRL",
       price: (p.precoCentavos / 100).toFixed(2),
-      availability: `https://schema.org/${regras.disponibilidadeSchema(p)}`,
+      availability: somenteNaLoja ? "https://schema.org/InStoreOnly" : `https://schema.org/${regras.disponibilidadeSchema(p)}`,
       seller: { "@id": `${urlDaLoja(t)}/#organization` },
     } : ofertas.some(v=>v.precoCentavos>0) ? {
       "@type": "AggregateOffer",
@@ -134,6 +146,23 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
           { "@type": "ListItem", position: p.categoria ? 4 : 3, name: p.nome, item: `${urlDaLoja(t)}/produtos/${p.slug}` },
         ],
       }) }} />
+      {ehMedicamento(medicamento) && (
+        // `Drug` é o tipo que descreve medicamento em schema.org; o `Product`
+        // acima continua sendo o que o Google lê para o rich result de produto.
+        // Nada aqui é inventado: sai do que o lojista cadastrou.
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Drug",
+          name: p.nome,
+          ...(medicamento.principioAtivo ? { activeIngredient: medicamento.principioAtivo, nonProprietaryName: medicamento.principioAtivo } : {}),
+          ...(medicamento.apresentacao ? { dosageForm: medicamento.apresentacao } : {}),
+          ...(p.marca ? { manufacturer: { "@type": "Organization", name: p.marca } } : {}),
+          prescriptionStatus: exigeReceita(medicamento.tarja)
+            ? "https://schema.org/PrescriptionOnly"
+            : "https://schema.org/OTC",
+          ...(medicamento.tipo === "generico" ? { isProprietary: false } : medicamento.tipo === "referencia" ? { isProprietary: true } : {}),
+        }).replace(/</g,"\\u003c") }} />
+      )}
       <EventoVerProduto item={{ id: p.id, nome: p.nome, precoCentavos: p.precoCentavos, categoria: p.categoria?.nome ?? null }} />
       <nav className="mb-4 text-xs text-muted-foreground">
         <Link href="/">Início</Link> / <Link href="/produtos">Produtos</Link>
@@ -161,7 +190,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
                 produto={{ id: p.id, slug: p.slug, nome: p.nome, precoCentavos: p.precoCentavos, imagem: p.imagens[0] }}
                 opcoes={p.opcoes}
                 variantes={ofertas.filter(v=>!v.padrao).map((v) => ({ id: v.id, nome: v.nome, valores: v.valores as Record<string, string>, precoCentavos: v.precoCentavos, estoque: v.estoque, imagem: v.imagem, disponivel:v.compravel }))}
-                vende={vende}
+                vende={vende && !somenteNaLoja}
               />
             </div>
           ) : (
@@ -182,7 +211,15 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
           )}
 
           <div className="mt-6 max-w-sm">
-            {p.opcoes.length > 0 ? null : sobConsulta ? (
+            {somenteNaLoja ? (
+              // Nem carrinho nem WhatsApp: o que a RDC 44/2009 veda é a venda a
+              // distância, e o pedido por mensagem seria a mesma infração por
+              // outro meio. O que a loja pode oferecer é o endereço dela.
+              <p className="medicamento-presencial">
+                Este medicamento é dispensado <strong>somente presencialmente</strong>, mediante
+                receita retida. Consulte a disponibilidade com a loja antes de ir.
+              </p>
+            ) : p.opcoes.length > 0 ? null : sobConsulta ? (
               t.whatsapp ? (
                 <a className="btn-primario w-full" href={linkWhatsApp(t.whatsapp, `Olá! Quero saber o preço de: ${p.nome}`)} target="_blank" rel="noopener">
                   Consultar preço
@@ -202,6 +239,8 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
           {p.opcoes.length === 0 && (
             <div className="mt-4"><EstoqueBaixo estoque={p.estoque} limite={t.estoqueBaixoEm} /></div>
           )}
+
+          <Medicamento produto={p} precoCentavos={p.precoCentavos} equivalentes={equivalentes} />
 
           <Compatibilidade compatibilidade={p.compatibilidade} codigoOriginal={p.codigoOriginal} codigosEquivalentes={p.codigosEquivalentes} moto={moto} />
 

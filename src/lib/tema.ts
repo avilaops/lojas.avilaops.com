@@ -18,7 +18,7 @@ export const TemaSchema = z.object({
    * (banner, categorias, destaques, sobre) — o lojista escolhe uma, não
    * desenha. É o limite entre "personalizar" e "customizar".
    */
-  layout: z.enum(["spotlight", "mercado", "distribuidora", "automotivo", "automotivo-premium", "conversao", "classico", "vitrine", "editorial", "minimal"]).default("classico"),
+  layout: z.enum(["spotlight", "mercado", "distribuidora", "automotivo", "automotivo-premium", "farmacia", "conversao", "classico", "vitrine", "editorial", "minimal"]).default("classico"),
   premium: z.object({
     heroTitulo: z.string().max(120).optional(),
     heroTexto: z.string().max(300).optional(),
@@ -61,6 +61,7 @@ export const LAYOUTS: Array<{ valor: TemaLoja["layout"]; rotulo: string; descric
   { valor: "spotlight", rotulo: "Spotlight", descricao: "Hero de alto impacto, produto principal e navegação visual. Ideal para performance e marca." },
   { valor: "mercado", rotulo: "Mercado", descricao: "Catálogo denso, departamentos e mais produtos por tela. Ideal para distribuidoras." },
   { valor: "distribuidora", rotulo: "Distribuidora", descricao: "O catálogo denso do Mercado com a sua imagem de banner na abertura. Para distribuidora que já tem arte de marca." },
+  { valor: "farmacia", rotulo: "Farmácia", descricao: "Abre pela busca da substância e pelo que a pessoa está sentindo, não pela vitrine. Departamentos de drogaria, selo de receita no card e o farmacêutico responsável à vista. Para farmácia e drogaria." },
   { valor: "automotivo", rotulo: "Automotivo", descricao: "Mostra o catálogo na ordem do serviço: lavar, corrigir, proteger. Para estética automotiva, acessórios e oficina, onde a ordem de aplicação é o que o cliente não sabe." },
   { valor: "conversao", rotulo: "Conversão", descricao: "Oferta clara, benefícios e caminho curto até a compra. Ideal para campanhas." },
   { valor: "classico", rotulo: "Clássico", descricao: "Faixa colorida com slogan, categorias em cartões, destaques em 4 colunas." },
