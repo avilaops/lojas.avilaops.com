@@ -61,6 +61,7 @@ export const SECOES: ItemNav[] = [
     filhos: [
       { rotulo: "Buscadores", href: "/painel/marketing" },
       { rotulo: "Anúncios", href: "/painel/marketing/anuncios" },
+      { rotulo: "Blog", href: "/painel/marketing/blog" },
     ],
   },
   { rotulo: "IA", href: "/painel/ia", icone: "ia" },

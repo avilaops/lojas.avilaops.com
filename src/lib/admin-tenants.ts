@@ -6,6 +6,7 @@ import { esquecerTenantEmCache } from "./tenant";
 import type { ProdutoEntrada, TenantEntrada } from "./admin-schemas";
 import { invalidarCatalogo } from "./catalogo-cache";
 import { salvarProdutoNoCatalogo } from "./catalogo-escrita";
+import { ErroCampo, lerDefinicoes, normalizarValor } from "./campos-personalizados";
 
 function dadosDoTenant(entrada: Partial<TenantEntrada>): Prisma.TenantUpdateInput {
   const { mercadoPago, tema, identidade, endereco, tabelaFrete, entregaLocal, ...resto } = entrada;
@@ -100,8 +101,16 @@ export async function importarProdutos(tenantId: string, produtos: ProdutoEntrad
   for (const c of await prisma.categoria.findMany({ where: { tenantId } })) categorias.set(c.slug, c.id);
   const nomesCorrigidos = new Set<string>();
 
+  // As definições de campo da loja, uma vez por lote: é por elas que um valor
+  // de planilha vira número, data ou opção válida.
+  const definicoes = lerDefinicoes(
+    (await prisma.tenant.findUnique({ where: { id: tenantId }, select: { camposPersonalizados: true } }))?.camposPersonalizados,
+  );
+
   let criados = 0;
   let atualizados = 0;
+  /** Célula recusada: a importação segue, e o painel mostra o que ficou de fora. */
+  const avisos: string[] = [];
 
   for (const p of produtos) {
     let categoriaId: string | null = null;
@@ -123,13 +132,36 @@ export async function importarProdutos(tenantId: string, produtos: ProdutoEntrad
     }
 
     const desejado = p.slug ? slugificar(p.slug) : slugificar(p.nome);
-    const { categoria: _c, compatibilidade, atributos, ...campos } = p;
+    const { categoria: _c, compatibilidade, atributos, camposPersonalizados, ...campos } = p;
     void _c;
     const existente = p.sku
       ? await prisma.produto.findFirst({ where: { tenantId, sku: p.sku } })
       : await prisma.produto.findUnique({ where: { tenantId_slug: { tenantId, slug: desejado } } });
 
     const slug = await slugLivre(tenantId, desejado, existente?.id ?? null);
+
+    /**
+     * Uma célula ruim não derruba a planilha inteira.
+     *
+     * Importação de 2.000 linhas que para na 1.700ª porque alguém escreveu
+     * "doze" num campo numérico deixa o lojista com o catálogo pela metade e
+     * sem saber onde parou. Aqui a linha entra sem aquele campo e o problema
+     * volta como aviso, junto do resultado.
+     */
+    let valoresCampos: Record<string, string> | undefined;
+    if (camposPersonalizados && definicoes.length) {
+      valoresCampos = {};
+      for (const campo of definicoes) {
+        if (!(campo.chave in camposPersonalizados)) continue;
+        try {
+          const valor = normalizarValor(campo, camposPersonalizados[campo.chave]);
+          if (valor !== null) valoresCampos[campo.chave] = valor;
+        } catch (e) {
+          if (!(e instanceof ErroCampo)) throw e;
+          avisos.push(`${p.nome}: ${e.message}`);
+        }
+      }
+    }
 
     const dados = {
       ...campos,
@@ -141,6 +173,7 @@ export async function importarProdutos(tenantId: string, produtos: ProdutoEntrad
       ...(p.categoria ? { categoriaId } : {}),
       ...(atributos !== undefined ? { atributos: atributos as Prisma.InputJsonValue } : {}),
       ...(compatibilidade ? { compatibilidade: compatibilidade as unknown as Prisma.InputJsonValue } : {}),
+      ...(valoresCampos ? { camposPersonalizados: valoresCampos as unknown as Prisma.InputJsonValue } : {}),
     };
 
     if (existente) {
@@ -155,5 +188,5 @@ export async function importarProdutos(tenantId: string, produtos: ProdutoEntrad
   // por loja caem agora, não daqui a cinco minutos.
   invalidarCatalogo(tenantId);
 
-  return { criados, atualizados };
+  return { criados, atualizados, ...(avisos.length ? { avisos: avisos.slice(0, 50) } : {}) };
 }

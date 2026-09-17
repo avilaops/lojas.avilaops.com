@@ -170,6 +170,13 @@ export const ProdutoEntradaSchema = z.object({
   larguraCm: z.number().positive().optional(),
   comprimentoCm: z.number().positive().optional(),
   atributos: z.record(z.string(), z.unknown()).optional(),
+  /**
+   * Valores dos campos que a loja definiu em Configurações › Campos do
+   * produto. Tipo e obrigatoriedade não cabem aqui: quem valida é
+   * `normalizarValores`, que precisa das definições da loja para saber que
+   * "Safra" é número e "Corpo" só aceita três opções.
+   */
+  camposPersonalizados: z.record(z.string(), z.unknown()).optional(),
   // Farmácia (segmento farmacia). Ver src/lib/farmacia.ts.
   //
   // A tarja é o único campo aqui que restringe a venda, e por isso é enum
