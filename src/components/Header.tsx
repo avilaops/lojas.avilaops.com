@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Store } from "lucide-react";
+import { Store, UserRound } from "lucide-react";
 import type { TenantPublico } from "@/lib/tenant";
 import CartButton from "@/components/cart/CartButton";
 import BuscaLoja from "@/components/BuscaLoja";
@@ -31,9 +31,15 @@ export default function Header({ loja, logoUrl, categorias, exemploBusca }: { lo
         {/* A lupa era o único caminho para a busca no celular. Agora o campo de
             busca está na própria barra, e manter as duas colocaria dois ícones
             de lupa lado a lado querendo dizer coisas diferentes. */}
+        {/* O rótulo "Minha conta" não cabe ao lado do carrinho no celular, mas
+            `hidden sm:inline-flex` tirava o link inteiro sem pôr nada no lugar:
+            abaixo de 640px não havia como entrar na conta nem ver pedidos, a
+            não ser digitando /conta na barra de endereço. O que não cabe é a
+            palavra — o caminho tem de caber sempre. */}
         {loja.vende && (
-          <Link href="/conta" className="hidden h-10 items-center rounded-lg border border-border bg-card px-3 text-sm font-medium sm:inline-flex" aria-label="Minha conta">
-            Minha conta
+          <Link href="/conta" className="inline-flex h-10 items-center justify-center rounded-lg border border-border bg-card px-2.5 text-sm font-medium sm:px-3" aria-label="Minha conta">
+            <UserRound size={18} aria-hidden="true" className="sm:hidden" />
+            <span className="hidden sm:inline">Minha conta</span>
           </Link>
         )}
         {loja.vende && <CartButton />}

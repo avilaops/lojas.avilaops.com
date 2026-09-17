@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import FichaTecnica from "@/components/FichaTecnica";
-import { exigirTenant, lojaVende, urlDaLoja, temaDo } from "@/lib/tenant";
+import { exigirTenant, lojaVende, urlDaLoja, temaDo, prazoDeDespacho } from "@/lib/tenant";
 import GaleriaPremium from "@/components/templates/automotivo-premium/Galeria";
 import { buscarProduto, equivalentesDoProduto, formatarBRL, listarProdutos, resumoAvaliacoes } from "@/lib/catalogo";
 import * as regras from "@/lib/produto-regras";
@@ -246,7 +246,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
 
           <ul className="mt-6 space-y-1 text-sm text-muted-foreground">
             {t.retiradaNaLoja && <li>✔ Retirada na loja sem custo</li>}
-            <li>✔ Envio em até {t.despachoDiasUteis} dia(s) útil(eis) após o pagamento</li>
+            <li>✔ Envio {prazoDeDespacho(t.despachoDiasUteis)} após o pagamento</li>
             {t.freteGratisAcima != null && <li>✔ Frete grátis acima de {formatarBRL(t.freteGratisAcima)}</li>}
             {p.sku && <li className="text-xs">SKU {p.sku}</li>}
           </ul>

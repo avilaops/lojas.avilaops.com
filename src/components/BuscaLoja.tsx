@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import { formatarBRL } from "@/lib/catalogo";
+import { sobConsulta } from "@/lib/produto-regras";
 
 interface Sugestao { slug: string; nome: string; precoCentavos: number; imagem: string | null; esgotado: boolean }
 interface Categoria { slug: string; nome: string }
@@ -123,7 +124,7 @@ export default function BuscaLoja({ exemplo }: { exemplo?: string | null }) {
                   {p.imagem && <img src={`${p.imagem}?w=480`} alt="" loading="lazy" />}
                 </span>
                 <span className="busca-nome">{p.nome}</span>
-                <span className="busca-preco">{p.esgotado ? "esgotado" : formatarBRL(p.precoCentavos)}</span>
+                <span className="busca-preco">{p.esgotado ? "esgotado" : sobConsulta(p) ? "sob consulta" : formatarBRL(p.precoCentavos)}</span>
               </a>
             </li>
           ))}

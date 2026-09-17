@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { exigirTenant, enderecoDo, enderecoCompleto } from "@/lib/tenant";
+import { exigirTenant, enderecoDo, enderecoCompleto, porOndeFalarCom, prazoDeDespacho } from "@/lib/tenant";
 import { mascararDocumento } from "@avilaops/checkout";
 
 /**
@@ -30,16 +30,16 @@ export default async function Politica({ params }: { params: Promise<{ tipo: str
   const t = await exigirTenant();
   const e = enderecoDo(t);
   const cidade = e.cidade ? `${e.cidade}${e.uf ? "/" + e.uf : ""}` : "nossa loja";
-  const contato = t.emailContato ?? (t.whatsapp ? "WhatsApp da loja" : "nossos canais de atendimento");
+  const contato = porOndeFalarCom(t);
   const empresa = t.razaoSocial ?? t.nome;
 
   const conteudo: Record<Tipo, { titulo: string; paragrafos: string[] }> = {
     envio: {
       titulo: "Política de envio e retirada",
       paragrafos: [
-        `Os pedidos são despachados em até ${t.despachoDiasUteis} dia(s) útil(eis) após a confirmação do pagamento. O prazo de entrega é o informado na cotação de frete no momento da compra e depende da transportadora e do CEP de destino.`,
+        `Os pedidos são despachados ${prazoDeDespacho(t.despachoDiasUteis)} após a confirmação do pagamento. O prazo de entrega é o informado na cotação de frete no momento da compra e depende da transportadora e do CEP de destino.`,
         t.retiradaNaLoja ? `Você pode retirar o pedido sem custo em ${cidade}, a partir do próximo dia útil após a confirmação. Aguarde o aviso de "pedido separado" antes de ir até a loja.` : "Esta loja não oferece retirada no balcão.",
-        `Em caso de avaria no transporte ou extravio, comunique-nos pelo ${contato} com fotos da embalagem. A reposição ou o estorno são por nossa conta.`,
+        `Em caso de avaria no transporte ou extravio, comunique-nos ${contato} com fotos da embalagem. A reposição ou o estorno são por nossa conta.`,
       ],
     },
     devolucao: {
@@ -47,7 +47,7 @@ export default async function Politica({ params }: { params: Promise<{ tipo: str
       paragrafos: [
         "Compras feitas pela internet podem ser desfeitas em até 7 dias corridos após o recebimento, sem necessidade de justificativa, conforme o art. 49 do Código de Defesa do Consumidor. O produto deve ser devolvido sem uso e na embalagem original; o valor pago, incluindo o frete, é estornado pelo mesmo meio de pagamento.",
         "Produto com defeito pode ser trocado em até 30 dias (não duráveis) ou 90 dias (duráveis) a contar do recebimento. Nesses casos o custo do retorno é da loja.",
-        `Para iniciar uma troca ou devolução, fale conosco pelo ${contato} informando o número do pedido.`,
+        `Para iniciar uma troca ou devolução, fale conosco ${contato} informando o número do pedido.`,
       ],
     },
     privacidade: {
@@ -55,7 +55,7 @@ export default async function Politica({ params }: { params: Promise<{ tipo: str
       paragrafos: [
         `A ${empresa}${t.cnpj ? `, CNPJ ${mascararDocumento(t.cnpj)}` : ""}, é a controladora dos seus dados e coleta apenas os necessários para processar o pedido: nome, CPF/CNPJ, e-mail, telefone e endereço de entrega. Eles são usados para emitir a cobrança, entregar o produto e prestar atendimento, nos termos da Lei 13.709/2018 (LGPD).`,
         "Dados de cartão não passam por nossos servidores: são tokenizados pelo provedor de pagamento no seu navegador.",
-        `Você pode solicitar acesso, correção ou exclusão dos seus dados a qualquer momento pelo ${contato}. Os dados de pedidos são mantidos pelo prazo exigido pela legislação fiscal.`,
+        `Você pode solicitar acesso, correção ou exclusão dos seus dados a qualquer momento ${contato}. Os dados de pedidos são mantidos pelo prazo exigido pela legislação fiscal.`,
         "Esta loja usa cookies estritamente necessários para o funcionamento do carrinho e, quando configurado, ferramentas de medição de audiência.",
       ],
     },
@@ -84,7 +84,7 @@ export default async function Politica({ params }: { params: Promise<{ tipo: str
         "As imagens são ilustrativas do produto anunciado. Embalagem, rótulo e apresentação podem mudar por conta do fabricante sem aviso prévio.",
         "Use os produtos conforme a orientação do fabricante no rótulo. Quando a instrução do rótulo divergir de qualquer texto desta loja, é o rótulo que vale.",
         "O conteúdo da loja (textos, fotos, marca e organização do catálogo) pertence a quem o produziu e não pode ser copiado sem autorização.",
-        `Dúvida sobre estes termos, sobre um pedido ou sobre um produto: fale conosco pelo ${contato}.`,
+        `Dúvida sobre estes termos, sobre um pedido ou sobre um produto: fale conosco ${contato}.`,
       ],
     },
   };

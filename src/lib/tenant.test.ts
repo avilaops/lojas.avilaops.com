@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type { Tenant } from "@prisma/client";
-import { enderecoCompleto, formatarCep, lojaVende } from "./tenant";
+import { contatoConfigurado, enderecoCompleto, formatarCep, lojaVende, porOndeFalarCom, prazoDeDespacho } from "./tenant";
 
 /**
  * `lojaVende` decide se a loja mostra "Finalizar compra" ou "Pedir pelo
@@ -51,4 +51,32 @@ test("CEP incompleto ou ausente sai como veio, sem inventar hífen", () => {
 test("endereço completo da loja usa o CEP formatado", () => {
   const t = loja({ endereco: { logradouro: "Rua das Oficinas", numero: "120", bairro: "Centro", cidade: "São Paulo", uf: "SP", cep: "01001000" } });
   assert.equal(enderecoCompleto(t), "Rua das Oficinas, 120 · Centro · São Paulo - SP · 01001-000");
+});
+
+/**
+ * As três frases que a loja escreve sobre si mesma. Todas saíram erradas na
+ * Vedashow ao mesmo tempo, e nenhuma por falta de dado: por concatenação.
+ */
+
+test("prazo de despacho concorda com o número, e zero é mesmo dia", () => {
+  // Era `${dias} dia(s) útil(eis)` em três telas — texto de template chegando
+  // ao comprador justamente na frase que promete um prazo.
+  assert.equal(prazoDeDespacho(0), "no mesmo dia útil");
+  assert.equal(prazoDeDespacho(1), "em até 1 dia útil");
+  assert.equal(prazoDeDespacho(3), "em até 3 dias úteis");
+});
+
+test("a preposição vem junto do canal, porque concorda com ele", () => {
+  // `pelo ${contato}` fixo escrevia "fale conosco pelo nossos canais de
+  // atendimento" nas três políticas — erro de concordância em página jurídica.
+  assert.equal(porOndeFalarCom(loja({ emailContato: "oi@loja.com.br" })), "pelo oi@loja.com.br");
+  assert.equal(porOndeFalarCom(loja({ whatsapp: "16999999999" })), "pelo WhatsApp da loja");
+  assert.equal(porOndeFalarCom(loja({})), "pelos nossos canais de atendimento");
+});
+
+test("loja sem canal nenhum é loja sem contato, e a página precisa saber", () => {
+  // Com todos os campos vazios, /contato servia um <h1> e uma lista sem itens.
+  assert.equal(contatoConfigurado(loja({})), false);
+  assert.equal(contatoConfigurado(loja({ telefone: "1633334444" })), true);
+  assert.equal(contatoConfigurado(loja({ enderecoPublico: true })), true);
 });
