@@ -421,6 +421,15 @@ model Pedido {
   pagamentoStatus String?
   rastreio        String?
 
+  /// De onde veio a venda: "loja" (checkout próprio) ou "mercadolivre".
+  /// Não é condição por loja — é fato do pedido, e o painel, o relatório e o
+  /// n8n precisam distinguir: quem compra no ML fala com o ML, não com a loja.
+  canal         String  @default("loja")
+  /// Id do pedido no canal externo (`order.id` do ML). É o que torna a
+  /// ingestão idempotente: a notificação do ML chega mais de uma vez, e o
+  /// mesmo pedido não pode virar dois.
+  canalPedidoId String?
+
   /**
    * Sessão da vitrine em que a compra foi fechada. Nulo em pedido anterior à
    * medição, em compra com cookie recusado e em pedido criado fora do site
@@ -438,6 +447,7 @@ model Pedido {
   itens     PedidoItem[]
   postagem  Postagem?
 
+  @@unique([tenantId, canal, canalPedidoId])
   @@index([tenantId, status])
   @@index([pagamentoId])
   @@index([sessaoId])
@@ -998,6 +1008,10 @@ model AnuncioMercadoLivre {
   /// Preço e estoque com que foi publicado, para saber o que mudou desde então.
   precoCentavosPublicado Int?
   estoquePublicado       Int?
+  /// Impressão digital do conteúdo publicado (título, fotos e descrição). O
+  /// anúncio só é reescrito quando ela muda: sem isso, ou o conteúdo da loja
+  /// nunca chegava ao anúncio, ou todo ciclo reenviaria tudo de novo.
+  conteudoHash           String?
 
   /// Preparo antes de publicar: nome enriquecido, categoria prevista, atributos
   /// conferidos e o veredito. Fica aqui e não em `Produto` porque é opinião de

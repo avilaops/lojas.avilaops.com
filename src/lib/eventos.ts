@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
-import type { Prisma } from "@prisma/client";
+import type { Prisma, Tenant } from "@prisma/client";
 import { prisma } from "./db";
+import { urlDaLoja } from "./tenant";
 
 /**
  * Eventos da plataforma → n8n.
@@ -61,7 +62,13 @@ export type EventoPlataforma =
   | { tipo: "categoria.seo-pendente"; slug: string; nome: string; categoriaId: string; categoriaSlug: string; categoriaNome: string; url: string }
   | { tipo: "categoria.seo-publicado"; slug: string; nome: string; categoriaId: string; categoriaSlug: string; categoriaNome: string; url: string; origem: string }
   | ({ tipo: "pedido.criado"; slug: string; referencia: string; numero?: number; totalCentavos: number; meioPagamento: string; clienteNome: string; clienteEmail: string; clienteTelefone: string } & Lojista)
-  | ({ tipo: "pedido.pago"; slug: string; referencia: string; numero?: number; totalCentavos: number; clienteNome: string; clienteEmail: string; clienteTelefone: string; itens: ItemEvento[]; itensTexto: string } & Lojista)
+  /**
+   * `canal` diz de onde veio a venda ("loja" quando ausente). O fluxo do n8n
+   * precisa dele: em pedido do Mercado Livre não há e-mail nem telefone do
+   * comprador — falar com ele acontece dentro do ML —, e disparar a
+   * confirmação de sempre contra campo vazio só produz automação falhada.
+   */
+  | ({ tipo: "pedido.pago"; slug: string; referencia: string; numero?: number; totalCentavos: number; clienteNome: string; clienteEmail: string; clienteTelefone: string; itens: ItemEvento[]; itensTexto: string; canal?: string } & Lojista)
   | ({ tipo: "pedido.recusado"; slug: string; referencia: string; clienteNome: string; clienteEmail: string; clienteTelefone: string; motivo?: string } & Lojista)
   | { tipo: "lojista.recuperar-senha"; slug: string; nome: string; email: string; link: string }
   | { tipo: "loja.suspensa"; slug: string; nome: string; motivo: string; link: string; emailContato: string | null; whatsapp: string | null }
@@ -92,6 +99,15 @@ function correlacaoDe(evento: EventoPlataforma): string {
 export const REENVIOS_MAXIMOS = 3;
 
 /** "2x Retentor XPTO, 1x Rolamento ABC" — o texto que vai em WhatsApp e e-mail. */
+/**
+ * Os dados do lojista que acompanham todo evento de pedido. Vive aqui, junto
+ * do contrato `Lojista`, porque agora tem mais de um emissor: o checkout
+ * próprio e o canal do Mercado Livre.
+ */
+export function lojista(t: Tenant): Lojista {
+  return { lojaNome: t.nome, lojaUrl: urlDaLoja(t), lojistaWhatsapp: t.whatsapp, lojistaEmail: t.loginEmail ?? t.emailContato, emailRemetente: t.emailRemetente };
+}
+
 export function itensParaTexto(itens: ItemEvento[]): string {
   return itens.map((i) => `${i.quantidade}x ${i.nome}`).join(", ");
 }

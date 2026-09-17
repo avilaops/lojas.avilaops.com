@@ -86,6 +86,8 @@ Todos os POST abaixo vão com `Authorization: Bearer $LOJAS_ADMIN_TOKEN`.
 | diário, 3h | `POST /api/admin/seo/categorias` | gera e publica SEO pendente em lote, sem IA no acesso público |
 | diário | `POST /api/admin/cobranca/verificar` | suspende quem passou da tolerância |
 | segunda 7h | `POST /api/admin/relatorios/semanal` | emite `loja.relatorio-semanal` por loja com movimento |
+| a cada 5 min | `POST /api/admin/canais/mercadolivre/avisos` | processa a fila de notificações do Mercado Livre: venda vira pedido e baixa estoque, envio vira rastreio, anúncio mexido vira pendência. **Quanto mais espaçado, maior a janela de vender a mesma peça duas vezes** |
+| a cada hora | `POST /api/admin/canais/mercadolivre/rodar` | publica o que o lojista aprovou e empurra preço e estoque para os anúncios |
 
 ## SEO de categorias V1
 

@@ -3,15 +3,11 @@ import { montarPedidoSeguro, type PayloadCheckout, type ResolucaoCatalogo } from
 import { calcularTotais, type PedidoCheckout } from "@avilaops/checkout";
 import { liberarReservas } from "./catalogo-reservas";
 import { prisma } from "./db";
-import { emitir, itensParaTexto } from "./eventos";
+import { emitir, itensParaTexto, lojista } from "./eventos";
 import { baixarEstoqueDoPedido } from "./estoque";
 import { marcarConvertido } from "./carrinhos";
-import { urlDaLoja } from "./tenant";
 import { COOKIE_SESSAO } from "./atribuicao";
 
-function lojista(t: Tenant) {
-  return { lojaNome: t.nome, lojaUrl: urlDaLoja(t), lojistaWhatsapp: t.whatsapp, lojistaEmail: t.loginEmail ?? t.emailContato, emailRemetente: t.emailRemetente };
-}
 
 /**
  * Persistência do pedido. O total gravado é o recalculado pelo pacote — o
