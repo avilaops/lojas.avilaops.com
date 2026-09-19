@@ -134,8 +134,11 @@ export async function importarProdutos(tenantId: string, produtos: ProdutoEntrad
     const desejado = p.slug ? slugificar(p.slug) : slugificar(p.nome);
     const { categoria: _c, compatibilidade, atributos, camposPersonalizados, ...campos } = p;
     void _c;
+    // `findUnique` desde que (tenantId, sku) virou único: o `findFirst` de
+    // antes não tinha `orderBy`, então com SKU repetido a planilha atualizava
+    // um produto ao acaso e o outro parava no tempo.
     const existente = p.sku
-      ? await prisma.produto.findFirst({ where: { tenantId, sku: p.sku } })
+      ? await prisma.produto.findUnique({ where: { tenantId_sku: { tenantId, sku: p.sku } } })
       : await prisma.produto.findUnique({ where: { tenantId_slug: { tenantId, slug: desejado } } });
 
     const slug = await slugLivre(tenantId, desejado, existente?.id ?? null);
