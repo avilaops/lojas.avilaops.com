@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Store } from "lucide-react";
+import { Store, UserRound } from "lucide-react";
 import type { TenantPublico } from "@/lib/tenant";
 import CartButton from "@/components/cart/CartButton";
 import BuscaLoja from "@/components/BuscaLoja";
@@ -32,8 +32,8 @@ export default function Header({ loja, logoUrl, categorias, exemploBusca }: { lo
             busca está na própria barra, e manter as duas colocaria dois ícones
             de lupa lado a lado querendo dizer coisas diferentes. */}
         {loja.vende && (
-          <Link href="/conta" className="hidden h-10 items-center rounded-lg border border-border bg-card px-3 text-sm font-medium sm:inline-flex" aria-label="Minha conta">
-            Minha conta
+          <Link href="/conta" className="ml-auto inline-flex h-11 items-center rounded-lg border border-border bg-card px-3 text-sm font-medium md:ml-0" aria-label="Minha conta">
+            <UserRound className="h-4 w-4 sm:hidden" aria-hidden="true" /><span className="hidden sm:inline">Minha conta</span>
           </Link>
         )}
         {loja.vende && <CartButton />}
@@ -45,7 +45,7 @@ export default function Header({ loja, logoUrl, categorias, exemploBusca }: { lo
           As duas listas passaram a sair da mesma ordem (maiores primeiro), e
           quem procura o resto tem "Ver todas". */}
       {categorias.length > 0 && (
-        <nav className="nav-loja border-t border-border">
+        <nav aria-label="Categorias da loja" className="nav-loja border-t border-border">
           <div className="container-loja nav-loja-tira flex gap-6 overflow-x-auto py-2.5 text-[13px]">
             <Link href="/produtos" className="whitespace-nowrap font-semibold text-foreground">
               Todos

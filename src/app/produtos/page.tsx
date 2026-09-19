@@ -75,7 +75,7 @@ export default async function Produtos({ searchParams }: { searchParams: Promise
     // O filtro de medida só aparece onde faz sentido: loja de roupa não tem
     // diâmetro interno, e campo que nunca filtra nada é ruído no formulário.
     medidasDaLoja(t.id),
-    premium ? marcasDaLoja(t.id) : [],
+    marcasDaLoja(t.id),
   ]);
   const produtos = lote.slice(0, POR_PAGINA);
   const temProxima = lote.length > POR_PAGINA;

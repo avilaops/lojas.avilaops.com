@@ -25,6 +25,7 @@ import { lerCompatibilidade } from "@/lib/motos";
 import { descricaoDoProduto, textoPuro } from "@/lib/seo-texto";
 import { ofertaDaVariante,gtinValido } from "@/lib/catalogo-oferta";
 import { midiasDaOferta } from "@/lib/catalogo-qualidade";
+import { paragrafosDaDescricao } from "@/lib/descricao-produto";
 
 type Props = { params: Promise<{ slug: string }>; searchParams:Promise<{variante?:string}> };
 
@@ -165,7 +166,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
         }).replace(/</g,"\\u003c") }} />
       )}
       <EventoVerProduto item={{ id: p.id, nome: p.nome, precoCentavos: p.precoCentavos, categoria: p.categoria?.nome ?? null }} />
-      <nav className="mb-4 text-xs text-muted-foreground">
+      <nav aria-label="Caminho do produto" className="mb-4 text-xs text-muted-foreground">
         <Link href="/">Início</Link> / <Link href="/produtos">Produtos</Link>
         {p.categoria && (
           <>
@@ -180,7 +181,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
         <div className="ap-produto-info">
           {p.marca && <p className="text-xs uppercase tracking-wide text-muted-foreground">{p.marca}</p>}
           <h1 className="mt-1 text-2xl font-bold">{p.nome}</h1>
-          {p.descricaoCurta && <p className="mt-2 text-sm text-muted-foreground">{p.descricaoCurta}</p>}
+          {p.descricaoCurta && <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{textoPuro(p.descricaoCurta)}</p>}
 
           {p.opcoes.length > 0 ? (
             <div className="mt-5 max-w-sm">
@@ -205,7 +206,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
             ) : (
               <>
                 <p className="text-3xl font-bold">{formatarBRL(p.precoCentavos)}</p>
-                {vende && t.meiosPagamento.includes("pix") && <p className="text-xs text-muted-foreground">no PIX, cartão ou boleto</p>}
+                {vende && <p className="mt-1 text-sm text-muted-foreground">{t.meiosPagamento.map(m => ({ pix: "Pix", cartao: "Cartão", boleto: "Boleto" })[m]).filter(Boolean).join(" · ")}</p>}
               </>
             )}
           </div>
@@ -252,15 +253,20 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
             {p.sku && <li className="text-xs">SKU {p.sku}</li>}
           </ul>
 
+          <div className="mt-4 flex flex-wrap gap-x-5 gap-y-3 text-sm">
+            <Link href="/politicas/envio" className="underline underline-offset-4">Entrega e retirada</Link>
+            {t.whatsapp && !somenteNaLoja && <a href={linkWhatsApp(t.whatsapp, `Olá! Tenho uma dúvida sobre ${p.nome}: ${urlDaLoja(t)}/produtos/${p.slug}`)} target="_blank" rel="noopener" className="underline underline-offset-4">Tirar dúvida sobre o produto</a>}
+          </div>
+
           <FichaTecnica
             atributos={(p.atributos as Record<string, unknown>) ?? {}}
             definicoes={lerDefinicoes(t.camposPersonalizados)}
             valores={lerValores(p.camposPersonalizados)}
           />
           {p.descricao && (
-            <section className="prosa mt-8 text-sm leading-relaxed">
+            <section className="prosa descricao-produto mt-8 text-sm leading-relaxed">
               <h2 className="mb-2 text-base font-bold">Descrição</h2>
-              {p.descricao.split(/\n{2,}/).map((par, i) => (
+              {paragrafosDaDescricao(p.descricao).map((par, i) => (
                 <p key={i}>{par}</p>
               ))}
             </section>

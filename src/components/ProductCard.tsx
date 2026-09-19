@@ -47,7 +47,7 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null }: {
               src={miniatura}
               alt={produto.nome}
               loading="lazy"
-              className={`h-full w-full object-cover transition-all duration-500 ${
+              className={`h-full w-full object-contain p-3 transition-all duration-500 ${
                 segundaImagem ? "group-hover:opacity-0 group-hover:scale-105" : "group-hover:scale-105"
               }`}
             />
@@ -58,7 +58,7 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null }: {
                 src={miniatura2}
                 alt={`${produto.nome} - ângulo secundário`}
                 loading="lazy"
-                className="absolute inset-0 h-full w-full object-cover opacity-0 transition-all duration-500 group-hover:opacity-100 group-hover:scale-105"
+                className="absolute inset-0 h-full w-full object-contain p-3 opacity-0 transition-all duration-500 group-hover:opacity-100 group-hover:scale-105"
               />
             )}
           </>
@@ -108,7 +108,7 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null }: {
             {modelos.slice(0, 2).map((c) => c.modelo).join(" · ")}{modelos.length > 2 ? ` +${modelos.length - 2}` : ""}
           </p>
         ) : null}
-        <Link href={`/produtos/${produto.slug}`} className="line-clamp-2 text-sm font-semibold hover:text-primary transition-colors">
+        <Link href={`/produtos/${produto.slug}`} title={produto.nome} className="line-clamp-2 min-h-10 text-sm font-semibold hover:text-primary transition-colors">
           {produto.nome}
         </Link>
         <div className="mt-auto pt-1">
@@ -146,6 +146,7 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null }: {
           </Link>
         ) : vende ? (
           <AddToCartButton
+            compacto
             item={{ id: produto.id, slug: produto.slug, nome: produto.nome, precoCentavos: produto.precoCentavos, imagem }}
             disponivel={disponivel}
           />

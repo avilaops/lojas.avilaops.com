@@ -1,4 +1,5 @@
 import type { Categoria } from "@prisma/client";
+import Link from "next/link";
 import type { ChaveDeMedida } from "@/lib/catalogo";
 
 /** Uma medida que a loja usa, com a faixa real do catálogo. */
@@ -34,9 +35,10 @@ export default function FiltrosProdutos({
   fabricantes?: string[];
 }) {
   const usandoMedida = medidas.some((m) => valores[`${PREFIXO[m.campo]}_de`] || valores[`${PREFIXO[m.campo]}_ate`]);
+  const temFiltros = usandoMedida || ["q", "categoria", "fabricante", "min", "max", "ordem"].some(chave => valores[chave]);
   return (
     <form action="/produtos" className="filtros-produtos mb-6 grid gap-2 rounded-xl border border-border bg-card p-3">
-      <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto_auto_auto_auto]">
+      <div className="filtros-linha grid gap-2">
         {valores.marca && valores.modelo && (
           <>
             <input type="hidden" name="marca" value={valores.marca} />
@@ -52,15 +54,15 @@ export default function FiltrosProdutos({
             a partir de 640px o CSS a dissolve e os campos voltam para a linha.
             A busca continua sempre visível, que é por onde a maioria chega. */}
         <input type="checkbox" id="filtros-mais" className="filtros-gaveta" defaultChecked={!!(valores.categoria || valores.min || valores.max || valores.ordem || valores.fabricante)} />
-        <label htmlFor="filtros-mais" className="filtros-abrir">Categoria, preço e ordem</label>
+        <label htmlFor="filtros-mais" className="filtros-abrir">Filtros e ordenação</label>
         <div className="filtros-campos contents">
           {fabricantes.length > 0 && <select name="fabricante" aria-label="Marca do produto" defaultValue={valores.fabricante ?? ""} className="h-10 rounded-lg border border-border bg-background px-3 text-sm"><option value="">Todas as marcas</option>{fabricantes.map(m => <option key={m}>{m}</option>)}</select>}
           <select name="categoria" aria-label="Categoria" defaultValue={valores.categoria ?? ""} className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
             <option value="">Todas as categorias</option>
             {categorias.map((c) => <option key={c.id} value={c.slug}>{c.nome}</option>)}
           </select>
-          <input name="min" defaultValue={valores.min ?? ""} placeholder="R$ mín." inputMode="decimal" className="h-10 rounded-lg border border-border bg-background px-3 text-sm sm:w-24" />
-          <input name="max" defaultValue={valores.max ?? ""} placeholder="R$ máx." inputMode="decimal" className="h-10 rounded-lg border border-border bg-background px-3 text-sm sm:w-24" />
+          <input name="min" aria-label="Preço mínimo em reais" defaultValue={valores.min ?? ""} placeholder="R$ mín." inputMode="decimal" className="h-10 rounded-lg border border-border bg-background px-3 text-sm sm:w-24" />
+          <input name="max" aria-label="Preço máximo em reais" defaultValue={valores.max ?? ""} placeholder="R$ máx." inputMode="decimal" className="h-10 rounded-lg border border-border bg-background px-3 text-sm sm:w-24" />
           <select name="ordem" aria-label="Ordenar por" defaultValue={valores.ordem ?? "relevancia"} className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
             <option value="relevancia">Relevância</option>
             <option value="menor-preco">Menor preço</option>
@@ -70,6 +72,7 @@ export default function FiltrosProdutos({
           </select>
         </div>
         <button className="btn-primario h-10 px-4 text-xs">Filtrar</button>
+        {temFiltros && <Link href="/produtos" className="inline-flex min-h-10 items-center justify-center px-3 text-sm underline underline-offset-4">Limpar filtros</Link>}
       </div>
 
       {medidas.length > 0 && (
