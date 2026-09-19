@@ -149,6 +149,7 @@ model Tenant {
   // ── Políticas da loja ─────────────────────────────────────────────────
   /**
    * /**
+   * /**
    * Políticas escritas pelo lojista, por tipo ("envio", "devolucao",
    * "privacidade", "termos", "aviso-legal").
    * Chave ausente = a loja publica o modelo da plataforma, que é o
@@ -167,6 +168,7 @@ model Tenant {
 
   // ── Campos personalizados do catálogo ─────────────────────────────────
   /**
+   * /**
    * /**
    * Definições de campo que esta loja acrescenta ao produto. Lista, porque a
    * ordem é a de exibição na ficha.
@@ -946,6 +948,36 @@ model Postagem {
   @@index([tenantId, acertadaEm])
 }
 
+/// Uma rotina agendada e o estado da última execução dela.
+///
+/// A plataforma se agenda sozinha (`src/lib/rotinas-agendador.ts`): antes quem
+/// chamava os endpoints de tempos em tempos era o n8n, e a parte mais crítica
+/// da operação dependia de um serviço de fora estar de pé. A linha é a trava:
+/// vários containers tentam reivindicar a mesma rotina e só um leva, como em
+/// `AutomacaoEvento`.
+///
+/// O nome é chave estável e vem de `ROTINAS` em `src/lib/rotinas.ts`.
+model Rotina {
+  nome            String    @id
+  /// Quando vence de novo. Só é candidata quando <= agora.
+  proximaEm       DateTime
+  /// Preenchido enquanto alguém executa. Trava velha = processo que morreu no
+  /// meio; depois de `travaMinutos` a rotina volta para a fila.
+  executandoDesde DateTime?
+  ultimaEm        DateTime?
+  ultimaDuracaoMs Int?
+  /// O resumo devolvido pela rotina (contagens). É o que a operação lê para
+  /// saber que ela rodou de verdade, e não só que não deu erro.
+  ultimoResumo    Json?
+  ultimoErro      String?
+  /// Zera a cada sucesso. Serve para ver "parou de funcionar" sem ler log.
+  falhasSeguidas  Int       @default(0)
+  execucoes       Int       @default(0)
+  criadaEm        DateTime  @default(now())
+
+  @@index([proximaEm])
+}
+
 enum AutomacaoEventoStatus {
   EMITIDO // a plataforma enviou ao n8n
   PROCESSANDO // o n8n reivindicou (primeira entrega)
@@ -1049,22 +1081,22 @@ model PerguntaMercadoLivre {
   /// mais `RESPONDENDO`, que é só nosso: a reivindicação entre o clique do
   /// painel e o ML aceitar, para dois cliques não virarem duas respostas
   /// públicas. Continua na fila do lojista, porque ainda não foi respondida.
-  statusMl     String  @default("UNANSWERED")
-  resposta     String?
+  statusMl      String    @default("UNANSWERED")
+  resposta      String?
   /// Quem respondeu daqui: operador da loja. Resposta que veio do app do ML
   /// entra sem operador, e é assim que se distingue uma da outra.
   respondidaPor String?
-  respondidaEm DateTime?
+  respondidaEm  DateTime?
   /// Motivo da recusa do ML (pergunta banida, resposta com contato, etc.).
-  motivoErro   String?
+  motivoErro    String?
 
   perguntadaEm DateTime
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
-  tenant  Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  anuncio AnuncioMercadoLivre?  @relation(fields: [anuncioId], references: [id], onDelete: SetNull)
-  produto Produto?              @relation(fields: [produtoId], references: [id], onDelete: SetNull)
+  tenant  Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  anuncio AnuncioMercadoLivre? @relation(fields: [anuncioId], references: [id], onDelete: SetNull)
+  produto Produto?             @relation(fields: [produtoId], references: [id], onDelete: SetNull)
 
   @@index([tenantId, statusMl, perguntadaEm])
   @@index([tenantId, mlbId])
@@ -1108,8 +1140,8 @@ model AnuncioMercadoLivre {
   criadoEm       DateTime  @default(now())
   atualizadoEm   DateTime  @updatedAt
 
-  tenant    Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  produto   Produto               @relation(fields: [produtoId], references: [id], onDelete: Cascade)
+  tenant    Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  produto   Produto                @relation(fields: [produtoId], references: [id], onDelete: Cascade)
   perguntas PerguntaMercadoLivre[]
 
   @@unique([tenantId, produtoId])

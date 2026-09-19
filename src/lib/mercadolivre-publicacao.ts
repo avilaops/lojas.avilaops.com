@@ -348,7 +348,7 @@ async function sincronizarPublicados(loja: Tenant, limite: number, resumo: Resum
   }
 }
 
-/** Rotina idempotente chamada pelo n8n. Sem conexão ou aprovação, não publica. */
+/** Rotina idempotente (`mercadolivre.rodar`). Sem conexão ou aprovação, não publica. */
 export async function rodarMercadoLivre(opcoes: { slug?: string; limite?: number; preparar?: number } = {}): Promise<ResumoMercadoLivre> {
   const limite = Math.min(Math.max(opcoes.limite ?? 20, 1), 100);
   const preparar = Math.min(Math.max(opcoes.preparar ?? 10, 0), 50);
