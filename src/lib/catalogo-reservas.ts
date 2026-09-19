@@ -75,6 +75,50 @@ export async function liberarReservas(tenantId: string, referencia: string) {
   },{timeout:20000});
 }
 
+/** O que uma linha do pedido pede, no mínimo que a baixa precisa saber. */
+export interface ItemParaBaixa { produtoId: string | null; varianteId: string | null; quantidade: number }
+/** O produto travado, com as apresentações que ele tem. */
+export interface ProdutoParaBaixa { id: string; variantes: Array<{ id: string; padrao: boolean; ativo: boolean }> }
+
+/**
+ * Quanto sai de cada apresentação, a partir das linhas do pedido.
+ *
+ * Separado da transação porque é a decisão mais cara de errar do sistema —
+ * estoque que desce da apresentação errada não dá erro, dá cancelamento duas
+ * semanas depois — e decisão assim precisa de teste, não de leitura atenta.
+ *
+ * Duas linhas não baixam nada, e as duas por motivo declarado:
+ *
+ * - **Sem produto**: venda de canal cujo anúncio não está ligado a nenhum
+ *   produto desta loja. Não há estoque nosso a mexer. Lançar aqui derrubava a
+ *   baixa do pedido inteiro, inclusive das linhas que casaram.
+ * - **Sem variante, em produto com várias**: venda de canal cuja apresentação
+ *   não foi reconhecida (ver `resolverVariante`). A padrão só serve quando é a
+ *   única que existe; escolhê-la no escuro erra duas de uma vez — tira do que
+ *   está na prateleira e deixa à venda o que acabou.
+ *
+ * O checkout da loja não cai em nenhuma das duas: a linha dele nasce com
+ * produto e variante, vindos do id do carrinho.
+ */
+export function agruparParaBaixa(
+  itens: ItemParaBaixa[],
+  produtos: ProdutoParaBaixa[],
+): { grupos: Map<string, number>; naoBaixados: ItemParaBaixa[] } {
+  const grupos = new Map<string, number>();
+  const naoBaixados: ItemParaBaixa[] = [];
+
+  for (const item of itens) {
+    if (!item.produtoId) { naoBaixados.push(item); continue; }
+    const p = produtos.find(p => p.id === item.produtoId);
+    if (!item.varianteId && p && p.variantes.filter(v => v.ativo).length > 1) { naoBaixados.push(item); continue; }
+    const v = p?.variantes.find(v => item.varianteId ? v.id === item.varianteId : v.padrao);
+    if (!v) throw new ErroCatalogo("Pedido sem variante de estoque reconciliada.", 409);
+    grupos.set(v.id, (grupos.get(v.id) ?? 0) + item.quantidade);
+  }
+
+  return { grupos, naoBaixados };
+}
+
 /** Idempotência e baixa na mesma transação. Pedidos antigos mantêm os snapshots. */
 export async function confirmarEstoqueDoPedido(pedidoId: string) {
   return prisma.$transaction(async tx=>{
@@ -87,29 +131,7 @@ export async function confirmarEstoqueDoPedido(pedidoId: string) {
     const ids = [...new Set(pedido.itens.flatMap(i=>i.produtoId?[i.produtoId]:[]))].sort();
     const produtos = [];
     for(const id of ids) produtos.push(await travarProduto(tx,pedido.tenantId,id));
-    const grupos = new Map<string,number>();
-    for(const item of pedido.itens) {
-      // Linha sem produto é linha que não é nossa: venda de canal cujo anúncio
-      // não está ligado a nenhum produto desta loja. Não há estoque a baixar, e
-      // lançar aqui derrubava o pedido inteiro — inclusive as linhas que
-      // casaram — por causa de uma que a própria integração já registrou como
-      // não casada. O checkout da loja nunca cai neste caso: ele resolve os
-      // itens pelo catálogo antes de cobrar.
-      if(!item.produtoId) continue;
-      const p = produtos.find(p=>p.id===item.produtoId);
-      // Linha sem variante só pode virar a padrão quando a padrão é a única
-      // apresentação que existe. Produto com várias, e linha sem variante, é
-      // venda de canal cuja apresentação não foi reconhecida (ver
-      // `resolverVariante` em mercadolivre-pedidos.ts): baixar a padrão tiraria
-      // do que está na prateleira e deixaria à venda o que já acabou — erra
-      // duas de uma vez. Fica sem baixa, e o pedido carrega o aviso dizendo
-      // por quê e como resolver. O checkout da loja nunca cai aqui: a linha
-      // dele nasce com a variante, vinda do id do carrinho.
-      if(!item.varianteId && p && p.variantes.filter(v=>v.ativo).length>1) continue;
-      const v = p?.variantes.find(v=>item.varianteId ? v.id===item.varianteId : v.padrao);
-      if(!v) throw new ErroCatalogo("Pedido sem variante de estoque reconciliada.",409);
-      grupos.set(v.id,(grupos.get(v.id)??0)+item.quantidade);
-    }
+    const { grupos } = agruparParaBaixa(pedido.itens, produtos);
     for(const [varianteId,quantidade] of [...grupos.entries()].sort()) {
       const reserva = await tx.reservaEstoque.findUnique({where:{tenantId_referencia_varianteId:{tenantId:pedido.tenantId,referencia:pedido.referencia,varianteId}}});
       if(reserva && reserva.estado!=="ATIVA") throw new ErroCatalogo("Pagamento chegou após liberação da reserva. Reconciliar estoque antes de separar.",409);
