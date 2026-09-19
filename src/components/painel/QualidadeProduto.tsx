@@ -10,6 +10,10 @@ export default function QualidadeProduto({produtoId,revisao,aoAbrirVariantes}:{p
     if(o.campo==="variantes") return aoAbrirVariantes();
     const campo=document.getElementById(`catalogo-${o.campo}`);
     if(campo instanceof HTMLInputElement && campo.readOnly) return aoAbrirVariantes();
+    // O formulário guarda o que é raro em blocos fechados: sem abrir o que
+    // contém o campo, "Corrigir" rolava para um elemento invisível e o foco
+    // não ia para lugar nenhum. Sobe abrindo todos os blocos no caminho.
+    for(let bloco=campo?.closest("details");bloco;bloco=bloco.parentElement?.closest("details")??null) bloco.open=true;
     campo?.scrollIntoView({behavior:"smooth",block:"center"});campo?.focus();
   }
   return <section aria-label="Qualidade do catálogo" className="border-y border-border py-5">
