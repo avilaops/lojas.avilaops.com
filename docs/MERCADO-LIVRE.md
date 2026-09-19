@@ -138,6 +138,43 @@ Três regras de silêncio, testadas:
 Falha na leitura da reputação não derruba publicação nem estoque: ela é a
 última coisa do ciclo, dentro do próprio try.
 
+## Qual apresentação foi vendida
+
+Até 19/09/2026 o pedido do canal nascia **sem variante**, e quem baixa o
+estoque caía na apresentação **padrão** do produto. Numa loja de camiseta,
+vender o G tirava o P: o P some da prateleira enquanto está lá, o G continua à
+venda depois de acabar, e a segunda venda do G vira cancelamento — que no
+Mercado Livre custa reputação. Errava duas apresentações de uma vez, e em
+silêncio.
+
+`resolverVariante` decide por uma escada, nesta ordem:
+
+1. **SKU.** `Variante.sku` é único por loja, então bate é bate. É também o
+   degrau que funciona em anúncio criado à mão no ML, que é como a maioria das
+   variações existe hoje.
+2. **Atributos.** O ML manda o que o comprador escolheu
+   (`variation_attributes`) e `Variante.valores` guarda exatamente isso. A
+   comparação ignora acento e caixa, e só aceita quando **uma** variante casa
+   em todos: "Tamanho G" sozinho serve para G/Azul e G/Vermelho, e duas
+   casando é ambiguidade, não resposta.
+3. **Apresentação única.** Produto simples não tem o que escolher.
+4. **Não identificada.** Devolve nulo, de propósito.
+
+No quarto caso **o estoque não é baixado**, e o pedido carrega um aviso que
+diz o que fazer: informar o SKU da variação no anúncio do ML, igual ao da
+variante na loja. Não baixar é visível — o lojista estranha o número; baixar
+errado é invisível até o cancelamento.
+
+Quem respeita isso do outro lado é `confirmarEstoqueDoPedido`: linha sem
+variante só vira a padrão quando a padrão é a **única** apresentação ativa.
+
+### Linha que não casou com o catálogo
+
+Item de anúncio não ligado a nenhum produto da loja entra no pedido (a venda
+existe) e é **pulado** na baixa. Antes ele derrubava a baixa do pedido inteiro
+— inclusive das linhas que casaram — porque a conferência lançava erro em vez
+de seguir. O comportamento agora é o que a documentação já prometia.
+
 ## O que a integração não inventa
 
 - **Contato do comprador.** O ML não entrega mais e-mail, telefone e documento
@@ -155,10 +192,11 @@ Falha na leitura da reputação não derruba publicação nem estoque: ela é a
 
 ## Limites conhecidos
 
-- **Variação do ML.** O preparo publica o produto, não a variação. Se uma
-  ordem vier com `variation_id`, o pedido registra o aviso e a baixa usa a
-  apresentação padrão do produto. Enquanto não houver mapa de variação, loja
-  com muitas apresentações deve conferir antes de separar.
+- **Publicar variação.** O preparo publica o produto, não a variação: um
+  anúncio por produto, com o preço e o estoque da apresentação principal. Quem
+  quer as variações no ar cria o anúncio com elas no próprio ML — e a venda
+  volta certa, porque o reconhecimento da apresentação (abaixo) não depende de
+  termos sido nós a publicar.
 - **Nota fiscal.** O ML exige NF em boa parte das categorias; a plataforma
   ainda não emite. Hoje isso é trabalho do lojista, fora daqui.
 - **Frete.** `shipping_cost` vem do pagamento. Quando o comprador usa frete

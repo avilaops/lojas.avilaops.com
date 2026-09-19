@@ -89,7 +89,23 @@ export async function confirmarEstoqueDoPedido(pedidoId: string) {
     for(const id of ids) produtos.push(await travarProduto(tx,pedido.tenantId,id));
     const grupos = new Map<string,number>();
     for(const item of pedido.itens) {
+      // Linha sem produto é linha que não é nossa: venda de canal cujo anúncio
+      // não está ligado a nenhum produto desta loja. Não há estoque a baixar, e
+      // lançar aqui derrubava o pedido inteiro — inclusive as linhas que
+      // casaram — por causa de uma que a própria integração já registrou como
+      // não casada. O checkout da loja nunca cai neste caso: ele resolve os
+      // itens pelo catálogo antes de cobrar.
+      if(!item.produtoId) continue;
       const p = produtos.find(p=>p.id===item.produtoId);
+      // Linha sem variante só pode virar a padrão quando a padrão é a única
+      // apresentação que existe. Produto com várias, e linha sem variante, é
+      // venda de canal cuja apresentação não foi reconhecida (ver
+      // `resolverVariante` em mercadolivre-pedidos.ts): baixar a padrão tiraria
+      // do que está na prateleira e deixaria à venda o que já acabou — erra
+      // duas de uma vez. Fica sem baixa, e o pedido carrega o aviso dizendo
+      // por quê e como resolver. O checkout da loja nunca cai aqui: a linha
+      // dele nasce com a variante, vinda do id do carrinho.
+      if(!item.varianteId && p && p.variantes.filter(v=>v.ativo).length>1) continue;
       const v = p?.variantes.find(v=>item.varianteId ? v.id===item.varianteId : v.padrao);
       if(!v) throw new ErroCatalogo("Pedido sem variante de estoque reconciliada.",409);
       grupos.set(v.id,(grupos.get(v.id)??0)+item.quantidade);
