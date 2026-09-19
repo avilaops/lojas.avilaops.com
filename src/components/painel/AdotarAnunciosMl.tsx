@@ -129,7 +129,7 @@ export default function AdotarAnunciosMl() {
           </p>
           {casados.map((a) => {
             const marcado = escolhidos.includes(a.mlbId);
-            const mudaPreco = a.mudaria && a.mudaria.precoCentavos !== a.precoCentavos;
+            const mudaPreco = a.mudaria && !a.temVariacoes && a.mudaria.precoCentavos !== a.precoCentavos;
             return (
               <label key={a.mlbId} className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-3 hover:bg-muted/40">
                 <input
@@ -145,7 +145,7 @@ export default function AdotarAnunciosMl() {
                   </span>
                   <span className="mt-1 block text-xs">
                     No ar: <b>{brl(a.precoCentavos)}</b>, {a.estoque} un.
-                    {a.mudaria && (
+                    {a.mudaria && !a.temVariacoes && (
                       <>
                         {" · "}a loja mandaria: <b className={mudaPreco ? "text-amber-700" : ""}>{brl(a.mudaria.precoCentavos)}</b>
                         {`, ${a.mudaria.estoque} un.`}
@@ -155,7 +155,8 @@ export default function AdotarAnunciosMl() {
                   {a.temVariacoes && (
                     <span className="mt-1 flex items-start gap-1.5 text-xs text-amber-700">
                       <AlertTriangle size={12} className="mt-0.5 flex-none" />
-                      Tem variações. O estoque da loja vai para o anúncio inteiro; a venda é reconhecida pelo SKU de cada variação.
+                      Tem variações: preço e estoque continuam sendo editados por você no Mercado Livre. O que a adoção resolve
+                      aqui é a venda — ela passa a casar com o produto e a baixar a apresentação certa, pelo SKU da variação.
                     </span>
                   )}
                 </span>

@@ -316,18 +316,58 @@ async function sincronizarPublicados(loja: Tenant, limite: number, resumo: Resum
   const anuncios = await prisma.anuncioMercadoLivre.findMany({
     where: { tenantId: loja.id, estado: "publicado", mlbId: { not: null } },
     include: { produto: true },
-    orderBy: [{ sincronizadoEm: "asc" }, { atualizadoEm: "asc" }],
+    // `nulls: "first"` é o ponto: no Postgres, ASC joga NULL para o fim, e
+    // anúncio adotado nasce com `sincronizadoEm` nulo. Sem isto, justamente
+    // quem nunca sincronizou ia para trás da fila e, com o teto do lote,
+    // podia não ser alcançado nunca.
+    orderBy: [{ sincronizadoEm: { sort: "asc", nulls: "first" } }, { atualizadoEm: "asc" }],
     take: limite,
   });
 
   for (const anuncio of anuncios) {
     if (!anuncio.mlbId) continue;
     try {
-      const atual = await chamarMl<{ status?: string; price?: number; available_quantity?: number; permalink?: string }>(loja, `/items/${encodeURIComponent(anuncio.mlbId)}`);
+      const atual = await chamarMl<{
+        status?: string;
+        price?: number;
+        available_quantity?: number;
+        permalink?: string;
+        variations?: Array<{ id?: number | string }> | null;
+      }>(loja, `/items/${encodeURIComponent(anuncio.mlbId)}`);
       if (atual.status === "closed") {
         await prisma.anuncioMercadoLivre.update({
           where: { id: anuncio.id },
           data: { estado: "pausado", statusMl: "closed", permalink: atual.permalink ?? anuncio.permalink, sincronizadoEm: new Date() },
+        });
+        resumo.ignorados++;
+        continue;
+      }
+
+      /**
+       * Anúncio com variações não recebe preço nem estoque daqui.
+       *
+       * O Mercado Livre recusa `available_quantity` no item quando ele tem
+       * variações: a quantidade mora em cada uma. Empurrar assim mesmo faria
+       * todo ciclo falhar, para sempre, num anúncio que está perfeitamente no
+       * ar — e encheria o painel de erro sobre algo que o lojista não pode
+       * resolver.
+       *
+       * Isso aparece em anúncio **adotado**: o que nós publicamos nasce sem
+       * variação. E a adoção continua valendo a pena sem esta parte, porque o
+       * que ela resolve de mais importante é o outro lado — a venda passa a
+       * casar com o produto e a baixar a apresentação certa (ver
+       * `resolverVariante`). Preço e estoque seguem sendo do lojista, no ML.
+       */
+      if (atual.variations?.length) {
+        await prisma.anuncioMercadoLivre.update({
+          where: { id: anuncio.id },
+          data: {
+            statusMl: atual.status ?? null,
+            permalink: atual.permalink ?? anuncio.permalink,
+            motivoErro:
+              "Anúncio com variações: preço e estoque continuam sendo editados por você no Mercado Livre. As vendas são reconhecidas e baixam a apresentação certa do estoque.",
+            sincronizadoEm: new Date(),
+          },
         });
         resumo.ignorados++;
         continue;

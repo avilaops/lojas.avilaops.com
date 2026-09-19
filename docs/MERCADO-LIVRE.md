@@ -170,6 +170,14 @@ Mostrar o preço cru do catálogo prometeria R$ 49,90 e enviaria R$ 58,90 numa
 loja com 16,3% de acréscimo — tela que diverge do sistema é pior que tela
 nenhuma.
 
+**Anúncio com variações é adotado, mas não recebe preço nem estoque.** O ML
+recusa `available_quantity` no item quando ele tem variações — a quantidade
+mora em cada uma. Empurrar assim mesmo faria todo ciclo falhar, para sempre,
+num anúncio que está perfeitamente no ar. A adoção continua valendo: o que ela
+resolve de mais importante é o outro lado — a venda passa a casar com o produto
+e a baixar a apresentação certa. Preço e estoque seguem sendo do lojista, no
+ML, e a tela diz isso antes de ele decidir.
+
 **Adotado sincroniza preço e estoque, não conteúdo.** `conteudoDoAnuncio`
 devolve nulo sem preparo, então título, fotos e descrição do lojista ficam
 como estão. Reescrever o texto de um anúncio que já vende, sem ninguém pedir,
