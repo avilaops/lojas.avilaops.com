@@ -21,6 +21,7 @@ junto da auditoria de 19/09/2026 e do que Amazon, Shopee e Magalu vão exigir.
 | **Perguntas do comprador** | `src/lib/mercadolivre-perguntas.ts`, painel → Canais | pronto (17/09/2026) |
 | Mensagens do pós-venda | — | não tratado: o aviso é marcado `IGNORADO` com o motivo |
 | **Saúde da conta (reputação e métricas)** | `src/lib/mercadolivre-reputacao.ts`, painel → Canais | pronto (17/09/2026) |
+| **Adotar anúncio que já existe no ML** (casa por SKU e GTIN, nunca por título; vincular é decisão do lojista) | `src/lib/mercadolivre-adocao.ts`, `painel/AdotarAnunciosMl.tsx` | pronto (19/09/2026) |
 | **Regras comerciais do canal** (acréscimo de preço, estoque reservado, tipo de anúncio, condição, garantia) | `src/lib/canais.ts`, painel → Canais | pronto (19/09/2026) |
 | **O que falta preencher**, agrupado pelo que falta, e preparo sob demanda | `pendenciasDoCatalogo`, `api/painel/canais/mercadolivre/preparo` | pronto (19/09/2026) |
 | **Escolher a categoria do ML à mão** (busca pública, categoria folha, recálculo de atributos; escolha manual não é sobrescrita pelo preditor) | `src/lib/mercadolivre-categorias.ts`, `painel/CategoriaMl.tsx` | pronto (19/09/2026) |
@@ -137,6 +138,36 @@ Três regras de silêncio, testadas:
 
 Falha na leitura da reputação não derruba publicação nem estoque: ela é a
 última coisa do ciclo, dentro do próprio try.
+
+## Adotar o que o lojista já vende lá
+
+Quase todo mundo que conecta o Mercado Livre **já vende lá**. Até 19/09/2026,
+conectar não ligava nada: `AnuncioMercadoLivre` só ganhava `mlbId` quando
+éramos nós a publicar. Os anúncios dele ficavam fora de tudo — preço e estoque
+não sincronizavam, o aviso de `items` era descartado com "o anúncio não é
+desta loja", e a venda chegava sem produto casado, logo **sem baixar estoque**.
+
+Em Canais → *Anúncios que você já tem no Mercado Livre*, a plataforma lê
+`GET /users/{id}/items/search`, detalha em lotes de 20 (teto do multiget) e
+propõe o casamento.
+
+**Só identificador casa: SKU e GTIN.** Título não entra, por mais tentador que
+seja. "Correia de transmissão 5PK 1230" e "…1235" são dois produtos, e um
+casamento errado aqui não erra uma tela — manda o preço de um produto para o
+anúncio do outro no ciclo seguinte. Pela mesma razão, casa só quando é
+**único** dos dois lados: SKU repetido no catálogo é problema de catálogo, não
+uma escolha a ser feita por sorteio.
+
+**Nada é automático.** Vincular entrega o preço e o estoque da loja ao
+anúncio, e isso é decisão de quem vende. Cada linha mostra o que está no ar
+hoje e o que passaria a valer, com o preço destacado quando muda — sim cego
+mudaria preço de venda sem ninguém ter pedido. É a mesma regra de "prontos
+para anunciar": a aprovação é humana.
+
+**Adotado sincroniza preço e estoque, não conteúdo.** `conteudoDoAnuncio`
+devolve nulo sem preparo, então título, fotos e descrição do lojista ficam
+como estão. Reescrever o texto de um anúncio que já vende, sem ninguém pedir,
+seria a adoção fazendo mais do que foi autorizada.
 
 ## Qual apresentação foi vendida
 
