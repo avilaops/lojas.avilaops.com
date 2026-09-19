@@ -52,6 +52,8 @@ export default function CategoriaMl({ produtoId, aoFechar, aoSalvar }: {
   const [termo, setTermo] = useState("");
   const [achadas, setAchadas] = useState<Categoria[] | null>(null);
   const [escolhida, setEscolhida] = useState<Categoria | null>(null);
+  /** Categoria de agrupamento aberta: mostramos as filhas dela. */
+  const [navegando, setNavegando] = useState<Categoria | null>(null);
   const [salva, setSalva] = useState<{ categoria: Categoria; faltando: Faltando[]; estado: string } | null>(null);
   const [ocupado, setOcupado] = useState<"carregando" | "buscando" | "salvando" | null>("carregando");
   const [erro, setErro] = useState<string | null>(null);
@@ -88,6 +90,8 @@ export default function CategoriaMl({ produtoId, aoFechar, aoSalvar }: {
       const r = await fetch(`/api/painel/canais/mercadolivre/categoria/buscar?${p}`);
       const d = await r.json();
       if (!r.ok) throw new Error(d.erro ?? "Busca falhou.");
+      setNavegando(null);
+      setEscolhida(null);
       setAchadas(d.categorias as Categoria[]);
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Falha inesperada.");
@@ -96,22 +100,37 @@ export default function CategoriaMl({ produtoId, aoFechar, aoSalvar }: {
     }
   }, []);
 
-  /** Descer numa categoria de agrupamento: o ML só publica em folha. */
-  const descer = async (id: string) => {
-    setEscolhida(null);
-    const r = await fetch(`/api/painel/canais/mercadolivre/categoria/buscar?id=${encodeURIComponent(id)}`);
-    const d = await r.json();
-    if (!r.ok) return setErro(d.erro ?? "Falha.");
-    const pai = (d.categorias as Categoria[])[0];
-    const filhas = await Promise.all(
-      pai.filhas.map(async (f) => {
-        const rr = await fetch(`/api/painel/canais/mercadolivre/categoria/buscar?id=${encodeURIComponent(f.categoriaId)}`);
-        const dd = await rr.json();
-        return (dd.categorias as Categoria[] | undefined)?.[0] ?? null;
-      }),
-    );
-    setAchadas(filhas.filter((f): f is Categoria => Boolean(f)));
-  };
+  /**
+   * Abre uma categoria: folha vira candidata, agrupamento vira navegação.
+   *
+   * Uma requisição por clique, e não uma por filha. Buscar o detalhe das
+   * filhas todas de uma vez parece adiantar trabalho, mas "Peças" tem dezenas
+   * delas: seria um leque de dezenas de chamadas ao Mercado Livre para o
+   * lojista ler três nomes e clicar em um.
+   */
+  const abrir = useCallback(async (id: string) => {
+    setErro(null);
+    setOcupado("buscando");
+    try {
+      const r = await fetch(`/api/painel/canais/mercadolivre/categoria/buscar?id=${encodeURIComponent(id)}`);
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.erro ?? "Falha.");
+      const c = (d.categorias as Categoria[])[0];
+      if (c.folha) {
+        setNavegando(null);
+        setAchadas([c]);
+        setEscolhida(c);
+      } else {
+        setEscolhida(null);
+        setAchadas(null);
+        setNavegando(c);
+      }
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Falha inesperada.");
+    } finally {
+      setOcupado(null);
+    }
+  }, []);
 
   async function salvar(categoriaId: string) {
     setErro(null);
@@ -263,6 +282,43 @@ export default function CategoriaMl({ produtoId, aoFechar, aoSalvar }: {
                 </small>
               </form>
 
+              {navegando && (
+                <div className="grid gap-2">
+                  <div className="flex items-start gap-2">
+                    <button
+                      className="btn-secundario h-8 flex-none px-2 text-xs"
+                      onClick={() => { setNavegando(null); setAchadas(null); }}
+                    >
+                      Voltar
+                    </button>
+                    <p className="min-w-0 text-sm">
+                      <b className="block">{navegando.categoriaNome}</b>
+                      <span className="text-xs text-muted-foreground">{trilha(navegando)}</span>
+                    </p>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    O Mercado Livre não publica nesta categoria: ela agrupa as de baixo. Escolha uma delas.
+                  </p>
+                  <ul className="grid gap-1">
+                    {navegando.filhas.map((f) => (
+                      <li key={f.categoriaId}>
+                        <button
+                          className="flex w-full items-center gap-2 rounded-lg border border-border p-3 text-left text-sm hover:bg-muted/40"
+                          disabled={Boolean(ocupado)}
+                          onClick={() => void abrir(f.categoriaId)}
+                        >
+                          <span className="min-w-0 flex-1">
+                            <b className="block">{f.categoriaNome}</b>
+                            <code className="text-xs text-muted-foreground">{f.categoriaId}</code>
+                          </span>
+                          <ChevronRight size={16} className="flex-none text-muted-foreground" />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
               {achadas?.length === 0 && (
                 <p className="text-sm text-muted-foreground">Nada encontrado. Tente outras palavras.</p>
               )}
@@ -273,7 +329,7 @@ export default function CategoriaMl({ produtoId, aoFechar, aoSalvar }: {
                     <li key={c.categoriaId} className="rounded-lg border border-border">
                       <button
                         className="flex w-full items-center gap-2 p-3 text-left"
-                        onClick={() => (c.folha ? setEscolhida(c) : void descer(c.categoriaId))}
+                        onClick={() => (c.folha ? setEscolhida(c) : void abrir(c.categoriaId))}
                       >
                         <span className="min-w-0 flex-1 text-sm">
                           <b className="block">{c.categoriaNome}</b>
@@ -292,7 +348,7 @@ export default function CategoriaMl({ produtoId, aoFechar, aoSalvar }: {
                       )}
                       {!c.folha && (
                         <p className="border-t border-border px-3 py-2 text-xs text-muted-foreground">
-                          Agrupa outras categorias — o Mercado Livre não publica aqui. Toque para ver as de dentro.
+                          Agrupa outras categorias. Toque para ver as de dentro.
                         </p>
                       )}
                     </li>
