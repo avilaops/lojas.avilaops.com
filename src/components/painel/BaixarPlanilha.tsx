@@ -30,13 +30,16 @@ export default function BaixarPlanilha({
   };
 
   return (
-    <div className="grid gap-1">
-      <div className="flex flex-wrap items-center gap-2 text-sm">
-        <span className="text-muted-foreground">{rotulo}</span>
-        <a href={endereco("xlsx")} className="btn-secundario inline-flex h-11 items-center gap-2 px-4">
+    <div className="grid gap-2">
+      {/* O rótulo em linha própria: na mesma linha dos botões ele empurrava o
+          "CSV" para baixo no celular, e os dois formatos apareciam separados
+          como se fossem coisas diferentes. */}
+      <span className="text-sm text-muted-foreground">{rotulo}</span>
+      <div className="flex flex-wrap gap-2">
+        <a href={endereco("xlsx")} className="btn-secundario inline-flex h-11 items-center gap-2 px-4 text-sm">
           <Download size={16} aria-hidden="true" /> Excel (.xlsx)
         </a>
-        <a href={endereco("csv")} className="btn-secundario inline-flex h-11 items-center gap-2 px-4">
+        <a href={endereco("csv")} className="btn-secundario inline-flex h-11 items-center gap-2 px-4 text-sm">
           <Download size={16} aria-hidden="true" /> CSV
         </a>
       </div>
