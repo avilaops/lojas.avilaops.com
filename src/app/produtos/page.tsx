@@ -5,7 +5,8 @@ import { metadataDeListagem } from "@/lib/seo-listagem";
 import PaginacaoLoja, { POR_PAGINA, paginaDaUrl } from "@/components/PaginacaoLoja";
 import { exigirTenant, lojaVende, temaDo } from "@/lib/tenant";
 import CategoriasPremium from "@/components/templates/automotivo-premium/Categorias";
-import { listarCategorias, listarProdutos, marcasDaLoja, medidasDaLoja, type ChaveDeMedida, type OrdemCatalogo } from "@/lib/catalogo";
+import { listarCategorias, listarProdutos, marcasDaLoja, medidasDaLoja } from "@/lib/catalogo";
+import { filtroDaUrl } from "@/lib/filtros-url";
 import ProductCard from "@/components/ProductCard";
 import FiltrosProdutos from "@/components/FiltrosProdutos";
 import { minhaMoto } from "@/lib/minha-moto";
@@ -23,47 +24,12 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
   return metadataDeListagem({ base: "/produtos", sp, pagina: paginaDaUrl(sp), title: sp.q ? `Busca: ${sp.q}` : "Produtos" });
 }
 
-const ORDENS = new Set<OrdemCatalogo>(["relevancia", "menor-preco", "maior-preco", "recentes", "nome"]);
-const reais = (v?: string) => {
-  if (!v) return undefined;
-  const n = Number.parseFloat(v.replace(/[^\d,.]/g, "").replace(",", "."));
-  return Number.isFinite(n) ? Math.round(n * 100) : undefined;
-};
-
-/** "20", "20,5" ou "20.5" → 20.5. Milímetro aceita vírgula: é como se escreve aqui. */
-const mm = (v?: string) => {
-  if (!v) return undefined;
-  const n = Number.parseFloat(v.replace(",", "."));
-  return Number.isFinite(n) && n >= 0 ? n : undefined;
-};
-
-/**
- * Faixas de medida vindas da URL (`di_de`, `di_ate`, `de_de`…). Só entra a
- * medida que tem pelo menos um extremo: faixa vazia não filtra nada e não
- * pode virar `{}`, que excluiria todo produto sem aquele atributo.
- */
-function faixasDaUrl(sp: Record<string, string | undefined>) {
-  const campos: Array<[ChaveDeMedida, string]> = [
-    ["diametroInternoMm", "di"],
-    ["diametroExternoMm", "de"],
-    ["alturaMm", "alt"],
-  ];
-  const fora: Partial<Record<ChaveDeMedida, { de?: number; ate?: number }>> = {};
-  for (const [campo, prefixo] of campos) {
-    const d = mm(sp[`${prefixo}_de`]);
-    const a = mm(sp[`${prefixo}_ate`]);
-    if (d != null || a != null) fora[campo] = { de: d, ate: a };
-  }
-  return Object.keys(fora).length ? fora : undefined;
-}
-
 export default async function Produtos({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const t = await exigirTenant();
   const premium = temaDo(t).layout === "automotivo-premium";
   const sp = await searchParams;
-  const ordem = ORDENS.has(sp.ordem as OrdemCatalogo) ? (sp.ordem as OrdemCatalogo) : "relevancia";
   const moto = t.segmento === "motopecas" ? await minhaMoto(sp) : null;
-  const medidas = faixasDaUrl(sp);
+  const filtro = filtroDaUrl(sp);
   // Paginado, e pedindo um a mais do que mostra: é assim que se sabe se há
   // "Próxima" sem contar o catálogo (contagem é informação de estoque, não
   // de compra). Antes esta página mandava os 5.591 cards da Vedashow de uma
@@ -71,7 +37,7 @@ export default async function Produtos({ searchParams }: { searchParams: Promise
   const pagina = paginaDaUrl(sp);
   const [categorias, lote, temMedida, fabricantes] = await Promise.all([
     listarCategorias(t.id),
-    listarProdutos(t.id, { busca: sp.q?.trim() || undefined, fabricante: sp.fabricante?.trim() || undefined, categoriaSlug: sp.categoria || undefined, ordem, minCentavos: reais(sp.min), maxCentavos: reais(sp.max), moto, medidas, limite: POR_PAGINA + 1, pular: (pagina - 1) * POR_PAGINA }),
+    listarProdutos(t.id, { ...filtro, categoriaSlug: sp.categoria || undefined, moto, limite: POR_PAGINA + 1, pular: (pagina - 1) * POR_PAGINA }),
     // O filtro de medida só aparece onde faz sentido: loja de roupa não tem
     // diâmetro interno, e campo que nunca filtra nada é ruído no formulário.
     medidasDaLoja(t.id),

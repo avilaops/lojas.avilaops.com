@@ -3,7 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import CapaCategoria from "@/components/CapaCategoria";
 import { exigirTenant, lojaVende, urlDaLoja, temaDo } from "@/lib/tenant";
-import { listarProdutos, listarCategorias } from "@/lib/catalogo";
+import { listarProdutos, listarCategorias, medidasDaLoja } from "@/lib/catalogo";
+import { filtroDaUrl } from "@/lib/filtros-url";
+import FiltrosProdutos from "@/components/FiltrosProdutos";
 import CategoriasPremium from "@/components/templates/automotivo-premium/Categorias";
 import PaginacaoLoja, { POR_PAGINA, paginaDaUrl } from "@/components/PaginacaoLoja";
 import ProductCard from "@/components/ProductCard";
@@ -15,7 +17,9 @@ import { metadataDeListagem } from "@/lib/seo-listagem";
 
 type Props = {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ marca?: string; modelo?: string; ano?: string; moto?: string; pagina?: string }>;
+  /** Aberto, não uma lista fechada: aqui filtra-se por busca, preço, medida e
+      ordem, como em /produtos. Ver `filtroDaUrl`. */
+  searchParams: Promise<Record<string, string | undefined>>;
 };
 
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
@@ -51,8 +55,15 @@ export default async function Categoria({ params, searchParams }: Props) {
   // Paginado como /produtos: "Retentores" na Vedashow são 2.003 cards, e
   // mandar todos de uma vez é o que fazia a página demorar segundos.
   const pagina = paginaDaUrl(sp);
-  const lote = await listarProdutos(t.id, { categoriaSlug: slug, moto, limite: POR_PAGINA + 1, pular: (pagina - 1) * POR_PAGINA });
+  const filtro = filtroDaUrl(sp);
+  const [lote, temMedida] = await Promise.all([
+    listarProdutos(t.id, { ...filtro, categoriaSlug: slug, moto, limite: POR_PAGINA + 1, pular: (pagina - 1) * POR_PAGINA }),
+    // A mesma faixa de medida de /produtos, calculada sobre a loja inteira:
+    // é o que o formulário mostra como referência, não o que ele filtra.
+    medidasDaLoja(t.id),
+  ]);
   const produtos = lote.slice(0, POR_PAGINA);
+  const filtrando = Object.entries(sp).some(([chave, valor]) => chave !== "pagina" && Boolean(valor));
   const temProxima = lote.length > POR_PAGINA;
   // Página além do fim é 404, não "nada encontrado" com 200: senão qualquer
   // ?pagina=999999 vira uma URL válida a mais para o Google guardar.
@@ -80,14 +91,30 @@ export default async function Categoria({ params, searchParams }: Props) {
         ) : null}
       </p>
 
+      {/* Sem `categorias`: nesta página a categoria é o endereço, não um campo
+          — trocá-la num select que envia para o próprio endereço não levaria
+          a lugar nenhum. O formulário manda para a própria categoria, então
+          filtrar por medida dentro de "Retentores" continua em "Retentores". */}
+      <FiltrosProdutos categorias={[]} valores={sp} medidas={temMedida} acao={`/categoria/${categoria.slug}`} />
+
       {produtos.length === 0 ? (
         <section className="rounded-xl border border-dashed border-border bg-card p-8 text-center" aria-labelledby="categoria-vazia-titulo">
           <h2 id="categoria-vazia-titulo" className="font-semibold">Nenhum produto encontrado</h2>
           <p className="mx-auto mt-2 max-w-lg text-sm text-muted-foreground">
             {moto
               ? `Não encontramos produtos desta categoria compatíveis com ${nomeDaMoto(moto)}.`
-              : "Ainda não há produtos disponíveis nesta categoria."}
+              : filtrando
+                // "Ainda não há produtos nesta categoria" seria mentira depois
+                // de filtrar 20-25 mm numa categoria cheia — e mandaria embora
+                // quem só precisava alargar a faixa.
+                ? "Nenhum produto desta categoria atende a esses filtros."
+                : "Ainda não há produtos disponíveis nesta categoria."}
           </p>
+          {!moto && filtrando && (
+            <Link href={`/categoria/${categoria.slug}`} className="btn-secundario mt-5">
+              Limpar filtros
+            </Link>
+          )}
           {moto && (
             <Link href={`/produtos?categoria=${categoria.slug}&moto=todas`} className="btn-secundario mt-5">
               Ver todos os produtos desta categoria

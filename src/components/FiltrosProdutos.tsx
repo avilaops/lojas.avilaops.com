@@ -1,15 +1,9 @@
 import type { Categoria } from "@prisma/client";
 import type { ChaveDeMedida } from "@/lib/catalogo";
+import { PREFIXO_DE_MEDIDA as PREFIXO } from "@/lib/filtros-url";
 
 /** Uma medida que a loja usa, com a faixa real do catálogo. */
 export type MedidaDisponivel = { campo: ChaveDeMedida; rotulo: string; min: number; max: number; itens: number };
-
-/** Prefixo curto na URL: `di_de=20&di_ate=25` é legível e cabe num link. */
-const PREFIXO: Record<ChaveDeMedida, string> = {
-  diametroInternoMm: "di",
-  diametroExternoMm: "de",
-  alturaMm: "alt",
-};
 
 /** Arredonda para o mm cheio, só no texto de ajuda. */
 const mm = (v: number) => `${Math.round(v)} mm`;
@@ -27,15 +21,23 @@ export default function FiltrosProdutos({
   valores,
   medidas = [],
   fabricantes = [],
+  acao = "/produtos",
 }: {
+  /** Vazio na página de uma categoria: ali ela é o endereço, não um campo. */
   categorias: Categoria[];
   valores: Record<string, string | undefined>;
   medidas?: MedidaDisponivel[];
   fabricantes?: string[];
+  /**
+   * Para onde o formulário envia. A página de categoria manda para ela mesma
+   * (`/categoria/<slug>`), senão filtrar dentro de "Retentores" jogaria a
+   * pessoa no catálogo inteiro e o endereço perderia a categoria.
+   */
+  acao?: string;
 }) {
   const usandoMedida = medidas.some((m) => valores[`${PREFIXO[m.campo]}_de`] || valores[`${PREFIXO[m.campo]}_ate`]);
   return (
-    <form action="/produtos" className="filtros-produtos mb-6 grid gap-2 rounded-xl border border-border bg-card p-3">
+    <form action={acao} className="filtros-produtos mb-6 grid gap-2 rounded-xl border border-border bg-card p-3">
       <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto_auto_auto_auto]">
         {valores.marca && valores.modelo && (
           <>
@@ -52,13 +54,15 @@ export default function FiltrosProdutos({
             a partir de 640px o CSS a dissolve e os campos voltam para a linha.
             A busca continua sempre visível, que é por onde a maioria chega. */}
         <input type="checkbox" id="filtros-mais" className="filtros-gaveta" defaultChecked={!!(valores.categoria || valores.min || valores.max || valores.ordem || valores.fabricante)} />
-        <label htmlFor="filtros-mais" className="filtros-abrir">Categoria, preço e ordem</label>
+        <label htmlFor="filtros-mais" className="filtros-abrir">{categorias.length > 0 ? "Categoria, preço e ordem" : "Preço e ordem"}</label>
         <div className="filtros-campos contents">
           {fabricantes.length > 0 && <select name="fabricante" aria-label="Marca do produto" defaultValue={valores.fabricante ?? ""} className="h-10 rounded-lg border border-border bg-background px-3 text-sm"><option value="">Todas as marcas</option>{fabricantes.map(m => <option key={m}>{m}</option>)}</select>}
-          <select name="categoria" aria-label="Categoria" defaultValue={valores.categoria ?? ""} className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
-            <option value="">Todas as categorias</option>
-            {categorias.map((c) => <option key={c.id} value={c.slug}>{c.nome}</option>)}
-          </select>
+          {categorias.length > 0 && (
+            <select name="categoria" aria-label="Categoria" defaultValue={valores.categoria ?? ""} className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
+              <option value="">Todas as categorias</option>
+              {categorias.map((c) => <option key={c.id} value={c.slug}>{c.nome}</option>)}
+            </select>
+          )}
           <input name="min" defaultValue={valores.min ?? ""} placeholder="R$ mín." inputMode="decimal" className="h-10 rounded-lg border border-border bg-background px-3 text-sm sm:w-24" />
           <input name="max" defaultValue={valores.max ?? ""} placeholder="R$ máx." inputMode="decimal" className="h-10 rounded-lg border border-border bg-background px-3 text-sm sm:w-24" />
           <select name="ordem" aria-label="Ordenar por" defaultValue={valores.ordem ?? "relevancia"} className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
