@@ -964,3 +964,29 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
      a foto do produto que passa por baixo. */
   .barra-inferior { background: var(--background); backdrop-filter: none; }
 }
+
+/* ─── Card de produto: duas correções de caixa, vistas no iPhone ──────────
+   Medidas tiradas do aparelho, não do olho: iPhone 14 Pro, grade de duas
+   colunas, que é como a loja é usada. */
+
+/* 1. O nome mostrava quatro pixels da terceira linha.
+      `line-clamp-2` monta uma caixa de 40px (duas linhas de 20), mas a regra
+      de toque abaixo dava 44px de altura mínima a TODO link do card — e a
+      caixa esticada deixa vazar o topo da linha que o clamp cortou. Quem
+      manda na altura aqui é o clamp; o alvo de toque do card continua sendo
+      a foto, que ocupa um quadrado inteiro, e o botão. */
+.cartao-produto a.line-clamp-2 { min-height: 0; }
+
+/* 2. "Adicionar ao carrinho" transbordava para fora do botão.
+      `.btn-primario` tem altura fixa de 44px e o rótulo ocupa 52px quando
+      quebra em duas linhas num card estreito — o texto saía por cima do
+      cartão. A altura passa a ser mínima, não fixa: 44px continua sendo o
+      piso de toque, e o botão cresce quando o rótulo precisa. */
+.cartao-produto .btn-primario,
+.cartao-produto .btn-secundario {
+  height: auto;
+  min-height: 2.75rem;
+  padding-block: .4rem;
+  line-height: 1.2;
+  text-align: center;
+}
