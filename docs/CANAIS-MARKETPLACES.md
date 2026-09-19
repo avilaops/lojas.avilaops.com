@@ -3,6 +3,11 @@
 Auditoria de 19/09/2026 da integração com marketplaces, e o desenho da tela em
 Configurações → Canais que saiu dela.
 
+> **Atualizado em 19/09/2026.** A auditoria abriu com dez achados; o trabalho
+> que saiu dela fechou nove e descobriu mais dois pelo caminho — os de número
+> 9, 11 e 12, que são os que mexiam em estoque de verdade. O que segue aberto
+> está no fim.
+
 A conclusão curta: **a integração com o Mercado Livre estava tecnicamente
 pronta e comercialmente cega.** Publicava, sincronizava, recebia a venda e
 respondia pergunta — mas anunciava pelo preço da própria loja num canal que
@@ -59,7 +64,9 @@ tela agora respeita em vez de contornar:
 | 6 | `ML_APP_ID` / `ML_APP_SECRET` usados no código e **ausentes do `.env.example`**. Sem eles, o botão "Conectar" levava a uma tela de erro do próprio ML | médio: parece defeito da loja do cliente | resolvido |
 | 7 | "Outros canais" era lista morta de quatro nomes com "ainda não" ao lado | baixo: não informa nada | resolvido |
 | 8 | A pendência diz "escolha a categoria à mão", e **não existia tela para isso** | médio: promessa que o produto não cumpria | resolvido (19/09/2026) |
-| 9 | O preparo publica o produto, não a **variação**. Ordem com `variation_id` baixa a apresentação padrão | médio | aberto, já documentado em `MERCADO-LIVRE.md` |
+| 9 | Ordem com `variation_id` baixava a **apresentação padrão**, seja qual fosse a vendida: vender o G tirava o P do estoque | **crítico**: erra duas apresentações de uma vez, em silêncio, até virar cancelamento | resolvido (19/09/2026) |
+| 11 | Item de anúncio **não casado** com o catálogo fazia a baixa do pedido inteiro lançar, inclusive das linhas que casaram — o código dizia o contrário | alto: venda de canal não baixava estoque nenhum | resolvido (19/09/2026) |
+| 12 | Não havia como ligar anúncio que **já existe** no ML do lojista. Quem já vendia lá conectava a conta e nada acontecia: sem sincronia, e a venda sem produto casado | **alto**: é a situação de quase todo lojista que conecta | resolvido (19/09/2026) |
 | 10 | **Nota fiscal**: o ML exige na maioria das categorias e a plataforma não emite | alto para o lojista, fora do escopo de hoje | aberto |
 
 ## Escolher a categoria à mão
@@ -184,8 +191,14 @@ primeiras lojas.
 
 ## O que fica aberto
 
-1. **Mapa de variação.** O preparo publica o produto; ordem com `variation_id`
-   baixa a apresentação padrão.
+1. **Publicar variação.** O preparo publica o produto, não a variação: um
+   anúncio por produto, com preço e estoque da apresentação principal. Deixou
+   de ser correção e virou alcance — a venda já volta certa em anúncio com
+   variações criado à mão, e esse anúncio já pode ser adotado. Construir isto
+   exige acertar `attribute_combinations` contra os atributos que cada
+   categoria aceita como variação, e `picture_ids` por variação: regras que só
+   se provam contra a API viva, como `scripts/provar-preparo-ml.ts` faz para o
+   preparo. Fazer às cegas gera recusa que o lojista não entende.
 2. **Nota fiscal.** O ML exige e a plataforma não emite. Hoje é trabalho do
    lojista, fora daqui.
 3. **Acréscimo por categoria.** A comissão do ML varia por categoria; o
@@ -204,6 +217,9 @@ primeiras lojas.
 | Conexão OAuth e chamada autenticada | `src/lib/mercadolivre.ts` |
 | Preparo do catálogo e pendências agrupadas | `src/lib/mercadolivre-preparo.ts` |
 | Escolha manual de categoria (busca pública, folha, recálculo) | `src/lib/mercadolivre-categorias.ts`, `painel/CategoriaMl.tsx` |
+| Adotar anúncio que já existe no ML (casa por SKU e GTIN, nunca por título) | `src/lib/mercadolivre-adocao.ts`, `painel/AdotarAnunciosMl.tsx` |
+| Qual apresentação o ML vendeu, e o que baixa do estoque | `resolverVariante`, `agruparParaBaixa` |
+| CI e publicação pelo próprio servidor | `deploy/ci-servidor.sh`, `docs/CI-NO-SERVIDOR.md` |
 | Publicação, sincronia e rotina | `src/lib/mercadolivre-publicacao.ts` |
 | A tela | `src/components/painel/Canais.tsx` |
 | Regras (PUT) e preparo sob demanda (POST) | `src/app/api/painel/canais/mercadolivre/{regras,preparo}` |
