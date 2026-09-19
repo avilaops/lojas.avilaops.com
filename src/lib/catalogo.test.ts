@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { medidaResumida, termosDeBusca } from "./catalogo";
+import { medidaResumida, ordenarPorMedida, termosDeBusca } from "./catalogo";
 
 /**
  * Em catálogo técnico a pessoa digita a peça como ela é falada na oficina.
@@ -184,4 +184,45 @@ test("produto sem medida não mostra nada", () => {
   assert.equal(medidaResumida(null), null);
   // Farmácia e moda passam por aqui a cada card: o campo não existe.
   assert.equal(medidaResumida({ volumeMl: 500, cor: "azul" }), null);
+});
+
+/**
+ * A série na página do produto. Quem está no 6205 quer o 6206, e uma lista de
+ * medidas fora de ordem obriga a comparar número a número.
+ */
+const item = (nome: string, atributos: Record<string, unknown>) => ({ nome, atributos });
+
+test("a série sai em ordem de medida, não de cadastro", () => {
+  const lista = [
+    item("6207", { diametroInternoMm: 35, diametroExternoMm: 72, alturaMm: 17 }),
+    item("6205", { diametroInternoMm: 25, diametroExternoMm: 52, alturaMm: 15 }),
+    item("6206", { diametroInternoMm: 30, diametroExternoMm: 62, alturaMm: 16 }),
+  ];
+  assert.deepEqual(ordenarPorMedida(lista).map((p) => p.nome), ["6205", "6206", "6207"]);
+});
+
+test("mesmo interno desempata pelo externo e depois pela altura", () => {
+  const lista = [
+    item("largo", { diametroInternoMm: 25, diametroExternoMm: 52, alturaMm: 20 }),
+    item("estreito", { diametroInternoMm: 25, diametroExternoMm: 52, alturaMm: 15 }),
+    item("menor externo", { diametroInternoMm: 25, diametroExternoMm: 47, alturaMm: 30 }),
+  ];
+  assert.deepEqual(ordenarPorMedida(lista).map((p) => p.nome), ["menor externo", "estreito", "largo"]);
+});
+
+test("item sem medida fica por último, não no começo", () => {
+  // `Number(undefined)` é NaN, e NaN em comparação devolve false: sem o
+  // tratamento o item sem medida embaralharia a lista inteira.
+  const lista = [
+    item("sem medida", {}),
+    item("6205", { diametroInternoMm: 25, diametroExternoMm: 52, alturaMm: 15 }),
+    item("código no lugar da medida", { diametroInternoMm: 5176168 }),
+  ];
+  assert.deepEqual(ordenarPorMedida(lista).map((p) => p.nome), ["6205", "sem medida", "código no lugar da medida"]);
+});
+
+test("ordenar não mexe na lista recebida", () => {
+  const lista = [item("b", { diametroInternoMm: 30 }), item("a", { diametroInternoMm: 20 })];
+  ordenarPorMedida(lista);
+  assert.deepEqual(lista.map((p) => p.nome), ["b", "a"]);
 });

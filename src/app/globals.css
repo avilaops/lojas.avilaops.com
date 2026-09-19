@@ -887,3 +887,80 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
 .atr-tabela tbody th { text-align: left; font-weight: 600; }
 .atr-tabela tbody th small { display: block; margin-top: 2px; font-weight: 400; font-size: .72rem; color: var(--muted-foreground); }
 .atr-tabela tbody tr:last-child th, .atr-tabela tbody tr:last-child td { border-bottom: 0; }
+
+/* ─── Barra inferior do celular ───────────────────────────────────────────
+   Navegação fixa no alcance do polegar. Só existe abaixo de 768px: no
+   desktop o cabeçalho já está sempre visível e a barra seria uma faixa presa
+   no rodapé sem motivo.
+
+   O `@media` cuida de três vizinhos que também moram no rodapé da tela — o
+   conteúdo (que terminaria embaixo da barra), o botão do WhatsApp e o aviso
+   de cookies. Levantar os três aqui, junto da barra, evita a descoberta por
+   sobreposição em produção. */
+.barra-inferior { display: none; }
+
+@media (max-width: 767px) {
+  .barra-inferior {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 40;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    border-top: 1px solid var(--border);
+    background: color-mix(in srgb, var(--background) 92%, transparent);
+    backdrop-filter: blur(12px);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .barra-inferior-aba {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    /* 3,25rem de conteúdo mais o respiro dá os 44px que o dedo precisa. */
+    min-height: 3.25rem;
+    padding: .45rem .25rem .5rem;
+    font-size: .6875rem;
+    font-weight: 500;
+    color: var(--muted-foreground);
+    background: none;
+    border: 0;
+  }
+  .barra-inferior-aba svg { width: 1.25rem; height: 1.25rem; }
+  .barra-inferior-aba[aria-current="page"], .barra-inferior-aba[data-ativo] { color: var(--primary); }
+  .barra-inferior-icone { position: relative; display: inline-flex; }
+  .barra-inferior-contador {
+    position: absolute;
+    top: -.4rem;
+    left: .7rem;
+    min-width: 1.05rem;
+    height: 1.05rem;
+    padding-inline: .2rem;
+    border-radius: 999px;
+    background: var(--primary);
+    color: var(--primary-foreground);
+    font-size: .625rem;
+    font-weight: 700;
+    line-height: 1.05rem;
+    text-align: center;
+  }
+
+  /* Os três só se desviam onde a barra existe de fato: o painel em
+     /plataforma monta o mesmo <body> e não tem barra nenhuma, então ganharia
+     uma tira de espaço morto no rodapé. Mesmo `:has` que a barra de categorias
+     já usa acima. */
+  /* O rodapé da loja terminava embaixo da barra. */
+  body:has(.barra-inferior) { padding-bottom: calc(3.75rem + env(safe-area-inset-bottom)); }
+  /* O botão do WhatsApp sobe junto, senão fica pela metade. */
+  body:has(.barra-inferior) .zap-flutuante { bottom: calc(4.5rem + env(safe-area-inset-bottom)); }
+  /* E o aviso de cookies, que é temporário mas cobre a barra enquanto dura. */
+  body:has(.barra-inferior) .aviso-cookies { bottom: calc(4rem + env(safe-area-inset-bottom)); }
+}
+
+@media (max-width: 767px) and (prefers-reduced-transparency: reduce) {
+  /* Sem desfoque, a barra precisa de fundo opaco para o texto não brigar com
+     a foto do produto que passa por baixo. */
+  .barra-inferior { background: var(--background); backdrop-filter: none; }
+}

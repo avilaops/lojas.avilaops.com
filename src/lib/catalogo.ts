@@ -286,6 +286,57 @@ export async function listarProdutos(tenantId: string, filtro?: FiltroCatalogo) 
   return janela([...servem, ...universais]);
 }
 
+/**
+ * Outras medidas da mesma série.
+ *
+ * "Você também pode gostar" é pergunta de loja de roupa. Quem está na página
+ * de um 6205 não quer descobrir um produto novo: quer o 6206, porque mediu o
+ * eixo errado ou porque precisa do vizinho na mesma máquina. Numa categoria
+ * com 881 retentores, quatro itens da mesma categoria são quatro itens ao
+ * acaso; quatro medidas da mesma série são a pergunta respondida.
+ *
+ * A série sai de `Produto.imagemFamilia`, que a política de imagem já exige
+ * de quem herda foto (ver `docs/VEDASHOW-FOTOS.md`): itens da mesma família
+ * são a mesma construção mudando de milímetro — que é exatamente a definição
+ * de série. Não é relação inventada nem inferida do código da peça; é a que o
+ * catálogo declara. O alcance, portanto, é o da declaração: item cuja foto é
+ * própria não tem família, e a loja simplesmente não mostra o bloco. Ele
+ * cresce junto com a cobertura de foto, sem nenhuma migração.
+ *
+ * A ordem é a da medida, não a da relevância: uma lista de medidas fora de
+ * ordem obriga a comparar número a número.
+ */
+export async function mesmaSerie(tenantId: string, produto: { id: string; imagemFamilia: string | null }, limite = 6) {
+  if (!produto.imagemFamilia) return [];
+  const irmaos = await prisma.produto.findMany({
+    // Teto de sanidade: família é um punhado de medidas da mesma peça. Se
+    // alguém carimbar a mesma família em mil itens, a página não paga por isso.
+    take: 60,
+    where: { tenantId, ativo: true, imagemFamilia: produto.imagemFamilia, id: { not: produto.id } },
+  });
+  return ordenarPorMedida(irmaos).slice(0, limite);
+}
+
+/**
+ * Ordena pela medida: interno, depois externo, depois altura.
+ *
+ * Item sem a medida cadastrada vai para o fim — continua sendo da série, mas
+ * não tem número para entrar na fila de quem tem. Pura e separada porque é a
+ * única parte com regra: o resto de `mesmaSerie` é uma consulta.
+ */
+export function ordenarPorMedida<T extends { atributos: unknown }>(lista: T[]): T[] {
+  const medidas = (p: T) =>
+    (Object.keys(MEDIDAS_FILTRAVEIS) as ChaveDeMedida[]).map((campo) => {
+      const v = Number(((p.atributos ?? {}) as Record<string, unknown>)[campo]);
+      return medidaValida(v) ? v : Number.POSITIVE_INFINITY;
+    });
+  return [...lista].sort((a, b) => {
+    const [ax, ay, az] = medidas(a);
+    const [bx, by, bz] = medidas(b);
+    return ax - bx || ay - by || az - bz;
+  });
+}
+
 /** A régua do sitemap, do noindex e da primeira vitrine. Mora em produto-regras. */
 export const produtoPublicavel = publicavel;
 

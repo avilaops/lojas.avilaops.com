@@ -18,6 +18,7 @@ import CabecalhoPremium from "@/components/templates/automotivo-premium/Cabecalh
 import CarrinhoLateral from "@/components/templates/automotivo-premium/CarrinhoLateral";
 import "@/components/templates/automotivo-premium/premium.css";
 import WhatsAppFlutuante from "@/components/WhatsAppFlutuante";
+import BarraInferior from "@/components/BarraInferior";
 import LojaNaoEncontrada from "@/components/LojaNaoEncontrada";
 import AvisoSuspensa from "@/components/AvisoSuspensa";
 import BarraGaragem from "@/components/BarraGaragem";
@@ -211,6 +212,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <Footer tenant={t} categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} />
           {premium && <CarrinhoLateral/>}
           {t.whatsapp && <WhatsAppFlutuante numero={t.whatsapp} nome={t.nome} />}
+          {/* Navegação do celular. Vale para os onze layouts: é da loja, não
+              do template. As abas saem do que a loja faz — ver o componente. */}
+          <BarraInferior vende={publico.vende} temContato={Boolean(t.whatsapp || t.telefone || t.emailContato)} />
           <Consentimento ativo={temRastreio(pixels)} />
         </CartProvider>
       </body>
