@@ -106,3 +106,67 @@ test("sem preparo, sem título ou sem foto pública não há conteúdo a mandar"
     "produto sem imagem válida não tem o que publicar",
   );
 });
+
+test("as regras do canal mandam no preço, no estoque e no tipo de anúncio", () => {
+  const r = corpoDaPublicacaoMl(anuncio, "https://vedashow.com.br", {
+    ativo: true,
+    acrescimoPercentual: 16.3,
+    arredondamento: "noventa",
+    estoqueReservado: 2,
+    estoqueMaximo: 0,
+    precoMinimoCentavos: 0,
+    tipoAnuncio: "premium",
+    condicao: "novo",
+    garantia: "vendedor",
+    garantiaMeses: 3,
+  });
+  // 123,45 + 16,3% = 143,57 → arredondado para cima, 143,90.
+  assert.equal(r.corpo?.price, 143.9);
+  assert.equal(r.corpo?.available_quantity, 5);
+  assert.equal(r.corpo?.listing_type_id, "gold_pro");
+  assert.deepEqual(r.corpo?.sale_terms, [
+    { id: "WARRANTY_TYPE", value_name: "Garantia do vendedor" },
+    { id: "WARRANTY_TIME", value_name: "3 meses" },
+  ]);
+});
+
+test("garantia não respondida não inventa termo de venda", () => {
+  const r = corpoDaPublicacaoMl(anuncio, "https://vedashow.com.br");
+  assert.equal(r.corpo?.sale_terms, undefined);
+  assert.equal(r.corpo?.listing_type_id, "gold_special");
+  assert.equal(r.corpo?.condition, "new");
+});
+
+test("o preço mínimo do canal segura o produto barato antes de ele subir", () => {
+  const r = corpoDaPublicacaoMl(anuncio, "https://vedashow.com.br", {
+    ativo: true,
+    acrescimoPercentual: 0,
+    arredondamento: "nenhum",
+    estoqueReservado: 0,
+    estoqueMaximo: 0,
+    precoMinimoCentavos: 20000,
+    tipoAnuncio: "classico",
+    condicao: "novo",
+    garantia: "sem",
+    garantiaMeses: 3,
+  });
+  assert.equal(r.corpo, undefined);
+  assert.match(r.erro ?? "", /abaixo do mínimo/);
+});
+
+test("estoque todo reservado para a loja não publica no canal", () => {
+  const r = corpoDaPublicacaoMl(anuncio, "https://vedashow.com.br", {
+    ativo: true,
+    acrescimoPercentual: 0,
+    arredondamento: "nenhum",
+    estoqueReservado: 7,
+    estoqueMaximo: 0,
+    precoMinimoCentavos: 0,
+    tipoAnuncio: "classico",
+    condicao: "novo",
+    garantia: "sem",
+    garantiaMeses: 3,
+  });
+  assert.equal(r.corpo, undefined);
+  assert.match(r.erro ?? "", /reservado para a loja/);
+});

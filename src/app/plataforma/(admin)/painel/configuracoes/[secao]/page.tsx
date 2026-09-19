@@ -7,6 +7,8 @@ import Canais from "@/components/painel/Canais";
 import PerguntasMl from "@/components/painel/PerguntasMl";
 import ReputacaoMl from "@/components/painel/ReputacaoMl";
 import { perguntasPendentes } from "@/lib/mercadolivre-perguntas";
+import { pendenciasDoCatalogo } from "@/lib/mercadolivre-preparo";
+import { lerRegrasDoCanal } from "@/lib/canais";
 import { Secao } from "@/components/painel/campos";
 import Descoberta from "@/components/painel/Descoberta";
 import Automacoes from "@/components/painel/Automacoes";
@@ -76,7 +78,7 @@ export default async function Pagina({ params, searchParams }: {
   if (secao === "canais") {
     const [loja, sp] = await Promise.all([lojistaAtual(), searchParams]);
     if (!loja) notFound();
-    const [porEstado, candidatos, perguntas, reputacao] = await Promise.all([
+    const [porEstado, candidatos, perguntas, reputacao, pendencias] = await Promise.all([
       prisma.anuncioMercadoLivre.groupBy({
         by: ["estado"],
         where: { tenantId: loja.id },
@@ -98,6 +100,7 @@ export default async function Pagina({ params, searchParams }: {
       }),
       perguntasPendentes(loja.id),
       prisma.reputacaoMercadoLivre.findUnique({ where: { tenantId: loja.id } }),
+      pendenciasDoCatalogo(loja.id),
     ]);
     const conta = (e: string) => porEstado.find((p) => p.estado === e)?._count._all ?? 0;
     return (
@@ -108,9 +111,15 @@ export default async function Pagina({ params, searchParams }: {
             produtoId,
             nome: produto.nome,
             preco: new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(produto.precoCentavos / 100),
+            precoCentavos: produto.precoCentavos,
             estoque: produto.estoque ?? 0,
             imagem: produto.imagens[0] ?? null,
           }))}
+          regras={lerRegrasDoCanal(loja.canais, "mercadolivre")}
+          pendencias={pendencias}
+          // O aplicativo do ML é da plataforma, não da loja: sem ele o botão de
+          // conectar levaria a uma tela de erro do próprio Mercado Livre.
+          integracaoDisponivel={Boolean(process.env.ML_APP_ID && process.env.ML_APP_SECRET)}
           retorno={sp.ml}
           ml={{
             conectado: Boolean(loja.mlAccessTokenEnc && loja.mlRefreshTokenEnc),
