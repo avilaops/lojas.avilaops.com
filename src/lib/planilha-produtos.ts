@@ -16,6 +16,17 @@
  * de o que é "destaque".
  */
 
+/**
+ * Quanto cabe num arquivo, por tipo.
+ *
+ * O teto existe para o servidor não montar uma planilha de dezenas de MB na
+ * memória. Ele fica aqui, e não na exportação, porque a tela precisa dizer
+ * que o arquivo veio cortado — exportação que corta em silêncio é pior que
+ * exportação que não existe: o lojista corrige o que baixou, reenvia, e
+ * conclui que o resto do catálogo sumiu.
+ */
+export const TETO_EXPORTACAO = { produtos: 20_000, pedidos: 5_000 } as const;
+
 /** Cabeçalho, na ordem em que sai — e a mesma do `modelo-catalogo.csv`. */
 export const COLUNAS_PRODUTO = [
   "nome",
@@ -90,23 +101,32 @@ const precoCabe = (valor: number) => valor >= 0 && valor <= TETO_INT;
 export function produtosDeLinhas(linhas: LinhaDePlanilha[]) {
   const produtos: Array<Record<string, unknown>> = [];
   const erros: string[] = [];
-  if (linhas.length < 2) return { produtos, erros: ["Planilha vazia."] };
+  // Planilha de fornecedor costuma começar com uma linha em branco. O
+  // cabeçalho é a primeira linha com alguma coisa escrita, e a posição dela
+  // fica guardada para o número da linha continuar sendo o do Excel.
+  const cabecalho = linhas.findIndex((l) => l.some((c) => c.trim()));
+  if (cabecalho < 0 || linhas.length - cabecalho < 2) return { produtos, erros: ["Planilha vazia."] };
 
   // O BOM que o próprio painel grava (e o Excel exige) vira parte do primeiro
   // cabeçalho se não sair aqui: sem isso, o arquivo que a loja acabou de
   // baixar volta sem a coluna `nome`.
-  const cab = linhas[0].map((c, i) => normalizarCabecalho(i === 0 ? c.replace(/^﻿/, "") : c));
+  const cab = linhas[cabecalho].map((c, i) => normalizarCabecalho(i === 0 ? c.replace(/^﻿/, "") : c));
   const idx = (n: string) => cab.indexOf(n);
 
-  linhas.slice(1).forEach((c, i) => {
+  linhas.slice(cabecalho + 1).forEach((c, i) => {
+    // `Linha N` é a linha do Excel: é por ela que o lojista acha o problema
+    // num arquivo de cinco mil itens.
+    const linha = cabecalho + i + 2;
+    // Linha vazia não é erro — é o enter que sobrou no meio ou no fim.
+    if (!c.some((v) => v.trim())) return;
     const nome = (c[idx("nome")] ?? "").trim();
     const preco = centavos(c[idx("preco")] ?? "");
     if (!nome || !Number.isFinite(preco)) {
-      erros.push(`Linha ${i + 2}: nome ou preço ausente.`);
+      erros.push(`Linha ${linha}: nome ou preço ausente.`);
       return;
     }
     if (!precoCabe(preco)) {
-      erros.push(`Linha ${i + 2}: preço fora do limite (${LIMITE_EM_REAIS}).`);
+      erros.push(`Linha ${linha}: preço fora do limite (${LIMITE_EM_REAIS}).`);
       return;
     }
     const pega = (n: string) => (idx(n) >= 0 ? c[idx(n)]?.trim() || undefined : undefined);
@@ -150,15 +170,26 @@ export function produtosDeLinhas(linhas: LinhaDePlanilha[]) {
       ...(decimal("comprimento_cm") ? { comprimentoCm: decimal("comprimento_cm") } : {}),
     });
   });
+  // Cabeçalho sozinho, ou só linhas em branco depois dele.
+  if (!produtos.length && !erros.length) erros.push("Planilha vazia.");
   return { produtos, erros };
 }
 
-/** CSV → matriz. Separador é o do cabeçalho: o Excel em português grava com
- *  ponto e vírgula, o Google Planilhas com vírgula. */
+/**
+ * CSV → matriz. Separador é o do cabeçalho: o Excel em português grava com
+ * ponto e vírgula, o Google Planilhas com vírgula.
+ *
+ * Linha em branco fica na matriz, vazia. Ela era descartada aqui, e com isso
+ * "Linha 312: nome ou preço ausente" apontava para a linha errada no Excel —
+ * quanto mais buracos no arquivo, maior o deslocamento. Quem ignora linha
+ * vazia é `produtosDeLinhas`, que sabe a posição real.
+ */
 export function linhasDeCsv(texto: string): LinhaDePlanilha[] {
-  const linhas = texto.replace(/\r/g, "").split("\n").filter((l) => l.trim());
+  const linhas = texto.replace(/\r/g, "").split("\n");
+  // A última quebra de linha do arquivo não é uma linha.
+  if (linhas.length && !linhas[linhas.length - 1].trim()) linhas.pop();
   if (!linhas.length) return [];
-  const sep = linhas[0].includes(";") ? ";" : ",";
+  const sep = (linhas.find((l) => l.trim()) ?? "").includes(";") ? ";" : ",";
   return linhas.map((l) => {
     const out: string[] = [];
     let atual = "";

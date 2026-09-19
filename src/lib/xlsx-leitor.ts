@@ -138,6 +138,12 @@ export function linhasDeXlsx(arquivo: Buffer): string[][] {
   const linhas: string[][] = [];
   for (const linha of xml.match(/<row\b[\s\S]*?<\/row>|<row\b[^>]*\/>/g) ?? []) {
     if (linhas.length >= TETO_LINHAS) break;
+    // A linha diz em que altura da planilha ela está. Quem apaga o conteúdo
+    // de uma linha no Excel deixa o buraco no arquivo, e ignorar o `r="7"`
+    // faria "Linha 7" virar "Linha 5" no aviso de erro — justamente o número
+    // que o lojista usa para achar o problema.
+    const altura = Number.parseInt(linha.match(/<row\b[^>]*\br="(\d+)"/)?.[1] ?? "0", 10);
+    while (altura > 0 && linhas.length < altura - 1 && linhas.length < TETO_LINHAS) linhas.push([]);
     const celulas: string[] = [];
     for (const celula of linha.match(/<c\b[\s\S]*?<\/c>|<c\b[^>]*\/>/g) ?? []) {
       const ref = celula.match(/\br="([A-Z]+)\d+"/)?.[1];

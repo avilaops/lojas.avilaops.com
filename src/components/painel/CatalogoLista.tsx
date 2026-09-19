@@ -235,6 +235,7 @@ export default function CatalogoLista({
           {dados.total > 0 && (
             <BaixarPlanilha
               tipo="produtos"
+              total={dados.total}
               filtros={{ q: aplicada, categoria, situacao }}
               rotulo={
                 filtrando

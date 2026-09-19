@@ -1,7 +1,7 @@
 import { prisma } from "./db";
 import { clientesDaLoja } from "./clientes";
 import { condicaoDoCatalogo, type FiltroCatalogo } from "./catalogo-filtros";
-import { COLUNAS_PRODUTO } from "./planilha-produtos";
+import { COLUNAS_PRODUTO, TETO_EXPORTACAO } from "./planilha-produtos";
 import { montarXlsx, type Celula } from "./xlsx";
 
 /**
@@ -72,7 +72,7 @@ export async function pedidosEmLinhas(tenantId: string): Promise<Valor[][]> {
     where: { tenantId },
     include: { itens: true },
     orderBy: { criadoEm: "desc" },
-    take: 5000,
+    take: TETO_EXPORTACAO.pedidos,
   });
 
   const linhas: Valor[][] = [[
@@ -107,14 +107,6 @@ export async function clientesEmLinhas(tenantId: string): Promise<Valor[][]> {
   }
   return linhas;
 }
-
-/**
- * Teto do arquivo do catálogo. A importação aceita 2.000 linhas por vez; aqui
- * o limite é maior porque exportar é leitura, e distribuidora com 5.591 itens
- * precisa do catálogo inteiro num arquivo só — quem corrige em lote depois
- * manda de volta em partes.
- */
-const TETO_PRODUTOS = 20_000;
 
 const medida = (valor: number | null) => (valor && valor > 0 ? decimal(valor, 3) : "");
 
@@ -181,7 +173,7 @@ export async function produtosEmLinhas(tenantId: string, filtro: FiltroCatalogo 
       categoria: { select: { nome: true } },
     },
     orderBy: [{ ativo: "desc" }, { nome: "asc" }],
-    take: TETO_PRODUTOS,
+    take: TETO_EXPORTACAO.produtos,
   });
 
   return [[...COLUNAS_PRODUTO], ...produtos.map(linhaDoProduto)];

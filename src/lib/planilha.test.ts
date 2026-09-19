@@ -303,3 +303,41 @@ test("preço maior que o banco aguenta vira linha recusada, não erro de gravaç
   assert.equal(produtos[0].nome, "Normal");
   assert.match(erros[0], /Linha 2: preço fora do limite/);
 });
+
+/**
+ * "Linha 312" tem que ser a linha 312 do Excel.
+ *
+ * É por esse número que o lojista acha o problema num arquivo de cinco mil
+ * itens. A matriz engolia linha em branco (no CSV) e linha apagada (no
+ * .xlsx), e o aviso passava a apontar para outro produto.
+ */
+test("linha em branco no meio do CSV não desloca o número do aviso", () => {
+  const { produtos, erros } = lerCsvProdutos("nome;preco\r\nBom;10,00\r\n\r\nSem preço;\r\n");
+  assert.equal(produtos.length, 1);
+  assert.deepEqual(erros, ["Linha 4: nome ou preço ausente."]);
+});
+
+test("linha apagada no .xlsx não desloca o número do aviso", () => {
+  const arquivo = planilhaDoExcel(
+    ["nome", "preco", "Bom", "Sem preço"],
+    [
+      '<row r="1"><c r="A1" t="s"><v>0</v></c><c r="B1" t="s"><v>1</v></c></row>',
+      '<row r="2"><c r="A2" t="s"><v>2</v></c><c r="B2"><v>10</v></c></row>',
+      // as linhas 3 e 4 foram apagadas no Excel e não existem no arquivo
+      '<row r="5"><c r="A5" t="s"><v>3</v></c></row>',
+    ],
+  );
+  const { produtos, erros } = produtosDeLinhas(linhasDeXlsx(arquivo));
+  assert.equal(produtos.length, 1);
+  assert.deepEqual(erros, ["Linha 5: nome ou preço ausente."]);
+});
+
+test("planilha que começa com linha em branco ainda acha o cabeçalho", () => {
+  const { produtos, erros } = lerCsvProdutos("\r\nnome;preco\r\nCaneca;34,90\r\n");
+  assert.deepEqual(erros, []);
+  assert.equal(produtos[0].nome, "Caneca");
+});
+
+test("arquivo só com cabeçalho diz que está vazio", () => {
+  assert.deepEqual(lerCsvProdutos("nome;preco\r\n\r\n\r\n").erros, ["Planilha vazia."]);
+});
