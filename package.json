@@ -14,6 +14,7 @@
     "seed:demo": "tsx scripts/seed-demo.ts",
     "loja:criar": "tsx scripts/criar-loja.ts",
     "loja:publicacao": "tsx scripts/conferir-publicacao.ts",
+    "loja:marcas": "tsx scripts/conferir-marca-catalogo.ts",
     "test": "tsx --test src/lib/*.test.ts packages/checkout/src/core/*.test.ts packages/checkout/src/server/*.test.ts"
   },
   "dependencies": {
