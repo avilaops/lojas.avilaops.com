@@ -2,6 +2,10 @@
 
 Integração de canal: a loja publica no ML e o ML devolve as vendas.
 
+As decisões comerciais do canal (por quanto e com quanto estoque o produto vai
+para lá) e o desenho da tela estão em [`CANAIS-MARKETPLACES.md`](CANAIS-MARKETPLACES.md),
+junto da auditoria de 19/09/2026 e do que Amazon, Shopee e Magalu vão exigir.
+
 ## O que existe
 
 | Etapa | Onde | Estado |
@@ -17,6 +21,9 @@ Integração de canal: a loja publica no ML e o ML devolve as vendas.
 | **Perguntas do comprador** | `src/lib/mercadolivre-perguntas.ts`, painel → Canais | pronto (17/09/2026) |
 | Mensagens do pós-venda | — | não tratado: o aviso é marcado `IGNORADO` com o motivo |
 | **Saúde da conta (reputação e métricas)** | `src/lib/mercadolivre-reputacao.ts`, painel → Canais | pronto (17/09/2026) |
+| **Regras comerciais do canal** (acréscimo de preço, estoque reservado, tipo de anúncio, condição, garantia) | `src/lib/canais.ts`, painel → Canais | pronto (19/09/2026) |
+| **O que falta preencher**, agrupado pelo que falta, e preparo sob demanda | `pendenciasDoCatalogo`, `api/painel/canais/mercadolivre/preparo` | pronto (19/09/2026) |
+| Escolher a categoria do ML à mão | — | **não existe**, e a pendência do preparo pede. Ver `docs/CANAIS-MARKETPLACES.md` |
 | Faturamento (nota fiscal), catálogo do ML, Mercado Envios Flex | — | não começado |
 
 ## A venda voltando

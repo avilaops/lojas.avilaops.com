@@ -449,3 +449,137 @@ export async function prepararCatalogo(
 
   return contagem;
 }
+
+/** Um produto parado, com o mínimo para a tela identificar e linkar. */
+export interface ProdutoTravado {
+  produtoId: string;
+  nome: string;
+}
+
+/** Um motivo de travamento e os produtos que ele trava. */
+export interface PendenciaAgrupada {
+  /** Id do atributo do ML (`BRAND`) ou `SEM_CATEGORIA`. */
+  chave: string;
+  /** Rótulo na língua do lojista. */
+  titulo: string;
+  /** O que fazer, em uma frase. */
+  comoResolver: string;
+  /** `bloqueia` impede publicar; `reduz` publica, mas o anúncio aparece menos. */
+  gravidade: "bloqueia" | "reduz";
+  /** Onde o valor é digitado: campo do produto, ou campo livre em `atributos`. */
+  onde: "campo-do-produto" | "atributo-livre" | "categoria";
+  total: number;
+  /** Os primeiros, para a tela mostrar sem carregar mil linhas. */
+  exemplos: ProdutoTravado[];
+}
+
+export interface PendenciasDoCatalogo {
+  /** Produtos com preparo feito, por veredito. */
+  pronto: number;
+  revisao: number;
+  bloqueado: number;
+  /** Produtos ativos que nunca passaram pelo preparo. */
+  semPreparo: number;
+  pendencias: PendenciaAgrupada[];
+}
+
+/** Atributos que o lojista digita em campo próprio do produto, não no saco livre. */
+const CAMPO_DO_PRODUTO: Record<string, string> = {
+  BRAND: "Marca",
+  GTIN: "GTIN (código de barras)",
+  PART_NUMBER: "Código (SKU)",
+};
+
+/**
+ * O que trava o catálogo neste canal, agrupado pelo que falta.
+ *
+ * Agrupado, e não em lista de produtos, porque a pergunta do lojista não é
+ * "quais produtos estão parados" — é "o que eu preciso digitar". Trezentas
+ * linhas dizendo "informe a marca" são uma tarefa só; a tela que as mostra
+ * uma a uma faz o lojista fechar a aba.
+ *
+ * Lê a coluna `preparoEstado` para contar e o JSON só dos que não estão
+ * prontos: varrer o `preparo` de um catálogo inteiro para descobrir que 90%
+ * está PRONTO seria pagar caro por uma informação que a coluna já dá.
+ */
+export async function pendenciasDoCatalogo(tenantId: string, limiteExemplos = 6): Promise<PendenciasDoCatalogo> {
+  const [porEstado, travados, ativos, comAnuncio] = await Promise.all([
+    prisma.anuncioMercadoLivre.groupBy({
+      by: ["preparoEstado"],
+      where: { tenantId },
+      _count: { _all: true },
+    }),
+    prisma.anuncioMercadoLivre.findMany({
+      where: { tenantId, preparoEstado: { in: ["REVISAO", "BLOQUEADO"] }, mlbId: null },
+      select: { produtoId: true, preparo: true, produto: { select: { nome: true } } },
+      orderBy: { preparadoEm: "desc" },
+      take: 2_000,
+    }),
+    prisma.produto.count({ where: { tenantId, ativo: true } }),
+    prisma.produto.count({ where: { tenantId, ativo: true, anunciosMl: { some: {} } } }),
+  ]);
+
+  const conta = (e: string) => porEstado.find((p) => p.preparoEstado === e)?._count._all ?? 0;
+  const grupos = new Map<string, PendenciaAgrupada>();
+
+  const somar = (chave: string, molde: Omit<PendenciaAgrupada, "total" | "exemplos" | "chave">, produto: ProdutoTravado) => {
+    const atual = grupos.get(chave) ?? { chave, ...molde, total: 0, exemplos: [] };
+    atual.total++;
+    // A gravidade sobe, nunca desce: o mesmo atributo pode ser condicional numa
+    // categoria e obrigatório na outra, e o lojista precisa ver o pior caso.
+    if (molde.gravidade === "bloqueia") atual.gravidade = "bloqueia";
+    if (atual.exemplos.length < limiteExemplos) atual.exemplos.push(produto);
+    grupos.set(chave, atual);
+  };
+
+  for (const t of travados) {
+    const preparo = t.preparo as Partial<Preparo> | null;
+    const produto: ProdutoTravado = { produtoId: t.produtoId, nome: t.produto.nome };
+
+    if (!preparo?.categoria || preparo.confianca === "nenhuma") {
+      somar("SEM_CATEGORIA", {
+        titulo: "Categoria do Mercado Livre não identificada",
+        comoResolver:
+          "O nome do produto não diz ao Mercado Livre o que ele é. Escreva o nome técnico completo (\"Rolamento rígido de esferas 6205 2RS\", não \"ROL. 6205\") e prepare de novo.",
+        gravidade: "bloqueia",
+        onde: "categoria",
+      }, produto);
+      continue;
+    }
+
+    if (preparo.confianca === "baixa") {
+      somar("CATEGORIA_FRACA", {
+        titulo: "Categoria sugerida sem convicção",
+        comoResolver:
+          "Dá para publicar, mas confira: o Mercado Livre respondeu com a mesma convicção quando acerta e quando erra. Nome mais específico melhora a sugestão.",
+        gravidade: "reduz",
+        onde: "categoria",
+      }, produto);
+    }
+
+    for (const f of preparo.faltando ?? []) {
+      const bloqueia = f.exigencia !== "conditional_required";
+      const campo = CAMPO_DO_PRODUTO[f.id];
+      somar(f.id, {
+        titulo: campo ?? f.nome,
+        comoResolver: campo
+          ? `Preencha "${campo}" no cadastro do produto.`
+          : `O Mercado Livre pede "${f.nome}" nesta categoria. Crie um campo com esse nome em Configurações → Campos do produto e responda no cadastro.`,
+        gravidade: bloqueia ? "bloqueia" : "reduz",
+        onde: campo ? "campo-do-produto" : "atributo-livre",
+      }, produto);
+    }
+  }
+
+  return {
+    pronto: conta("PRONTO"),
+    revisao: conta("REVISAO"),
+    bloqueado: conta("BLOQUEADO"),
+    semPreparo: Math.max(0, ativos - comAnuncio),
+    // O que trava mais gente primeiro: é a tarefa que desbloqueia mais catálogo
+    // pelo mesmo esforço. Empate desempata pelo que bloqueia sobre o que reduz.
+    pendencias: [...grupos.values()].sort(
+      (a, b) => Number(b.gravidade === "bloqueia") - Number(a.gravidade === "bloqueia") || b.total - a.total,
+    ),
+  };
+}

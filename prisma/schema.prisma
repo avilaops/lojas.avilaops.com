@@ -141,6 +141,19 @@ model Tenant {
   mlExpiraEm        DateTime?
   /// Quando o lojista conectou. Nulo = nunca conectou.
   mlConectadoEm     DateTime?
+
+  /**
+   * Regras comerciais por canal de venda: acréscimo de preço, estoque
+   * reservado, tipo de anúncio, garantia. Ver RegrasDoCanal em src/lib/canais.ts.
+   * { "mercadolivre": { "acrescimoPercentual": 16.3, "estoqueReservado": 1, ... } }
+   *
+   * É JSON e não coluna por canal porque a pergunta é a mesma no Mercado Livre,
+   * na Amazon e na Shopee — "por quanto e com quanto estoque vai para lá" —, e
+   * o dia em que a Shopee entrar não pode ser o dia de uma migração de seis
+   * colunas. Chave ausente = o padrão de REGRAS_PADRAO, que é exatamente o que
+   * a integração fazia antes destes campos existirem.
+   */
+  canais           Json @default("{}")
   meiosPagamento    String[]  @default(["pix", "cartao", "boleto"])
 
   // ── E-mail (mail.avilaops.com) ────────────────────────────────────────
