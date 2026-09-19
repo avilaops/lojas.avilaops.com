@@ -7,6 +7,7 @@ import ListaDeRegistros from "@/components/aplicacao/ListaDeRegistros";
 import Paginacao from "@/components/aplicacao/Paginacao";
 import Filtros from "@/components/aplicacao/Filtros";
 import Vazio from "@/components/aplicacao/Vazio";
+import BaixarPlanilha from "./BaixarPlanilha";
 
 /**
  * O catálogo do painel: busca, filtro e página.
@@ -46,6 +47,9 @@ const SITUACOES = [
   { valor: "esgotado", rotulo: "Esgotados" },
   { valor: "sem-foto", rotulo: "Sem foto" },
   { valor: "sem-preco", rotulo: "Sem preço" },
+  // Sem medida é o que faz o frete sair pela caixa padrão da loja, quase
+  // sempre mais caro que o real — o aviso do topo da tela vira trabalho aqui.
+  { valor: "sem-medida", rotulo: "Sem medida" },
   { valor: "inativo", rotulo: "Desativados" },
 ];
 
@@ -224,6 +228,22 @@ export default function CatalogoLista({
             aoMudar={setPagina}
             substantivo="produtos"
           />
+
+          {/* Baixar o catálogo era o que faltava para o caminho de volta da
+              planilha: até aqui dava para subir 5.591 itens e não dava para
+              pegá-los de volta para corrigir preço ou medida em lote. */}
+          {dados.total > 0 && (
+            <BaixarPlanilha
+              tipo="produtos"
+              filtros={{ q: aplicada, categoria, situacao }}
+              rotulo={
+                filtrando
+                  ? `Baixar estes ${dados.total.toLocaleString("pt-BR")} produtos:`
+                  : "Baixar o catálogo:"
+              }
+              ajuda="O CSV volta pela importação, com as mesmas colunas. O Excel preserva código e código de barras como texto."
+            />
+          )}
         </>
       )}
     </Secao>

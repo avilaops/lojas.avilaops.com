@@ -25,6 +25,20 @@ export type Cadencia =
   | { tipo: "semanal"; diaDaSemana: number; hora: number; minuto?: number };
 
 export interface DefinicaoRotina {
+  /**
+   * Duas ou três palavras, para caber como título numa linha de celular.
+   *
+   * A frase inteira é descrição, não título: no painel da Ávila Ops ela saía
+   * cortada em "Gera e publica em lote o …" em toda linha da lista. Quem lê a
+   * tela lê isto; a frase fica ao lado, onde há largura.
+   *
+   * O teto de 22 caracteres foi medido, não estimado: num iPhone de 375 px
+   * "Fila do Mercado Livre" (21) encostava na borda e "Anúncios do Mercado
+   * Livre" (25) vazava 20 px. Os dois viraram "Vendas do ML" e "Anúncios do
+   * ML", que também dizem melhor o que cada um faz — um traz venda para
+   * dentro, o outro empurra anúncio para fora.
+   */
+  titulo: string;
   /** O que a rotina faz, em uma linha — é o que a tela de operação mostra. */
   descricao: string;
   cadencia: Cadencia;
@@ -49,6 +63,7 @@ export interface DefinicaoRotina {
  */
 export const ROTINAS = {
   "mercadolivre.avisos": {
+    titulo: "Vendas do ML",
     descricao: "Fila do Mercado Livre: venda vira pedido e baixa estoque, envio vira rastreio",
     cadencia: { tipo: "intervalo", minutos: 5 },
     travaMinutos: 10,
@@ -56,24 +71,28 @@ export const ROTINAS = {
     falhasAteAlerta: 2,
   },
   "mercadolivre.rodar": {
+    titulo: "Anúncios do ML",
     descricao: "Publica o que o lojista aprovou e empurra preço e estoque para os anúncios",
     cadencia: { tipo: "intervalo", minutos: 60 },
     travaMinutos: 30,
     falhasAteAlerta: 3,
   },
   "carrinhos.verificar": {
+    titulo: "Carrinho abandonado",
     descricao: "Marca carrinho parado há 45 min e emite carrinho.abandonado",
     cadencia: { tipo: "intervalo", minutos: 60 },
     travaMinutos: 15,
     falhasAteAlerta: 3,
   },
   "estoque.avisos": {
+    titulo: "Voltou ao estoque",
     descricao: "Avisa quem esperava produto que voltou ao estoque",
     cadencia: { tipo: "intervalo", minutos: 60 },
     travaMinutos: 15,
     falhasAteAlerta: 3,
   },
   "pedidos.verificar": {
+    titulo: "Pagamento pendente",
     descricao: "Confere no gateway os pedidos aguardando pagamento (Pix, boleto) dos últimos 7 dias",
     cadencia: { tipo: "intervalo", minutos: 60 },
     travaMinutos: 15,
@@ -81,18 +100,21 @@ export const ROTINAS = {
     falhasAteAlerta: 2,
   },
   "seo.categorias": {
+    titulo: "SEO de categoria",
     descricao: "Gera e publica em lote o SEO de categoria pendente, fora do acesso público",
     cadencia: { tipo: "diaria", hora: 3 },
     travaMinutos: 30,
     falhasAteAlerta: 2,
   },
   "cobranca.verificar": {
+    titulo: "Régua de cobrança",
     descricao: "Suspende loja que passou da tolerância e sincroniza as assinaturas",
     cadencia: { tipo: "diaria", hora: 6 },
     travaMinutos: 30,
     falhasAteAlerta: 2,
   },
   "relatorios.semanal": {
+    titulo: "Relatório semanal",
     descricao: "Emite loja.relatorio-semanal por loja com movimento",
     cadencia: { tipo: "semanal", diaDaSemana: 1, hora: 7 },
     travaMinutos: 30,

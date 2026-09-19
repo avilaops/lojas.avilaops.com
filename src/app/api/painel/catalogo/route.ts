@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/db";
-import { termosDeBusca } from "@/lib/catalogo";
+import { condicaoDoCatalogo, filtroDaUrl } from "@/lib/catalogo-filtros";
 import { exigir } from "@/lib/operadores";
-import type { Prisma } from "@prisma/client";
 
 /**
  * A listagem do catálogo no painel: busca, filtro e página.
@@ -25,27 +24,11 @@ export async function GET(request: Request) {
   if (erro) return erro;
 
   const url = new URL(request.url);
-  const busca = (url.searchParams.get("q") ?? "").trim();
-  const categoria = (url.searchParams.get("categoria") ?? "").trim();
-  const situacao = (url.searchParams.get("situacao") ?? "").trim();
   const pagina = Math.max(1, Number(url.searchParams.get("pagina") ?? 1) || 1);
-
-  const where: Prisma.ProdutoWhereInput = { tenantId: s.tenant.id };
-
-  if (busca) {
-    // Todos os termos precisam casar, como na vitrine: "retentor 30x47" tem
-    // que trazer o retentor daquela medida, não todo retentor da loja.
-    where.AND = termosDeBusca(busca).map((termo) => ({ busca: { contains: termo } }));
-  }
-  if (categoria) where.categoria = { slug: categoria };
-
-  // Situação é a pergunta que o lojista faz de verdade: "o que está esgotado?",
-  // "o que está sem foto?". Não é filtro de banco de dados, é trabalho do dia.
-  if (situacao === "ativo") where.ativo = true;
-  else if (situacao === "inativo") where.ativo = false;
-  else if (situacao === "esgotado") where.OR = [{ disponibilidade: "out_of_stock" }, { estoque: 0 }];
-  else if (situacao === "sem-foto") where.imagens = { isEmpty: true };
-  else if (situacao === "sem-preco") where.precoCentavos = 0;
+  // Busca, categoria e situação saem daqui já do jeito que a exportação
+  // também lê (src/lib/catalogo-filtros.ts): lista e planilha não podem
+  // discordar sobre o que é "sem foto".
+  const where = condicaoDoCatalogo(s.tenant.id, filtroDaUrl(url));
 
   const [total, produtos] = await Promise.all([
     prisma.produto.count({ where }),

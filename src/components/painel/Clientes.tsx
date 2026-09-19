@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Secao, brl } from "./campos";
+import BaixarPlanilha from "./BaixarPlanilha";
 
 export interface ClienteView {
   email: string;
@@ -109,8 +110,11 @@ export default function Clientes({ clientes }: { clientes: ClienteView[] }) {
       </Secao>
 
       <Secao titulo="Levar para fora do painel" descricao="Os dados de quem compra na sua loja são seus, e a responsabilidade por eles também (LGPD, art. 18).">
-        <p><a href="/api/painel/exportar?tipo=clientes" className="btn-secundario">Baixar clientes (CSV)</a></p>
-        <p className="text-xs text-muted-foreground">Mesma apuração desta tela, num arquivo que abre direto no Excel.</p>
+        <BaixarPlanilha
+          tipo="clientes"
+          rotulo="Baixar clientes:"
+          ajuda="Mesma apuração desta tela, num arquivo que abre direto no Excel."
+        />
       </Secao>
     </>
   );

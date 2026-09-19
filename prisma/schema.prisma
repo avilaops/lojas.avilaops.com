@@ -141,6 +141,19 @@ model Tenant {
   mlExpiraEm        DateTime?
   /// Quando o lojista conectou. Nulo = nunca conectou.
   mlConectadoEm     DateTime?
+
+  /**
+   * Regras comerciais por canal de venda: acréscimo de preço, estoque
+   * reservado, tipo de anúncio, garantia. Ver RegrasDoCanal em src/lib/canais.ts.
+   * { "mercadolivre": { "acrescimoPercentual": 16.3, "estoqueReservado": 1, ... } }
+   *
+   * É JSON e não coluna por canal porque a pergunta é a mesma no Mercado Livre,
+   * na Amazon e na Shopee — "por quanto e com quanto estoque vai para lá" —, e
+   * o dia em que a Shopee entrar não pode ser o dia de uma migração de seis
+   * colunas. Chave ausente = o padrão de REGRAS_PADRAO, que é exatamente o que
+   * a integração fazia antes destes campos existirem.
+   */
+  canais           Json @default("{}")
   meiosPagamento    String[]  @default(["pix", "cartao", "boleto"])
 
   // ── E-mail (mail.avilaops.com) ────────────────────────────────────────
@@ -1110,6 +1123,17 @@ model AnuncioMercadoLivre {
   /// Id do anúncio no ML (MLB1234567890). Nulo enquanto é rascunho.
   mlbId       String? @unique
   categoriaMl String?
+  /**
+   * Quem decidiu a categoria: `automatica` (preditor do ML) ou `manual` (o
+   * lojista escolheu na tela).
+   *
+   * É coluna, e não campo do `preparo`, porque o preditor precisa consultá-la
+   * **antes** de rodar: escolha manual é palavra final, e uma escolha que some
+   * no repreparo seguinte é pior que escolha nenhuma — o lojista arruma,
+   * publica errado uma semana depois e não tem como saber por quê.
+   */
+  categoriaOrigem     String    @default("automatica")
+  categoriaDefinidaEm DateTime?
   /// active | paused | closed | under_review
   statusMl    String?
   permalink   String?
@@ -1147,6 +1171,7 @@ model AnuncioMercadoLivre {
   @@unique([tenantId, produtoId])
   @@index([tenantId, estado])
   @@index([tenantId, preparoEstado])
+  @@index([tenantId, categoriaOrigem])
 }
 
 /// Quem trabalha na loja e entra no painel.
