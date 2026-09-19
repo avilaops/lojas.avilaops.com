@@ -197,3 +197,60 @@ export async function atributosDaCategoria(categoriaId: string) {
 export function conectado(t: Tenant): boolean {
   return Boolean(t.mlAccessTokenEnc && t.mlRefreshTokenEnc);
 }
+
+/**
+ * Uma categoria do Mercado Livre, com o que o lojista precisa para reconhecê-la.
+ *
+ * O nome sozinho não distingue: "Rolamentos" existe em Acessórios para
+ * Veículos, em Ferramentas e em Indústria e Comércio, e escolher o errado
+ * coloca o anúncio num corredor onde ninguém procura a peça. Por isso o caminho
+ * inteiro vem junto.
+ */
+export interface DetalheCategoria {
+  categoriaId: string;
+  categoriaNome: string;
+  /** Do topo até ela, inclusive. */
+  caminho: string[];
+  /**
+   * O ML só aceita anúncio em categoria **folha**. Categoria de meio de árvore
+   * é agrupamento, e publicar nela devolve erro sem explicar o motivo — por
+   * isso a escolha manual recusa antes de gravar, e oferece as filhas.
+   */
+  folha: boolean;
+  filhas: Array<{ categoriaId: string; categoriaNome: string }>;
+}
+
+type RespostaCategoria = {
+  id?: string;
+  name?: string;
+  path_from_root?: Array<{ id?: string; name?: string }>;
+  children_categories?: Array<{ id?: string; name?: string }>;
+};
+
+/**
+ * Detalhe de uma categoria. **Endpoint público**: não exige token.
+ *
+ * É o que permite o lojista organizar o catálogo inteiro — escolher categoria,
+ * conferir exigência — antes de conectar conta nenhuma. Obrigá-lo a autorizar
+ * uma integração só para arrumar o cadastro seria cobrar OAuth por trabalho que
+ * o Mercado Livre entrega de graça.
+ */
+export async function detalheDaCategoria(categoriaId: string): Promise<DetalheCategoria | null> {
+  if (!/^MLB\d+$/.test(categoriaId)) return null;
+  const r = await fetch(`${API}/categories/${categoriaId}`, { signal: AbortSignal.timeout(15_000) });
+  if (!r.ok) return null;
+  const d = (await r.json().catch(() => null)) as RespostaCategoria | null;
+  if (!d?.id || !d.name) return null;
+
+  const filhas = (d.children_categories ?? [])
+    .filter((f): f is { id: string; name: string } => Boolean(f.id && f.name))
+    .map((f) => ({ categoriaId: f.id, categoriaNome: f.name }));
+
+  return {
+    categoriaId: d.id,
+    categoriaNome: d.name,
+    caminho: (d.path_from_root ?? []).map((p) => p.name ?? "").filter(Boolean),
+    folha: filhas.length === 0,
+    filhas,
+  };
+}

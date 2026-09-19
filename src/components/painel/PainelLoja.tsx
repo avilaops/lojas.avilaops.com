@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { IdentidadeLoja } from "@/lib/identidade";
 import type { TemaLoja } from "@/lib/tema";
-import { Campo, Secao, brl, inputClasse, lerCsvProdutos } from "./campos";
+import { Campo, Secao, brl, inputClasse } from "./campos";
+import { lerCsvProdutos } from "@/lib/planilha-produtos";
 import Marca from "./Marca";
 import Cupons, { type CupomView } from "./Cupons";
 import Categorias, { type CategoriaView } from "./Categorias";
@@ -245,7 +246,13 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
           </Secao>
 
           <Secao titulo="Importar planilha" descricao="Produto com o mesmo SKU é atualizado, não duplicado.">
-            <p className="text-xs text-muted-foreground">Colunas: <code>nome, preco, categoria, marca, sku, gtin, preco_de, descricao_curta, descricao, imagem, destaque, peso_kg</code></p>
+            <p className="text-xs text-muted-foreground">Colunas: <code>nome, preco, categoria, marca, sku, gtin, preco_de, descricao_curta, descricao, imagem, destaque, peso_kg, altura_cm, largura_cm, comprimento_cm, estoque, ativo</code></p>
+            {/* São as mesmas colunas que a exportação do Catálogo grava: o
+                caminho de corrigir em lote é baixar, mexer e devolver. Coluna
+                que não vier no arquivo não é mexida no produto. */}
+            <p className="text-xs text-muted-foreground">
+              Só <code>nome</code> e <code>preco</code> são obrigatórios. Para corrigir em lote, baixe o catálogo em CSV na aba Catálogo, ajuste e reenvie aqui — coluna que não vier no arquivo fica como está.
+            </p>
             <SoltarPlanilha
               desabilitado={ocupado}
               onArquivo={(a) => a.text().then((t) => setCsv({ nome: a.name, ...lerCsvProdutos(t) }))}

@@ -110,7 +110,7 @@ async function atualizarEnvio(loja: Tenant, envioId: string, resumo: ResumoAviso
   resumo.envios++;
 }
 
-/** Processa a fila. Chamada pelo n8n, do mesmo jeito que as outras rotinas. */
+/** Processa a fila. Rotina `mercadolivre.avisos`, a cada 5 min. */
 export async function processarAvisosMl(opcoes: { limite?: number } = {}): Promise<ResumoAvisosMl> {
   const limite = Math.min(Math.max(opcoes.limite ?? 50, 1), 200);
   const pendentes = await prisma.automacaoEvento.findMany({

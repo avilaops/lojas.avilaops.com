@@ -5,6 +5,15 @@ import { chamarMl, MercadoLivreNaoConectado } from "./mercadolivre";
 import type { Preparo } from "./mercadolivre-preparo";
 import { prepararCatalogo } from "./mercadolivre-preparo";
 import { urlDaLoja } from "./tenant";
+import {
+  REGRAS_PADRAO,
+  estoqueDoCanal,
+  impedimentoNoCanal,
+  lerRegrasDoCanal,
+  precoDoCanal,
+  resolverRegrasDoCanal,
+  type RegrasDoCanal,
+} from "./canais";
 import { atualizarReputacaoMl } from "./mercadolivre-reputacao";
 import { avisoDaImagem } from "./imagem-origem";
 
@@ -27,12 +36,28 @@ export type CorpoPublicacaoMl = {
   currency_id: "BRL";
   available_quantity: number;
   buying_mode: "buy_it_now";
-  listing_type_id: "gold_special";
-  condition: "new";
+  /** `gold_special` é o Clássico; `gold_pro`, o Premium. Ver RegrasDoCanal.tipoAnuncio. */
+  listing_type_id: "gold_special" | "gold_pro";
+  condition: "new" | "used";
   channels: ["marketplace"];
   pictures: Array<{ source: string }>;
   attributes: Array<{ id: string; value_name: string }>;
+  /**
+   * Garantia. O ML separa `sale_terms` de `attributes` porque é condição de
+   * venda, não característica do produto — e recusa o anúncio em boa parte das
+   * categorias quando ela falta. Sai daqui só quando o lojista respondeu.
+   */
+  sale_terms?: Array<{ id: string; value_name: string }>;
 };
+
+/** Garantia do lojista → o par que o Mercado Livre espera em `sale_terms`. */
+function termosDeVenda(r: RegrasDoCanal): CorpoPublicacaoMl["sale_terms"] {
+  if (r.garantia === "sem") return undefined;
+  return [
+    { id: "WARRANTY_TYPE", value_name: r.garantia === "fabrica" ? "Garantia de fábrica" : "Garantia do vendedor" },
+    { id: "WARRANTY_TIME", value_name: `${r.garantiaMeses} ${r.garantiaMeses === 1 ? "mês" : "meses"}` },
+  ];
+}
 
 export type ResumoMercadoLivre = {
   lojas: number;
@@ -73,17 +98,27 @@ function lerPreparo(valor: unknown): Preparo | null {
     : null;
 }
 
-/** Monta apenas fatos já aprovados no preparo. Não inventa marca, GTIN ou categoria. */
+/**
+ * Monta apenas fatos já aprovados no preparo. Não inventa marca, GTIN ou categoria.
+ *
+ * Preço, estoque, tipo de anúncio, condição e garantia saem das regras que o
+ * lojista respondeu em Configurações → Canais. Sem regras gravadas vale
+ * `REGRAS_PADRAO`, que é exatamente o que esta função fazia antes de elas
+ * existirem: preço da loja, estoque cheio, Clássico, novo, sem garantia.
+ */
 export function corpoDaPublicacaoMl(
   anuncio: AnuncioParaPublicar,
   base: string,
+  regras: RegrasDoCanal = REGRAS_PADRAO,
 ): { corpo?: CorpoPublicacaoMl; erro?: string } {
   const preparo = lerPreparo(anuncio.preparo);
   if (!preparo || preparo.estado !== "PRONTO") return { erro: "O preparo do produto não está aprovado como PRONTO." };
   if (!anuncio.categoriaMl) return { erro: "Falta a categoria do Mercado Livre." };
-  if (!anuncio.produto.ativo) return { erro: "O produto está inativo na loja." };
-  if (anuncio.produto.precoCentavos <= 0) return { erro: "O produto não tem preço de venda." };
-  if ((anuncio.produto.estoque ?? 0) <= 0) return { erro: "O produto não tem estoque disponível." };
+  const impedimento = impedimentoNoCanal(
+    { ativo: anuncio.produto.ativo, precoCentavos: anuncio.produto.precoCentavos, estoque: anuncio.produto.estoque },
+    regras,
+  );
+  if (impedimento) return { erro: impedimento };
 
   const pictures = anuncio.produto.imagens
     .map((imagem) => imagemAbsoluta(base, imagem))
@@ -103,15 +138,16 @@ export function corpoDaPublicacaoMl(
     corpo: {
       title: textoCurto(preparo.nomeEnriquecido, 60),
       category_id: anuncio.categoriaMl,
-      price: Number((anuncio.produto.precoCentavos / 100).toFixed(2)),
+      price: Number((precoDoCanal(anuncio.produto.precoCentavos, regras) / 100).toFixed(2)),
       currency_id: "BRL",
-      available_quantity: Math.max(1, Math.trunc(anuncio.produto.estoque ?? 0)),
+      available_quantity: estoqueDoCanal(anuncio.produto.estoque, regras),
       buying_mode: "buy_it_now",
-      listing_type_id: "gold_special",
-      condition: "new",
+      listing_type_id: regras.tipoAnuncio === "premium" ? "gold_pro" : "gold_special",
+      condition: regras.condicao === "usado" ? "used" : "new",
       channels: ["marketplace"],
       pictures,
       attributes: [...atributos].map(([id, value_name]) => ({ id, value_name })),
+      ...(termosDeVenda(regras) ? { sale_terms: termosDeVenda(regras) } : {}),
     },
   };
 }
@@ -228,7 +264,8 @@ async function escreverDescricao(loja: Tenant, mlbId: string, descricao: string)
   }
 }
 
-async function publicarAprovados(loja: Tenant, limite: number, resumo: ResumoMercadoLivre) {
+async function publicarAprovados(loja: Tenant, limite: number, resumo: ResumoMercadoLivre, regras: RegrasDoCanal) {
+  const regrasDoProduto = resolverRegrasDoCanal(regras);
   const anuncios = await prisma.anuncioMercadoLivre.findMany({
     where: { tenantId: loja.id, estado: "aprovado", mlbId: null, preparoEstado: "PRONTO" },
     include: { produto: true },
@@ -238,7 +275,8 @@ async function publicarAprovados(loja: Tenant, limite: number, resumo: ResumoMer
   const base = urlDaLoja(loja);
 
   for (const anuncio of anuncios) {
-    const montado = corpoDaPublicacaoMl(anuncio, base);
+    const doProduto = regrasDoProduto({ categoriaMl: anuncio.categoriaMl });
+    const montado = corpoDaPublicacaoMl(anuncio, base, doProduto);
     if (!montado.corpo) {
       resumo.ignorados++;
       await prisma.anuncioMercadoLivre.update({
@@ -272,8 +310,11 @@ async function publicarAprovados(loja: Tenant, limite: number, resumo: ResumoMer
           estado: "publicado",
           motivoErro: problemas.length ? problemas.join(" ") : null,
           conteudoHash: problemas.length ? null : (conteudo?.hash ?? null),
-          precoCentavosPublicado: anuncio.produto.precoCentavos,
-          estoquePublicado: anuncio.produto.estoque ?? 0,
+          // O que foi publicado é o preço do canal, não o da loja: com
+          // acréscimo, os dois divergem, e guardar o da loja faria o ciclo
+          // seguinte achar que o anúncio está desatualizado para sempre.
+          precoCentavosPublicado: precoDoCanal(anuncio.produto.precoCentavos, doProduto),
+          estoquePublicado: estoqueDoCanal(anuncio.produto.estoque, doProduto),
           sincronizadoEm: new Date(),
         },
       });
@@ -287,7 +328,8 @@ async function publicarAprovados(loja: Tenant, limite: number, resumo: ResumoMer
   }
 }
 
-async function sincronizarPublicados(loja: Tenant, limite: number, resumo: ResumoMercadoLivre) {
+async function sincronizarPublicados(loja: Tenant, limite: number, resumo: ResumoMercadoLivre, regras: RegrasDoCanal) {
+  const regrasDoProduto = resolverRegrasDoCanal(regras);
   const anuncios = await prisma.anuncioMercadoLivre.findMany({
     where: { tenantId: loja.id, estado: "publicado", mlbId: { not: null } },
     include: { produto: true },
@@ -315,10 +357,15 @@ async function sincronizarPublicados(loja: Tenant, limite: number, resumo: Resum
         ? await escreverConteudo(loja, anuncio.mlbId, conteudo)
         : { avisos: [], pendente: false };
 
-      const estoque = anuncio.produto.ativo ? Math.max(0, Math.trunc(anuncio.produto.estoque ?? 0)) : 0;
-      const preco = Number((anuncio.produto.precoCentavos / 100).toFixed(2));
+      // Preço e estoque do canal, não da loja: é o acréscimo e a reserva que
+      // o lojista definiu que vão para o anúncio. Produto inativo vai a zero,
+      // que é como o ML tira do ar sem fechar o anúncio.
+      const doProduto = regrasDoProduto({ categoriaMl: anuncio.categoriaMl });
+      const estoque = anuncio.produto.ativo ? estoqueDoCanal(anuncio.produto.estoque, doProduto) : 0;
+      const precoCanalCentavos = precoDoCanal(anuncio.produto.precoCentavos, doProduto);
+      const preco = Number((precoCanalCentavos / 100).toFixed(2));
       const mudouEstoque = atual.available_quantity !== estoque;
-      const mudouPreco = anuncio.produto.precoCentavos > 0 && atual.price !== preco;
+      const mudouPreco = precoCanalCentavos > 0 && atual.price !== preco;
 
       if (mudouEstoque || mudouPreco) {
         const corpo: Record<string, number> = {};
@@ -333,7 +380,7 @@ async function sincronizarPublicados(loja: Tenant, limite: number, resumo: Resum
       const confirmado = await chamarMl<{ status?: string; price?: number; available_quantity?: number; permalink?: string }>(loja, `/items/${encodeURIComponent(anuncio.mlbId)}`);
       const problemas: string[] = [...escrita.avisos];
       if (confirmado.available_quantity !== estoque) problemas.push("O Mercado Livre não confirmou o novo estoque; a conta pode usar estoque multiorigem.");
-      if (anuncio.produto.precoCentavos > 0 && confirmado.price !== preco) problemas.push("O Mercado Livre não confirmou o novo preço; pode existir automação de preço ativa.");
+      if (precoCanalCentavos > 0 && confirmado.price !== preco) problemas.push("O Mercado Livre não confirmou o novo preço; pode existir automação de preço ativa.");
 
       await prisma.anuncioMercadoLivre.update({
         where: { id: anuncio.id },
@@ -341,7 +388,7 @@ async function sincronizarPublicados(loja: Tenant, limite: number, resumo: Resum
           statusMl: confirmado.status ?? atual.status ?? null,
           permalink: confirmado.permalink ?? atual.permalink ?? anuncio.permalink,
           motivoErro: problemas.length ? problemas.join(" ") : null,
-          precoCentavosPublicado: confirmado.price === preco ? anuncio.produto.precoCentavos : anuncio.precoCentavosPublicado,
+          precoCentavosPublicado: confirmado.price === preco ? precoCanalCentavos : anuncio.precoCentavosPublicado,
           estoquePublicado: confirmado.available_quantity === estoque ? estoque : anuncio.estoquePublicado,
           // Grava a impressão digital quando não sobrou nada que o próximo
           // ciclo possa consertar. Recusa definitiva (título de anúncio que
@@ -365,7 +412,7 @@ async function sincronizarPublicados(loja: Tenant, limite: number, resumo: Resum
   }
 }
 
-/** Rotina idempotente chamada pelo n8n. Sem conexão ou aprovação, não publica. */
+/** Rotina idempotente (`mercadolivre.rodar`). Sem conexão ou aprovação, não publica. */
 export async function rodarMercadoLivre(opcoes: { slug?: string; limite?: number; preparar?: number } = {}): Promise<ResumoMercadoLivre> {
   const limite = Math.min(Math.max(opcoes.limite ?? 20, 1), 100);
   const preparar = Math.min(Math.max(opcoes.preparar ?? 10, 0), 50);
@@ -381,6 +428,7 @@ export async function rodarMercadoLivre(opcoes: { slug?: string; limite?: number
 
   for (const loja of lojas) {
     try {
+      const regras = lerRegrasDoCanal(loja.canais, "mercadolivre");
       if (preparar > 0) {
         const pendentes = await prisma.produto.count({ where: { tenantId: loja.id, ativo: true, anunciosMl: { none: {} } } });
         if (pendentes > 0) {
@@ -391,8 +439,12 @@ export async function rodarMercadoLivre(opcoes: { slug?: string; limite?: number
           resumo.preparados += resultado.total;
         }
       }
-      await publicarAprovados(loja, limite, resumo);
-      await sincronizarPublicados(loja, limite, resumo);
+      // Canal desligado para de mandar coisa nova, mas continua sincronizando
+      // o que já está no ar: parar o estoque de um anúncio publicado venderia
+      // peça que acabou, e desligar a integração não pode custar isso ao
+      // lojista. Quem tira do ar é ele, no Mercado Livre.
+      if (regras.ativo) await publicarAprovados(loja, limite, resumo, regras);
+      await sincronizarPublicados(loja, limite, resumo, regras);
       // Uma chamada por ciclo para saber como a conta está no canal. Falhar
       // aqui não pode derrubar publicação nem estoque, que são o essencial.
       try {
