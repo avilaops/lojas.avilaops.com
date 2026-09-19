@@ -5,9 +5,10 @@ import { processarAvisosMl } from "@/lib/mercadolivre-avisos";
 /**
  * POST /api/admin/canais/mercadolivre/avisos — processa a fila de notificações.
  *
- * O webhook do ML só enfileira (ele precisa de 200 em segundos). Quem age é
- * esta rota, chamada pelo n8n de minutos em minutos: venda vira pedido, envio
- * vira rastreio, anúncio mexido vira pendência.
+ * O webhook do ML só enfileira (ele precisa de 200 em segundos). Quem age é a
+ * rotina `mercadolivre.avisos`, de 5 em 5 minutos: venda vira pedido, envio
+ * vira rastreio, anúncio mexido vira pendência. Esta rota é o disparo manual
+ * da mesma coisa.
  *
  * Idempotente e segura para rodar em paralelo: cada aviso é reivindicado antes
  * do efeito, e o pedido é único por (loja, canal, id do pedido no ML).
