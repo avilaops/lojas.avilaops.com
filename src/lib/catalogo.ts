@@ -130,6 +130,45 @@ export function medidaValida(v: unknown): v is number {
   return typeof v === "number" && Number.isFinite(v) && v > 0 && v <= MEDIDA_MAXIMA_MM;
 }
 
+/** Como a medida é falada no balcão quando ela vai sozinha. */
+const ABREVIACAO: Record<ChaveDeMedida, string> = {
+  diametroInternoMm: "Ø int.",
+  diametroExternoMm: "Ø ext.",
+  alturaMm: "alt.",
+};
+
+/** Milímetro com vírgula e sem zero à toa: 14, 14,5 — nunca 14.50. */
+const mm = (v: number) => String(Math.round(v * 100) / 100).replace(".", ",");
+
+/**
+ * A medida do item numa linha, para o card da vitrine.
+ *
+ * A loja já deixa buscar e filtrar por faixa de medida (`medidasDaLoja`), mas
+ * quem filtrava "20 a 25 mm de diâmetro interno" recebia uma grade em que o
+ * critério da escolha estava diluído no meio do nome do produto. Num catálogo
+ * onde dez itens da mesma série só diferem em milímetros, a medida não é
+ * detalhe da ficha: é o que decide a compra, e merece linha própria.
+ *
+ * Com as três, sai na ordem que o setor lê — 20 × 47 × 14 mm, interno, externo
+ * e altura — que é como a peça é pedida e como a busca já a entende. Com uma
+ * ou duas, cada uma leva o seu rótulo: "20 × 47" sem dizer quais são as duas
+ * é um palpite que faz comprar a peça errada.
+ *
+ * Nada aqui é por loja: a farmácia não tem estes campos em `atributos`, e o
+ * card simplesmente não mostra a linha.
+ */
+export function medidaResumida(atributos: unknown): string | null {
+  const attr = (atributos ?? {}) as Record<string, unknown>;
+  const lidas = (Object.keys(MEDIDAS_FILTRAVEIS) as ChaveDeMedida[]).map((campo) => {
+    const v = Number(attr[campo]);
+    return medidaValida(v) ? { campo, v } : null;
+  });
+  const presentes = lidas.filter((m) => m !== null);
+  if (presentes.length === 0) return null;
+  if (presentes.length === lidas.length) return `${presentes.map((m) => mm(m.v)).join(" × ")} mm`;
+  return presentes.map((m) => `${ABREVIACAO[m.campo]} ${mm(m.v)} mm`).join(" · ");
+}
+
 const ORDENS: Record<OrdemCatalogo, Prisma.ProdutoOrderByWithRelationInput[]> = {
   relevancia: [{ destaque: "desc" }, { nome: "asc" }],
   "menor-preco": [{ precoCentavos: "asc" }],

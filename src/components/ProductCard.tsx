@@ -1,7 +1,8 @@
 import Link from "next/link";
 import * as regras from "@/lib/produto-regras";
 import type { Produto } from "@prisma/client";
-import { formatarBRL } from "@/lib/catalogo";
+import { formatarBRL, medidaResumida } from "@/lib/catalogo";
+import { avisoDaImagem, seloDaImagem } from "@/lib/imagem-origem";
 import AddToCartButton from "@/components/cart/AddToCartButton";
 import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
 import { encaixe, lerCompatibilidade, type Moto } from "@/lib/motos";
@@ -30,6 +31,15 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null }: {
   const medicamento = lerMedicamento(produto);
   const somenteNaLoja = vendaRemotaProibida(medicamento.tarja);
   const pedeReceita = exigeReceita(medicamento.tarja);
+
+  // O que a foto é. Em catálogo técnico a mesma imagem cobre uma série
+  // inteira (ver docs/VEDASHOW-FOTOS.md); sem dizer isso na grade, dez itens
+  // diferentes aparecem como dez fotos iguais e a economia de fotografia vira
+  // devolução. A regra mora em imagem-origem.ts, com a galeria.
+  const seloImagem = seloDaImagem(produto.imagemOrigem, !!imagem);
+  const avisoImagem = avisoDaImagem(produto.imagemOrigem, !!imagem);
+  // A medida com que a peça é pedida no balcão, quando o cadastro tem.
+  const medida = medidaResumida(produto.atributos);
 
   const percentualDesconto =
     produto.precoDeCentavos && produto.precoDeCentavos > produto.precoCentavos
@@ -98,6 +108,17 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null }: {
             </span>
           ) : null}
         </div>
+
+        {seloImagem && (
+          // Embaixo e discreto: é ressalva, não chamada. As tarjas de preço e
+          // estoque ficam no topo e continuam mandando na atenção.
+          <span
+            className="absolute bottom-2 left-2 z-10 rounded-md bg-background/85 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground shadow-sm backdrop-blur-sm"
+            title={avisoImagem ?? undefined}
+          >
+            {seloImagem}
+          </span>
+        )}
       </Link>
       <div className="flex flex-1 flex-col gap-2 p-4">
         {produto.marca && <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{produto.marca}</p>}
@@ -111,6 +132,11 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null }: {
         <Link href={`/produtos/${produto.slug}`} className="line-clamp-2 text-sm font-semibold hover:text-primary transition-colors">
           {produto.nome}
         </Link>
+        {medida && (
+          <p className="w-fit rounded-md bg-muted px-1.5 py-0.5 text-[11px] font-semibold tabular-nums text-foreground" title="Medida cadastrada deste item">
+            {medida}
+          </p>
+        )}
         <div className="mt-auto pt-1">
           {produto.precoDeCentavos && produto.precoDeCentavos > produto.precoCentavos && (
             <p className="text-xs text-muted-foreground line-through">{formatarBRL(produto.precoDeCentavos)}</p>

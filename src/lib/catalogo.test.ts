@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { termosDeBusca } from "./catalogo";
+import { medidaResumida, termosDeBusca } from "./catalogo";
 
 /**
  * Em catálogo técnico a pessoa digita a peça como ela é falada na oficina.
@@ -148,4 +148,40 @@ test("plural acha o singular do cadastro", () => {
 test("código nunca perde o s final", () => {
   assert.deepEqual(termosDeBusca("6205 2rs"), ["6205", "2rs"]);
   assert.deepEqual(termosDeBusca("abs"), ["abs"]);
+});
+
+/**
+ * A medida no card. O filtro por faixa já existia; a grade devolvia o
+ * resultado sem mostrar o critério que a pessoa acabou de usar.
+ */
+test("as três medidas saem na ordem do balcão", () => {
+  assert.equal(medidaResumida({ diametroInternoMm: 20, diametroExternoMm: 47, alturaMm: 14 }), "20 × 47 × 14 mm");
+});
+
+test("medida quebrada mostra vírgula, não ponto", () => {
+  assert.equal(medidaResumida({ diametroInternoMm: 20.5, diametroExternoMm: 47, alturaMm: 14 }), "20,5 × 47 × 14 mm");
+});
+
+test("medida vinda da planilha como texto continua valendo", () => {
+  // A importação grava em `atributos` o que veio da coluna, e nem toda
+  // planilha manda número.
+  assert.equal(medidaResumida({ diametroInternoMm: "20", diametroExternoMm: "47", alturaMm: "14" }), "20 × 47 × 14 mm");
+});
+
+test("com duas medidas cada uma leva o rótulo", () => {
+  // "20 × 47" sem dizer quais são as duas faz comprar a peça errada.
+  assert.equal(medidaResumida({ diametroInternoMm: 20, alturaMm: 14 }), "Ø int. 20 mm · alt. 14 mm");
+});
+
+test("código lido como medida não vira linha no card", () => {
+  // Mesmo teto do filtro: 5.176.168 mm é lixo de importação, não medida.
+  assert.equal(medidaResumida({ diametroInternoMm: 5176168 }), null);
+  assert.equal(medidaResumida({ diametroInternoMm: 0 }), null);
+});
+
+test("produto sem medida não mostra nada", () => {
+  assert.equal(medidaResumida({}), null);
+  assert.equal(medidaResumida(null), null);
+  // Farmácia e moda passam por aqui a cada card: o campo não existe.
+  assert.equal(medidaResumida({ volumeMl: 500, cor: "azul" }), null);
 });
