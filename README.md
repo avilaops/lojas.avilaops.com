@@ -119,8 +119,28 @@ na API), para que ninguém os religue achando que estão prontos.
 
 ## Deploy (Hetzner, Docker): em produção desde 24/08/2026
 
+O caminho normal é o GitHub Actions: `container.yml` constrói a imagem (o
+portão — typecheck, testes e build — roda dentro do `Dockerfile`), publica no
+GHCR e o `deploy-ssh.yml` roda `deploy lojas.avilaops.com <imagem@digest>` por
+SSH.
+
+**Quando o Actions não está disponível** — em 19/09/2026 a conta parou de
+alocar runner e os três PRs e a `main` ficaram sem CI —, os mesmos passos rodam
+no servidor com `bash deploy/ci-servidor.sh`. Mesmo `Dockerfile`, mesma imagem,
+mesmo comando `deploy`. Ver [`docs/CI-NO-SERVIDOR.md`](docs/CI-NO-SERVIDOR.md),
+inclusive a conferência de disco e memória: a máquina foi escolhida para *não*
+construir, e o script recusa em vez de encher um disco em 95%.
+
+> **A receita manual abaixo está desatualizada.** Ela espera o standalone
+> aninhado em `.next/standalone/lojas.avilaops.com/`; com o
+> `outputFileTracingRoot: process.cwd()` do `next.config.ts` atual ele sai
+> **plano**, que é o que `deploy/runtime.github.yml` consome. O mesmo vale para
+> `scripts/empacotar.sh`, `deploy/deploy.sh` e
+> `deploy/docker-compose.producao.yml`. Fica registrada como história até
+> alguém decidir entre atualizar e remover.
+
 O servidor (CX23, 4 GB, disco Docker sempre perto de 95%) **não builda**: o
-build Next `standalone` é feito aqui no Windows e sobe pronto. Fluxo:
+build Next `standalone` era feito no Windows e subia pronto. Fluxo:
 
 ```bash
 # 1. build local (Prisma gera também o engine debian-openssl-3.0.x: ver schema.prisma)
