@@ -327,9 +327,12 @@ export async function vincularAnuncios(
       estado: "publicado",
       statusMl: "active",
       motivoErro: null,
-      // Sem impressão digital de conteúdo: o anúncio adotado tem o texto do
-      // lojista, e o ciclo não deve reescrevê-lo. `conteudoDoAnuncio` devolve
-      // nulo sem preparo, então só preço e estoque vão daqui para lá.
+      // O que impede a sincronia de reescrever o texto do lojista. Não basta
+      // contar com "sem preparo, sem conteúdo": um produto que passou por
+      // "Conferir catálogo" antes de ser adotado guarda o preparo, e o upsert
+      // abaixo o preserva — o anúncio dele nasceria adotado e com o nosso
+      // título a caminho.
+      origem: "adotada",
       conteudoHash: null,
       sincronizadoEm: null,
     };

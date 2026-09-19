@@ -375,7 +375,10 @@ async function sincronizarPublicados(loja: Tenant, limite: number, resumo: Resum
 
       // Conteúdo antes de preço: o lojista que corrigiu a foto errada quer ver
       // a foto certa no ar, e isso não depende de o preço ter mudado.
-      const conteudo = conteudoDoAnuncio(anuncio, urlDaLoja(loja));
+      //
+      // Anúncio adotado fica de fora: o título, as fotos e a descrição são
+      // dele, e adotar autorizou preço e estoque, não trocar o anúncio.
+      const conteudo = anuncio.origem === "adotada" ? null : conteudoDoAnuncio(anuncio, urlDaLoja(loja));
       const escrita: EscritaDeConteudo = conteudo && conteudo.hash !== anuncio.conteudoHash
         ? await escreverConteudo(loja, anuncio.mlbId, conteudo)
         : { avisos: [], pendente: false };

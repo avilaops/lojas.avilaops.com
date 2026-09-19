@@ -1134,6 +1134,19 @@ model AnuncioMercadoLivre {
    */
   categoriaOrigem     String    @default("automatica")
   categoriaDefinidaEm DateTime?
+
+  /**
+   * Quem criou o anúncio: `propria` (publicamos daqui) ou `adotada` (já
+   * existia no Mercado Livre do lojista e foi vinculada).
+   *
+   * Decide de quem é o **texto**. Anúncio adotado tem título, fotos e
+   * descrição escritos pelo lojista, e a sincronia não os reescreve: ele nos
+   * autorizou a cuidar de preço e estoque, não a trocar o anúncio dele. Sem
+   * esta coluna o caso passava despercebido — um produto preparado antes de
+   * ser adotado guarda o `preparo`, e `conteudoDoAnuncio` então devolve
+   * conteúdo em vez de nulo.
+   */
+  origem              String    @default("propria")
   /// active | paused | closed | under_review
   statusMl    String?
   permalink   String?
