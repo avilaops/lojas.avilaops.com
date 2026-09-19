@@ -29,6 +29,34 @@ quem usa a loja. Os endpoints continuam existindo e continuam pedindo
 `Authorization: Bearer $LOJAS_ADMIN_TOKEN` — o que mudou é que eles viraram o
 disparo manual, não mais o agendamento.
 
+## Enquanto o agendamento antigo do n8n não for desligado
+
+Os nós de Schedule do fluxo `p063mxq8dQijjBDL` continuam apontando para os
+mesmos endpoints. Até serem desligados, cada rotina é chamada **duas vezes** no
+mesmo horário — uma pelo agendador, outra pelo n8n. Nenhuma das duas sabe da
+outra, então quem tem que aguentar isso é o trabalho em si:
+
+| Rotina | Chamada duas vezes faz mal? |
+|---|---|
+| `mercadolivre.avisos` | não — cada aviso é reivindicado antes do efeito |
+| `mercadolivre.rodar` | não — publica só o aprovado e sincroniza o que mudou |
+| `carrinhos.verificar` | não — o checkout vira `LEMBRADO` e sai da fila |
+| `estoque.avisos` | não — `AvisoEstoque.avisadoEm` |
+| `pedidos.verificar` | não — só lê o gateway e concilia |
+| `seo.categorias` | não — trava de 15 min por categoria |
+| `cobranca.verificar` | não — fatura é upsert por `externalId`, e `suspender()` confere de novo |
+| `relatorios.semanal` | **fazia** — ver abaixo |
+
+O relatório semanal era o único que não se defendia: cada execução emitia outro
+`loja.relatorio-semanal`, e o lojista receberia dois e-mails na segunda de
+manhã. Passou a valer **uma vez por loja por semana**, olhando o próprio
+`AutomacaoEvento` para saber o que já saiu — o que também protege contra um
+disparo manual no mesmo dia. A janela é de 6 dias, não 7, para o relatório
+legítimo da semana seguinte não ser recusado por alguns segundos de diferença.
+
+Desligar os Schedule do n8n continua valendo, mas deixou de ser condição para
+este deploy.
+
 ## Como um container não atropela o outro
 
 A linha da tabela `Rotina` **é** a trava. Reivindicar é um

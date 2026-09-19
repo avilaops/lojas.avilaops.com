@@ -3,15 +3,41 @@ import { emitir } from "./eventos";
 import { urlDaLoja } from "./tenant";
 
 /**
- * Relatório semanal por loja: emite `loja.relatorio-semanal` (o n8n manda o
- * e-mail). Segunda de manhã, pelo Schedule do n8n → /api/admin/relatorios/semanal.
+ * Quanto tempo depois de um relatório a mesma loja pode receber outro.
+ *
+ * Seis dias e não sete: a rotina roda segunda de manhã e não cai sempre no
+ * mesmo minuto, então sete dias cheios recusariam o relatório legítimo da
+ * semana seguinte por alguns segundos de diferença.
  */
-export async function emitirRelatoriosSemanais(): Promise<{ lojas: number }> {
+const JANELA_SEM_REPETIR_MS = 6 * 86_400_000;
+
+/**
+ * Relatório semanal por loja: emite `loja.relatorio-semanal` (quem manda o
+ * e-mail é o fluxo). Rotina `relatorios.semanal`, segunda às 7h.
+ *
+ * **Uma vez por loja por semana, não uma por chamada.** Diferente das outras
+ * rotinas, esta não é naturalmente idempotente: cada execução emitiria outro
+ * evento e o lojista receberia outro e-mail. Enquanto o agendamento antigo do
+ * n8n não for desligado, os dois chamam no mesmo horário — e mesmo depois,
+ * um disparo manual no mesmo dia não pode custar um e-mail duplicado a quem
+ * recebe. A lista do que já saiu é o próprio `AutomacaoEvento`.
+ */
+export async function emitirRelatoriosSemanais(): Promise<{ lojas: number; jaEnviados: number }> {
   const fim = new Date();
   const inicio = new Date(fim.getTime() - 7 * 86_400_000);
   const lojas = await prisma.tenant.findMany({ where: { status: "ATIVA" } });
+  const recentes = await prisma.automacaoEvento.findMany({
+    where: { tipo: "loja.relatorio-semanal", emitidoEm: { gte: new Date(fim.getTime() - JANELA_SEM_REPETIR_MS) } },
+    select: { slug: true },
+  });
+  const jaTemDestaSemana = new Set(recentes.map((e) => e.slug));
   let enviados = 0;
+  let jaEnviados = 0;
   for (const t of lojas) {
+    if (jaTemDestaSemana.has(t.slug)) {
+      jaEnviados++;
+      continue;
+    }
     const [pagos, abandonados, avaliacoes] = await Promise.all([
       prisma.pedido.findMany({ where: { tenantId: t.id, status: { in: ["PAGO", "EM_SEPARACAO", "ENVIADO", "ENTREGUE"] }, criadoEm: { gte: inicio, lte: fim } }, include: { itens: true } }),
       prisma.checkoutAberto.count({ where: { tenantId: t.id, status: { in: ["ABERTO", "LEMBRADO"] }, criadoEm: { gte: inicio, lte: fim } } }),
@@ -40,7 +66,7 @@ export async function emitirRelatoriosSemanais(): Promise<{ lojas: number }> {
     });
     enviados++;
   }
-  return { lojas: enviados };
+  return { lojas: enviados, jaEnviados };
 }
 
 /** Um pedido só conta como venda depois de pago — e deixa de contar se for cancelado ou estornado. */
