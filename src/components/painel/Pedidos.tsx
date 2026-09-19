@@ -8,6 +8,7 @@ import Filtros from "@/components/aplicacao/Filtros";
 import Paginacao from "@/components/aplicacao/Paginacao";
 import Vazio from "@/components/aplicacao/Vazio";
 import { paginaValida } from "@/lib/pedidos-painel";
+import BaixarPlanilha from "./BaixarPlanilha";
 
 /**
  * Os pedidos da loja.
@@ -245,11 +246,11 @@ export default function Pedidos({
       )}
 
       {dados && dados.total > 0 && (
-        <p className="text-sm">
-          <a href="/api/painel/exportar?tipo=pedidos" className="btn-secundario inline-flex h-11 items-center px-4">
-            Baixar pedidos (CSV)
-          </a>
-        </p>
+        <BaixarPlanilha
+          tipo="pedidos"
+          rotulo="Baixar pedidos:"
+          ajuda="Documento e telefone saem como texto, do jeito que foram digitados."
+        />
       )}
     </Secao>
   );

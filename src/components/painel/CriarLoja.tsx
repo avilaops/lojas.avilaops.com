@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { Campo, Secao, inputClasse, lerCsvProdutos } from "./campos";
+import { Campo, Secao, inputClasse } from "./campos";
+import { lerCsvProdutos } from "@/lib/planilha-produtos";
 import { criarDirecaoVisual, PERSONALIDADES, SEGMENTOS, type DiagnosticoMarca, type IdentidadeLoja } from "@/lib/identidade";
 
 const PASSOS = ["Negócio", "Essência", "Direção de marca", "Operação", "Catálogo e acesso"] as const;
