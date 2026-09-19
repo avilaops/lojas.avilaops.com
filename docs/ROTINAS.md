@@ -13,16 +13,22 @@ refatoração.
 
 ## O que roda, quando e o que faz
 
-| Rotina | Quando | O que faz | Disparo manual |
-|---|---|---|---|
-| `mercadolivre.avisos` | a cada 5 min | processa a fila de notificações do Mercado Livre: venda vira pedido e baixa estoque, envio vira rastreio, anúncio mexido vira pendência. **Quanto mais espaçado, maior a janela de vender a mesma peça duas vezes** | `POST /api/admin/canais/mercadolivre/avisos` |
-| `mercadolivre.rodar` | a cada hora | publica o que o lojista aprovou e empurra preço e estoque para os anúncios | `POST /api/admin/canais/mercadolivre/rodar` |
-| `carrinhos.verificar` | a cada hora | marca carrinho parado há 45 min e emite `carrinho.abandonado` | `POST /api/admin/carrinhos/verificar` |
-| `estoque.avisos` | a cada hora | avisa quem esperava produto que voltou | `POST /api/admin/estoque/avisos` |
-| `pedidos.verificar` | a cada hora | confere no gateway os pedidos aguardando pagamento (Pix, boleto) dos últimos 7 dias. Rede de segurança do webhook | `POST /api/admin/pedidos/verificar` |
-| `seo.categorias` | todo dia às 3h | gera e publica SEO pendente em lote, sem IA no acesso público | `POST /api/admin/seo/categorias` |
-| `cobranca.verificar` | todo dia às 6h | suspende quem passou da tolerância | `POST /api/admin/cobranca/verificar` |
-| `relatorios.semanal` | segunda às 7h | emite `loja.relatorio-semanal` por loja com movimento | `POST /api/admin/relatorios/semanal` |
+Cada rotina tem um nome de chave (estável, vai para o banco), um **título**
+curto e uma descrição. O título existe porque a frase inteira não cabe como
+título de linha num celular — no painel da Ávila Ops ela saía cortada em "Gera
+e publica em lote o …". O teto é de 22 caracteres, medido num iPhone de 375 px
+e preso por teste. Quem muda um deles mexe em `ROTINAS`, não na tela.
+
+| Rotina | Título | Quando | O que faz | Disparo manual |
+|---|---|---|---|---|
+| `mercadolivre.avisos` | Vendas do ML | a cada 5 min | processa a fila de notificações do Mercado Livre: venda vira pedido e baixa estoque, envio vira rastreio, anúncio mexido vira pendência. **Quanto mais espaçado, maior a janela de vender a mesma peça duas vezes** | `POST /api/admin/canais/mercadolivre/avisos` |
+| `mercadolivre.rodar` | Anúncios do ML | a cada hora | publica o que o lojista aprovou e empurra preço e estoque para os anúncios | `POST /api/admin/canais/mercadolivre/rodar` |
+| `carrinhos.verificar` | Carrinho abandonado | a cada hora | marca carrinho parado há 45 min e emite `carrinho.abandonado` | `POST /api/admin/carrinhos/verificar` |
+| `estoque.avisos` | Voltou ao estoque | a cada hora | avisa quem esperava produto que voltou | `POST /api/admin/estoque/avisos` |
+| `pedidos.verificar` | Pagamento pendente | a cada hora | confere no gateway os pedidos aguardando pagamento (Pix, boleto) dos últimos 7 dias. Rede de segurança do webhook | `POST /api/admin/pedidos/verificar` |
+| `seo.categorias` | SEO de categoria | todo dia às 3h | gera e publica SEO pendente em lote, sem IA no acesso público | `POST /api/admin/seo/categorias` |
+| `cobranca.verificar` | Régua de cobrança | todo dia às 6h | suspende quem passou da tolerância | `POST /api/admin/cobranca/verificar` |
+| `relatorios.semanal` | Relatório semanal | segunda às 7h | emite `loja.relatorio-semanal` por loja com movimento | `POST /api/admin/relatorios/semanal` |
 
 Horário é o de São Paulo (`America/Sao_Paulo`), não o do servidor: "3h" é 3h de
 quem usa a loja. Os endpoints continuam existindo e continuam pedindo

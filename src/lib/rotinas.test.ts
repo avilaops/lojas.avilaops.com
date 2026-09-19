@@ -102,6 +102,23 @@ test("nome de rotina vindo da URL é conferido contra o catálogo", () => {
   assert.equal(ehNomeDeRotina("../../etc"), false);
 });
 
+test("todo título cabe numa linha de celular e não repete a descrição", () => {
+  // O painel mostra `titulo` como título da linha; frase longa ali sai
+  // cortada em "Gera e publica em lote o …", que foi o que aconteceu.
+  for (const nome of NOMES_DE_ROTINA) {
+    const { titulo, descricao } = ROTINAS[nome];
+    // 22 é medida, não estimativa: ver o comentário de `titulo` em rotinas.ts.
+    assert.ok(titulo.length > 0 && titulo.length <= 22, `${nome}: "${titulo}" tem ${titulo.length} caracteres`);
+    assert.ok(titulo.split(" ").length <= 4, `${nome}: título com palavras demais`);
+    assert.notEqual(titulo, descricao, `${nome}: título e descrição iguais`);
+  }
+});
+
+test("título de rotina é único: dois iguais na tela não se distinguem", () => {
+  const titulos = NOMES_DE_ROTINA.map((nome) => ROTINAS[nome].titulo);
+  assert.equal(new Set(titulos).size, titulos.length);
+});
+
 test("a fila do Mercado Livre é a mais frequente do catálogo", () => {
   // Documenta a decisão: espaçar esta rotina reabre a janela de vender a
   // mesma peça duas vezes. Se alguém aumentar o intervalo, o teste cai.

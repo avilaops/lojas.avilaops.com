@@ -36,6 +36,7 @@ export async function GET(request: Request) {
     const falhando = (linha?.falhasSeguidas ?? 0) >= definicao.falhasAteAlerta;
     return {
       nome,
+      titulo: definicao.titulo,
       descricao: definicao.descricao,
       cadencia: descreverCadencia(definicao.cadencia),
       proximaEm: proximaEm.toISOString(),
