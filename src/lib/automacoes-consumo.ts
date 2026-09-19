@@ -1,20 +1,22 @@
 import { prisma } from "./db";
-import { emailConfigurado, enviarEmail } from "./email";
-import { DadosInsuficientes, emailDoEvento, temEmailProprio, TIPOS_COM_EMAIL_PROPRIO } from "./emails-do-evento";
+import { acoesDoEvento, tiposQueExecutamos, type Canal } from "./acoes-do-evento";
+import { enviarEmail } from "./email";
+import { DadosInsuficientes } from "./emails-do-evento";
+import { enviarWhatsapp } from "./whatsapp";
 
 /**
  * O consumidor da fila de eventos — a parte que o n8n fazia.
  *
  * `AutomacaoEvento` sempre foi uma caixa de saída: a plataforma grava o evento
  * e alguém do lado de fora reivindica, executa e encerra. Esse alguém era o
- * n8n. Aqui a plataforma passa a reivindicar e executar os próprios eventos,
- * pela mesma porta e com a mesma trava — o `UPDATE … WHERE status = 'EMITIDO'`
- * que já impedia duas entregas do webhook de agirem as duas.
+ * n8n. Aqui a plataforma reivindica e executa os próprios eventos, pela mesma
+ * porta e com a mesma trava — o `UPDATE … WHERE status = 'EMITIDO'` que já
+ * impedia duas entregas do webhook de agirem as duas.
  *
- * **Só os tipos cujo efeito inteiro é um e-mail.** Evento que também manda
- * WhatsApp continua indo para o n8n inteiro: trazer metade para cá faria o
- * aviso do lojista sumir sem ninguém notar. A lista está em
- * `TIPOS_COM_EMAIL_PROPRIO`, e `emitir()` usa a mesma para decidir o caminho.
+ * **Só os tipos cujos canais este ambiente consegue cumprir inteiros**
+ * (`tiposQueExecutamos`). Faltando o token do WhatsApp, `pedido.pago` volta
+ * inteiro para o n8n: executar metade faria o aviso do lojista sumir sem
+ * ninguém notar.
  */
 
 export interface ResumoConsumo {
@@ -28,22 +30,19 @@ export interface ResumoConsumo {
 /** Quanto tempo um evento pode ficar PROCESSANDO antes de ser dado por morto. */
 const TRAVA_MS = 10 * 60 * 1000;
 
-/**
- * Processa a fila dos tipos que sabemos executar.
- *
- * Sem SMTP configurado a função não reivindica nada: melhor a fila parada e
- * visível do que evento marcado como feito sem e-mail nenhum ter saído.
- */
 export async function processarEventosProprios(opcoes: { limite?: number; eventId?: string } = {}): Promise<ResumoConsumo> {
   const resumo: ResumoConsumo = { lidos: 0, processados: 0, ignorados: 0, falhas: 0, detalhes: [] };
-  if (!emailConfigurado()) return resumo;
+  const nossos = tiposQueExecutamos();
+  // Sem canal nenhum configurado a função não reivindica nada: melhor a fila
+  // parada e visível do que evento marcado como feito sem nada ter saído.
+  if (!nossos.length) return resumo;
 
   const limite = Math.min(Math.max(opcoes.limite ?? 50, 1), 200);
   const travaVencida = new Date(Date.now() - TRAVA_MS);
   const pendentes = await prisma.automacaoEvento.findMany({
     where: {
       ...(opcoes.eventId ? { eventId: opcoes.eventId } : {}),
-      tipo: { in: [...TIPOS_COM_EMAIL_PROPRIO] },
+      tipo: { in: nossos },
       OR: [
         { status: "EMITIDO" },
         // Container que morreu no meio deixa PROCESSANDO para trás. Depois da
@@ -57,8 +56,6 @@ export async function processarEventosProprios(opcoes: { limite?: number; eventI
 
   for (const evento of pendentes) {
     resumo.lidos++;
-    // Reivindicar antes de qualquer efeito: se o n8n ainda estiver ligado para
-    // este tipo, quem perder a corrida não vê a linha e ninguém manda dois.
     const meu = await prisma.automacaoEvento.updateMany({
       where: {
         eventId: evento.eventId,
@@ -68,52 +65,96 @@ export async function processarEventosProprios(opcoes: { limite?: number; eventI
     });
     if (!meu.count) continue;
 
-    try {
-      const envelope = (evento.payload ?? {}) as Record<string, unknown>;
-      // O tipo do banco manda: payload reenviado pode ser antigo, mas a linha
-      // é a verdade sobre o que este evento é.
-      const email = temEmailProprio(evento.tipo) ? emailDoEvento({ ...envelope, tipo: evento.tipo }) : null;
-
-      if (!email) {
-        await encerrar(evento.eventId, "IGNORADO", motivoDeIgnorar(evento.tipo, envelope));
-        resumo.ignorados++;
-        resumo.detalhes.push({ eventId: evento.eventId, tipo: evento.tipo, resultado: "ignorado" });
-        continue;
-      }
-
-      const { messageId } = await enviarEmail(email);
-      await encerrar(evento.eventId, "PROCESSADO", `e-mail para ${email.para} (${messageId})`);
-      resumo.processados++;
-      resumo.detalhes.push({ eventId: evento.eventId, tipo: evento.tipo, resultado: `e-mail para ${email.para}` });
-    } catch (erro) {
-      const motivo = erro instanceof Error ? erro.message : "falha inesperada";
-      // `DadosInsuficientes` é defeito nosso, não indisponibilidade de fora:
-      // fica FALHOU e aparece na tela de automações com o campo que faltou.
-      await encerrar(evento.eventId, "FALHOU", motivo);
-      resumo.falhas++;
-      resumo.detalhes.push({
-        eventId: evento.eventId,
-        tipo: evento.tipo,
-        resultado: `${erro instanceof DadosInsuficientes ? "dados" : "envio"}: ${motivo}`,
-      });
-    }
+    const resultado = await cumprir(evento.eventId, evento.tipo, evento.payload, evento.canaisFeitos);
+    resumo[resultado.contador]++;
+    resumo.detalhes.push({ eventId: evento.eventId, tipo: evento.tipo, resultado: resultado.detalhe });
   }
 
   return resumo;
 }
 
-/** Por que este evento não vira e-mail — a tela de automações mostra isto. */
-function motivoDeIgnorar(tipo: string, envelope: Record<string, unknown>): string {
-  if (tipo.startsWith("categoria.seo")) return "evento de SEO não notifica ninguém";
-  const destino = ["clienteEmail", "destinatario", "emailContato", "email"].find(
-    (c) => typeof envelope[c] === "string" && (envelope[c] as string).trim(),
-  );
-  return destino ? `destinatário inválido em ${destino}` : "sem endereço de e-mail no evento";
+type Contador = "processados" | "ignorados" | "falhas";
+
+/**
+ * Cumpre os canais que faltam deste evento e fecha o ciclo.
+ *
+ * Canal que já saiu numa tentativa anterior não sai de novo: quem recebeu o
+ * e-mail não recebe duas vezes porque o WhatsApp falhou depois.
+ */
+async function cumprir(
+  eventId: string,
+  tipo: string,
+  payload: unknown,
+  jaFeitos: string[],
+): Promise<{ contador: Contador; detalhe: string }> {
+  let acoes;
+  try {
+    acoes = acoesDoEvento({ ...((payload ?? {}) as Record<string, unknown>), tipo });
+  } catch (erro) {
+    // `DadosInsuficientes`: o evento promete campos que não tem. É defeito
+    // nosso, não indisponibilidade de fora — fica FALHOU com o campo no texto.
+    const motivo = erro instanceof Error ? erro.message : "falha inesperada";
+    await encerrar(eventId, "FALHOU", motivo, jaFeitos);
+    return { contador: "falhas", detalhe: `${erro instanceof DadosInsuficientes ? "dados" : "erro"}: ${motivo}` };
+  }
+
+  const pendentes: Array<{ canal: Canal; executar: () => Promise<string> }> = [];
+  if (acoes.email && !jaFeitos.includes("email")) {
+    const email = acoes.email;
+    pendentes.push({ canal: "email", executar: async () => `e-mail para ${email.para} (${(await enviarEmail(email)).messageId})` });
+  }
+  if (acoes.whatsapp && !jaFeitos.includes("whatsapp")) {
+    const zap = acoes.whatsapp;
+    pendentes.push({ canal: "whatsapp", executar: async () => `WhatsApp ${zap.template} para ${zap.para} (${(await enviarWhatsapp(zap)).messageId})` });
+  }
+
+  if (!pendentes.length) {
+    const nada = !acoes.email && !acoes.whatsapp;
+    const detalhe = nada ? motivoDeIgnorar(tipo, payload) : `nada a fazer: ${jaFeitos.join(", ")} já saíram`;
+    await encerrar(eventId, nada ? "IGNORADO" : "PROCESSADO", detalhe, jaFeitos);
+    return { contador: nada ? "ignorados" : "processados", detalhe };
+  }
+
+  const feitos = [...jaFeitos];
+  const saiu: string[] = [];
+  let falha: string | null = null;
+  for (const { canal, executar } of pendentes) {
+    try {
+      saiu.push(await executar());
+      feitos.push(canal);
+      // Grava assim que sai: se o processo morrer entre um canal e outro, a
+      // próxima tentativa já sabe o que não precisa repetir.
+      await prisma.automacaoEvento.update({ where: { eventId }, data: { canaisFeitos: feitos } });
+    } catch (erro) {
+      falha = `${canal}: ${erro instanceof Error ? erro.message : "falha inesperada"}`;
+      // Os outros canais ainda são tentados: WhatsApp fora do ar não pode
+      // impedir a confirmação de pedido de chegar ao comprador.
+    }
+  }
+
+  const detalhe = [...saiu, falha].filter(Boolean).join(" · ");
+  await encerrar(eventId, falha ? "FALHOU" : "PROCESSADO", detalhe, feitos);
+  return { contador: falha ? "falhas" : "processados", detalhe };
 }
 
-async function encerrar(eventId: string, status: "PROCESSADO" | "IGNORADO" | "FALHOU", detalhe: string): Promise<void> {
+/** Por que este evento não vira mensagem nenhuma — a tela de automações mostra isto. */
+function motivoDeIgnorar(tipo: string, payload: unknown): string {
+  if (tipo.startsWith("categoria.seo")) return "evento de SEO não notifica ninguém";
+  const envelope = (payload ?? {}) as Record<string, unknown>;
+  const destino = ["clienteEmail", "destinatario", "emailContato", "email", "clienteTelefone", "whatsapp", "lojistaWhatsapp"].find(
+    (c) => typeof envelope[c] === "string" && (envelope[c] as string).trim(),
+  );
+  return destino ? `destinatário inválido em ${destino}` : "sem destinatário no evento";
+}
+
+async function encerrar(
+  eventId: string,
+  status: "PROCESSADO" | "IGNORADO" | "FALHOU",
+  detalhe: string,
+  canaisFeitos: string[],
+): Promise<void> {
   await prisma.automacaoEvento.update({
     where: { eventId },
-    data: { status, detalhe: detalhe.slice(0, 500), concluidoEm: new Date() },
+    data: { status, detalhe: detalhe.slice(0, 500), concluidoEm: new Date(), canaisFeitos },
   });
 }

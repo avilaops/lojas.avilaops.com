@@ -129,10 +129,6 @@ export const TIPOS_COM_EMAIL_PROPRIO = [
 
 export type TipoComEmailProprio = (typeof TIPOS_COM_EMAIL_PROPRIO)[number];
 
-export function temEmailProprio(tipo: string): tipo is TipoComEmailProprio {
-  return (TIPOS_COM_EMAIL_PROPRIO as readonly string[]).includes(tipo);
-}
-
 /**
  * A mensagem que este evento manda, ou `null` quando não manda nenhuma.
  *
@@ -141,14 +137,7 @@ export function temEmailProprio(tipo: string): tipo is TipoComEmailProprio {
  * de contato, comprador do Mercado Livre, que não tem e-mail do lado de cá.
  */
 export function emailDoEvento(envelope: Envelope): EmailDoEvento | null {
-  const tipo = texto(envelope, "tipo");
-  if (!tipo || !temEmailProprio(tipo)) return null;
-
-  switch (tipo) {
-    case "categoria.seo-pendente":
-    case "categoria.seo-publicado":
-      return null;
-
+  switch (texto(envelope, "tipo")) {
     case "lojista.recuperar-senha":
       return recuperarSenha(envelope);
     case "loja.voltou-ao-estoque":
@@ -161,9 +150,176 @@ export function emailDoEvento(envelope: Envelope): EmailDoEvento | null {
       return pedidoEntregue(envelope);
     case "pedido.cancelado":
       return pedidoCancelado(envelope);
+    case "pedido.pago":
+      return pedidoPago(envelope);
+    case "pedido.recusado":
+      return pedidoRecusado(envelope);
+    case "carrinho.abandonado":
+      return carrinhoAbandonado(envelope);
+    case "loja.criada":
+      return lojaCriada(envelope);
+    case "loja.provisionada":
+      return lojaProvisionada(envelope);
     case "loja.relatorio-semanal":
       return relatorioSemanal(envelope);
+    default:
+      // Inclui os de SEO de categoria, que não notificam ninguém.
+      return null;
   }
+}
+
+/** `/pedido/<referencia>` é a página pública do pedido: a referência é o segredo. */
+function linkDoPedido(e: Envelope): string | null {
+  const direto = linkSeguro(texto(e, "linkPedido"));
+  if (direto) return direto;
+  const base = texto(e, "lojaUrl");
+  const referencia = texto(e, "referencia");
+  return base && referencia ? linkSeguro(`${base.replace(/\/+$/, "")}/pedido/${encodeURIComponent(referencia)}`) : null;
+}
+
+function listaDeItens(e: Envelope): string[] {
+  const itens = e.itens;
+  if (!Array.isArray(itens)) return [];
+  return itens
+    .filter((i): i is { nome: string; quantidade: number } => Boolean(i) && typeof i === "object")
+    .map((i) => `${i.quantidade}x ${i.nome}`);
+}
+
+function pedidoPago(e: Envelope): EmailDoEvento | null {
+  const para = texto(e, "clienteEmail");
+  // Pedido de canal externo não tem e-mail do comprador: a conversa é lá.
+  if (!enderecoValido(para)) return null;
+  const loja = exigir(e, "lojaNome");
+  const numero = String(inteiro(e, "numero") ?? exigir(e, "referencia"));
+  const total = inteiro(e, "totalCentavos") ?? 0;
+  const link = linkDoPedido(e);
+  const itens = listaDeItens(e);
+  const linhas = [
+    texto(e, "clienteNome") ? `Olá, ${texto(e, "clienteNome")}!` : "Olá!",
+    ``,
+    `Seu pagamento foi confirmado na ${loja}.`,
+    ``,
+    ...(itens.length ? [...itens, ``] : []),
+    `Total: ${brl(total)}`,
+  ];
+  if (link) linhas.push(``, `Acompanhe pelo pedido: ${link}`);
+  return {
+    para,
+    assunto: `Pedido ${numero} confirmado — ${loja}`,
+    texto: linhas.join("\n"),
+    html: pagina(
+      "Pagamento confirmado",
+      p(`Seu pagamento foi confirmado na <b>${escapar(loja)}</b>.`) +
+        (itens.length ? `<ul style="margin:0 0 12px;padding-left:20px;font-size:15px;line-height:1.6">${itens.map((i) => `<li>${escapar(i)}</li>`).join("")}</ul>` : "") +
+        p(`Total: <b>${brl(total)}</b>`) +
+        (link ? botao(link, "Acompanhar o pedido") : ""),
+      `Pedido ${escapar(numero)} · ${escapar(loja)}`,
+    ),
+    ...daLoja(e),
+  };
+}
+
+function pedidoRecusado(e: Envelope): EmailDoEvento | null {
+  const para = texto(e, "clienteEmail");
+  if (!enderecoValido(para)) return null;
+  const loja = exigir(e, "lojaNome");
+  const url = linkSeguro(texto(e, "lojaUrl"));
+  const motivo = texto(e, "motivo");
+  const linhas = [
+    texto(e, "clienteNome") ? `Olá, ${texto(e, "clienteNome")}!` : "Olá!",
+    ``,
+    `O pagamento do seu pedido na ${loja} não foi aprovado.`,
+  ];
+  if (motivo) linhas.push(`Motivo informado: ${motivo}.`);
+  linhas.push(`Você pode tentar de novo, inclusive com Pix, que é aprovado na hora.`);
+  if (url) linhas.push(``, url);
+  return {
+    para,
+    assunto: `Pagamento não aprovado — ${loja}`,
+    texto: linhas.join("\n"),
+    html: pagina(
+      "Pagamento não aprovado",
+      p(`O pagamento do seu pedido na <b>${escapar(loja)}</b> não foi aprovado.`) +
+        (motivo ? p(`Motivo informado: ${escapar(motivo)}.`) : "") +
+        p("Você pode tentar de novo, inclusive com Pix, que é aprovado na hora.") +
+        (url ? botao(url, "Tentar de novo") : ""),
+      "Se precisar de ajuda, responda este e-mail.",
+    ),
+    ...daLoja(e),
+  };
+}
+
+function carrinhoAbandonado(e: Envelope): EmailDoEvento | null {
+  const para = texto(e, "clienteEmail");
+  if (!enderecoValido(para)) return null;
+  const loja = exigir(e, "lojaNome");
+  const link = linkSeguro(texto(e, "linkCarrinho"));
+  const total = inteiro(e, "totalCentavos");
+  const itens = listaDeItens(e);
+  const linhas = [
+    texto(e, "clienteNome") ? `Olá, ${texto(e, "clienteNome")}!` : "Olá!",
+    ``,
+    `Seu carrinho na ${loja} continua guardado.`,
+    ``,
+    ...(itens.length ? [...itens, ``] : []),
+  ];
+  if (total !== null && total > 0) linhas.push(`Total: ${brl(total)}`);
+  if (link) linhas.push(``, link);
+  return {
+    para,
+    assunto: `Seu carrinho na ${loja} continua guardado`,
+    texto: linhas.join("\n"),
+    html: pagina(
+      "Seu carrinho continua guardado",
+      p(`Na <b>${escapar(loja)}</b>.`) +
+        (itens.length ? `<ul style="margin:0 0 12px;padding-left:20px;font-size:15px;line-height:1.6">${itens.map((i) => `<li>${escapar(i)}</li>`).join("")}</ul>` : "") +
+        (total !== null && total > 0 ? p(`Total: <b>${brl(total)}</b>`) : "") +
+        (link ? botao(link, "Finalizar a compra") : ""),
+      "Se não quiser mais, é só ignorar: nada foi cobrado.",
+    ),
+    ...daLoja(e),
+  };
+}
+
+/** Os dois avisos ao lojista quando a loja nasce e quando fica configurada. */
+function lojaParaOLojista(
+  e: Envelope,
+  opcoes: { assunto: (loja: string) => string; titulo: string; frase: string; rodape: string },
+): EmailDoEvento | null {
+  const para = texto(e, "emailContato");
+  if (!enderecoValido(para)) return null;
+  const loja = exigir(e, "nome");
+  const url = linkSeguro(texto(e, "url"));
+  const linhas = [`Olá!`, ``, opcoes.frase.replace("{loja}", loja)];
+  if (url) linhas.push(``, url);
+  return {
+    para,
+    assunto: opcoes.assunto(loja),
+    texto: linhas.join("\n"),
+    html: pagina(
+      opcoes.titulo,
+      p(opcoes.frase.replace("{loja}", `<b>${escapar(loja)}</b>`)) + (url ? botao(url, "Abrir a loja") : ""),
+      opcoes.rodape,
+    ),
+  };
+}
+
+function lojaCriada(e: Envelope) {
+  return lojaParaOLojista(e, {
+    assunto: (loja) => `${loja} está no ar para você aprovar`,
+    titulo: "Sua loja está no ar",
+    frase: "A loja {loja} já está no ar para você conferir e aprovar.",
+    rodape: "Cadastre produtos e ajuste as cores no painel da plataforma.",
+  });
+}
+
+function lojaProvisionada(e: Envelope) {
+  return lojaParaOLojista(e, {
+    assunto: (loja) => `${loja}: domínio e e-mail configurados`,
+    titulo: "Domínio e e-mail configurados",
+    frase: "O domínio, o DNS e o e-mail da loja {loja} estão configurados. Ela já pode receber pedidos.",
+    rodape: "Qualquer coisa, responda este e-mail.",
+  });
 }
 
 function recuperarSenha(e: Envelope): EmailDoEvento | null {

@@ -2,8 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { Prisma, Tenant } from "@prisma/client";
 import { prisma } from "./db";
 import { urlDaLoja } from "./tenant";
-import { emailConfigurado } from "./email";
-import { temEmailProprio } from "./emails-do-evento";
+import { executamos } from "./acoes-do-evento";
 
 /**
  * Eventos da plataforma → n8n.
@@ -148,11 +147,12 @@ export async function emitir(evento: EventoPlataforma): Promise<void> {
 
   // Quem executa este tipo: a própria plataforma ou o n8n?
   //
-  // Os tipos cujo efeito inteiro é um e-mail saem daqui mesmo — não há por que
-  // atravessar um serviço de fora para mandar uma mensagem que sabemos montar.
-  // Sem SMTP configurado nada disso vale e tudo volta a ir para o n8n, que é o
-  // que faz este caminho novo nascer desligado até alguém ligar.
-  if (temEmailProprio(evento.tipo) && emailConfigurado()) {
+  // Sai daqui mesmo o tipo cujos canais este ambiente consegue cumprir
+  // inteiros (`CANAIS_POR_TIPO` em acoes-do-evento.ts). Faltando o SMTP ou o
+  // token do WhatsApp, o tipo volta inteiro para o n8n — é o que faz este
+  // caminho nascer desligado até alguém ligar, e o que impede metade do aviso
+  // de sumir sem ninguém notar.
+  if (executamos(evento.tipo)) {
     // Sem `await`: quem emitiu está no meio de um checkout ou de um clique no
     // painel, e não pode esperar uma conversa SMTP. A rotina `automacoes.eventos`
     // é a rede de proteção — o que este disparo perder, ela pega em um minuto.

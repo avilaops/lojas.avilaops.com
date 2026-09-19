@@ -47,10 +47,14 @@
   `ROTINAS` (`src/lib/rotinas.ts`) e é o próprio container que dispara — rotina
   nova é entrada no catálogo, não agendamento em serviço de fora; o nome vai
   para a tabela `Rotina`, então renomear é migração (`docs/ROTINAS.md`).
-  Evento cujo efeito inteiro é um e-mail também sai daqui:
-  `TIPOS_COM_EMAIL_PROPRIO` em `src/lib/emails-do-evento.ts`, texto em função
-  pura, envio em `src/lib/email.ts` (`docs/EMAIL.md`). **Tipo que também manda
-  WhatsApp não entra nessa lista** — trazer metade faz o aviso do lojista sumir
-  sem ninguém notar. O que ainda é do n8n é o WhatsApp, e só ele.
+  Executar o evento também: `CANAIS_POR_TIPO` em `src/lib/acoes-do-evento.ts`
+  diz quais canais cada tipo usa, o texto de cada mensagem é função pura
+  (`emails-do-evento.ts`, `whatsapp-do-evento.ts`) e o envio fica em
+  `email.ts` e `whatsapp.ts` (`docs/MENSAGENS.md`). **Tipo só é nosso quando
+  todos os canais dele estão configurados** — executar metade faz o aviso do
+  lojista sumir sem ninguém notar, e canal que já saiu fica em
+  `AutomacaoEvento.canaisFeitos` para a nova tentativa não repetir. O que ainda
+  é do n8n é o que espera (`pix_pendente` aos 30 min, `loja_indicacoes` aos 3
+  dias), não um canal.
 - **Português nos nomes e comentários**, como no resto do monorepo.
 - **TypeScript estrito**; `npm run typecheck` antes de entregar.

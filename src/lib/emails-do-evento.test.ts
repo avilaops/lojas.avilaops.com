@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { brl, DadosInsuficientes, emailDoEvento, escapar, temEmailProprio, TIPOS_COM_EMAIL_PROPRIO } from "./emails-do-evento";
+import { brl, DadosInsuficientes, emailDoEvento, escapar } from "./emails-do-evento";
+import { CANAIS_POR_TIPO, TIPOS_EXECUTAVEIS } from "./acoes-do-evento";
 
 // `toLocaleString` separa "R$" do número com espaço não separável (U+00A0), não com
 // espaço comum: comparar com "R$ 129,90" digitado à mão falha sem ninguém
@@ -13,19 +14,20 @@ const lojista = {
   emailRemetente: "pedidos@padariaaurora.example",
 };
 
-test("o catálogo não inclui tipo que também manda WhatsApp", () => {
-  // Trazer só a metade de e-mail para cá faria o aviso do lojista sumir sem
-  // ninguém notar. Ver docs/WHATSAPP-TEMPLATES.md.
-  for (const comWhatsapp of [
-    "pedido.pago",
-    "pedido.criado",
-    "pedido.recusado",
-    "carrinho.abandonado",
-    "loja.criada",
-    "loja.provisionada",
-  ]) {
-    assert.equal(temEmailProprio(comWhatsapp), false, `${comWhatsapp} não podia estar no catálogo`);
+test("tipo que manda WhatsApp declara o canal, senão sai metade do aviso", () => {
+  // Um tipo com WhatsApp declarado só é executado aqui quando o token existe;
+  // declarar só "email" faria o aviso do lojista sumir sem ninguém notar.
+  // Ver docs/WHATSAPP-TEMPLATES.md.
+  for (const comWhatsapp of ["pedido.pago", "pedido.recusado", "carrinho.abandonado", "loja.criada", "loja.provisionada"]) {
+    const canais = CANAIS_POR_TIPO[comWhatsapp as keyof typeof CANAIS_POR_TIPO] as readonly string[];
+    assert.ok(canais?.includes("whatsapp"), `${comWhatsapp} não declarou o WhatsApp`);
   }
+});
+
+test("pedido.criado continua fora: o aviso dele é espera, não reação", () => {
+  // `pix_pendente` dispara 30 min depois; enquanto não houver rotina para
+  // isso, o tipo inteiro fica no n8n.
+  assert.ok(!(TIPOS_EXECUTAVEIS as readonly string[]).includes("pedido.criado"));
 });
 
 test("tipo desconhecido não vira e-mail nenhum", () => {
@@ -35,7 +37,8 @@ test("tipo desconhecido não vira e-mail nenhum", () => {
 
 test("evento de SEO é do catálogo e não manda e-mail", () => {
   // Está no catálogo para sair da fila em casa, não para notificar alguém.
-  assert.equal(temEmailProprio("categoria.seo-publicado"), true);
+  assert.ok((TIPOS_EXECUTAVEIS as readonly string[]).includes("categoria.seo-publicado"));
+  assert.deepEqual(CANAIS_POR_TIPO["categoria.seo-publicado"], []);
   assert.equal(emailDoEvento({ tipo: "categoria.seo-publicado", slug: "x" }), null);
 });
 
@@ -238,10 +241,11 @@ test("escapar cobre os quatro caracteres que quebram marcação", () => {
   assert.equal(escapar('<a href="x">&</a>'), "&lt;a href=&quot;x&quot;&gt;&amp;&lt;/a&gt;");
 });
 
-test("todo tipo do catálogo é tratado no switch", () => {
-  // Acrescentar tipo na lista e esquecer o `case` devolveria `undefined` — o
+test("todo tipo com canal de e-mail é tratado no switch", () => {
+  // Acrescentar tipo na tabela e esquecer o `case` devolveria `undefined` — o
   // e-mail simplesmente não sairia, e o evento fecharia como ignorado.
-  for (const tipo of TIPOS_COM_EMAIL_PROPRIO) {
+  const comEmail = TIPOS_EXECUTAVEIS.filter((t) => (CANAIS_POR_TIPO[t] as readonly string[]).includes("email"));
+  for (const tipo of comEmail) {
     let resultado: unknown = "não chamou";
     try {
       resultado = emailDoEvento({ tipo });
