@@ -43,7 +43,11 @@
   próprio domínio, sem IP nem user-agent (`src/lib/atribuicao.ts`). Ligar a visita
   de hoje à de ontem é perfil e depende de "aceito" no banner. Número que a
   medição não tem não vira zero na tela: vira a explicação de por que não existe.
-- **Automação é n8n.** Código emite evento (`src/lib/eventos.ts`); o que fazer
-  com ele é fluxo.
+- **O relógio é nosso; o envio do evento ainda não.** O que roda sozinho está
+  em `ROTINAS` (`src/lib/rotinas.ts`) e é o próprio container que dispara —
+  rotina nova é uma entrada no catálogo, não um agendamento em serviço de fora.
+  O nome vai para a tabela `Rotina`, então renomear é migração. Emitir evento
+  (`src/lib/eventos.ts`) continua sendo código e executá-lo continua sendo
+  fluxo do n8n, até isso também vir para dentro. Ver `docs/ROTINAS.md`.
 - **Português nos nomes e comentários**, como no resto do monorepo.
 - **TypeScript estrito**; `npm run typecheck` antes de entregar.
