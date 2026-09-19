@@ -179,10 +179,24 @@ const TEMPO_LIMITE_MS = 20_000;
 /** Uma conversa SMTP, linha a linha, com o servidor. */
 class Conversa {
   private acumulado = "";
+  /**
+   * Respostas completas que chegaram antes de alguém pedir.
+   *
+   * Sem esta fila, uma resposta que chegasse entre o `connect` e o primeiro
+   * `esperar()` seria jogada fora, e o envio ficaria pendurado até o tempo
+   * limite. Na ordem de eventos do Node isso não acontece hoje, mas depender
+   * de microtarefa vir antes de E/S é o tipo de coisa que quebra num upgrade
+   * e aparece como "o e-mail às vezes não sai".
+   */
+  private recebidas: string[] = [];
   private aguardando: ((resposta: string) => void) | null = null;
   private erro: Error | null = null;
 
   constructor(private socket: Socket | TLSSocket) {
+    this.escutar(socket);
+  }
+
+  private escutar(socket: Socket | TLSSocket) {
     socket.setEncoding("utf8");
     socket.setTimeout(TEMPO_LIMITE_MS);
     socket.on("data", (pedaco: string) => this.receber(pedaco));
@@ -201,7 +215,8 @@ class Conversa {
     this.acumulado = "";
     const espera = this.aguardando;
     this.aguardando = null;
-    espera?.(resposta);
+    if (espera) espera(resposta);
+    else this.recebidas.push(resposta);
   }
 
   private falhar(e: Error) {
@@ -212,17 +227,19 @@ class Conversa {
   }
 
   trocarSocket(socket: TLSSocket) {
+    // Todos os ouvintes, não só o de dados: o socket de baixo continua vivo
+    // debaixo do TLS, e um `error` dele rejeitaria a espera do socket novo.
     this.socket.removeAllListeners("data");
+    this.socket.removeAllListeners("error");
+    this.socket.removeAllListeners("timeout");
     this.socket = socket;
-    socket.setEncoding("utf8");
-    socket.setTimeout(TEMPO_LIMITE_MS);
-    socket.on("data", (pedaco: string) => this.receber(pedaco));
-    socket.on("error", (e) => this.falhar(e));
-    socket.on("timeout", () => this.falhar(new FalhaDeEnvio("SMTP não respondeu a tempo")));
+    this.escutar(socket);
   }
 
   esperar(): Promise<string> {
     if (this.erro) return Promise.reject(this.erro);
+    const guardada = this.recebidas.shift();
+    if (guardada !== undefined) return Promise.resolve(guardada);
     return new Promise((resolve, reject) => {
       this.aguardando = (resposta) => (this.erro ? reject(this.erro) : resolve(resposta));
     });

@@ -122,13 +122,21 @@ async function cumprir(
     try {
       saiu.push(await executar());
       feitos.push(canal);
-      // Grava assim que sai: se o processo morrer entre um canal e outro, a
-      // próxima tentativa já sabe o que não precisa repetir.
-      await prisma.automacaoEvento.update({ where: { eventId }, data: { canaisFeitos: feitos } });
     } catch (erro) {
       falha = `${canal}: ${erro instanceof Error ? erro.message : "falha inesperada"}`;
       // Os outros canais ainda são tentados: WhatsApp fora do ar não pode
       // impedir a confirmação de pedido de chegar ao comprador.
+      continue;
+    }
+    // Gravar fora do `try` de cima, e com `catch` próprio: a mensagem já saiu,
+    // e um erro de banco aqui não pode ser contado como "o canal falhou" —
+    // isso faria a nova tentativa mandar de novo para quem já recebeu. Falhar
+    // ao gravar é raro e o pior caso continua sendo uma repetição, mas não
+    // deve ser causado por confundir os dois erros.
+    try {
+      await prisma.automacaoEvento.update({ where: { eventId }, data: { canaisFeitos: feitos } });
+    } catch (erro) {
+      console.error("[eventos] canal saiu mas não registrei", eventId, canal, erro);
     }
   }
 
