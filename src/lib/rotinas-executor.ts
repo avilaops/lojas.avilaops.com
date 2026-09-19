@@ -14,6 +14,7 @@ import { emitirRelatoriosSemanais } from "./relatorio";
 import { processarSeoCategoriasPendentes } from "./seo-categorias";
 import { processarAvisosMl } from "./mercadolivre-avisos";
 import { rodarMercadoLivre } from "./mercadolivre-publicacao";
+import { processarEventosProprios } from "./automacoes-consumo";
 
 /**
  * Quem faz o trabalho de cada rotina.
@@ -30,6 +31,9 @@ const TRABALHOS: Record<NomeDeRotina, () => Promise<unknown>> = {
   // fila crescer mais rápido do que é esvaziada.
   "mercadolivre.avisos": () => processarAvisosMl({ limite: 100 }),
   "mercadolivre.rodar": () => rodarMercadoLivre({}),
+  // Falha de envio não derruba a rotina: ela vira FALHOU no próprio evento,
+  // que é onde a tela de automações procura. O resumo carrega a contagem.
+  "automacoes.eventos": () => processarEventosProprios({ limite: 50 }),
   "carrinhos.verificar": () => verificarCarrinhosAbandonados(),
   "estoque.avisos": () => avisarQuemEsperava(),
   "pedidos.verificar": () => reconciliarPagamentosPendentes(),

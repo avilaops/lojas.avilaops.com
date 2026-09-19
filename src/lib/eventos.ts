@@ -2,6 +2,8 @@ import { randomUUID } from "node:crypto";
 import type { Prisma, Tenant } from "@prisma/client";
 import { prisma } from "./db";
 import { urlDaLoja } from "./tenant";
+import { emailConfigurado } from "./email";
+import { temEmailProprio } from "./emails-do-evento";
 
 /**
  * Eventos da plataforma → n8n.
@@ -142,6 +144,23 @@ export async function emitir(evento: EventoPlataforma): Promise<void> {
     });
   } catch (erro) {
     console.error("[eventos] não registrou", eventId, erro);
+  }
+
+  // Quem executa este tipo: a própria plataforma ou o n8n?
+  //
+  // Os tipos cujo efeito inteiro é um e-mail saem daqui mesmo — não há por que
+  // atravessar um serviço de fora para mandar uma mensagem que sabemos montar.
+  // Sem SMTP configurado nada disso vale e tudo volta a ir para o n8n, que é o
+  // que faz este caminho novo nascer desligado até alguém ligar.
+  if (temEmailProprio(evento.tipo) && emailConfigurado()) {
+    // Sem `await`: quem emitiu está no meio de um checkout ou de um clique no
+    // painel, e não pode esperar uma conversa SMTP. A rotina `automacoes.eventos`
+    // é a rede de proteção — o que este disparo perder, ela pega em um minuto.
+    const { processarEventosProprios } = await import("./automacoes-consumo");
+    void processarEventosProprios({ eventId }).catch((erro) => {
+      console.error("[eventos] consumo imediato falhou", eventId, erro);
+    });
+    return;
   }
 
   await entregar(envelope, eventId, evento.tipo);

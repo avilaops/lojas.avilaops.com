@@ -77,6 +77,15 @@ export const ROTINAS = {
     travaMinutos: 30,
     falhasAteAlerta: 3,
   },
+  "automacoes.eventos": {
+    titulo: "Fila de eventos",
+    descricao: "Executa os eventos que a plataforma mesma resolve, hoje os que viram e-mail",
+    cadencia: { tipo: "intervalo", minutos: 1 },
+    travaMinutos: 5,
+    // A cada minuto: é por aqui que sai a recuperação de senha quando o
+    // disparo imediato não saiu (processo reiniciado, SMTP fora do ar).
+    falhasAteAlerta: 2,
+  },
   "carrinhos.verificar": {
     titulo: "Carrinho abandonado",
     descricao: "Marca carrinho parado há 45 min e emite carrinho.abandonado",

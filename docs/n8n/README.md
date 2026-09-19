@@ -11,8 +11,8 @@ derrubou uma revisão inteira (ver `ROTINAS.md`).
 | Camada | Faz | Não faz |
 |---|---|---|
 | Painel do Lojas | tela, formulário, estado, botão de reenviar | chamar serviço externo |
-| Backend do Lojas | valida, persiste, emite o evento com outbox, expõe endpoints internos, transações de pedido/estoque/saldo | mandar WhatsApp ou e-mail |
-| n8n | recebe o evento, reivindica, executa o efeito externo (Meta, SMTP, Todoist), encerra o ciclo; rotinas agendadas chamam endpoints internos | escrever direto no Postgres do Lojas |
+| Backend do Lojas | valida, persiste, emite o evento com outbox, expõe endpoints internos, transações de pedido/estoque/saldo; **agenda as próprias rotinas** (`docs/ROTINAS.md`) e **manda os próprios e-mails** (`docs/EMAIL.md`) | mandar WhatsApp |
+| n8n | recebe o evento, reivindica, executa o efeito externo que ainda é dele — WhatsApp (Meta) e Todoist —, encerra o ciclo | escrever direto no Postgres do Lojas; agendar rotina; mandar os e-mails que a plataforma já manda |
 | Postgres do Lojas | fonte oficial: `Pedido`, `Pagamento`, `AutomacaoEvento` | depender do histórico de execução do n8n |
 
 ## Fluxos
@@ -37,6 +37,11 @@ Regras: dinheiro em centavos inteiros; `itens` como array **e** `itensTexto`;
 plataforma e o n8n o devolve no `reivindicar`. A lista de campos obrigatórios
 por tipo vive no nó `Validar Contrato` e em `src/lib/eventos.ts`
 (`EventoPlataforma`); os dois têm que concordar.
+
+**Desde 19/09/2026 nem todo tipo chega aqui.** Os que só viram e-mail são
+executados pela própria plataforma e nunca são enviados ao webhook — a lista é
+`TIPOS_COM_EMAIL_PROPRIO` em `src/lib/emails-do-evento.ts`, e `docs/EMAIL.md`
+explica a divisão. Os nós desses ramos no fluxo podem sair.
 
 Tipos conhecidos (23): `loja.criada`, `loja.provisionada`,
 `loja.provisionamento-falhou`, `loja.ativada`, `loja.identidade-atualizada`,
