@@ -137,10 +137,19 @@ export async function processarAvisosMl(opcoes: { limite?: number } = {}): Promi
       if (!aviso) throw new Error("Aviso sem recurso: nada a buscar no Mercado Livre.");
       if (!loja) throw new Error(`A loja ${evento.slug} não existe mais.`);
 
+      // O que a venda deixou por resolver acompanha o evento até o painel. O
+      // resumo da rotina não serve para isso: ele volta para quem a chamou (o
+      // n8n) e some. Quem precisa ler "o estoque não foi baixado porque não
+      // reconheci a variação" é o lojista, e o lugar dele é Automações.
+      let porResolver = "";
+
       if (aviso.topico === "orders_v2" || aviso.topico === "orders") {
         const r = await registrarPedidoMl(loja, aviso.id);
         resumo.pedidos++;
-        if (r.avisos.length) resumo.detalhes.push({ loja: loja.slug, topico: aviso.topico, resultado: r.avisos.join(" ") });
+        if (r.avisos.length) {
+          porResolver = r.avisos.join(" ");
+          resumo.detalhes.push({ loja: loja.slug, topico: aviso.topico, resultado: porResolver });
+        }
       } else if (aviso.topico === "items") {
         await atualizarAnuncio(loja, aviso.id, resumo);
       } else if (aviso.topico === "shipments") {
@@ -162,7 +171,14 @@ export async function processarAvisosMl(opcoes: { limite?: number } = {}): Promi
 
       await prisma.automacaoEvento.update({
         where: { eventId: evento.eventId },
-        data: { status: "PROCESSADO", detalhe: null, concluidoEm: new Date() },
+        data: {
+          status: "PROCESSADO",
+          // Processado com ressalva continua sendo processado: a venda entrou.
+          // Apagar o detalhe aqui era jogar fora justamente o que o lojista
+          // precisa agir em cima.
+          detalhe: porResolver ? porResolver.slice(0, 1000) : null,
+          concluidoEm: new Date(),
+        },
       });
     } catch (erro) {
       const mensagem = (erro instanceof MercadoLivreNaoConectado || erro instanceof Error ? erro.message : "Falha desconhecida.").slice(0, 1000);

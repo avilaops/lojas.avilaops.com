@@ -160,10 +160,20 @@ silêncio.
 3. **Apresentação única.** Produto simples não tem o que escolher.
 4. **Não identificada.** Devolve nulo, de propósito.
 
-No quarto caso **o estoque não é baixado**, e o pedido carrega um aviso que
-diz o que fazer: informar o SKU da variação no anúncio do ML, igual ao da
-variante na loja. Não baixar é visível — o lojista estranha o número; baixar
-errado é invisível até o cancelamento.
+No quarto caso **o estoque não é baixado**, e o aviso diz o que fazer:
+informar o SKU da variação no anúncio do ML, igual ao da variante na loja. Não
+baixar é visível — o lojista estranha o número; baixar errado é invisível até o
+cancelamento.
+
+Esse aviso chega ao lojista em **Configurações → Automações**, no próprio
+evento, em âmbar. Antes ele existia só no resumo que a rotina devolve para o
+n8n, e o evento era gravado com `detalhe: null` — ou seja, o que pedia ação era
+exatamente o que se apagava. Evento processado com ressalva continua
+processado: a venda entrou; o que ficou por fazer é que precisa aparecer.
+
+Eventos `IGNORADO` continuam sem detalhe na tela, de propósito: o deles é
+sempre "tópico X ainda não tem tratamento", chega em volume e não tem ação do
+outro lado. Âmbar em toda linha é âmbar que se aprende a ignorar.
 
 Quem respeita isso do outro lado é `confirmarEstoqueDoPedido`: linha sem
 variante só vira a padrão quando a padrão é a **única** apresentação ativa.
