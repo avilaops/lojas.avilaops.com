@@ -53,19 +53,52 @@ A tabela viva é `CANAIS_POR_TIPO`, em `src/lib/acoes-do-evento.ts`.
 WhatsApp — porque executar metade faria o aviso do lojista sumir sem ninguém
 notar. Um teste cobra que nenhum tipo com WhatsApp declare só o e-mail.
 
-### O que ainda é do n8n
+### Os dois avisos que esperam
 
-Dois avisos, e os dois pelo mesmo motivo: **não são reação a um evento, são
-espera.**
+`pix_pendente` (30 min depois do pedido) e `loja_indicacoes` (3 dias depois de
+a loja entrar no ar) **não são reação a um evento**: são espera. No n8n isso
+era um nó de espera pendurado em `pedido.criado` e em `loja.ativada`.
 
-| Template | Quando | O que falta |
+Aqui viraram varredura (`src/lib/avisos-que-esperam.ts`), porque varredura
+sobrevive a reinício de container e espera pendurada em execução não:
+
+| Rotina | Cadência | O que procura |
 |---|---|---|
-| `pix_pendente` | 30 min depois de `pedido.criado` com Pix | uma rotina que varra pedidos aguardando pagamento |
-| `loja_indicacoes` | 3 dias depois de `loja.ativada`, se a loja continuar ATIVA | uma rotina que varra lojas ativadas há 3 dias |
+| `pix.lembrete` | a cada 10 min | pedido Pix `AGUARDANDO_PAGAMENTO` criado entre 30 min e 24 h atrás |
+| `loja.indicacoes` | todo dia às 10h | loja com `loja.ativada` emitido há 3 a 5 dias e que **continua** ATIVA |
 
-Por isso `pedido.criado` não está na tabela: o efeito dele não acontece na
-emissão. As duas rotinas são o próximo passo, e aí o fluxo do n8n pode ser
-desligado.
+Duas decisões dentro delas:
+
+- **A data de entrada no ar não é coluna: é o próprio `loja.ativada`.** Ele sai
+  uma vez só, na virada `PROVISIONANDO → ATIVA`, e a caixa de saída serve de
+  registro. A regra "conta a partir de quando a loja ficou no ar" não depende
+  de ninguém lembrar de preencher um campo.
+- **Quem já foi avisado está na própria caixa de saída**, pelo `correlationId`.
+  Sem coluna nova, e o reenvio manual pela tela continua funcionando como em
+  qualquer outro evento.
+
+**As duas dormem enquanto `N8N_WEBHOOK_URL` existir**, e dizem isso no resumo
+da rotina em vez de parecer que rodaram e não acharam ninguém. O fluxo continua
+recebendo `pedido.criado` e `loja.ativada` e fazendo o que sempre fez; ligar os
+dois lados ao mesmo tempo mandaria o lembrete de Pix duas vezes, e a segunda
+ninguém saberia de onde veio.
+
+Também dormem quando nenhum canal do tipo está configurado — emitir um evento
+que ninguém vai executar só encheria a fila.
+
+### Como desligar o n8n
+
+1. Pôr `SMTP_*` e `WHATSAPP_*` no ambiente do Lojas.
+2. Conferir em `GET /api/admin/rotinas` que `automacoes.eventos` está rodando e
+   em Configurações → Automações que os eventos estão fechando `PROCESSADO`.
+3. **Tirar `N8N_WEBHOOK_URL`.** É isso que acorda `pix.lembrete` e
+   `loja.indicacoes`.
+
+Depois do passo 3, os tipos que ainda não têm canal aqui (`loja.ativada`,
+`loja.suspensa`, `avaliacao.recebida`, `canal.pergunta-recebida` e os de
+mensalidade) ficam `EMITIDO` na fila, visíveis na tela de Automações, sem
+efeito externo. Eles são o que sobra para trazer depois — e ficar parado e
+visível é melhor do que sair por um caminho que ninguém monitora.
 
 ## Quando um evento tem dois canais
 

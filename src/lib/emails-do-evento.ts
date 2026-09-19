@@ -160,6 +160,10 @@ export function emailDoEvento(envelope: Envelope): EmailDoEvento | null {
       return lojaCriada(envelope);
     case "loja.provisionada":
       return lojaProvisionada(envelope);
+    case "pedido.pix-pendente":
+      return pixPendente(envelope);
+    case "loja.indicacoes":
+      return indicacoes(envelope);
     case "loja.relatorio-semanal":
       return relatorioSemanal(envelope);
     default:
@@ -446,6 +450,63 @@ function pedidoCancelado(e: Envelope) {
       .filter(Boolean)
       .join(" ") || undefined,
   });
+}
+
+function pixPendente(e: Envelope): EmailDoEvento | null {
+  const para = texto(e, "clienteEmail");
+  if (!enderecoValido(para)) return null;
+  const loja = exigir(e, "lojaNome");
+  const numero = String(inteiro(e, "numero") ?? exigir(e, "referencia"));
+  const total = inteiro(e, "totalCentavos") ?? 0;
+  const link = linkDoPedido(e);
+  const linhas = [
+    texto(e, "clienteNome") ? `Olá, ${texto(e, "clienteNome")}!` : "Olá!",
+    ``,
+    `Seu pedido na ${loja} ainda está aguardando o pagamento do Pix.`,
+    `Total: ${brl(total)}`,
+  ];
+  if (link) linhas.push(``, `O código está aqui: ${link}`);
+  return {
+    para,
+    assunto: `Pedido ${numero}: o Pix ainda não foi pago`,
+    texto: linhas.join("\n"),
+    html: pagina(
+      "O Pix ainda não foi pago",
+      p(`Seu pedido na <b>${escapar(loja)}</b> continua aguardando o pagamento.`) +
+        p(`Total: <b>${brl(total)}</b>`) +
+        (link ? botao(link, "Ver o código Pix") : ""),
+      "O código expira depois de um tempo. Se o seu já expirou, responda este e-mail.",
+    ),
+    ...daLoja(e),
+  };
+}
+
+function indicacoes(e: Envelope): EmailDoEvento | null {
+  const para = texto(e, "emailContato");
+  if (!enderecoValido(para)) return null;
+  const loja = exigir(e, "nome");
+  const texto0 = [
+    `Olá!`,
+    ``,
+    `Tudo certo com a ${loja}?`,
+    ``,
+    `Para manter o valor promocional do setup, combinamos 2 indicações (nome e`,
+    `telefone) de quem também pode querer vender pela internet. Pode responder`,
+    `este e-mail com elas. Obrigado!`,
+  ].join("\n");
+  return {
+    para,
+    assunto: `${loja}: as duas indicações que combinamos`,
+    texto: texto0,
+    html: pagina(
+      "Como está indo?",
+      p(`Tudo certo com a <b>${escapar(loja)}</b>?`) +
+        p(
+          "Para manter o valor promocional do setup, combinamos 2 indicações (nome e telefone) de quem também pode querer vender pela internet. É só responder este e-mail.",
+        ),
+      "Obrigado!",
+    ),
+  };
 }
 
 function relatorioSemanal(e: Envelope): EmailDoEvento | null {

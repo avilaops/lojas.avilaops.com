@@ -33,6 +33,9 @@ export const CANAIS_POR_TIPO = {
   "carrinho.abandonado": ["email", "whatsapp"],
   "loja.criada": ["email", "whatsapp"],
   "loja.provisionada": ["email", "whatsapp"],
+  // Os dois que esperam: emitidos por rotina, não pelo checkout.
+  "pedido.pix-pendente": ["email", "whatsapp"],
+  "loja.indicacoes": ["email", "whatsapp"],
   // Não notificam ninguém: entram para encerrar o ciclo em casa, sem viagem.
   "categoria.seo-pendente": [],
   "categoria.seo-publicado": [],

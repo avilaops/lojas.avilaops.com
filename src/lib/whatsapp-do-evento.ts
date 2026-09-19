@@ -36,12 +36,10 @@ function reaisSemSimbolo(centavos: number): string {
 }
 
 /**
- * Os templates ligados a um evento direto.
- *
- * `loja_indicacoes` (3 dias depois de ativar) e `pix_pendente` (30 min depois
- * do pedido) ficam de fora: não são reação a um evento, são espera. Enquanto
- * não existir rotina que os dispare, esses dois continuam no n8n — e é por
- * isso que `pedido.criado` não está na lista de tipos que executamos.
+ * `pix_pendente` e `loja_indicacoes` não nascem de um evento do checkout: são
+ * espera, e quem os emite são as rotinas `pix.lembrete` e `loja.indicacoes`.
+ * Por isso `pedido.criado` não está aqui — o efeito dele não acontece na
+ * emissão.
  */
 export function whatsappDoEvento(envelope: Envelope): MensagemWhatsapp | null {
   const tipo = texto(envelope, "tipo");
@@ -71,6 +69,25 @@ export function whatsappDoEvento(envelope: Envelope): MensagemWhatsapp | null {
       const itens = texto(envelope, "itensTexto") ?? "ver no painel";
       if (!numero) return null;
       return { para: para!, template: "pedido_pago_lojista", parametros: [numero, reaisSemSimbolo(total), cliente, itens] };
+    }
+
+    case "pedido.pix-pendente": {
+      const para = texto(envelope, "clienteTelefone");
+      const loja = texto(envelope, "lojaNome");
+      const total = inteiro(envelope, "totalCentavos");
+      if (!numeroParaMeta(para) || !loja || total === null) return null;
+      return {
+        para: para!,
+        template: "pix_pendente",
+        parametros: [primeiroNome(texto(envelope, "clienteNome")) || "tudo bem", loja, reaisSemSimbolo(total)],
+      };
+    }
+
+    case "loja.indicacoes": {
+      const para = texto(envelope, "whatsapp");
+      const loja = texto(envelope, "nome");
+      if (!numeroParaMeta(para) || !loja) return null;
+      return { para: para!, template: "loja_indicacoes", parametros: [loja] };
     }
 
     case "pedido.recusado": {

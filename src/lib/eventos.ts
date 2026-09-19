@@ -94,6 +94,16 @@ export type EventoPlataforma =
    * painel — responder rápido é o que converte no Mercado Livre.
    */
   | ({ tipo: "canal.pergunta-recebida"; slug: string; canal: string; perguntaId: string; produtoNome: string; texto: string; linkPainel: string } & Lojista)
+  /**
+   * O Pix nasceu e não foi pago. Emitido pela rotina `pix.lembrete`, 30 min
+   * depois do pedido — não pelo checkout: é espera, não reação.
+   */
+  | ({ tipo: "pedido.pix-pendente"; slug: string; referencia: string; numero?: number; totalCentavos: number; clienteNome: string; clienteEmail: string; clienteTelefone: string; linkPedido: string } & Lojista)
+  /**
+   * Três dias depois de a loja entrar no ar, e só se ela continuar ATIVA.
+   * Emitido pela rotina `loja.indicacoes`.
+   */
+  | { tipo: "loja.indicacoes"; slug: string; nome: string; url: string; emailContato: string | null; whatsapp: string | null }
   | ({ tipo: "pedido.cancelado"; slug: string; referencia: string; numero: number; clienteNome: string; clienteEmail: string; clienteTelefone: string; totalCentavos: number; motivo: string; linkPedido: string } & Lojista);
 
 export type TipoEvento = EventoPlataforma["tipo"];
@@ -164,6 +174,19 @@ export async function emitir(evento: EventoPlataforma): Promise<void> {
   }
 
   await entregar(envelope, eventId, evento.tipo);
+}
+
+/**
+ * O n8n ainda está no circuito?
+ *
+ * `N8N_WEBHOOK_URL` é o sinal: enquanto ela existir, o fluxo recebe os tipos
+ * que ainda são dele e faz o que sempre fez. As rotinas que substituem os dois
+ * avisos que **esperam** (`pix.lembrete`, `loja.indicacoes`) dormem enquanto
+ * isso — senão o comprador receberia o lembrete de Pix duas vezes, uma de cada
+ * lado, e ninguém saberia de onde veio a segunda.
+ */
+export function n8nAindaExecuta(): boolean {
+  return Boolean((process.env.N8N_WEBHOOK_URL ?? "").trim());
 }
 
 async function entregar(envelope: Record<string, unknown>, eventId: string, tipo: string): Promise<boolean> {
