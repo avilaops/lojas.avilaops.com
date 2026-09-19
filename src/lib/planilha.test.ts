@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import * as zlib from "node:zlib";
 import { inflateRawSync } from "node:zlib";
-import { COLUNAS_PRODUTO, lerCsvProdutos } from "./planilha-produtos";
+import { COLUNAS_PRODUTO, lerCsvProdutos, produtosDeLinhas } from "./planilha-produtos";
+import { ErroPlanilha, linhasDeXlsx } from "./xlsx-leitor";
 import { linhaDoProduto, montarPlanilha, type ProdutoDePlanilha } from "./exportar";
 import { letraDaColuna, montarXlsx } from "./xlsx";
 
@@ -147,4 +149,157 @@ test("a coluna 27 é AA", () => {
   assert.equal(letraDaColuna(25), "Z");
   assert.equal(letraDaColuna(26), "AA");
   assert.equal(letraDaColuna(27), "AB");
+});
+
+/**
+ * O caminho de volta: o arquivo que o painel baixa tem que ser aceito de
+ * volta pela importação. O Excel grava o texto numa tabela compartilhada
+ * (`sharedStrings`), coisa que o nosso escritor não faz — então o leitor é
+ * testado contra os dois jeitos, senão ele só sabe ler o que ele mesmo
+ * escreveu.
+ */
+
+/** Zip sem compressão, para montar no teste a planilha que o Excel grava. */
+function zipDeTeste(arquivos: Array<{ nome: string; texto: string }>): Buffer {
+  const locais: Buffer[] = [];
+  const central: Buffer[] = [];
+  let deslocamento = 0;
+  for (const a of arquivos) {
+    const nome = Buffer.from(a.nome, "utf8");
+    const dados = Buffer.from(a.texto, "utf8");
+    const crc = zlib.crc32 ? zlib.crc32(dados) : crc32(dados);
+    const cab = Buffer.alloc(30);
+    cab.writeUInt32LE(0x04034b50, 0);
+    cab.writeUInt16LE(20, 4);
+    cab.writeUInt16LE(0, 6);
+    cab.writeUInt16LE(0, 8); // sem compressão
+    cab.writeUInt32LE(crc, 14);
+    cab.writeUInt32LE(dados.length, 18);
+    cab.writeUInt32LE(dados.length, 22);
+    cab.writeUInt16LE(nome.length, 26);
+    locais.push(cab, nome, dados);
+
+    const ent = Buffer.alloc(46);
+    ent.writeUInt32LE(0x02014b50, 0);
+    ent.writeUInt16LE(20, 4);
+    ent.writeUInt16LE(20, 6);
+    ent.writeUInt16LE(0, 10);
+    ent.writeUInt32LE(crc, 16);
+    ent.writeUInt32LE(dados.length, 20);
+    ent.writeUInt32LE(dados.length, 24);
+    ent.writeUInt16LE(nome.length, 28);
+    ent.writeUInt32LE(deslocamento, 42);
+    central.push(ent, nome);
+    deslocamento += cab.length + nome.length + dados.length;
+  }
+  const diretorio = Buffer.concat(central);
+  const fim = Buffer.alloc(22);
+  fim.writeUInt32LE(0x06054b50, 0);
+  fim.writeUInt16LE(arquivos.length, 8);
+  fim.writeUInt16LE(arquivos.length, 10);
+  fim.writeUInt32LE(diretorio.length, 12);
+  fim.writeUInt32LE(deslocamento, 16);
+  return Buffer.concat([...locais, diretorio, fim]);
+}
+
+function crc32(dados: Buffer): number {
+  let c = 0xffffffff;
+  for (const b of dados) {
+    c ^= b;
+    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+  }
+  return (c ^ 0xffffffff) >>> 0;
+}
+
+const ABERTURA = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+
+/** Como o Excel grava: texto na tabela compartilhada, número solto. */
+function planilhaDoExcel(compartilhados: string[], linhas: string[]): Buffer {
+  return zipDeTeste([
+    { nome: "[Content_Types].xml", texto: `${ABERTURA}<Types/>` },
+    { nome: "_rels/.rels", texto: `${ABERTURA}<Relationships/>` },
+    {
+      nome: "xl/workbook.xml",
+      texto: `${ABERTURA}<workbook xmlns:r="r"><sheets><sheet name="Planilha1" sheetId="1" r:id="rId7"/></sheets></workbook>`,
+    },
+    {
+      nome: "xl/_rels/workbook.xml.rels",
+      texto: `${ABERTURA}<Relationships><Relationship Id="rId7" Target="worksheets/folha.xml"/></Relationships>`,
+    },
+    {
+      nome: "xl/sharedStrings.xml",
+      texto: `${ABERTURA}<sst count="${compartilhados.length}">${compartilhados.map((t) => `<si><t>${t}</t></si>`).join("")}</sst>`,
+    },
+    { nome: "xl/worksheets/folha.xml", texto: `${ABERTURA}<worksheet><sheetData>${linhas.join("")}</sheetData></worksheet>` },
+  ]);
+}
+
+test("o .xlsx que o painel baixa volta inteiro pela importação", () => {
+  const bytes = montarPlanilha([[...COLUNAS_PRODUTO], linhaDoProduto(PRODUTO)], "xlsx", "Produtos") as Uint8Array;
+  const { produtos, erros } = produtosDeLinhas(linhasDeXlsx(Buffer.from(bytes)));
+  assert.deepEqual(erros, []);
+  const p = produtos[0];
+  assert.equal(p.nome, PRODUTO.nome);
+  assert.equal(p.precoCentavos, 5990);
+  // O que o CSV estraga no Excel e o .xlsx guarda: o zero à esquerda.
+  assert.equal(p.gtin, "0789123456789");
+  assert.equal(p.sku, "ROL6205");
+  assert.equal(p.estoque, 12);
+  assert.equal(p.pesoKg, 0.13);
+  assert.equal(p.ativo, true);
+  assert.equal(p.destaque, true);
+});
+
+test("planilha gravada pelo Excel (texto compartilhado) é lida igual", () => {
+  const arquivo = planilhaDoExcel(
+    ["nome", "preco", "sku", "Rolamento 6205 2RS", "ROL6205"],
+    [
+      '<row r="1"><c r="A1" t="s"><v>0</v></c><c r="B1" t="s"><v>1</v></c><c r="C1" t="s"><v>2</v></c></row>',
+      '<row r="2"><c r="A2" t="s"><v>3</v></c><c r="B2"><v>59.9</v></c><c r="C2" t="s"><v>4</v></c></row>',
+    ],
+  );
+  const { produtos, erros } = produtosDeLinhas(linhasDeXlsx(arquivo));
+  assert.deepEqual(erros, []);
+  assert.equal(produtos[0].nome, "Rolamento 6205 2RS");
+  assert.equal(produtos[0].precoCentavos, 5990);
+  assert.equal(produtos[0].sku, "ROL6205");
+});
+
+test("célula vazia no meio da linha não empurra as colunas", () => {
+  // Sem respeitar o `r="C2"`, o preço cairia na coluna da categoria e o
+  // catálogo inteiro entraria com o preço errado.
+  const arquivo = planilhaDoExcel(
+    ["nome", "categoria", "preco", "Caneca"],
+    [
+      '<row r="1"><c r="A1" t="s"><v>0</v></c><c r="B1" t="s"><v>1</v></c><c r="C1" t="s"><v>2</v></c></row>',
+      '<row r="2"><c r="A2" t="s"><v>3</v></c><c r="C2"><v>34.9</v></c></row>',
+    ],
+  );
+  const { produtos } = produtosDeLinhas(linhasDeXlsx(arquivo));
+  assert.equal(produtos[0].nome, "Caneca");
+  assert.equal(produtos[0].precoCentavos, 3490);
+  assert.equal(produtos[0].categoria, undefined);
+});
+
+test("arquivo que não é planilha vira recado, não exceção crua", () => {
+  assert.throws(() => linhasDeXlsx(Buffer.from("isto é um pdf, não uma planilha")), ErroPlanilha);
+});
+
+test("preço decimal de planilha não vira bilhão", () => {
+  // 79,90 guardado como ponto flutuante numa planilha vira "79.90000000000001".
+  // A regra antiga apagava o ponto seguido de três dígitos e o preço virava
+  // 7.990.000.000.000.001 centavos: o banco recusava a importação inteira.
+  const lido = (preco: string) => lerCsvProdutos(`nome;preco\r\nX;${preco}\r\n`).produtos[0]?.precoCentavos;
+  assert.equal(lido("79.90000000000001"), 7990);
+  assert.equal(lido("59,90"), 5990);
+  assert.equal(lido("1.234,56"), 123456);
+  assert.equal(lido("R$ 1.234,56"), 123456);
+  assert.equal(lido("1234.56"), 123456);
+});
+
+test("preço maior que o banco aguenta vira linha recusada, não erro de gravação", () => {
+  const { produtos, erros } = lerCsvProdutos("nome;preco\r\nCaro;99999999999\r\nNormal;10,00\r\n");
+  assert.equal(produtos.length, 1);
+  assert.equal(produtos[0].nome, "Normal");
+  assert.match(erros[0], /Linha 2: preço fora do limite/);
 });

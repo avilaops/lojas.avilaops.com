@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import type { IdentidadeLoja } from "@/lib/identidade";
 import type { TemaLoja } from "@/lib/tema";
 import { Campo, Secao, brl, inputClasse } from "./campos";
-import { lerCsvProdutos } from "@/lib/planilha-produtos";
 import Marca from "./Marca";
 import Cupons, { type CupomView } from "./Cupons";
 import Categorias, { type CategoriaView } from "./Categorias";
@@ -121,6 +120,8 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
   // ── estado dos formulários ──
   const [novo, setNovo] = useState({ nome: "", preco: "", precoDe: "", categoria: "", sku: "", descricaoCurta: "", imagem: "", destaque: false, pesoKg: "", estoque: "" });
   const [csv, setCsv] = useState<{ nome: string; produtos: Array<Record<string, unknown>>; erros: string[] } | null>(null);
+  /** Quantos produtos já foram gravados, enquanto os lotes sobem. */
+  const [importando, setImportando] = useState<{ feitos: number; total: number } | null>(null);
   const [limiteEstoque, setLimiteEstoque] = useState(String(loja.estoqueBaixoEm));
   const [empresa, setEmpresa] = useState({ razaoSocial: loja.razaoSocial ?? "", cnpj: loja.cnpj ?? "" });
   const [entrega, setEntrega] = useState({ retiradaNaLoja: loja.retiradaNaLoja, despachoDiasUteis: loja.despachoDiasUteis, freteGratisAcima: loja.freteGratisAcima != null ? String(loja.freteGratisAcima / 100).replace(".", ",") : "", tabela: loja.tabelaFrete.map((f) => ({ ufs: f.ufs.join(","), preco: String(f.preco / 100).replace(".", ","), prazo: String(f.prazoDiasUteis), nome: f.nome ?? "" })), local: loja.entregaLocal.map((f) => ({ prefixos: f.prefixos.join(","), nome: f.nome, preco: String(f.preco / 100).replace(".", ","), prazo: String(f.prazoDiasUteis), gratis: f.gratisAcima != null ? String(f.gratisAcima / 100).replace(".", ",") : "" })) });
@@ -131,6 +132,71 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
   const [senha, setSenha] = useState({ atual: "", nova: "" });
 
   const centavos = (v: string) => Math.round(Number.parseFloat(v.replace(/[^\d,.-]/g, "").replace(",", ".")) * 100);
+
+  /**
+   * A planilha é lida no servidor, não no navegador: é lá que existe o
+   * descompactador que abre .xlsx, e é assim que os dois formatos passam
+   * pelas mesmas regras de coluna.
+   */
+  async function lerPlanilha(arquivo: File) {
+    setErro(null); setOk(null); setOcupado(true);
+    try {
+      const corpo = new FormData();
+      corpo.append("arquivo", arquivo);
+      const r = await fetch("/api/painel/produtos/planilha", { method: "POST", body: corpo });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d?.erro ?? "Não foi possível ler a planilha.");
+      setCsv({ nome: arquivo.name, produtos: d.produtos ?? [], erros: d.erros ?? [] });
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Não foi possível ler a planilha.");
+    } finally {
+      setOcupado(false);
+    }
+  }
+
+  /**
+   * Importa em lotes.
+   *
+   * A rota grava no máximo 2.000 por requisição, e uma distribuidora tem
+   * 5.591 itens: mandar tudo de uma vez devolvia "Dados inválidos" justamente
+   * para o catálogo que mais precisa de correção em lote. Em lotes menores a
+   * tela ainda diz onde parou se a conexão cair no meio — o que já entrou
+   * está gravado, e reenviar o mesmo arquivo atualiza em vez de duplicar,
+   * porque o SKU é a chave.
+   */
+  const POR_LOTE = 500;
+
+  async function importarPlanilha(produtos: Array<Record<string, unknown>>) {
+    setErro(null); setOk(null); setOcupado(true);
+    setImportando({ feitos: 0, total: produtos.length });
+    let criados = 0, atualizados = 0;
+    const avisos: string[] = [];
+    try {
+      for (let i = 0; i < produtos.length; i += POR_LOTE) {
+        const lote = produtos.slice(i, i + POR_LOTE);
+        const r = await fetch("/api/painel/produtos", {
+          method: "PUT",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(lote),
+        });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(d?.erro ?? "Falha ao importar.");
+        criados += d.criados ?? 0;
+        atualizados += d.atualizados ?? 0;
+        if (Array.isArray(d.avisos)) avisos.push(...d.avisos);
+        setImportando({ feitos: Math.min(i + POR_LOTE, produtos.length), total: produtos.length });
+      }
+      setCsv(null);
+      setOk(`${criados.toLocaleString("pt-BR")} produto(s) criados e ${atualizados.toLocaleString("pt-BR")} atualizados.${avisos.length ? ` ${avisos.length} célula(s) recusada(s).` : ""}`);
+      router.refresh();
+    } catch (e) {
+      // O que já subiu ficou: dizer quanto entrou é o que permite continuar.
+      setErro(`${e instanceof Error ? e.message : "Falha ao importar."} ${(criados + atualizados).toLocaleString("pt-BR")} produto(s) já foram gravados.`);
+    } finally {
+      setImportando(null);
+      setOcupado(false);
+    }
+  }
 
 
   function salvarProduto() {
@@ -251,12 +317,9 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
                 caminho de corrigir em lote é baixar, mexer e devolver. Coluna
                 que não vier no arquivo não é mexida no produto. */}
             <p className="text-xs text-muted-foreground">
-              Só <code>nome</code> e <code>preco</code> são obrigatórios. Para corrigir em lote, baixe o catálogo em CSV na aba Catálogo, ajuste e reenvie aqui — coluna que não vier no arquivo fica como está.
+              Só <code>nome</code> e <code>preco</code> são obrigatórios. Para corrigir em lote, baixe o catálogo na aba Catálogo, ajuste no Excel e reenvie o mesmo arquivo aqui — coluna que não vier no arquivo fica como está.
             </p>
-            <SoltarPlanilha
-              desabilitado={ocupado}
-              onArquivo={(a) => a.text().then((t) => setCsv({ nome: a.name, ...lerCsvProdutos(t) }))}
-            />
+            <SoltarPlanilha desabilitado={ocupado} onArquivo={(a) => void lerPlanilha(a)} />
             {csv && (
               <div className="rounded-lg border border-border p-4 text-sm">
                 <p className="flex flex-wrap items-center gap-2">
@@ -284,9 +347,11 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
                   <button
                     className="btn-primario"
                     disabled={ocupado || !csv.produtos.length}
-                    onClick={() => chamar("/api/painel/produtos", "PUT", csv.produtos, "Produtos importados.").then(() => setCsv(null))}
+                    onClick={() => void importarPlanilha(csv.produtos)}
                   >
-                    Importar {csv.produtos.length.toLocaleString("pt-BR")} produto(s)
+                    {importando
+                      ? `Importando ${importando.feitos.toLocaleString("pt-BR")} de ${importando.total.toLocaleString("pt-BR")}…`
+                      : `Importar ${csv.produtos.length.toLocaleString("pt-BR")} produto(s)`}
                   </button>
                   <button className="btn-secundario px-4" disabled={ocupado} onClick={() => setCsv(null)}>
                     Escolher outra

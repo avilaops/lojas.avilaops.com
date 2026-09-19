@@ -241,7 +241,7 @@ export default function CatalogoLista({
                   ? `Baixar estes ${dados.total.toLocaleString("pt-BR")} produtos:`
                   : "Baixar o catálogo:"
               }
-              ajuda="O CSV volta pela importação, com as mesmas colunas. O Excel preserva código e código de barras como texto."
+              ajuda="Os dois voltam pela importação, com as mesmas colunas. O Excel guarda código e código de barras como texto; o CSV abre em qualquer lugar."
             />
           )}
         </>

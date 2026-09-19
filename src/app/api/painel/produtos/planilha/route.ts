@@ -1,0 +1,53 @@
+import { exigir } from "@/lib/operadores";
+import { linhasDeCsv, produtosDeLinhas } from "@/lib/planilha-produtos";
+import { ErroPlanilha, linhasDeXlsx } from "@/lib/xlsx-leitor";
+
+/**
+ * POST /api/painel/produtos/planilha — o arquivo vira a prévia da importação.
+ *
+ * O painel lia o CSV no navegador e não sabia abrir .xlsx, que é justamente o
+ * formato que a exportação oferece para preservar código e código de barras.
+ * Aqui os dois formatos passam pelo mesmo leitor, e o que volta é o que o
+ * lojista confere antes de gravar: quantos produtos entraram e que linhas
+ * ficaram de fora.
+ *
+ * Nada é gravado neste caminho. Quem grava continua sendo o PUT de
+ * `/api/painel/produtos`, depois que a pessoa confirma.
+ */
+export const dynamic = "force-dynamic";
+
+/** Catálogo de 20 mil linhas em .xlsx dá poucos MB; acima disto é engano. */
+const TETO_BYTES = 12 * 1024 * 1024;
+
+export async function POST(request: Request) {
+  const { erro } = await exigir("catalogo");
+  if (erro) return erro;
+
+  const formulario = await request.formData().catch(() => null);
+  const arquivo = formulario?.get("arquivo");
+  if (!(arquivo instanceof File)) return Response.json({ erro: "Nenhum arquivo enviado." }, { status: 422 });
+  if (arquivo.size > TETO_BYTES) {
+    return Response.json({ erro: "Arquivo muito grande (máximo 12 MB). Divida a planilha em partes." }, { status: 413 });
+  }
+
+  const nome = arquivo.name.toLowerCase();
+  // O .xls antigo é outro formato (binário, anterior a 2007) e não é lido
+  // aqui: recusar dizendo o que fazer é melhor que devolver planilha vazia.
+  if (nome.endsWith(".xls")) {
+    return Response.json({ erro: "O formato .xls é antigo. No Excel: Arquivo → Salvar como → Pasta de Trabalho do Excel (.xlsx)." }, { status: 422 });
+  }
+
+  if (!nome.endsWith(".xlsx") && !nome.endsWith(".csv")) {
+    return Response.json({ erro: "Envie um arquivo .csv ou .xlsx." }, { status: 422 });
+  }
+
+  try {
+    const linhas = nome.endsWith(".xlsx")
+      ? linhasDeXlsx(Buffer.from(await arquivo.arrayBuffer()))
+      : linhasDeCsv(await arquivo.text());
+    return Response.json(produtosDeLinhas(linhas));
+  } catch (e) {
+    if (e instanceof ErroPlanilha) return Response.json({ erro: e.message }, { status: 422 });
+    return Response.json({ erro: "Não foi possível ler a planilha." }, { status: 422 });
+  }
+}

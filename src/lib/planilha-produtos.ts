@@ -9,6 +9,11 @@
  *
  * `imagem` leva só a primeira foto de propósito: é a que a vitrine usa como
  * capa, e uma coluna por foto quebraria a planilha em quem tem oito.
+ *
+ * Quem lê o arquivo — `lerCsvProdutos` aqui, `lerXlsxProdutos` no servidor —
+ * só entrega uma matriz de texto; quem decide o que cada coluna significa é
+ * `produtosDeLinhas`, uma vez só. Formato novo não pode reabrir a discussão
+ * de o que é "destaque".
  */
 
 /** Cabeçalho, na ordem em que sai — e a mesma do `modelo-catalogo.csv`. */
@@ -42,55 +47,80 @@ const SIM = /^(1|sim|s|true|x|ativo)$/i;
 const NAO = /^(0|nao|n|false|inativo)$/i;
 
 /**
- * CSV → produtos. Cabeçalhos aceitos (qualquer ordem, com ou sem acento):
- * ver `COLUNAS_PRODUTO`. Preço em reais ("59,90" ou "59.90") vira centavos.
+ * Uma linha da planilha, já dividida em células de texto.
+ *
+ * Célula vazia é string vazia e coluna ausente é `undefined`: a diferença
+ * decide se o produto é sobrescrito ou fica como está.
+ */
+export type LinhaDePlanilha = string[];
+
+/**
+ * "R$ 1.234,56", "1234.56" ou "79.90000000000001" → centavos.
+ *
+ * A vírgula é quem manda: quando existe, ela é o decimal e o ponto é milhar —
+ * é assim que o Excel em português grava. Sem vírgula, o ponto é o decimal e
+ * não se mexe nele.
+ *
+ * A regra antiga apagava todo ponto seguido de três dígitos, para dar conta
+ * de "1.234,56". Só que `79.90000000000001` — que é como uma planilha guarda
+ * 79,90 — virava 7.990.000.000.000.001 centavos, e o banco recusava o lote
+ * inteiro com erro de conversão. Achado reimportando um .xlsx exportado pelo
+ * próprio painel.
+ */
+function centavos(v: string): number {
+  const limpo = v.replace(/[^\d,.-]/g, "");
+  const decimal = limpo.includes(",") ? limpo.replace(/\./g, "").replace(",", ".") : limpo;
+  return Math.round(Number.parseFloat(decimal) * 100);
+}
+
+/** Teto de um inteiro no Postgres. Acima dele a gravação falha no driver e o
+ *  lote inteiro cai por causa de uma célula. */
+const TETO_INT = 2_147_483_647;
+const LIMITE_EM_REAIS = "máximo R$ 21.474.836,47";
+const precoCabe = (valor: number) => valor >= 0 && valor <= TETO_INT;
+
+/**
+ * Matriz (cabeçalho + linhas) → produtos prontos para a importação.
+ *
+ * Cabeçalhos aceitos em qualquer ordem, com ou sem acento: ver
+ * `COLUNAS_PRODUTO`. Preço em reais ("59,90" ou "59.90") vira centavos.
  * Coluna que não existe no arquivo não é mexida no produto — planilha de
  * fornecedor que só traz preço não pode apagar foto, medida nem estoque.
  */
-export function lerCsvProdutos(texto: string) {
-  const linhas = texto.replace(/\r/g, "").split("\n").filter((l) => l.trim());
-  if (linhas.length < 2) return { produtos: [] as Array<Record<string, unknown>>, erros: ["Planilha vazia."] };
-  const sep = linhas[0].includes(";") ? ";" : ",";
-  const dividir = (l: string) => {
-    const out: string[] = [];
-    let atual = "";
-    let aspas = false;
-    for (const ch of l) {
-      if (ch === '"') aspas = !aspas;
-      else if (ch === sep && !aspas) {
-        out.push(atual);
-        atual = "";
-      } else atual += ch;
-    }
-    out.push(atual);
-    return out.map((c) => c.trim());
-  };
+export function produtosDeLinhas(linhas: LinhaDePlanilha[]) {
+  const produtos: Array<Record<string, unknown>> = [];
+  const erros: string[] = [];
+  if (linhas.length < 2) return { produtos, erros: ["Planilha vazia."] };
+
   // O BOM que o próprio painel grava (e o Excel exige) vira parte do primeiro
   // cabeçalho se não sair aqui: sem isso, o arquivo que a loja acabou de
   // baixar volta sem a coluna `nome`.
-  const cab = dividir(linhas[0].replace(/^﻿/, "")).map(normalizarCabecalho);
+  const cab = linhas[0].map((c, i) => normalizarCabecalho(i === 0 ? c.replace(/^﻿/, "") : c));
   const idx = (n: string) => cab.indexOf(n);
-  const centavos = (v: string) => Math.round(Number.parseFloat(v.replace(/[^\d,.-]/g, "").replace(/\.(?=\d{3})/g, "").replace(",", ".")) * 100);
 
-  const produtos: Array<Record<string, unknown>> = [];
-  const erros: string[] = [];
-  linhas.slice(1).forEach((l, i) => {
-    const c = dividir(l);
-    const nome = c[idx("nome")] ?? "";
+  linhas.slice(1).forEach((c, i) => {
+    const nome = (c[idx("nome")] ?? "").trim();
     const preco = centavos(c[idx("preco")] ?? "");
     if (!nome || !Number.isFinite(preco)) {
       erros.push(`Linha ${i + 2}: nome ou preço ausente.`);
       return;
     }
-    const pega = (n: string) => (idx(n) >= 0 ? c[idx(n)] || undefined : undefined);
+    if (!precoCabe(preco)) {
+      erros.push(`Linha ${i + 2}: preço fora do limite (${LIMITE_EM_REAIS}).`);
+      return;
+    }
+    const pega = (n: string) => (idx(n) >= 0 ? c[idx(n)]?.trim() || undefined : undefined);
     const decimal = (n: string) => {
       const bruto = pega(n);
       if (bruto === undefined) return undefined;
       const valor = Number.parseFloat(bruto.replace(",", "."));
       return Number.isFinite(valor) && valor > 0 ? valor : undefined;
     };
-    const precoDe = pega("preco_de") ? centavos(pega("preco_de")!) : undefined;
-    const estoque = pega("estoque") ? Number.parseInt(pega("estoque")!.replace(/\D/g, ""), 10) : undefined;
+    const precoDeBruto = pega("preco_de") ? centavos(pega("preco_de")!) : undefined;
+    // Preço "de" torto não derruba a linha: o produto entra sem o riscado.
+    const precoDe = precoDeBruto !== undefined && precoCabe(precoDeBruto) ? precoDeBruto : undefined;
+    const estoqueBruto = pega("estoque") ? Number.parseInt(pega("estoque")!.replace(/\D/g, ""), 10) : undefined;
+    const estoque = estoqueBruto !== undefined && Number.isFinite(estoqueBruto) && estoqueBruto <= TETO_INT ? estoqueBruto : undefined;
     const ativo = pega("ativo");
     // `destaque` só é escrito quando a coluna existe: antes, toda planilha sem
     // ela tirava a estrela de todo produto importado, sem aviso nenhum.
@@ -121,4 +151,31 @@ export function lerCsvProdutos(texto: string) {
     });
   });
   return { produtos, erros };
+}
+
+/** CSV → matriz. Separador é o do cabeçalho: o Excel em português grava com
+ *  ponto e vírgula, o Google Planilhas com vírgula. */
+export function linhasDeCsv(texto: string): LinhaDePlanilha[] {
+  const linhas = texto.replace(/\r/g, "").split("\n").filter((l) => l.trim());
+  if (!linhas.length) return [];
+  const sep = linhas[0].includes(";") ? ";" : ",";
+  return linhas.map((l) => {
+    const out: string[] = [];
+    let atual = "";
+    let aspas = false;
+    for (const ch of l) {
+      if (ch === '"') aspas = !aspas;
+      else if (ch === sep && !aspas) {
+        out.push(atual);
+        atual = "";
+      } else atual += ch;
+    }
+    out.push(atual);
+    return out.map((c) => c.trim());
+  });
+}
+
+/** CSV → produtos. */
+export function lerCsvProdutos(texto: string) {
+  return produtosDeLinhas(linhasDeCsv(texto));
 }
