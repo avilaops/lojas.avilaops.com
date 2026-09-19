@@ -70,7 +70,12 @@ async function atualizarAnuncio(loja: Tenant, mlbId: string, resumo: ResumoAviso
       permalink: item.permalink ?? undefined,
       // Só o estado do ML muda aqui; o veredito do preparo continua sendo nosso.
       estado: encerrado || pausado ? "pausado" : "publicado",
-      motivoErro: item.sub_status?.length ? `Mercado Livre: ${item.sub_status.join(", ")}` : null,
+      // Sem `sub_status`, o campo fica como está em vez de ir a nulo. Ele é
+      // escrito e limpo pela sincronia, que sabe por que escreveu — inclusive
+      // a nota permanente de anúncio com variações. Zerar aqui apagava a
+      // explicação de outro processo a cada notificação de `items`, e ela
+      // voltava no ciclo seguinte: piscava no painel sem nada ter mudado.
+      motivoErro: item.sub_status?.length ? `Mercado Livre: ${item.sub_status.join(", ")}` : undefined,
       sincronizadoEm: new Date(),
     },
   });

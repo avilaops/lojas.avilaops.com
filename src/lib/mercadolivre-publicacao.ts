@@ -343,36 +343,6 @@ async function sincronizarPublicados(loja: Tenant, limite: number, resumo: Resum
         continue;
       }
 
-      /**
-       * Anúncio com variações não recebe preço nem estoque daqui.
-       *
-       * O Mercado Livre recusa `available_quantity` no item quando ele tem
-       * variações: a quantidade mora em cada uma. Empurrar assim mesmo faria
-       * todo ciclo falhar, para sempre, num anúncio que está perfeitamente no
-       * ar — e encheria o painel de erro sobre algo que o lojista não pode
-       * resolver.
-       *
-       * Isso aparece em anúncio **adotado**: o que nós publicamos nasce sem
-       * variação. E a adoção continua valendo a pena sem esta parte, porque o
-       * que ela resolve de mais importante é o outro lado — a venda passa a
-       * casar com o produto e a baixar a apresentação certa (ver
-       * `resolverVariante`). Preço e estoque seguem sendo do lojista, no ML.
-       */
-      if (atual.variations?.length) {
-        await prisma.anuncioMercadoLivre.update({
-          where: { id: anuncio.id },
-          data: {
-            statusMl: atual.status ?? null,
-            permalink: atual.permalink ?? anuncio.permalink,
-            motivoErro:
-              "Anúncio com variações: preço e estoque continuam sendo editados por você no Mercado Livre. As vendas são reconhecidas e baixam a apresentação certa do estoque.",
-            sincronizadoEm: new Date(),
-          },
-        });
-        resumo.ignorados++;
-        continue;
-      }
-
       // Conteúdo antes de preço: o lojista que corrigiu a foto errada quer ver
       // a foto certa no ar, e isso não depende de o preço ter mudado.
       //
@@ -386,6 +356,38 @@ async function sincronizarPublicados(loja: Tenant, limite: number, resumo: Resum
       // Preço e estoque do canal, não da loja: é o acréscimo e a reserva que
       // o lojista definiu que vão para o anúncio. Produto inativo vai a zero,
       // que é como o ML tira do ar sem fechar o anúncio.
+      /**
+       * Anúncio com variações não recebe preço nem estoque daqui.
+       *
+       * O ML recusa `available_quantity` no item quando ele tem variações: a
+       * quantidade mora em cada uma. Empurrar assim mesmo faria todo ciclo
+       * falhar, para sempre, num anúncio que está perfeitamente no ar.
+       *
+       * Só preço e estoque param. O **conteúdo acima segue**, e é o caso do
+       * lojista que acrescentou variações a um anúncio que nós publicamos: o
+       * título e as fotos continuam sendo nossos, e não há razão para congelá-los
+       * junto. Em anúncio adotado o conteúdo já não é escrito, por `origem`.
+       *
+       * A venda continua certa dos dois lados: `resolverVariante` reconhece a
+       * apresentação vendida pelo SKU ou pelos atributos.
+       */
+      if (atual.variations?.length) {
+        await prisma.anuncioMercadoLivre.update({
+          where: { id: anuncio.id },
+          data: {
+            statusMl: atual.status ?? null,
+            permalink: atual.permalink ?? anuncio.permalink,
+            motivoErro: escrita.avisos.length
+              ? escrita.avisos.join(" ")
+              : "Anúncio com variações: preço e estoque continuam sendo editados por você no Mercado Livre. As vendas são reconhecidas e baixam a apresentação certa do estoque.",
+            conteudoHash: conteudo && !escrita.pendente ? conteudo.hash : anuncio.conteudoHash,
+            sincronizadoEm: new Date(),
+          },
+        });
+        resumo.ignorados++;
+        continue;
+      }
+
       const doProduto = regrasDoProduto({ categoriaMl: anuncio.categoriaMl });
       const estoque = anuncio.produto.ativo ? estoqueDoCanal(anuncio.produto.estoque, doProduto) : 0;
       const precoCanalCentavos = precoDoCanal(anuncio.produto.precoCentavos, doProduto);
