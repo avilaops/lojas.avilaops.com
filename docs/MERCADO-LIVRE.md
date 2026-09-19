@@ -178,10 +178,21 @@ resolve de mais importante é o outro lado — a venda passa a casar com o produ
 e a baixar a apresentação certa. Preço e estoque seguem sendo do lojista, no
 ML, e a tela diz isso antes de ele decidir.
 
-**Adotado sincroniza preço e estoque, não conteúdo.** `conteudoDoAnuncio`
-devolve nulo sem preparo, então título, fotos e descrição do lojista ficam
-como estão. Reescrever o texto de um anúncio que já vende, sem ninguém pedir,
-seria a adoção fazendo mais do que foi autorizada.
+**Adotado sincroniza preço e estoque, não conteúdo.** Título, fotos e
+descrição são do lojista e ficam como estão — reescrever o texto de um anúncio
+que já vende seria a adoção fazendo mais do que foi autorizada.
+
+Quem garante isso é a coluna `AnuncioMercadoLivre.origem` (`propria` |
+`adotada`), e **não** a ausência de preparo. A diferença importa: um produto
+que passou por "Conferir catálogo agora" *antes* de ser adotado guarda o
+`preparo`, o upsert da vinculação o preserva, e `conteudoDoAnuncio` então
+devolveria conteúdo em vez de nulo — o anúncio nasceria adotado com o nosso
+título a caminho.
+
+Pela mesma razão, `prepararCatalogo` pula anúncio adotado: o preparo existe
+para decidir o que publicar, e ele já está publicado pelo lojista. Rodar o
+preditor nele trocaria a categoria **real** do Mercado Livre por um palpite
+tirado do nome.
 
 ## Qual apresentação foi vendida
 
