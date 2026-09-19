@@ -6,12 +6,14 @@ import EnviarImagem from "./EnviarImagem";
 import { ANO_MAX, ANO_MIN, MOTOS_BRASIL, lerCompatibilidade, type Compatibilidade } from "@/lib/motos";
 import { PRINCIPIOS_COMUNS, TARJAS, TIPOS_MEDICAMENTO, pendenciasDe } from "@/lib/farmacia";
 import { AJUDA_TIPO, lerDefinicoes, lerValores, type CampoPersonalizado } from "@/lib/campos-personalizados";
+import { ORIGENS_DE_IMAGEM, SELO_IMAGEM, declaracaoDaImagem } from "@/lib/imagem-origem";
+import { detalharErro } from "@/lib/erro-de-formulario";
 
 /** Campo vazio não vira 0: sem medida, o frete usa a caixa padrão da loja. */
 const medida = (chave: string, valor: string) =>
   valor.trim() ? { [chave]: Number.parseFloat(valor.replace(",", ".")) } : {};
 
-interface Form { tarja: string; principioAtivo: string; apresentacao: string; registroAnvisa: string; tipoMedicamento: string; versaoCatalogo:number; temVariacoes:boolean; mpn:string; identificadoresEstado:string; nome: string; categoria: string; marca: string; sku: string; gtin: string; preco: string; precoDe: string; descricaoCurta: string; descricao: string; imagens: string[]; destaque: boolean; ativo: boolean; disponibilidade: string; estoque: string; pesoKg: string; alturaCm: string; larguraCm: string; comprimentoCm: string; codigoOriginal: string; codigosEquivalentes: string; compatibilidade: LinhaCompat[]; camposPersonalizados: Record<string, string> }
+interface Form { tarja: string; principioAtivo: string; apresentacao: string; registroAnvisa: string; tipoMedicamento: string; versaoCatalogo:number; temVariacoes:boolean; mpn:string; identificadoresEstado:string; nome: string; categoria: string; marca: string; sku: string; gtin: string; preco: string; precoDe: string; descricaoCurta: string; descricao: string; imagens: string[]; imagemOrigem: string; imagemFamilia: string; destaque: boolean; ativo: boolean; disponibilidade: string; estoque: string; pesoKg: string; alturaCm: string; larguraCm: string; comprimentoCm: string; codigoOriginal: string; codigosEquivalentes: string; compatibilidade: LinhaCompat[]; camposPersonalizados: Record<string, string> }
 /** Linha do editor de compatibilidade: texto livre até salvar (ano vazio = sem limite). */
 interface LinhaCompat { marca: string; modelo: string; anoDe: string; anoAte: string }
 
@@ -46,7 +48,9 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoFechar,
         versaoCatalogo:p.versaoCatalogo, temVariacoes:p.opcoes.length>0, mpn:p.mpn??"", identificadoresEstado:p.identificadoresEstado??"desconhecido",
         nome: p.nome, categoria: p.categoria ?? "", marca: p.marca ?? "", sku: p.sku ?? "", gtin: p.gtin ?? "",
         preco: (p.precoCentavos / 100).toFixed(2).replace(".", ","), precoDe: p.precoDeCentavos != null ? (p.precoDeCentavos / 100).toFixed(2).replace(".", ",") : "",
-        descricaoCurta: p.descricaoCurta ?? "", descricao: p.descricao ?? "", imagens: p.imagens ?? [], destaque: p.destaque, ativo: p.ativo,
+        descricaoCurta: p.descricaoCurta ?? "", descricao: p.descricao ?? "", imagens: p.imagens ?? [],
+        imagemOrigem: p.imagemOrigem ?? "propria", imagemFamilia: p.imagemFamilia ?? "",
+        destaque: p.destaque, ativo: p.ativo,
         disponibilidade: p.disponibilidade, estoque: p.estoque != null ? String(p.estoque) : "", pesoKg: p.pesoKg != null ? String(p.pesoKg) : "",
         alturaCm: p.alturaCm != null ? String(p.alturaCm) : "", larguraCm: p.larguraCm != null ? String(p.larguraCm) : "", comprimentoCm: p.comprimentoCm != null ? String(p.comprimentoCm) : "",
         codigoOriginal: p.codigoOriginal ?? "", codigosEquivalentes: (p.codigosEquivalentes ?? []).join(", "), compatibilidade: paraLinhas(p.compatibilidade),
@@ -62,6 +66,11 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoFechar,
     if (!f) return;
     const preco = centavos(f.preco);
     if (!f.nome.trim() || !Number.isFinite(preco)) return setErro("Nome e preço são obrigatórios.");
+    // O banco recusaria isso com um 422 genérico. A cobrança tem que ser aqui,
+    // dizendo para que serve: sem a série não há como achar todos os produtos
+    // que usam a foto no dia em que ela for trocada.
+    if (f.imagens.length && f.imagemOrigem === "representativa" && !f.imagemFamilia.trim())
+      return setErro("Diga de que série a foto veio — é o que permite trocar a imagem de toda a família depois.");
     setErro(null); setOcupado(true);
     try {
       const precoDe = f.precoDe.trim() ? centavos(f.precoDe) : undefined;
@@ -71,6 +80,9 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoFechar,
           id: produtoId, versaoCatalogo:f.versaoCatalogo, mpn:f.temVariacoes?undefined:(f.mpn||null), identificadoresEstado:f.temVariacoes?undefined:f.identificadoresEstado, nome: f.nome, categoria: f.categoria, marca: f.marca || undefined, sku: f.temVariacoes?undefined:f.sku, gtin:f.temVariacoes?undefined:f.gtin.trim(), precoCentavos:f.temVariacoes?undefined:preco,
           ...(!f.temVariacoes ? { precoDeCentavos: precoDe ?? null } : {}),
           descricaoCurta: f.descricaoCurta || undefined, descricao: f.descricao || undefined, imagens: f.imagens, destaque: f.destaque, ativo: f.ativo,
+          // A regra de o que pode ser declarado mora no lib, com o resto da
+          // política de imagem — não aqui.
+          ...declaracaoDaImagem(f.imagens, f.imagemOrigem, f.imagemFamilia),
           disponibilidade:f.temVariacoes?undefined:f.disponibilidade, ...(!f.temVariacoes ? { estoque:f.estoque.trim()?Number(f.estoque):null } : {}), ...(f.pesoKg.trim() ? { pesoKg: Number.parseFloat(f.pesoKg.replace(",", ".")) } : {}),
         ...medida("alturaCm", f.alturaCm), ...medida("larguraCm", f.larguraCm), ...medida("comprimentoCm", f.comprimentoCm),
           codigoOriginal: f.codigoOriginal.trim() || null,
@@ -89,7 +101,11 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoFechar,
         }),
       });
       const d = await r.json();
-      if (!r.ok) throw new Error(d?.erro ?? "Falha ao salvar.");
+      // "Dados inválidos." sozinho é beco sem saída: a resposta diz QUAL campo
+      // recusou, e essa parte ficava no console. Num formulário com trinta
+      // campos, saber que é a foto ou o GTIN é a diferença entre corrigir e
+      // desistir.
+      if (!r.ok) throw new Error(detalharErro(d));
       aoSalvar("Produto atualizado.");
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Falha.");
@@ -276,6 +292,34 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoFechar,
             <EnviarImagem aoEnviar={(url) => set("imagens", [...f.imagens, url])} rotulo="+ foto" />
           </div>
         </Campo>
+
+        {/* De que é a foto.
+            Em catálogo técnico a mesma imagem cobre uma série inteira — é o
+            que o plano de foto prevê, uma por família — e reaproveitar é
+            honesto; fingir que a foto é do SKU exato não é. O campo existe
+            desde que a política virou CHECK no banco, mas só a importação e a
+            API sabiam preenchê-lo: quem faz a sessão de foto não tinha por
+            onde dizer. Some sem foto, porque declarar a origem de uma imagem
+            que não existe é o que a escrita recusa. */}
+        {f.imagens.length > 0 && (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Campo label="De que é a foto" ajuda={ORIGENS_DE_IMAGEM.find((o) => o.valor === f.imagemOrigem)?.ajuda}>
+              <select className={inputClasse} value={f.imagemOrigem} onChange={(e) => set("imagemOrigem", e.target.value)}>
+                {ORIGENS_DE_IMAGEM.map((o) => <option key={o.valor} value={o.valor}>{o.rotulo}</option>)}
+              </select>
+            </Campo>
+            {f.imagemOrigem === "representativa" && (
+              <Campo label="Série de que a foto veio" obrigatorio ajuda="Como a série é chamada no catálogo: 6200, UCP, 32000.">
+                <input className={inputClasse} value={f.imagemFamilia} onChange={(e) => set("imagemFamilia", e.target.value)} placeholder="6200" maxLength={40} />
+              </Campo>
+            )}
+            {SELO_IMAGEM[f.imagemOrigem] && (
+              <p className="text-xs text-muted-foreground sm:col-span-2">
+                O card da vitrine vai mostrar <strong>{SELO_IMAGEM[f.imagemOrigem]}</strong> sobre a foto, e a página do produto e o anúncio no Mercado Livre trazem a frase inteira.
+              </p>
+            )}
+          </div>
+        )}
       </div>
       {erro && <p className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">{erro}</p>}
       <div className="mt-4"><button className="btn-primario" disabled={ocupado} onClick={salvar}>Salvar produto</button></div>

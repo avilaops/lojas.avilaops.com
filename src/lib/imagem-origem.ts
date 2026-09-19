@@ -42,3 +42,36 @@ export function avisoDaImagem(origem: string | null | undefined, temImagem: bool
 export function seloDaImagem(origem: string | null | undefined, temImagem: boolean): string | null {
   return temImagem && origem ? (SELO_IMAGEM[origem] ?? null) : null;
 }
+
+/**
+ * As três origens como o painel as oferece.
+ *
+ * Mora junto do que a vitrine diz, e não numa lista dentro do formulário,
+ * porque rótulo e aviso são a mesma declaração vista de dois lados: quem
+ * escolhe "Foto da série" no painel precisa ler ali o que o comprador vai ler
+ * no card. Duas listas divergiriam no primeiro ajuste de texto.
+ */
+export const ORIGENS_DE_IMAGEM = [
+  { valor: "propria", rotulo: "Foto deste item", ajuda: "Do SKU exato: própria, ou do fabricante com o código conferido. A loja não diz nada." },
+  { valor: "representativa", rotulo: "Foto da série", ajuda: "De outro item da mesma família visual. Exige dizer de que série veio, para achar quem usa a foto no dia em que ela for trocada." },
+  { valor: "ilustracao", rotulo: "Ilustração técnica", ajuda: "Desenho gerado das medidas cadastradas. Não é fotografia, e a loja avisa." },
+] as const;
+
+/**
+ * A declaração que vai ao banco, a partir do que o formulário tem na tela.
+ *
+ * Duas regras que não podem morar no JSX, porque são as mesmas que a escrita
+ * aplica e que o `CHECK` do Postgres cobra:
+ *
+ *   sem foto, não há o que declarar — a origem volta a ser a própria;
+ *   a família acompanha a foto de série e só ela. Deixada para trás depois de
+ *   trocar para foto própria, a auditoria de "quem herdou esta imagem" passa
+ *   a mentir, e é exatamente para ela que a coluna existe.
+ */
+export function declaracaoDaImagem(imagens: string[], origem: string, familia: string): { imagemOrigem: string; imagemFamilia: string | null } {
+  if (imagens.length === 0) return { imagemOrigem: "propria", imagemFamilia: null };
+  return {
+    imagemOrigem: origem,
+    imagemFamilia: origem === "representativa" ? familia.trim() || null : null,
+  };
+}

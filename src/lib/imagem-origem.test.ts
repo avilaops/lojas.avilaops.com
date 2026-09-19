@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { avisoDaImagem, seloDaImagem } from "./imagem-origem";
+import { avisoDaImagem, declaracaoDaImagem, seloDaImagem } from "./imagem-origem";
 
 /**
  * A declaração de origem da imagem existe para que foto de série não passe
@@ -31,4 +31,28 @@ test("origem desconhecida não inventa texto", () => {
   assert.equal(seloDaImagem("fornecedor", true), null);
   assert.equal(seloDaImagem(null, true), null);
   assert.equal(seloDaImagem(undefined, true), null);
+});
+
+/**
+ * O painel passou a oferecer a declaração. O que ele envia obedece às mesmas
+ * duas regras da escrita, para o formulário não conseguir gravar o que o
+ * `CHECK` do banco recusaria — nem deixar rastro que mente.
+ */
+test("sem foto não há o que declarar", () => {
+  assert.deepEqual(declaracaoDaImagem([], "representativa", "6200"), { imagemOrigem: "propria", imagemFamilia: null });
+  assert.deepEqual(declaracaoDaImagem([], "ilustracao", ""), { imagemOrigem: "propria", imagemFamilia: null });
+});
+
+test("a família acompanha a foto de série, e só ela", () => {
+  assert.deepEqual(declaracaoDaImagem(["/a.webp"], "representativa", "6200"), { imagemOrigem: "representativa", imagemFamilia: "6200" });
+  // Trocou para foto própria: a família não pode ficar pendurada, senão a
+  // auditoria de quem herdou a imagem passa a apontar para quem não herdou.
+  assert.deepEqual(declaracaoDaImagem(["/a.webp"], "propria", "6200"), { imagemOrigem: "propria", imagemFamilia: null });
+  assert.deepEqual(declaracaoDaImagem(["/a.webp"], "ilustracao", "6200"), { imagemOrigem: "ilustracao", imagemFamilia: null });
+});
+
+test("série em branco é série ausente, não string vazia", () => {
+  // O `CHECK` recusa representativa sem família: mandar "" seria mandar o
+  // formulário tomar um 422 em vez de o campo cobrar na tela.
+  assert.deepEqual(declaracaoDaImagem(["/a.webp"], "representativa", "   "), { imagemOrigem: "representativa", imagemFamilia: null });
 });
