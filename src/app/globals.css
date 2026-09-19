@@ -765,6 +765,34 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
 }
 
 @media (max-width: 640px) {
+  .atalhos-cat { position: relative; }
+  .atalhos-cat::after {
+    content: ""; position: absolute; inset-block: 0; right: 0; width: 1.75rem;
+    background: linear-gradient(to right, transparent, var(--background));
+    pointer-events: none;
+  }
+
+  /* No celular, o cabeçalho completo preso ao topo escondia parte das etapas
+     durante a rolagem. A busca continua logo no início da página. */
+  body:has(.home-automotivo) .cabecalho-loja { position: static; }
+
+  /* Embalagens precisam aparecer inteiras. O recorte quadrado continua, mas a
+     foto não amplia até cortar o rótulo. */
+  .home-automotivo .cartao-produto-imagem { background: #fff; }
+  .home-automotivo .cartao-produto-imagem img { object-fit: contain; padding: .75rem; }
+
+  /* Reduz o espaço antes da trilha e mantém os cartões legíveis em uma tela
+     estreita. */
+  .home-automotivo .automotivo-trilha { padding-top: 2rem; }
+  .home-automotivo .automotivo-trilha > header { margin-bottom: 1rem; }
+  .home-automotivo .automotivo-trilha h2 { font-size: 1.5rem; line-height: 1.1; }
+  .home-automotivo .automotivo-trilha ol { gap: .5rem; margin-top: 1rem; }
+  .home-automotivo .automotivo-trilha a { gap: .75rem; padding: .875rem; }
+  .home-automotivo .automotivo-passo-numero { width: 2rem; height: 2rem; }
+  .home-automotivo .automotivo-passo-texto strong { font-size: .9375rem; }
+  .home-automotivo .automotivo-passo-texto > span { font-size: .75rem; line-height: 1.4; }
+  .home-automotivo .automotivo-passo-texto em { font-size: .625rem; letter-spacing: .08em; }
+
   /* Atalhos colados na busca, e a abertura institucional depois deles.
      É a ordem do Mercado Livre e da Amazon: busca, caminho, produto. O texto de
      apresentação é para quem chegou pelo Google sem saber quem é a empresa, e
