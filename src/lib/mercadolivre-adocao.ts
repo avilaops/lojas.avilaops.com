@@ -1,6 +1,7 @@
 import type { Tenant } from "@prisma/client";
 import { prisma } from "./db";
 import { chamarMl } from "./mercadolivre";
+import { estoqueDoCanal, lerRegrasDoCanal, precoDoCanal, resolverRegrasDoCanal, type RegrasDoCanal } from "./canais";
 
 /**
  * Adotar anúncios que já existem no Mercado Livre do lojista.
@@ -144,15 +145,24 @@ export interface AnuncioParaAdotar {
   /**
    * O que a loja passaria a mandar para o anúncio se ele fosse adotado. É o
    * que transforma "vincular" numa decisão informada em vez de um sim cego.
+   *
+   * Já **com as regras do canal aplicadas** — acréscimo, arredondamento,
+   * estoque reservado. Mostrar o preço cru do catálogo seria prometer um
+   * número e mandar outro: quem sincroniza usa `precoDoCanal`, e uma tela que
+   * diverge do que o sistema faz é pior do que tela nenhuma.
    */
-  mudaria: { precoCentavos: number; estoque: number | null } | null;
+  mudaria: { precoCentavos: number; estoque: number } | null;
 }
 
 /** Reais do ML em centavos inteiros, sem escorregar no float. */
 const centavos = (v: number | undefined): number => Math.round(Number(v ?? 0) * 100);
 
-/** Monta a proposta de adoção a partir do item e do catálogo. Puro. */
-export function proporAdocao(item: ItemDoVendedor, catalogo: ProdutoDoCatalogo[]): AnuncioParaAdotar {
+/** Monta a proposta de adoção a partir do item, do catálogo e das regras. Puro. */
+export function proporAdocao(
+  item: ItemDoVendedor,
+  catalogo: ProdutoDoCatalogo[],
+  regras: RegrasDoCanal,
+): AnuncioParaAdotar {
   const casamento = casarAnuncioComCatalogo(item, catalogo);
   const produto = casamento ? catalogo.find((p) => p.produtoId === casamento.produtoId) : undefined;
   return {
@@ -167,7 +177,9 @@ export function proporAdocao(item: ItemDoVendedor, catalogo: ProdutoDoCatalogo[]
     skus: skusDoAnuncio(item),
     casamento,
     produtoNome: produto?.nome ?? null,
-    mudaria: produto ? { precoCentavos: produto.precoCentavos, estoque: produto.estoque } : null,
+    mudaria: produto
+      ? { precoCentavos: precoDoCanal(produto.precoCentavos, regras), estoque: estoqueDoCanal(produto.estoque, regras) }
+      : null,
   };
 }
 
@@ -194,15 +206,19 @@ const CAMPOS = [
 export async function listarParaAdotar(
   loja: Tenant,
   opcoes: { limite?: number } = {},
-): Promise<{ totalNoMl: number; jaVinculados: number; anuncios: AnuncioParaAdotar[] }> {
+): Promise<{ totalNoMl: number; jaVinculados: number; varridos: number; anuncios: AnuncioParaAdotar[] }> {
   const limite = Math.min(Math.max(opcoes.limite ?? 100, 1), 200);
+  // Sem o id do vendedor a URL viraria `/users//items/search`, que o ML
+  // responde com 404 — erro que não ensina nada a quem lê a tela.
+  const vendedor = (loja.mlUserId ?? "").trim();
+  if (!vendedor) throw new Error("A conta do Mercado Livre está conectada sem o código do vendedor. Reconecte.");
 
   const ids: string[] = [];
   let totalNoMl = 0;
   for (let offset = 0; offset < limite; offset += 50) {
     const pagina = await chamarMl<{ results?: string[]; paging?: { total?: number } }>(
       loja,
-      `/users/${encodeURIComponent(loja.mlUserId ?? "")}/items/search?status=active&limit=50&offset=${offset}`,
+      `/users/${encodeURIComponent(vendedor)}/items/search?status=active&limit=50&offset=${offset}`,
     );
     totalNoMl = pagina.paging?.total ?? totalNoMl;
     const achados = pagina.results ?? [];
@@ -218,10 +234,13 @@ export async function listarParaAdotar(
   const faltando = ids.filter((id) => !jaTemos.has(id)).slice(0, limite);
 
   if (!faltando.length) {
-    return { totalNoMl, jaVinculados: jaTemos.size, anuncios: [] };
+    return { totalNoMl, jaVinculados: jaTemos.size, varridos: ids.length, anuncios: [] };
   }
 
   const catalogo = await catalogoParaCasar(loja.id);
+  // As mesmas regras que a sincronia vai aplicar. Ler aqui é o que mantém a
+  // prévia honesta quando a loja tem acréscimo ou estoque reservado.
+  const regras = resolverRegrasDoCanal(lerRegrasDoCanal(loja.canais, "mercadolivre"))({});
 
   const anuncios: AnuncioParaAdotar[] = [];
   for (let i = 0; i < faltando.length; i += 20) {
@@ -229,7 +248,7 @@ export async function listarParaAdotar(
     const resposta = await chamarMl<RespostaMultiget>(loja, `/items?ids=${lote.join(",")}&attributes=${CAMPOS}`);
     for (const envelope of resposta ?? []) {
       if (envelope.code !== 200 || !envelope.body?.id) continue;
-      anuncios.push(proporAdocao(envelope.body, catalogo));
+      anuncios.push(proporAdocao(envelope.body, catalogo, regras));
     }
   }
 
@@ -237,7 +256,7 @@ export async function listarParaAdotar(
   // resto exige decisão por linha, e não pode empurrar isso para o fim da
   // rolagem.
   anuncios.sort((a, b) => Number(Boolean(b.casamento)) - Number(Boolean(a.casamento)));
-  return { totalNoMl, jaVinculados: jaTemos.size, anuncios };
+  return { totalNoMl, jaVinculados: jaTemos.size, varridos: ids.length, anuncios };
 }
 
 /** Produtos ativos da loja no formato que o casamento lê. */

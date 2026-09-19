@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { exigir } from "@/lib/operadores";
@@ -88,6 +89,11 @@ export async function POST(request: Request) {
     return Response.json(await vincularAnuncios(s.tenant.id, entrada.data.pares));
   } catch (e) {
     if (e instanceof AdocaoRecusada) return Response.json({ erro: e.message }, { status: 409 });
+    // Entre a conferência acima e a gravação, outra aba pode ter vinculado o
+    // mesmo anúncio: `mlbId` é único, e o banco recusa. É corrida, não defeito.
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+      return Response.json({ erro: "Esse anúncio acabou de ser vinculado. Procure de novo para ver como ficou." }, { status: 409 });
+    }
     return Response.json({ erro: "Não consegui vincular agora. Tente de novo." }, { status: 500 });
   }
 }

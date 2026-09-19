@@ -160,9 +160,15 @@ uma escolha a ser feita por sorteio.
 
 **Nada é automático.** Vincular entrega o preço e o estoque da loja ao
 anúncio, e isso é decisão de quem vende. Cada linha mostra o que está no ar
-hoje e o que passaria a valer, com o preço destacado quando muda — sim cego
+hoje e o que a loja mandaria, com o preço destacado quando muda — sim cego
 mudaria preço de venda sem ninguém ter pedido. É a mesma regra de "prontos
 para anunciar": a aprovação é humana.
+
+A prévia sai **com as regras do canal já aplicadas** (acréscimo,
+arredondamento, estoque reservado), porque é isso que a sincronia vai mandar.
+Mostrar o preço cru do catálogo prometeria R$ 49,90 e enviaria R$ 58,90 numa
+loja com 16,3% de acréscimo — tela que diverge do sistema é pior que tela
+nenhuma.
 
 **Adotado sincroniza preço e estoque, não conteúdo.** `conteudoDoAnuncio`
 devolve nulo sem preparo, então título, fotos e descrição do lojista ficam

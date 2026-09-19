@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { REGRAS_PADRAO } from "./canais";
 import {
   casarAnuncioComCatalogo,
   proporAdocao,
@@ -129,6 +130,7 @@ test("a proposta mostra o que mudaria, para o sim não ser cego", () => {
   const p = proporAdocao(
     item({ id: "MLB9", title: "Correia 5PK", seller_custom_field: "COR-5PK-1230", price: 59.9, available_quantity: 4 }),
     CATALOGO,
+    REGRAS_PADRAO,
   );
   assert.equal(p.casamento?.produtoId, "p-correia");
   assert.equal(p.produtoNome, "Correia de transmissão 5PK 1230");
@@ -139,13 +141,36 @@ test("a proposta mostra o que mudaria, para o sim não ser cego", () => {
 });
 
 test("proposta sem casamento não inventa o que mudaria", () => {
-  const p = proporAdocao(item({ id: "MLB9", price: 10 }), CATALOGO);
+  const p = proporAdocao(item({ id: "MLB9", price: 10 }), CATALOGO, REGRAS_PADRAO);
   assert.equal(p.casamento, null);
   assert.equal(p.produtoNome, null);
   assert.equal(p.mudaria, null);
 });
 
 test("centavos não escorregam no float", () => {
-  assert.equal(proporAdocao(item({ price: 0.29 }), CATALOGO).precoCentavos, 29);
-  assert.equal(proporAdocao(item({ price: 1234.56 }), CATALOGO).precoCentavos, 123456);
+  assert.equal(proporAdocao(item({ price: 0.29 }), CATALOGO, REGRAS_PADRAO).precoCentavos, 29);
+  assert.equal(proporAdocao(item({ price: 1234.56 }), CATALOGO, REGRAS_PADRAO).precoCentavos, 123456);
+});
+
+test("a prévia mostra o preço do CANAL, não o do catálogo", () => {
+  // Quem sincroniza aplica acréscimo e arredondamento. Mostrar o preço cru
+  // seria prometer R$ 49,90 e mandar R$ 58,10 — tela que diverge do sistema é
+  // pior que tela nenhuma.
+  const p = proporAdocao(
+    item({ seller_custom_field: "COR-5PK-1230", price: 59.9, available_quantity: 4 }),
+    CATALOGO,
+    { ...REGRAS_PADRAO, acrescimoPercentual: 16.3, arredondamento: "noventa" },
+  );
+  // 49,90 + 16,3% = 58,03 → arredondado para cima, 58,90.
+  assert.equal(p.mudaria?.precoCentavos, 5890);
+});
+
+test("a prévia desconta o estoque reservado, como a sincronia faz", () => {
+  const p = proporAdocao(
+    item({ seller_custom_field: "COR-5PK-1230", available_quantity: 4 }),
+    CATALOGO,
+    { ...REGRAS_PADRAO, estoqueReservado: 2 },
+  );
+  // A loja tem 12; 2 ficam reservados, então o anúncio recebe 10.
+  assert.equal(p.mudaria?.estoque, 10);
 });

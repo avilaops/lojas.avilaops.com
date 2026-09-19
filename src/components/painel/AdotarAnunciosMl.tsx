@@ -36,7 +36,7 @@ const brl = (c: number) => (c / 100).toLocaleString("pt-BR", { style: "currency"
  * muda preço de venda sem ninguém ter pedido.
  */
 export default function AdotarAnunciosMl() {
-  const [dados, setDados] = useState<{ totalNoMl: number; jaVinculados: number; anuncios: AnuncioParaAdotar[] } | null>(null);
+  const [dados, setDados] = useState<{ totalNoMl: number; jaVinculados: number; varridos: number; anuncios: AnuncioParaAdotar[] } | null>(null);
   const [escolhidos, setEscolhidos] = useState<string[]>([]);
   const [ocupado, setOcupado] = useState<"buscando" | "vinculando" | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -93,7 +93,7 @@ export default function AdotarAnunciosMl() {
   return (
     <Secao
       titulo="Anúncios que você já tem no Mercado Livre"
-      descricao="Reconhecemos pelo SKU e pelo código de barras. Vincular entrega o preço e o estoque da loja ao anúncio — por isso cada linha mostra o que mudaria antes de você decidir."
+      descricao="Reconhecemos pelo SKU e pelo código de barras. Vincular entrega o preço e o estoque da loja ao anúncio — por isso cada linha mostra o que a loja mandaria, já com as regras do canal aplicadas, antes de você decidir."
     >
       {erro && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{erro}</p>}
       {recado && <p className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800">{recado}</p>}
@@ -111,8 +111,14 @@ export default function AdotarAnunciosMl() {
       </div>
 
       {dados && dados.anuncios.length === 0 && (
-        <p className="flex items-center gap-2 text-sm text-emerald-700">
-          <Check size={15} /> Todos os anúncios que encontrei já estão ligados a produtos da loja.
+        // A varredura tem teto, então "todos" só pode ser dito quando ela
+        // alcançou tudo. Dizer que está resolvido com 400 anúncios não olhados
+        // seria dar por pronto o que nem foi visto.
+        <p className={`flex items-start gap-2 text-sm ${dados.varridos >= dados.totalNoMl ? "text-emerald-700" : "text-muted-foreground"}`}>
+          <Check size={15} className="mt-0.5 flex-none" />
+          {dados.varridos >= dados.totalNoMl
+            ? "Todos os seus anúncios já estão ligados a produtos da loja."
+            : `Os ${dados.varridos} anúncios mais recentes já estão ligados. Você tem ${dados.totalNoMl} no Mercado Livre — procure de novo para seguir pelos próximos.`}
         </p>
       )}
 
@@ -141,8 +147,8 @@ export default function AdotarAnunciosMl() {
                     No ar: <b>{brl(a.precoCentavos)}</b>, {a.estoque} un.
                     {a.mudaria && (
                       <>
-                        {" · "}passaria a: <b className={mudaPreco ? "text-amber-700" : ""}>{brl(a.mudaria.precoCentavos)}</b>
-                        {a.mudaria.estoque != null && `, ${a.mudaria.estoque} un.`}
+                        {" · "}a loja mandaria: <b className={mudaPreco ? "text-amber-700" : ""}>{brl(a.mudaria.precoCentavos)}</b>
+                        {`, ${a.mudaria.estoque} un.`}
                       </>
                     )}
                   </span>
