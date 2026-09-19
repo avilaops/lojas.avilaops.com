@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+/** `https://…` ou caminho da própria loja; nada de `//host`, aspas ou `<`. */
+const URL_DE_IMAGEM = /^(https:\/\/|\/(?!\/))[^<>"\\]*$/;
+
 /**
  * Tema = tokens e uma experiência de vitrine versionada. Templates podem
  * compor cabeçalho, navegação, home, produto e carrinho; catálogo, identidade,
@@ -37,6 +40,37 @@ export const TemaSchema = z.object({
       texto: z.string().max(180),
       icone: z.enum(["lavagem", "polimento", "protecao", "vitrificacao", "acessorios", "kits", "moto"]),
     })).max(8).optional(),
+  }).optional(),
+  /**
+   * Imagens e chamadas do layout Automotivo. Tudo opcional: loja que não
+   * preenche fica com a tela de antes (arte única, trilha só com número, sem
+   * faixa de campanha).
+   *
+   * As fotos da trilha vão pela **chave da etapa** (`lavar`, `corrigir`…), não
+   * pelo slug da categoria: a etapa é vocabulário nosso e não muda quando o
+   * lojista renomeia "Polimento" para "Correção de pintura".
+   *
+   * A campanha guarda só o fundo e o texto. Texto, preço e selo nunca moram na
+   * imagem: oferta troca toda semana, e arte com "20% OFF" pintado vira
+   * retrabalho de design em vez de um campo editado no painel.
+   */
+  automotivo: z.object({
+    bannerMobileUrl: z.string().max(1000).regex(URL_DE_IMAGEM).optional(),
+    etapasImagens: z.object({
+      lavar: z.string().max(1000).regex(URL_DE_IMAGEM).optional(),
+      descontaminar: z.string().max(1000).regex(URL_DE_IMAGEM).optional(),
+      corrigir: z.string().max(1000).regex(URL_DE_IMAGEM).optional(),
+      proteger: z.string().max(1000).regex(URL_DE_IMAGEM).optional(),
+    }).optional(),
+    campanhas: z.array(z.object({
+      imagem: z.string().max(1000).regex(URL_DE_IMAGEM),
+      selo: z.string().max(40).optional(),
+      titulo: z.string().min(1).max(90),
+      texto: z.string().max(200).optional(),
+      botao: z.string().max(30).optional(),
+      /** Só caminho da própria loja: campanha não leva o cliente para fora. */
+      link: z.string().max(300).regex(/^\/(?!\/)[^<>"\\\s]*$/),
+    })).max(2).optional(),
   }).optional(),
   /**
    * O que a vitrine faz com categoria que não tem foto.

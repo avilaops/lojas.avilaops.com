@@ -83,6 +83,14 @@ export default function Marca({
   const [erroJson, setErroJson] = useState<string | null>(null);
 
   const voltar = () => router.push(caminho);
+  // Campanha pela metade (sem fundo, título ou destino) não vai ao servidor: o
+  // tema recusa o objeto incompleto e a recusa derrubaria o salvamento inteiro,
+  // inclusive o que a pessoa acertou nos outros campos.
+  const temaParaSalvar = (): TemaLoja => {
+    if (!tema.automotivo?.campanhas) return tema;
+    const campanhas = tema.automotivo.campanhas.filter((c) => c && c.imagem && c.titulo.trim() && c.link);
+    return { ...tema, automotivo: { ...tema.automotivo, campanhas: campanhas.length ? campanhas : undefined } };
+  };
   const salvar = (corpo: unknown, msg: string) => chamar("/api/painel/loja", "PATCH", corpo, msg).then((d) => { if (d) voltar(); });
 
   function recriarMarca() {
@@ -278,6 +286,34 @@ export default function Marca({
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={tema.premium?.mostrarNome ?? false} onChange={e => setTema({...tema,premium:{...tema.premium,mostrarNome:e.target.checked}})}/> Mostrar o nome ao lado do símbolo</label>
             <EditorEtapas etapas={tema.premium?.etapas ?? []} categorias={categorias} aoAlterar={etapas => setTema({...tema,premium:{...tema.premium,etapas}})}/>
           </fieldset>}
+          {tema.layout === "automotivo" && <fieldset className="mt-6 grid gap-4 rounded-xl border border-border p-4 sm:grid-cols-2">
+            <legend className="px-2 text-sm font-semibold">Imagens do layout Automotivo</legend>
+            <p className="sm:col-span-2 text-xs text-muted-foreground">Imagens sem texto, preço ou selo: o que muda toda semana se escreve nos campos abaixo, não na arte. As fotos do passo a passo só aparecem quando todas as etapas da loja têm foto.</p>
+            <Campo label="Banner para celular" ajuda="Enquadramento em pé. Vazio = o celular usa o banner principal."><div className="flex gap-2"><input className={inputClasse} value={tema.automotivo?.bannerMobileUrl ?? ""} onChange={e => setTema({...tema,automotivo:{...tema.automotivo,bannerMobileUrl:e.target.value || undefined}})}/><EnviarImagem aoEnviar={url => setTema(v => ({...v,automotivo:{...v.automotivo,bannerMobileUrl:url}}))} rotulo="Enviar banner mobile"/></div></Campo>
+            {([["lavar", "Foto da etapa Lavar"], ["descontaminar", "Foto da etapa Descontaminar"], ["corrigir", "Foto da etapa Corrigir"], ["proteger", "Foto da etapa Proteger"]] as const).map(([chave, label]) => (
+              <Campo key={chave} label={label}><div className="flex gap-2"><input className={inputClasse} value={tema.automotivo?.etapasImagens?.[chave] ?? ""} onChange={e => setTema({...tema,automotivo:{...tema.automotivo,etapasImagens:{...tema.automotivo?.etapasImagens,[chave]:e.target.value || undefined}}})}/><EnviarImagem aoEnviar={url => setTema(v => ({...v,automotivo:{...v.automotivo,etapasImagens:{...v.automotivo?.etapasImagens,[chave]:url}}}))} rotulo="Enviar foto"/></div></Campo>
+            ))}
+            {[0, 1].map(i => {
+              const campanha = tema.automotivo?.campanhas?.[i];
+              // Campanha só existe com fundo, título e destino: enquanto faltar
+              // um dos três ela fica fora do tema, que não aceita metade.
+              const gravar = (mudanca: Record<string, string | undefined>) => setTema(v => {
+                const lista = [...(v.automotivo?.campanhas ?? [])];
+                const atual = lista[i];
+                lista[i] = { ...atual, imagem: atual?.imagem ?? "", titulo: atual?.titulo ?? "", link: atual?.link ?? "/produtos", ...mudanca };
+                return { ...v, automotivo: { ...v.automotivo, campanhas: lista } };
+              });
+              return <div key={i} className="grid gap-3 rounded-lg border border-border p-3 sm:col-span-2 sm:grid-cols-2">
+                <p className="sm:col-span-2 text-sm font-semibold">Campanha {i + 1}</p>
+                <Campo label="Imagem de fundo" ajuda="Deixe a área calma à esquerda: é onde o texto entra."><div className="flex gap-2"><input className={inputClasse} value={campanha?.imagem ?? ""} onChange={e => gravar({imagem:e.target.value})}/><EnviarImagem aoEnviar={url => gravar({imagem:url})} rotulo="Enviar fundo"/></div></Campo>
+                <Campo label="Título"><input className={inputClasse} maxLength={90} value={campanha?.titulo ?? ""} onChange={e => gravar({titulo:e.target.value})}/></Campo>
+                <Campo label="Selo" ajuda="Ex.: Oferta da semana"><input className={inputClasse} maxLength={40} value={campanha?.selo ?? ""} onChange={e => gravar({selo:e.target.value || undefined})}/></Campo>
+                <Campo label="Texto"><input className={inputClasse} maxLength={200} value={campanha?.texto ?? ""} onChange={e => gravar({texto:e.target.value || undefined})}/></Campo>
+                <Campo label="Texto do botão"><input className={inputClasse} maxLength={30} value={campanha?.botao ?? ""} onChange={e => gravar({botao:e.target.value || undefined})} placeholder="Ver produtos"/></Campo>
+                <Campo label="Destino" ajuda="Caminho dentro da loja, como /categoria/kits-completos"><input className={inputClasse} value={campanha?.link ?? ""} onChange={e => gravar({link:e.target.value})} placeholder="/produtos"/></Campo>
+              </div>;
+            })}
+          </fieldset>}
           {segmento === "farmacia" && (
             <fieldset className="mt-6 grid gap-4 rounded-xl border border-border p-4 sm:grid-cols-2">
               <legend className="px-2 text-sm font-semibold">Responsável técnico</legend>
@@ -300,7 +336,7 @@ export default function Marca({
               </Campo>
             </fieldset>
           )}
-          {rodape(() => salvar({ tema, segmento,
+          {rodape(() => salvar({ tema: temaParaSalvar(), segmento,
             ...(segmento === "farmacia" ? {
               farmaceuticoResponsavel: farmacia.farmaceuticoResponsavel.trim() || null,
               farmaceuticoCrf: farmacia.farmaceuticoCrf.trim() || null,

@@ -27,6 +27,12 @@ import type { DadosHome } from "./tipos";
 
 export default function Automotivo({ t, identidade, categorias, vitrine, temDestaques, vende, moto }: DadosHome) {
   const { trilha, restantes, mostrar: mostrarTrilha } = montarTrilha(categorias);
+  const imagens = temaDo(t).automotivo ?? {};
+  const fotosDasEtapas: Record<string, string | undefined> = imagens.etapasImagens ?? {};
+  // Foto em metade dos passos deixa a fileira torta: ou a trilha inteira tem
+  // foto, ou nenhuma tem e ela continua sendo a lista numerada de antes.
+  const trilhaComFoto = mostrarTrilha && trilha.every((passo) => fotosDasEtapas[passo.chave]);
+  const campanhas = imagens.campanhas ?? [];
 
   return (
     <main className="home-mercado home-automotivo">
@@ -46,8 +52,14 @@ export default function Automotivo({ t, identidade, categorias, vitrine, temDest
           </div>
           {t.bannerUrl && (
             <aside className="distribuidora-arte">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={t.bannerUrl} alt="" />
+              {/* A arte do desktop é deitada e, no celular, vira uma tarja com o
+                  carro do tamanho de um selo. Quem mandou o enquadramento em pé
+                  recebe ele abaixo do tablet; quem não mandou fica como estava. */}
+              <picture>
+                {imagens.bannerMobileUrl && <source media="(max-width: 767px)" srcSet={imagens.bannerMobileUrl} />}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={t.bannerUrl} alt="" />
+              </picture>
             </aside>
           )}
         </div>
@@ -58,7 +70,7 @@ export default function Automotivo({ t, identidade, categorias, vitrine, temDest
       <div className="container-loja"><BeneficiosBarra t={t} /></div>
 
       {mostrarTrilha && (
-        <section className="container-loja automotivo-trilha">
+        <section className={`container-loja automotivo-trilha${trilhaComFoto ? " automotivo-trilha-com-foto" : ""}`}>
           <header>
             <div>
               <p className="home-selo text-primary"><Sparkles /> Passo a passo</p>
@@ -70,6 +82,10 @@ export default function Automotivo({ t, identidade, categorias, vitrine, temDest
             {trilha.map((passo, indice) => (
               <li key={passo.chave}>
                 <Link href={`/categoria/${passo.categoria.slug}`}>
+                  {trilhaComFoto && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img className="automotivo-passo-foto" src={fotosDasEtapas[passo.chave]} alt="" loading="lazy" />
+                  )}
                   <span className="automotivo-passo-numero" aria-hidden="true">{indice + 1}</span>
                   <span className="automotivo-passo-texto">
                     <strong>{passo.titulo}</strong>
@@ -107,6 +123,23 @@ export default function Automotivo({ t, identidade, categorias, vitrine, temDest
               </Link>
             ))}
           </div>
+        </section>
+      )}
+
+      {campanhas.length > 0 && (
+        <section className="container-loja automotivo-campanhas" aria-label="Campanhas da loja">
+          {campanhas.map((campanha) => (
+            <Link key={campanha.link + campanha.titulo} href={campanha.link} className="automotivo-campanha">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={campanha.imagem} alt="" loading="lazy" />
+              <span className="automotivo-campanha-texto">
+                {campanha.selo && <em>{campanha.selo}</em>}
+                <strong>{campanha.titulo}</strong>
+                {campanha.texto && <span>{campanha.texto}</span>}
+                <span className="automotivo-campanha-botao">{campanha.botao ?? "Ver produtos"} <ArrowRight aria-hidden="true" /></span>
+              </span>
+            </Link>
+          ))}
         </section>
       )}
 

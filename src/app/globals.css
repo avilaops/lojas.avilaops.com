@@ -187,6 +187,7 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
    banner e sobrava o miolo de duas palavras. */
 .distribuidora-arte { align-self: center; }
 .distribuidora-arte img { display: block; width: 100%; height: auto; }
+@media (max-width: 767px) { .home-automotivo .distribuidora-arte picture:has(source) img { aspect-ratio: 4 / 5; object-fit: cover; } }
 /* Contadores em linha sob a arte. Sobre a imagem, cobriam o texto que a
    própria arte desenha; e informação de apoio não merece uma terceira coluna. */
 .distribuidora-arte-numeros { display: flex; gap: 1.5rem; padding-inline: .25rem; }
@@ -223,6 +224,36 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
      inteira já é clicável e o cartão inteiro reage no hover. */
   .automotivo-trilha a > svg { display: none; }
 }
+/* Trilha com foto: o cartão vira imagem em cima e texto embaixo. Só liga
+   quando TODAS as etapas têm foto (ver Automotivo.tsx). O número sobe para
+   cima da foto, porque a sequência continua sendo o ponto. */
+.automotivo-trilha-com-foto a { position: relative; grid-template-columns: 1fr auto; align-items: start; padding: 0 0 1.1rem; overflow: hidden; }
+.automotivo-trilha-com-foto a > :not(.automotivo-passo-foto):not(.automotivo-passo-numero) { margin-inline: 1.1rem; }
+.automotivo-passo-foto { grid-column: 1 / -1; display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; }
+.automotivo-trilha-com-foto .automotivo-passo-numero { position: absolute; top: .75rem; left: .75rem; background: var(--primary); color: var(--primary-foreground); }
+@media (min-width: 1180px) {
+  .automotivo-trilha-com-foto a { grid-template-columns: 1fr; }
+  .automotivo-passo-foto { aspect-ratio: 4 / 3; }
+}
+/* Campanhas: a foto é só fundo, o texto é HTML editado no painel. O degradê
+   escurece o lado do texto, então a arte precisa de área calma à esquerda. */
+.automotivo-campanhas { display: grid; gap: .85rem; padding-top: 3.75rem; }
+.automotivo-campanha { position: relative; display: grid; align-items: end; min-height: 15rem; overflow: hidden; border-radius: calc(var(--radius) * 2); background: #0b0b0c; color: #fff; isolation: isolate; }
+.automotivo-campanha > img { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; transition: transform .5s ease-out; }
+.automotivo-campanha::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, rgba(0,0,0,.82) 0%, rgba(0,0,0,.55) 45%, rgba(0,0,0,.08) 100%); }
+.automotivo-campanha:hover > img { transform: scale(1.03); }
+.automotivo-campanha-texto { display: grid; gap: .4rem; max-width: 26rem; padding: 1.5rem; }
+.automotivo-campanha-texto em { font-size: .7rem; font-style: normal; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: rgba(255,255,255,.7); }
+.automotivo-campanha-texto strong { font-size: clamp(1.25rem, 2.4vw, 1.7rem); font-weight: 780; line-height: 1.15; letter-spacing: -.03em; }
+.automotivo-campanha-texto > span { font-size: .86rem; line-height: 1.5; color: rgba(255,255,255,.78); }
+.automotivo-campanha-texto .automotivo-campanha-botao { display: inline-flex; align-items: center; gap: .4rem; margin-top: .5rem; font-size: .78rem; font-weight: 700; color: #fff; }
+.automotivo-campanha-botao svg { width: .95rem; height: .95rem; }
+@media (min-width: 768px) {
+  .automotivo-campanhas:has(> :nth-child(2)) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .automotivo-campanha { min-height: 18rem; }
+  .automotivo-campanha-texto { padding: 2rem; }
+}
+@media (prefers-reduced-motion: reduce) { .automotivo-campanha > img { transition: none; } }
 
 .mercado-departamentos, .mercado-produtos { padding-top: 3.75rem; }
 .mercado-departamentos h2, .mercado-produtos h2 { margin-top: .4rem; font-size: clamp(1.55rem, 3vw, 2.15rem); font-weight: 780; letter-spacing: -.035em; }
