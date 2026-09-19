@@ -8,6 +8,7 @@ import {
   impedimentoNoCanal,
   lerRegrasDoCanal,
   precoDoCanal,
+  resolverRegrasDoCanal,
 } from "./canais";
 
 test("loja que nunca abriu a tela publica como sempre publicou", () => {
@@ -84,4 +85,15 @@ test("o impedimento diz o que falta, e diferencia sem estoque de estoque reserva
   );
   assert.match(impedimentoNoCanal({ ...base, ativo: false }, REGRAS_PADRAO) ?? "", /inativo na loja/);
   assert.match(impedimentoNoCanal(base, { ...REGRAS_PADRAO, ativo: false }) ?? "", /desligada nas regras/);
+});
+
+test("o resolvedor devolve as regras da loja para todo produto, hoje", () => {
+  // O acréscimo por categoria não existe, e não deve existir antes de um
+  // lojista precisar. O que o resolvedor garante é a forma: quem publica já
+  // pergunta produto a produto, então o dia em que existir muda só aqui.
+  const globais = { ...REGRAS_PADRAO, acrescimoPercentual: 16.3 };
+  const paraProduto = resolverRegrasDoCanal(globais);
+  assert.deepEqual(paraProduto({ categoriaMl: "MLB455028" }), globais);
+  assert.deepEqual(paraProduto({ categoriaMl: null }), globais);
+  assert.deepEqual(paraProduto({}), globais);
 });

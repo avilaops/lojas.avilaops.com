@@ -11,6 +11,7 @@ import {
   impedimentoNoCanal,
   lerRegrasDoCanal,
   precoDoCanal,
+  resolverRegrasDoCanal,
   type RegrasDoCanal,
 } from "./canais";
 import { atualizarReputacaoMl } from "./mercadolivre-reputacao";
@@ -247,6 +248,7 @@ async function escreverDescricao(loja: Tenant, mlbId: string, descricao: string)
 }
 
 async function publicarAprovados(loja: Tenant, limite: number, resumo: ResumoMercadoLivre, regras: RegrasDoCanal) {
+  const regrasDoProduto = resolverRegrasDoCanal(regras);
   const anuncios = await prisma.anuncioMercadoLivre.findMany({
     where: { tenantId: loja.id, estado: "aprovado", mlbId: null, preparoEstado: "PRONTO" },
     include: { produto: true },
@@ -256,7 +258,8 @@ async function publicarAprovados(loja: Tenant, limite: number, resumo: ResumoMer
   const base = urlDaLoja(loja);
 
   for (const anuncio of anuncios) {
-    const montado = corpoDaPublicacaoMl(anuncio, base, regras);
+    const doProduto = regrasDoProduto({ categoriaMl: anuncio.categoriaMl });
+    const montado = corpoDaPublicacaoMl(anuncio, base, doProduto);
     if (!montado.corpo) {
       resumo.ignorados++;
       await prisma.anuncioMercadoLivre.update({
@@ -293,8 +296,8 @@ async function publicarAprovados(loja: Tenant, limite: number, resumo: ResumoMer
           // O que foi publicado é o preço do canal, não o da loja: com
           // acréscimo, os dois divergem, e guardar o da loja faria o ciclo
           // seguinte achar que o anúncio está desatualizado para sempre.
-          precoCentavosPublicado: precoDoCanal(anuncio.produto.precoCentavos, regras),
-          estoquePublicado: estoqueDoCanal(anuncio.produto.estoque, regras),
+          precoCentavosPublicado: precoDoCanal(anuncio.produto.precoCentavos, doProduto),
+          estoquePublicado: estoqueDoCanal(anuncio.produto.estoque, doProduto),
           sincronizadoEm: new Date(),
         },
       });
@@ -309,6 +312,7 @@ async function publicarAprovados(loja: Tenant, limite: number, resumo: ResumoMer
 }
 
 async function sincronizarPublicados(loja: Tenant, limite: number, resumo: ResumoMercadoLivre, regras: RegrasDoCanal) {
+  const regrasDoProduto = resolverRegrasDoCanal(regras);
   const anuncios = await prisma.anuncioMercadoLivre.findMany({
     where: { tenantId: loja.id, estado: "publicado", mlbId: { not: null } },
     include: { produto: true },
@@ -339,8 +343,9 @@ async function sincronizarPublicados(loja: Tenant, limite: number, resumo: Resum
       // Preço e estoque do canal, não da loja: é o acréscimo e a reserva que
       // o lojista definiu que vão para o anúncio. Produto inativo vai a zero,
       // que é como o ML tira do ar sem fechar o anúncio.
-      const estoque = anuncio.produto.ativo ? estoqueDoCanal(anuncio.produto.estoque, regras) : 0;
-      const precoCanalCentavos = precoDoCanal(anuncio.produto.precoCentavos, regras);
+      const doProduto = regrasDoProduto({ categoriaMl: anuncio.categoriaMl });
+      const estoque = anuncio.produto.ativo ? estoqueDoCanal(anuncio.produto.estoque, doProduto) : 0;
+      const precoCanalCentavos = precoDoCanal(anuncio.produto.precoCentavos, doProduto);
       const preco = Number((precoCanalCentavos / 100).toFixed(2));
       const mudouEstoque = atual.available_quantity !== estoque;
       const mudouPreco = precoCanalCentavos > 0 && atual.price !== preco;

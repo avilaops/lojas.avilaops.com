@@ -262,3 +262,23 @@ export function impedimentoNoCanal(
   }
   return null;
 }
+
+/** Pergunta "que regras valem para este produto?", respondida por canal. */
+export type RegrasPorProduto = (produto: { categoriaMl?: string | null }) => RegrasDoCanal;
+
+/**
+ * O resolvedor de regras de uma loja.
+ *
+ * Hoje toda pergunta devolve as mesmas regras da loja, e é de propósito: a
+ * comissão do Mercado Livre varia por categoria, mas cobrar essa configuração
+ * de um lojista que ainda não sentiu a diferença é complexidade sem dono.
+ *
+ * O que esta função garante é a **forma**: quem publica e quem sincroniza já
+ * perguntam produto a produto, em vez de lerem uma regra global direto. No dia
+ * em que um lojista precisar de acréscimo por categoria, a mudança é aqui
+ * dentro — o resolvedor passa a consultar a categoria — e nenhum dos dois
+ * caminhos de publicação muda uma linha. Nenhuma tela expõe isso agora.
+ */
+export function resolverRegrasDoCanal(globais: RegrasDoCanal): RegrasPorProduto {
+  return () => globais;
+}

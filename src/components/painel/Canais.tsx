@@ -3,8 +3,9 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, ArrowRight, Check, ExternalLink, Info, Link2, ListChecks, RefreshCw, Send, Unlink } from "lucide-react";
+import { AlertTriangle, ArrowRight, Check, ExternalLink, Info, Link2, ListChecks, RefreshCw, Send, Tags, Unlink } from "lucide-react";
 import { Campo, Secao, inputClasse } from "./campos";
+import CategoriaMl from "./CategoriaMl";
 import {
   CANAIS,
   acrescimoQueCobreComissao,
@@ -223,6 +224,7 @@ export default function Canais({ loja, ml, regras, pendencias, candidatos, integ
         dados={pendencias}
         ocupado={ocupado === "preparo"}
         aoConferir={conferir}
+        aoMudarCategoria={() => router.refresh()}
       />
 
       {candidatos.length > 0 && (
@@ -472,12 +474,15 @@ function RegrasDoCanalForm({ regras, ocupado, aoSalvar }: {
  * estava parado não aparecia em lugar nenhum. Agrupado pelo motivo, porque
  * "informe a marca" em trezentos produtos é uma tarefa, não trezentas.
  */
-function Pendencias({ dados, ocupado, aoConferir }: {
+function Pendencias({ dados, ocupado, aoConferir, aoMudarCategoria }: {
   dados: PendenciasDoCatalogo;
   ocupado: boolean;
   aoConferir: () => void;
+  aoMudarCategoria: () => void;
 }) {
   const [aberta, setAberta] = useState<string | null>(null);
+  /** Produto cuja categoria está sendo escolhida na gaveta. */
+  const [escolhendo, setEscolhendo] = useState<string | null>(null);
   const conferidos = dados.pronto + dados.revisao + dados.bloqueado;
 
   return (
@@ -541,9 +546,22 @@ function Pendencias({ dados, ocupado, aoConferir }: {
                 <ul className="grid gap-1 border-t border-border p-3">
                   {p.exemplos.map((e) => (
                     <li key={e.produtoId}>
-                      <Link href={`/painel/produtos/${e.produtoId}`} className="inline-flex items-center gap-1.5 text-sm underline">
-                        {e.nome} <ArrowRight size={12} />
-                      </Link>
+                      {/* Pendência de categoria se resolve aqui mesmo: mandar o
+                          lojista para o cadastro do produto não resolveria, porque
+                          categoria do Mercado Livre não é campo do produto dele. */}
+                      {p.onde === "categoria" ? (
+                        <button
+                          type="button"
+                          className="inline-flex items-center gap-1.5 text-sm underline"
+                          onClick={() => setEscolhendo(e.produtoId)}
+                        >
+                          {e.nome} <Tags size={12} />
+                        </button>
+                      ) : (
+                        <Link href={`/painel/produtos/${e.produtoId}`} className="inline-flex items-center gap-1.5 text-sm underline">
+                          {e.nome} <ArrowRight size={12} />
+                        </Link>
+                      )}
                     </li>
                   ))}
                   {p.total > p.exemplos.length && (
@@ -554,6 +572,14 @@ function Pendencias({ dados, ocupado, aoConferir }: {
             </li>
           ))}
         </ul>
+      )}
+
+      {escolhendo && (
+        <CategoriaMl
+          produtoId={escolhendo}
+          aoFechar={() => setEscolhendo(null)}
+          aoSalvar={aoMudarCategoria}
+        />
       )}
     </Secao>
   );

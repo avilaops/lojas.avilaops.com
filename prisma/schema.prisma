@@ -1091,6 +1091,17 @@ model AnuncioMercadoLivre {
   /// Id do anúncio no ML (MLB1234567890). Nulo enquanto é rascunho.
   mlbId       String? @unique
   categoriaMl String?
+  /**
+   * Quem decidiu a categoria: `automatica` (preditor do ML) ou `manual` (o
+   * lojista escolheu na tela).
+   *
+   * É coluna, e não campo do `preparo`, porque o preditor precisa consultá-la
+   * **antes** de rodar: escolha manual é palavra final, e uma escolha que some
+   * no repreparo seguinte é pior que escolha nenhuma — o lojista arruma,
+   * publica errado uma semana depois e não tem como saber por quê.
+   */
+  categoriaOrigem     String    @default("automatica")
+  categoriaDefinidaEm DateTime?
   /// active | paused | closed | under_review
   statusMl    String?
   permalink   String?
@@ -1128,6 +1139,7 @@ model AnuncioMercadoLivre {
   @@unique([tenantId, produtoId])
   @@index([tenantId, estado])
   @@index([tenantId, preparoEstado])
+  @@index([tenantId, categoriaOrigem])
 }
 
 /// Quem trabalha na loja e entra no painel.

@@ -23,7 +23,7 @@ junto da auditoria de 19/09/2026 e do que Amazon, Shopee e Magalu vão exigir.
 | **Saúde da conta (reputação e métricas)** | `src/lib/mercadolivre-reputacao.ts`, painel → Canais | pronto (17/09/2026) |
 | **Regras comerciais do canal** (acréscimo de preço, estoque reservado, tipo de anúncio, condição, garantia) | `src/lib/canais.ts`, painel → Canais | pronto (19/09/2026) |
 | **O que falta preencher**, agrupado pelo que falta, e preparo sob demanda | `pendenciasDoCatalogo`, `api/painel/canais/mercadolivre/preparo` | pronto (19/09/2026) |
-| Escolher a categoria do ML à mão | — | **não existe**, e a pendência do preparo pede. Ver `docs/CANAIS-MARKETPLACES.md` |
+| **Escolher a categoria do ML à mão** (busca pública, categoria folha, recálculo de atributos; escolha manual não é sobrescrita pelo preditor) | `src/lib/mercadolivre-categorias.ts`, `painel/CategoriaMl.tsx` | pronto (19/09/2026) |
 | Faturamento (nota fiscal), catálogo do ML, Mercado Envios Flex | — | não começado |
 
 ## A venda voltando

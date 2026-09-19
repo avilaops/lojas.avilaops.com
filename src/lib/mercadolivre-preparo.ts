@@ -1,6 +1,6 @@
 import type { Produto } from "@prisma/client";
 import { prisma } from "./db";
-import { atributosDaCategoria, preverCategoria } from "./mercadolivre";
+import { atributosDaCategoria, detalheDaCategoria, preverCategoria, type DetalheCategoria } from "./mercadolivre";
 import { enriquecerNome, temMedida } from "./nome-produto";
 
 /**
@@ -28,6 +28,11 @@ import { enriquecerNome, temMedida } from "./nome-produto";
  */
 const CORINGA = "MLB269718";
 
+/** A categoria coringa do preditor. Ver o comentário de `CORINGA`. */
+export function ehCategoriaCoringa(categoriaId: string): boolean {
+  return categoriaId === CORINGA;
+}
+
 /**
  * Palavra que não liga produto a categoria e por isso não conta na conferência.
  * "para veículos" aparece em meia categoria do site: casar por ela aprovaria
@@ -48,7 +53,22 @@ export interface CategoriaSugerida {
   categoriaId: string;
   categoriaNome: string;
   dominioNome: string;
+  /**
+   * Do topo até ela, quando conhecido. Existe porque o nome sozinho não
+   * distingue: "Rolamentos" aparece em três ramos diferentes do site, e o
+   * lojista precisa do caminho para saber qual é o dele.
+   */
+  caminho?: string[];
 }
+
+/**
+ * Quem decidiu a categoria.
+ *
+ * `manual` é a palavra final: o preditor pode rodar mil vezes depois e não
+ * troca. Uma escolha que some sozinha é pior que escolha nenhuma — o lojista
+ * arruma, publica errado uma semana depois e não tem como saber por quê.
+ */
+export type OrigemCategoria = "automatica" | "manual";
 
 export interface DiagnosticoAtributo {
   id: string;
@@ -75,6 +95,8 @@ export interface Preparo {
   aplicou: string[];
 
   categoria: CategoriaSugerida | null;
+  /** Quem decidiu a categoria. Ausente em preparo antigo = automática. */
+  origemCategoria?: OrigemCategoria;
   alternativas: CategoriaSugerida[];
   confianca: Confianca;
   /** Por que essa confiança, em português. */
@@ -110,7 +132,7 @@ function palavrasUteis(texto: string): string[] {
  * A comparação é por radical de cinco letras porque o ML escreve a categoria no
  * plural: "correia"/"correias", "eletrodo"/"eletrodos", "retentor"/"retentores".
  */
-function casaComOProduto(texto: string, c: CategoriaSugerida): boolean {
+export function casaComOProduto(texto: string, c: CategoriaSugerida): boolean {
   const doProduto = palavrasUteis(texto);
   const daCategoria = [...palavrasUteis(c.categoriaNome), ...palavrasUteis(c.dominioNome)];
   return doProduto.some((p) =>
@@ -223,8 +245,28 @@ export function tamanhoDoCache(): number {
   return cacheAtributos.size;
 }
 
+/**
+ * Mesma ideia para o detalhe da categoria: nome, caminho e se é folha.
+ *
+ * Um catálogo inteiro escolhido a dedo costuma cair em meia dúzia de
+ * categorias, e cada repreparo precisa do nome delas para escrever a tela.
+ */
+const cacheDetalhe = new Map<string, Promise<DetalheCategoria | null>>();
+
+export function detalheComCache(categoriaId: string) {
+  const guardado = cacheDetalhe.get(categoriaId);
+  if (guardado) return guardado;
+  const p = detalheDaCategoria(categoriaId).catch((e) => {
+    cacheDetalhe.delete(categoriaId);
+    throw e;
+  });
+  cacheDetalhe.set(categoriaId, p);
+  return p;
+}
+
 export function limparCache(): void {
   cacheAtributos.clear();
+  cacheDetalhe.clear();
 }
 
 type ProdutoParaPreparo = Pick<Produto, "id" | "nome" | "marca" | "sku" | "gtin" | "atributos">;
@@ -301,6 +343,7 @@ export async function prepararProduto({ produto, grupo }: EntradaPreparo): Promi
     nomeEnriquecido: enriquecido.nome,
     aplicou: enriquecido.aplicou,
     categoria,
+    origemCategoria: "automatica" as const,
     alternativas,
     confianca,
     motivos,
@@ -322,7 +365,27 @@ export async function prepararProduto({ produto, grupo }: EntradaPreparo): Promi
   }
 
   const exigidos = await atributosComCache(categoria.categoriaId);
+  const conferencia = conferirAtributos(produto, exigidos);
+  return { ...base, ...conferencia, ...vereditoDoPreparo(conferencia, confianca) };
+}
 
+/** O que a categoria exige, conferido contra o cadastro do produto. */
+export interface ConferenciaAtributos {
+  presentes: DiagnosticoAtributo[];
+  faltando: DiagnosticoAtributo[];
+  naoInferiveis: DiagnosticoAtributo[];
+}
+
+type AtributoExigido = { id: string; name: string; tags?: Record<string, boolean> };
+
+/**
+ * Cruza os atributos que a categoria exige com o que o cadastro tem.
+ *
+ * Separado do preparo porque não depende de **como** a categoria foi escolhida:
+ * a conferência é a mesma se ela veio do preditor ou se o lojista a escolheu a
+ * dedo, e é ela que precisa rodar de novo a cada troca de categoria.
+ */
+export function conferirAtributos(produto: ProdutoParaPreparo, exigidos: AtributoExigido[]): ConferenciaAtributos {
   const presentes: DiagnosticoAtributo[] = [];
   const faltando: DiagnosticoAtributo[] = [];
   const naoInferiveis: DiagnosticoAtributo[] = [];
@@ -346,6 +409,14 @@ export async function prepararProduto({ produto, grupo }: EntradaPreparo): Promi
     faltando.push(d);
   }
 
+  return { presentes, faltando, naoInferiveis };
+}
+
+/** O veredito e o que o lojista precisa fazer, a partir da conferência. */
+export function vereditoDoPreparo(
+  { presentes, faltando }: ConferenciaAtributos,
+  confianca: Confianca,
+): { estado: Preparo["estado"]; pendencias: string[] } {
   // `EMPTY_GTIN_REASON` existe para o caso de não haver GTIN. Cobrar os dois ao
   // mesmo tempo é contraditório, e cobrar o motivo de quem tem o código é pedir
   // justificativa para uma ausência que não existe.
@@ -371,7 +442,79 @@ export async function prepararProduto({ produto, grupo }: EntradaPreparo): Promi
   const estado: Preparo["estado"] =
     bloqueia.length > 0 ? "BLOQUEADO" : pendencias.length > 0 || confianca !== "alta" ? "REVISAO" : "PRONTO";
 
-  return { ...base, presentes, faltando, naoInferiveis, estado, pendencias };
+  return { estado, pendencias };
+}
+
+/**
+ * Preparo de um produto numa categoria **já decidida**, sem consultar o preditor.
+ *
+ * É o caminho da escolha manual e o de todo repreparo de quem já escolheu: o
+ * preditor não é chamado, então não há como ele discordar e trocar a categoria
+ * pelas costas do lojista.
+ *
+ * A confiança é `alta` porque ninguém adivinhou: uma pessoa que conhece o
+ * produto apontou a categoria. O que continua valendo é a exigência de
+ * atributo — escolher a categoria certa não dispensa informar a marca.
+ */
+export async function prepararComCategoria({ produto, categoria, grupo }: {
+  produto: ProdutoParaPreparo;
+  categoria: CategoriaSugerida;
+  grupo?: string | null;
+}): Promise<Preparo> {
+  const enriquecido = enriquecerNome({ nome: produto.nome, grupo, marca: produto.marca });
+  const exigidos = await atributosComCache(categoria.categoriaId);
+  const conferencia = conferirAtributos(produto, exigidos);
+
+  return {
+    produtoId: produto.id,
+    nomeOriginal: produto.nome,
+    nomeEnriquecido: enriquecido.nome,
+    aplicou: enriquecido.aplicou,
+    categoria,
+    origemCategoria: "manual",
+    alternativas: [],
+    confianca: "alta",
+    motivos: [
+      categoria.caminho?.length
+        ? `Categoria escolhida por você: ${categoria.caminho.join(" › ")}.`
+        : "Categoria escolhida por você.",
+    ],
+    ...conferencia,
+    ...vereditoDoPreparo(conferencia, "alta"),
+  };
+}
+
+/**
+ * A categoria que o lojista escolheu a dedo, se houver.
+ *
+ * Só `manual` manda: uma linha gravada pelo preditor é palpite, e palpite pode
+ * ser refeito. Separado numa função porque é a regra que impede o preditor de
+ * desfazer o trabalho de quem arrumou o catálogo — e regra que importa tanto
+ * merece um nome e um teste.
+ */
+export function categoriaEscolhidaAMao(
+  anuncio: { categoriaMl: string | null; categoriaOrigem: string | null } | undefined | null,
+): string | null {
+  return anuncio?.categoriaOrigem === "manual" && anuncio.categoriaMl ? anuncio.categoriaMl : null;
+}
+
+/** Detalhe da categoria no formato que o preparo guarda. */
+async function categoriaParaPreparo(categoriaId: string): Promise<CategoriaSugerida> {
+  const d = await detalheComCache(categoriaId);
+  if (!d) throw new Error(`O Mercado Livre não reconhece a categoria ${categoriaId}.`);
+  return {
+    categoriaId: d.categoriaId,
+    categoriaNome: d.categoriaNome,
+    // O ramo é o que o lojista lê para saber que "Rolamentos" é o certo.
+    dominioNome: d.caminho.at(-2) ?? d.categoriaNome,
+    caminho: d.caminho,
+  };
+}
+
+function contar(c: { pronto: number; revisao: number; bloqueado: number }, estado: string | null | undefined) {
+  if (estado === "PRONTO") c.pronto++;
+  else if (estado === "REVISAO") c.revisao++;
+  else c.bloqueado++;
 }
 
 /**
@@ -407,6 +550,9 @@ export async function prepararCatalogo(
       gtin: true,
       atributos: true,
       categoria: { select: { nome: true } },
+      // A escolha manual do lojista, quando existe. É ela que decide se o
+      // preditor sequer roda para este produto.
+      anunciosMl: { select: { categoriaMl: true, categoriaOrigem: true, preparoEstado: true } },
     },
     take: opcoes.limite,
     orderBy: { criadoEm: "asc" },
@@ -415,10 +561,32 @@ export async function prepararCatalogo(
   const contagem = { pronto: 0, revisao: 0, bloqueado: 0, total: produtos.length };
 
   for (const [i, p] of produtos.entries()) {
-    const { categoria, ...produto } = p;
-    // A categoria da loja é o "grupo" do catálogo: é a classificação que o
-    // lojista já fez, e é ela que dá confiança à previsão.
-    const r = await prepararProduto({ produto, grupo: categoria?.nome });
+    const { categoria, anunciosMl, ...produto } = p;
+    const escolhido = categoriaEscolhidaAMao(anunciosMl[0]);
+
+    let r: Preparo;
+    if (escolhido) {
+      // Categoria escolhida a dedo: o preditor não é chamado. O repreparo
+      // continua valendo a pena — é ele que enxerga a marca que o lojista
+      // acabou de cadastrar —, mas a categoria é palavra final dele.
+      try {
+        r = await prepararComCategoria({
+          produto,
+          grupo: categoria?.nome,
+          categoria: await categoriaParaPreparo(escolhido),
+        });
+      } catch {
+        // Mercado Livre fora do ar não pode apagar a escolha de ninguém: o
+        // produto fica exatamente como estava, e o próximo ciclo tenta de novo.
+        contar(contagem, anunciosMl[0]?.preparoEstado);
+        opcoes.aoAndar?.(i + 1, produtos.length);
+        continue;
+      }
+    } else {
+      // A categoria da loja é o "grupo" do catálogo: é a classificação que o
+      // lojista já fez, e é ela que dá confiança à previsão.
+      r = await prepararProduto({ produto, grupo: categoria?.nome });
+    }
 
     await prisma.anuncioMercadoLivre.upsert({
       where: { tenantId_produtoId: { tenantId, produtoId: p.id } },
@@ -426,6 +594,7 @@ export async function prepararCatalogo(
         tenantId,
         produtoId: p.id,
         categoriaMl: r.categoria?.categoriaId ?? null,
+        categoriaOrigem: r.origemCategoria ?? "automatica",
         preparo: r as unknown as object,
         preparoEstado: r.estado,
         preparadoEm: new Date(),
@@ -434,16 +603,14 @@ export async function prepararCatalogo(
       // publicação, e repreparar não pode apagar um anúncio que já está no ar.
       update: {
         categoriaMl: r.categoria?.categoriaId ?? null,
+        categoriaOrigem: r.origemCategoria ?? "automatica",
         preparo: r as unknown as object,
         preparoEstado: r.estado,
         preparadoEm: new Date(),
       },
     });
 
-    if (r.estado === "PRONTO") contagem.pronto++;
-    else if (r.estado === "REVISAO") contagem.revisao++;
-    else contagem.bloqueado++;
-
+    contar(contagem, r.estado);
     opcoes.aoAndar?.(i + 1, produtos.length);
   }
 
@@ -540,7 +707,7 @@ export async function pendenciasDoCatalogo(tenantId: string, limiteExemplos = 6)
       somar("SEM_CATEGORIA", {
         titulo: "Categoria do Mercado Livre não identificada",
         comoResolver:
-          "O nome do produto não diz ao Mercado Livre o que ele é. Escreva o nome técnico completo (\"Rolamento rígido de esferas 6205 2RS\", não \"ROL. 6205\") e prepare de novo.",
+          "O nome do produto não diz ao Mercado Livre o que ele é. Abra e escolha a categoria à mão — ou corrija o nome para o técnico completo (\"Rolamento rígido de esferas 6205 2RS\", não \"ROL. 6205\") e confira de novo.",
         gravidade: "bloqueia",
         onde: "categoria",
       }, produto);
@@ -551,7 +718,7 @@ export async function pendenciasDoCatalogo(tenantId: string, limiteExemplos = 6)
       somar("CATEGORIA_FRACA", {
         titulo: "Categoria sugerida sem convicção",
         comoResolver:
-          "Dá para publicar, mas confira: o Mercado Livre respondeu com a mesma convicção quando acerta e quando erra. Nome mais específico melhora a sugestão.",
+          "Dá para publicar, mas confira: o Mercado Livre responde com a mesma convicção quando acerta e quando erra. Abra para confirmar a sugestão ou escolher outra.",
         gravidade: "reduz",
         onde: "categoria",
       }, produto);

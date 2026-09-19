@@ -58,9 +58,56 @@ tela agora respeita em vez de contornar:
 | 5 | `listing_type_id`, `condition` e a **garantia** eram fixos no código. Sem `sale_terms`, o ML recusa o anúncio em boa parte das categorias | médio: recusa sem explicação para o lojista | resolvido |
 | 6 | `ML_APP_ID` / `ML_APP_SECRET` usados no código e **ausentes do `.env.example`**. Sem eles, o botão "Conectar" levava a uma tela de erro do próprio ML | médio: parece defeito da loja do cliente | resolvido |
 | 7 | "Outros canais" era lista morta de quatro nomes com "ainda não" ao lado | baixo: não informa nada | resolvido |
-| 8 | A pendência diz "escolha a categoria à mão", e **não existe tela para isso** | médio: promessa que o produto não cumpre | aberto, ver abaixo |
+| 8 | A pendência diz "escolha a categoria à mão", e **não existia tela para isso** | médio: promessa que o produto não cumpria | resolvido (19/09/2026) |
 | 9 | O preparo publica o produto, não a **variação**. Ordem com `variation_id` baixa a apresentação padrão | médio | aberto, já documentado em `MERCADO-LIVRE.md` |
 | 10 | **Nota fiscal**: o ML exige na maioria das categorias e a plataforma não emite | alto para o lojista, fora do escopo de hoje | aberto |
+
+## Escolher a categoria à mão
+
+Era o achado 8, e a única promessa que o produto não cumpria: o preparo mandava
+*"escolha a categoria do Mercado Livre à mão"* em todo produto cujo nome o
+preditor não entendeu, e não havia tela nenhuma.
+
+O caminho agora é: **Canais → O que falta → Categoria → o produto**, que abre
+uma gaveta com a sugestão automática (quando houver), a busca por texto livre,
+o caminho inteiro de cada resultado e o código da categoria. Ao salvar, os
+atributos são reconferidos na hora e a resposta já diz o que sobrou:
+
+```
+Categoria definida ✓
+Esferas de Rolamento
+Acessórios para Veículos › Peças › Esferas de Rolamento
+MLB455028
+
+Ainda faltam 2 informações
+  • Marca
+  • Material
+```
+
+Descobrir isso tentando publicar é exatamente o que a tela existe para evitar.
+
+Três regras que o código respeita:
+
+1. **Escolha manual é palavra final.** `AnuncioMercadoLivre.categoriaOrigem`
+   separa `automatica` de `manual`, e `categoriaEscolhidaAMao` é consultada
+   **antes** de o preditor rodar: quem escolheu a dedo nunca vê a categoria
+   trocar sozinha num repreparo. O repreparo continua acontecendo — é ele que
+   enxerga a marca recém-cadastrada —, só não mexe na categoria.
+2. **O Mercado Livre só publica em categoria folha.** Categoria de meio de
+   árvore é agrupamento, e o ML recusa sem explicar. A escolha manual recusa
+   antes de gravar e mostra as filhas para o lojista descer.
+3. **Falha de rede não apaga escolha.** A consulta ao ML acontece inteira antes
+   de qualquer gravação: Mercado Livre fora do ar deixa a categoria anterior
+   exatamente como estava, e o lojista lê isso na mensagem.
+
+O coringa (*Águas Minerais*) tem tratamento diferente aqui e no preparo. No
+preparo ele é sempre descartado, porque em primeiro lugar significa que o
+preditor não entendeu o nome. Na busca manual quem digitou foi uma pessoa: se
+ela escrever "água mineral", esconder a categoria de água mineral seria esconder
+o que ela procurou. Então ele só cai quando não casa com o texto digitado.
+
+Nada disso exige conta conectada: busca, caminho e atributos de categoria são
+endpoints públicos do ML.
 
 ## O que o lojista preenche, e por quê
 
@@ -98,7 +145,7 @@ tarefa, não trezentas. Cada grupo abre a lista e cada linha leva ao cadastro.
 | Código de barras (`GTIN`) | campo GTIN do produto | reduz alcance (o ML aceita com motivo de GTIN vazio) |
 | Código do fabricante (`PART_NUMBER`) | campo SKU do produto | bloqueia na maioria das categorias |
 | Modelo, material, tipo de veículo e outros atributos da categoria | Configurações → Campos do produto, depois no cadastro | bloqueia ou reduz, conforme a categoria |
-| Categoria não identificada | nome do produto: `"Rolamento rígido de esferas 6205 2RS"`, não `"ROL. 6205"` | bloqueia |
+| Categoria não identificada | a própria pendência abre a escolha manual; corrigir o nome do produto também resolve | bloqueia |
 | Foto pública, preço e estoque | cadastro do produto | bloqueia |
 
 O botão **Conferir catálogo agora** roda o preparo na hora, até 40 produtos por
@@ -137,16 +184,17 @@ primeiras lojas.
 
 ## O que fica aberto
 
-1. **Escolher a categoria do ML à mão** (achado 8). Hoje a pendência pede e não
-   há tela. É a próxima peça: lista de busca por nome, gravando `categoriaMl`
-   no anúncio e refazendo a conferência de atributos com a categoria escolhida.
-2. **Mapa de variação.** O preparo publica o produto; ordem com `variation_id`
+1. **Mapa de variação.** O preparo publica o produto; ordem com `variation_id`
    baixa a apresentação padrão.
-3. **Nota fiscal.** O ML exige e a plataforma não emite. Hoje é trabalho do
+2. **Nota fiscal.** O ML exige e a plataforma não emite. Hoje é trabalho do
    lojista, fora daqui.
-4. **Acréscimo por categoria.** A comissão do ML varia por categoria; o
+3. **Acréscimo por categoria.** A comissão do ML varia por categoria; o
    acréscimo hoje é um só para a loja inteira. Vale esperar aparecer um lojista
-   em quem isso doa antes de construir.
+   em quem isso doa antes de construir — e o caminho já está preparado sem
+   estar aberto: `resolverRegrasDoCanal` devolve um resolvedor que a publicação
+   e a sincronia consultam **produto a produto**, então o dia em que o override
+   existir a mudança é dentro dele, e nenhum dos dois caminhos muda uma linha.
+   Nenhuma tela expõe isso.
 
 ## Onde está cada coisa
 
@@ -155,6 +203,7 @@ primeiras lojas.
 | Registro de canais, regras e conta de preço | `src/lib/canais.ts` |
 | Conexão OAuth e chamada autenticada | `src/lib/mercadolivre.ts` |
 | Preparo do catálogo e pendências agrupadas | `src/lib/mercadolivre-preparo.ts` |
+| Escolha manual de categoria (busca pública, folha, recálculo) | `src/lib/mercadolivre-categorias.ts`, `painel/CategoriaMl.tsx` |
 | Publicação, sincronia e rotina | `src/lib/mercadolivre-publicacao.ts` |
 | A tela | `src/components/painel/Canais.tsx` |
 | Regras (PUT) e preparo sob demanda (POST) | `src/app/api/painel/canais/mercadolivre/{regras,preparo}` |
