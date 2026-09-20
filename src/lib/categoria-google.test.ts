@@ -2,6 +2,23 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { categoriaGoogle, prateleirasDaLoja } from "./categoria-google";
 
+test("mapeia categorias Vedashow com correspondência exata no Google", () => {
+  assert.equal(categoriaGoogle("Abraçadeiras"), 502978);
+  assert.equal(categoriaGoogle("Alicates"), 1958);
+  assert.equal(categoriaGoogle("Arruelas"), 2195);
+  assert.equal(categoriaGoogle("Correntes"), 1492);
+  assert.equal(categoriaGoogle("Estiletes"), 2198);
+  assert.equal(categoriaGoogle("Ferragens"), 632);
+  assert.equal(categoriaGoogle("Ferramentas"), 1167);
+  assert.equal(categoriaGoogle("Molas"), 499933);
+  assert.equal(categoriaGoogle("Parafusos"), 2251);
+  assert.equal(categoriaGoogle("Serras"), 1235);
+  assert.equal(categoriaGoogle("Torneiras"), 2032);
+  assert.equal(categoriaGoogle("Anéis"), undefined);
+  assert.equal(categoriaGoogle("Discos"), undefined);
+  assert.equal(categoriaGoogle("Conjuntos"), undefined);
+});
+
 test("mapeia abraçadeiras para a categoria exata de ferragens do Google", () => {
   assert.equal(categoriaGoogle("Abraçadeiras"), 502978);
   assert.equal(categoriaGoogle("Abraçadeira"), 502978);
