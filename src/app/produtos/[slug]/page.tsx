@@ -24,7 +24,8 @@ import { minhaMoto } from "@/lib/minha-moto";
 import { lerCompatibilidade } from "@/lib/motos";
 import { descricaoDoProduto, textoPuro } from "@/lib/seo-texto";
 import { ofertaDaVariante,gtinValido } from "@/lib/catalogo-oferta";
-import { midiasDaOferta } from "@/lib/catalogo-qualidade";\nimport { marcaConfirmada } from "@/lib/marca-confirmada";
+import { midiasDaOferta } from "@/lib/catalogo-qualidade";
+import { marcaConfirmada } from "@/lib/marca-confirmada";
 
 type Props = { params: Promise<{ slug: string }>; searchParams:Promise<{variante?:string}> };
 
