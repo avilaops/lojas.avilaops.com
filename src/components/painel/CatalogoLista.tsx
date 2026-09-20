@@ -52,7 +52,7 @@ const SITUACOES = [
   { valor: "imagem-merchant-revisar", rotulo: "Revisar imagem Merchant" },
   { valor: "sem-preco", rotulo: "Sem preço" },
   { valor: "sem-categoria", rotulo: "Sem categoria" },
-  { valor: "sem-marca", rotulo: "Sem marca" },
+  { valor: "sem-marca", rotulo: "Marca a confirmar" },
   { valor: "identificadores-pendentes", rotulo: "GTIN/MPN a confirmar" },
   // Sem medida é o que faz o frete sair pela caixa padrão da loja, quase
   // sempre mais caro que o real — o aviso do topo da tela vira trabalho aqui.
