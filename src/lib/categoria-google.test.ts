@@ -2,9 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { categoriaGoogle, prateleirasDaLoja } from "./categoria-google";
 
-test("mapeia abraçadeiras para a categoria exata de ferragens do Google", () => {
-  assert.equal(categoriaGoogle("Abraçadeiras"), 502978);
-  assert.equal(categoriaGoogle("Abraçadeira"), 502978);
+test("não força uma categoria para abraçadeiras de uso não confirmado", () => {
+  assert.equal(categoriaGoogle("Abraçadeiras"), undefined);
+  assert.equal(categoriaGoogle("Abraçadeira"), undefined);
   assert.equal(categoriaGoogle("Acessórios"), undefined);
 });
 
@@ -40,7 +40,6 @@ test("reconhece o vocabulário do ramo, não só o nome exato", () => {
 });
 
 test("categoria de outro ramo não recebe prateleira chutada", () => {
-  // Deixar o Google adivinhar é melhor do que afirmar a prateleira errada.
   assert.equal(categoriaGoogle("Retentores"), undefined);
   assert.equal(categoriaGoogle("Camisetas"), undefined);
 });
@@ -55,8 +54,6 @@ test("não quebra com categoria ausente", () => {
 const BRILHAX = ["Lavagem", "Polimento", "Vitrificação", "Proteção", "Acessórios", "Kits Completos", "Produtos para Moto"];
 
 test("nome genérico sozinho não recebe prateleira", () => {
-  // Sem saber o ramo, "Acessórios" tanto é pincel de roda quanto presilha de
-  // cabelo. O Google adivinha melhor do que nós aqui.
   assert.equal(categoriaGoogle("Acessórios"), undefined);
   assert.equal(categoriaGoogle("Produtos para Moto"), undefined);
 });
@@ -73,17 +70,12 @@ test("nenhuma das sete categorias da Brilhax fica sem prateleira", () => {
 });
 
 test("o ramo de uma loja não vaza para outra", () => {
-  // Numa pet e numa de beleza, "Acessórios" continua sem prateleira: mandar
-  // 2894 poria coleira e presilha em "escovas para limpeza de carro".
   assert.equal(prateleirasDaLoja(["Rações", "Higiene", "Brinquedos", "Acessórios"])("Acessórios"), undefined);
   assert.equal(prateleirasDaLoja(["Cabelo", "Unhas", "Acessórios"])("Acessórios"), undefined);
-  // "Kit festa" não prova ramo nenhum: "kit" é palavra de toda loja.
   assert.equal(prateleirasDaLoja(["Bolos", "Kit festa", "Acessórios"])("Acessórios"), undefined);
 });
 
 test("o sinal do ramo não se confunde com palavra parecida", () => {
-  // "automotivo" contém "mot", e "motor" contém "moto": nenhum dos dois pode
-  // fazer uma categoria virar lava-motos.
   const prateleira = prateleirasDaLoja(BRILHAX);
   assert.equal(prateleira("Óleo de motor"), undefined);
   assert.equal(prateleira("Motosserras"), undefined);
