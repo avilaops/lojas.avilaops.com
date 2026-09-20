@@ -28,7 +28,7 @@ export async function POST(request: Request) {
   try {
     if (!tratar) {
       const r = await salvarImagem(loja.slug, arquivo);
-      return Response.json({ url: r.url, tratada: false, ...(produto ? { sku, produto: produto.nome } : {}) });
+      return Response.json({ url: r.url, tratada: false, ...(produto ? { sku, produto: produto.nome, produtoId: produto.id } : {}) });
     }
     if (!removedorConfigurado()) return Response.json({ erro: "Tratamento de imagem indisponível nesta instalação." }, { status: 503 });
     const bytes = Buffer.from(await arquivo.arrayBuffer());
