@@ -15,7 +15,7 @@ const preco=(n:number)=>`${(n/100).toFixed(2)} BRL`;
  */
 export function itensMerchant(p:ProdutoCatalogo,base:string,prateleira:(nome:string|null|undefined)=>number|undefined=categoriaGoogle):string[] {
   if(!p.ativo) return [];
-  const ocorrencias=diagnosticarProduto(p);
+  const ocorrencias=diagnosticarProduto(p,prateleira);
   const marca=marcaConfirmada(p.marca);
   return p.variantes.filter(v=>v.ativo).flatMap(original=>{
     const v=ofertaDaVariante(original);
@@ -32,7 +32,7 @@ export function itensMerchant(p:ProdutoCatalogo,base:string,prateleira:(nome:str
       tag("id",externo),tag("title",titulo.slice(0,150)),tag("description",(p.descricaoCurta||p.descricao||p.nome).replace(/<[^>]*>/g," ").slice(0,5000)),tag("link",link),
       tag("image_link",imagens[0].url),...imagens.slice(1,10).map(m=>tag("additional_image_link",m.url)),
       tag("availability",v.compravel?"in_stock":"out_of_stock"), tag("price",preco(precoPromocional?v.precoDeCentavos!:v.precoCentavos)), precoPromocional?tag("sale_price",preco(v.precoCentavos)):"", tag("condition","new"),
-      p.marca?tag("brand",p.marca):"",gtinValido(v.gtin)?tag("gtin",v.gtin!):"",v.mpn?tag("mpn",v.mpn):"",
+      marca?tag("brand",marca):"",gtinValido(v.gtin)?tag("gtin",v.gtin!):"",v.mpn?tag("mpn",v.mpn):"",
       v.identificadoresEstado==="sem_identificador"&&!v.gtin&&!v.mpn?tag("identifier_exists","no"):"",
       p.categoria?tag("product_type",p.categoria.nome):"",googleCategoria?tag("google_product_category",String(googleCategoria)):"",
       dimensoesDeEnvioValidas?tag("shipping_length",`${v.comprimentoCm} cm`)+tag("shipping_width",`${v.larguraCm} cm`)+tag("shipping_height",`${v.alturaCm} cm`):"",
