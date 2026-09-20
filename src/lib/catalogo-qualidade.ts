@@ -29,8 +29,12 @@ export function diagnosticarProduto(p: ProdutoCatalogo): OcorrenciaCatalogo[] {
     if(v.identificadoresEstado==="sem_identificador" && (v.gtin || v.mpn)) add("identificador_contraditorio","gtin","erro","google","Há identificadores cadastrados, mas o item está marcado como sem identificador.","Corrija a declaração da apresentação.",v.id);
     if(!v.gtin && !v.mpn && v.identificadoresEstado!=="sem_identificador") add("identificador_desconhecido","gtin","aviso","google","Identificador ainda desconhecido.","Confirme o GTIN/MPN; vazio não significa que o fabricante não atribuiu um.",v.id);
     if(v.disponibilidade==="backorder") add("prazo_encomenda","disponibilidade","erro","google","A encomenda ainda não tem data confirmada para o canal.","Confirme a data de disponibilidade antes de anunciar.",v.id);
+    const dimensoesEmbalagem=[v.comprimentoCm,v.larguraCm,v.alturaCm];
+    const dimensoesGoogleValidas=dimensoesEmbalagem.every(n=>typeof n==="number"&&Number.isFinite(n)&&n>=1&&n<=400);
     if(v.pesoKg==null||!Number.isFinite(v.pesoKg)||v.pesoKg<=0) add("peso_embalagem_ausente","pesoKg","aviso","loja","Falta o peso do produto embalado para calcular o frete.","Pese o produto já dentro da embalagem de envio.",v.id);
-    if(![v.alturaCm,v.larguraCm,v.comprimentoCm].every(n=>typeof n==="number"&&Number.isFinite(n)&&n>0)) add("dimensoes_embalagem_ausentes","alturaCm","aviso","loja","Falta uma ou mais dimensões da embalagem.","Informe altura, largura e comprimento externos da embalagem de envio.",v.id);
+    else if(v.pesoKg>1000) add("peso_embalagem_fora_faixa","pesoKg","aviso","google","O peso do pacote supera o limite aceito pelo Merchant.","Confira a unidade e o peso real da embalagem.",v.id);
+    if(!dimensoesEmbalagem.every(n=>typeof n==="number"&&Number.isFinite(n)&&n>0)) add("dimensoes_embalagem_ausentes","alturaCm","aviso","loja","Falta uma ou mais dimensões da embalagem.","Informe altura, largura e comprimento externos da embalagem de envio.",v.id);
+    if(dimensoesEmbalagem.some(n=>n!=null)&&!dimensoesGoogleValidas) add("dimensoes_merchant_incompletas","alturaCm","aviso","google","O Merchant só recebe dimensões quando altura, largura e comprimento estão entre 1 e 400 cm.","Informe as três medidas externas da embalagem dentro dos limites aceitos.",v.id);
     const midias=midiasDaOferta(p,v.id);
     if(!midias.length) add("foto_ausente","imagens","erro","google","Esta apresentação não tem foto.","Envie uma foto do item exato.",v.id);
     else {
