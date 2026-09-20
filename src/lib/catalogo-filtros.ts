@@ -41,6 +41,10 @@ export function condicaoDoCatalogo(tenantId: string, filtro: FiltroCatalogo): Pr
   else if (situacao === "inativo") where.ativo = false;
   else if (situacao === "esgotado") where.OR = [{ disponibilidade: "out_of_stock" }, { estoque: 0 }];
   else if (situacao === "sem-foto") where.imagens = { isEmpty: true };
+  else if (situacao === "imagem-merchant-revisar") where.OR = [
+    { imagens: { isEmpty: true } },
+    { imagemOrigem: { not: "propria" } },
+  ];
   else if (situacao === "sem-preco") where.precoCentavos = 0;
   else if (situacao === "sem-categoria") where.categoriaId = null;
   else if (situacao === "sem-marca") where.marca = null;

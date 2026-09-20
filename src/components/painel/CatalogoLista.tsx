@@ -36,6 +36,7 @@ type Item = {
   opcoes: string[];
   variantes: number;
   identificadoresPendentes: boolean;
+  fotoMerchantRevisar: boolean;
   temFoto: boolean;
 };
 
@@ -48,6 +49,7 @@ const SITUACOES = [
   { valor: "", rotulo: "Todos" },
   { valor: "esgotado", rotulo: "Esgotados" },
   { valor: "sem-foto", rotulo: "Sem foto" },
+  { valor: "imagem-merchant-revisar", rotulo: "Revisar imagem Merchant" },
   { valor: "sem-preco", rotulo: "Sem preço" },
   { valor: "sem-categoria", rotulo: "Sem categoria" },
   { valor: "sem-marca", rotulo: "Sem marca" },
@@ -176,6 +178,7 @@ export default function CatalogoLista({
                     <ImageOff size={10} aria-hidden="true" /> sem foto
                   </span>
                 )}
+                {p.fotoMerchantRevisar && p.temFoto && <span className="rounded bg-amber-50 px-1.5 py-0.5 text-amber-800">imagem Merchant a revisar</span>}
                 {!p.marca && <span className="rounded bg-amber-50 px-1.5 py-0.5 text-amber-800">sem marca</span>}
                 {p.identificadoresPendentes && <span className="rounded bg-amber-50 px-1.5 py-0.5 text-amber-800">GTIN/MPN a confirmar</span>}
               </>
@@ -191,6 +194,7 @@ export default function CatalogoLista({
                       <ImageOff size={10} aria-hidden="true" /> sem foto
                     </span>
                   )}
+                  {p.fotoMerchantRevisar && p.temFoto && <span className="ml-2 inline-flex rounded bg-amber-50 px-1.5 py-0.5 text-[11px] text-amber-800">imagem Merchant a revisar</span>}
                   {!p.marca && <span className="ml-2 inline-flex rounded bg-amber-50 px-1.5 py-0.5 text-[11px] text-amber-800">sem marca</span>}
                   {p.identificadoresPendentes && <span className="ml-2 inline-flex rounded bg-amber-50 px-1.5 py-0.5 text-[11px] text-amber-800">GTIN/MPN a confirmar</span>}
                 </>

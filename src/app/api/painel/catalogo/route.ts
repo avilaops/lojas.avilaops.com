@@ -63,6 +63,7 @@ export async function GET(request: Request) {
       opcoes: p.opcoes,
       variantes: p._count.variantes,
       identificadoresPendentes: p.variantes.length > 0,
+      fotoMerchantRevisar: p.imagens.length === 0 || p.imagemOrigem !== "propria",
       temFoto: p.imagens.length > 0,
     })),
   });
