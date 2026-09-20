@@ -111,13 +111,20 @@ export function lerCsvProdutos(texto: string) {
   const produtos: Array<Record<string, unknown>> = [];
   const erros: string[] = [];
   registros.slice(1).forEach((c, i) => {
-    const nome = c[idx("nome")] ?? "";
-    const preco = centavos(c[idx("preco")] ?? "");
-    if (!nome || !Number.isFinite(preco)) {
-      erros.push(`Linha ${i + 2}: nome ou preço ausente.`);
+    const pega = (n: string) => (idx(n) >= 0 ? c[idx(n)] || undefined : undefined);
+    const nome = c[idx("nome")]?.trim() ?? "";
+    const sku = pega("sku");
+    const slug = pega("slug");
+    const brutoPreco = idx("preco") >= 0 ? c[idx("preco")]?.trim() ?? "" : "";
+    const preco = brutoPreco ? centavos(brutoPreco) : undefined;
+    if (!nome && !sku && !slug) {
+      erros.push(`Linha ${i + 2}: informe SKU, slug ou nome para localizar o produto.`);
       return;
     }
-    const pega = (n: string) => (idx(n) >= 0 ? c[idx(n)] || undefined : undefined);
+    if (brutoPreco && !Number.isFinite(preco)) {
+      erros.push(`Linha ${i + 2}: preço inválido.`);
+      return;
+    }
     const decimal = (n: string) => {
       const bruto = pega(n);
       if (bruto === undefined) return undefined;
@@ -130,7 +137,10 @@ export function lerCsvProdutos(texto: string) {
     const googleProductCategory = pega("google_product_category");
     const imagemOrigem = pega("imagem_origem")?.toLowerCase();
     const origemValida = imagemOrigem === "propria" || imagemOrigem === "representativa" || imagemOrigem === "ilustracao";
-    if (imagemOrigem && !origemValida) erros.push(`Linha ${i + 2}: imagem_origem deve ser propria, representativa ou ilustracao.`);
+    if (imagemOrigem && !origemValida) {
+      erros.push(`Linha ${i + 2}: imagem_origem deve ser propria, representativa ou ilustracao.`);
+      return;
+    }
     const identificadoresEstado = pega("identificadores_estado")?.toLowerCase();
     const estadoValido = identificadoresEstado === "desconhecido" || identificadoresEstado === "informado" || identificadoresEstado === "sem_identificador";
     if (identificadoresEstado && !estadoValido) erros.push(`Linha ${i + 2}: identificadores_estado deve ser desconhecido, informado ou sem_identificador.`);
@@ -138,13 +148,14 @@ export function lerCsvProdutos(texto: string) {
     // ela tirava a estrela de todo produto importado, sem aviso nenhum.
     const destaque = pega("destaque");
     produtos.push({
-      nome,
-      precoCentavos: preco,
+      ...(nome ? { nome } : {}),
+      ...(preco !== undefined ? { precoCentavos: preco } : {}),
+      ...(slug ? { slug } : {}),
       ...(precoDe !== undefined && Number.isFinite(precoDe) ? { precoDeCentavos: precoDe } : {}),
       categoria: pega("categoria"),
       ...(googleProductCategory !== undefined ? { googleProductCategory: googleProductCategory.toLowerCase() === "auto" ? null : googleProductCategory } : {}),
       marca: pega("marca"),
-      sku: pega("sku"),
+      ...(sku ? { sku } : {}),
       // O código de barras costuma vir com pontuação ou como texto do Excel;
       // só os dígitos interessam, e vazio não vira string vazia no banco.
       gtin: pega("gtin")?.replace(/\D/g, "") || undefined,
