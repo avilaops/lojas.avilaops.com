@@ -4,6 +4,8 @@ import type { Tenant } from "@prisma/client";
 import { prisma } from "./db";
 import { lerTema, type TemaLoja } from "./tema";
 import { lerIdentidade, type IdentidadeLoja } from "./identidade";
+import { retiradaPublicaDisponivel } from "./retirada-publica";
+export { retiradaPublicaDisponivel } from "./retirada-publica";
 
 /**
  * Resolução da loja pelo Host.
@@ -84,15 +86,6 @@ export interface Endereco {
 
 export function enderecoDo(t: Tenant): Endereco {
   return (t.endereco as Endereco | null) ?? {};
-}
-
-/** Retirada só é divulgada quando existe um destino completo e público. */
-export function retiradaPublicaDisponivel(t: Pick<Tenant, "retiradaNaLoja" | "enderecoPublico" | "endereco">): boolean {
-  if (!t.retiradaNaLoja || !t.enderecoPublico) return false;
-  const e = (t.endereco as Endereco | null) ?? {};
-  const campos = [e.logradouro, e.numero, e.bairro, e.cidade, e.uf];
-  return campos.every((valor) => typeof valor === "string" && valor.trim().length > 0)
-    && (e.cep ?? "").replace(/\D/g, "").length === 8;
 }
 
 /**
