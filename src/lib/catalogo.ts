@@ -3,7 +3,7 @@ import type { ItemCarrinho } from "@avilaops/checkout";
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import { prisma } from "./db";
-import { INCLUIR_CATALOGO } from "./catalogo-qualidade";
+import { INCLUIR_CATALOGO } from "./catalogo-qualidade";\nimport { marcaConfirmada } from "./marca-confirmada";
 import { encaixe, lerCompatibilidade, type Moto } from "./motos";
 import type { TemaLoja } from "./tema";
 import { publicavel, WHERE_COMPLETO } from "./produto-regras";
@@ -378,7 +378,7 @@ async function motosDaLojaSemCache(tenantId: string) {
 /** Marcas de produto (fabricantes de peças) da loja, mais frequentes primeiro. */
 export async function marcasDaLoja(tenantId: string): Promise<string[]> {
   const grupos = await prisma.produto.groupBy({ by: ["marca"], where: { tenantId, ativo: true, marca: { not: null } }, _count: { _all: true }, orderBy: [{ _count: { marca: "desc" } }, { marca: "asc" }], take: 24 });
-  return grupos.map((g) => g.marca).filter((m): m is string => !!m);
+  return grupos.map((g) => marcaConfirmada(g.marca)).filter((m): m is string => m !== null);
 }
 
 /** Média e contagem das avaliações aprovadas de um produto. */
