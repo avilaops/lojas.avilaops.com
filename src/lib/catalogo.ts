@@ -3,7 +3,8 @@ import type { ItemCarrinho } from "@avilaops/checkout";
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import { prisma } from "./db";
-import { INCLUIR_CATALOGO } from "./catalogo-qualidade";\nimport { marcaConfirmada } from "./marca-confirmada";
+import { INCLUIR_CATALOGO } from "./catalogo-qualidade";
+import { marcaConfirmada } from "./marca-confirmada";
 import { encaixe, lerCompatibilidade, type Moto } from "./motos";
 import type { TemaLoja } from "./tema";
 import { publicavel, WHERE_COMPLETO } from "./produto-regras";
@@ -442,13 +443,16 @@ export interface DiagnosticoFeed {
  */
 export async function diagnosticoDoFeed(tenantId: string): Promise<DiagnosticoFeed> {
   const { diagnosticarProduto } = await import("./catalogo-qualidade");
+  const { prateleirasDaLoja } = await import("./categoria-google");
+  const categorias=await prisma.categoria.findMany({where:{tenantId},select:{nome:true}});
+  const prateleira=prateleirasDaLoja(categorias.map(c=>c.nome));
   const problemas: ProblemaDeFeed[] = [];
   let total=0, prontos=0, cursor:string|undefined;
   do {
     const produtos=await prisma.produto.findMany({where:{tenantId,ativo:true},include:INCLUIR_CATALOGO,orderBy:{id:"asc"},take:200,...(cursor?{cursor:{id:cursor},skip:1}:{})});
     for(const p of produtos) {
       total++;
-      const ocorrencias=diagnosticarProduto(p);
+      const ocorrencias=diagnosticarProduto(p,prateleira);
       const bloqueios=[...new Set(ocorrencias.filter(o=>o.severidade==="erro").map(o=>o.mensagem))];
       const avisos=[...new Set(ocorrencias.filter(o=>o.severidade==="aviso").map(o=>o.mensagem))];
       if(!bloqueios.length)prontos++;
