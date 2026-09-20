@@ -47,7 +47,7 @@ export function condicaoDoCatalogo(tenantId: string, filtro: FiltroCatalogo): Pr
   ];
   else if (situacao === "sem-preco") where.precoCentavos = 0;
   else if (situacao === "sem-categoria") where.categoriaId = null;
-  else if (situacao === "sem-marca") where.marca = null;
+  else if (situacao === "sem-marca") where.OR = [\n    { marca: null },\n    { marca: "" },\n    { marca: { equals: "DIVERSOS", mode: "insensitive" } },\n  ];
   else if (situacao === "identificadores-pendentes") {
     // Mostrar apenas códigos ainda não confirmados pelo fabricante. Estado
     // `sem_identificador` é uma resposta válida e não entra nesta fila.
