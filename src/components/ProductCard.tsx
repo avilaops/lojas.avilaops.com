@@ -5,13 +5,13 @@ import { formatarBRL } from "@/lib/catalogo";
 import AddToCartButton from "@/components/cart/AddToCartButton";
 import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
 import { encaixe, lerCompatibilidade, type Moto } from "@/lib/motos";
-import { exigeReceita, lerMedicamento, vendaRemotaProibida } from "@/lib/farmacia";
+import { exigeReceita, lerMedicamento, vendaRemotaProibida } from "@/lib/farmacia";\nimport { marcaConfirmada } from "@/lib/marca-confirmada";
 
 export default function ProductCard({ produto, vende, whatsapp, moto = null, ocultarSeloDestaque = false }: { produto: Produto; vende: boolean; whatsapp: string | null; moto?: Moto | null; ocultarSeloDestaque?: boolean }) {
   const serve = moto != null && encaixe(produto.compatibilidade, moto) === "serve";
   const modelos = lerCompatibilidade(produto.compatibilidade);
   const imagem = produto.imagens[0];
-  const segundaImagem = produto.imagens[1];
+  const segundaImagem = produto.imagens[1];\n  const marca = marcaConfirmada(produto.marca);
   const miniatura = imagem && /\/uploads\//.test(imagem) && !/\.svg$/i.test(imagem) ? `${imagem}?w=480` : imagem;
   const miniatura2 = segundaImagem && /\/uploads\//.test(segundaImagem) && !/\.svg$/i.test(segundaImagem) ? `${segundaImagem}?w=480` : segundaImagem;
   // Preço zero é "ainda não precificado", não "de graça". Catálogo importado
@@ -100,7 +100,7 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null, ocu
         </div>
       </Link>
       <div className="flex flex-1 flex-col gap-2 p-4">
-        {produto.marca && <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{produto.marca}</p>}
+        {marca && <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{marca}</p>}
         {serve ? (
           <p className="selo-serve">✔ Serve na sua moto</p>
         ) : modelos.length > 0 ? (
