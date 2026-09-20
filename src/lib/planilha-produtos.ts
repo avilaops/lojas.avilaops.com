@@ -154,7 +154,7 @@ export function lerCsvProdutos(texto: string) {
       descricao: pega("descricao"),
       imagens: pega("imagem") ? [pega("imagem")!] : undefined,
       ...(origemValida ? { imagemOrigem } : {}),
-      ...(pega("imagem_familia") !== undefined ? { imagemFamilia: pega("imagem_familia") || null } : {}),
+      ...(idx("imagem_familia") >= 0 ? { imagemFamilia: c[idx("imagem_familia")] || null } : {}),
       ...(idx("destaque") >= 0 ? { destaque: SIM.test(destaque ?? "") } : {}),
       ...(ativo !== undefined && (SIM.test(ativo) || NAO.test(ativo)) ? { ativo: SIM.test(ativo) } : {}),
       ...(estoque !== undefined && Number.isFinite(estoque) ? { estoque } : {}),
