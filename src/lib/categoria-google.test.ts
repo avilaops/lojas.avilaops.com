@@ -56,6 +56,7 @@ test("classifica produtos de categorias amplas quando o nome informa a finalidad
 
 test("classifica fitas de demarcação, vedação e sabonetes pelo uso declarado", () => {
   assert.equal(categoriaGoogleProduto("BOM-1305 Fita de Marcacao para PISO", "Fitas"), 976);
+  assert.equal(categoriaGoogleProduto("BOM-1321 Fita de Demarcacao para PISO", "Fitas"), 976);
   assert.equal(categoriaGoogleProduto("Fita Adesiva - 1304 Bomvink P/DEMARCACAO E Sinalizacao", "Fitas"), 976);
   assert.equal(categoriaGoogleProduto("Fita Ipermeavel 10CM 1.5M", "Fitas"), 503744);
   assert.equal(categoriaGoogleProduto("Cantoneira EVA Estacionamento 750x100x100x10", "Cantoneiras"), 503744);
