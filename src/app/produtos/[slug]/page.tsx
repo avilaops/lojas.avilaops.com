@@ -24,7 +24,7 @@ import { minhaMoto } from "@/lib/minha-moto";
 import { lerCompatibilidade } from "@/lib/motos";
 import { descricaoDoProduto, textoPuro } from "@/lib/seo-texto";
 import { ofertaDaVariante,gtinValido } from "@/lib/catalogo-oferta";
-import { midiasDaOferta } from "@/lib/catalogo-qualidade";
+import { midiasDaOferta } from "@/lib/catalogo-qualidade";\nimport { marcaConfirmada } from "@/lib/marca-confirmada";
 
 type Props = { params: Promise<{ slug: string }>; searchParams:Promise<{variante?:string}> };
 
@@ -88,7 +88,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
     "@context": "https://schema.org",
     "@type": "Product",
     name: p.nome,
-    ...(p.marca ? { brand: { "@type": "Brand", name: p.marca } } : {}),
+    ...(marcaConfirmada(p.marca) ? { brand: { "@type": "Brand", name: marcaConfirmada(p.marca)! } } : {}),
     ...(p.sku ? { sku: p.sku } : {}),
     ...(gtinValido(p.gtin) ? { gtin: p.gtin } : {}),
     ...(escolhida?.mpn ? { mpn: escolhida.mpn } : {}),
