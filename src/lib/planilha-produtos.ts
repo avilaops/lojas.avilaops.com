@@ -143,7 +143,10 @@ export function lerCsvProdutos(texto: string) {
     }
     const identificadoresEstado = pega("identificadores_estado")?.toLowerCase();
     const estadoValido = identificadoresEstado === "desconhecido" || identificadoresEstado === "informado" || identificadoresEstado === "sem_identificador";
-    if (identificadoresEstado && !estadoValido) erros.push(`Linha ${i + 2}: identificadores_estado deve ser desconhecido, informado ou sem_identificador.`);
+    if (identificadoresEstado && !estadoValido) {
+      erros.push(`Linha ${i + 2}: identificadores_estado deve ser desconhecido, informado ou sem_identificador.`);
+      return;
+    }
     // `destaque` só é escrito quando a coluna existe: antes, toda planilha sem
     // ela tirava a estrela de todo produto importado, sem aviso nenhum.
     const destaque = pega("destaque");
