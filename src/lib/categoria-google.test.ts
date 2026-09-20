@@ -54,6 +54,15 @@ test("classifica produtos de categorias amplas quando o nome informa a finalidad
   assert.equal(categoriaGoogleProduto("Cantoneira P/MOV OVER BIC.11/2 C/04", "Cantoneiras"), 632);
 });
 
+test("classifica fitas de demarcação, vedação e sabonetes pelo uso declarado", () => {
+  assert.equal(categoriaGoogleProduto("BOM-1305 Fita de Marcacao para PISO", "Fitas"), 976);
+  assert.equal(categoriaGoogleProduto("Fita Adesiva - 1304 Bomvink P/DEMARCACAO E Sinalizacao", "Fitas"), 976);
+  assert.equal(categoriaGoogleProduto("Fita Ipermeavel 10CM 1.5M", "Fitas"), 503744);
+  assert.equal(categoriaGoogleProduto("Cantoneira EVA Estacionamento 750x100x100x10", "Cantoneiras"), 503744);
+  assert.equal(categoriaGoogleProduto("Sabonete Liq.prem.erva DOCE C/T 1LT", "Químicos"), 2503);
+  assert.equal(categoriaGoogleProduto("BOM-1305 Fita de Marcacao para PISO", "Outros"), undefined);
+});
+
 test("põe cada categoria da Brilhax na prateleira certa", () => {
   assert.equal(categoriaGoogle("Lavagem"), 2590);
   assert.equal(categoriaGoogle("Polimento"), 2590);
