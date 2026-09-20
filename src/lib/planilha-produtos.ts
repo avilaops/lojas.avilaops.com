@@ -41,6 +41,54 @@ export function normalizarCabecalho(nome: string): string {
   return nome.normalize("NFD").replace(/\p{M}+/gu, "").toLowerCase().replace(/[^a-z0-9]+/g, "_");
 }
 
+/** Lê registros CSV completos, inclusive quebras de linha dentro de aspas. */
+function lerRegistrosCsv(texto: string): { registros: string[][]; erro?: string } {
+  const conteudo = texto.replace(/^\uFEFF/, "");
+  let separadores = { virgula: 0, pontoVirgula: 0 };
+  let entreAspas = false;
+  for (let i = 0; i < conteudo.length; i++) {
+    const caractere = conteudo[i];
+    if (caractere === '"') {
+      if (entreAspas && conteudo[i + 1] === '"') i++;
+      else entreAspas = !entreAspas;
+    } else if (!entreAspas && (caractere === "\n" || caractere === "\r")) break;
+    else if (!entreAspas && caractere === ",") separadores.virgula++;
+    else if (!entreAspas && caractere === ";") separadores.pontoVirgula++;
+  }
+  const separador = separadores.pontoVirgula > separadores.virgula ? ";" : ",";
+  const registros: string[][] = [];
+  let registro: string[] = [];
+  let campo = "";
+  entreAspas = false;
+  const concluirCampo = () => { registro.push(campo.trim()); campo = ""; };
+  const concluirRegistro = () => {
+    concluirCampo();
+    if (registro.some((valor) => valor.length > 0)) registros.push(registro);
+    registro = [];
+  };
+  for (let i = 0; i < conteudo.length; i++) {
+    const caractere = conteudo[i];
+    if (caractere === '"') {
+      if (entreAspas && conteudo[i + 1] === '"') {
+        campo += '"';
+        i++;
+      } else if (entreAspas) entreAspas = false;
+      else if (campo.length === 0) entreAspas = true;
+      else campo += caractere;
+    } else if (entreAspas && (caractere === "\n" || caractere === "\r")) {
+      campo += "\n";
+      if (caractere === "\r" && conteudo[i + 1] === "\n") i++;
+    } else if (!entreAspas && caractere === separador) concluirCampo();
+    else if (!entreAspas && (caractere === "\n" || caractere === "\r")) {
+      concluirRegistro();
+      if (caractere === "\r" && conteudo[i + 1] === "\n") i++;
+    } else campo += caractere;
+  }
+  if (entreAspas) return { registros: [], erro: "Planilha inválida: há um campo entre aspas sem fechamento." };
+  if (campo.length > 0 || registro.length > 0) concluirRegistro();
+  return { registros };
+}
+
 const SIM = /^(1|sim|s|true|x|ativo)$/i;
 const NAO = /^(0|nao|n|false|inativo)$/i;
 
@@ -51,34 +99,16 @@ const NAO = /^(0|nao|n|false|inativo)$/i;
  * fornecedor que só traz preço não pode apagar foto, medida nem estoque.
  */
 export function lerCsvProdutos(texto: string) {
-  const linhas = texto.replace(/\r/g, "").split("\n").filter((l) => l.trim());
-  if (linhas.length < 2) return { produtos: [] as Array<Record<string, unknown>>, erros: ["Planilha vazia."] };
-  const sep = linhas[0].includes(";") ? ";" : ",";
-  const dividir = (l: string) => {
-    const out: string[] = [];
-    let atual = "";
-    let aspas = false;
-    for (const ch of l) {
-      if (ch === '"') aspas = !aspas;
-      else if (ch === sep && !aspas) {
-        out.push(atual);
-        atual = "";
-      } else atual += ch;
-    }
-    out.push(atual);
-    return out.map((c) => c.trim());
-  };
-  // O BOM que o próprio painel grava (e o Excel exige) vira parte do primeiro
-  // cabeçalho se não sair aqui: sem isso, o arquivo que a loja acabou de
-  // baixar volta sem a coluna `nome`.
-  const cab = dividir(linhas[0].replace(/^﻿/, "")).map(normalizarCabecalho);
+  const { registros, erro } = lerRegistrosCsv(texto);
+  if (erro) return { produtos: [] as Array<Record<string, unknown>>, erros: [erro] };
+  if (registros.length < 2) return { produtos: [] as Array<Record<string, unknown>>, erros: ["Planilha vazia."] };
+  const cab = registros[0].map(normalizarCabecalho);
   const idx = (n: string) => cab.indexOf(n);
   const centavos = (v: string) => Math.round(Number.parseFloat(v.replace(/[^\d,.-]/g, "").replace(/\.(?=\d{3})/g, "").replace(",", ".")) * 100);
 
   const produtos: Array<Record<string, unknown>> = [];
   const erros: string[] = [];
-  linhas.slice(1).forEach((l, i) => {
-    const c = dividir(l);
+  registros.slice(1).forEach((c, i) => {
     const nome = c[idx("nome")] ?? "";
     const preco = centavos(c[idx("preco")] ?? "");
     if (!nome || !Number.isFinite(preco)) {
