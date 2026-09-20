@@ -48,7 +48,7 @@ const REGRAS: Array<{ termos: RegExp; id: number; prateleira: string }> = [
   // "Veículos e peças > Peças e acessórios de veículos > Manutenção, cuidado e
   // decoração para veículos motorizados > Limpeza de veículos".
   {
-    termos: /lavagem|shampoo|limpa[\\s-]?rodas|limpeza\\s+automotiva/i,
+    termos: /lavagem|shampoo|limpa[\s-]?rodas|limpeza\s+automotiva/i,
     id: 2590,
     prateleira: "Soluções para limpeza de carro",
   },
@@ -58,7 +58,7 @@ const REGRAS: Array<{ termos: RegExp; id: number; prateleira: string }> = [
     prateleira: "Soluções para limpeza de carro",
   },
   {
-    termos: /vitrifica|coating|selante|\\bcera\\b|prote[çc][ãa]o/i,
+    termos: /vitrifica|coating|selante|\bcera\b|prote[çc][ãa]o/i,
     id: 2643,
     prateleira: "Ceras, graxas e protetores de veículos",
   },
@@ -81,7 +81,7 @@ const REGRAS: Array<{ termos: RegExp; id: number; prateleira: string }> = [
  * aqui um falso positivo não erra uma categoria, erra a loja inteira. Ficam de
  * fora os genéricos que qualquer ramo usa — "kit", "cera" (vela), "proteção".
  */
-const SINAL_DO_RAMO = /vitrifica|coating|polimento|boina|automotiv|limpa[\\s-]?rodas|snow\\s*foam|descontamina/i;
+const SINAL_DO_RAMO = /vitrifica|coating|polimento|boina|automotiv|limpa[\s-]?rodas|snow\s*foam|descontamina/i;
 
 /**
  * Regras que só valem com o ramo já provado pelo SINAL_DO_RAMO. Sozinhos,
@@ -95,7 +95,7 @@ const REGRAS_DO_RAMO: Array<{ termos: RegExp; id: number; prateleira: string }> 
   },
   {
     // \\bmotos?\\b não casa com "automotivo" nem com "motor".
-    termos: /\\bmotos?\\b|motocicl/i,
+    termos: /\bmotos?\b|motocicl/i,
     id: 2895,
     prateleira: "Limpeza de veículos",
   },
