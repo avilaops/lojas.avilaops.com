@@ -102,10 +102,10 @@ test("ativo aceita sim e não, e em branco não mexe no produto", () => {
 });
 
 test("planilha importa o estado incorreto da imagem e rejeita valores desconhecidos", () => {
-  const rejeitada = lerCsvProdutos("sku;correspondencia_imagem\\r\\nROL6205;rejeitada\\r\\n");
+  const rejeitada = lerCsvProdutos("sku;correspondencia_imagem\r\nROL6205;rejeitada\r\n");
   assert.deepEqual(rejeitada.erros, []);
   assert.equal(rejeitada.produtos[0].correspondenciaImagem, "rejeitada");
-  const invalida = lerCsvProdutos("sku;correspondencia_imagem\\r\\nROL6205;talvez\\r\\n");
+  const invalida = lerCsvProdutos("sku;correspondencia_imagem\r\nROL6205;talvez\r\n");
   assert.match(invalida.erros[0], /correspondencia_imagem/);
 });
 
