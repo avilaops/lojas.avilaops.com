@@ -74,6 +74,19 @@ export default function ImportarFotosPorSku({ ocupado, aoConcluir }: {
     if (sucessos) aoConcluir();
   }
 
+  async function descartar(foto: Foto) {
+    if (!foto.url || foto.associado || enviando || associando) return;
+    try {
+      const r = await fetch(`/api/painel/imagens?url=${encodeURIComponent(foto.url)}`, { method: "DELETE" });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d?.erro ?? "Falha ao remover.");
+      setFotos((atuais) => atuais.filter((f) => f.arquivo !== foto.arquivo));
+    } catch (e) {
+      const mensagem = e instanceof Error ? e.message : "Falha ao remover.";
+      setFotos((atuais) => atuais.map((f) => f.arquivo === foto.arquivo ? { ...f, erroAssociacao: mensagem } : f));
+    }
+  }
+
   const pendentes = fotos.filter((f) => !f.url && !f.erro).length;
   const prontas = fotos.filter((f) => f.url && f.produtoId && !f.erro && !f.associado).length;
   const bloqueadas = duplicados.size > 0;
@@ -87,7 +100,7 @@ export default function ImportarFotosPorSku({ ocupado, aoConcluir }: {
     </label>
     {fotos.length > 0 && <>
       <ul className="my-3 max-h-64 space-y-1 overflow-auto text-sm">
-        {fotos.map((f, i) => <li key={`${f.arquivo.name}-${i}`} className="flex flex-wrap justify-between gap-2 border-b border-border py-2"><span>{f.arquivo.name} <span className="text-muted-foreground">→ SKU {f.sku || "não identificado"}</span></span><span>{f.enviando ? "Enviando…" : f.associado ? "Associado" : f.erroAssociacao ?? (f.url ? "Enviado, aguardando associação" : f.erro ?? (duplicados.has(f.sku) ? "SKU repetido nesta seleção" : "Aguardando"))}</span></li>)}
+        {fotos.map((f, i) => <li key={`${f.arquivo.name}-${i}`} className="flex flex-wrap justify-between gap-2 border-b border-border py-2"><span>{f.arquivo.name} <span className="text-muted-foreground">→ SKU {f.sku || "não identificado"}</span></span><span className="flex items-center gap-2">{f.enviando ? "Enviando…" : f.associado ? "Associado" : f.erroAssociacao ?? (f.url ? "Enviado, aguardando associação" : f.erro ?? (duplicados.has(f.sku) ? "SKU repetido nesta seleção" : "Aguardando"))}{f.url && !f.associado && <button type="button" className="underline" disabled={enviando || associando} onClick={() => void descartar(f)}>Remover upload</button>}</span></li>)}
       </ul>
       <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={confirmado} onChange={(e) => setConfirmado(e.target.checked)} /> Confirmo que cada imagem mostra exatamente o produto e apresentação correspondentes ao SKU.</label>
       <div className="mt-3 flex flex-wrap gap-2">
