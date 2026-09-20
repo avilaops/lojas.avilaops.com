@@ -29,6 +29,7 @@ export const COLUNAS_PRODUTO = [
   "imagem_origem",
   "imagem_familia",
   "confirmar_imagem_exata",
+  "correspondencia_imagem",
   "destaque",
   "peso_kg",
   "altura_cm",
@@ -150,6 +151,11 @@ export function lerCsvProdutos(texto: string) {
     // `destaque` só é escrito quando a coluna existe: antes, toda planilha sem
     // ela tirava a estrela de todo produto importado, sem aviso nenhum.
     const destaque = pega("destaque");
+    const correspondenciaImagem = pega("correspondencia_imagem")?.toLowerCase();
+    if (correspondenciaImagem && !["nao_confirmada", "confirmada", "rejeitada"].includes(correspondenciaImagem)) {
+      erros.push(`Linha ${i + 2}: correspondencia_imagem deve ser nao_confirmada, confirmada ou rejeitada.`);
+      return;
+    }
     const googleProductCategory = pega("google_product_category");
     const imagemOrigem = pega("imagem_origem")?.toLowerCase();
     const origemValida = imagemOrigem === "propria" || imagemOrigem === "representativa" || imagemOrigem === "ilustracao";
@@ -182,6 +188,7 @@ export function lerCsvProdutos(texto: string) {
       ...(origemValida ? { imagemOrigem } : {}),
       ...(idx("imagem_familia") >= 0 ? { imagemFamilia: c[idx("imagem_familia")] || null } : {}),
       ...(confirmarImagemExata && SIM.test(confirmarImagemExata) ? { confirmarImagemExata: true } : {}),
+      ...(correspondenciaImagem ? { correspondenciaImagem } : {}),
       ...(idx("destaque") >= 0 ? { destaque: SIM.test(destaque ?? "") } : {}),
       ...(ativo !== undefined && (SIM.test(ativo) || NAO.test(ativo)) ? { ativo: SIM.test(ativo) } : {}),
       ...(estoque !== undefined && Number.isFinite(estoque) ? { estoque } : {}),
