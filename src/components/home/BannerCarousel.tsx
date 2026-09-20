@@ -52,8 +52,10 @@ export default function BannerCarousel({ campanhas }: { campanhas: Campanha[] })
           setAtiva(Math.round(elemento.scrollLeft / elemento.clientWidth));
         }}
       >
-        {campanhas.map((campanha, indice) => (
-          <Link className="banner-campanha" key={`${campanha.imagemUrl}-${indice}`} href={campanha.link}>
+        {campanhas.map((campanha, indice) => {
+          const mobileVertical = campanha.imagemMobileUrl?.endsWith("campanha-geral-v3-mobile.svg") ?? false;
+          return (
+          <Link className={`banner-campanha${mobileVertical ? " banner-campanha-mobile-vertical" : ""}`} key={`${campanha.imagemUrl}-${indice}`} href={campanha.link}>
             <picture>
               {campanha.imagemMobileUrl && <source media="(max-width: 640px)" srcSet={campanha.imagemMobileUrl} />}
               <img
@@ -66,7 +68,8 @@ export default function BannerCarousel({ campanhas }: { campanhas: Campanha[] })
               />
             </picture>
           </Link>
-        ))}
+          );
+        })}
       </div>
       {campanhas.length > 1 && <>
         <button className="banner-campanhas-seta anterior" type="button" aria-label="Campanha anterior" onClick={() => navegar(-1)} disabled={ativa === 0}>
