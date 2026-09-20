@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import FichaTecnica from "@/components/FichaTecnica";
 import { lerDefinicoes, lerValores } from "@/lib/campos-personalizados";
-import { exigirTenant, lojaVende, urlDaLoja, temaDo } from "@/lib/tenant";
+import { exigirTenant, lojaVende, urlDaLoja, temaDo, retiradaPublicaDisponivel } from "@/lib/tenant";
 import GaleriaPremium from "@/components/templates/automotivo-premium/Galeria";
 import { buscarProduto, equivalentesDoProduto, formatarBRL, listarProdutos, resumoAvaliacoes } from "@/lib/catalogo";
 import * as regras from "@/lib/produto-regras";
@@ -247,7 +247,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
           <Compatibilidade compatibilidade={p.compatibilidade} codigoOriginal={p.codigoOriginal} codigosEquivalentes={p.codigosEquivalentes} moto={moto} />
 
           <ul className="mt-6 space-y-1 text-sm text-muted-foreground">
-            {t.retiradaNaLoja && <li>✔ Retirada na loja sem custo</li>}
+            {retiradaPublicaDisponivel(t) && <li>✔ Retirada na loja sem custo</li>}
             <li>✔ {t.despachoDiasUteis === 0
               ? "Despacho no mesmo dia útil para pagamentos confirmados durante o expediente"
               : `Envio em até ${t.despachoDiasUteis} dias úteis após o pagamento`}</li>
