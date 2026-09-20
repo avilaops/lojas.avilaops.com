@@ -127,6 +127,8 @@ export type ProdutoDePlanilha = {
   marca: string | null;
   sku: string | null;
   gtin: string | null;
+  mpn?: string | null;
+  identificadoresEstado?: "desconhecido" | "informado" | "sem_identificador";
   descricaoCurta: string | null;
   descricao: string | null;
   imagens: string[];
@@ -149,6 +151,8 @@ export function linhaDoProduto(p: ProdutoDePlanilha): Valor[] {
     p.marca ?? "",
     p.sku ?? "",
     p.gtin ?? "",
+    p.mpn ?? "",
+    p.identificadoresEstado ?? "desconhecido",
     p.precoDeCentavos ? reais(p.precoDeCentavos) : "",
     p.descricaoCurta ?? "",
     p.descricao ?? "",
@@ -179,10 +183,15 @@ export async function produtosEmLinhas(tenantId: string, filtro: FiltroCatalogo 
       descricaoCurta: true, descricao: true, imagens: true, destaque: true, ativo: true, estoque: true,
       pesoKg: true, alturaCm: true, larguraCm: true, comprimentoCm: true,
       categoria: { select: { nome: true } },
+      variantes: { where: { padrao: true }, select: { mpn: true, identificadoresEstado: true }, take: 1 },
     },
     orderBy: [{ ativo: "desc" }, { nome: "asc" }],
     take: TETO_PRODUTOS,
   });
 
-  return [[...COLUNAS_PRODUTO], ...produtos.map(linhaDoProduto)];
+  return [[...COLUNAS_PRODUTO], ...produtos.map((p) => linhaDoProduto({
+    ...p,
+    mpn: p.variantes[0]?.mpn ?? null,
+    identificadoresEstado: (p.variantes[0]?.identificadoresEstado ?? "desconhecido") as ProdutoDePlanilha["identificadoresEstado"],
+  }))];
 }

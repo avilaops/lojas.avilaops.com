@@ -19,6 +19,8 @@ export const COLUNAS_PRODUTO = [
   "marca",
   "sku",
   "gtin",
+  "mpn",
+  "identificadores_estado",
   "preco_de",
   "descricao_curta",
   "descricao",
@@ -92,6 +94,9 @@ export function lerCsvProdutos(texto: string) {
     const precoDe = pega("preco_de") ? centavos(pega("preco_de")!) : undefined;
     const estoque = pega("estoque") ? Number.parseInt(pega("estoque")!.replace(/\D/g, ""), 10) : undefined;
     const ativo = pega("ativo");
+    const identificadoresEstado = pega("identificadores_estado")?.toLowerCase();
+    const estadoValido = identificadoresEstado === "desconhecido" || identificadoresEstado === "informado" || identificadoresEstado === "sem_identificador";
+    if (identificadoresEstado && !estadoValido) erros.push(`Linha ${i + 2}: identificadores_estado deve ser desconhecido, informado ou sem_identificador.`);
     // `destaque` só é escrito quando a coluna existe: antes, toda planilha sem
     // ela tirava a estrela de todo produto importado, sem aviso nenhum.
     const destaque = pega("destaque");
@@ -105,6 +110,8 @@ export function lerCsvProdutos(texto: string) {
       // O código de barras costuma vir com pontuação ou como texto do Excel;
       // só os dígitos interessam, e vazio não vira string vazia no banco.
       gtin: pega("gtin")?.replace(/\D/g, "") || undefined,
+      mpn: pega("mpn")?.trim() || undefined,
+      ...(estadoValido ? { identificadoresEstado } : {}),
       descricaoCurta: pega("descricao_curta"),
       descricao: pega("descricao"),
       imagens: pega("imagem") ? [pega("imagem")!] : undefined,
