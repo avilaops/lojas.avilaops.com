@@ -1,6 +1,6 @@
 import { diagnosticarProduto, midiasDaOferta, type ProdutoCatalogo } from "./catalogo-qualidade";
 import { gtinValido, ofertaDaVariante } from "./catalogo-oferta";
-import { categoriaGoogle, prateleirasDaLoja } from "./categoria-google";
+import { categoriaGoogle, categoriaGoogleProduto, prateleirasDaLoja } from "./categoria-google";
 import { idDaCategoriaGoogle } from "./google-product-taxonomy";
 import { marcaConfirmada } from "./marca-confirmada";
 
@@ -26,7 +26,7 @@ export function itensMerchant(p:ProdutoCatalogo,base:string,prateleira:(nome:str
     const titulo=v.padrao?p.nome:`${p.nome} · ${v.nome}`;
     const precoPromocional=v.precoDeCentavos!=null&&v.precoDeCentavos>v.precoCentavos;
     const valores=v.valores as Record<string,string>;
-    const googleCategoria=idDaCategoriaGoogle(p.googleProductCategory) || prateleira(p.categoria?.nome);
+    const googleCategoria=idDaCategoriaGoogle(p.googleProductCategory) || categoriaGoogleProduto(p.nome,p.categoria?.nome,prateleira);
     const dimensoesDeEnvioValidas=[v.comprimentoCm,v.larguraCm,v.alturaCm].every(n=>typeof n==="number" && Number.isFinite(n) && n>=1 && n<=400);
     return [`<item>${[
       tag("id",externo),tag("title",titulo.slice(0,150)),tag("description",(p.descricaoCurta||p.descricao||p.nome).replace(/<[^>]*>/g," ").slice(0,5000)),tag("link",link),
