@@ -33,17 +33,59 @@
 
 /** Ramo por ramo, na ordem em que as regras são testadas. */
 const REGRAS: Array<{ termos: RegExp; id: number; prateleira: string }> = [
-  // Tipos de abraçadeira da Vedashow variam; aguardar confirmação do uso.
-  { termos: /^alicates?$/i, id: 1958, prateleira: "Alicates" },
-  { termos: /^arruelas?$/i, id: 2195, prateleira: "Arruelas" },
-  { termos: /^correntes?$/i, id: 1492, prateleira: "Correntes" },
-  { termos: /^estiletes?$/i, id: 2198, prateleira: "Estiletes" },
-  { termos: /^ferragens?$/i, id: 632, prateleira: "Ferragens" },
-  { termos: /^ferramentas?$/i, id: 1167, prateleira: "Ferramentas" },
-  { termos: /^molas?$/i, id: 499933, prateleira: "Molas" },
-  { termos: /^parafusos?$/i, id: 2251, prateleira: "Parafusos" },
-  { termos: /^serras?$/i, id: 1235, prateleira: "Serras" },
-  { termos: /^torneiras?$/i, id: 2032, prateleira: "Torneiras" },
+  // Categorias com correspondência direta e exata na taxonomia pt-BR.
+  // “Abraçadeiras” mistura tipos de produto na Vedashow, então fica sem
+  // categoria Google até confirmar o uso de cada item.
+  {
+    termos: /^alicates?$/i,
+    id: 1958,
+    prateleira: "Alicates",
+  },
+  {
+    termos: /^arruelas?$/i,
+    id: 2195,
+    prateleira: "Arruelas",
+  },
+  {
+    termos: /^correntes?$/i,
+    id: 1492,
+    prateleira: "Correntes",
+  },
+  {
+    termos: /^estiletes?$/i,
+    id: 2198,
+    prateleira: "Estiletes",
+  },
+  {
+    termos: /^ferragens?$/i,
+    id: 632,
+    prateleira: "Ferragens",
+  },
+  {
+    termos: /^ferramentas?$/i,
+    id: 1167,
+    prateleira: "Ferramentas",
+  },
+  {
+    termos: /^molas?$/i,
+    id: 499933,
+    prateleira: "Molas",
+  },
+  {
+    termos: /^parafusos?$/i,
+    id: 2251,
+    prateleira: "Parafusos",
+  },
+  {
+    termos: /^serras?$/i,
+    id: 1235,
+    prateleira: "Serras",
+  },
+  {
+    termos: /^torneiras?$/i,
+    id: 2032,
+    prateleira: "Torneiras",
+  },
   // Estética automotiva, na ordem do serviço. Os quatro ids abaixo vivem em
   // "Veículos e peças > Peças e acessórios de veículos > Manutenção, cuidado e
   // decoração para veículos motorizados > Limpeza de veículos".
@@ -84,6 +126,15 @@ const REGRAS: Array<{ termos: RegExp; id: number; prateleira: string }> = [
 const SINAL_DO_RAMO = /vitrifica|coating|polimento|boina|automotiv|limpa[\s-]?rodas|snow\s*foam|descontamina/i;
 
 /**
+ * Uma distribuidora de peças industriais tem muitas famílias sem equivalente
+ * específico na taxonomia (retentores, mancais, O-rings e rolamentos industriais
+ * não aparecem como folhas). A categoria pai oficial é mais precisa do que
+ * deixar o Merchant inferir a área pelo título. Só usar o pai depois que as
+ * próprias categorias provarem que esta é uma loja industrial.
+ */
+const SINAL_INDUSTRIAL = /retentores?|rolamentos?|o[\s-]?rings?|gaxetas?|raspadores?|mancais?|correias?|buchas?|an[ée]is\s+(?:backup|el[áa]sticos?)|vedações?|hidráulica/i;
+
+/**
  * Regras que só valem com o ramo já provado pelo SINAL_DO_RAMO. Sozinhos,
  * estes nomes não dizem nada: toda loja tem "Acessórios".
  */
@@ -94,7 +145,7 @@ const REGRAS_DO_RAMO: Array<{ termos: RegExp; id: number; prateleira: string }> 
     prateleira: "Escovas para limpeza de carro",
   },
   {
-    // \\bmotos?\\b não casa com "automotivo" nem com "motor".
+    // \bmotos?\b não casa com "automotivo" nem com "motor".
     termos: /\bmotos?\b|motocicl/i,
     id: 2895,
     prateleira: "Limpeza de veículos",
@@ -123,11 +174,15 @@ export function categoriaGoogle(nomeDaCategoria: string | null | undefined): num
  */
 export function prateleirasDaLoja(nomes: Array<string | null | undefined>): (nomeDaCategoria: string | null | undefined) => number | undefined {
   const automotiva = nomes.some((n) => !!n && SINAL_DO_RAMO.test(n));
+  const industrial = nomes.some((n) => !!n && SINAL_INDUSTRIAL.test(n));
   return (nomeDaCategoria) => {
     if (!nomeDaCategoria) return undefined;
     const direta = categoriaGoogle(nomeDaCategoria);
     if (direta !== undefined) return direta;
-    if (!automotiva) return undefined;
-    return REGRAS_DO_RAMO.find((r) => r.termos.test(nomeDaCategoria))?.id;
+    if (!automotiva && !industrial) return undefined;
+    const automotivaDireta = REGRAS_DO_RAMO.find((r) => r.termos.test(nomeDaCategoria))?.id;
+    if (automotivaDireta !== undefined) return automotivaDireta;
+    if (industrial) return 111; // Comercial e industrial, categoria pai da taxonomia oficial.
+    return undefined;
   };
 }
