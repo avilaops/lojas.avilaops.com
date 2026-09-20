@@ -174,7 +174,7 @@ const REGRAS_DO_RAMO: Array<{ termos: RegExp; id: number; prateleira: string }> 
  */
 export function categoriaGoogle(nomeDaCategoria: string | null | undefined): number | undefined {
   if (!nomeDaCategoria) return undefined;
-  if (/^fita ades\.?\\s*p\\/emb\\b/i.test(nomeDaCategoria.trim())) return 975;
+  if (/^fita ades\.?\s*p\/emb\b/i.test(nomeDaCategoria.trim())) return 975;
   return REGRAS.find((r) => r.termos.test(nomeDaCategoria))?.id;
 }
 
