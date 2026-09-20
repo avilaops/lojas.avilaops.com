@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { prisma } from "@/lib/db";
-import { ProdutoEntradaSchema, conferirImagem } from "@/lib/admin-schemas";
+import { ProdutoEntradaSchema, ProdutoPlanilhaSchema, conferirImagem } from "@/lib/admin-schemas";
 import { importarProdutos } from "@/lib/admin-tenants";
 import { lojistaAtual } from "@/lib/sessao";
 import { exigir } from "@/lib/operadores";
@@ -16,7 +16,7 @@ export async function PUT(request: Request) {
   const { s, erro } = await exigir("catalogo");
   if (erro) return erro;
   const loja = s.tenant;
-  const r = z.array(ProdutoEntradaSchema).min(1).max(2000).safeParse(await request.json().catch(() => null));
+  const r = z.array(ProdutoPlanilhaSchema).min(1).max(2000).safeParse(await request.json().catch(() => null));
   if (!r.success) return Response.json({ erro: "Dados inválidos.", detalhes: r.error.flatten() }, { status: 422 });
   let resultado;
   try { resultado = await importarProdutos(loja.id, r.data); } catch (e) { return respostaErroCatalogo(e); }
