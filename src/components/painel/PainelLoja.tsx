@@ -109,15 +109,21 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
   const irPara = (s: SecaoPainel) => router.push(ROTA_DA_SECAO[s]);
   const [erro, setErro] = useState<string | null>(null);
   const [ok, setOk] = useState<string | null>(null);
+  const [aviso, setAviso] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
 
   async function chamar(caminho: string, method: string, body?: unknown, sucesso = "Salvo.") {
-    setErro(null); setOk(null); setOcupado(true);
+    setErro(null); setOk(null); setAviso(null); setOcupado(true);
     try {
       const r = await fetch(caminho, { method, headers: body ? { "content-type": "application/json" } : undefined, body: body ? JSON.stringify(body) : undefined });
       const d = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(d?.erro ?? "Falha.");
-      setOk(sucesso); router.refresh(); return d;
+      setOk(sucesso);
+      if (Array.isArray(d?.avisos) && d.avisos.length) {
+        const total = Number(d.avisosTotal) || d.avisos.length;
+        setAviso(`${total} linha(s) precisam de atenção: ${d.avisos.slice(0, 5).join(" · ")}${total > 5 ? " · e outras" : ""}`);
+      }
+      router.refresh(); return d;
     } catch (e) { setErro(e instanceof Error ? e.message : "Falha inesperada."); } finally { setOcupado(false); }
   }
 
@@ -163,6 +169,7 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
 
       {erro && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{erro}</p>}
       {ok && <p className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-700">{ok}</p>}
+      {aviso && <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900" role="status">{aviso}</p>}
 
 
       {aba === "Visão geral" && (
@@ -255,13 +262,13 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
           </Secao>
 
           <Secao titulo="Importar planilha" descricao="Produto com o mesmo SKU é atualizado, não duplicado.">
-            <p className="text-xs text-muted-foreground">Colunas: <code>nome, preco, categoria, google_product_category, marca, sku, gtin, mpn, identificadores_estado, preco_de, descricao_curta, descricao, imagem, destaque, peso_kg, altura_cm, largura_cm, comprimento_cm, estoque, ativo</code></p>
+            <p className="text-xs text-muted-foreground">Colunas: <code>nome, preco, categoria, google_product_category, marca, sku, gtin, mpn, identificadores_estado, preco_de, descricao_curta, descricao, imagem, imagem_origem, imagem_familia, destaque, peso_kg, altura_cm, largura_cm, comprimento_cm, estoque, ativo</code></p>
             <p className="text-xs text-muted-foreground">Use MPN somente para o código do fabricante. Em <code>google_product_category</code>, informe o ID ou o caminho oficial confirmado. Em atualização por planilha, a célula vazia mantém o valor salvo; escreva <code>auto</code> para remover uma substituição e voltar à classificação automática. Em <code>identificadores_estado</code>, informe <code>desconhecido</code>, <code>informado</code> ou <code>sem_identificador</code>, conforme embalagem ou fornecedor. Em produtos com variantes, a planilha atualiza a apresentação padrão.</p>
             {/* São as mesmas colunas que a exportação do Catálogo grava: o
                 caminho de corrigir em lote é baixar, mexer e devolver. Coluna
                 que não vier no arquivo não é mexida no produto. */}
             <p className="text-xs text-muted-foreground">
-              Só <code>nome</code> e <code>preco</code> são obrigatórios. Para corrigir em lote, baixe o catálogo em CSV na aba Catálogo, ajuste e reenvie aqui — coluna que não vier no arquivo fica como está.
+              Para atualizar um produto existente, informe o <code>sku</code> e somente as colunas que deseja corrigir. Para cadastrar um produto novo, informe <code>nome</code> e <code>preco</code>. Colunas ausentes e células vazias preservam o valor atual; para limpar a família da imagem, deixe a coluna <code>imagem_familia</code> presente e vazia.
             </p>
             <SoltarPlanilha
               desabilitado={ocupado}
@@ -294,7 +301,7 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
                   <button
                     className="btn-primario"
                     disabled={ocupado || !csv.produtos.length}
-                    onClick={() => chamar("/api/painel/produtos", "PUT", csv.produtos, "Produtos importados.").then(() => setCsv(null))}
+                    onClick={() => chamar("/api/painel/produtos", "PUT", csv.produtos, "Produtos importados.").then((resultado) => { if (resultado) setCsv(null); })}
                   >
                     Importar {csv.produtos.length.toLocaleString("pt-BR")} produto(s)
                   </button>
