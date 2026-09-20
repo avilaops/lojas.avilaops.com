@@ -2,6 +2,7 @@ import { diagnosticarProduto, midiasDaOferta, type ProdutoCatalogo } from "./cat
 import { gtinValido, ofertaDaVariante } from "./catalogo-oferta";
 import { categoriaGoogle, prateleirasDaLoja } from "./categoria-google";
 import { idDaCategoriaGoogle } from "./google-product-taxonomy";
+import { marcaConfirmada } from "./marca-confirmada";
 
 const esc=(s:string)=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 const tag=(k:string,v:string)=>`<g:${k}>${esc(v)}</g:${k}>`;
@@ -15,6 +16,7 @@ const preco=(n:number)=>`${(n/100).toFixed(2)} BRL`;
 export function itensMerchant(p:ProdutoCatalogo,base:string,prateleira:(nome:string|null|undefined)=>number|undefined=categoriaGoogle):string[] {
   if(!p.ativo) return [];
   const ocorrencias=diagnosticarProduto(p);
+  const marca=marcaConfirmada(p.marca);
   return p.variantes.filter(v=>v.ativo).flatMap(original=>{
     const v=ofertaDaVariante(original);
     if(v.precoCentavos<=0 || ocorrencias.some(o=>o.severidade==="erro" && o.canal==="google" && (!o.varianteId || o.varianteId===v.id))) return [];
