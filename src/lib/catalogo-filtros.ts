@@ -44,11 +44,12 @@ export function condicaoDoCatalogo(tenantId: string, filtro: FiltroCatalogo): Pr
   else if (situacao === "imagem-merchant-revisar") where.OR = [
     { imagens: { isEmpty: true } },
     { imagemOrigem: { not: "propria" } },
+    { midias: { none: { varianteId: null, tipo: "imagem", ordem: 0, correspondencia: "confirmada" } } },
   ];
   else if (situacao === "sem-preco") where.precoCentavos = 0;
   else if (situacao === "sem-preco-com-saldo") {
-    // A auditoria encontrou variantes ativas com saldo positivo e preço zero.
-    // Filtrar pela variante porque um produto pode conter várias ofertas.
+    // A lista de auditoria mostrou variantes ativas com saldo positivo e preço
+    // zero. Filtrar pela variante, pois o produto pode ter mais de uma oferta.
     where.variantes = { some: { ativo: true, estoque: { gt: 0 }, precoCentavos: 0 } };
   }
   else if (situacao === "sem-categoria") where.categoriaId = null;
@@ -60,7 +61,11 @@ export function condicaoDoCatalogo(tenantId: string, filtro: FiltroCatalogo): Pr
       { OR: [{ descricaoCurta: null }, { descricaoCurta: "" }] },
     ];
   }
-  else if (situacao === "sem-marca") where.OR = [\n    { marca: null },\n    { marca: "" },\n    { marca: { equals: "DIVERSOS", mode: "insensitive" } },\n  ];
+  else if (situacao === "sem-marca") where.OR = [
+    { marca: null },
+    { marca: "" },
+    { marca: { equals: "DIVERSOS", mode: "insensitive" } },
+  ];
   else if (situacao === "identificadores-pendentes") {
     // Mostrar apenas códigos ainda não confirmados pelo fabricante. Estado
     // `sem_identificador` é uma resposta válida e não entra nesta fila.
