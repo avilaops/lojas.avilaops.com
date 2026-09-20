@@ -61,7 +61,7 @@ export async function PATCH(request: Request) {
   const loja = s.tenant;
   const r = Edicao.safeParse(await request.json().catch(() => null));
   if (!r.success) return Response.json({ erro: "Dados inválidos.", detalhes: r.error.flatten() }, { status: 422 });
-  const { id, categoria, atributos, slug, compatibilidade, versaoCatalogo, camposPersonalizados, confirmarImagemExata, associarFotoSku, ...campos } = r.data;
+  const { id, categoria, atributos, slug, compatibilidade, versaoCatalogo, camposPersonalizados, confirmarImagemExata, correspondenciaImagem, associarFotoSku, ...campos } = r.data;
   const p = await prisma.produto.findFirst({ where: { id, tenantId: loja.id } });
   if (!p) return Response.json({ erro: "Produto não encontrado." }, { status: 404 });
   if (associarFotoSku) {
@@ -95,8 +95,9 @@ export async function PATCH(request: Request) {
   }
 
   let atualizado;
-  if (confirmarImagemExata && ((campos.imagemOrigem ?? p.imagemOrigem) !== "propria" || !((campos.imagens?.length ?? 0) || p.imagens.length))) return Response.json({ erro: "Confirme somente uma foto principal própria que esteja associada ao produto." }, { status: 422 });
-  try { atualizado = await salvarProdutoNoCatalogo(loja.id, id, { ...campos, ...(valoresCampos ? { camposPersonalizados: valoresCampos as unknown as Prisma.InputJsonValue } : {}), ...(slug ? { slug: slugificar(slug) } : {}), ...(categoriaId !== undefined ? { categoriaId } : {}), ...(atributos ? { atributos: atributos as Prisma.InputJsonValue } : {}), ...(compatibilidade ? { compatibilidade: compatibilidade as unknown as Prisma.InputJsonValue } : {}) }, { origem: "painel", versao: versaoCatalogo, exigirSemImagem: associarFotoSku, ...(confirmarImagemExata ? { metadadosMidia: { fonte: "painel", correspondencia: "confirmada", somentePrincipal: true } } : {}) });
+  const correspondenciaFinal = confirmarImagemExata ? "confirmada" : correspondenciaImagem;
+  if (correspondenciaFinal && ((campos.imagemOrigem ?? p.imagemOrigem) !== "propria" || !((campos.imagens?.length ?? 0) || p.imagens.length))) return Response.json({ erro: "A conferência da imagem exige foto própria associada ao produto." }, { status: 422 });
+  try { atualizado = await salvarProdutoNoCatalogo(loja.id, id, { ...campos, ...(valoresCampos ? { camposPersonalizados: valoresCampos as unknown as Prisma.InputJsonValue } : {}), ...(slug ? { slug: slugificar(slug) } : {}), ...(categoriaId !== undefined ? { categoriaId } : {}), ...(atributos ? { atributos: atributos as Prisma.InputJsonValue } : {}), ...(compatibilidade ? { compatibilidade: compatibilidade as unknown as Prisma.InputJsonValue } : {}) }, { origem: "painel", versao: versaoCatalogo, exigirSemImagem: associarFotoSku, ...(correspondenciaFinal ? { metadadosMidia: { fonte: "painel", correspondencia: correspondenciaFinal, somentePrincipal: true } } : {}) });
   } catch(e) { return respostaErroCatalogo(e); }
   invalidarCatalogo(loja.id);
   void avisarBuscadores(loja, caminhosDoProduto(atualizado.slug, categoria ?? undefined));
