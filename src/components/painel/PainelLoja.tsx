@@ -381,7 +381,7 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
             <Campo label="Despacho (dias úteis)"><input className={inputClasse} type="number" min={0} max={30} value={entrega.despachoDiasUteis} onChange={(e) => setEntrega({ ...entrega, despachoDiasUteis: Number(e.target.value) })} /></Campo>
             <Campo label="Frete grátis acima de (R$)"><input className={inputClasse} value={entrega.freteGratisAcima} onChange={(e) => setEntrega({ ...entrega, freteGratisAcima: e.target.value })} placeholder="200,00" /></Campo>
           </div>
-          {entrega.retiradaNaLoja && (!loja.enderecoPublico || !loja.endereco?.logradouro || !loja.endereco?.numero || !loja.endereco?.cidade || !loja.endereco?.uf || loja.endereco?.cep?.replace(/\\D/g, "").length !== 8) && (
+          {entrega.retiradaNaLoja && (!loja.enderecoPublico || !loja.endereco?.logradouro || !loja.endereco?.numero || !loja.endereco?.cidade || !loja.endereco?.uf || loja.endereco?.cep?.replace(/\D/g, "").length !== 8) && (
             <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">Para oferecer retirada, complete o endereço e marque a exibição pública na seção Conta. Salve o endereço e volte aqui para ativar.</p>
           )}
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Tabela por estado (UF separadas por vírgula; * = resto do Brasil)</p>
