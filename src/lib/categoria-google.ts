@@ -41,6 +41,11 @@ const REGRAS: Array<{ termos: RegExp; id: number; prateleira: string }> = [
     prateleira: "Abraçadeiras",
   },
   {
+    termos: /^alicates?$/i,
+    id: 1958,
+    prateleira: "Alicates",
+  },
+  {
     termos: /^arruelas?$/i,
     id: 2195,
     prateleira: "Arruelas",
@@ -49,6 +54,11 @@ const REGRAS: Array<{ termos: RegExp; id: number; prateleira: string }> = [
     termos: /^correntes?$/i,
     id: 1492,
     prateleira: "Correntes",
+  },
+  {
+    termos: /^estiletes?$/i,
+    id: 2198,
+    prateleira: "Estiletes",
   },
   {
     termos: /^ferragens?$/i,
@@ -69,6 +79,16 @@ const REGRAS: Array<{ termos: RegExp; id: number; prateleira: string }> = [
     termos: /^parafusos?$/i,
     id: 2251,
     prateleira: "Parafusos",
+  },
+  {
+    termos: /^serras?$/i,
+    id: 1235,
+    prateleira: "Serras",
+  },
+  {
+    termos: /^torneiras?$/i,
+    id: 2032,
+    prateleira: "Torneiras",
   },
   // Estética automotiva, na ordem do serviço. Os quatro ids abaixo vivem em
   // "Veículos e peças > Peças e acessórios de veículos > Manutenção, cuidado e
