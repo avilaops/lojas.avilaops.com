@@ -13,7 +13,7 @@ import BuscaLoja from "@/components/BuscaLoja";
  */
 export const PRINCIPAIS = 8;
 
-export default function Header({ loja, logoUrl, categorias, exemploBusca }: { loja: TenantPublico; logoUrl: string | null; categorias: Array<{ slug: string; nome: string }>; exemploBusca?: string | null }) {
+export default function Header({ loja, logoUrl, categorias, exemploBusca, mostrarPromocoes = false }: { loja: TenantPublico; logoUrl: string | null; categorias: Array<{ slug: string; nome: string }>; exemploBusca?: string | null; mostrarPromocoes?: boolean }) {
   return (
     <header className="cabecalho-loja sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur-xl">
       <div className="container-loja flex h-[72px] items-center gap-4">
@@ -50,6 +50,7 @@ export default function Header({ loja, logoUrl, categorias, exemploBusca }: { lo
             <Link href="/produtos" className="whitespace-nowrap font-semibold text-foreground">
               Todos
             </Link>
+            {mostrarPromocoes && <Link href="/promocoes" className="whitespace-nowrap font-semibold text-primary">Promoções</Link>}
             {categorias.slice(0, PRINCIPAIS).map((c) => (
               <Link key={c.slug} href={`/categoria/${c.slug}`} className="whitespace-nowrap text-muted-foreground hover:text-foreground">
                 {c.nome}
