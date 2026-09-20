@@ -46,6 +46,11 @@ export function condicaoDoCatalogo(tenantId: string, filtro: FiltroCatalogo): Pr
     { imagemOrigem: { not: "propria" } },
   ];
   else if (situacao === "sem-preco") where.precoCentavos = 0;
+  else if (situacao === "sem-preco-com-saldo") {
+    // A auditoria encontrou variantes ativas com saldo positivo e preço zero.
+    // Filtrar pela variante porque um produto pode conter várias ofertas.
+    where.variantes = { some: { ativo: true, estoque: { gt: 0 }, precoCentavos: 0 } };
+  }
   else if (situacao === "sem-categoria") where.categoriaId = null;
   else if (situacao === "sem-descricao") {
     const anteriores = Array.isArray(where.AND) ? where.AND : where.AND ? [where.AND] : [];
