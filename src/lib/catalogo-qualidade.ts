@@ -49,7 +49,8 @@ export function diagnosticarProduto(p: ProdutoCatalogo, prateleira: (nome: strin
       // apresentação. O Merchant exige uma imagem do item anunciado, então
       // a origem declarada não basta para publicar até a correspondência ser
       // conferida no painel.
-      if(midias[0].correspondencia!=="confirmada") add("foto_nao_conferida","imagens","erro","google","A correspondência da foto com esta apresentação não foi confirmada.","Confira SKU, cor e apresentação no painel antes de incluir no Merchant.",v.id);
+      if(midias[0].correspondencia==="rejeitada") add("foto_incorreta","imagens","erro","google","A foto principal foi marcada como diferente do produto ou apresentação vendidos.","Associe uma foto correta ao SKU e confirme a correspondência.",v.id);
+      else if(midias[0].correspondencia!=="confirmada") add("foto_nao_conferida","imagens","aviso","google","A correspondência da foto com esta apresentação não foi confirmada.","Confira SKU, cor e apresentação no painel; substitua imagens erradas antes de anunciar.",v.id);
       if(midias.length===1) add("foto_unica","imagens","aviso","loja","Há apenas uma foto.","Acrescente outro ângulo ou detalhe do item.",v.id);
     }
   }
