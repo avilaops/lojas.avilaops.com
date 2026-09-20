@@ -72,6 +72,11 @@ const REGRAS: Array<{ termos: RegExp; id: number; prateleira: string }> = [
     prateleira: "Ferramentas",
   },
   {
+    termos: /^tintas?\s+spray$/i,
+    id: 1361,
+    prateleira: "Ferragens > Consumíveis para construção > Consumíveis para pintura > Tinta",
+  },
+  {
     termos: /^molas?$/i,
     id: 499933,
     prateleira: "Molas",
@@ -169,6 +174,7 @@ const REGRAS_DO_RAMO: Array<{ termos: RegExp; id: number; prateleira: string }> 
  */
 export function categoriaGoogle(nomeDaCategoria: string | null | undefined): number | undefined {
   if (!nomeDaCategoria) return undefined;
+  if (/^fita ades\.?\\s*p\\/emb\\b/i.test(nomeDaCategoria.trim())) return 975;
   return REGRAS.find((r) => r.termos.test(nomeDaCategoria))?.id;
 }
 
