@@ -1,6 +1,7 @@
 import { diagnosticarProduto, midiasDaOferta, type ProdutoCatalogo } from "./catalogo-qualidade";
 import { gtinValido, ofertaDaVariante } from "./catalogo-oferta";
 import { categoriaGoogle, prateleirasDaLoja } from "./categoria-google";
+import { idDaCategoriaGoogle } from "./google-product-taxonomy";
 
 const esc=(s:string)=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 const tag=(k:string,v:string)=>`<g:${k}>${esc(v)}</g:${k}>`;
@@ -22,7 +23,7 @@ export function itensMerchant(p:ProdutoCatalogo,base:string,prateleira:(nome:str
     const link=`${base}/produtos/${p.slug}${v.padrao ? "" : `?variante=${encodeURIComponent(v.id)}`}`;
     const titulo=v.padrao?p.nome:`${p.nome} · ${v.nome}`;
     const valores=v.valores as Record<string,string>;
-    const googleCategoria=p.googleProductCategory?.trim() || prateleira(p.categoria?.nome);
+    const googleCategoria=idDaCategoriaGoogle(p.googleProductCategory) || prateleira(p.categoria?.nome);
     return [`<item>${[
       tag("id",externo),tag("title",titulo.slice(0,150)),tag("description",(p.descricaoCurta||p.descricao||p.nome).replace(/<[^>]*>/g," ").slice(0,5000)),tag("link",link),
       tag("image_link",imagens[0].url),...imagens.slice(1,10).map(m=>tag("additional_image_link",m.url)),
