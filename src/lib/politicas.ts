@@ -1,6 +1,6 @@
 import type { Tenant } from "@prisma/client";
 import type { Endereco } from "./tenant";
-import { retiradaPublicaDisponivel } from "./tenant";
+import { retiradaPublicaDisponivel } from "./retirada-publica";
 import { mascararDocumento } from "@avilaops/checkout";
 
 /**
