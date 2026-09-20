@@ -163,7 +163,7 @@ export async function importarProdutos(tenantId: string, produtos: ProdutoPlanil
       }
     }
 
-    const { categoria: _c, compatibilidade, atributos, camposPersonalizados, confirmarImagemExata, ...campos } = p;
+    const { categoria: _c, compatibilidade, atributos, camposPersonalizados, confirmarImagemExata, correspondenciaImagem, ...campos } = p;
     void _c;
     const slug = await slugLivre(tenantId, desejado ?? existente!.slug, existente?.id ?? null);
 
@@ -204,10 +204,10 @@ export async function importarProdutos(tenantId: string, produtos: ProdutoPlanil
     };
 
     if (existente) {
-      await salvarProdutoNoCatalogo(tenantId, existente.id, dados, { origem: "importacao", ...(confirmarImagemExata ? { metadadosMidia: { fonte: "painel", correspondencia: "confirmada", somentePrincipal: true } } : {}) });
+      await salvarProdutoNoCatalogo(tenantId, existente.id, dados, { origem: "importacao", ...((confirmarImagemExata || correspondenciaImagem) ? { metadadosMidia: { fonte: "painel", correspondencia: confirmarImagemExata ? "confirmada" : correspondenciaImagem, somentePrincipal: true } } : {}) });
       atualizados++;
     } else {
-      await salvarProdutoNoCatalogo(tenantId, null, dados, { origem: "importacao", ...(confirmarImagemExata ? { metadadosMidia: { fonte: "painel", correspondencia: "confirmada", somentePrincipal: true } } : {}) });
+      await salvarProdutoNoCatalogo(tenantId, null, dados, { origem: "importacao", ...((confirmarImagemExata || correspondenciaImagem) ? { metadadosMidia: { fonte: "painel", correspondencia: confirmarImagemExata ? "confirmada" : correspondenciaImagem, somentePrincipal: true } } : {}) });
       criados++;
     }
   }
