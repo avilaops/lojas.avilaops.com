@@ -26,6 +26,8 @@ export const COLUNAS_PRODUTO = [
   "descricao_curta",
   "descricao",
   "imagem",
+  "imagem_origem",
+  "imagem_familia",
   "destaque",
   "peso_kg",
   "altura_cm",
@@ -126,6 +128,9 @@ export function lerCsvProdutos(texto: string) {
     const estoque = pega("estoque") ? Number.parseInt(pega("estoque")!.replace(/\D/g, ""), 10) : undefined;
     const ativo = pega("ativo");
     const googleProductCategory = pega("google_product_category");
+    const imagemOrigem = pega("imagem_origem")?.toLowerCase();
+    const origemValida = imagemOrigem === "propria" || imagemOrigem === "representativa" || imagemOrigem === "ilustracao";
+    if (imagemOrigem && !origemValida) erros.push(`Linha ${i + 2}: imagem_origem deve ser propria, representativa ou ilustracao.`);
     const identificadoresEstado = pega("identificadores_estado")?.toLowerCase();
     const estadoValido = identificadoresEstado === "desconhecido" || identificadoresEstado === "informado" || identificadoresEstado === "sem_identificador";
     if (identificadoresEstado && !estadoValido) erros.push(`Linha ${i + 2}: identificadores_estado deve ser desconhecido, informado ou sem_identificador.`);
@@ -148,6 +153,8 @@ export function lerCsvProdutos(texto: string) {
       descricaoCurta: pega("descricao_curta"),
       descricao: pega("descricao"),
       imagens: pega("imagem") ? [pega("imagem")!] : undefined,
+      ...(origemValida ? { imagemOrigem } : {}),
+      ...(pega("imagem_familia") !== undefined ? { imagemFamilia: pega("imagem_familia") || null } : {}),
       ...(idx("destaque") >= 0 ? { destaque: SIM.test(destaque ?? "") } : {}),
       ...(ativo !== undefined && (SIM.test(ativo) || NAO.test(ativo)) ? { ativo: SIM.test(ativo) } : {}),
       ...(estoque !== undefined && Number.isFinite(estoque) ? { estoque } : {}),
