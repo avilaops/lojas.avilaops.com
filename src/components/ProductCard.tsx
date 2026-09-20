@@ -68,6 +68,16 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null, ocu
 
         {/* Badges Flutuantes */}
         <div className="absolute left-2.5 top-2.5 flex flex-col gap-1 z-10">
+          {produto.imagemOrigem === "representativa" && (
+            <span className="rounded-md bg-zinc-900/90 px-2 py-1 text-[10px] font-semibold text-white shadow-sm backdrop-blur-sm">
+              Imagem representativa
+            </span>
+          )}
+          {produto.imagemOrigem === "ilustracao" && (
+            <span className="rounded-md bg-zinc-900/90 px-2 py-1 text-[10px] font-semibold text-white shadow-sm backdrop-blur-sm">
+              Ilustração técnica
+            </span>
+          )}
           {percentualDesconto && (
             <span className="rounded-md bg-red-600 px-2 py-0.5 text-[11px] font-black uppercase text-white shadow-sm">
               -{percentualDesconto}% OFF
