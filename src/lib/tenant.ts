@@ -86,6 +86,15 @@ export function enderecoDo(t: Tenant): Endereco {
   return (t.endereco as Endereco | null) ?? {};
 }
 
+/** Retirada só é divulgada quando existe um destino completo e público. */
+export function retiradaPublicaDisponivel(t: Pick<Tenant, "retiradaNaLoja" | "enderecoPublico" | "endereco">): boolean {
+  if (!t.retiradaNaLoja || !t.enderecoPublico) return false;
+  const e = (t.endereco as Endereco | null) ?? {};
+  const campos = [e.logradouro, e.numero, e.bairro, e.cidade, e.uf];
+  return campos.every((valor) => typeof valor === "string" && valor.trim().length > 0)
+    && (e.cep ?? "").replace(/\D/g, "").length === 8;
+}
+
 /**
  * CEP guardado é só dígito (o schema limpa na entrada). Na vitrine ele aparece
  * do jeito que o brasileiro lê: "01001-000", e não "01001000".
@@ -160,7 +169,7 @@ export function tenantPublico(t: Tenant) {
     whatsapp: t.whatsapp,
     mpPublicKey: t.mpPublicKey,
     meiosPagamento: t.meiosPagamento,
-    retiradaNaLoja: t.retiradaNaLoja,
+    retiradaNaLoja: retiradaPublicaDisponivel(t),
     despachoDiasUteis: t.despachoDiasUteis,
     estoqueBaixoEm: t.estoqueBaixoEm,
     freteGratisAcima: t.freteGratisAcima,
