@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { categoriaGoogle, prateleirasDaLoja } from "./categoria-google";
+import { categoriaGoogle, categoriaGoogleProduto, prateleirasDaLoja } from "./categoria-google";
 
 test("não força uma categoria para abraçadeiras de uso não confirmado", () => {
   assert.equal(categoriaGoogle("Abraçadeiras"), undefined);
@@ -29,6 +29,29 @@ test("mapeia categorias com nome exato na taxonomia do Google", () => {
 test("classifica apenas fita adesiva para embalagem pela finalidade", () => {
   assert.equal(categoriaGoogle("Fita ades. p/emb 48mm"), 975);
   assert.equal(categoriaGoogle("Fitas dupla face"), undefined);
+});
+
+test("classifica produtos de categorias amplas quando o nome informa a finalidade", () => {
+  assert.equal(categoriaGoogleProduto("BOM-1302 Fita dupla FACE 1.7 280CM", "Fitas"), undefined);
+  assert.equal(categoriaGoogleProduto("Fita Crepe 24MMX50M Tapefix", "Fitas"), undefined);
+  assert.equal(categoriaGoogleProduto("BOM-1318 Fita Espanta Passaros 4.8CM 45M", "Fitas"), 7137);
+  assert.equal(categoriaGoogleProduto("Feltros Autoadesivos Quadrados BOM-1333", "Colas"), 7214);
+  assert.equal(categoriaGoogleProduto("CAPA P/CHUVA PVC Forr.amar. G Nikol", "Outros"), 3066);
+  assert.equal(categoriaGoogleProduto("JOGO Allen (plastico)", "Outros"), 1439);
+  assert.equal(categoriaGoogleProduto("Suporte para Fita Lacradora Masterprint Mp-901", "Fitas"), 503746);
+  assert.equal(categoriaGoogleProduto("KAOL P/POLIMENTO 200 ml", "Químicos"), 2590);
+  assert.equal(categoriaGoogleProduto("ORBI CERA Polidora", "Outros"), 2643);
+  assert.equal(categoriaGoogleProduto("ETANIZ Grafite Spray Etaniz 300ML180G", "Grafite"), 1753);
+  assert.equal(categoriaGoogleProduto("Carga GAS P/MACAR/FOG Original 227G", "Elétrica"), 543575);
+  assert.equal(categoriaGoogleProduto("KIT Anel Milimitro(azul)", "Anéis"), 111);
+  assert.equal(categoriaGoogleProduto("Fita Guia LISA Teflon com Bronze 10x2.5", "Fitas"), 111);
+  assert.equal(categoriaGoogleProduto("VONDER Macaco Garrafa 12TON", "Outros"), 503771);
+  assert.equal(categoriaGoogleProduto("ORION Reparo Motor Danfoss OMS 160", "Outros"), 111);
+  assert.equal(categoriaGoogleProduto("IBIRA Borracha Esponjosa 1021 16x8 20344", "Outros"), 503744);
+  assert.equal(categoriaGoogleProduto("Assento Alumasa ROMA branco", "Outros"), 1865);
+  assert.equal(categoriaGoogleProduto("Tampa Lavatorio EVA", "Hidráulica"), 1963);
+  assert.equal(categoriaGoogleProduto("Tampa NBR 47x7", "Hidráulica"), 111);
+  assert.equal(categoriaGoogleProduto("Cantoneira P/MOV OVER BIC.11/2 C/04", "Cantoneiras"), 632);
 });
 
 test("põe cada categoria da Brilhax na prateleira certa", () => {
