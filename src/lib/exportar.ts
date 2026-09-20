@@ -133,6 +133,8 @@ export type ProdutoDePlanilha = {
   descricaoCurta: string | null;
   descricao: string | null;
   imagens: string[];
+  imagemOrigem?: string | null;
+  imagemFamilia?: string | null;
   destaque: boolean;
   ativo: boolean;
   estoque: number | null;
@@ -161,6 +163,8 @@ export function linhaDoProduto(p: ProdutoDePlanilha): Valor[] {
     // Só a foto de capa: é a que a vitrine usa, e uma coluna por imagem
     // quebraria a planilha de quem tem oito.
     p.imagens[0] ?? "",
+    p.imagemOrigem ?? "",
+    p.imagemFamilia ?? "",
     p.destaque ? "sim" : "nao",
     medida(p.pesoKg),
     medida(p.alturaCm),
@@ -183,7 +187,7 @@ export async function produtosEmLinhas(tenantId: string, filtro: FiltroCatalogo 
     select: {
       nome: true, precoCentavos: true, precoDeCentavos: true, marca: true, sku: true, gtin: true,
       googleProductCategory: true,
-      descricaoCurta: true, descricao: true, imagens: true, destaque: true, ativo: true, estoque: true,
+      descricaoCurta: true, descricao: true, imagens: true, imagemOrigem: true, imagemFamilia: true, destaque: true, ativo: true, estoque: true,
       pesoKg: true, alturaCm: true, larguraCm: true, comprimentoCm: true,
       categoria: { select: { nome: true } },
       variantes: { where: { padrao: true }, select: { mpn: true, identificadoresEstado: true }, take: 1 },
