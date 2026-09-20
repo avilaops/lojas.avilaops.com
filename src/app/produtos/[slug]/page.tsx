@@ -247,7 +247,9 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
 
           <ul className="mt-6 space-y-1 text-sm text-muted-foreground">
             {t.retiradaNaLoja && <li>✔ Retirada na loja sem custo</li>}
-            <li>✔ Envio em até {t.despachoDiasUteis} dia(s) útil(eis) após o pagamento</li>
+            <li>✔ {t.despachoDiasUteis === 0
+              ? "Despacho no mesmo dia útil para pagamentos confirmados durante o expediente"
+              : `Envio em até ${t.despachoDiasUteis} dias úteis após o pagamento`}</li>
             {t.freteGratisAcima != null && <li>✔ Frete grátis acima de {formatarBRL(t.freteGratisAcima)}</li>}
             {p.sku && <li className="text-xs">SKU {p.sku}</li>}
           </ul>
