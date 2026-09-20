@@ -8,11 +8,12 @@ import { encaixe, lerCompatibilidade, type Moto } from "@/lib/motos";
 import { exigeReceita, lerMedicamento, vendaRemotaProibida } from "@/lib/farmacia";
 import { marcaConfirmada } from "@/lib/marca-confirmada";
 
-export default function ProductCard({ produto, vende, whatsapp, moto = null, ocultarSeloDestaque = false }: { produto: Produto; vende: boolean; whatsapp: string | null; moto?: Moto | null; ocultarSeloDestaque?: boolean }) {
+export default function ProductCard({ produto, vende, whatsapp, moto = null, ocultarSeloDestaque = false, somenteImagem = false }: { produto: Produto; vende: boolean; whatsapp: string | null; moto?: Moto | null; ocultarSeloDestaque?: boolean; somenteImagem?: boolean }) {
   const serve = moto != null && encaixe(produto.compatibilidade, moto) === "serve";
   const modelos = lerCompatibilidade(produto.compatibilidade);
   const imagem = produto.imagens[0];
-  const segundaImagem = produto.imagens[1];\n  const marca = marcaConfirmada(produto.marca);
+  const segundaImagem = produto.imagens[1];
+  const marca = marcaConfirmada(produto.marca);
   const miniatura = imagem && /\/uploads\//.test(imagem) && !/\.svg$/i.test(imagem) ? `${imagem}?w=480` : imagem;
   const miniatura2 = segundaImagem && /\/uploads\//.test(segundaImagem) && !/\.svg$/i.test(segundaImagem) ? `${segundaImagem}?w=480` : segundaImagem;
   // Preço zero é "ainda não precificado", não "de graça". Catálogo importado
@@ -36,6 +37,35 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null, ocu
     produto.precoDeCentavos && produto.precoDeCentavos > produto.precoCentavos
       ? Math.round(((produto.precoDeCentavos - produto.precoCentavos) / produto.precoDeCentavos) * 100)
       : null;
+
+  if (somenteImagem) {
+    return (
+      <article className="cartao-produto cartao-produto-visual-only group overflow-hidden rounded-xl border-0 bg-transparent shadow-none">
+        <Link href={`/produtos/${produto.slug}`} aria-label={`Ver ${produto.nome}`} className="cartao-produto-imagem relative block aspect-square overflow-hidden rounded-xl bg-muted">
+          {imagem ? (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={miniatura}
+                alt={produto.nome}
+                loading="lazy"
+                className={`h-full w-full object-cover transition-all duration-500 ${segundaImagem ? "group-hover:opacity-0 group-hover:scale-105" : "group-hover:scale-105"}`}
+              />
+              {segundaImagem && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={miniatura2}
+                  alt=""
+                  loading="lazy"
+                  className="absolute inset-0 h-full w-full object-cover opacity-0 transition-all duration-500 group-hover:opacity-100 group-hover:scale-105"
+                />
+              )}
+            </>
+          ) : null}
+        </Link>
+      </article>
+    );
+  }
 
   return (
     <article className="cartao-produto group flex flex-col overflow-hidden rounded-xl border border-border bg-card">
