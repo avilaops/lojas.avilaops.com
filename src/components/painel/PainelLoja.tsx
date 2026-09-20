@@ -536,14 +536,14 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
             <Campo label="Bairro"><input className={inputClasse} value={enderecoEmpresa.bairro} onChange={(e) => setEnderecoEmpresa({ ...enderecoEmpresa, bairro: e.target.value })} /></Campo>
             <Campo label="Cidade"><input className={inputClasse} value={enderecoEmpresa.cidade} onChange={(e) => setEnderecoEmpresa({ ...enderecoEmpresa, cidade: e.target.value })} /></Campo>
             <Campo label="UF"><input className={inputClasse} maxLength={2} value={enderecoEmpresa.uf} onChange={(e) => setEnderecoEmpresa({ ...enderecoEmpresa, uf: e.target.value.toUpperCase() })} placeholder="SP" /></Campo>
-            <label className="flex min-h-[44px] items-center gap-2 text-sm"><input type="checkbox" className="h-5 w-5" checked={enderecoEmpresa.enderecoPublico} onChange={(e) => setEnderecoEmpresa({ ...enderecoEmpresa, enderecoPublico: e.target.checked })} /> Mostrar endereço na página de contato</label>
+            <label className="flex min-h-[44px] items-center gap-2 text-sm"><input type="checkbox" className="h-5 w-5" checked={enderecoEmpresa.enderecoPublico || loja.retiradaNaLoja} disabled={loja.retiradaNaLoja} onChange={(e) => setEnderecoEmpresa({ ...enderecoEmpresa, enderecoPublico: e.target.checked })} /> Mostrar endereço na página de contato{loja.retiradaNaLoja && <span className="text-muted-foreground">(obrigatório para retirada)</span>}</label>
           </div>
           <div><button className="btn-primario" disabled={ocupado} onClick={() => {
             const cep = enderecoEmpresa.cep.replace(/\D/g, "");
             chamar("/api/painel/loja", "PATCH", {
               endereco: { logradouro: enderecoEmpresa.logradouro.trim(), numero: enderecoEmpresa.numero.trim(), complemento: enderecoEmpresa.complemento.trim(), bairro: enderecoEmpresa.bairro.trim(), cidade: enderecoEmpresa.cidade.trim(), uf: enderecoEmpresa.uf.trim().slice(0, 2), ...(cep.length === 8 ? { cep } : {}) },
               ...(cep.length === 8 ? { cepOrigem: cep } : {}),
-              enderecoPublico: enderecoEmpresa.enderecoPublico,
+              enderecoPublico: enderecoEmpresa.enderecoPublico || loja.retiradaNaLoja,
             }, "Endereço salvo.");
           }}>Salvar endereço</button></div>
         </Secao>
