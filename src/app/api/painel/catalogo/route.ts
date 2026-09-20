@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { condicaoDoCatalogo, filtroDaUrl } from "@/lib/catalogo-filtros";
+import { condicaoDoCatalogo, filtroDaUrl, varianteSemIdentificadores } from "@/lib/catalogo-filtros";
 import { exigir } from "@/lib/operadores";
 
 /**
@@ -36,7 +36,7 @@ export async function GET(request: Request) {
       where,
       include: {
         categoria: { select: { nome: true } },
-        variantes: { where: { ativo: true, identificadoresEstado: "desconhecido", gtin: null, mpn: null }, select: { id: true }, take: 1 },
+        variantes: { where: varianteSemIdentificadores, select: { id: true }, take: 1 },
         _count: { select: { variantes: { where: { ativo: true, padrao: false } } } },
       },
       orderBy: [{ ativo: "desc" }, { nome: "asc" }],

@@ -16,6 +16,13 @@ export type FiltroCatalogo = {
   situacao?: string;
 };
 
+/** Identificação ainda desconhecida. Ausência confirmada pelo fabricante é válida. */
+export const varianteSemIdentificadores: Prisma.VarianteWhereInput = {
+  ativo: true,
+  identificadoresEstado: "desconhecido",
+  AND: [{ OR: [{ gtin: null }, { gtin: "" }] }, { OR: [{ mpn: null }, { mpn: "" }] }],
+};
+
 /** As situações são a pergunta do dia ("o que está sem foto?"), não colunas. */
 export function condicaoDoCatalogo(tenantId: string, filtro: FiltroCatalogo): Prisma.ProdutoWhereInput {
   const where: Prisma.ProdutoWhereInput = { tenantId };
@@ -40,11 +47,7 @@ export function condicaoDoCatalogo(tenantId: string, filtro: FiltroCatalogo): Pr
   else if (situacao === "identificadores-pendentes") {
     // Mostrar apenas códigos ainda não confirmados pelo fabricante. Estado
     // `sem_identificador` é uma resposta válida e não entra nesta fila.
-    where.variantes = { some: {
-      ativo: true,
-      identificadoresEstado: "desconhecido",
-      AND: [{ OR: [{ gtin: null }, { gtin: "" }] }, { OR: [{ mpn: null }, { mpn: "" }] }],
-    } };
+    where.variantes = { some: varianteSemIdentificadores };
   }
   else if (situacao === "sem-medida") {
     // O aviso do topo da tela ("5.588 produtos sem medida pagam frete pela
