@@ -153,7 +153,7 @@ export async function importarProdutos(tenantId: string, produtos: ProdutoPlanil
         registrarChaveCategoria(cslug, c.id);
         registrarChaveCategoria(slugificar(c.nome), c.id);
         categoriaId = c.id;
-      } else if (!nomesCorrigidos.has(cslug)) {
+      } else if (categoriaId && !nomesCorrigidos.has(cslug)) {
         // O slug ignora acento, então "Eletrica" e "Elétrica" são a mesma
         // categoria — mas o nome exibido continuava o da primeira importação.
         // Corrigir a planilha não corrigia a vitrine, e o menu ficava com o
