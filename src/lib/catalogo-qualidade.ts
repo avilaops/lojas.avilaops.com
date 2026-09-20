@@ -40,7 +40,11 @@ export function diagnosticarProduto(p: ProdutoCatalogo): OcorrenciaCatalogo[] {
     if(!midias.length) add("foto_ausente","imagens","erro","google","Esta apresentação não tem foto.","Envie uma foto do item exato.",v.id);
     else {
       if(midias[0].origem!=="propria") add("foto_representativa","imagens","erro","google","A imagem principal é representativa ou ilustrada.","Escolha uma foto fiel à apresentação vendida.",v.id);
-      if(midias[0].correspondencia!=="confirmada") add("foto_nao_conferida","imagens","aviso","google","A correspondência entre foto e item não foi conferida.","Confira a embalagem, cor e apresentação da foto.",v.id);
+      // Uma foto marcada como própria ainda pode ser de outro SKU, cor ou
+      // apresentação. O Merchant exige uma imagem do item anunciado, então
+      // a origem declarada não basta para publicar até a correspondência ser
+      // conferida no painel.
+      if(midias[0].correspondencia!=="confirmada") add("foto_nao_conferida","imagens","erro","google","A correspondência da foto com esta apresentação não foi confirmada.","Confira SKU, cor e apresentação no painel antes de incluir no Merchant.",v.id);
       if(midias.length===1) add("foto_unica","imagens","aviso","loja","Há apenas uma foto.","Acrescente outro ângulo ou detalhe do item.",v.id);
     }
   }
