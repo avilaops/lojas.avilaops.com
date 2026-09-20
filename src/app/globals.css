@@ -214,6 +214,7 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
 @media (max-width: 640px) {
   .banner-campanha picture { aspect-ratio: 4 / 5; overflow: hidden; }
   .banner-campanha picture img { width: 100%; height: 100%; object-fit: contain; }
+  .banner-campanha-mobile-vertical picture { aspect-ratio: 2 / 3; }
   .banner-campanhas-seta { width: 2.25rem; height: 2.25rem; }
   .banner-campanhas-seta.anterior { left: .5rem; }
   .banner-campanhas-seta.proxima { right: .5rem; }
