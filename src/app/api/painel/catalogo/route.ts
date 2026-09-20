@@ -34,7 +34,11 @@ export async function GET(request: Request) {
     prisma.produto.count({ where }),
     prisma.produto.findMany({
       where,
-      include: { categoria: { select: { nome: true } }, _count: { select: { variantes: { where: { ativo: true, padrao: false } } } } },
+      include: {
+        categoria: { select: { nome: true } },
+        variantes: { where: { ativo: true, identificadoresEstado: "desconhecido", gtin: null, mpn: null }, select: { id: true }, take: 1 },
+        _count: { select: { variantes: { where: { ativo: true, padrao: false } } } },
+      },
       orderBy: [{ ativo: "desc" }, { nome: "asc" }],
       skip: (pagina - 1) * POR_PAGINA,
       take: POR_PAGINA,
@@ -50,6 +54,7 @@ export async function GET(request: Request) {
       id: p.id,
       nome: p.nome,
       categoria: p.categoria?.nome ?? null,
+      marca: p.marca,
       sku: p.sku,
       precoCentavos: p.precoCentavos,
       estoque: p.estoque,
@@ -57,6 +62,7 @@ export async function GET(request: Request) {
       destaque: p.destaque,
       opcoes: p.opcoes,
       variantes: p._count.variantes,
+      identificadoresPendentes: p.variantes.length > 0,
       temFoto: p.imagens.length > 0,
     })),
   });

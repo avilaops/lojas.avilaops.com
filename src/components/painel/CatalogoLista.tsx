@@ -27,6 +27,7 @@ type Item = {
   id: string;
   nome: string;
   categoria: string | null;
+  marca: string | null;
   sku: string | null;
   precoCentavos: number;
   estoque: number | null;
@@ -34,6 +35,7 @@ type Item = {
   destaque: boolean;
   opcoes: string[];
   variantes: number;
+  identificadoresPendentes: boolean;
   temFoto: boolean;
 };
 
@@ -47,6 +49,9 @@ const SITUACOES = [
   { valor: "esgotado", rotulo: "Esgotados" },
   { valor: "sem-foto", rotulo: "Sem foto" },
   { valor: "sem-preco", rotulo: "Sem preço" },
+  { valor: "sem-categoria", rotulo: "Sem categoria" },
+  { valor: "sem-marca", rotulo: "Sem marca" },
+  { valor: "identificadores-pendentes", rotulo: "GTIN/MPN a confirmar" },
   // Sem medida é o que faz o frete sair pela caixa padrão da loja, quase
   // sempre mais caro que o real — o aviso do topo da tela vira trabalho aqui.
   { valor: "sem-medida", rotulo: "Sem medida" },
@@ -171,6 +176,8 @@ export default function CatalogoLista({
                     <ImageOff size={10} aria-hidden="true" /> sem foto
                   </span>
                 )}
+                {!p.marca && <span className="rounded bg-amber-50 px-1.5 py-0.5 text-amber-800">sem marca</span>}
+                {p.identificadoresPendentes && <span className="rounded bg-amber-50 px-1.5 py-0.5 text-amber-800">GTIN/MPN a confirmar</span>}
               </>
             )}
             colunas={[
@@ -184,6 +191,8 @@ export default function CatalogoLista({
                       <ImageOff size={10} aria-hidden="true" /> sem foto
                     </span>
                   )}
+                  {!p.marca && <span className="ml-2 inline-flex rounded bg-amber-50 px-1.5 py-0.5 text-[11px] text-amber-800">sem marca</span>}
+                  {p.identificadoresPendentes && <span className="ml-2 inline-flex rounded bg-amber-50 px-1.5 py-0.5 text-[11px] text-amber-800">GTIN/MPN a confirmar</span>}
                 </>
               ) },
               { rotulo: "Categoria", celula: (p) => p.categoria ?? "—", largura: "w-32" },

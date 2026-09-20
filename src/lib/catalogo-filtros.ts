@@ -35,6 +35,17 @@ export function condicaoDoCatalogo(tenantId: string, filtro: FiltroCatalogo): Pr
   else if (situacao === "esgotado") where.OR = [{ disponibilidade: "out_of_stock" }, { estoque: 0 }];
   else if (situacao === "sem-foto") where.imagens = { isEmpty: true };
   else if (situacao === "sem-preco") where.precoCentavos = 0;
+  else if (situacao === "sem-categoria") where.categoriaId = null;
+  else if (situacao === "sem-marca") where.marca = null;
+  else if (situacao === "identificadores-pendentes") {
+    // Mostrar apenas códigos ainda não confirmados pelo fabricante. Estado
+    // `sem_identificador` é uma resposta válida e não entra nesta fila.
+    where.variantes = { some: {
+      ativo: true,
+      identificadoresEstado: "desconhecido",
+      AND: [{ OR: [{ gtin: null }, { gtin: "" }] }, { OR: [{ mpn: null }, { mpn: "" }] }],
+    } };
+  }
   else if (situacao === "sem-medida") {
     // O aviso do topo da tela ("5.588 produtos sem medida pagam frete pela
     // caixa padrão") vira filtro e vira planilha: é o caminho de corrigir.
