@@ -219,6 +219,7 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
   .banner-campanhas-seta.proxima { right: .5rem; }
   .banner-campanhas-pontos { bottom: .6rem; }
   .campanhas-produtos { width: min(100% - 1rem, 1200px); }
+  body:has(.home-campanhas) .nav-loja { display: block; }
 }
 /* Layout Automotivo: o Mercado com a trilha do serviço antes das categorias.
    Herda .home-mercado inteiro; só a trilha mora aqui. Loja sem etapas
