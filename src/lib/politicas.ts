@@ -1,5 +1,6 @@
 import type { Tenant } from "@prisma/client";
 import type { Endereco } from "./tenant";
+import { retiradaPublicaDisponivel } from "./tenant";
 import { mascararDocumento } from "@avilaops/checkout";
 
 /**
@@ -160,7 +161,7 @@ export function modeloDePolitica(t: Tenant, tipo: TipoPolitica): string[] {
         `${t.despachoDiasUteis === 0
           ? "Pedidos pagos durante o expediente em dia útil são despachados no mesmo dia; confirmações fora do expediente seguem no próximo dia útil."
           : `Os pedidos são despachados em até ${t.despachoDiasUteis} dias úteis após a confirmação do pagamento.`} O prazo de entrega é o informado na cotação de frete no momento da compra e depende da transportadora e do CEP de destino.`,
-        t.retiradaNaLoja
+        retiradaPublicaDisponivel(t)
           ? `Você pode retirar o pedido sem custo em ${cidade}, a partir do próximo dia útil após a confirmação. Aguarde o aviso de "pedido separado" antes de ir até a loja.`
           : "Esta loja não oferece retirada no balcão.",
         `Em caso de avaria no transporte ou extravio, comunique-nos pelo ${contato} com fotos da embalagem. A reposição ou o estorno são por nossa conta.`,
