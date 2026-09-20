@@ -15,7 +15,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 SAIDA="${1:-/tmp/lojas-standalone.tgz}"
-APP=".next/standalone/lojas.avilaops.com"
+APP=".next/standalone"
 
 [ -d "$APP" ] || { echo "!! falta $APP; rode 'npm run build' antes" >&2; exit 1; }
 
@@ -46,6 +46,13 @@ rm -rf "$APP/.next/static" "$APP/public" "$APP/prisma"
 cp -r .next/static "$APP/.next/static"
 cp -r public "$APP/public"
 cp -r prisma "$APP/prisma"
+# O ONNX é externalizado pelo Next, mas o binário standalone não copia a
+# biblioteca Linux que o binding carrega em runtime. Sem ela, /uploads retorna
+# 500 ao tentar otimizar imagens, embora o health check simples siga verde.
+onnx_lib=$(find node_modules/onnxruntime-node/bin -path '*/linux/x64/libonnxruntime.so.1' -print -quit 2>/dev/null || true)
+[ -n "$onnx_lib" ] || { echo "!! falta libonnxruntime.so.1 para o runtime Linux" >&2; exit 1; }
+mkdir -p "$APP/node_modules/onnxruntime-node/bin/napi-v6/linux/x64"
+cp "$onnx_lib" "$APP/node_modules/onnxruntime-node/bin/napi-v6/linux/x64/"
 
 echo "==> empacotando"
 rm -f "$SAIDA"
@@ -54,11 +61,16 @@ rm -f "$SAIDA"
 # o deploy só descobre ao descompactar, com o container já parando.
 tmp="$SAIDA.parcial"
 rm -f "$tmp"
-if ! tar --force-local -czf "$tmp" -C .next/standalone .; then
+stage=$(mktemp -d "${SAIDA%/*}/lojas-stage.XXXXXX")
+mkdir -p "$stage/lojas.avilaops.com"
+cp -a "$APP/." "$stage/lojas.avilaops.com/"
+if ! tar --force-local -czf "$tmp" -C "$stage" .; then
+  rm -rf "$stage"
   rm -f "$tmp"
   echo "!! tar falhou; nada foi gerado" >&2
   exit 1
 fi
+rm -rf "$stage"
 gzip -t "$tmp" || { rm -f "$tmp"; echo "!! gzip corrompido" >&2; exit 1; }
 mv "$tmp" "$SAIDA"
 
