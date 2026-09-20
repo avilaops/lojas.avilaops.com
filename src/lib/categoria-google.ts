@@ -175,11 +175,6 @@ const REGRAS_DO_RAMO: Array<{ termos: RegExp; id: number; prateleira: string }> 
 export function categoriaGoogle(nomeDaCategoria: string | null | undefined): number | undefined {
   if (!nomeDaCategoria) return undefined;
   if (/^fita ades\.?\s*p\/emb\b/i.test(nomeDaCategoria.trim())) return 975;
-  if (/^bom-?13(?:04|05|21)\b.*\b(?:demarcacao|marcacao)\b|^fita\b.*\b(?:demarcacao|marcacao)\b.*(?:\bpiso\b|\bsinalizacao\b)/.test(nome) && /^fitas?$/.test(categoria)) return 976;
-  if (/\bbom-?1314\b|^fita\b.*\b(?:impermeavel|ipermeavel)\b/.test(nome) && /^fitas?$/.test(categoria)) return 503744;
-  if (/^cantoneira eva estacionamento\b/.test(nome) && /^cantoneiras?$/.test(categoria)) return 503744;
-  if (/^sabonete\b/.test(nome) && /^(?:quimicos|outros)$/.test(categoria)) return 2503;
-  if (/^lanca jato turbo\b/.test(nome) && /^hidraulica$/.test(categoria)) return 6328;
   return REGRAS.find((r) => r.termos.test(nomeDaCategoria))?.id;
 }
 
@@ -191,6 +186,11 @@ export function categoriaGoogleProduto(
   const nome = nomeProduto.normalize("NFD").replace(/\p{M}+/gu, "").trim().toLowerCase();
   const categoria = (nomeDaCategoria ?? "").normalize("NFD").replace(/\p{M}+/gu, "").trim().toLowerCase();
   if (/^fita ades\.?\s*p\/emb\b/.test(nome)) return 975;
+  if ((/^bom-?13(?:04|05|21)\b.*\b(?:demarcacao|marcacao)\b|^fita\b.*\b(?:demarcacao|marcacao)\b.*(?:\bpiso\b|\bsinalizacao\b)/.test(nome)) && /^fitas?$/.test(categoria)) return 976;
+  if ((/\bbom-?1314\b|^fita\b.*\b(?:impermeavel|ipermeavel)\b/.test(nome)) && /^fitas?$/.test(categoria)) return 503744;
+  if (/^cantoneira eva estacionamento\b/.test(nome) && /^cantoneiras?$/.test(categoria)) return 503744;
+  if (/^sabonete\b/.test(nome) && /^(?:quimicos|outros)$/.test(categoria)) return 2503;
+  if (/^lanca jato turbo\b/.test(nome) && /^hidraulica$/.test(categoria)) return 6328;
   if (/\bfita espanta passaros\b/.test(nome) && /^fitas?$/.test(categoria)) return 7137;
   if (/^feltros? autoadesivos?\b/.test(nome) && /^(?:colas?|outros)$/.test(categoria)) return 7214;
   if (/^capa (?:p\/chuva|de chuva)\b/.test(nome) && /^outros$/.test(categoria)) return 3066;

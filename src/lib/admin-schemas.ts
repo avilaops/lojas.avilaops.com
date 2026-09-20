@@ -168,6 +168,7 @@ export const ProdutoEntradaSchema = z.object({
   /** Família da imagem representativa ("6200", "UCP"): obrigatória nela. */
   imagemFamilia: z.string().trim().min(1).max(40).nullable().optional(),
   correspondenciaImagem: z.enum(["nao_confirmada", "confirmada", "rejeitada"]).optional(),
+  confirmarImagemExata: z.boolean().optional(),
   destaque: z.boolean().optional(),
   ativo: z.boolean().optional(),
   disponibilidade: z.enum(["in_stock", "out_of_stock", "backorder"]).optional(),
