@@ -15,6 +15,8 @@ test("mapeia categorias com nome exato na taxonomia do Google", () => {
   assert.equal(categoriaGoogle("Estiletes"), 2198);
   assert.equal(categoriaGoogle("Ferragens"), 632);
   assert.equal(categoriaGoogle("Ferramentas"), 1167);
+  assert.equal(categoriaGoogle("Tintas Spray"), 1361);
+  assert.equal(categoriaGoogle("Tintas spray"), 1361);
   assert.equal(categoriaGoogle("Molas"), 499933);
   assert.equal(categoriaGoogle("Parafusos"), 2251);
   assert.equal(categoriaGoogle("Serras"), 1235);
@@ -22,6 +24,11 @@ test("mapeia categorias com nome exato na taxonomia do Google", () => {
   assert.equal(categoriaGoogle("Anéis"), undefined);
   assert.equal(categoriaGoogle("Discos"), undefined);
   assert.equal(categoriaGoogle("Conjuntos"), undefined);
+});
+
+test("classifica apenas fita adesiva para embalagem pela finalidade", () => {
+  assert.equal(categoriaGoogle("Fita ades. p/emb 48mm"), 975);
+  assert.equal(categoriaGoogle("Fitas dupla face"), undefined);
 });
 
 test("põe cada categoria da Brilhax na prateleira certa", () => {
