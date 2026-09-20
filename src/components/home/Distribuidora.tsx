@@ -20,7 +20,6 @@ export default function Distribuidora({ t, identidade, categorias, vitrine, temD
     return (
       <main className="home-mercado home-distribuidora home-campanhas">
         <BannerCarousel campanhas={campanhas.map(({ imagemUrl, imagemMobileUrl, link, alt }) => ({ imagemUrl, imagemMobileUrl, link, alt }))} />
-        <AtalhosCategorias categorias={categorias} semImagem={tema.categoriaSemImagem} />
         {vitrine.length > 0 && (
           <section className="container-loja campanhas-produtos" aria-label="Produtos em destaque">
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
