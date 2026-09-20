@@ -133,6 +133,10 @@ const SINAL_DO_RAMO = /vitrifica|coating|polimento|boina|automotiv|limpa[\s-]?ro
  * próprias categorias provarem que esta é uma loja industrial.
  */
 const SINAL_INDUSTRIAL = /retentores?|rolamentos?|o[\s-]?rings?|gaxetas?|raspadores?|mancais?|correias?|buchas?|an[ée]is\s+(?:backup|el[áa]sticos?)|vedações?|hidráulica/i;
+// Esta categoria foi marcada como ambígua no catálogo: inclui abraçadeiras de
+// usos diferentes. O ramo industrial da loja não basta para escolher uma
+// prateleira para cada tipo, então não herdar o fallback 111.
+const CATEGORIA_INDUSTRIAL_AMBIGUA = /^abra[cç]adeiras?$/i;
 
 /**
  * Regras que só valem com o ramo já provado pelo SINAL_DO_RAMO. Sozinhos,
@@ -177,6 +181,7 @@ export function prateleirasDaLoja(nomes: Array<string | null | undefined>): (nom
   const industrial = nomes.some((n) => !!n && SINAL_INDUSTRIAL.test(n));
   return (nomeDaCategoria) => {
     if (!nomeDaCategoria) return undefined;
+    if (CATEGORIA_INDUSTRIAL_AMBIGUA.test(nomeDaCategoria.trim())) return undefined;
     const direta = categoriaGoogle(nomeDaCategoria);
     if (direta !== undefined) return direta;
     if (!automotiva && !industrial) return undefined;
