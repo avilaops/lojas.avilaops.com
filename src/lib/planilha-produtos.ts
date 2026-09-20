@@ -28,6 +28,7 @@ export const COLUNAS_PRODUTO = [
   "imagem",
   "imagem_origem",
   "imagem_familia",
+  "confirmar_imagem_exata",
   "destaque",
   "peso_kg",
   "altura_cm",
@@ -62,12 +63,14 @@ function lerRegistrosCsv(texto: string): { registros: string[][]; erro?: string 
   let registro: string[] = [];
   let campo = "";
   entreAspas = false;
+
   const concluirCampo = () => { registro.push(campo.trim()); campo = ""; };
   const concluirRegistro = () => {
     concluirCampo();
     if (registro.some((valor) => valor.length > 0)) registros.push(registro);
     registro = [];
   };
+
   for (let i = 0; i < conteudo.length; i++) {
     const caractere = conteudo[i];
     if (caractere === '"') {
@@ -86,6 +89,7 @@ function lerRegistrosCsv(texto: string): { registros: string[][]; erro?: string 
       if (caractere === "\r" && conteudo[i + 1] === "\n") i++;
     } else campo += caractere;
   }
+
   if (entreAspas) return { registros: [], erro: "Planilha inválida: há um campo entre aspas sem fechamento." };
   if (campo.length > 0 || registro.length > 0) concluirRegistro();
   return { registros };
@@ -104,6 +108,9 @@ export function lerCsvProdutos(texto: string) {
   const { registros, erro } = lerRegistrosCsv(texto);
   if (erro) return { produtos: [] as Array<Record<string, unknown>>, erros: [erro] };
   if (registros.length < 2) return { produtos: [] as Array<Record<string, unknown>>, erros: ["Planilha vazia."] };
+  // O BOM que o próprio painel grava (e o Excel exige) vira parte do primeiro
+  // cabeçalho se não sair aqui: sem isso, o arquivo que a loja acabou de
+  // baixar volta sem a coluna `nome`.
   const cab = registros[0].map(normalizarCabecalho);
   const idx = (n: string) => cab.indexOf(n);
   const centavos = (v: string) => Math.round(Number.parseFloat(v.replace(/[^\d,.-]/g, "").replace(/\.(?=\d{3})/g, "").replace(",", ".")) * 100);
@@ -134,13 +141,6 @@ export function lerCsvProdutos(texto: string) {
     const precoDe = pega("preco_de") ? centavos(pega("preco_de")!) : undefined;
     const estoque = pega("estoque") ? Number.parseInt(pega("estoque")!.replace(/\D/g, ""), 10) : undefined;
     const ativo = pega("ativo");
-    const googleProductCategory = pega("google_product_category");
-    const imagemOrigem = pega("imagem_origem")?.toLowerCase();
-    const origemValida = imagemOrigem === "propria" || imagemOrigem === "representativa" || imagemOrigem === "ilustracao";
-    if (imagemOrigem && !origemValida) {
-      erros.push(`Linha ${i + 2}: imagem_origem deve ser propria, representativa ou ilustracao.`);
-      return;
-    }
     const identificadoresEstado = pega("identificadores_estado")?.toLowerCase();
     const estadoValido = identificadoresEstado === "desconhecido" || identificadoresEstado === "informado" || identificadoresEstado === "sem_identificador";
     if (identificadoresEstado && !estadoValido) {
@@ -150,6 +150,18 @@ export function lerCsvProdutos(texto: string) {
     // `destaque` só é escrito quando a coluna existe: antes, toda planilha sem
     // ela tirava a estrela de todo produto importado, sem aviso nenhum.
     const destaque = pega("destaque");
+    const googleProductCategory = pega("google_product_category");
+    const imagemOrigem = pega("imagem_origem")?.toLowerCase();
+    const origemValida = imagemOrigem === "propria" || imagemOrigem === "representativa" || imagemOrigem === "ilustracao";
+    if (imagemOrigem && !origemValida) {
+      erros.push(`Linha ${i + 2}: imagem_origem deve ser propria, representativa ou ilustracao.`);
+      return;
+    }
+    const confirmarImagemExata = pega("confirmar_imagem_exata")?.toLowerCase();
+    if (confirmarImagemExata && !SIM.test(confirmarImagemExata) && !NAO.test(confirmarImagemExata)) {
+      erros.push(`Linha ${i + 2}: confirmar_imagem_exata deve ser sim ou nao.`);
+      return;
+    }
     produtos.push({
       ...(nome ? { nome } : {}),
       ...(preco !== undefined ? { precoCentavos: preco } : {}),
@@ -169,6 +181,7 @@ export function lerCsvProdutos(texto: string) {
       imagens: pega("imagem") ? [pega("imagem")!] : undefined,
       ...(origemValida ? { imagemOrigem } : {}),
       ...(idx("imagem_familia") >= 0 ? { imagemFamilia: c[idx("imagem_familia")] || null } : {}),
+      ...(confirmarImagemExata && SIM.test(confirmarImagemExata) ? { confirmarImagemExata: true } : {}),
       ...(idx("destaque") >= 0 ? { destaque: SIM.test(destaque ?? "") } : {}),
       ...(ativo !== undefined && (SIM.test(ativo) || NAO.test(ativo)) ? { ativo: SIM.test(ativo) } : {}),
       ...(estoque !== undefined && Number.isFinite(estoque) ? { estoque } : {}),
