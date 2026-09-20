@@ -12,7 +12,7 @@ import { AJUDA_TIPO, lerDefinicoes, lerValores, type CampoPersonalizado } from "
 const medida = (chave: string, valor: string) =>
   valor.trim() ? { [chave]: Number.parseFloat(valor.replace(",", ".")) } : {};
 
-interface Form { tarja: string; principioAtivo: string; apresentacao: string; registroAnvisa: string; tipoMedicamento: string; versaoCatalogo:number; temVariacoes:boolean; mpn:string; identificadoresEstado:string; googleProductCategory:string; nome: string; categoria: string; marca: string; sku: string; gtin: string; preco: string; precoDe: string; descricaoCurta: string; descricao: string; imagens: string[]; destaque: boolean; ativo: boolean; disponibilidade: string; estoque: string; pesoKg: string; alturaCm: string; larguraCm: string; comprimentoCm: string; codigoOriginal: string; codigosEquivalentes: string; compatibilidade: LinhaCompat[]; camposPersonalizados: Record<string, string> }
+interface Form { tarja: string; principioAtivo: string; apresentacao: string; registroAnvisa: string; tipoMedicamento: string; versaoCatalogo:number; temVariacoes:boolean; mpn:string; identificadoresEstado:string; googleProductCategory:string; imagemOrigem:string; imagemFamilia:string; nome: string; categoria: string; marca: string; sku: string; gtin: string; preco: string; precoDe: string; descricaoCurta: string; descricao: string; imagens: string[]; destaque: boolean; ativo: boolean; disponibilidade: string; estoque: string; pesoKg: string; alturaCm: string; larguraCm: string; comprimentoCm: string; codigoOriginal: string; codigosEquivalentes: string; compatibilidade: LinhaCompat[]; camposPersonalizados: Record<string, string> }
 /** Linha do editor de compatibilidade: texto livre até salvar (ano vazio = sem limite). */
 interface LinhaCompat { marca: string; modelo: string; anoDe: string; anoAte: string }
 
@@ -58,7 +58,7 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoSalvar 
       if (p?.erro) return setErro(p.erro);
       setDefinicoes(lerDefinicoes(p.definicoesCampos));
       const carregado: Form = {
-        camposPersonalizados: lerValores(p.camposPersonalizados),
+        camposPersonalizados: lerValores(p.camposPersonalizados), imagemOrigem:p.imagemOrigem??"propria", imagemFamilia:p.imagemFamilia??"",
         versaoCatalogo:p.versaoCatalogo, temVariacoes:p.opcoes.length>0, mpn:p.mpn??"", identificadoresEstado:p.identificadoresEstado??"desconhecido", googleProductCategory:p.googleProductCategory??"",
         nome: p.nome, categoria: p.categoria ?? "", marca: p.marca ?? "", sku: p.sku ?? "", gtin: p.gtin ?? "",
         preco: (p.precoCentavos / 100).toFixed(2).replace(".", ","), precoDe: p.precoDeCentavos != null ? (p.precoDeCentavos / 100).toFixed(2).replace(".", ",") : "",
@@ -100,7 +100,7 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoSalvar 
         body: JSON.stringify({
           id: produtoId, versaoCatalogo:f.versaoCatalogo, mpn:f.temVariacoes?undefined:(f.mpn||null), identificadoresEstado:f.temVariacoes?undefined:f.identificadoresEstado, googleProductCategory:f.googleProductCategory.trim() || null, nome: f.nome, categoria: f.categoria, marca: f.marca || undefined, sku: f.temVariacoes?undefined:f.sku, gtin:f.temVariacoes?undefined:f.gtin.trim(), precoCentavos:f.temVariacoes?undefined:preco,
           ...(!f.temVariacoes ? { precoDeCentavos: precoDe ?? null } : {}),
-          descricaoCurta: f.descricaoCurta || undefined, descricao: f.descricao || undefined, imagens: f.imagens, destaque: f.destaque, ativo: f.ativo,
+          descricaoCurta: f.descricaoCurta || undefined, descricao: f.descricao || undefined, imagens: f.imagens, imagemOrigem:f.imagemOrigem, imagemFamilia:f.imagemFamilia.trim()||null, destaque: f.destaque, ativo: f.ativo,
           disponibilidade:f.temVariacoes?undefined:f.disponibilidade, ...(!f.temVariacoes ? { estoque:f.estoque.trim()?Number(f.estoque):null } : {}), ...(f.pesoKg.trim() ? { pesoKg: Number.parseFloat(f.pesoKg.replace(",", ".")) } : {}),
         ...medida("alturaCm", f.alturaCm), ...medida("larguraCm", f.larguraCm), ...medida("comprimentoCm", f.comprimentoCm),
           codigoOriginal: f.codigoOriginal.trim() || null,
@@ -186,6 +186,12 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoSalvar 
           <EnviarImagem aoEnviar={(url) => set("imagens", [...f.imagens, url])} rotulo="+ foto" />
         </div>
       </Campo>
+      <div className="grid min-w-0 gap-4 sm:grid-cols-2">
+        <Campo label="Tipo da imagem principal" ajuda="Foto própria só quando mostra este produto exato. Imagem representativa exige a família da peça.">
+          <select id="catalogo-imagem-origem" className={inputClasse} value={f.imagemOrigem} onChange={(e) => set("imagemOrigem", e.target.value)}><option value="propria">Foto própria do produto exato</option><option value="representativa">Imagem representativa da família</option><option value="ilustracao">Ilustração ou diagrama</option></select>
+        </Campo>
+        {f.imagemOrigem === "representativa" && <Campo label="Família representada"><input id="catalogo-imagem-familia" className={inputClasse} value={f.imagemFamilia} onChange={(e) => set("imagemFamilia", e.target.value)} placeholder="Ex.: série 6200" maxLength={40} /></Campo>}
+      </div>
 
       <Recolhivel titulo="Identificação" resumo="marca, SKU, GTIN, MPN" aviso={semIdentificador ? "sem GTIN nem MPN" : null}>
         <div className="grid min-w-0 gap-4 sm:grid-cols-2">
