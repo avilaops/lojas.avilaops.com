@@ -541,7 +541,7 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
           <div><button className="btn-primario" disabled={ocupado} onClick={() => {
             const cep = enderecoEmpresa.cep.replace(/\D/g, "");
             chamar("/api/painel/loja", "PATCH", {
-              endereco: { logradouro: enderecoEmpresa.logradouro.trim(), numero: enderecoEmpresa.numero.trim(), complemento: enderecoEmpresa.complemento.trim(), bairro: enderecoEmpresa.bairro.trim(), cidade: enderecoEmpresa.cidade.trim(), uf: enderecoEmpresa.uf.trim().slice(0, 2), cep },
+              endereco: { logradouro: enderecoEmpresa.logradouro.trim(), numero: enderecoEmpresa.numero.trim(), complemento: enderecoEmpresa.complemento.trim(), bairro: enderecoEmpresa.bairro.trim(), cidade: enderecoEmpresa.cidade.trim(), uf: enderecoEmpresa.uf.trim().slice(0, 2), ...(cep.length === 8 ? { cep } : {}) },
               ...(cep.length === 8 ? { cepOrigem: cep } : {}),
               enderecoPublico: enderecoEmpresa.enderecoPublico,
             }, "Endereço salvo.");
