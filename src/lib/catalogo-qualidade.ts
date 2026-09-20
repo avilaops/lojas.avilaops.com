@@ -1,5 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import { gtinValido, INCLUIR_OFERTA, ofertaDaVariante } from "./catalogo-oferta";
+import { marcaConfirmada } from "./marca-confirmada";
 
 export const INCLUIR_CATALOGO = { categoria: true, midias: { orderBy: { ordem: "asc" as const } }, variantes: { include: { ...INCLUIR_OFERTA, publicacoes: true }, orderBy: { ordem: "asc" as const } } } satisfies Prisma.ProdutoInclude;
 export type ProdutoCatalogo = Prisma.ProdutoGetPayload<{ include: typeof INCLUIR_CATALOGO }>;
@@ -17,6 +18,7 @@ export function diagnosticarProduto(p: ProdutoCatalogo): OcorrenciaCatalogo[] {
   const ocorrencias: OcorrenciaCatalogo[]=[];
   const add=(regra:string,campo:string,severidade:"erro"|"aviso",canal:"loja"|"google",mensagem:string,acao:string,varianteId?:string)=>ocorrencias.push({regra,versao:1,campo,severidade,canal,mensagem,acao,varianteId});
   if(!p.categoriaId) add("categoria_ausente","categoria","aviso","loja","Produto sem categoria.","Escolha a categoria do produto.");
+  if(!marcaConfirmada(p.marca)) add("marca_ausente","marca","aviso","google",p.marca?.trim()?"O cadastro contém “DIVERSOS”, que não identifica o fabricante.":"Falta a marca do fabricante.","Confirme a marca na embalagem, ficha técnica ou com o fornecedor.");
   if(!p.descricao?.trim() && !p.descricaoCurta?.trim()) add("descricao_ausente","descricao","erro","google","Falta uma descrição do produto.","Descreva o uso e as características confirmadas.");
   for(const original of p.variantes.filter(v=>v.ativo)) {
     const v=ofertaDaVariante(original);
