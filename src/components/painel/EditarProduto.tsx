@@ -12,7 +12,7 @@ import { AJUDA_TIPO, lerDefinicoes, lerValores, type CampoPersonalizado } from "
 const medida = (chave: string, valor: string) =>
   valor.trim() ? { [chave]: Number.parseFloat(valor.replace(",", ".")) } : {};
 
-interface Form { tarja: string; principioAtivo: string; apresentacao: string; registroAnvisa: string; tipoMedicamento: string; versaoCatalogo:number; temVariacoes:boolean; mpn:string; identificadoresEstado:string; googleProductCategory:string; imagemOrigem:string; imagemFamilia:string; nome: string; categoria: string; marca: string; sku: string; gtin: string; preco: string; precoDe: string; descricaoCurta: string; descricao: string; imagens: string[]; destaque: boolean; ativo: boolean; disponibilidade: string; estoque: string; pesoKg: string; alturaCm: string; larguraCm: string; comprimentoCm: string; codigoOriginal: string; codigosEquivalentes: string; compatibilidade: LinhaCompat[]; camposPersonalizados: Record<string, string> }
+interface Form { tarja: string; principioAtivo: string; apresentacao: string; registroAnvisa: string; tipoMedicamento: string; versaoCatalogo:number; temVariacoes:boolean; mpn:string; identificadoresEstado:string; googleProductCategory:string; imagemOrigem:string; imagemFamilia:string; imagemConfirmada:boolean; nome: string; categoria: string; marca: string; sku: string; gtin: string; preco: string; precoDe: string; descricaoCurta: string; descricao: string; imagens: string[]; destaque: boolean; ativo: boolean; disponibilidade: string; estoque: string; pesoKg: string; alturaCm: string; larguraCm: string; comprimentoCm: string; codigoOriginal: string; codigosEquivalentes: string; compatibilidade: LinhaCompat[]; camposPersonalizados: Record<string, string> }
 /** Linha do editor de compatibilidade: texto livre até salvar (ano vazio = sem limite). */
 interface LinhaCompat { marca: string; modelo: string; anoDe: string; anoAte: string }
 
@@ -58,7 +58,7 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoSalvar 
       if (p?.erro) return setErro(p.erro);
       setDefinicoes(lerDefinicoes(p.definicoesCampos));
       const carregado: Form = {
-        camposPersonalizados: lerValores(p.camposPersonalizados), imagemOrigem:p.imagemOrigem??"propria", imagemFamilia:p.imagemFamilia??"",
+        camposPersonalizados: lerValores(p.camposPersonalizados), imagemOrigem:p.imagemOrigem??"propria", imagemFamilia:p.imagemFamilia??"", imagemConfirmada:p.midias?.[0]?.correspondencia === "confirmada",
         versaoCatalogo:p.versaoCatalogo, temVariacoes:p.opcoes.length>0, mpn:p.mpn??"", identificadoresEstado:p.identificadoresEstado??"desconhecido", googleProductCategory:p.googleProductCategory??"",
         nome: p.nome, categoria: p.categoria ?? "", marca: p.marca ?? "", sku: p.sku ?? "", gtin: p.gtin ?? "",
         preco: (p.precoCentavos / 100).toFixed(2).replace(".", ","), precoDe: p.precoDeCentavos != null ? (p.precoDeCentavos / 100).toFixed(2).replace(".", ",") : "",
@@ -101,6 +101,7 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoSalvar 
           id: produtoId, versaoCatalogo:f.versaoCatalogo, mpn:f.temVariacoes?undefined:(f.mpn||null), identificadoresEstado:f.temVariacoes?undefined:f.identificadoresEstado, googleProductCategory:f.googleProductCategory.trim() || null, nome: f.nome, categoria: f.categoria, marca: f.marca || undefined, sku: f.temVariacoes?undefined:f.sku, gtin:f.temVariacoes?undefined:f.gtin.trim(), precoCentavos:f.temVariacoes?undefined:preco,
           ...(!f.temVariacoes ? { precoDeCentavos: precoDe ?? null } : {}),
           descricaoCurta: f.descricaoCurta || undefined, descricao: f.descricao || undefined, imagens: f.imagens, imagemOrigem:f.imagemOrigem, imagemFamilia:f.imagemFamilia.trim()||null, destaque: f.destaque, ativo: f.ativo,
+          ...(f.imagemConfirmada && f.imagemOrigem === "propria" && f.imagens.length ? { confirmarImagemExata: true } : {}),
           disponibilidade:f.temVariacoes?undefined:f.disponibilidade, ...(!f.temVariacoes ? { estoque:f.estoque.trim()?Number(f.estoque):null } : {}), ...(f.pesoKg.trim() ? { pesoKg: Number.parseFloat(f.pesoKg.replace(",", ".")) } : {}),
         ...medida("alturaCm", f.alturaCm), ...medida("larguraCm", f.larguraCm), ...medida("comprimentoCm", f.comprimentoCm),
           codigoOriginal: f.codigoOriginal.trim() || null,
@@ -131,6 +132,7 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoSalvar 
 
   if (!f) return <div className="rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground sm:p-6">{erro ?? "Carregando…"}</div>;
   const set = (k: keyof Form, v: unknown) => setF({ ...f, [k]: v });
+  const setImagens = (imagens: string[]) => setF({ ...f, imagens, imagemConfirmada: false });
 
   // O que falta aparece na linha fechada do bloco: recolher não pode esconder
   // pendência, senão a tela fica curta mentindo.
@@ -178,20 +180,21 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoSalvar 
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={url} alt="" className="h-20 w-20 rounded-lg border border-border object-cover" />
               <div className="mt-1 flex gap-1 text-[10px]">
-                {i > 0 && <button className="underline" onClick={() => { const a = [...f.imagens]; [a[i - 1], a[i]] = [a[i], a[i - 1]]; set("imagens", a); }}>← principal</button>}
-                <button className="text-red-700 underline" onClick={() => set("imagens", f.imagens.filter((_, j) => j !== i))}>remover</button>
+                {i > 0 && <button className="underline" onClick={() => { const a = [...f.imagens]; [a[i - 1], a[i]] = [a[i], a[i - 1]]; setImagens(a); }}>← principal</button>}
+                <button className="text-red-700 underline" onClick={() => setImagens(f.imagens.filter((_, j) => j !== i))}>remover</button>
               </div>
             </div>
           ))}
-          <EnviarImagem aoEnviar={(url) => set("imagens", [...f.imagens, url])} rotulo="+ foto" />
+          <EnviarImagem aoEnviar={(url) => setImagens([...f.imagens, url])} rotulo="+ foto" />
         </div>
       </Campo>
       <div className="grid min-w-0 gap-4 sm:grid-cols-2">
         <Campo label="Tipo da imagem principal" ajuda="Foto própria só quando mostra este produto exato. Imagem representativa exige a família da peça.">
-          <select id="catalogo-imagem-origem" className={inputClasse} value={f.imagemOrigem} onChange={(e) => set("imagemOrigem", e.target.value)}><option value="propria">Foto própria do produto exato</option><option value="representativa">Imagem representativa da família</option><option value="ilustracao">Ilustração ou diagrama</option></select>
+          <select id="catalogo-imagem-origem" className={inputClasse} value={f.imagemOrigem} onChange={(e) => setF({ ...f, imagemOrigem: e.target.value, imagemConfirmada: e.target.value === f.imagemOrigem ? f.imagemConfirmada : false })}><option value="propria">Foto própria do produto exato</option><option value="representativa">Imagem representativa da família</option><option value="ilustracao">Ilustração ou diagrama</option></select>
         </Campo>
         {f.imagemOrigem === "representativa" && <Campo label="Família representada"><input id="catalogo-imagem-familia" className={inputClasse} value={f.imagemFamilia} onChange={(e) => set("imagemFamilia", e.target.value)} placeholder="Ex.: série 6200" maxLength={40} /></Campo>}
       </div>
+      <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" className="size-5 accent-primary" checked={f.imagemConfirmada} disabled={!f.imagens.length || f.imagemOrigem !== "propria"} onChange={(e) => set("imagemConfirmada", e.target.checked)} /> Confirmo que a foto principal mostra exatamente este produto e apresentação.</label>
 
       <Recolhivel titulo="Identificação" resumo="marca, SKU, GTIN, MPN" aviso={semIdentificador ? "sem GTIN nem MPN" : null}>
         <div className="grid min-w-0 gap-4 sm:grid-cols-2">
