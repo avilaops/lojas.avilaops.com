@@ -4,7 +4,7 @@ import { provisionarLoja } from "@/lib/provisionar";
 import { exigir } from "@/lib/operadores";
 import { emitir } from "@/lib/eventos";
 import { lerIdentidade } from "@/lib/identidade";
-import { urlDaLoja } from "@/lib/tenant";
+import { type Endereco, retiradaPublicaDisponivel, urlDaLoja } from "@/lib/tenant";
 
 /** PATCH — o lojista altera a própria loja (tema, contato, frete, gateway, domínio). */
 export async function PATCH(request: Request) {
@@ -17,12 +17,10 @@ export async function PATCH(request: Request) {
   if (!r.success) return Response.json({ erro: "Dados inválidos.", detalhes: r.error.flatten() }, { status: 422 });
 
   if (r.data.retiradaNaLoja) {
-    const atual = (s.tenant.endereco as Record<string, unknown> | null) ?? {};
+    const atual = (s.tenant.endereco as Endereco | null) ?? {};
     const endereco = { ...atual, ...(r.data.endereco ?? {}) };
-    const cep = String(endereco.cep ?? "").replace(/\D/g, "");
-    const completo = Boolean(endereco.logradouro && endereco.numero && endereco.cidade && endereco.uf && cep.length === 8);
     const publico = r.data.enderecoPublico ?? s.tenant.enderecoPublico;
-    if (!completo || !publico) {
+    if (!retiradaPublicaDisponivel({ retiradaNaLoja: true, enderecoPublico: publico, endereco })) {
       return Response.json({
         erro: "Para ativar retirada, complete o endereço da empresa e torne-o público na seção Conta.",
       }, { status: 422 });
