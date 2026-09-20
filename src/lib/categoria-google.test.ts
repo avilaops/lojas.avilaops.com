@@ -8,6 +8,15 @@ test("mapeia abraçadeiras para a categoria exata de ferragens do Google", () =>
   assert.equal(categoriaGoogle("Acessórios"), undefined);
 });
 
+test("mapeia categorias com nome exato na taxonomia do Google", () => {
+  assert.equal(categoriaGoogle("Arruelas"), 2195);
+  assert.equal(categoriaGoogle("Correntes"), 1492);
+  assert.equal(categoriaGoogle("Ferragens"), 632);
+  assert.equal(categoriaGoogle("Ferramentas"), 1167);
+  assert.equal(categoriaGoogle("Molas"), 499933);
+  assert.equal(categoriaGoogle("Parafusos"), 2251);
+});
+
 test("põe cada categoria da Brilhax na prateleira certa", () => {
   assert.equal(categoriaGoogle("Lavagem"), 2590);
   assert.equal(categoriaGoogle("Polimento"), 2590);

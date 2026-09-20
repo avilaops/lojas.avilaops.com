@@ -40,6 +40,36 @@ const REGRAS: Array<{ termos: RegExp; id: number; prateleira: string }> = [
     id: 502978,
     prateleira: "Abraçadeiras",
   },
+  {
+    termos: /^arruelas?$/i,
+    id: 2195,
+    prateleira: "Arruelas",
+  },
+  {
+    termos: /^correntes?$/i,
+    id: 1492,
+    prateleira: "Correntes",
+  },
+  {
+    termos: /^ferragens?$/i,
+    id: 632,
+    prateleira: "Ferragens",
+  },
+  {
+    termos: /^ferramentas?$/i,
+    id: 1167,
+    prateleira: "Ferramentas",
+  },
+  {
+    termos: /^molas?$/i,
+    id: 499933,
+    prateleira: "Molas",
+  },
+  {
+    termos: /^parafusos?$/i,
+    id: 2251,
+    prateleira: "Parafusos",
+  },
   // Estética automotiva, na ordem do serviço. Os quatro ids abaixo vivem em
   // "Veículos e peças > Peças e acessórios de veículos > Manutenção, cuidado e
   // decoração para veículos motorizados > Limpeza de veículos".
