@@ -38,6 +38,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     && p.precoCentavos > 0
     && p.precoDeCentavos != null
     && p.precoDeCentavos > p.precoCentavos
+    && p.imagens.length > 0
     && p.imagemOrigem === "propria"
     && p.disponibilidade !== "out_of_stock"
     && (p.estoque == null || p.estoque > 0),
