@@ -45,7 +45,7 @@ export default async function Home() {
     // Nenhum layout mostra mais de 10 destaques: pedir mais é carregar o que
     // o lojista marcou ao longo de meses para descartar na tela.
     listarProdutos(t.id, { destaque: true, moto, limite: 12, ...(campanhaVisual ? { imagemOrigem: "propria" as const } : {}) }),
-    provaSocialDa(t.id),
+    campanhaVisual ? { media: null, total: 0, avaliacoes: [] } : provaSocialDa(t.id),
     motopecas ? motosDaLoja(t.id) : null,
     motopecas ? marcasDaLoja(t.id) : [],
     t.segmento === "farmacia" ? necessidadesDaLoja(t.id) : undefined,
@@ -78,8 +78,8 @@ export default async function Home() {
     <>
       {layout}
       {motos && <Garagem moto={moto} motos={motos} marcas={marcas} nomeDaLoja={t.nome} />}
-      <ProvaSocial dados={prova} nomeDaLoja={t.nome} />
-      {prova.media !== null && prova.total >= 3 && (
+      {!campanhaVisual && <ProvaSocial dados={prova} nomeDaLoja={t.nome} />}
+      {!campanhaVisual && prova.media !== null && prova.total >= 3 && (
         // A nota só entra no JSON-LD porque está visível na própria página,
         // que é o que o Google exige de dado estruturado de avaliação.
         <script
