@@ -19,6 +19,8 @@ export function midiasDaOferta(p: ProdutoCatalogo, varianteId: string) {
 export function diagnosticarProduto(p: ProdutoCatalogo, prateleira: (nome: string | null | undefined) => number | undefined = categoriaGoogle): OcorrenciaCatalogo[] {
   const ocorrencias: OcorrenciaCatalogo[]=[];
   const add=(regra:string,campo:string,severidade:"erro"|"aviso",canal:"loja"|"google",mensagem:string,acao:string,varianteId?:string)=>ocorrencias.push({regra,versao:1,campo,severidade,canal,mensagem,acao,varianteId});
+  const nomeNormalizado=p.nome.normalize("NFD").replace(/\p{M}+/gu, "").trim().toLowerCase();
+  if (/^(?:unitario|produto|item|diversos?|pecas plasticas diversas)$/.test(nomeNormalizado)) add("titulo_insuficiente","nome","erro","google","O título não identifica qual produto o cliente vai receber.","Confirme tipo, modelo ou aplicação na embalagem ou ficha do fornecedor antes de anunciar.");
   const googleCategoriaManual=idDaCategoriaGoogle(p.googleProductCategory);
   const googleCategoriaAutomatica=categoriaGoogleProduto(p.nome,p.categoria?.nome,prateleira);
   if (!googleCategoriaManual && !googleCategoriaAutomatica) add("categoria_google_ausente","googleProductCategory","aviso","google","Não há categoria Google confirmada para esta categoria da loja.","Escolha um caminho ou ID na taxonomia Google, ou reorganize o produto numa categoria já classificada.");
