@@ -133,10 +133,10 @@ const SINAL_DO_RAMO = /vitrifica|coating|polimento|boina|automotiv|limpa[\s-]?ro
  * próprias categorias provarem que esta é uma loja industrial.
  */
 const SINAL_INDUSTRIAL = /retentores?|rolamentos?|o[\s-]?rings?|gaxetas?|raspadores?|mancais?|correias?|buchas?|an[ée]is\s+(?:backup|el[áa]sticos?)|vedações?|hidráulica/i;
-// Esta categoria foi marcada como ambígua no catálogo: inclui abraçadeiras de
-// usos diferentes. O ramo industrial da loja não basta para escolher uma
-// prateleira para cada tipo, então não herdar o fallback 111.
-const CATEGORIA_INDUSTRIAL_AMBIGUA = /^abra[cç]adeiras?$/i;
+// O fallback 111 só é apropriado para estas famílias da Vedashow, cujo
+// catálogo observado é de componentes industriais. Categorias genéricas ou
+// com mistura de itens domésticos, elétricos e industriais ficam sem chute.
+const CATEGORIAS_INDUSTRIAIS = /^(?:rolamentos?|correias?|mancais?|buchas?|mangueiras?|retentores?|gaxetas?|raspadores?|o[\\s-]?rings?|an[ée]is\\s+(?:backup|el[áa]sticos?)|guias)$/i;
 
 /**
  * Regras que só valem com o ramo já provado pelo SINAL_DO_RAMO. Sozinhos,
@@ -181,13 +181,13 @@ export function prateleirasDaLoja(nomes: Array<string | null | undefined>): (nom
   const industrial = nomes.some((n) => !!n && SINAL_INDUSTRIAL.test(n));
   return (nomeDaCategoria) => {
     if (!nomeDaCategoria) return undefined;
-    if (CATEGORIA_INDUSTRIAL_AMBIGUA.test(nomeDaCategoria.trim())) return undefined;
     const direta = categoriaGoogle(nomeDaCategoria);
     if (direta !== undefined) return direta;
-    if (!automotiva && !industrial) return undefined;
-    const automotivaDireta = REGRAS_DO_RAMO.find((r) => r.termos.test(nomeDaCategoria))?.id;
-    if (automotivaDireta !== undefined) return automotivaDireta;
-    if (industrial) return 111; // Comercial e industrial, categoria pai da taxonomia oficial.
+    if (automotiva) {
+      const automotivaDireta = REGRAS_DO_RAMO.find((r) => r.termos.test(nomeDaCategoria))?.id;
+      if (automotivaDireta !== undefined) return automotivaDireta;
+    }
+    if (industrial && CATEGORIAS_INDUSTRIAIS.test(nomeDaCategoria.trim())) return 111; // Categoria pai para famílias industriais confirmadas.
     return undefined;
   };
 }
