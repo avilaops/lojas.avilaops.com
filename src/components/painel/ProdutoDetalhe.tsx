@@ -50,7 +50,7 @@ export default function ProdutoDetalhe({ id, nome, urlNaLoja, temVariacoes, segm
       </div>
 
       {ok && <p className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-700">{ok}</p>}
-      <QualidadeProduto produtoId={id} revisao={revisao} aoAbrirVariantes={()=>setGrade(true)} />
+      <QualidadeProduto produtoId={id} revisao={revisao} temVariacoes={temVariacoes} aoAbrirVariantes={()=>setGrade(true)} />
 
       {grade && (
         <GradeVariantes
