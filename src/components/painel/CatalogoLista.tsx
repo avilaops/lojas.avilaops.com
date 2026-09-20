@@ -51,6 +51,7 @@ const SITUACOES = [
   { valor: "sem-foto", rotulo: "Sem foto" },
   { valor: "imagem-merchant-revisar", rotulo: "Revisar imagem Merchant" },
   { valor: "sem-preco", rotulo: "Sem preço" },
+  { valor: "sem-preco-com-saldo", rotulo: "Saldo positivo, preço pendente" },
   { valor: "sem-categoria", rotulo: "Sem categoria" },
   { valor: "sem-descricao", rotulo: "Sem descrição" },
   { valor: "sem-marca", rotulo: "Marca a confirmar" },
