@@ -54,6 +54,7 @@ export default function BannerCarousel({ campanhas }: { campanhas: Campanha[] })
       >
         {campanhas.map((campanha, indice) => {
           const mobileVertical = campanha.imagemMobileUrl?.endsWith("campanha-geral-v3-mobile.svg") ?? false;
+          const desktopWide = campanha.imagemUrl.endsWith("campanha-geral-v3-desktop.svg");
           return (
           <Link className={`banner-campanha${mobileVertical ? " banner-campanha-mobile-vertical" : ""}`} key={`${campanha.imagemUrl}-${indice}`} href={campanha.link}>
             <picture>
@@ -62,7 +63,7 @@ export default function BannerCarousel({ campanhas }: { campanhas: Campanha[] })
                 src={campanha.imagemUrl}
                 alt={campanha.alt}
                 width={1600}
-                height={900}
+                height={desktopWide ? 600 : 900}
                 fetchPriority={indice === 0 ? "high" : "auto"}
                 loading={indice === 0 ? "eager" : "lazy"}
               />
