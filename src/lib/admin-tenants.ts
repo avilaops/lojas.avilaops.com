@@ -3,7 +3,7 @@ import { prisma } from "./db";
 import { cifrar } from "./cofre";
 import { slugificar } from "./catalogo";
 import { esquecerTenantEmCache } from "./tenant";
-import type { ProdutoEntrada, TenantEntrada } from "./admin-schemas";
+import type { ProdutoPlanilha, TenantEntrada } from "./admin-schemas";
 import { invalidarCatalogo } from "./catalogo-cache";
 import { salvarProdutoNoCatalogo } from "./catalogo-escrita";
 import { ErroCampo, lerDefinicoes, normalizarValor } from "./campos-personalizados";
@@ -96,7 +96,7 @@ export async function slugLivre(
  * O endereço da página (`slug`) é derivado, não é a chave: quando o slug
  * desejado já é de outro produto, ganha um sufixo em vez de derrubar o lote.
  */
-export async function importarProdutos(tenantId: string, produtos: ProdutoEntrada[]) {
+export async function importarProdutos(tenantId: string, produtos: ProdutoPlanilha[]) {
   const categorias = new Map<string, string>();
   for (const c of await prisma.categoria.findMany({ where: { tenantId } })) categorias.set(c.slug, c.id);
   const nomesCorrigidos = new Set<string>();
@@ -113,6 +113,20 @@ export async function importarProdutos(tenantId: string, produtos: ProdutoEntrad
   const avisos: string[] = [];
 
   for (const p of produtos) {
+    const desejado = p.slug ? slugificar(p.slug) : p.nome ? slugificar(p.nome) : null;
+    let existente = p.sku ? await prisma.produto.findFirst({ where: { tenantId, sku: p.sku } }) : null;
+    if (!existente && desejado) {
+      existente = await prisma.produto.findUnique({ where: { tenantId_slug: { tenantId, slug: desejado } } });
+    }
+    if (!existente && (!p.nome?.trim() || p.precoCentavos === undefined)) {
+      avisos.push(`${p.sku ?? p.slug ?? "Linha sem identificação"}: SKU não encontrado; um produto novo exige nome e preço.`);
+      continue;
+    }
+    if (p.imagemOrigem && p.imagemOrigem !== "propria" && !(p.imagens?.length || existente?.imagens.length)) {
+      avisos.push(`${p.sku ?? p.nome ?? "Produto"}: informe a imagem antes de classificar sua origem.`);
+      continue;
+    }
+
     let categoriaId: string | null = null;
     if (p.categoria) {
       const cslug = slugificar(p.categoria);
@@ -131,14 +145,9 @@ export async function importarProdutos(tenantId: string, produtos: ProdutoEntrad
       }
     }
 
-    const desejado = p.slug ? slugificar(p.slug) : slugificar(p.nome);
     const { categoria: _c, compatibilidade, atributos, camposPersonalizados, ...campos } = p;
     void _c;
-    const existente = p.sku
-      ? await prisma.produto.findFirst({ where: { tenantId, sku: p.sku } })
-      : await prisma.produto.findUnique({ where: { tenantId_slug: { tenantId, slug: desejado } } });
-
-    const slug = await slugLivre(tenantId, desejado, existente?.id ?? null);
+    const slug = await slugLivre(tenantId, desejado ?? existente!.slug, existente?.id ?? null);
 
     /**
      * Uma célula ruim não derruba a planilha inteira.
@@ -188,5 +197,5 @@ export async function importarProdutos(tenantId: string, produtos: ProdutoEntrad
   // por loja caem agora, não daqui a cinco minutos.
   invalidarCatalogo(tenantId);
 
-  return { criados, atualizados, ...(avisos.length ? { avisos: avisos.slice(0, 50) } : {}) };
+  return { criados, atualizados, ...(avisos.length ? { avisosTotal: avisos.length, avisos: avisos.slice(0, 50) } : {}) };
 }
