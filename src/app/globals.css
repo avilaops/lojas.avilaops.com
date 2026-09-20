@@ -211,6 +211,8 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
 .banner-campanhas-pontos button[aria-current=true] { width: 1.45rem; background: #fff; }
 @media (prefers-reduced-motion: reduce) { .banner-campanhas-trilho { scroll-behavior: auto; } }
 .campanhas-produtos { width: min(100% - 2rem, 1200px); margin-inline: auto; }
+.home-campanhas .atalhos-cat-visual .atalhos-cat-foto { width: 4.25rem; height: 4.25rem; }
+.home-campanhas .atalhos-cat-visual .atalhos-cat-nome { display: none; }
 @media (max-width: 640px) {
   .banner-campanha picture { aspect-ratio: 4 / 5; overflow: hidden; }
   .banner-campanha picture img { width: 100%; height: 100%; object-fit: contain; }
