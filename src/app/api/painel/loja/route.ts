@@ -16,6 +16,19 @@ export async function PATCH(request: Request) {
   const r = TenantAtualizacaoSchema.omit({ status: true, slug: true, plano: true }).safeParse(await request.json().catch(() => null));
   if (!r.success) return Response.json({ erro: "Dados inválidos.", detalhes: r.error.flatten() }, { status: 422 });
 
+  if (r.data.retiradaNaLoja) {
+    const atual = (s.tenant.endereco as Record<string, unknown> | null) ?? {};
+    const endereco = { ...atual, ...(r.data.endereco ?? {}) };
+    const cep = String(endereco.cep ?? "").replace(/\\D/g, "");
+    const completo = Boolean(endereco.logradouro && endereco.numero && endereco.cidade && endereco.uf && cep.length === 8);
+    const publico = r.data.enderecoPublico ?? s.tenant.enderecoPublico;
+    if (!completo || !publico) {
+      return Response.json({
+        erro: "Para ativar retirada, complete o endereço da empresa e torne-o público na seção Conta.",
+      }, { status: 422 });
+    }
+  }
+
   const t = await atualizarTenant(loja.slug, r.data);
   if (r.data.identidade || r.data.tema || r.data.logoUrl !== undefined || r.data.bannerUrl !== undefined) {
     const identidade = lerIdentidade(t.identidade);
