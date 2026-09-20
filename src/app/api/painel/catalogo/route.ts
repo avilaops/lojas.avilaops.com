@@ -38,6 +38,7 @@ export async function GET(request: Request) {
         categoria: { select: { nome: true } },
         variantes: { where: varianteSemIdentificadores, select: { id: true }, take: 1 },
         _count: { select: { variantes: { where: { ativo: true, padrao: false } } } },
+        midias: { where: { varianteId: null, tipo: "imagem", ordem: 0 }, select: { correspondencia: true }, take: 1 },
       },
       orderBy: [{ ativo: "desc" }, { nome: "asc" }],
       skip: (pagina - 1) * POR_PAGINA,
@@ -63,7 +64,7 @@ export async function GET(request: Request) {
       opcoes: p.opcoes,
       variantes: p._count.variantes,
       identificadoresPendentes: p.variantes.length > 0,
-      fotoMerchantRevisar: p.imagens.length === 0 || p.imagemOrigem !== "propria",
+      fotoMerchantRevisar: p.imagens.length === 0 || p.imagemOrigem !== "propria" || p.midias[0]?.correspondencia !== "confirmada",
       temFoto: p.imagens.length > 0,
     })),
   });
