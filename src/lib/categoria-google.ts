@@ -136,7 +136,7 @@ const SINAL_INDUSTRIAL = /retentores?|rolamentos?|o[\s-]?rings?|gaxetas?|raspado
 // O fallback 111 só é apropriado para estas famílias da Vedashow, cujo
 // catálogo observado é de componentes industriais. Categorias genéricas ou
 // com mistura de itens domésticos, elétricos e industriais ficam sem chute.
-const CATEGORIAS_INDUSTRIAIS = /^(?:rolamentos?|correias?|mancais?|buchas?|mangueiras?|retentores?|gaxetas?|raspadores?|o[\\s-]?rings?|an[ée]is\\s+(?:backup|el[áa]sticos?)|guias)$/i;
+const CATEGORIAS_INDUSTRIAIS = /^(?:rolamentos?|correias?|mancais?|buchas?|mangueiras?|retentores?|gaxetas?|raspadores?|o[\s-]?rings?|an[ée]is\s+(?:backup|el[áa]sticos?)|guias)$/i;
 
 /**
  * Regras que só valem com o ramo já provado pelo SINAL_DO_RAMO. Sozinhos,
