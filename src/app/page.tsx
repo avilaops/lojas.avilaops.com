@@ -38,22 +38,22 @@ export default async function Home() {
   const t = await exigirTenant();
   const motopecas = t.segmento === "motopecas";
   const moto = motopecas ? await minhaMoto() : null;
+  const layoutAtual = temaDo(t).layout;
+  const campanhaVisual = layoutAtual === "distribuidora" && (temaDo(t).campanhasHome?.length ?? 0) > 0;
   const [categorias, destaques, prova, motos, marcas, necessidades] = await Promise.all([
     listarCategorias(t.id),
     // Nenhum layout mostra mais de 10 destaques: pedir mais é carregar o que
     // o lojista marcou ao longo de meses para descartar na tela.
-    listarProdutos(t.id, { destaque: true, moto, limite: 12 }),
+    listarProdutos(t.id, { destaque: true, moto, limite: 12, ...(campanhaVisual ? { imagemOrigem: "propria" as const } : {}) }),
     provaSocialDa(t.id),
     motopecas ? motosDaLoja(t.id) : null,
     motopecas ? marcasDaLoja(t.id) : [],
     t.segmento === "farmacia" ? necessidadesDaLoja(t.id) : undefined,
   ]);
-  const layoutAtual = temaDo(t).layout;
-  const campanhaVisual = layoutAtual === "distribuidora" && (temaDo(t).campanhasHome?.length ?? 0) > 0;
   const vitrine = campanhaVisual
       ? await (async () => {
-        const destaquesProntos = destaques.filter((produto) => produto.precoCentavos > 0 && produto.imagens.length > 0);
-        const completas = (await vitrineDaLoja(t.id, { moto, limite: 24 }))
+        const destaquesProntos = destaques.filter((produto) => produto.precoCentavos > 0 && produto.imagens.length > 0 && produto.imagemOrigem === "propria");
+        const completas = (await vitrineDaLoja(t.id, { moto, limite: 24, imagemOrigem: "propria" }))
           .filter((produto) => produto.precoCentavos > 0 && produto.imagens.length > 0);
         const idsDestaques = new Set(destaquesProntos.map((produto) => produto.id));
         return [...destaquesProntos, ...completas.filter((produto) => !idsDestaques.has(produto.id))].slice(0, 12);

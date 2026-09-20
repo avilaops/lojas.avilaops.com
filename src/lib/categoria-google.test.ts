@@ -2,6 +2,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { categoriaGoogle, prateleirasDaLoja } from "./categoria-google";
 
+test("mapeia abraçadeiras para a categoria exata de ferragens do Google", () => {
+  assert.equal(categoriaGoogle("Abraçadeiras"), 502978);
+  assert.equal(categoriaGoogle("Abraçadeira"), 502978);
+  assert.equal(categoriaGoogle("Acessórios"), undefined);
+});
+
 test("põe cada categoria da Brilhax na prateleira certa", () => {
   assert.equal(categoriaGoogle("Lavagem"), 2590);
   assert.equal(categoriaGoogle("Polimento"), 2590);

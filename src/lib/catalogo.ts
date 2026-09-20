@@ -80,6 +80,8 @@ export interface FiltroCatalogo {
   busca?: string;
   fabricante?: string;
   destaque?: boolean;
+  /** Só produtos cuja imagem foi declarada como foto do próprio item. */
+  imagemOrigem?: "propria" | "representativa" | "ilustracao";
   minCentavos?: number;
   maxCentavos?: number;
   ordem?: OrdemCatalogo;
@@ -203,6 +205,7 @@ export async function listarProdutos(tenantId: string, filtro?: FiltroCatalogo) 
       tenantId,
       ativo: true,
       ...(filtro?.destaque ? { destaque: true } : {}),
+      ...(filtro?.imagemOrigem ? { imagemOrigem: filtro.imagemOrigem } : {}),
       ...(filtro?.fabricante ? { marca: { equals: filtro.fabricante, mode: "insensitive" } } : {}),
       ...(filtro?.categoriaSlug ? { categoria: { slug: filtro.categoriaSlug } } : {}),
       ...(filtro?.excetoId ? { id: { not: filtro.excetoId } } : {}),
@@ -262,17 +265,17 @@ export const produtoPublicavel = publicavel;
  * Com moto escolhida o corte é por compatibilidade e continua em memória,
  * como em `listarProdutos`: aí a ordem por foto se aplica sobre o que serve.
  */
-export async function vitrineDaLoja(tenantId: string, opcoes: { moto?: Moto | null; limite?: number } = {}) {
+export async function vitrineDaLoja(tenantId: string, opcoes: { moto?: Moto | null; limite?: number; imagemOrigem?: "propria" | "representativa" | "ilustracao" } = {}) {
   const limite = opcoes.limite ?? 12;
   const completude = (p: Produto) => (p.imagens.length > 0 ? 1 : 0) + (p.precoCentavos > 0 ? 1 : 0);
 
   if (opcoes.moto) {
-    const todos = await listarProdutos(tenantId, { moto: opcoes.moto });
+    const todos = await listarProdutos(tenantId, { moto: opcoes.moto, imagemOrigem: opcoes.imagemOrigem });
     return todos.sort((a, b) => completude(b) - completude(a)).slice(0, limite);
   }
 
   const completos = await prisma.produto.findMany({
-    where: { tenantId, ...WHERE_COMPLETO },
+    where: { tenantId, ...WHERE_COMPLETO, ...(opcoes.imagemOrigem ? { imagemOrigem: opcoes.imagemOrigem } : {}) },
     include: { categoria: true },
     orderBy: ORDENS.relevancia,
     take: limite,
@@ -280,7 +283,7 @@ export async function vitrineDaLoja(tenantId: string, opcoes: { moto?: Moto | nu
   if (completos.length >= limite) return completos;
 
   const resto = await prisma.produto.findMany({
-    where: { tenantId, ativo: true, id: { notIn: completos.map((p) => p.id) } },
+    where: { tenantId, ativo: true, ...(opcoes.imagemOrigem ? { imagemOrigem: opcoes.imagemOrigem } : {}), id: { notIn: completos.map((p) => p.id) } },
     include: { categoria: true },
     orderBy: ORDENS.relevancia,
     take: limite * 4,

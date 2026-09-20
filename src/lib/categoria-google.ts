@@ -33,6 +33,13 @@
 
 /** Ramo por ramo, na ordem em que as regras são testadas. */
 const REGRAS: Array<{ termos: RegExp; id: number; prateleira: string }> = [
+  // Categorias com correspondência direta e exata na taxonomia pt-BR.
+  // Abraçadeiras da Vedashow são ferragens, não peças automotivas por padrão.
+  {
+    termos: /^abraçadeiras?$/i,
+    id: 502978,
+    prateleira: "Abraçadeiras",
+  },
   // Estética automotiva, na ordem do serviço. Os quatro ids abaixo vivem em
   // "Veículos e peças > Peças e acessórios de veículos > Manutenção, cuidado e
   // decoração para veículos motorizados > Limpeza de veículos".

@@ -24,6 +24,7 @@ export default async function Promocoes() {
       precoCentavos: { gt: 0 },
       precoDeCentavos: { gt: prisma.produto.fields.precoCentavos },
       imagens: { isEmpty: false },
+      imagemOrigem: "propria",
       disponibilidade: { not: "out_of_stock" },
       OR: [{ estoque: null }, { estoque: { gt: 0 } }],
     },
