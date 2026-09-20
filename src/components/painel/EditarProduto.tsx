@@ -12,7 +12,7 @@ import { AJUDA_TIPO, lerDefinicoes, lerValores, type CampoPersonalizado } from "
 const medida = (chave: string, valor: string) =>
   valor.trim() ? { [chave]: Number.parseFloat(valor.replace(",", ".")) } : {};
 
-interface Form { tarja: string; principioAtivo: string; apresentacao: string; registroAnvisa: string; tipoMedicamento: string; versaoCatalogo:number; temVariacoes:boolean; mpn:string; identificadoresEstado:string; nome: string; categoria: string; marca: string; sku: string; gtin: string; preco: string; precoDe: string; descricaoCurta: string; descricao: string; imagens: string[]; destaque: boolean; ativo: boolean; disponibilidade: string; estoque: string; pesoKg: string; alturaCm: string; larguraCm: string; comprimentoCm: string; codigoOriginal: string; codigosEquivalentes: string; compatibilidade: LinhaCompat[]; camposPersonalizados: Record<string, string> }
+interface Form { tarja: string; principioAtivo: string; apresentacao: string; registroAnvisa: string; tipoMedicamento: string; versaoCatalogo:number; temVariacoes:boolean; mpn:string; identificadoresEstado:string; googleProductCategory:string; nome: string; categoria: string; marca: string; sku: string; gtin: string; preco: string; precoDe: string; descricaoCurta: string; descricao: string; imagens: string[]; destaque: boolean; ativo: boolean; disponibilidade: string; estoque: string; pesoKg: string; alturaCm: string; larguraCm: string; comprimentoCm: string; codigoOriginal: string; codigosEquivalentes: string; compatibilidade: LinhaCompat[]; camposPersonalizados: Record<string, string> }
 /** Linha do editor de compatibilidade: texto livre até salvar (ano vazio = sem limite). */
 interface LinhaCompat { marca: string; modelo: string; anoDe: string; anoAte: string }
 
@@ -59,7 +59,7 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoSalvar 
       setDefinicoes(lerDefinicoes(p.definicoesCampos));
       const carregado: Form = {
         camposPersonalizados: lerValores(p.camposPersonalizados),
-        versaoCatalogo:p.versaoCatalogo, temVariacoes:p.opcoes.length>0, mpn:p.mpn??"", identificadoresEstado:p.identificadoresEstado??"desconhecido",
+        versaoCatalogo:p.versaoCatalogo, temVariacoes:p.opcoes.length>0, mpn:p.mpn??"", identificadoresEstado:p.identificadoresEstado??"desconhecido", googleProductCategory:p.googleProductCategory??"",
         nome: p.nome, categoria: p.categoria ?? "", marca: p.marca ?? "", sku: p.sku ?? "", gtin: p.gtin ?? "",
         preco: (p.precoCentavos / 100).toFixed(2).replace(".", ","), precoDe: p.precoDeCentavos != null ? (p.precoDeCentavos / 100).toFixed(2).replace(".", ",") : "",
         descricaoCurta: p.descricaoCurta ?? "", descricao: p.descricao ?? "", imagens: p.imagens ?? [], destaque: p.destaque, ativo: p.ativo,
@@ -98,7 +98,7 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoSalvar 
       const r = await fetch("/api/painel/produtos", {
         method: "PATCH", headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          id: produtoId, versaoCatalogo:f.versaoCatalogo, mpn:f.temVariacoes?undefined:(f.mpn||null), identificadoresEstado:f.temVariacoes?undefined:f.identificadoresEstado, nome: f.nome, categoria: f.categoria, marca: f.marca || undefined, sku: f.temVariacoes?undefined:f.sku, gtin:f.temVariacoes?undefined:f.gtin.trim(), precoCentavos:f.temVariacoes?undefined:preco,
+          id: produtoId, versaoCatalogo:f.versaoCatalogo, mpn:f.temVariacoes?undefined:(f.mpn||null), identificadoresEstado:f.temVariacoes?undefined:f.identificadoresEstado, googleProductCategory:f.googleProductCategory.trim() || null, nome: f.nome, categoria: f.categoria, marca: f.marca || undefined, sku: f.temVariacoes?undefined:f.sku, gtin:f.temVariacoes?undefined:f.gtin.trim(), precoCentavos:f.temVariacoes?undefined:preco,
           ...(!f.temVariacoes ? { precoDeCentavos: precoDe ?? null } : {}),
           descricaoCurta: f.descricaoCurta || undefined, descricao: f.descricao || undefined, imagens: f.imagens, destaque: f.destaque, ativo: f.ativo,
           disponibilidade:f.temVariacoes?undefined:f.disponibilidade, ...(!f.temVariacoes ? { estoque:f.estoque.trim()?Number(f.estoque):null } : {}), ...(f.pesoKg.trim() ? { pesoKg: Number.parseFloat(f.pesoKg.replace(",", ".")) } : {}),
@@ -154,6 +154,7 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoSalvar 
       <div className="grid min-w-0 gap-4 sm:grid-cols-2">
         <Campo label="Nome"><input id="catalogo-nome" className={inputClasse} value={f.nome} onChange={(e) => set("nome", e.target.value)} /></Campo>
         <Campo label="Categoria"><input id="catalogo-categoria" className={inputClasse} value={f.categoria} onChange={(e) => set("categoria", e.target.value)} /></Campo>
+        <Campo label="Categoria Google (opcional)" ajuda="Use o ID ou caminho completo da taxonomia oficial. Vazio mantém a classificação automática do Google."><input id="catalogo-google-category" className={inputClasse} value={f.googleProductCategory} onChange={(e) => set("googleProductCategory", e.target.value)} placeholder="ID ou caminho oficial confirmado" /></Campo>
         <Campo label="Preço (R$)"><input id="catalogo-preco" readOnly={f.temVariacoes} className={inputClasse} value={f.preco} onChange={(e) => set("preco", e.target.value)} inputMode="decimal" /></Campo>
         <Campo label="Preço “de” (R$)" ajuda="Riscado na loja, ao lado do preço."><input id="catalogo-precoDe" readOnly={f.temVariacoes} className={inputClasse} value={f.precoDe} onChange={(e) => set("precoDe", e.target.value)} inputMode="decimal" /></Campo>
         <Campo label="Estoque físico" ajuda="Quantidade física; as reservas são descontadas automaticamente. Vazio = não controla."><input id="catalogo-estoque" readOnly={f.temVariacoes} className={inputClasse} value={f.estoque} onChange={(e) => set("estoque", e.target.value)} inputMode="numeric" /></Campo>
