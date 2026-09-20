@@ -13,9 +13,7 @@ import { removedorConfigurado, removerFundo } from "./fundo";
  * Só imagem, até 5 MB, tipo conferido pelos bytes (não pela extensão que o
  * navegador mandou).
  */
-// The directory holds runtime uploads outside the bundle. Keep the dynamic
-// working directory lookup out of Turbopack's file tracing.
-export const UPLOADS_DIR = process.env.UPLOADS_DIR ?? path.join(/*turbopackIgnore: true*/ process.cwd(), "uploads");
+export const UPLOADS_DIR = process.env.UPLOADS_DIR ?? path.join(process.cwd(), "uploads");
 const LIMITE = 5 * 1024 * 1024;
 const BASE = process.env.LOJAS_BASE_DOMAIN ?? "lojas.avilaops.com";
 
