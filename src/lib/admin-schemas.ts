@@ -144,6 +144,10 @@ export const ProdutoEntradaSchema = z.object({
   marca: z.string().max(80).optional(),
   sku: z.string().max(60).optional(),
   gtin: z.string().max(20).optional(),
+  googleProductCategory: z.string().trim().max(300).nullable().optional().refine(
+    (v) => v === undefined || v === null || /^\d{1,10}$/.test(v) || (!/[<\r\n]/.test(v) && v.split(">").length > 1 && v.split(">").every((p) => p.trim().length > 0)),
+    "Use o ID numérico ou o caminho completo da taxonomia Google.",
+  ),
   mpn: z.string().trim().max(60).nullable().optional(),
   identificadoresEstado: z.enum(["desconhecido", "informado", "sem_identificador"]).optional(),
   precoCentavos: z.number().int().nonnegative(),

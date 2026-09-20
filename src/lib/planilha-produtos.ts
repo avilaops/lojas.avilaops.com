@@ -16,6 +16,7 @@ export const COLUNAS_PRODUTO = [
   "nome",
   "preco",
   "categoria",
+  "google_product_category",
   "marca",
   "sku",
   "gtin",
@@ -94,6 +95,7 @@ export function lerCsvProdutos(texto: string) {
     const precoDe = pega("preco_de") ? centavos(pega("preco_de")!) : undefined;
     const estoque = pega("estoque") ? Number.parseInt(pega("estoque")!.replace(/\D/g, ""), 10) : undefined;
     const ativo = pega("ativo");
+    const googleProductCategory = pega("google_product_category");
     const identificadoresEstado = pega("identificadores_estado")?.toLowerCase();
     const estadoValido = identificadoresEstado === "desconhecido" || identificadoresEstado === "informado" || identificadoresEstado === "sem_identificador";
     if (identificadoresEstado && !estadoValido) erros.push(`Linha ${i + 2}: identificadores_estado deve ser desconhecido, informado ou sem_identificador.`);
@@ -105,6 +107,7 @@ export function lerCsvProdutos(texto: string) {
       precoCentavos: preco,
       ...(precoDe !== undefined && Number.isFinite(precoDe) ? { precoDeCentavos: precoDe } : {}),
       categoria: pega("categoria"),
+      ...(googleProductCategory !== undefined ? { googleProductCategory: googleProductCategory.toLowerCase() === "auto" ? null : googleProductCategory } : {}),
       marca: pega("marca"),
       sku: pega("sku"),
       // O código de barras costuma vir com pontuação ou como texto do Excel;

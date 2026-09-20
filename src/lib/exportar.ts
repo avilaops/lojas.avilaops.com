@@ -124,6 +124,7 @@ export type ProdutoDePlanilha = {
   nome: string;
   precoCentavos: number;
   precoDeCentavos: number | null;
+  googleProductCategory?: string | null;
   marca: string | null;
   sku: string | null;
   gtin: string | null;
@@ -148,6 +149,7 @@ export function linhaDoProduto(p: ProdutoDePlanilha): Valor[] {
     p.nome,
     reais(p.precoCentavos),
     p.categoria?.nome ?? "",
+    p.googleProductCategory ?? "",
     p.marca ?? "",
     p.sku ?? "",
     p.gtin ?? "",
@@ -180,6 +182,7 @@ export async function produtosEmLinhas(tenantId: string, filtro: FiltroCatalogo 
     where: condicaoDoCatalogo(tenantId, filtro),
     select: {
       nome: true, precoCentavos: true, precoDeCentavos: true, marca: true, sku: true, gtin: true,
+      googleProductCategory: true,
       descricaoCurta: true, descricao: true, imagens: true, destaque: true, ativo: true, estoque: true,
       pesoKg: true, alturaCm: true, larguraCm: true, comprimentoCm: true,
       categoria: { select: { nome: true } },
