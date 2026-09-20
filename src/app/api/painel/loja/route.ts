@@ -19,7 +19,7 @@ export async function PATCH(request: Request) {
   if (r.data.retiradaNaLoja) {
     const atual = (s.tenant.endereco as Record<string, unknown> | null) ?? {};
     const endereco = { ...atual, ...(r.data.endereco ?? {}) };
-    const cep = String(endereco.cep ?? "").replace(/\\D/g, "");
+    const cep = String(endereco.cep ?? "").replace(/\D/g, "");
     const completo = Boolean(endereco.logradouro && endereco.numero && endereco.cidade && endereco.uf && cep.length === 8);
     const publico = r.data.enderecoPublico ?? s.tenant.enderecoPublico;
     if (!completo || !publico) {
