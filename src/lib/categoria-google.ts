@@ -47,6 +47,11 @@ const REGRAS: Array<{ termos: RegExp; id: number; prateleira: string }> = [
     prateleira: "Arruelas",
   },
   {
+    termos: /^brocas?$/i,
+    id: 1540,
+    prateleira: "Brocas para furadeiras",
+  },
+  {
     termos: /^correntes?$/i,
     id: 1492,
     prateleira: "Correntes",
