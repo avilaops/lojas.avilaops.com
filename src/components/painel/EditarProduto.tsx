@@ -189,7 +189,7 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoSalvar 
 
       <Recolhivel titulo="Identificação" resumo="marca, SKU, GTIN, MPN" aviso={semIdentificador ? "sem GTIN nem MPN" : null}>
         <div className="grid min-w-0 gap-4 sm:grid-cols-2">
-          <Campo label="Marca"><input className={inputClasse} value={f.marca} onChange={(e) => set("marca", e.target.value)} /></Campo>
+          <Campo label="Marca"><input id="catalogo-marca" className={inputClasse} value={f.marca} onChange={(e) => set("marca", e.target.value)} /></Campo>
           <Campo label="SKU"><input id="catalogo-sku" readOnly={f.temVariacoes} className={inputClasse} value={f.sku} onChange={(e) => set("sku", e.target.value)} /></Campo>
           {/* O GTIN é o que faz o Google e o Mercado Livre reconhecerem que a
               peça é a mesma que o concorrente anuncia. Sem ele o produto fica
