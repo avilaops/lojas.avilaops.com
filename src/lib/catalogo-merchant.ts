@@ -24,13 +24,14 @@ export function itensMerchant(p:ProdutoCatalogo,base:string,prateleira:(nome:str
     const externo=v.publicacoes.find(c=>c.canal==="google" && !c.contaExterna)?.idExterno ?? (v.padrao ? p.id : `${p.id}:${v.id}`);
     const link=`${base}/produtos/${p.slug}${v.padrao ? "" : `?variante=${encodeURIComponent(v.id)}`}`;
     const titulo=v.padrao?p.nome:`${p.nome} · ${v.nome}`;
+    const precoPromocional=v.precoDeCentavos!=null&&v.precoDeCentavos>v.precoCentavos;
     const valores=v.valores as Record<string,string>;
     const googleCategoria=idDaCategoriaGoogle(p.googleProductCategory) || prateleira(p.categoria?.nome);
     const dimensoesDeEnvioValidas=[v.comprimentoCm,v.larguraCm,v.alturaCm].every(n=>typeof n==="number" && Number.isFinite(n) && n>=1 && n<=400);
     return [`<item>${[
       tag("id",externo),tag("title",titulo.slice(0,150)),tag("description",(p.descricaoCurta||p.descricao||p.nome).replace(/<[^>]*>/g," ").slice(0,5000)),tag("link",link),
       tag("image_link",imagens[0].url),...imagens.slice(1,10).map(m=>tag("additional_image_link",m.url)),
-      tag("availability",v.compravel?"in_stock":"out_of_stock"), tag("price",preco(v.precoCentavos)), tag("condition","new"),
+      tag("availability",v.compravel?"in_stock":"out_of_stock"), tag("price",preco(precoPromocional?v.precoDeCentavos!:v.precoCentavos)), precoPromocional?tag("sale_price",preco(v.precoCentavos)):"", tag("condition","new"),
       p.marca?tag("brand",p.marca):"",gtinValido(v.gtin)?tag("gtin",v.gtin!):"",v.mpn?tag("mpn",v.mpn):"",
       v.identificadoresEstado==="sem_identificador"&&!v.gtin&&!v.mpn?tag("identifier_exists","no"):"",
       p.categoria?tag("product_type",p.categoria.nome):"",googleCategoria?tag("google_product_category",String(googleCategoria)):"",
