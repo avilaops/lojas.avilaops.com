@@ -23,6 +23,7 @@ export function diagnosticarProduto(p: ProdutoCatalogo): OcorrenciaCatalogo[] {
   for(const original of p.variantes.filter(v=>v.ativo)) {
     const v=ofertaDaVariante(original);
     if(v.precoCentavos<=0) add("preco_ausente","preco","erro","loja","Preço ainda não definido.","Informe o preço da apresentação para habilitar a compra.",v.id);
+    if(v.precoDeCentavos!=null&&v.precoDeCentavos<=v.precoCentavos) add("preco_comparacao_nao_maior","precoDe","aviso","loja","O preço “de” precisa ser maior que o preço atual para formar uma promoção.","Ajuste o preço anterior ou remova esse valor.",v.id);
     if(!v.sku) add("sku_ausente","sku","aviso","loja","SKU ainda não informado.","Informe o código interno desta apresentação.",v.id);
     else if(/^https?:\/\//i.test(v.sku)) add("sku_url","sku","aviso","loja","O SKU contém uma URL.","Confira o código interno na origem do cadastro.",v.id);
     if(v.gtin && !gtinValido(v.gtin)) add("gtin_invalido","gtin","erro","google","O GTIN não passa na validação de formato e dígito verificador.","Confira os dígitos na embalagem ou com o fabricante.",v.id);
