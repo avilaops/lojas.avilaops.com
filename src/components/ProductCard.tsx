@@ -5,7 +5,8 @@ import { formatarBRL } from "@/lib/catalogo";
 import AddToCartButton from "@/components/cart/AddToCartButton";
 import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
 import { encaixe, lerCompatibilidade, type Moto } from "@/lib/motos";
-import { exigeReceita, lerMedicamento, vendaRemotaProibida } from "@/lib/farmacia";\nimport { marcaConfirmada } from "@/lib/marca-confirmada";
+import { exigeReceita, lerMedicamento, vendaRemotaProibida } from "@/lib/farmacia";
+import { marcaConfirmada } from "@/lib/marca-confirmada";
 
 export default function ProductCard({ produto, vende, whatsapp, moto = null, ocultarSeloDestaque = false }: { produto: Produto; vende: boolean; whatsapp: string | null; moto?: Moto | null; ocultarSeloDestaque?: boolean }) {
   const serve = moto != null && encaixe(produto.compatibilidade, moto) === "serve";
