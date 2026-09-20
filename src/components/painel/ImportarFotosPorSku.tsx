@@ -2,14 +2,13 @@
 
 import { useMemo, useState } from "react";
 
-type Foto = { arquivo: File; sku: string; url?: string; erro?: string; enviando?: boolean };
+type Foto = { arquivo: File; sku: string; url?: string; produtoId?: string; erro?: string; erroAssociacao?: string; enviando?: boolean; associado?: boolean };
 
 function skuDoNome(nome: string) {
   return nome.replace(/\.[^.]+$/, "").replace(/^foto[-_]/i, "").trim();
 }
 
-export default function ImportarFotosPorSku({ chamar, ocupado, aoConcluir }: {
-  chamar: (c: string, m: string, b?: unknown, s?: string) => Promise<unknown>;
+export default function ImportarFotosPorSku({ ocupado, aoConcluir }: {
   ocupado: boolean;
   aoConcluir: () => void;
 }) {
@@ -43,7 +42,7 @@ export default function ImportarFotosPorSku({ chamar, ocupado, aoConcluir }: {
         const r = await fetch("/api/painel/imagens", { method: "POST", body: fd });
         const d = await r.json();
         if (!r.ok) throw new Error(d?.erro ?? "Falha no envio.");
-        atualizadas[i] = { ...f, url: d.url };
+        atualizadas[i] = { ...f, url: d.url, produtoId: d.produtoId };
       } catch (e) {
         atualizadas[i] = { ...f, erro: e instanceof Error ? e.message : "Falha no envio." };
       }
@@ -53,27 +52,42 @@ export default function ImportarFotosPorSku({ chamar, ocupado, aoConcluir }: {
   }
 
   async function associar() {
-    const prontas = fotos.filter((f) => f.url && !f.erro);
+    const prontas = fotos.filter((f) => f.url && f.produtoId && !f.erro && !f.associado);
     if (!prontas.length || associando || ocupado) return;
     setAssociando(true);
-    const resposta = await chamar("/api/painel/produtos", "PUT", prontas.map((f) => ({ sku: f.sku, imagens: [f.url], imagemOrigem: "propria", confirmarImagemExata: true })), "Fotos associadas ao catálogo.");
+    let sucessos = 0;
+    const atualizadas = [...fotos];
+    for (const foto of prontas) {
+      const indice = atualizadas.findIndex((f) => f.arquivo === foto.arquivo);
+      try {
+        const resposta = await fetch("/api/painel/produtos", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: foto.produtoId, sku: foto.sku, imagens: [foto.url], imagemOrigem: "propria", confirmarImagemExata: true, associarFotoSku: true }) });
+        const dados = await resposta.json();
+        if (!resposta.ok) throw new Error(dados?.erro ?? "Falha ao associar.");
+        atualizadas[indice] = { ...atualizadas[indice], associado: true, erroAssociacao: undefined };
+        sucessos++;
+      } catch (e) {
+        atualizadas[indice] = { ...atualizadas[indice], erroAssociacao: e instanceof Error ? e.message : "Falha ao associar." };
+      }
+      setFotos([...atualizadas]);
+    }
     setAssociando(false);
-    if (resposta) { setFotos([]); setConfirmado(false); aoConcluir(); }
+    if (sucessos) aoConcluir();
   }
 
   const pendentes = fotos.filter((f) => !f.url && !f.erro).length;
-  const prontas = fotos.filter((f) => f.url && !f.erro).length;
-  const bloqueadas = fotos.some((f) => !f.sku || f.erro) || duplicados.size > 0;
+  const prontas = fotos.filter((f) => f.url && f.produtoId && !f.erro && !f.associado).length;
+  const bloqueadas = duplicados.size > 0;
+  const lotePreservado = fotos.some((f) => f.url && !f.associado);
 
   return <details className="mb-4 rounded-xl border border-border bg-background p-4">
     <summary className="cursor-pointer font-medium">Enviar fotos por SKU</summary>
     <p className="mt-2 text-sm text-muted-foreground">Selecione até 50 imagens nomeadas com o SKU, como ABC123.jpg. O arquivo fica associado depois que você confirma a correspondência.</p>
     <label className="mt-3 inline-flex min-h-11 cursor-pointer items-center rounded-lg border border-border px-3 text-sm">
-      Escolher imagens<input className="sr-only" type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif" disabled={enviando || associando} onChange={(e) => selecionar(e.target.files)} />
+      Escolher imagens<input className="sr-only" type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif" disabled={enviando || associando || lotePreservado} onChange={(e) => selecionar(e.target.files)} />
     </label>
     {fotos.length > 0 && <>
       <ul className="my-3 max-h-64 space-y-1 overflow-auto text-sm">
-        {fotos.map((f, i) => <li key={`${f.arquivo.name}-${i}`} className="flex flex-wrap justify-between gap-2 border-b border-border py-2"><span>{f.arquivo.name} <span className="text-muted-foreground">→ SKU {f.sku || "não identificado"}</span></span><span>{f.enviando ? "Enviando…" : f.url ? "Enviado" : f.erro ?? (duplicados.has(f.sku) ? "SKU repetido nesta seleção" : "Aguardando")}</span></li>)}
+        {fotos.map((f, i) => <li key={`${f.arquivo.name}-${i}`} className="flex flex-wrap justify-between gap-2 border-b border-border py-2"><span>{f.arquivo.name} <span className="text-muted-foreground">→ SKU {f.sku || "não identificado"}</span></span><span>{f.enviando ? "Enviando…" : f.associado ? "Associado" : f.erroAssociacao ?? (f.url ? "Enviado, aguardando associação" : f.erro ?? (duplicados.has(f.sku) ? "SKU repetido nesta seleção" : "Aguardando"))}</span></li>)}
       </ul>
       <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={confirmado} onChange={(e) => setConfirmado(e.target.checked)} /> Confirmo que cada imagem mostra exatamente o produto e apresentação correspondentes ao SKU.</label>
       <div className="mt-3 flex flex-wrap gap-2">
