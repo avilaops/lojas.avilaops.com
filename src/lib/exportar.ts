@@ -135,6 +135,7 @@ export type ProdutoDePlanilha = {
   imagens: string[];
   imagemOrigem?: string | null;
   imagemFamilia?: string | null;
+  imagemConfirmada?: boolean;
   destaque: boolean;
   ativo: boolean;
   estoque: number | null;
@@ -163,8 +164,9 @@ export function linhaDoProduto(p: ProdutoDePlanilha): Valor[] {
     // Só a foto de capa: é a que a vitrine usa, e uma coluna por imagem
     // quebraria a planilha de quem tem oito.
     p.imagens[0] ?? "",
-    p.imagemOrigem ?? "",
+    p.imagemOrigem ?? "propria",
     p.imagemFamilia ?? "",
+    p.imagemConfirmada ? "sim" : "",
     p.destaque ? "sim" : "nao",
     medida(p.pesoKg),
     medida(p.alturaCm),
@@ -187,7 +189,7 @@ export async function produtosEmLinhas(tenantId: string, filtro: FiltroCatalogo 
     select: {
       nome: true, precoCentavos: true, precoDeCentavos: true, marca: true, sku: true, gtin: true,
       googleProductCategory: true,
-      descricaoCurta: true, descricao: true, imagens: true, imagemOrigem: true, imagemFamilia: true, destaque: true, ativo: true, estoque: true,
+      descricaoCurta: true, descricao: true, imagens: true, imagemOrigem: true, imagemFamilia: true, midias: { where: { varianteId: null, tipo: "imagem", ordem: 0 }, select: { correspondencia: true }, take: 1 }, destaque: true, ativo: true, estoque: true,
       pesoKg: true, alturaCm: true, larguraCm: true, comprimentoCm: true,
       categoria: { select: { nome: true } },
       variantes: { where: { padrao: true }, select: { mpn: true, identificadoresEstado: true }, take: 1 },
@@ -200,5 +202,6 @@ export async function produtosEmLinhas(tenantId: string, filtro: FiltroCatalogo 
     ...p,
     mpn: p.variantes[0]?.mpn ?? null,
     identificadoresEstado: (p.variantes[0]?.identificadoresEstado ?? "desconhecido") as ProdutoDePlanilha["identificadoresEstado"],
+    imagemConfirmada: p.midias[0]?.correspondencia === "confirmada",
   }))];
 }
