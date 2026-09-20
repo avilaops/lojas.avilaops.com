@@ -35,7 +35,7 @@ type Bloco = "direcao" | "visual" | "vitrine" | "contato";
 const BLOCOS: Record<Bloco, { titulo: string; descricao: string }> = {
   direcao: { titulo: "Direção da marca", descricao: "Segmento, público, diferencial e personalidade" },
   visual: { titulo: "Identidade visual", descricao: "Cor, fonte, cantos e modo" },
-  vitrine: { titulo: "Vitrine", descricao: "Layout da página inicial, banner, logo e slogan" },
+  vitrine: { titulo: "Vitrine", descricao: "Layout da página inicial, campanhas em imagem, logo e slogan" },
   contato: { titulo: "Contato e avisos", descricao: "WhatsApp, e-mail, barra de avisos e domínio" },
 };
 
@@ -81,6 +81,15 @@ export default function Marca({
   const [contato, setContato] = useState({ avisoTopo: loja.avisoTopo ?? "", whatsapp: loja.whatsapp ?? "", emailContato: loja.emailContato ?? "", dominioPrincipal: loja.dominioPrincipal ?? "" });
   const [jsonIdentidade, setJsonIdentidade] = useState("");
   const [erroJson, setErroJson] = useState<string | null>(null);
+
+  const campanhas = tema.campanhasHome ?? [];
+  function atualizarCampanha(indice: number, mudancas: Partial<NonNullable<TemaLoja["campanhasHome"]>[number]>) {
+    setTema((atual) => {
+      const novas = [...(atual.campanhasHome ?? [])];
+      novas[indice] = { ...novas[indice], ...mudancas };
+      return { ...atual, campanhasHome: novas };
+    });
+  }
 
   const voltar = () => router.push(caminho);
   const salvar = (corpo: unknown, msg: string) => chamar("/api/painel/loja", "PATCH", corpo, msg).then((d) => { if (d) voltar(); });
@@ -258,13 +267,35 @@ export default function Marca({
                 <EnviarImagem aoEnviar={(url) => setVitrine((v) => ({ ...v, logoUrl: url }))} rotulo="Enviar logo" />
               </div>
             </Campo>
-            <Campo label="Banner da página inicial" ajuda="Imagem larga (ex.: 1600×600). Fica atrás do slogan.">
+            <Campo label="Banner de reserva" ajuda="Imagem usada quando a loja ainda não tem campanhas no carrossel.">
               <div className="flex items-center gap-2">
                 <input className={inputClasse} value={vitrine.bannerUrl} onChange={(e) => setVitrine({ ...vitrine, bannerUrl: e.target.value })} placeholder="URL ou envie um arquivo" />
                 <EnviarImagem aoEnviar={(url) => setVitrine((v) => ({ ...v, bannerUrl: url }))} rotulo="Enviar banner" />
               </div>
             </Campo>
           </div>
+          {(tema.layout === "distribuidora" || tema.layout === "automotivo") && <fieldset className="mt-6 grid gap-4 rounded-xl border border-border p-4">
+            <legend className="px-2 text-sm font-semibold">Carrossel de campanhas em imagem</legend>
+            <p className="text-sm text-muted-foreground">A chamada e qualquer condição comercial devem estar dentro da arte. Use apenas preço e desconto aprovados para a campanha.</p>
+            {campanhas.map((campanha, indice) => <div key={indice} className="grid gap-3 rounded-lg border border-border p-3 sm:grid-cols-2">
+              <div className="flex items-center gap-2 sm:col-span-2">
+                <strong className="text-sm">Arte {indice + 1}</strong>
+                <EnviarImagem valorAtual={campanha.imagemUrl || null} aoEnviar={(url) => atualizarCampanha(indice, { imagemUrl: url })} rotulo={campanha.imagemUrl ? "Trocar arte" : "Enviar arte"} />
+                <EnviarImagem valorAtual={campanha.imagemMobileUrl || null} aoEnviar={(url) => atualizarCampanha(indice, { imagemMobileUrl: url })} rotulo={campanha.imagemMobileUrl ? "Trocar arte móvel" : "Enviar arte móvel"} />
+                <button type="button" className="ml-auto text-sm text-muted-foreground underline" onClick={() => setTema((atual) => ({ ...atual, campanhasHome: (atual.campanhasHome ?? []).filter((_, i) => i !== indice) }))}>Remover</button>
+              </div>
+              <Campo label="Destino do banner">
+                <select className={inputClasse} value={campanha.link} onChange={(e) => atualizarCampanha(indice, { link: e.target.value })}>
+                  <option value="/produtos">Todos os produtos</option>
+                  {categorias.map((categoria) => <option key={categoria.slug} value={`/categoria/${categoria.slug}`}>{categoria.nome}</option>)}
+                </select>
+              </Campo>
+              <Campo label="Descrição acessível da imagem" ajuda="Texto para leitores de tela. Não aparece sobre o banner.">
+                <input className={inputClasse} value={campanha.alt} maxLength={180} onChange={(e) => atualizarCampanha(indice, { alt: e.target.value })} />
+              </Campo>
+            </div>)}
+            {campanhas.length < 5 && <button type="button" className="btn-secundario w-fit" onClick={() => setTema((atual) => ({ ...atual, campanhasHome: [...(atual.campanhasHome ?? []), { imagemUrl: "", link: "/produtos", alt: "Campanha da loja" }] }))}>Adicionar arte</button>}
+          </fieldset>}
           {tema.layout === "automotivo-premium" && <fieldset className="mt-6 grid gap-4 rounded-xl border border-border p-4 sm:grid-cols-2">
             <legend className="px-2 text-sm font-semibold">Conteúdo do Automotivo Premium</legend>
             {([
