@@ -513,9 +513,9 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
       {aba === "Conta" && (
         <>
         <Secao titulo="Dados da empresa" descricao="Quem vende pela internet é obrigado a exibir razão social, CNPJ e endereço (Decreto 7.962/2013). Preenchendo aqui, isso aparece sozinho no rodapé de todas as páginas e nas políticas da loja.">
-          {(!loja.razaoSocial || !loja.cnpj) && (
+          {(!loja.razaoSocial || !loja.cnpj || !loja.endereco?.logradouro || !loja.endereco?.numero || !loja.endereco?.bairro || !loja.endereco?.cidade || !loja.endereco?.uf || loja.endereco?.cep?.replace(/\D/g, "").length !== 8) && (
             <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
-              Sua loja ainda não exibe a identificação da empresa. Sem ela, o cliente que reclamar no Procon tem razão de cara, e o Google Ads costuma reprovar o anúncio.
+              Complete razão social, CNPJ e endereço físico. Esses dados identificam o vendedor nas políticas e nas informações comerciais da loja.
             </p>
           )}
           <div className="grid gap-4 sm:grid-cols-2">
