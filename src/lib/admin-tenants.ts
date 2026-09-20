@@ -97,8 +97,15 @@ export async function slugLivre(
  * desejado já é de outro produto, ganha um sufixo em vez de derrubar o lote.
  */
 export async function importarProdutos(tenantId: string, produtos: ProdutoPlanilha[]) {
-  const categorias = new Map<string, string>();
-  for (const c of await prisma.categoria.findMany({ where: { tenantId } })) categorias.set(c.slug, c.id);
+  const categorias = new Map<string, string | null>();
+  const registrarChaveCategoria = (chave: string, id: string) => {
+    if (!categorias.has(chave)) categorias.set(chave, id);
+    else if (categorias.get(chave) !== id) categorias.set(chave, null);
+  };
+  for (const c of await prisma.categoria.findMany({ where: { tenantId } })) {
+    registrarChaveCategoria(c.slug, c.id);
+    registrarChaveCategoria(slugificar(c.nome), c.id);
+  }
   const nomesCorrigidos = new Set<string>();
 
   // As definições de campo da loja, uma vez por lote: é por elas que um valor
@@ -136,10 +143,15 @@ export async function importarProdutos(tenantId: string, produtos: ProdutoPlanil
     let categoriaId: string | null = null;
     if (p.categoria) {
       const cslug = slugificar(p.categoria);
+      const categoriaConhecida = categorias.has(cslug);
       categoriaId = categorias.get(cslug) ?? null;
-      if (!categoriaId) {
-        const c = await prisma.categoria.create({ data: { tenantId, slug: cslug, nome: p.categoria, ordem: categorias.size } });
-        categorias.set(cslug, c.id);
+      if (categoriaConhecida && !categoriaId) {
+        avisos.push(`${p.sku ?? p.nome ?? "Produto"}: nome de categoria ambíguo; a categoria atual foi preservada.`);
+      } else if (!categoriaConhecida) {
+        const categoriasUnicas = new Set([...categorias.values()].filter((id): id is string => Boolean(id)));
+        const c = await prisma.categoria.create({ data: { tenantId, slug: cslug, nome: p.categoria, ordem: categoriasUnicas.size } });
+        registrarChaveCategoria(cslug, c.id);
+        registrarChaveCategoria(slugificar(c.nome), c.id);
         categoriaId = c.id;
       } else if (!nomesCorrigidos.has(cslug)) {
         // O slug ignora acento, então "Eletrica" e "Elétrica" são a mesma
@@ -185,7 +197,7 @@ export async function importarProdutos(tenantId: string, produtos: ProdutoPlanil
       // null aqui tirava da prateleira todo produto de uma carga que só queria
       // atualizar preço ou foto: aconteceu com 872 retentores em 02/09/2026,
       // que sumiram do menu sem erro nenhum aparecer.
-      ...(p.categoria ? { categoriaId } : {}),
+      ...(p.categoria && categoriaId ? { categoriaId } : {}),
       ...(atributos !== undefined ? { atributos: atributos as Prisma.InputJsonValue } : {}),
       ...(compatibilidade ? { compatibilidade: compatibilidade as unknown as Prisma.InputJsonValue } : {}),
       ...(valoresCampos ? { camposPersonalizados: valoresCampos as unknown as Prisma.InputJsonValue } : {}),
