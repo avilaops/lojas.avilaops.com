@@ -2,6 +2,7 @@ import { z } from "zod";
 import { validarCnpj } from "@avilaops/checkout";
 import { TemaSchema } from "./tema";
 import { IdentidadeSchema, LIMITE_SLOGAN } from "./identidade";
+import { categoriaGoogleValida } from "./google-product-taxonomy";
 
 /**
  * Contratos da API administrativa. É o que o formulário de onboarding do
@@ -146,8 +147,8 @@ export const ProdutoEntradaSchema = z.object({
   sku: z.string().max(60).optional(),
   gtin: z.string().max(20).optional(),
   googleProductCategory: z.string().trim().max(300).nullable().optional().refine(
-    (v) => v === undefined || v === null || /^\d{1,10}$/.test(v) || (!/[<\r\n]/.test(v) && v.split(">").length > 1 && v.split(">").every((p) => p.trim().length > 0)),
-    "Use o ID numérico ou o caminho completo da taxonomia Google.",
+    categoriaGoogleValida,
+    "Use um ID ou caminho existente na taxonomia oficial do Google em português.",
   ),
   mpn: z.string().trim().max(60).nullable().optional(),
   identificadoresEstado: z.enum(["desconhecido", "informado", "sem_identificador"]).optional(),
