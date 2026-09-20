@@ -47,6 +47,14 @@ export function condicaoDoCatalogo(tenantId: string, filtro: FiltroCatalogo): Pr
   ];
   else if (situacao === "sem-preco") where.precoCentavos = 0;
   else if (situacao === "sem-categoria") where.categoriaId = null;
+  else if (situacao === "sem-descricao") {
+    const anteriores = Array.isArray(where.AND) ? where.AND : where.AND ? [where.AND] : [];
+    where.AND = [
+      ...anteriores,
+      { OR: [{ descricao: null }, { descricao: "" }] },
+      { OR: [{ descricaoCurta: null }, { descricaoCurta: "" }] },
+    ];
+  }
   else if (situacao === "sem-marca") where.OR = [\n    { marca: null },\n    { marca: "" },\n    { marca: { equals: "DIVERSOS", mode: "insensitive" } },\n  ];
   else if (situacao === "identificadores-pendentes") {
     // Mostrar apenas códigos ainda não confirmados pelo fabricante. Estado
