@@ -114,7 +114,9 @@ export async function importarProdutos(tenantId: string, produtos: ProdutoPlanil
 
   for (const p of produtos) {
     const desejado = p.slug ? slugificar(p.slug) : p.nome ? slugificar(p.nome) : null;
-    let existente = p.sku ? await prisma.produto.findFirst({ where: { tenantId, sku: p.sku } }) : null;
+    let existente = p.sku
+      ? await prisma.produto.findFirst({ where: { tenantId, sku: p.sku } })
+      : null;
     if (!existente && desejado) {
       existente = await prisma.produto.findUnique({ where: { tenantId_slug: { tenantId, slug: desejado } } });
     }
@@ -124,6 +126,10 @@ export async function importarProdutos(tenantId: string, produtos: ProdutoPlanil
     }
     if (p.imagemOrigem && p.imagemOrigem !== "propria" && !(p.imagens?.length || existente?.imagens.length)) {
       avisos.push(`${p.sku ?? p.nome ?? "Produto"}: informe a imagem antes de classificar sua origem.`);
+      continue;
+    }
+    if (p.confirmarImagemExata && ((p.imagemOrigem ?? existente?.imagemOrigem ?? "propria") !== "propria" || !((p.imagens?.length ?? 0) || (existente?.imagens.length ?? 0)))) {
+      avisos.push(`${p.sku ?? p.nome ?? "Produto"}: confirmação exige foto principal e origem própria.`);
       continue;
     }
 
@@ -145,7 +151,7 @@ export async function importarProdutos(tenantId: string, produtos: ProdutoPlanil
       }
     }
 
-    const { categoria: _c, compatibilidade, atributos, camposPersonalizados, ...campos } = p;
+    const { categoria: _c, compatibilidade, atributos, camposPersonalizados, confirmarImagemExata, ...campos } = p;
     void _c;
     const slug = await slugLivre(tenantId, desejado ?? existente!.slug, existente?.id ?? null);
 
@@ -186,10 +192,10 @@ export async function importarProdutos(tenantId: string, produtos: ProdutoPlanil
     };
 
     if (existente) {
-      await salvarProdutoNoCatalogo(tenantId, existente.id, dados, { origem: "importacao" });
+      await salvarProdutoNoCatalogo(tenantId, existente.id, dados, { origem: "importacao", ...(confirmarImagemExata ? { metadadosMidia: { fonte: "painel", correspondencia: "confirmada", somentePrincipal: true } } : {}) });
       atualizados++;
     } else {
-      await salvarProdutoNoCatalogo(tenantId, null, dados, { origem: "importacao" });
+      await salvarProdutoNoCatalogo(tenantId, null, dados, { origem: "importacao", ...(confirmarImagemExata ? { metadadosMidia: { fonte: "painel", correspondencia: "confirmada", somentePrincipal: true } } : {}) });
       criados++;
     }
   }
