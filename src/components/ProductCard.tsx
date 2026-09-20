@@ -7,7 +7,7 @@ import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
 import { encaixe, lerCompatibilidade, type Moto } from "@/lib/motos";
 import { exigeReceita, lerMedicamento, vendaRemotaProibida } from "@/lib/farmacia";
 
-export default function ProductCard({ produto, vende, whatsapp, moto = null }: { produto: Produto; vende: boolean; whatsapp: string | null; moto?: Moto | null }) {
+export default function ProductCard({ produto, vende, whatsapp, moto = null, ocultarSeloDestaque = false }: { produto: Produto; vende: boolean; whatsapp: string | null; moto?: Moto | null; ocultarSeloDestaque?: boolean }) {
   const serve = moto != null && encaixe(produto.compatibilidade, moto) === "serve";
   const modelos = lerCompatibilidade(produto.compatibilidade);
   const imagem = produto.imagens[0];
@@ -73,7 +73,7 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null }: {
               -{percentualDesconto}% OFF
             </span>
           )}
-          {produto.destaque && (
+          {produto.destaque && !ocultarSeloDestaque && (
             <span className="rounded-md bg-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary-foreground shadow-sm">
               Destaque
             </span>
