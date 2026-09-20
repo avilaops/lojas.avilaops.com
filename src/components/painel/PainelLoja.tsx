@@ -246,7 +246,8 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
           </Secao>
 
           <Secao titulo="Importar planilha" descricao="Produto com o mesmo SKU é atualizado, não duplicado.">
-            <p className="text-xs text-muted-foreground">Colunas: <code>nome, preco, categoria, marca, sku, gtin, preco_de, descricao_curta, descricao, imagem, destaque, peso_kg, altura_cm, largura_cm, comprimento_cm, estoque, ativo</code></p>
+            <p className="text-xs text-muted-foreground">Colunas: <code>nome, preco, categoria, marca, sku, gtin, mpn, identificadores_estado, preco_de, descricao_curta, descricao, imagem, destaque, peso_kg, altura_cm, largura_cm, comprimento_cm, estoque, ativo</code></p>
+            <p className="text-xs text-muted-foreground">Use MPN somente para o código do fabricante. Em <code>identificadores_estado</code>, informe <code>desconhecido</code>, <code>informado</code> ou <code>sem_identificador</code>, conforme embalagem ou fornecedor. Em produtos com variantes, a planilha atualiza a apresentação padrão.</p>
             {/* São as mesmas colunas que a exportação do Catálogo grava: o
                 caminho de corrigir em lote é baixar, mexer e devolver. Coluna
                 que não vier no arquivo não é mexida no produto. */}
