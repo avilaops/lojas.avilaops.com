@@ -48,7 +48,17 @@ export default async function Home() {
     motopecas ? marcasDaLoja(t.id) : [],
     t.segmento === "farmacia" ? necessidadesDaLoja(t.id) : undefined,
   ]);
-  const vitrine = destaques.length ? destaques : await vitrineDaLoja(t.id, { moto });
+  const layoutAtual = temaDo(t).layout;
+  const campanhaVisual = layoutAtual === "distribuidora" && (temaDo(t).campanhasHome?.length ?? 0) > 0;
+  const vitrine = campanhaVisual
+      ? await (async () => {
+        const destaquesProntos = destaques.filter((produto) => produto.precoCentavos > 0 && produto.imagens.length > 0);
+        const completas = (await vitrineDaLoja(t.id, { moto, limite: 24 }))
+          .filter((produto) => produto.precoCentavos > 0 && produto.imagens.length > 0);
+        const idsDestaques = new Set(destaquesProntos.map((produto) => produto.id));
+        return [...destaquesProntos, ...completas.filter((produto) => !idsDestaques.has(produto.id))].slice(0, 12);
+      })()
+    : destaques.length ? destaques : await vitrineDaLoja(t.id, { moto });
   const dados = { t, identidade: identidadeDa(t), categorias, vitrine, temDestaques: destaques.length > 0, vende: lojaVende(t), moto, necessidades };
 
   const layout =
