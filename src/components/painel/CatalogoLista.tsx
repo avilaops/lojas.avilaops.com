@@ -8,6 +8,7 @@ import Paginacao from "@/components/aplicacao/Paginacao";
 import Filtros from "@/components/aplicacao/Filtros";
 import Vazio from "@/components/aplicacao/Vazio";
 import BaixarPlanilha from "./BaixarPlanilha";
+import ImportarFotosPorSku from "./ImportarFotosPorSku";
 
 /**
  * O catálogo do painel: busca, filtro e página.
@@ -154,6 +155,8 @@ export default function CatalogoLista({
           </select>
         }
       />
+
+      <ImportarFotosPorSku chamar={chamar} ocupado={ocupado} aoConcluir={() => void carregar()} />
 
       {dados && (
         <>
