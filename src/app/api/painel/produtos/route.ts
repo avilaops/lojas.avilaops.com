@@ -44,7 +44,7 @@ export async function GET(request: Request) {
   const loja = await lojistaAtual();
   if (!loja) return Response.json({ erro: "Sessão expirada." }, { status: 401 });
   const id = new URL(request.url).searchParams.get("id") ?? "";
-  const p = await prisma.produto.findFirst({ where: { id, tenantId: loja.id }, include: { categoria: true, variantes: { where: { padrao:true,ativo:true },include:{saldos:true} } } });
+  const p = await prisma.produto.findFirst({ where: { id, tenantId: loja.id }, include: { categoria: true, midias: { where: { varianteId: null, tipo: "imagem" }, orderBy: { ordem: "asc" } }, variantes: { where: { padrao:true,ativo:true },include:{saldos:true} } } });
   if (!p) return Response.json({ erro: "Produto não encontrado." }, { status: 404 });
   const simples=p.variantes[0];
   // As definições de campo vêm junto do produto para o formulário não precisar
@@ -52,7 +52,7 @@ export async function GET(request: Request) {
   return Response.json({ ...p, estoque:simples?.saldos.find(s=>s.local==="principal")?.fisico ?? p.estoque, mpn:simples?.mpn??null, identificadoresEstado:simples?.identificadoresEstado??"desconhecido", categoria: p.categoria?.nome ?? null, definicoesCampos: lerDefinicoes(loja.camposPersonalizados) });
 }
 
-const Edicao = conferirImagem(ProdutoEntradaSchema.partial().extend({ id: z.string(), versaoCatalogo: z.number().int().positive().optional() }));
+const Edicao = conferirImagem(ProdutoEntradaSchema.partial().extend({ id: z.string(), versaoCatalogo: z.number().int().positive().optional(), confirmarImagemExata: z.boolean().optional() }));
 
 /** PATCH — edita um produto (qualquer campo; categoria por nome, criada se não existir). */
 export async function PATCH(request: Request) {
@@ -61,7 +61,7 @@ export async function PATCH(request: Request) {
   const loja = s.tenant;
   const r = Edicao.safeParse(await request.json().catch(() => null));
   if (!r.success) return Response.json({ erro: "Dados inválidos.", detalhes: r.error.flatten() }, { status: 422 });
-  const { id, categoria, atributos, slug, compatibilidade, versaoCatalogo, camposPersonalizados, ...campos } = r.data;
+  const { id, categoria, atributos, slug, compatibilidade, versaoCatalogo, camposPersonalizados, confirmarImagemExata, ...campos } = r.data;
   const p = await prisma.produto.findFirst({ where: { id, tenantId: loja.id } });
   if (!p) return Response.json({ erro: "Produto não encontrado." }, { status: 404 });
 
@@ -88,7 +88,8 @@ export async function PATCH(request: Request) {
   }
 
   let atualizado;
-  try { atualizado = await salvarProdutoNoCatalogo(loja.id, id, { ...campos, ...(valoresCampos ? { camposPersonalizados: valoresCampos as unknown as Prisma.InputJsonValue } : {}), ...(slug ? { slug: slugificar(slug) } : {}), ...(categoriaId !== undefined ? { categoriaId } : {}), ...(atributos ? { atributos: atributos as Prisma.InputJsonValue } : {}), ...(compatibilidade ? { compatibilidade: compatibilidade as unknown as Prisma.InputJsonValue } : {}) }, { origem: "painel", versao: versaoCatalogo });
+  if (confirmarImagemExata && ((campos.imagemOrigem ?? p.imagemOrigem) !== "propria" || !((campos.imagens?.length ?? 0) || p.imagens.length))) return Response.json({ erro: "Confirme somente uma foto principal própria que esteja associada ao produto." }, { status: 422 });
+  try { atualizado = await salvarProdutoNoCatalogo(loja.id, id, { ...campos, ...(valoresCampos ? { camposPersonalizados: valoresCampos as unknown as Prisma.InputJsonValue } : {}), ...(slug ? { slug: slugificar(slug) } : {}), ...(categoriaId !== undefined ? { categoriaId } : {}), ...(atributos ? { atributos: atributos as Prisma.InputJsonValue } : {}), ...(compatibilidade ? { compatibilidade: compatibilidade as unknown as Prisma.InputJsonValue } : {}) }, { origem: "painel", versao: versaoCatalogo, ...(confirmarImagemExata ? { metadadosMidia: { fonte: "painel", correspondencia: "confirmada", somentePrincipal: true } } : {}) });
   } catch(e) { return respostaErroCatalogo(e); }
   invalidarCatalogo(loja.id);
   void avisarBuscadores(loja, caminhosDoProduto(atualizado.slug, categoria ?? undefined));
