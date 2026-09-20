@@ -1,6 +1,8 @@
 import type { Prisma } from "@prisma/client";
 import { gtinValido, INCLUIR_OFERTA, ofertaDaVariante } from "./catalogo-oferta";
 import { marcaConfirmada } from "./marca-confirmada";
+import { categoriaGoogle } from "./categoria-google";
+import { idDaCategoriaGoogle } from "./google-product-taxonomy";
 
 export const INCLUIR_CATALOGO = { categoria: true, midias: { orderBy: { ordem: "asc" as const } }, variantes: { include: { ...INCLUIR_OFERTA, publicacoes: true }, orderBy: { ordem: "asc" as const } } } satisfies Prisma.ProdutoInclude;
 export type ProdutoCatalogo = Prisma.ProdutoGetPayload<{ include: typeof INCLUIR_CATALOGO }>;
@@ -14,9 +16,12 @@ export function midiasDaOferta(p: ProdutoCatalogo, varianteId: string) {
 }
 
 /** Regras locais explícitas. Não atesta fidelidade da foto nem aprovação externa. */
-export function diagnosticarProduto(p: ProdutoCatalogo): OcorrenciaCatalogo[] {
+export function diagnosticarProduto(p: ProdutoCatalogo, prateleira: (nome: string | null | undefined) => number | undefined = categoriaGoogle): OcorrenciaCatalogo[] {
   const ocorrencias: OcorrenciaCatalogo[]=[];
   const add=(regra:string,campo:string,severidade:"erro"|"aviso",canal:"loja"|"google",mensagem:string,acao:string,varianteId?:string)=>ocorrencias.push({regra,versao:1,campo,severidade,canal,mensagem,acao,varianteId});
+  const googleCategoriaManual=idDaCategoriaGoogle(p.googleProductCategory);
+  const googleCategoriaAutomatica=prateleira(p.categoria?.nome);
+  if (!googleCategoriaManual && !googleCategoriaAutomatica) add("categoria_google_ausente","googleProductCategory","aviso","google","Não há categoria Google confirmada para esta categoria da loja.","Escolha um caminho ou ID na taxonomia Google, ou reorganize o produto numa categoria já classificada.");
   if(!p.categoriaId) add("categoria_ausente","categoria","aviso","loja","Produto sem categoria.","Escolha a categoria do produto.");
   if(!marcaConfirmada(p.marca)) add("marca_ausente","marca","aviso","google",p.marca?.trim()?"O cadastro contém “DIVERSOS”, que não identifica o fabricante.":"Falta a marca do fabricante.","Confirme a marca na embalagem, ficha técnica ou com o fornecedor.");
   if(!p.descricao?.trim() && !p.descricaoCurta?.trim()) add("descricao_ausente","descricao","erro","google","Falta uma descrição do produto.","Descreva o uso e as características confirmadas.");
