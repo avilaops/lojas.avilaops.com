@@ -136,6 +136,7 @@ export type ProdutoDePlanilha = {
   imagemOrigem?: string | null;
   imagemFamilia?: string | null;
   imagemConfirmada?: boolean;
+  correspondenciaImagem?: "nao_confirmada" | "confirmada" | "rejeitada";
   destaque: boolean;
   ativo: boolean;
   estoque: number | null;
@@ -167,6 +168,7 @@ export function linhaDoProduto(p: ProdutoDePlanilha): Valor[] {
     p.imagemOrigem ?? "propria",
     p.imagemFamilia ?? "",
     p.imagemConfirmada ? "sim" : "",
+    p.correspondenciaImagem ?? (p.imagemConfirmada ? "confirmada" : "nao_confirmada"),
     p.destaque ? "sim" : "nao",
     medida(p.pesoKg),
     medida(p.alturaCm),
@@ -203,5 +205,6 @@ export async function produtosEmLinhas(tenantId: string, filtro: FiltroCatalogo 
     mpn: p.variantes[0]?.mpn ?? null,
     identificadoresEstado: (p.variantes[0]?.identificadoresEstado ?? "desconhecido") as ProdutoDePlanilha["identificadoresEstado"],
     imagemConfirmada: p.midias[0]?.correspondencia === "confirmada",
+    correspondenciaImagem: p.midias[0]?.correspondencia as ProdutoDePlanilha["correspondenciaImagem"],
   }))];
 }
