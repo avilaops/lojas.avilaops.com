@@ -179,6 +179,7 @@ export function categoriaGoogle(nomeDaCategoria: string | null | undefined): num
   if (/\bbom-?1314\b|^fita\b.*\b(?:impermeavel|ipermeavel)\b/.test(nome) && /^fitas?$/.test(categoria)) return 503744;
   if (/^cantoneira eva estacionamento\b/.test(nome) && /^cantoneiras?$/.test(categoria)) return 503744;
   if (/^sabonete\b/.test(nome) && /^(?:quimicos|outros)$/.test(categoria)) return 2503;
+  if (/^lanca jato turbo\b/.test(nome) && /^hidraulica$/.test(categoria)) return 6328;
   return REGRAS.find((r) => r.termos.test(nomeDaCategoria))?.id;
 }
 
