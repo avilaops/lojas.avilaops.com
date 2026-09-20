@@ -2,10 +2,13 @@ import { BadgeCheck, PackageCheck, Store, Truck } from "lucide-react";
 import type { Tenant } from "@prisma/client";
 
 export default function BeneficiosBarra({ t }: { t: Tenant }) {
+  const despacho = t.despachoDiasUteis === 0
+    ? "Despacho no mesmo dia"
+    : `Despacho em até ${t.despachoDiasUteis} ${t.despachoDiasUteis === 1 ? "dia útil" : "dias úteis"}`;
   const itens = [
     {
       Icone: PackageCheck,
-      titulo: `Despacho em até ${t.despachoDiasUteis} ${t.despachoDiasUteis === 1 ? "dia útil" : "dias úteis"}`,
+      titulo: despacho,
       texto: "Prazo informado antes da compra",
     },
     t.freteGratisAcima != null
