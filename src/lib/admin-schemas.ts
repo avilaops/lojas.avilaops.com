@@ -239,5 +239,24 @@ export function conferirImagem<T extends { imagemOrigem?: string | null; imagemF
 /** Importação em lote: o produto vem inteiro, então as regras valem sempre. */
 export const ProdutoImportadoSchema = conferirImagem(ProdutoEntradaSchema);
 
+/** Atualização por planilha: campos podem ser enviados isoladamente para um
+ * produto existente identificado por SKU. A criação ainda exige nome e preço. */
+export const ProdutoPlanilhaSchema = ProdutoEntradaSchema.partial()
+  .refine((p) => p.imagemOrigem !== "representativa" || Boolean(p.imagemFamilia), {
+    message: "Imagem representativa exige imagemFamilia (a série de que ela veio).",
+    path: ["imagemFamilia"],
+  })
+  .refine((p) => !p.imagemOrigem || p.imagemOrigem === "propria" || p.imagens === undefined || p.imagens.length > 0, {
+    message: "Origem de imagem declarada sem nenhuma imagem.",
+    path: ["imagens"],
+  })
+  .refine((p) => Boolean(p.sku?.trim() || p.slug?.trim() || p.nome?.trim()), {
+    message: "Informe SKU, slug ou nome para localizar o produto.",
+  })
+  .refine((p) => Object.entries(p).some(([k, v]) => !["sku", "slug"].includes(k) && v !== undefined), {
+    message: "Informe pelo menos um campo para atualizar.",
+  });
+
 export type TenantEntrada = z.infer<typeof TenantEntradaSchema>;
 export type ProdutoEntrada = z.infer<typeof ProdutoEntradaSchema>;
+export type ProdutoPlanilha = z.infer<typeof ProdutoPlanilhaSchema>;
