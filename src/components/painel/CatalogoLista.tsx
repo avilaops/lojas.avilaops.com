@@ -156,7 +156,7 @@ export default function CatalogoLista({
         }
       />
 
-      <ImportarFotosPorSku chamar={chamar} ocupado={ocupado} aoConcluir={() => void carregar()} />
+      <ImportarFotosPorSku ocupado={ocupado} aoConcluir={() => void carregar()} />
 
       {dados && (
         <>
