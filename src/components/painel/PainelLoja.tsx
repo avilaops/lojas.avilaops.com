@@ -44,6 +44,9 @@ export interface LojaView {
   avisoTopo: string | null;
   razaoSocial: string | null;
   cnpj: string | null;
+  endereco: { logradouro?: string; numero?: string; complemento?: string; bairro?: string; cidade?: string; uf?: string; cep?: string } | null;
+  enderecoPublico: boolean;
+  cepOrigem: string | null;
   dominioPrincipal: string | null;
   bannerUrl: string | null;
   mpPublicKey: string | null;
@@ -123,6 +126,12 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
   const [csv, setCsv] = useState<{ nome: string; produtos: Array<Record<string, unknown>>; erros: string[] } | null>(null);
   const [limiteEstoque, setLimiteEstoque] = useState(String(loja.estoqueBaixoEm));
   const [empresa, setEmpresa] = useState({ razaoSocial: loja.razaoSocial ?? "", cnpj: loja.cnpj ?? "" });
+  const [enderecoEmpresa, setEnderecoEmpresa] = useState({
+    logradouro: loja.endereco?.logradouro ?? "", numero: loja.endereco?.numero ?? "",
+    complemento: loja.endereco?.complemento ?? "", bairro: loja.endereco?.bairro ?? "",
+    cidade: loja.endereco?.cidade ?? "", uf: loja.endereco?.uf ?? "",
+    cep: loja.endereco?.cep ?? loja.cepOrigem ?? "", enderecoPublico: loja.enderecoPublico,
+  });
   const [entrega, setEntrega] = useState({ retiradaNaLoja: loja.retiradaNaLoja, despachoDiasUteis: loja.despachoDiasUteis, freteGratisAcima: loja.freteGratisAcima != null ? String(loja.freteGratisAcima / 100).replace(".", ",") : "", tabela: loja.tabelaFrete.map((f) => ({ ufs: f.ufs.join(","), preco: String(f.preco / 100).replace(".", ","), prazo: String(f.prazoDiasUteis), nome: f.nome ?? "" })), local: loja.entregaLocal.map((f) => ({ prefixos: f.prefixos.join(","), nome: f.nome, preco: String(f.preco / 100).replace(".", ","), prazo: String(f.prazoDiasUteis), gratis: f.gratisAcima != null ? String(f.gratisAcima / 100).replace(".", ",") : "" })) });
   const [mp, setMp] = useState({ publicKey: loja.mpPublicKey ?? "", accessToken: "", webhookSecret: "" });
   // Diagnóstico do recebimento: credencial errada só dava erro na primeira
@@ -514,6 +523,29 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
             <Campo label="CNPJ"><input className={inputClasse} value={empresa.cnpj} onChange={(e) => setEmpresa({ ...empresa, cnpj: e.target.value })} placeholder="00.000.000/0001-00" inputMode="numeric" /></Campo>
           </div>
           <div><button className="btn-primario" disabled={ocupado} onClick={() => chamar("/api/painel/loja", "PATCH", { razaoSocial: empresa.razaoSocial.trim() || null, cnpj: empresa.cnpj.trim() || null }, "Dados da empresa salvos.")}>Salvar</button></div>
+        </Secao>
+        <Secao titulo="Endereço da empresa e retirada" descricao="Mantenha o endereço correto para as informações legais, contato e cálculo de frete. O endereço aparece na página de contato quando a opção pública estiver ativa e nas políticas da loja.">
+          {loja.retiradaNaLoja && !(enderecoEmpresa.logradouro && enderecoEmpresa.numero && enderecoEmpresa.cidade && enderecoEmpresa.uf && enderecoEmpresa.cep.replace(/\D/g, "").length === 8) && (
+            <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">A retirada está ativa, mas o endereço está incompleto. Preencha rua, número, cidade, UF e CEP para orientar os clientes.</p>
+          )}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Campo label="CEP"><input className={inputClasse} inputMode="numeric" value={enderecoEmpresa.cep} onChange={(e) => setEnderecoEmpresa({ ...enderecoEmpresa, cep: e.target.value })} placeholder="00000-000" /></Campo>
+            <Campo label="Logradouro"><input className={inputClasse} value={enderecoEmpresa.logradouro} onChange={(e) => setEnderecoEmpresa({ ...enderecoEmpresa, logradouro: e.target.value })} placeholder="Rua ou avenida" /></Campo>
+            <Campo label="Número"><input className={inputClasse} value={enderecoEmpresa.numero} onChange={(e) => setEnderecoEmpresa({ ...enderecoEmpresa, numero: e.target.value })} /></Campo>
+            <Campo label="Complemento"><input className={inputClasse} value={enderecoEmpresa.complemento} onChange={(e) => setEnderecoEmpresa({ ...enderecoEmpresa, complemento: e.target.value })} /></Campo>
+            <Campo label="Bairro"><input className={inputClasse} value={enderecoEmpresa.bairro} onChange={(e) => setEnderecoEmpresa({ ...enderecoEmpresa, bairro: e.target.value })} /></Campo>
+            <Campo label="Cidade"><input className={inputClasse} value={enderecoEmpresa.cidade} onChange={(e) => setEnderecoEmpresa({ ...enderecoEmpresa, cidade: e.target.value })} /></Campo>
+            <Campo label="UF"><input className={inputClasse} maxLength={2} value={enderecoEmpresa.uf} onChange={(e) => setEnderecoEmpresa({ ...enderecoEmpresa, uf: e.target.value.toUpperCase() })} placeholder="SP" /></Campo>
+            <label className="flex min-h-[44px] items-center gap-2 text-sm"><input type="checkbox" className="h-5 w-5" checked={enderecoEmpresa.enderecoPublico} onChange={(e) => setEnderecoEmpresa({ ...enderecoEmpresa, enderecoPublico: e.target.checked })} /> Mostrar endereço na página de contato</label>
+          </div>
+          <div><button className="btn-primario" disabled={ocupado} onClick={() => {
+            const cep = enderecoEmpresa.cep.replace(/\D/g, "");
+            chamar("/api/painel/loja", "PATCH", {
+              endereco: { logradouro: enderecoEmpresa.logradouro.trim(), numero: enderecoEmpresa.numero.trim(), complemento: enderecoEmpresa.complemento.trim(), bairro: enderecoEmpresa.bairro.trim(), cidade: enderecoEmpresa.cidade.trim(), uf: enderecoEmpresa.uf.trim().slice(0, 2), cep },
+              ...(cep.length === 8 ? { cepOrigem: cep } : {}),
+              enderecoPublico: enderecoEmpresa.enderecoPublico,
+            }, "Endereço salvo.");
+          }}>Salvar endereço</button></div>
         </Secao>
         <Secao titulo="Senha do painel">
           <div className="grid gap-4 sm:grid-cols-2">

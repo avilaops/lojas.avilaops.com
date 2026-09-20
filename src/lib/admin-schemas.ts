@@ -22,6 +22,7 @@ const whatsappBrasil = z.string().transform((s, ctx) => {
 export const EnderecoSchema = z.object({
   logradouro: z.string().max(120).optional(),
   numero: z.string().max(20).optional(),
+  complemento: z.string().max(80).optional(),
   bairro: z.string().max(80).optional(),
   cidade: z.string().max(80).optional(),
   uf: z.string().length(2).optional(),
