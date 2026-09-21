@@ -33,7 +33,10 @@ export type LinhaDaFicha = {
 
 const MEDIDAS: Record<string, string> = {
   diametroInternoMm: "Diâmetro interno",
+  diametroInternoRolamentoMm: "Diâmetro interno do rolamento",
   diametroExternoMm: "Diâmetro externo",
+  diametroExternoPorcaMm: "Diâmetro externo da porca",
+  medidaEixoMm: "Medida do eixo",
   alturaMm: "Altura",
   larguraMm: "Largura",
   comprimentoMm: "Comprimento",
@@ -73,6 +76,10 @@ const ROTULOS: Record<string, string> = {
   diametro: "Diâmetro",
   espessura: "Espessura",
   furo: "Furo",
+  conicidade: "Conicidade",
+  rosca: "Rosca",
+  rolamentosCompativeis: "Rolamentos compatíveis",
+  itensInclusos: "Itens inclusos",
   liga: "Liga",
 };
 

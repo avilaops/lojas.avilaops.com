@@ -7,8 +7,8 @@
  * em lote precisava do arquivo do fornecedor de volta. Aqui a lista de colunas
  * é uma só, e é o que garante a volta: baixa, corrige no Excel, reimporta.
  *
- * `imagem` leva só a primeira foto de propósito: é a que a vitrine usa como
- * capa, e uma coluna por foto quebraria a planilha em quem tem oito.
+ * `imagem` preserva compatibilidade com planilhas antigas. `imagens` leva a
+ * galeria completa, separada por |, e `atributos_json` preserva a ficha técnica.
  */
 
 /** Cabeçalho, na ordem em que sai — e a mesma do `modelo-catalogo.csv`. */
@@ -26,6 +26,8 @@ export const COLUNAS_PRODUTO = [
   "descricao_curta",
   "descricao",
   "imagem",
+  "imagens",
+  "atributos_json",
   "imagem_origem",
   "imagem_familia",
   "confirmar_imagem_exata",
@@ -48,7 +50,7 @@ export function normalizarCabecalho(nome: string): string {
 /** Lê registros CSV completos, inclusive quebras de linha dentro de aspas. */
 function lerRegistrosCsv(texto: string): { registros: string[][]; erro?: string } {
   const conteudo = texto.replace(/^\uFEFF/, "");
-  let separadores = { virgula: 0, pontoVirgula: 0 };
+  const separadores = { virgula: 0, pontoVirgula: 0 };
   let entreAspas = false;
   for (let i = 0; i < conteudo.length; i++) {
     const caractere = conteudo[i];
@@ -157,6 +159,26 @@ export function lerCsvProdutos(texto: string) {
       return;
     }
     const googleProductCategory = pega("google_product_category");
+    const imagensBrutas = pega("imagens");
+    const imagens = imagensBrutas
+      ? imagensBrutas.split("|").map((url) => url.trim()).filter(Boolean)
+      : pega("imagem") ? [pega("imagem")!] : undefined;
+    if (imagens && imagens.length > 10) {
+      erros.push(`Linha ${i + 2}: informe no máximo 10 imagens, separadas por |.`);
+      return;
+    }
+    const atributosBrutos = pega("atributos_json");
+    let atributos: Record<string, unknown> | undefined;
+    if (atributosBrutos) {
+      try {
+        const valor: unknown = JSON.parse(atributosBrutos);
+        if (!valor || typeof valor !== "object" || Array.isArray(valor)) throw new Error("JSON precisa ser um objeto.");
+        atributos = valor as Record<string, unknown>;
+      } catch {
+        erros.push(`Linha ${i + 2}: atributos_json precisa conter um objeto JSON válido.`);
+        return;
+      }
+    }
     const imagemOrigem = pega("imagem_origem")?.toLowerCase();
     const origemValida = imagemOrigem === "propria" || imagemOrigem === "representativa" || imagemOrigem === "ilustracao";
     if (imagemOrigem && !origemValida) {
@@ -184,7 +206,8 @@ export function lerCsvProdutos(texto: string) {
       ...(estadoValido ? { identificadoresEstado } : {}),
       descricaoCurta: pega("descricao_curta"),
       descricao: pega("descricao"),
-      imagens: pega("imagem") ? [pega("imagem")!] : undefined,
+      ...(imagens ? { imagens: Array.from(new Set(imagens)) } : {}),
+      ...(atributos ? { atributos } : {}),
       ...(origemValida ? { imagemOrigem } : {}),
       ...(idx("imagem_familia") >= 0 ? { imagemFamilia: c[idx("imagem_familia")] || null } : {}),
       ...(confirmarImagemExata && SIM.test(confirmarImagemExata) ? { confirmarImagemExata: true } : {}),
