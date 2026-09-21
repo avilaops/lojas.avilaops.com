@@ -21,11 +21,11 @@ export default function Distribuidora({ t, identidade, categorias, vitrine, temD
     return (
       <main className="home-mercado home-distribuidora home-campanhas">
         <BannerCarousel campanhas={campanhas.map(({ imagemUrl, imagemMobileUrl, link, alt }) => ({ imagemUrl, imagemMobileUrl, link, alt }))} />
-        <AtalhosCategorias categorias={categorias} semImagem={tema.categoriaSemImagem} somenteImagem />
+        <AtalhosCategorias categorias={categorias} semImagem={tema.categoriaSemImagem} />
         {vitrine.length > 0 && (
           <section className="container-loja campanhas-produtos" aria-label="Produtos em destaque">
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-              {vitrine.slice(0, 10).map((produto) => <ProductCard key={produto.id} produto={produto} vende={vende} whatsapp={t.whatsapp} moto={moto} ocultarSeloDestaque somenteImagem />)}
+              {vitrine.slice(0, 10).map((produto) => <ProductCard key={produto.id} produto={produto} vende={vende} whatsapp={t.whatsapp} moto={moto} />)}
             </div>
           </section>
         )}
@@ -39,11 +39,11 @@ export default function Distribuidora({ t, identidade, categorias, vitrine, temD
     return (
       <main className="home-mercado home-distribuidora home-campanhas">
         {bannerFallback && <BannerCarousel campanhas={[{ imagemUrl: bannerFallback, imagemMobileUrl: bannerFallback.endsWith("campanha-geral-v3-desktop.svg") ? "/media/vedashow/campanha-geral-v3-mobile.svg" : undefined, link: "/produtos", alt: "Campanha da loja" }]} />}
-        <AtalhosCategorias categorias={categorias} semImagem={tema.categoriaSemImagem} somenteImagem />
+        <AtalhosCategorias categorias={categorias} semImagem={tema.categoriaSemImagem} />
         {vitrine.length > 0 && (
           <section className="container-loja campanhas-produtos" aria-label="Produtos">
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-              {vitrine.slice(0, 10).map((produto) => <ProductCard key={produto.id} produto={produto} vende={vende} whatsapp={t.whatsapp} moto={moto} somenteImagem />)}
+              {vitrine.slice(0, 10).map((produto) => <ProductCard key={produto.id} produto={produto} vende={vende} whatsapp={t.whatsapp} moto={moto} />)}
             </div>
           </section>
         )}

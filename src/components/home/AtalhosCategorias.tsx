@@ -21,11 +21,9 @@ import type { TemaLoja } from "@/lib/tema";
 export default function AtalhosCategorias({
   categorias,
   semImagem,
-  somenteImagem = false,
 }: {
   categorias: Array<{ id: string; slug: string; nome: string; imagemUrl: string | null }>;
   semImagem: TemaLoja["categoriaSemImagem"];
-  somenteImagem?: boolean;
 }) {
   const lista = categoriasParaVitrine(categorias, semImagem);
   // Menos de três atalhos não formam uma fileira: viram dois círculos soltos
@@ -36,7 +34,7 @@ export default function AtalhosCategorias({
     <nav className="atalhos-cat" aria-label="Categorias em destaque">
       <div className="container-loja atalhos-cat-tira">
         {lista.slice(0, PRINCIPAIS).map((c) => (
-          <Link key={c.id} href={`/categoria/${c.slug}`} aria-label={c.nome} title={c.nome} className={somenteImagem ? "atalhos-cat-visual" : undefined}>
+          <Link key={c.id} href={`/categoria/${c.slug}`} aria-label={c.nome} title={c.nome}>
             <span className="atalhos-cat-foto">
               {c.imagemUrl ? (
                 // `lazy` de propósito, mesmo estando na primeira tela: o React
@@ -53,7 +51,7 @@ export default function AtalhosCategorias({
             </span>
             {/* Duas linhas no máximo: o nome inteiro numa só empurraria a
                 fileira para o dobro da altura por causa de uma categoria. */}
-            {!somenteImagem && <span className="atalhos-cat-nome">{c.nome}</span>}
+            <span className="atalhos-cat-nome">{c.nome}</span>
           </Link>
         ))}
       </div>
