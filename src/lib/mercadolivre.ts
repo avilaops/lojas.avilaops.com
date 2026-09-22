@@ -194,6 +194,30 @@ export async function atributosDaCategoria(categoriaId: string) {
   return todos.filter((a) => a.tags?.required || a.tags?.catalog_required || a.tags?.conditional_required);
 }
 
+/**
+ * Os atributos que a categoria aceita **como variação**.
+ *
+ * Endpoint público, o mesmo de `atributosDaCategoria`, com outro filtro:
+ * `allow_variations`. É uma lista curta e específica por categoria — camiseta
+ * aceita cor e tamanho, pneu aceita medida, e tentar variar por qualquer outro
+ * é recusa na publicação.
+ *
+ * Existe porque o nosso rótulo é livre ("Tamanho", "Cor", "Sabor") e o ML
+ * quer o id dele (`SIZE`, `COLOR`). O casamento é pelo nome, e o que não casa
+ * vira pendência em vez de palpite: publicar "Sabor" como se fosse cor poria o
+ * anúncio no ar com a variação errada.
+ */
+export async function atributosDeVariacao(categoriaId: string): Promise<Array<{ id: string; name: string }>> {
+  const r = await fetch(`${API}/categories/${categoriaId}/attributes`, {
+    signal: AbortSignal.timeout(15_000),
+  });
+  if (!r.ok) return [];
+  const todos = (await r.json().catch(() => [])) as Array<{ id?: string; name?: string; tags?: Record<string, boolean> }>;
+  return todos
+    .filter((a) => a.tags?.allow_variations && a.id && a.name)
+    .map((a) => ({ id: a.id!, name: a.name! }));
+}
+
 export function conectado(t: Tenant): boolean {
   return Boolean(t.mlAccessTokenEnc && t.mlRefreshTokenEnc);
 }
