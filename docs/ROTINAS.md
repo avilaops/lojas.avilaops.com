@@ -88,6 +88,18 @@ Decisões que estão no código e valem a pena conhecer:
   comprador.
 - **Trava vencida volta para a fila.** Container que morreu no meio não deixa a
   rotina presa para sempre (`travaMinutos` por rotina).
+- **A passada tem prazo: 10 minutos.** "Uma por vez" é uma trava dentro do
+  processo, e trava cria a falha que ela mesma não vê — passada que nunca
+  termina não falha, emudece: sem erro, sem `falhasSeguidas`, sem nada no
+  endpoint de saúde, e o relógio inteiro para até alguém reiniciar o container.
+  Não é hipótese: toda chamada de rede daqui tem prazo próprio, mas consulta ao
+  banco não tem, e um lock no Postgres segura o `await` pelo tempo que durar.
+  Vencido o prazo, o trabalho pendurado **não** é cancelado (não há como) — o
+  que acontece é a guarda ser solta, para o próximo tique andar. A rotina que
+  ficou pendurada segue com a linha travada até a `travaMinutos` dela vencer, o
+  que é o tratamento certo: do ponto de vista da tabela, passada pendurada e
+  container morto são a mesma coisa. Sai no log como
+  `[rotina] passada não voltou em 10 min`. Ver `src/lib/passada-unica.ts`.
 
 ## Como saber que ainda está rodando
 
