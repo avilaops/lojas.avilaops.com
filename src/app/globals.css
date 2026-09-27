@@ -1055,3 +1055,8 @@ body:has(.home-automotivo) .rodape-loja { margin-top: 1rem; }
 @media (max-width: 639px) { .campanhas-busca { flex-direction: column; align-items: stretch; } .cartao-produto > div:last-child { padding: .75rem; } .campanhas-produtos > header > a { min-height: 44px; } }
 
 .home-campanhas .atalhos-cat-foto { width: min(4rem, 100%); height: auto; aspect-ratio: 1; }
+/* No celular, os cards já oferecem orçamento. O atalho duplicado cobria
+   medidas e ações na segunda coluna durante a rolagem. */
+@media (max-width: 640px) {
+  body:has(.cartao-produto a[href^="https://wa.me/"]) .whatsapp-flutuante { display: none; }
+}
