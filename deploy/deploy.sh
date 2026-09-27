@@ -70,6 +70,9 @@ docker run --rm -v /opt/lojas/app.novo:/app lojas-base sh -c '
   # O ONNX tambem e externalizado com hash; o wrapper nativo precisa da biblioteca
   # Linux (incluida pelo empacotador) junto ao pacote e deste alias no runtime.
   for h in $(grep -rhoE "\"onnxruntime-node-[0-9a-f]{16}\"" /app/lojas.avilaops.com/.next/server/chunks | tr -d "\"" | sort -u); do ln -sfn onnxruntime-node "$h"; done
+  # Falhar antes da troca se o pacote não carregar os módulos de imagem Linux.
+  # Health e CSS isolados não detectam esse erro na rota de uploads.
+  node -e "require(\"/app/lojas.avilaops.com/node_modules/onnxruntime-node\"); require(\"/app/lojas.avilaops.com/node_modules/sharp\")"
 '
 
 echo "==> trocando a versão no ar"
