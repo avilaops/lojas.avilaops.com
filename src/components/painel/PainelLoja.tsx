@@ -44,6 +44,9 @@ export interface LojaView {
   avisoTopo: string | null;
   razaoSocial: string | null;
   cnpj: string | null;
+  endereco: { logradouro?: string; numero?: string; complemento?: string; bairro?: string; cidade?: string; uf?: string; cep?: string } | null;
+  enderecoPublico: boolean;
+  cepOrigem: string | null;
   dominioPrincipal: string | null;
   bannerUrl: string | null;
   mpPublicKey: string | null;
@@ -64,6 +67,19 @@ export interface EnderecoEntregaView { logradouro: string; numero: string; compl
 export interface PedidoView { id: string; numero: number; referencia: string; status: string; clienteNome: string; clienteEmail: string; clienteTelefone: string; clienteDocumento: string; totalCentavos: number; subtotalCentavos: number; freteCentavos: number; descontoCentavos: number; cupomCodigo: string | null; meioPagamento: string; freteNome: string; rastreio: string | null; entrega: EnderecoEntregaView | null; etiqueta: { status: string; codigoObjeto: string | null; pdf: string | null; custoCentavos: number } | null; criadoEm: string; itens: Array<{ nome: string; quantidade: number; sku: string | null; precoUnitarioCentavos: number }> }
 
 const STATUS: Record<string, string> = { ATIVA: "No ar", PROVISIONANDO: "Configurando", SUSPENSA: "Suspensa", CANCELADA: "Cancelada" };
+const CAMPOS_IMPORTACAO = [
+  ["nome", "nome"], ["precoCentavos", "preço"], ["precoDeCentavos", "preço de"], ["categoria", "categoria"],
+  ["googleProductCategory", "categoria Google"], ["marca", "marca"], ["sku", "SKU"], ["gtin", "GTIN"],
+  ["mpn", "MPN"], ["identificadoresEstado", "estado dos identificadores"], ["descricaoCurta", "descrição curta"],
+  ["descricao", "descrição"], ["imagens", "foto"], ["imagemOrigem", "origem da foto"], ["imagemFamilia", "família da foto"],
+  ["confirmarImagemExata", "confirmação da foto exata"], ["destaque", "destaque"], ["estoque", "estoque"],
+  ["pesoKg", "peso"], ["alturaCm", "altura"], ["larguraCm", "largura"], ["comprimentoCm", "comprimento"], ["ativo", "status"],
+] as const;
+
+function camposDaImportacao(produto: Record<string, unknown>) {
+  return CAMPOS_IMPORTACAO.filter(([chave]) => produto[chave] !== undefined).map(([, rotulo]) => rotulo);
+}
+
 /**
  * Cada seção é um endereço.
  *
@@ -106,15 +122,21 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
   const irPara = (s: SecaoPainel) => router.push(ROTA_DA_SECAO[s]);
   const [erro, setErro] = useState<string | null>(null);
   const [ok, setOk] = useState<string | null>(null);
+  const [aviso, setAviso] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
 
   async function chamar(caminho: string, method: string, body?: unknown, sucesso = "Salvo.") {
-    setErro(null); setOk(null); setOcupado(true);
+    setErro(null); setOk(null); setAviso(null); setOcupado(true);
     try {
       const r = await fetch(caminho, { method, headers: body ? { "content-type": "application/json" } : undefined, body: body ? JSON.stringify(body) : undefined });
       const d = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(d?.erro ?? "Falha.");
-      setOk(sucesso); router.refresh(); return d;
+      setOk(sucesso);
+      if (Array.isArray(d?.avisos) && d.avisos.length) {
+        const total = Number(d.avisosTotal) || d.avisos.length;
+        setAviso(`${total} linha(s) precisam de atenção: ${d.avisos.slice(0, 5).join(" · ")}${total > 5 ? " · e outras" : ""}`);
+      }
+      router.refresh(); return d;
     } catch (e) { setErro(e instanceof Error ? e.message : "Falha inesperada."); } finally { setOcupado(false); }
   }
 
@@ -123,6 +145,12 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
   const [csv, setCsv] = useState<{ nome: string; produtos: Array<Record<string, unknown>>; erros: string[] } | null>(null);
   const [limiteEstoque, setLimiteEstoque] = useState(String(loja.estoqueBaixoEm));
   const [empresa, setEmpresa] = useState({ razaoSocial: loja.razaoSocial ?? "", cnpj: loja.cnpj ?? "" });
+  const [enderecoEmpresa, setEnderecoEmpresa] = useState({
+    logradouro: loja.endereco?.logradouro ?? "", numero: loja.endereco?.numero ?? "",
+    complemento: loja.endereco?.complemento ?? "", bairro: loja.endereco?.bairro ?? "",
+    cidade: loja.endereco?.cidade ?? "", uf: loja.endereco?.uf ?? "",
+    cep: loja.endereco?.cep ?? loja.cepOrigem ?? "", enderecoPublico: loja.enderecoPublico,
+  });
   const [entrega, setEntrega] = useState({ retiradaNaLoja: loja.retiradaNaLoja, despachoDiasUteis: loja.despachoDiasUteis, freteGratisAcima: loja.freteGratisAcima != null ? String(loja.freteGratisAcima / 100).replace(".", ",") : "", tabela: loja.tabelaFrete.map((f) => ({ ufs: f.ufs.join(","), preco: String(f.preco / 100).replace(".", ","), prazo: String(f.prazoDiasUteis), nome: f.nome ?? "" })), local: loja.entregaLocal.map((f) => ({ prefixos: f.prefixos.join(","), nome: f.nome, preco: String(f.preco / 100).replace(".", ","), prazo: String(f.prazoDiasUteis), gratis: f.gratisAcima != null ? String(f.gratisAcima / 100).replace(".", ",") : "" })) });
   const [mp, setMp] = useState({ publicKey: loja.mpPublicKey ?? "", accessToken: "", webhookSecret: "" });
   // Diagnóstico do recebimento: credencial errada só dava erro na primeira
@@ -154,6 +182,7 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
 
       {erro && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{erro}</p>}
       {ok && <p className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-700">{ok}</p>}
+      {aviso && <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900" role="status">{aviso}</p>}
 
 
       {aba === "Visão geral" && (
@@ -246,12 +275,13 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
           </Secao>
 
           <Secao titulo="Importar planilha" descricao="Produto com o mesmo SKU é atualizado, não duplicado.">
-            <p className="text-xs text-muted-foreground">Colunas: <code>nome, preco, categoria, marca, sku, gtin, preco_de, descricao_curta, descricao, imagem, destaque, peso_kg, altura_cm, largura_cm, comprimento_cm, estoque, ativo</code></p>
+            <p className="text-xs text-muted-foreground">Colunas: <code>nome, preco, categoria, google_product_category, marca, sku, gtin, mpn, identificadores_estado, preco_de, descricao_curta, descricao, imagem, imagem_origem, imagem_familia, confirmar_imagem_exata, correspondencia_imagem, destaque, peso_kg, altura_cm, largura_cm, comprimento_cm, estoque, ativo</code></p>
+            <p className="text-xs text-muted-foreground">Use MPN somente para o código do fabricante. Em <code>google_product_category</code>, informe o ID ou o caminho oficial confirmado. Em atualização por planilha, a célula vazia mantém o valor salvo; escreva <code>auto</code> para remover uma substituição e voltar à classificação automática. Em <code>identificadores_estado</code>, informe <code>desconhecido</code>, <code>informado</code> ou <code>sem_identificador</code>, conforme embalagem ou fornecedor. Em <code>confirmar_imagem_exata</code>, informe <code>sim</code> só depois de conferir que a foto principal mostra exatamente o produto e a apresentação daquele SKU. Em <code>correspondencia_imagem</code>, use <code>confirmada</code> ou <code>rejeitada</code> após conferir a foto principal. A rejeição bloqueia o item do Merchant até substituir a foto e revisar o estado. Em produtos com variantes, a planilha atualiza a apresentação padrão.</p>
             {/* São as mesmas colunas que a exportação do Catálogo grava: o
                 caminho de corrigir em lote é baixar, mexer e devolver. Coluna
                 que não vier no arquivo não é mexida no produto. */}
             <p className="text-xs text-muted-foreground">
-              Só <code>nome</code> e <code>preco</code> são obrigatórios. Para corrigir em lote, baixe o catálogo em CSV na aba Catálogo, ajuste e reenvie aqui — coluna que não vier no arquivo fica como está.
+              Para atualizar um produto existente, informe o <code>sku</code> e somente as colunas que deseja corrigir. Para cadastrar um produto novo, informe <code>nome</code> e <code>preco</code>. Colunas ausentes e células vazias preservam o valor atual; para limpar a família da imagem, deixe a coluna <code>imagem_familia</code> presente e vazia.
             </p>
             <SoltarPlanilha
               desabilitado={ocupado}
@@ -266,6 +296,15 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
                     {csv.produtos.length.toLocaleString("pt-BR")} produto(s) prontos para importar
                   </span>
                 </p>
+                {csv.produtos.length > 0 && <div className="mt-3 max-h-72 overflow-auto rounded-lg border border-border">
+                  <ul aria-label="Prévia dos produtos e campos da importação" className="divide-y divide-border">
+                    {csv.produtos.slice(0, 10).map((produto, indice) => <li key={`${String(produto.sku ?? produto.slug ?? produto.nome ?? "produto")}-${indice}`} className="grid gap-1 px-3 py-2 text-xs sm:grid-cols-[minmax(10rem,1fr)_minmax(12rem,1.2fr)] sm:items-start">
+                      <span className="min-w-0 break-words font-medium">{produto.sku ? `SKU ${String(produto.sku)}` : "Novo produto"}{produto.nome ? ` · ${String(produto.nome)}` : ""}</span>
+                      <span className="text-muted-foreground">Campos: {camposDaImportacao(produto).join(", ") || "nenhum"}</span>
+                    </li>)}
+                  </ul>
+                  {csv.produtos.length > 10 && <p className="border-t border-border px-3 py-2 text-xs text-muted-foreground">Prévia das primeiras 10 linhas de {csv.produtos.length.toLocaleString("pt-BR")}.</p>}
+                </div>}
                 {/* O erro aparece antes de importar, e não depois: planilha de
                     fornecedor quase sempre tem linha torta, e descobrir isso
                     com metade do catálogo gravado é pior. */}
@@ -284,7 +323,7 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
                   <button
                     className="btn-primario"
                     disabled={ocupado || !csv.produtos.length}
-                    onClick={() => chamar("/api/painel/produtos", "PUT", csv.produtos, "Produtos importados.").then(() => setCsv(null))}
+                    onClick={() => chamar("/api/painel/produtos", "PUT", csv.produtos, "Produtos importados.").then((resultado) => { if (resultado) setCsv(null); })}
                   >
                     Importar {csv.produtos.length.toLocaleString("pt-BR")} produto(s)
                   </button>
@@ -371,6 +410,9 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
             <Campo label="Despacho (dias úteis)"><input className={inputClasse} type="number" min={0} max={30} value={entrega.despachoDiasUteis} onChange={(e) => setEntrega({ ...entrega, despachoDiasUteis: Number(e.target.value) })} /></Campo>
             <Campo label="Frete grátis acima de (R$)"><input className={inputClasse} value={entrega.freteGratisAcima} onChange={(e) => setEntrega({ ...entrega, freteGratisAcima: e.target.value })} placeholder="200,00" /></Campo>
           </div>
+          {entrega.retiradaNaLoja && (!loja.enderecoPublico || !loja.endereco?.logradouro || !loja.endereco?.numero || !loja.endereco?.cidade || !loja.endereco?.uf || loja.endereco?.cep?.replace(/\D/g, "").length !== 8) && (
+            <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">Para oferecer retirada, complete o endereço e marque a exibição pública na seção Conta. Salve o endereço e volte aqui para ativar.</p>
+          )}
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Tabela por estado (UF separadas por vírgula; * = resto do Brasil)</p>
           {entrega.tabela.map((f, i) => (
             <div key={i} className="grid gap-2 sm:grid-cols-[1fr_1fr_1fr_1fr_auto]">
@@ -503,9 +545,9 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
       {aba === "Conta" && (
         <>
         <Secao titulo="Dados da empresa" descricao="Quem vende pela internet é obrigado a exibir razão social, CNPJ e endereço (Decreto 7.962/2013). Preenchendo aqui, isso aparece sozinho no rodapé de todas as páginas e nas políticas da loja.">
-          {(!loja.razaoSocial || !loja.cnpj) && (
+          {(!loja.razaoSocial || !loja.cnpj || !loja.endereco?.logradouro || !loja.endereco?.numero || !loja.endereco?.bairro || !loja.endereco?.cidade || !loja.endereco?.uf || loja.endereco?.cep?.replace(/\D/g, "").length !== 8) && (
             <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
-              Sua loja ainda não exibe a identificação da empresa. Sem ela, o cliente que reclamar no Procon tem razão de cara, e o Google Ads costuma reprovar o anúncio.
+              Complete razão social, CNPJ e endereço físico. Esses dados identificam o vendedor nas políticas e nas informações comerciais da loja.
             </p>
           )}
           <div className="grid gap-4 sm:grid-cols-2">
@@ -513,6 +555,29 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
             <Campo label="CNPJ"><input className={inputClasse} value={empresa.cnpj} onChange={(e) => setEmpresa({ ...empresa, cnpj: e.target.value })} placeholder="00.000.000/0001-00" inputMode="numeric" /></Campo>
           </div>
           <div><button className="btn-primario" disabled={ocupado} onClick={() => chamar("/api/painel/loja", "PATCH", { razaoSocial: empresa.razaoSocial.trim() || null, cnpj: empresa.cnpj.trim() || null }, "Dados da empresa salvos.")}>Salvar</button></div>
+        </Secao>
+        <Secao titulo="Endereço da empresa e retirada" descricao="Mantenha o endereço correto para as informações legais, contato e cálculo de frete. O endereço aparece na página de contato quando a opção pública estiver ativa e nas políticas da loja.">
+          {loja.retiradaNaLoja && !(enderecoEmpresa.logradouro && enderecoEmpresa.numero && enderecoEmpresa.cidade && enderecoEmpresa.uf && enderecoEmpresa.cep.replace(/\D/g, "").length === 8) && (
+            <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">A retirada está ativa, mas o endereço está incompleto. Preencha rua, número, cidade, UF e CEP para orientar os clientes.</p>
+          )}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Campo label="CEP"><input className={inputClasse} inputMode="numeric" value={enderecoEmpresa.cep} onChange={(e) => setEnderecoEmpresa({ ...enderecoEmpresa, cep: e.target.value })} placeholder="00000-000" /></Campo>
+            <Campo label="Logradouro"><input className={inputClasse} value={enderecoEmpresa.logradouro} onChange={(e) => setEnderecoEmpresa({ ...enderecoEmpresa, logradouro: e.target.value })} placeholder="Rua ou avenida" /></Campo>
+            <Campo label="Número"><input className={inputClasse} value={enderecoEmpresa.numero} onChange={(e) => setEnderecoEmpresa({ ...enderecoEmpresa, numero: e.target.value })} /></Campo>
+            <Campo label="Complemento"><input className={inputClasse} value={enderecoEmpresa.complemento} onChange={(e) => setEnderecoEmpresa({ ...enderecoEmpresa, complemento: e.target.value })} /></Campo>
+            <Campo label="Bairro"><input className={inputClasse} value={enderecoEmpresa.bairro} onChange={(e) => setEnderecoEmpresa({ ...enderecoEmpresa, bairro: e.target.value })} /></Campo>
+            <Campo label="Cidade"><input className={inputClasse} value={enderecoEmpresa.cidade} onChange={(e) => setEnderecoEmpresa({ ...enderecoEmpresa, cidade: e.target.value })} /></Campo>
+            <Campo label="UF"><input className={inputClasse} maxLength={2} value={enderecoEmpresa.uf} onChange={(e) => setEnderecoEmpresa({ ...enderecoEmpresa, uf: e.target.value.toUpperCase() })} placeholder="SP" /></Campo>
+            <label className="flex min-h-[44px] items-center gap-2 text-sm"><input type="checkbox" className="h-5 w-5" checked={enderecoEmpresa.enderecoPublico || loja.retiradaNaLoja} disabled={loja.retiradaNaLoja} onChange={(e) => setEnderecoEmpresa({ ...enderecoEmpresa, enderecoPublico: e.target.checked })} /> Mostrar endereço na página de contato{loja.retiradaNaLoja && <span className="text-muted-foreground">(obrigatório para retirada)</span>}</label>
+          </div>
+          <div><button className="btn-primario" disabled={ocupado} onClick={() => {
+            const cep = enderecoEmpresa.cep.replace(/\D/g, "");
+            chamar("/api/painel/loja", "PATCH", {
+              endereco: { logradouro: enderecoEmpresa.logradouro.trim(), numero: enderecoEmpresa.numero.trim(), complemento: enderecoEmpresa.complemento.trim(), bairro: enderecoEmpresa.bairro.trim(), cidade: enderecoEmpresa.cidade.trim(), uf: enderecoEmpresa.uf.trim().slice(0, 2), ...(cep.length === 8 ? { cep } : {}) },
+              ...(cep.length === 8 ? { cepOrigem: cep } : {}),
+              enderecoPublico: enderecoEmpresa.enderecoPublico || loja.retiradaNaLoja,
+            }, "Endereço salvo.");
+          }}>Salvar endereço</button></div>
         </Secao>
         <Secao titulo="Senha do painel">
           <div className="grid gap-4 sm:grid-cols-2">

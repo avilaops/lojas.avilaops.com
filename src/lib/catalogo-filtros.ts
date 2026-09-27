@@ -16,6 +16,13 @@ export type FiltroCatalogo = {
   situacao?: string;
 };
 
+/** Identificação ainda desconhecida. Ausência confirmada pelo fabricante é válida. */
+export const varianteSemIdentificadores: Prisma.VarianteWhereInput = {
+  ativo: true,
+  identificadoresEstado: "desconhecido",
+  AND: [{ OR: [{ gtin: null }, { gtin: "" }] }, { OR: [{ mpn: null }, { mpn: "" }] }],
+};
+
 /** As situações são a pergunta do dia ("o que está sem foto?"), não colunas. */
 export function condicaoDoCatalogo(tenantId: string, filtro: FiltroCatalogo): Prisma.ProdutoWhereInput {
   const where: Prisma.ProdutoWhereInput = { tenantId };
@@ -34,7 +41,36 @@ export function condicaoDoCatalogo(tenantId: string, filtro: FiltroCatalogo): Pr
   else if (situacao === "inativo") where.ativo = false;
   else if (situacao === "esgotado") where.OR = [{ disponibilidade: "out_of_stock" }, { estoque: 0 }];
   else if (situacao === "sem-foto") where.imagens = { isEmpty: true };
+  else if (situacao === "imagem-merchant-revisar") where.OR = [
+    { imagens: { isEmpty: true } },
+    { imagemOrigem: { not: "propria" } },
+    { midias: { none: { varianteId: null, tipo: "imagem", ordem: 0, correspondencia: "confirmada" } } },
+  ];
   else if (situacao === "sem-preco") where.precoCentavos = 0;
+  else if (situacao === "sem-preco-com-saldo") {
+    // A lista de auditoria mostrou variantes ativas com saldo positivo e preço
+    // zero. Filtrar pela variante, pois o produto pode ter mais de uma oferta.
+    where.variantes = { some: { ativo: true, estoque: { gt: 0 }, precoCentavos: 0 } };
+  }
+  else if (situacao === "sem-categoria") where.categoriaId = null;
+  else if (situacao === "sem-descricao") {
+    const anteriores = Array.isArray(where.AND) ? where.AND : where.AND ? [where.AND] : [];
+    where.AND = [
+      ...anteriores,
+      { OR: [{ descricao: null }, { descricao: "" }] },
+      { OR: [{ descricaoCurta: null }, { descricaoCurta: "" }] },
+    ];
+  }
+  else if (situacao === "sem-marca") where.OR = [
+    { marca: null },
+    { marca: "" },
+    { marca: { equals: "DIVERSOS", mode: "insensitive" } },
+  ];
+  else if (situacao === "identificadores-pendentes") {
+    // Mostrar apenas códigos ainda não confirmados pelo fabricante. Estado
+    // `sem_identificador` é uma resposta válida e não entra nesta fila.
+    where.variantes = { some: varianteSemIdentificadores };
+  }
   else if (situacao === "sem-medida") {
     // O aviso do topo da tela ("5.588 produtos sem medida pagam frete pela
     // caixa padrão") vira filtro e vira planilha: é o caminho de corrigir.

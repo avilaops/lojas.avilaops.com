@@ -8,9 +8,8 @@ import { adicionarAoCarrinho } from "@/lib/eventos-loja";
 interface Sugestao { id: string; slug: string; nome: string; precoCentavos: number; imagem: string | null }
 
 /**
- * "Leve também" no carrinho. É o jeito honesto de subir o ticket médio: em vez
- * de esconder o frete, mostra o que costuma sair junto — e ainda ajuda quem
- * esqueceu o item que faltava.
+ * "Leve também" no carrinho. Mostra itens que costumam sair junto e ajudam
+ * a completar o pedido.
  */
 export default function Sugestoes() {
   const { itens, adicionar, pronto } = useCart();
@@ -28,7 +27,7 @@ export default function Sugestoes() {
       signal: cancelar.signal,
     })
       .then((r) => (r.ok ? r.json() : { produtos: [] }))
-      .then((d) => setSugestoes(d.produtos ?? []))
+      .then((d) => setSugestoes((d.produtos ?? []).filter((p: Sugestao) => Number.isFinite(p.precoCentavos) && p.precoCentavos > 0)))
       .catch(() => {});
     return () => cancelar.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- só na abertura

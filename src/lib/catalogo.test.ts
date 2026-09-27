@@ -173,6 +173,18 @@ test("com duas medidas cada uma leva o rótulo", () => {
   assert.equal(medidaResumida({ diametroInternoMm: 20, alturaMm: 14 }), "Ø int. 20 mm · alt. 14 mm");
 });
 
+test("espessura e seção não entram na sequência do balcão", () => {
+  // O catálogo indexa cinco medidas, mas só três têm forma falada: somar tudo
+  // num "20 × 47 × 14 × 2" seria uma medida que ninguém pede no balcão. O que
+  // sobra continua dito por extenso, em vez de desaparecer da tela.
+  assert.equal(
+    medidaResumida({ diametroInternoMm: 20, diametroExternoMm: 47, alturaMm: 14, espessuraMm: 2 }),
+    "20 × 47 × 14 mm · esp. 2 mm",
+  );
+  // Sem o trio completo, nenhuma sequência: cada medida com o seu rótulo.
+  assert.equal(medidaResumida({ espessuraMm: 2, secaoMm: 3.5 }), "esp. 2 mm · seção 3,5 mm");
+});
+
 test("código lido como medida não vira linha no card", () => {
   // Mesmo teto do filtro: 5.176.168 mm é lixo de importação, não medida.
   assert.equal(medidaResumida({ diametroInternoMm: 5176168 }), null);

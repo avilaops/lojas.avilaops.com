@@ -14,7 +14,7 @@ import { detalharErro } from "@/lib/erro-de-formulario";
 const medida = (chave: string, valor: string) =>
   valor.trim() ? { [chave]: Number.parseFloat(valor.replace(",", ".")) } : {};
 
-interface Form { tarja: string; principioAtivo: string; apresentacao: string; registroAnvisa: string; tipoMedicamento: string; versaoCatalogo:number; temVariacoes:boolean; mpn:string; identificadoresEstado:string; nome: string; categoria: string; marca: string; sku: string; gtin: string; preco: string; precoDe: string; descricaoCurta: string; descricao: string; imagens: string[]; imagemOrigem: string; imagemFamilia: string; destaque: boolean; ativo: boolean; disponibilidade: string; estoque: string; pesoKg: string; alturaCm: string; larguraCm: string; comprimentoCm: string; codigoOriginal: string; codigosEquivalentes: string; compatibilidade: LinhaCompat[]; camposPersonalizados: Record<string, string> }
+interface Form { tarja: string; principioAtivo: string; apresentacao: string; registroAnvisa: string; tipoMedicamento: string; versaoCatalogo:number; temVariacoes:boolean; mpn:string; identificadoresEstado:string; googleProductCategory:string; imagemOrigem:string; imagemFamilia:string; imagemConfirmada:boolean; correspondenciaImagem:"nao_confirmada"|"confirmada"|"rejeitada"; nome: string; categoria: string; marca: string; sku: string; gtin: string; preco: string; precoDe: string; descricaoCurta: string; descricao: string; imagens: string[]; destaque: boolean; ativo: boolean; disponibilidade: string; estoque: string; pesoKg: string; alturaCm: string; larguraCm: string; comprimentoCm: string; codigoOriginal: string; codigosEquivalentes: string; compatibilidade: LinhaCompat[]; camposPersonalizados: Record<string, string> }
 /** Linha do editor de compatibilidade: texto livre até salvar (ano vazio = sem limite). */
 interface LinhaCompat { marca: string; modelo: string; anoDe: string; anoAte: string }
 
@@ -60,12 +60,11 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoSalvar 
       if (p?.erro) return setErro(p.erro);
       setDefinicoes(lerDefinicoes(p.definicoesCampos));
       const carregado: Form = {
-        camposPersonalizados: lerValores(p.camposPersonalizados),
-        versaoCatalogo:p.versaoCatalogo, temVariacoes:p.opcoes.length>0, mpn:p.mpn??"", identificadoresEstado:p.identificadoresEstado??"desconhecido",
+        camposPersonalizados: lerValores(p.camposPersonalizados), imagemOrigem:p.imagemOrigem??"propria", imagemFamilia:p.imagemFamilia??"", imagemConfirmada:p.midias?.[0]?.correspondencia === "confirmada", correspondenciaImagem:p.midias?.[0]?.correspondencia ?? "nao_confirmada",
+        versaoCatalogo:p.versaoCatalogo, temVariacoes:p.opcoes.length>0, mpn:p.mpn??"", identificadoresEstado:p.identificadoresEstado??"desconhecido", googleProductCategory:p.googleProductCategory??"",
         nome: p.nome, categoria: p.categoria ?? "", marca: p.marca ?? "", sku: p.sku ?? "", gtin: p.gtin ?? "",
         preco: (p.precoCentavos / 100).toFixed(2).replace(".", ","), precoDe: p.precoDeCentavos != null ? (p.precoDeCentavos / 100).toFixed(2).replace(".", ",") : "",
         descricaoCurta: p.descricaoCurta ?? "", descricao: p.descricao ?? "", imagens: p.imagens ?? [],
-        imagemOrigem: p.imagemOrigem ?? "propria", imagemFamilia: p.imagemFamilia ?? "",
         destaque: p.destaque, ativo: p.ativo,
         disponibilidade: p.disponibilidade, estoque: p.estoque != null ? String(p.estoque) : "", pesoKg: p.pesoKg != null ? String(p.pesoKg) : "",
         alturaCm: p.alturaCm != null ? String(p.alturaCm) : "", larguraCm: p.larguraCm != null ? String(p.larguraCm) : "", comprimentoCm: p.comprimentoCm != null ? String(p.comprimentoCm) : "",
@@ -107,12 +106,14 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoSalvar 
       const r = await fetch("/api/painel/produtos", {
         method: "PATCH", headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          id: produtoId, versaoCatalogo:f.versaoCatalogo, mpn:f.temVariacoes?undefined:(f.mpn||null), identificadoresEstado:f.temVariacoes?undefined:f.identificadoresEstado, nome: f.nome, categoria: f.categoria, marca: f.marca || undefined, sku: f.temVariacoes?undefined:f.sku, gtin:f.temVariacoes?undefined:f.gtin.trim(), precoCentavos:f.temVariacoes?undefined:preco,
+          id: produtoId, versaoCatalogo:f.versaoCatalogo, mpn:f.temVariacoes?undefined:(f.mpn||null), identificadoresEstado:f.temVariacoes?undefined:f.identificadoresEstado, googleProductCategory:f.googleProductCategory.trim() || null, nome: f.nome, categoria: f.categoria, marca: f.marca || undefined, sku: f.temVariacoes?undefined:f.sku, gtin:f.temVariacoes?undefined:f.gtin.trim(), precoCentavos:f.temVariacoes?undefined:preco,
           ...(!f.temVariacoes ? { precoDeCentavos: precoDe ?? null } : {}),
           descricaoCurta: f.descricaoCurta || undefined, descricao: f.descricao || undefined, imagens: f.imagens, destaque: f.destaque, ativo: f.ativo,
           // A regra de o que pode ser declarado mora no lib, com o resto da
           // política de imagem — não aqui.
           ...declaracaoDaImagem(f.imagens, f.imagemOrigem, f.imagemFamilia),
+          ...(f.imagemConfirmada && f.imagemOrigem === "propria" && f.imagens.length ? { confirmarImagemExata: true } : {}),
+          ...(f.imagemOrigem === "propria" && f.imagens.length && f.correspondenciaImagem !== "confirmada" ? { correspondenciaImagem: f.correspondenciaImagem } : {}),
           disponibilidade:f.temVariacoes?undefined:f.disponibilidade, ...(!f.temVariacoes ? { estoque:f.estoque.trim()?Number(f.estoque):null } : {}), ...(f.pesoKg.trim() ? { pesoKg: Number.parseFloat(f.pesoKg.replace(",", ".")) } : {}),
         ...medida("alturaCm", f.alturaCm), ...medida("larguraCm", f.larguraCm), ...medida("comprimentoCm", f.comprimentoCm),
           codigoOriginal: f.codigoOriginal.trim() || null,
@@ -147,6 +148,7 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoSalvar 
 
   if (!f) return <div className="rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground sm:p-6">{erro ?? "Carregando…"}</div>;
   const set = (k: keyof Form, v: unknown) => setF({ ...f, [k]: v });
+  const setImagens = (imagens: string[]) => setF({ ...f, imagens, imagemConfirmada: false, correspondenciaImagem: "nao_confirmada" });
 
   // O que falta aparece na linha fechada do bloco: recolher não pode esconder
   // pendência, senão a tela fica curta mentindo.
@@ -170,6 +172,7 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoSalvar 
       <div className="grid min-w-0 gap-4 sm:grid-cols-2">
         <Campo label="Nome"><input id="catalogo-nome" className={inputClasse} value={f.nome} onChange={(e) => set("nome", e.target.value)} /></Campo>
         <Campo label="Categoria"><input id="catalogo-categoria" className={inputClasse} value={f.categoria} onChange={(e) => set("categoria", e.target.value)} /></Campo>
+        <Campo label="Categoria Google (opcional)" ajuda="Use o ID ou caminho completo da taxonomia oficial. Vazio mantém a classificação automática do Google."><input id="catalogo-google-category" className={inputClasse} value={f.googleProductCategory} onChange={(e) => set("googleProductCategory", e.target.value)} placeholder="ID ou caminho oficial confirmado" /></Campo>
         <Campo label="Preço (R$)"><input id="catalogo-preco" readOnly={f.temVariacoes} className={inputClasse} value={f.preco} onChange={(e) => set("preco", e.target.value)} inputMode="decimal" /></Campo>
         <Campo label="Preço “de” (R$)" ajuda="Riscado na loja, ao lado do preço."><input id="catalogo-precoDe" readOnly={f.temVariacoes} className={inputClasse} value={f.precoDe} onChange={(e) => set("precoDe", e.target.value)} inputMode="decimal" /></Campo>
         <Campo label="Estoque físico" ajuda="Quantidade física; as reservas são descontadas automaticamente. Vazio = não controla."><input id="catalogo-estoque" readOnly={f.temVariacoes} className={inputClasse} value={f.estoque} onChange={(e) => set("estoque", e.target.value)} inputMode="numeric" /></Campo>
@@ -193,14 +196,25 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoSalvar 
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={url} alt="" className="h-20 w-20 rounded-lg border border-border object-cover" />
               <div className="mt-1 flex gap-1 text-[10px]">
-                {i > 0 && <button className="underline" onClick={() => { const a = [...f.imagens]; [a[i - 1], a[i]] = [a[i], a[i - 1]]; set("imagens", a); }}>← principal</button>}
-                <button className="text-red-700 underline" onClick={() => set("imagens", f.imagens.filter((_, j) => j !== i))}>remover</button>
+                {i > 0 && <button className="underline" onClick={() => { const a = [...f.imagens]; [a[i - 1], a[i]] = [a[i], a[i - 1]]; setImagens(a); }}>← principal</button>}
+                <button className="text-red-700 underline" onClick={() => setImagens(f.imagens.filter((_, j) => j !== i))}>remover</button>
               </div>
             </div>
           ))}
-          <EnviarImagem aoEnviar={(url) => set("imagens", [...f.imagens, url])} rotulo="+ foto" />
+          <EnviarImagem aoEnviar={(url) => setImagens([...f.imagens, url])} rotulo="+ foto" />
         </div>
       </Campo>
+      <div className="grid min-w-0 gap-4 sm:grid-cols-2">
+        <Campo label="Tipo da imagem principal" ajuda="Foto própria só quando mostra este produto exato. Imagem representativa exige a família da peça.">
+          <select id="catalogo-imagem-origem" className={inputClasse} value={f.imagemOrigem} onChange={(e) => setF({ ...f, imagemOrigem: e.target.value, imagemConfirmada: e.target.value === f.imagemOrigem ? f.imagemConfirmada : false, correspondenciaImagem: e.target.value === f.imagemOrigem ? f.correspondenciaImagem : "nao_confirmada" })}><option value="propria">Foto própria do produto exato</option><option value="representativa">Imagem representativa da família</option><option value="ilustracao">Ilustração ou diagrama</option></select>
+        </Campo>
+        {f.imagemOrigem === "representativa" && <Campo label="Família representada"><input id="catalogo-imagem-familia" className={inputClasse} value={f.imagemFamilia} onChange={(e) => set("imagemFamilia", e.target.value)} placeholder="Ex.: série 6200" maxLength={40} /></Campo>}
+      </div>
+      <div className="grid gap-2 sm:grid-cols-2">
+        <Campo label="Correspondência da foto" ajuda="Uma imagem marcada como incorreta fica fora do feed do Google até ser substituída e revisada.">
+          <select className={inputClasse} value={f.correspondenciaImagem} disabled={!f.imagens.length || f.imagemOrigem !== "propria"} onChange={(e) => setF({ ...f, correspondenciaImagem: e.target.value as Form["correspondenciaImagem"], imagemConfirmada: e.target.value === "confirmada" })}><option value="nao_confirmada">Ainda não conferida</option><option value="confirmada">Confirmada para este SKU</option><option value="rejeitada">Incorreta para este SKU</option></select>
+        </Campo>
+      </div>
 
       {/* De que é a foto.
           Em catálogo técnico a mesma imagem cobre uma série inteira — é o que
@@ -232,7 +246,7 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoSalvar 
 
       <Recolhivel titulo="Identificação" resumo="marca, SKU, GTIN, MPN" aviso={semIdentificador ? "sem GTIN nem MPN" : null}>
         <div className="grid min-w-0 gap-4 sm:grid-cols-2">
-          <Campo label="Marca"><input className={inputClasse} value={f.marca} onChange={(e) => set("marca", e.target.value)} /></Campo>
+          <Campo label="Marca"><input id="catalogo-marca" className={inputClasse} value={f.marca} onChange={(e) => set("marca", e.target.value)} /></Campo>
           <Campo label="SKU"><input id="catalogo-sku" readOnly={f.temVariacoes} className={inputClasse} value={f.sku} onChange={(e) => set("sku", e.target.value)} /></Campo>
           {/* O GTIN é o que faz o Google e o Mercado Livre reconhecerem que a
               peça é a mesma que o concorrente anuncia. Sem ele o produto fica

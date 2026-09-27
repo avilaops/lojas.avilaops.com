@@ -14,6 +14,8 @@ export const PREFIXO_DE_MEDIDA: Record<ChaveDeMedida, string> = {
   diametroInternoMm: "di",
   diametroExternoMm: "de",
   alturaMm: "alt",
+  espessuraMm: "esp",
+  secaoMm: "sec",
 };
 
 const ORDENS = new Set<OrdemCatalogo>(["relevancia", "menor-preco", "maior-preco", "recentes", "nome"]);
@@ -44,7 +46,8 @@ export function centavosDaUrl(v?: string): number | undefined {
 /** "20", "20,5" ou "20.5" → 20.5. Milímetro aceita vírgula: é como se escreve aqui. */
 export function milimetroDaUrl(v?: string): number | undefined {
   if (!v) return undefined;
-  const n = Number.parseFloat(v.replace(",", "."));
+  if (!/^\d+(?:[.,]\d+)?$/.test(v.trim())) return undefined;
+  const n = Number(v.trim().replace(",", "."));
   return Number.isFinite(n) && n >= 0 ? n : undefined;
 }
 
@@ -71,6 +74,7 @@ export function faixasDaUrl(sp: Record<string, string | undefined>) {
 export function filtroDaUrl(sp: Record<string, string | undefined>): FiltroCatalogo {
   return {
     busca: sp.q?.trim() || undefined,
+    perfil: sp.perfil?.trim() || undefined,
     fabricante: sp.fabricante?.trim() || undefined,
     ordem: ordemDaUrl(sp),
     minCentavos: centavosDaUrl(sp.min),

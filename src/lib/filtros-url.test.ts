@@ -45,17 +45,29 @@ test("faixa com um extremo só vale; sem nenhum, não existe", () => {
   assert.equal(faixasDaUrl({}), undefined);
 });
 
-test("as três medidas convivem numa consulta só", () => {
-  assert.deepEqual(faixasDaUrl({ di_de: "20", di_ate: "25", de_de: "40", alt_ate: "10" }), {
+test("as medidas convivem numa consulta só, inclusive espessura e seção", () => {
+  assert.deepEqual(faixasDaUrl({ di_de: "20", di_ate: "25", de_de: "40", alt_ate: "10", esp_de: "2", sec_ate: "3,5" }), {
     diametroInternoMm: { de: 20, ate: 25 },
     diametroExternoMm: { de: 40, ate: undefined },
     alturaMm: { de: undefined, ate: 10 },
+    espessuraMm: { de: 2, ate: undefined },
+    secaoMm: { de: undefined, ate: 3.5 },
   });
 });
 
+test("medida tem que ser número: lixo na URL não filtra", () => {
+  // `parseFloat` aceitava "20abc" como 20 e a loja filtrava por uma medida
+  // que ninguém pediu — pior que ignorar, porque a lista encurta calada.
+  assert.equal(faixasDaUrl({ di_de: "20abc" }), undefined);
+  assert.equal(faixasDaUrl({ di_de: "abc" }), undefined);
+  assert.equal(faixasDaUrl({ di_de: "-5" }), undefined);
+  assert.deepEqual(faixasDaUrl({ di_de: " 20,5 " }), { diametroInternoMm: { de: 20.5, ate: undefined } });
+});
+
 test("o filtro inteiro sai da URL, com espaço em branco fora", () => {
-  assert.deepEqual(filtroDaUrl({ q: "  6205  ", fabricante: " FAG ", min: "10", max: "", ordem: "nome", di_de: "25" }), {
+  assert.deepEqual(filtroDaUrl({ q: "  6205  ", perfil: " SC ", fabricante: " FAG ", min: "10", max: "", ordem: "nome", di_de: "25" }), {
     busca: "6205",
+    perfil: "SC",
     fabricante: "FAG",
     ordem: "nome",
     minCentavos: 1000,
@@ -67,8 +79,9 @@ test("o filtro inteiro sai da URL, com espaço em branco fora", () => {
 test("URL sem filtro nenhum não inventa filtro", () => {
   // Campo em branco no formulário chega como "": não pode virar busca por "",
   // que no Prisma casaria com tudo e trocaria a ordem da listagem.
-  assert.deepEqual(filtroDaUrl({ q: "", fabricante: "", pagina: "3" }), {
+  assert.deepEqual(filtroDaUrl({ q: "", perfil: "", fabricante: "", pagina: "3" }), {
     busca: undefined,
+    perfil: undefined,
     fabricante: undefined,
     ordem: "relevancia",
     minCentavos: undefined,
