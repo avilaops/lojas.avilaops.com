@@ -51,6 +51,8 @@ rm -rf "$APP/.next/static" "$APP/public" "$APP/prisma"
 cp -r .next/static "$APP/.next/static"
 cp -r public "$APP/public"
 cp -r prisma "$APP/prisma"
+cp -r scripts "$APP/"
+cp -r deploy "$APP/"
 # A revisão acompanha o pacote para permitir auditar o domínio após o SSH.
 git rev-parse HEAD > "$APP/REVISION"
 node -e 'const fs=require("fs"),cp=require("child_process"); fs.writeFileSync(process.argv[1],JSON.stringify({commit:cp.execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),buildId:fs.readFileSync(".next/BUILD_ID","utf8").trim()}))' "$APP/public/versao.json"
@@ -69,22 +71,23 @@ rm -f "$SAIDA"
 # o deploy só descobre ao descompactar, com o container já parando.
 tmp="$SAIDA.parcial"
 rm -f "$tmp"
-# O /tmp do servidor é tmpfs. Montar o estágio ao lado de .next evita duplicar
-# 180 MB temporários na RAM e preserva espaço para o runtime dos containers.
-stage=$(mktemp -d ".next/lojas-stage.XXXXXX")
-mkdir -p "$stage/lojas.avilaops.com"
-cp -a "$APP/." "$stage/lojas.avilaops.com/"
+# O rastreamento dinâmico de uploads pode copiar arquivos de trabalho para o
+# standalone. Empacotar só a aplicação evita carregar evidências, exportações,
+# arquivos de ambiente e caches de desenvolvimento. O transform normaliza a
+# raiz sem duplicar o runtime em outro estágio e sem alterar alvos de symlinks.
+itens=(.next node_modules package.json server.js public prisma REVISION)
+for item in src scripts deploy packages next.config.ts; do
+  [ ! -e "$APP/$item" ] || itens+=("$item")
+done
 if ! tar --force-local \
-  --exclude='./lojas.avilaops.com/output' --exclude='./lojas.avilaops.com/output/**' \
-  --exclude='./output' --exclude='./output/**' \
   --exclude='.env*' --exclude='evidencias' --exclude='tmp' \
-  -czf "$tmp" -C "$stage" .; then
-  rm -rf "$stage"
+  --exclude='.next/cache' --exclude='.next/dev' --exclude='node_modules/.cache' \
+  --transform='flags=r;s,^,./lojas.avilaops.com/,' \
+  -czf "$tmp" -C "$APP" "${itens[@]}"; then
   rm -f "$tmp"
   echo "!! tar falhou; nada foi gerado" >&2
   exit 1
 fi
-rm -rf "$stage"
 gzip -t "$tmp" || { rm -f "$tmp"; echo "!! gzip corrompido" >&2; exit 1; }
 mv "$tmp" "$SAIDA"
 
