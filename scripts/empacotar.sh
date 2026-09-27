@@ -32,7 +32,7 @@ fi
 # no deploy.
 echo "==> esperando o build assentar"
 for _ in $(seq 1 45); do
-  quantos=$(find .next -newermt '-8 seconds' -type f 2>/dev/null | wc -l)
+  quantos=$(find .next/server .next/static -newermt '-8 seconds' -type f 2>/dev/null | wc -l)
   [ "$quantos" -eq 0 ] && break
   printf "\r    %s arquivo(s) ainda sendo escritos…" "$quantos"
   sleep 4
