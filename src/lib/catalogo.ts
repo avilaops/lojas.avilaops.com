@@ -1,4 +1,4 @@
-import { consultaDimensional, confereDimensoes, codigoExato } from "./busca-tecnica";
+import { consultaDimensional, confereDimensoes, codigoExato, consultaParDeMedidas, confereParNoNome } from "./busca-tecnica";
 import type { Prisma, Produto, Categoria } from "@prisma/client";
 import type { ItemCarrinho } from "@avilaops/checkout";
 import { cache } from "react";
@@ -206,13 +206,13 @@ function singular(t: string): string {
   return cortado.length >= 4 ? cortado : t;
 }
 
-export async function listarProdutos(tenantId: string, filtro?: FiltroCatalogo) {
+function condicaoProdutos(tenantId: string, filtro?: FiltroCatalogo): Prisma.ProdutoWhereInput {
   const dimensional = filtro?.busca ? consultaDimensional(filtro.busca) : null;
-  const termos = termosDeBusca(dimensional?.texto ?? filtro?.busca ?? "");
-  const posFiltro = Boolean(filtro?.moto || filtro?.medidas || filtro?.busca);
-
-  const produtos = await prisma.produto.findMany({
-    where: {
+  const par = !dimensional && filtro?.busca ? consultaParDeMedidas(filtro.busca) : null;
+  // O índice já contém as medidas normalizadas pelo gatilho. Reduz os
+  // candidatos antes de conferir valor, ordem e unidade no atributo original.
+  const termos = [...termosDeBusca(dimensional?.texto ?? par?.texto ?? filtro?.busca ?? ""), ...(dimensional?.valores.map(String) ?? [])];
+  return {
       tenantId,
       ativo: true,
       ...(filtro?.destaque ? { destaque: true } : {}),
@@ -226,9 +226,18 @@ export async function listarProdutos(tenantId: string, filtro?: FiltroCatalogo) 
         : {}),
       ...(termos.length ? { AND: termos.map((t) => ({ busca: { contains: t } })) } : {}),
       ...(filtro?.perfil ? { atributos: { path: ["perfil"], equals: filtro.perfil } } : {}),
-    },
+    };
+}
+
+export async function listarProdutos(tenantId: string, filtro?: FiltroCatalogo) {
+  const dimensional = filtro?.busca ? consultaDimensional(filtro.busca) : null;
+  const par = !dimensional && filtro?.busca ? consultaParDeMedidas(filtro.busca) : null;
+  const posFiltro = Boolean(filtro?.moto || filtro?.medidas || filtro?.busca);
+
+  const produtos = await prisma.produto.findMany({
+    where: condicaoProdutos(tenantId, filtro),
     include: { categoria: true, variantes: { where: { tenantId, ativo: true }, select: { sku: true, mpn: true, gtin: true } } },
-    orderBy: ORDENS[filtro?.ordem ?? "relevancia"],
+    orderBy: [...ORDENS[filtro?.ordem ?? "relevancia"], { id: "asc" }],
     // Com moto ou medida escolhida o corte é feito depois, então o limite também.
     ...(filtro?.limite && !posFiltro ? { take: filtro.limite, skip: filtro.pular ?? 0 } : {}),
   });
@@ -239,6 +248,7 @@ export async function listarProdutos(tenantId: string, filtro?: FiltroCatalogo) 
   // moto: o catálogo de uma loja cabe na memória, e a alternativa seria SQL
   // cru, perdendo a tipagem em troca de milissegundos que ninguém percebe.
   let lista = dimensional ? produtos.filter(p => confereDimensoes(p.atributos, dimensional.valores)) : produtos;
+  if (par) lista = lista.filter(p => confereParNoNome(p.nome, par.valores));
   if (filtro?.busca && (!filtro.ordem || filtro.ordem === "relevancia")) {
     lista.sort((a, b) => Number(codigoExato(b, filtro.busca!)) - Number(codigoExato(a, filtro.busca!)));
   }
@@ -588,4 +598,17 @@ export async function facetasTecnicas(tenantId: string, categoriaSlug?: string) 
   const fabricantes = [...new Set(linhas.map(p => p.marca).filter((m): m is string => !!m && m.toLowerCase() !== "diversos"))].sort();
   const perfis = categoriaSlug ? [...new Set(linhas.map(p => (p.atributos as Record<string, unknown> | null)?.perfil).filter((p): p is string => typeof p === "string" && !!p.trim()))].sort() : [];
   return { fabricantes, perfis };
+}
+
+/** Contagem no banco para os filtros simples; os demais contam após comparar atributos. */
+export async function paginaDeProdutos(tenantId: string, filtro: FiltroCatalogo, limite: number, pular: number) {
+  if (filtro.busca || filtro.medidas || filtro.moto) {
+    const todos = await listarProdutos(tenantId, filtro);
+    return { total: todos.length, produtos: todos.slice(pular, pular + limite) };
+  }
+  const [total, produtos] = await Promise.all([
+    prisma.produto.count({ where: condicaoProdutos(tenantId, filtro) }),
+    listarProdutos(tenantId, { ...filtro, limite, pular }),
+  ]);
+  return { total, produtos };
 }

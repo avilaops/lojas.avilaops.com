@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { consultaDimensional, confereDimensoes, codigoExato, normalizarBusca } from "./busca-tecnica";
+import { consultaDimensional, confereDimensoes, codigoExato, normalizarBusca, consultaParDeMedidas, confereParNoNome } from "./busca-tecnica";
 
 test("medidas equivalentes conservam decimal e ordem", () => {
   for (const q of ["Retentor 35x52x8,5", "RETENTOR 35 mm × 52 mm × 8.5 mm", "retentor 35 X 52 X 8,50"]) {
@@ -22,4 +22,13 @@ test("código exato não é substring nem perde zeros", () => {
   assert.equal(codigoExato({ sku: "5465" }, "5465"), true);
   assert.equal(codigoExato({ variantes: [{ sku: null, mpn: "HE310", gtin: null }] }, "he310"), true);
   assert.equal(normalizarBusca("  VÁLVULA   pressão  "), "valvula pressao");
+});
+
+test("par de medidas só casa com o par explícito no nome, na mesma ordem", () => {
+  const c = consultaParDeMedidas("Anel 20 x 3,5 mm")!;
+  assert.deepEqual(c.valores, [20, 3.5]);
+  assert.equal(confereParNoNome("Anel 20 mm × 3.5 mm NBR", c.valores), true);
+  assert.equal(confereParNoNome("Anel 3,5x20", c.valores), false);
+  assert.equal(confereParNoNome("Anel 20x30x3,5", c.valores), false);
+  assert.equal(consultaParDeMedidas("20x30x3,5"), null);
 });

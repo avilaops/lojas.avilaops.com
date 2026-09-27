@@ -24,6 +24,26 @@ export function confereDimensoes(atributos: unknown, valores: number[]): boolean
   });
 }
 
+/** Um par pode ser DI × cordão, DI × DE etc. Só compara a sequência
+ * explicitamente escrita no nome, sem atribuir um significado aos campos. */
+export function consultaParDeMedidas(texto: string) {
+  const normal = normalizarBusca(texto);
+  if (/pol|inch|["″/]/.test(normal)) return null;
+  const padrao = /\d+(?:[.,]\d+)?\s*(?:mm\s*)?[x×]\s*\d+(?:[.,]\d+)?\s*(?:mm\b)?/;
+  const m = normal.match(padrao);
+  if (!m || /[x×]/.test(normal.replace(m[0], ""))) return null;
+  const valores = m[0].match(/\d+(?:[.,]\d+)?/g)!.map(v => Number(v.replace(",", ".")));
+  return { texto: normal.replace(m[0], " ").trim(), valores };
+}
+
+export function confereParNoNome(nome: string, valores: number[]): boolean {
+  const sequencias = normalizarBusca(nome).matchAll(/\d+(?:[.,]\d+)?\s*(?:mm\s*)?(?:[x×]\s*\d+(?:[.,]\d+)?\s*(?:mm\s*)?){1,2}/g);
+  return [...sequencias].some(m => {
+    const ns = m[0].match(/\d+(?:[.,]\d+)?/g)!.map(v => Number(v.replace(",", ".")));
+    return ns.length === 2 && ns.every((n, i) => n === valores[i]);
+  });
+}
+
 export function codigoExato(produto: { sku?: string | null; codigoOriginal?: string | null; codigosEquivalentes?: string[]; atributos?: unknown; variantes?: { sku: string | null; mpn: string | null; gtin: string | null }[] }, consulta: string): boolean {
   const a = (produto.atributos ?? {}) as Record<string, unknown>;
   const codigos = [produto.sku, produto.codigoOriginal, ...(produto.codigosEquivalentes ?? []), a.referencia, a.codigoFabricante, a.mpn,

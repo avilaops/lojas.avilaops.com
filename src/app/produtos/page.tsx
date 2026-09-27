@@ -5,7 +5,7 @@ import { metadataDeListagem } from "@/lib/seo-listagem";
 import PaginacaoLoja, { POR_PAGINA, paginaDaUrl } from "@/components/PaginacaoLoja";
 import { exigirTenant, lojaVende, temaDo } from "@/lib/tenant";
 import CategoriasPremium from "@/components/templates/automotivo-premium/Categorias";
-import { listarCategorias, listarProdutos, facetasTecnicas, medidasDaLoja, type ChaveDeMedida, type OrdemCatalogo } from "@/lib/catalogo";
+import { listarCategorias, paginaDeProdutos, facetasTecnicas, medidasDaLoja, type ChaveDeMedida, type OrdemCatalogo } from "@/lib/catalogo";
 import ProductCard from "@/components/ProductCard";
 import FiltrosProdutos from "@/components/FiltrosProdutos";
 import { minhaMoto } from "@/lib/minha-moto";
@@ -71,14 +71,14 @@ export default async function Produtos({ searchParams }: { searchParams: Promise
   const pagina = paginaDaUrl(sp);
   const [categorias, lote, temMedida, facetas] = await Promise.all([
     listarCategorias(t.id),
-    listarProdutos(t.id, { busca: sp.q?.trim() || undefined, perfil: sp.perfil || undefined, fabricante: sp.fabricante?.trim() || undefined, categoriaSlug: sp.categoria || undefined, ordem, minCentavos: reais(sp.min), maxCentavos: reais(sp.max), moto, medidas }),
+    paginaDeProdutos(t.id, { busca: sp.q?.trim() || undefined, perfil: sp.perfil || undefined, fabricante: sp.fabricante?.trim() || undefined, categoriaSlug: sp.categoria || undefined, ordem, minCentavos: reais(sp.min), maxCentavos: reais(sp.max), moto, medidas }, POR_PAGINA, (pagina - 1) * POR_PAGINA),
     // O filtro de medida só aparece onde faz sentido: loja de roupa não tem
     // diâmetro interno, e campo que nunca filtra nada é ruído no formulário.
     medidasDaLoja(t.id, sp.categoria || undefined),
     facetasTecnicas(t.id, sp.categoria || undefined),
   ]);
-  const produtos = lote.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
-  const temProxima = lote.length > pagina * POR_PAGINA;
+  const produtos = lote.produtos;
+  const temProxima = lote.total > pagina * POR_PAGINA;
   // Página além do fim é 404, não "nada encontrado" com 200: senão qualquer
   // ?pagina=999999 vira uma URL válida a mais para o Google guardar.
   if (produtos.length === 0 && pagina > 1) notFound();
@@ -91,7 +91,7 @@ export default async function Produtos({ searchParams }: { searchParams: Promise
       {premium && <CategoriasPremium categorias={[...categorias].sort((a,b)=>a.ordem-b.ordem)} atual={sp.categoria ?? "todas"}/>}
       <h1 className="mb-1 text-2xl font-bold">{titulo}</h1>
       <p className="mb-4 text-sm text-muted-foreground">
-        {lote.length} {lote.length === 1 ? "produto encontrado" : "produtos encontrados"} · Página {pagina}
+        {lote.total} {lote.total === 1 ? "produto encontrado" : "produtos encontrados"} · Página {pagina}
         {moto && (sp.q || categoriaAtual) && <>Mostrando o que serve na {nomeDaMoto(moto)}</>}
         {moto && <> · <Link href="/produtos?moto=todas" className="underline">ver catálogo completo</Link></>}
       </p>
