@@ -1,2 +1,2 @@
-nome;preco;categoria;marca;sku;gtin;preco_de;descricao_curta;descricao;imagem;destaque;peso_kg;altura_cm;largura_cm;comprimento_cm;estoque;ativo
-Camiseta essencial;79,90;Camisetas;Minha Marca;CAM-001;7891234567895;99,90;Camiseta confortável para o dia a dia;Descrição completa do produto;https://exemplo.com/imagem.jpg;sim;0,3;5;25;35;12;sim
+﻿nome;preco;categoria;google_product_category;marca;sku;gtin;mpn;identificadores_estado;preco_de;descricao_curta;descricao;imagem;imagens;atributos_json;imagem_origem;imagem_familia;confirmar_imagem_exata;correspondencia_imagem;destaque;peso_kg;altura_cm;largura_cm;comprimento_cm;estoque;ativo
+Camiseta essencial;79,90;Camisetas;212;Minha Marca;CAM-001;7891234567895;COD-FAB-001;informado;99,90;Camiseta confortável para o dia a dia;Descrição completa do produto;https://exemplo.com/imagem.jpg;https://exemplo.com/imagem.jpg;{};propria;;;nao_confirmada;sim;0,3;5;25;35;12;sim

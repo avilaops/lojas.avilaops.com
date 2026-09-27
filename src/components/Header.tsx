@@ -3,6 +3,7 @@ import { Store } from "lucide-react";
 import type { TenantPublico } from "@/lib/tenant";
 import CartButton from "@/components/cart/CartButton";
 import BuscaLoja from "@/components/BuscaLoja";
+import MenuMobile from "@/components/MenuMobile";
 
 /**
  * Quantas categorias entram na barra e nos atalhos com foto.
@@ -13,14 +14,14 @@ import BuscaLoja from "@/components/BuscaLoja";
  */
 export const PRINCIPAIS = 8;
 
-export default function Header({ loja, logoUrl, categorias, exemploBusca }: { loja: TenantPublico; logoUrl: string | null; categorias: Array<{ slug: string; nome: string }>; exemploBusca?: string | null }) {
+export default function Header({ loja, logoUrl, categorias, exemploBusca, mostrarPromocoes = false, mostrarNome = true }: { loja: TenantPublico; logoUrl: string | null; categorias: Array<{ slug: string; nome: string }>; exemploBusca?: string | null; mostrarPromocoes?: boolean; mostrarNome?: boolean }) {
   return (
     <header className="cabecalho-loja sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur-xl">
       <div className="container-loja flex h-[72px] items-center gap-4">
         <Link href="/" className="marca-loja flex items-center gap-2.5 font-bold" aria-label={loja.nome}>
           {logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={logoUrl} alt={loja.nome} className="h-11 w-auto sm:h-12" />
+            <><img src={logoUrl} alt="" className="h-11 w-auto sm:h-12" />{mostrarNome && <span className="marca-loja-nome">{loja.nome}</span>}</>
           ) : (
             <><span className="marca-loja-icone"><Store className="h-4 w-4" /></span><span className="text-lg tracking-tight">{loja.nome}</span></>
           )}
@@ -36,6 +37,7 @@ export default function Header({ loja, logoUrl, categorias, exemploBusca }: { lo
             Minha conta
           </Link>
         )}
+        <MenuMobile className="ml-auto sm:hidden" nome={loja.nome} vende={loja.vende} mostrarPromocoes={mostrarPromocoes} categorias={categorias} />
         {loja.vende && <CartButton />}
       </div>
 
@@ -50,6 +52,7 @@ export default function Header({ loja, logoUrl, categorias, exemploBusca }: { lo
             <Link href="/produtos" className="whitespace-nowrap font-semibold text-foreground">
               Todos
             </Link>
+            {mostrarPromocoes && <Link href="/promocoes" className="whitespace-nowrap font-semibold text-primary">Promoções</Link>}
             {categorias.slice(0, PRINCIPAIS).map((c) => (
               <Link key={c.slug} href={`/categoria/${c.slug}`} className="whitespace-nowrap text-muted-foreground hover:text-foreground">
                 {c.nome}

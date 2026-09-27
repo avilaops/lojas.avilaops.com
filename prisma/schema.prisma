@@ -293,6 +293,8 @@ model Produto {
   marca                String?
   sku                  String?
   gtin                 String?
+  /// Categoria Google confirmada por item: ID ou caminho da taxonomia oficial.
+  googleProductCategory String?
   /// Centavos. Nunca float — ver packages/checkout/src/core/types.ts.
   precoCentavos        Int
   precoDeCentavos      Int? // "de R$ X por R$ Y"

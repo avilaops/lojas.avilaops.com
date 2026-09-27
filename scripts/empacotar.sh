@@ -16,6 +16,11 @@ cd "$(dirname "$0")/.."
 
 SAIDA="${1:-/tmp/lojas-standalone.tgz}"
 APP=".next/standalone/lojas.avilaops.com"
+if [ ! -d "$APP" ] && [ -f ".next/standalone/server.js" ]; then
+  # Quando o build roda dentro da pasta do app, o Next escreve o standalone
+  # direto na raiz. Em monorepo ele mantém a pasta lojas.avilaops.com.
+  APP=".next/standalone"
+fi
 
 [ -d "$APP" ] || { echo "!! falta $APP; rode 'npm run build' antes" >&2; exit 1; }
 
@@ -27,7 +32,7 @@ APP=".next/standalone/lojas.avilaops.com"
 # no deploy.
 echo "==> esperando o build assentar"
 for _ in $(seq 1 45); do
-  quantos=$(find .next -newermt '-8 seconds' -type f 2>/dev/null | wc -l)
+  quantos=$(find .next/server .next/static -newermt '-8 seconds' -type f 2>/dev/null | wc -l)
   [ "$quantos" -eq 0 ] && break
   printf "\r    %s arquivo(s) ainda sendo escritos…" "$quantos"
   sleep 4
@@ -46,6 +51,18 @@ rm -rf "$APP/.next/static" "$APP/public" "$APP/prisma"
 cp -r .next/static "$APP/.next/static"
 cp -r public "$APP/public"
 cp -r prisma "$APP/prisma"
+cp -r scripts "$APP/"
+cp -r deploy "$APP/"
+# A revisão acompanha o pacote para permitir auditar o domínio após o SSH.
+git rev-parse HEAD > "$APP/REVISION"
+node -e 'const fs=require("fs"),cp=require("child_process"); fs.writeFileSync(process.argv[1],JSON.stringify({commit:cp.execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),buildId:fs.readFileSync(".next/BUILD_ID","utf8").trim()}))' "$APP/public/versao.json"
+# O ONNX é externalizado pelo Next, mas o binário standalone não copia a
+# biblioteca Linux que o binding carrega em runtime. Sem ela, /uploads retorna
+# 500 ao tentar otimizar imagens, embora o health check simples siga verde.
+onnx_lib=$(find node_modules/onnxruntime-node/bin -path '*/linux/x64/libonnxruntime.so.1' -print -quit 2>/dev/null || true)
+[ -n "$onnx_lib" ] || { echo "!! falta libonnxruntime.so.1 para o runtime Linux" >&2; exit 1; }
+mkdir -p "$APP/node_modules/onnxruntime-node/bin/napi-v6/linux/x64"
+cp "$onnx_lib" "$APP/node_modules/onnxruntime-node/bin/napi-v6/linux/x64/"
 
 echo "==> empacotando"
 rm -f "$SAIDA"
@@ -54,7 +71,19 @@ rm -f "$SAIDA"
 # o deploy só descobre ao descompactar, com o container já parando.
 tmp="$SAIDA.parcial"
 rm -f "$tmp"
-if ! tar --force-local -czf "$tmp" -C .next/standalone .; then
+# O rastreamento dinâmico de uploads pode copiar arquivos de trabalho para o
+# standalone. Empacotar só a aplicação evita carregar evidências, exportações,
+# arquivos de ambiente e caches de desenvolvimento. O transform normaliza a
+# raiz sem duplicar o runtime em outro estágio e sem alterar alvos de symlinks.
+itens=(.next node_modules package.json server.js public prisma REVISION)
+for item in src scripts deploy packages next.config.ts; do
+  [ ! -e "$APP/$item" ] || itens+=("$item")
+done
+if ! tar --force-local \
+  --exclude='.env*' --exclude='evidencias' --exclude='tmp' \
+  --exclude='.next/cache' --exclude='.next/dev' --exclude='node_modules/.cache' \
+  --transform='flags=r;s,^,./lojas.avilaops.com/,' \
+  -czf "$tmp" -C "$APP" "${itens[@]}"; then
   rm -f "$tmp"
   echo "!! tar falhou; nada foi gerado" >&2
   exit 1

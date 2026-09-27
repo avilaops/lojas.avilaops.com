@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import CapaCategoria from "@/components/CapaCategoria";
 import { exigirTenant, lojaVende, urlDaLoja, temaDo } from "@/lib/tenant";
-import { listarProdutos, listarCategorias } from "@/lib/catalogo";
+import { listarProdutos, listarCategorias, slugificar } from "@/lib/catalogo";
 import CategoriasPremium from "@/components/templates/automotivo-premium/Categorias";
 import PaginacaoLoja, { POR_PAGINA, paginaDaUrl } from "@/components/PaginacaoLoja";
 import ProductCard from "@/components/ProductCard";
@@ -13,6 +13,33 @@ import { buscarCategoriaPublica } from "@/lib/categorias";
 import Trilha from "@/components/Trilha";
 import { metadataDeListagem } from "@/lib/seo-listagem";
 
+async function resolverCategoria(t: Awaited<ReturnType<typeof exigirTenant>>, slug: string) {
+  const ativas = await listarCategorias(t.id);
+  const direta = await buscarCategoriaPublica(t.id, slug);
+  if (direta) {
+    // Uma categoria duplicada continua acessível por slug enquanto contém
+    // produtos. Só redirecionamos a origem depois que a consolidação a esvazia.
+    if (ativas.some((categoria) => categoria.slug === direta.slug)) return direta;
+    const mesmaCategoriaAtiva = ativas
+      .filter((categoria) => slugificar(categoria.nome) === slugificar(direta.nome))
+      .sort((a, b) => b._count.produtos - a._count.produtos || a.ordem - b.ordem)[0];
+    if (mesmaCategoriaAtiva) return mesmaCategoriaAtiva;
+    return direta;
+  }
+  // O slug sem acento do nome é a rota canônica em lojas que usam nomes
+  // regulares. Ex.: /categoria/o-rings resolve para /categoria/anel-o-ring
+  // somente se houver uma única categoria correspondente.
+  const aliases: Record<string, string> = { "o-rings": "anel-o-ring" };
+  const slugAlternativo = aliases[slug];
+  if (slugAlternativo) {
+    const canonica = ativas.find((categoria) => categoria.slug === slugAlternativo);
+    if (canonica) return canonica;
+  }
+  const candidatas = ativas.filter((categoria) => slugificar(categoria.nome) === slug);
+  if (candidatas.length === 1) return candidatas[0];
+  return candidatas.sort((a, b) => b._count.produtos - a._count.produtos || a.ordem - b.ordem)[0] ?? null;
+}
+
 type Props = {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ marca?: string; modelo?: string; ano?: string; moto?: string; pagina?: string }>;
@@ -21,7 +48,7 @@ type Props = {
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const t = await exigirTenant();
   const [{ slug }, sp] = await Promise.all([params, searchParams]);
-  const categoria = await buscarCategoriaPublica(t.id, slug);
+  const categoria = await resolverCategoria(t, slug);
 
   if (!categoria) {
     return {
@@ -45,8 +72,9 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 export default async function Categoria({ params, searchParams }: Props) {
   const t = await exigirTenant();
   const [{ slug }, sp] = await Promise.all([params, searchParams]);
-  const categoria = await buscarCategoriaPublica(t.id, slug);
+  const categoria = await resolverCategoria(t, slug);
   if (!categoria) notFound();
+  if (categoria.slug !== slug) permanentRedirect(`/categoria/${categoria.slug}`);
   const moto = t.segmento === "motopecas" ? await minhaMoto(sp) : null;
   // Paginado como /produtos: "Retentores" na Vedashow são 2.003 cards, e
   // mandar todos de uma vez é o que fazia a página demorar segundos.
@@ -80,6 +108,7 @@ export default async function Categoria({ params, searchParams }: Props) {
         ) : null}
       </p>
 
+      <Link href={`/produtos?categoria=${encodeURIComponent(categoria.slug)}`} className="btn-secundario mb-6">Buscar e filtrar nesta categoria</Link>
       {produtos.length === 0 ? (
         <section className="rounded-xl border border-dashed border-border bg-card p-8 text-center" aria-labelledby="categoria-vazia-titulo">
           <h2 id="categoria-vazia-titulo" className="font-semibold">Nenhum produto encontrado</h2>

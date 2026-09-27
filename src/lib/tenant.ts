@@ -4,6 +4,8 @@ import type { Tenant } from "@prisma/client";
 import { prisma } from "./db";
 import { lerTema, type TemaLoja } from "./tema";
 import { lerIdentidade, type IdentidadeLoja } from "./identidade";
+import { retiradaPublicaDisponivel } from "./retirada-publica";
+export { retiradaPublicaDisponivel } from "./retirada-publica";
 
 /**
  * Resolução da loja pelo Host.
@@ -160,7 +162,7 @@ export function tenantPublico(t: Tenant) {
     whatsapp: t.whatsapp,
     mpPublicKey: t.mpPublicKey,
     meiosPagamento: t.meiosPagamento,
-    retiradaNaLoja: t.retiradaNaLoja,
+    retiradaNaLoja: retiradaPublicaDisponivel(t),
     despachoDiasUteis: t.despachoDiasUteis,
     estoqueBaixoEm: t.estoqueBaixoEm,
     freteGratisAcima: t.freteGratisAcima,

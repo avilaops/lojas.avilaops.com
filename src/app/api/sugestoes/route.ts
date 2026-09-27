@@ -7,7 +7,7 @@ import { prisma } from "@/lib/db";
  * é o cliente: manda os ids que já tem e recebe até quatro produtos ativos das
  * mesmas categorias, sem repetir o que já está lá.
  *
- * Público de propósito — é o mesmo que qualquer visitante vê na vitrine.
+ * Rota pública por propósito, com os mesmos itens que qualquer visitante vê.
  */
 const Entrada = z.object({ ids: z.array(z.string().max(40)).max(50) });
 
@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   const noCarrinho = ids.length ? await prisma.produto.findMany({ where: { tenantId: t.id, id: { in: ids } }, select: { categoriaId: true } }) : [];
   const categorias = [...new Set(noCarrinho.map((p) => p.categoriaId).filter((c): c is string => Boolean(c)))];
 
-  const comum = { tenantId: t.id, ativo: true, disponibilidade: { not: "out_of_stock" }, id: { notIn: ids } };
+  const comum = { tenantId: t.id, ativo: true, precoCentavos: { gt: 0 }, disponibilidade: { not: "out_of_stock" }, id: { notIn: ids } };
   const seleciona = { id: true, slug: true, nome: true, precoCentavos: true, imagens: true } as const;
 
   // Primeiro o que combina com o carrinho; se a loja ainda tem poucas

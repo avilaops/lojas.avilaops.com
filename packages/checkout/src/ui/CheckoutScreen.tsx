@@ -139,7 +139,10 @@ export default function CheckoutScreen({
   const [cliente, setCliente] = useState<Cliente>({ ...VAZIO_CLIENTE, ...clienteInicial });
   const [endereco, setEndereco] = useState<EnderecoEntrega>({ ...VAZIO_ENDERECO, ...enderecoInicial });
   const [opcoesFrete, setOpcoesFrete] = useState<OpcaoFrete[]>(fretes);
-  const [freteId, setFreteId] = useState<string>(fretes[0]?.id ?? "");
+  const [freteId, setFreteId] = useState<string>(() => {
+    const primeiraOpcao = fretes[0];
+    return primeiraOpcao?.id === FRETE_RETIRADA_ID ? "" : primeiraOpcao?.id ?? "";
+  });
   const [meio, setMeio] = useState<MeioPagamento>(meiosPagamento[0] ?? "pix");
   const [parcelas, setParcelas] = useState(1);
   const [erros, setErros] = useState<Record<string, string>>({});
@@ -374,7 +377,7 @@ export default function CheckoutScreen({
                       </span>
                     </span>
                     <span className="ck-option-price">
-                      {f.preco === 0 ? "Grátis" : formatarBRL(f.preco)}
+                      {f.id === FRETE_RETIRADA_ID && f.preco === 0 ? "Retirada grátis" : f.preco === 0 ? "Grátis" : formatarBRL(f.preco)}
                     </span>
                   </label>
                 ))}
@@ -557,7 +560,7 @@ export default function CheckoutScreen({
           <div className="ck-summary-line">
             <span>Entrega</span>
             <span>
-              {frete ? (totais.frete === 0 ? "Grátis" : formatarBRL(totais.frete)) : "A calcular"}
+              {frete ? (retirada ? "Retirada grátis" : totais.frete === 0 ? "Grátis" : formatarBRL(totais.frete)) : "Informe o CEP"}
             </span>
           </div>
           {totais.desconto > 0 && (

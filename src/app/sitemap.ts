@@ -1,7 +1,8 @@
 import type { MetadataRoute } from "next";
 import { headers } from "next/headers";
-import { tenantAtual, urlDaLoja } from "@/lib/tenant";
+import { tenantAtual, temaDo, urlDaLoja } from "@/lib/tenant";
 import { listarCategorias, listarProdutos, produtoPublicavel } from "@/lib/catalogo";
+import { campanhasDaLoja } from "@/lib/campanhas";
 import { postsPublicados } from "@/lib/blog";
 import { listarPublicadas } from "@/lib/publicacoes-consulta";
 import { politicasPublicadas } from "@/lib/politicas";
@@ -32,9 +33,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (!t || t.status !== "ATIVA") return [];
   const base = urlDaLoja(t);
   const [categorias, produtos, publicacoes] = await Promise.all([listarCategorias(t.id), listarProdutos(t.id), listarPublicadas(t.id, 500)]);
+  const temPromocoes = campanhasDaLoja(temaDo(t)).length > 0 || produtos.some((p) =>
+    produtoPublicavel(p)
+    && p.precoCentavos > 0
+    && p.precoDeCentavos != null
+    && p.precoDeCentavos > p.precoCentavos
+    && p.imagens.length > 0
+    && p.imagemOrigem === "propria"
+    && p.disponibilidade !== "out_of_stock"
+    && (p.estoque == null || p.estoque > 0),
+  );
   return [
     { url: base, changeFrequency: "daily", priority: 1 },
     { url: `${base}/produtos`, changeFrequency: "daily", priority: 0.9 },
+    ...(temPromocoes ? [{ url: `${base}/promocoes`, changeFrequency: "daily" as const, priority: 0.8 }] : []),
     ...categorias.map((c) => ({ url: `${base}/categoria/${c.slug}`, lastModified: c.atualizadoEm, changeFrequency: "weekly" as const, priority: 0.7 })),
     // Só o que tem foto ou preço. A Vedashow mandava 5.589 produtos ao Google
     // com 2.100 vendáveis: o resto era nome e ficha, sem nada para exibir, e

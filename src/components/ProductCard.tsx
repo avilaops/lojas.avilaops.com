@@ -1,3 +1,4 @@
+import { fichaDoProduto } from "@/lib/ficha";
 import Link from "next/link";
 import * as regras from "@/lib/produto-regras";
 import type { Produto } from "@prisma/client";
@@ -6,12 +7,16 @@ import AddToCartButton from "@/components/cart/AddToCartButton";
 import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
 import { encaixe, lerCompatibilidade, type Moto } from "@/lib/motos";
 import { exigeReceita, lerMedicamento, vendaRemotaProibida } from "@/lib/farmacia";
+import { marcaConfirmada } from "@/lib/marca-confirmada";
 
-export default function ProductCard({ produto, vende, whatsapp, moto = null }: { produto: Produto; vende: boolean; whatsapp: string | null; moto?: Moto | null }) {
+export default function ProductCard({ produto, vende, whatsapp, moto = null, ocultarSeloDestaque = false, compacto = false, alternarImagem = true }: { produto: Produto; vende: boolean; whatsapp: string | null; moto?: Moto | null; ocultarSeloDestaque?: boolean; compacto?: boolean; alternarImagem?: boolean }) {
   const serve = moto != null && encaixe(produto.compatibilidade, moto) === "serve";
   const modelos = lerCompatibilidade(produto.compatibilidade);
   const imagem = produto.imagens[0];
-  const segundaImagem = produto.imagens[1];
+  const segundaImagem = alternarImagem ? produto.imagens[1] : undefined;
+  const ficha = fichaDoProduto(produto.atributos as Record<string, unknown> | null);
+  const tecnicos = ficha.filter(l => l.unidade === "mm" || ["referencia", "perfil"].includes(l.chave)).slice(0, 5);
+  const marca = marcaConfirmada(produto.marca);
   const miniatura = imagem && /\/uploads\//.test(imagem) && !/\.svg$/i.test(imagem) ? `${imagem}?w=480` : imagem;
   const miniatura2 = segundaImagem && /\/uploads\//.test(segundaImagem) && !/\.svg$/i.test(segundaImagem) ? `${segundaImagem}?w=480` : segundaImagem;
   // Preço zero é "ainda não precificado", não "de graça". Catálogo importado
@@ -47,7 +52,7 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null }: {
               src={miniatura}
               alt={produto.nome}
               loading="lazy"
-              className={`h-full w-full object-cover transition-all duration-500 ${
+              className={`h-full w-full object-contain transition-all duration-500 ${
                 segundaImagem ? "group-hover:opacity-0 group-hover:scale-105" : "group-hover:scale-105"
               }`}
             />
@@ -58,7 +63,7 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null }: {
                 src={miniatura2}
                 alt={`${produto.nome} - ângulo secundário`}
                 loading="lazy"
-                className="absolute inset-0 h-full w-full object-cover opacity-0 transition-all duration-500 group-hover:opacity-100 group-hover:scale-105"
+                className="absolute inset-0 h-full w-full object-contain opacity-0 transition-all duration-500 group-hover:opacity-100 group-hover:scale-105"
               />
             )}
           </>
@@ -68,12 +73,22 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null }: {
 
         {/* Badges Flutuantes */}
         <div className="absolute left-2.5 top-2.5 flex flex-col gap-1 z-10">
+          {produto.imagemOrigem === "representativa" && (
+            <span className="rounded-md bg-zinc-900/90 px-2 py-1 text-[10px] font-semibold text-white shadow-sm backdrop-blur-sm">
+              Imagem representativa
+            </span>
+          )}
+          {produto.imagemOrigem === "ilustracao" && (
+            <span className="rounded-md bg-zinc-900/90 px-2 py-1 text-[10px] font-semibold text-white shadow-sm backdrop-blur-sm">
+              Ilustração técnica
+            </span>
+          )}
           {percentualDesconto && (
             <span className="rounded-md bg-red-600 px-2 py-0.5 text-[11px] font-black uppercase text-white shadow-sm">
               -{percentualDesconto}% OFF
             </span>
           )}
-          {produto.destaque && (
+          {produto.destaque && !ocultarSeloDestaque && (
             <span className="rounded-md bg-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary-foreground shadow-sm">
               Destaque
             </span>
@@ -100,7 +115,7 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null }: {
         </div>
       </Link>
       <div className="flex flex-1 flex-col gap-2 p-4">
-        {produto.marca && <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{produto.marca}</p>}
+        {marca && <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{marca}</p>}
         {serve ? (
           <p className="selo-serve">✔ Serve na sua moto</p>
         ) : modelos.length > 0 ? (
@@ -108,9 +123,13 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null }: {
             {modelos.slice(0, 2).map((c) => c.modelo).join(" · ")}{modelos.length > 2 ? ` +${modelos.length - 2}` : ""}
           </p>
         ) : null}
-        <Link href={`/produtos/${produto.slug}`} className="line-clamp-2 text-sm font-semibold hover:text-primary transition-colors">
+        <Link href={`/produtos/${produto.slug}`} className="cartao-produto-nome text-sm font-semibold hover:text-primary transition-colors">
           {produto.nome}
         </Link>
+        {produto.sku && <p className="text-xs text-muted-foreground break-words">Código: {produto.sku}</p>}
+        {tecnicos.length > 0 && <dl className="cartao-produto-tecnica">{tecnicos.map(l => <div key={l.chave}><dt>{l.rotulo}</dt><dd>{l.valor}</dd></div>)}</dl>}
+        <p className="text-xs text-muted-foreground">{esgotado ? "Indisponível no momento" : produto.disponibilidade === "backorder" ? "Sob encomenda" : "Em estoque"}</p>
+        <Link href={`/produtos/${produto.slug}`} className="text-xs underline underline-offset-4">Ver detalhes</Link>
         <div className="mt-auto pt-1">
           {produto.precoDeCentavos && produto.precoDeCentavos > produto.precoCentavos && (
             <p className="text-xs text-muted-foreground line-through">{formatarBRL(produto.precoDeCentavos)}</p>
@@ -140,12 +159,15 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null }: {
               Ver detalhes
             </Link>
           )
+        ) : esgotado ? (
+          <Link href={`/produtos/${produto.slug}`} className="btn-secundario w-full text-xs">Ver disponibilidade</Link>
         ) : vende && produto.opcoes.length > 0 ? (
           <Link href={`/produtos/${produto.slug}`} className="btn-secundario w-full text-xs">
             Ver opções
           </Link>
         ) : vende ? (
           <AddToCartButton
+            compacto={compacto}
             item={{ id: produto.id, slug: produto.slug, nome: produto.nome, precoCentavos: produto.precoCentavos, imagem }}
             disponivel={disponivel}
           />

@@ -123,7 +123,7 @@ export default function BuscaLoja({ exemplo }: { exemplo?: string | null }) {
                   {p.imagem && <img src={`${p.imagem}?w=480`} alt="" loading="lazy" />}
                 </span>
                 <span className="busca-nome">{p.nome}</span>
-                <span className="busca-preco">{p.esgotado ? "esgotado" : formatarBRL(p.precoCentavos)}</span>
+                <span className="busca-preco">{p.esgotado ? "esgotado" : (p.precoCentavos > 0 ? formatarBRL(p.precoCentavos) : "Sob consulta")}</span>
               </a>
             </li>
           ))}
