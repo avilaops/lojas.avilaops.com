@@ -61,8 +61,10 @@ node -e 'const fs=require("fs"),cp=require("child_process"); fs.writeFileSync(pr
 # 500 ao tentar otimizar imagens, embora o health check simples siga verde.
 onnx_lib=$(find node_modules/onnxruntime-node/bin -path '*/linux/x64/libonnxruntime.so.1' -print -quit 2>/dev/null || true)
 [ -n "$onnx_lib" ] || { echo "!! falta libonnxruntime.so.1 para o runtime Linux" >&2; exit 1; }
+onnx_binding="$(dirname "$onnx_lib")/onnxruntime_binding.node"
+[ -f "$onnx_binding" ] || { echo "!! falta onnxruntime_binding.node para o runtime Linux" >&2; exit 1; }
 mkdir -p "$APP/node_modules/onnxruntime-node/bin/napi-v6/linux/x64"
-cp "$onnx_lib" "$APP/node_modules/onnxruntime-node/bin/napi-v6/linux/x64/"
+cp "$onnx_lib" "$onnx_binding" "$APP/node_modules/onnxruntime-node/bin/napi-v6/linux/x64/"
 
 echo "==> empacotando"
 rm -f "$SAIDA"
@@ -110,6 +112,8 @@ css=$(grep -c '\.next/static/chunks/.*\.css$' "$lista" || true)
 tem 'lojas\.avilaops\.com/public/'            'public/ ausente'
 tem 'lojas\.avilaops\.com/prisma/schema\.prisma' 'prisma/ ausente'
 tem 'lojas\.avilaops\.com/server\.js'         'server.js ausente'
+tem 'onnxruntime-node/bin/napi-v6/linux/x64/onnxruntime_binding\.node' 'binding ONNX Linux ausente'
+tem 'onnxruntime-node/bin/napi-v6/linux/x64/libonnxruntime\.so\.1' 'biblioteca ONNX Linux ausente'
 
 rm -f "$lista"
 [ "$falta" -eq 0 ] || { echo "!! pacote incompleto; NAO suba" >&2; exit 1; }
