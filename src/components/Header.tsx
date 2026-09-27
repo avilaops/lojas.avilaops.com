@@ -14,14 +14,14 @@ import MenuMobile from "@/components/MenuMobile";
  */
 export const PRINCIPAIS = 8;
 
-export default function Header({ loja, logoUrl, categorias, exemploBusca, mostrarPromocoes = false }: { loja: TenantPublico; logoUrl: string | null; categorias: Array<{ slug: string; nome: string }>; exemploBusca?: string | null; mostrarPromocoes?: boolean }) {
+export default function Header({ loja, logoUrl, categorias, exemploBusca, mostrarPromocoes = false, mostrarNome = true }: { loja: TenantPublico; logoUrl: string | null; categorias: Array<{ slug: string; nome: string }>; exemploBusca?: string | null; mostrarPromocoes?: boolean; mostrarNome?: boolean }) {
   return (
     <header className="cabecalho-loja sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur-xl">
       <div className="container-loja flex h-[72px] items-center gap-4">
         <Link href="/" className="marca-loja flex items-center gap-2.5 font-bold" aria-label={loja.nome}>
           {logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <><img src={logoUrl} alt="" className="h-11 w-auto sm:h-12" /><span className="marca-loja-nome">{loja.nome}</span></>
+            <><img src={logoUrl} alt="" className="h-11 w-auto sm:h-12" />{mostrarNome && <span className="marca-loja-nome">{loja.nome}</span>}</>
           ) : (
             <><span className="marca-loja-icone"><Store className="h-4 w-4" /></span><span className="text-lg tracking-tight">{loja.nome}</span></>
           )}

@@ -6,6 +6,9 @@ import { z } from "zod";
  * preço e checkout continuam compartilhados. Nenhuma condição por loja.
  */
 export const TemaSchema = z.object({
+  heroTitulo: z.string().max(120).optional(),
+  heroTexto: z.string().max(220).optional(),
+  mostrarNomeNoCabecalho: z.boolean().default(true),
   corPrimaria: z.string().regex(/^#[0-9a-f]{6}$/i).default("#2563eb"),
   corPrimariaTexto: z.string().regex(/^#[0-9a-f]{6}$/i).default("#ffffff"),
   corFundo: z.string().regex(/^#[0-9a-f]{6}$/i).optional(),

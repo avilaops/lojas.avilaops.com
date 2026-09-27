@@ -198,6 +198,7 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
 .automotivo-banner::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgb(0 0 0 / 85%), rgb(0 0 0 / 35%) 60%, transparent); pointer-events: none; }
 .automotivo-banner-conteudo { position: absolute; z-index: 1; inset: 0; display: flex; flex-direction: column; align-items: start; justify-content: center; gap: 1rem; color: #fff; }
 .automotivo-banner-conteudo h1 { max-width: 16ch; line-height: 1.08; text-wrap: balance; }
+.automotivo-banner-resumo { max-width: 42ch; font-size: clamp(.875rem, 1.2vw, 1rem); line-height: 1.5; color: #fff; }
 .automotivo-banner-conteudo .home-selo { color: #fff; }
 .automotivo-banner-conteudo .btn-primario { margin-top: .5rem; }
 .marca-loja-nome { max-width: 15ch; font-size: 1.3rem; line-height: 1.15; overflow-wrap: anywhere; }
@@ -883,6 +884,7 @@ body:has(.home-automotivo) .rodape-loja { margin-top: 1rem; }
 }
 @media (max-width: 640px) {
   .home-automotivo .automotivo-banner img { height: clamp(220px, 58vw, 280px); object-position: center 18%; }
+  .home-automotivo .automotivo-banner:has(.automotivo-banner-resumo) img { min-height: 320px; }
   .atalhos-cat-tira {
     grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.25rem .5rem;
     width: min(100% - 1.5rem, 34rem); padding-block: 1.5rem;

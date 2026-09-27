@@ -29,6 +29,7 @@ import type { DadosHome } from "./tipos";
 
 export default function Automotivo({ t, identidade, categorias, vitrine, temDestaques, vende, moto }: DadosHome) {
   const { trilha, restantes, mostrar: mostrarTrilha } = montarTrilha(categorias);
+  const tema = temaDo(t);
   const categoriasDosAtalhos = new Set(
     categoriasParaVitrine(categorias, temaDo(t).categoriaSemImagem)
       .slice(0, PRINCIPAIS)
@@ -51,7 +52,8 @@ export default function Automotivo({ t, identidade, categorias, vitrine, temDest
             </picture>
             <div className="container-loja automotivo-banner-conteudo">
               <p className="home-selo">{t.nome}</p>
-              <h1>{t.slogan || "Cuidado em cada detalhe"}</h1>
+              <h1>{tema.heroTitulo || t.slogan || "Cuidado em cada detalhe"}</h1>
+              {tema.heroTexto && <p className="automotivo-banner-resumo">{tema.heroTexto}</p>}
               <span className="btn-primario">Explorar produtos <ArrowRight aria-hidden="true" /></span>
             </div>
           </Link>
@@ -146,7 +148,7 @@ export default function Automotivo({ t, identidade, categorias, vitrine, temDest
           <p className="home-vazio">Os primeiros produtos estão sendo organizados para esta vitrine.</p>
         ) : (
           <div className="automotivo-grade-produtos">
-            {vitrine.slice(0, 12).map((produto) => <ProductCard key={produto.id} produto={produto} vende={vende} whatsapp={t.whatsapp} moto={moto} compacto />)}
+            {vitrine.slice(0, 12).map((produto) => <ProductCard key={produto.id} produto={produto} vende={vende} whatsapp={t.whatsapp} moto={moto} compacto alternarImagem={false} />)}
           </div>
         )}
       </section>

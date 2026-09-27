@@ -9,11 +9,11 @@ import { encaixe, lerCompatibilidade, type Moto } from "@/lib/motos";
 import { exigeReceita, lerMedicamento, vendaRemotaProibida } from "@/lib/farmacia";
 import { marcaConfirmada } from "@/lib/marca-confirmada";
 
-export default function ProductCard({ produto, vende, whatsapp, moto = null, ocultarSeloDestaque = false, compacto = false }: { produto: Produto; vende: boolean; whatsapp: string | null; moto?: Moto | null; ocultarSeloDestaque?: boolean; compacto?: boolean }) {
+export default function ProductCard({ produto, vende, whatsapp, moto = null, ocultarSeloDestaque = false, compacto = false, alternarImagem = true }: { produto: Produto; vende: boolean; whatsapp: string | null; moto?: Moto | null; ocultarSeloDestaque?: boolean; compacto?: boolean; alternarImagem?: boolean }) {
   const serve = moto != null && encaixe(produto.compatibilidade, moto) === "serve";
   const modelos = lerCompatibilidade(produto.compatibilidade);
   const imagem = produto.imagens[0];
-  const segundaImagem = produto.imagens[1];
+  const segundaImagem = alternarImagem ? produto.imagens[1] : undefined;
   const ficha = fichaDoProduto(produto.atributos as Record<string, unknown> | null);
   const tecnicos = ficha.filter(l => l.unidade === "mm" || ["referencia", "perfil"].includes(l.chave)).slice(0, 5);
   const marca = marcaConfirmada(produto.marca);
