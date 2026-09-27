@@ -9,7 +9,7 @@ import { encaixe, lerCompatibilidade, type Moto } from "@/lib/motos";
 import { exigeReceita, lerMedicamento, vendaRemotaProibida } from "@/lib/farmacia";
 import { marcaConfirmada } from "@/lib/marca-confirmada";
 
-export default function ProductCard({ produto, vende, whatsapp, moto = null, ocultarSeloDestaque = false }: { produto: Produto; vende: boolean; whatsapp: string | null; moto?: Moto | null; ocultarSeloDestaque?: boolean }) {
+export default function ProductCard({ produto, vende, whatsapp, moto = null, ocultarSeloDestaque = false, compacto = false }: { produto: Produto; vende: boolean; whatsapp: string | null; moto?: Moto | null; ocultarSeloDestaque?: boolean; compacto?: boolean }) {
   const serve = moto != null && encaixe(produto.compatibilidade, moto) === "serve";
   const modelos = lerCompatibilidade(produto.compatibilidade);
   const imagem = produto.imagens[0];
@@ -167,6 +167,7 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null, ocu
           </Link>
         ) : vende ? (
           <AddToCartButton
+            compacto={compacto}
             item={{ id: produto.id, slug: produto.slug, nome: produto.nome, precoCentavos: produto.precoCentavos, imagem }}
             disponivel={disponivel}
           />

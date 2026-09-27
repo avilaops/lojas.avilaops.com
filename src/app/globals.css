@@ -194,6 +194,25 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
 .mercado-abertura-com-banner::after { display: none; }
 .home-automotivo .mercado-abertura-com-banner { border: 0; background: #090a0d; }
 .home-automotivo .automotivo-banner, .home-automotivo .automotivo-banner picture { display: block; width: 100%; }
+.home-automotivo .automotivo-banner { position: relative; isolation: isolate; }
+.automotivo-banner::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgb(0 0 0 / 85%), rgb(0 0 0 / 35%) 60%, transparent); pointer-events: none; }
+.automotivo-banner-conteudo { position: absolute; z-index: 1; inset: 0; display: flex; flex-direction: column; align-items: start; justify-content: center; gap: 1rem; color: #fff; }
+.automotivo-banner-conteudo h1 { max-width: 16ch; line-height: 1.08; text-wrap: balance; }
+.automotivo-banner-conteudo .home-selo { color: #fff; }
+.automotivo-banner-conteudo .btn-primario { margin-top: .5rem; }
+.marca-loja-nome { max-width: 15ch; font-size: 1.3rem; line-height: 1.15; overflow-wrap: anywhere; }
+.marca-loja img { max-width: 140px; object-fit: contain; }
+.automotivo-grade-produtos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.home-automotivo { padding-bottom: 2rem; }
+body:has(.home-automotivo) .rodape-loja { margin-top: 1rem; }
+.home-automotivo .cartao-produto { min-width: 0; box-shadow: 0 3px 12px rgb(0 0 0 / 4%); }
+.home-automotivo .cartao-produto-imagem { background: #fff; }
+.home-automotivo .cartao-produto-imagem img { object-fit: contain; padding: 1rem; }
+.home-automotivo .cartao-produto .btn-primario { box-shadow: 0 3px 0 color-mix(in srgb, var(--primary) 70%, #000); }
+.home-automotivo .cartao-produto .btn-primario:active { transform: translateY(2px); box-shadow: none; }
+.home-automotivo a:focus-visible, .home-automotivo button:focus-visible { outline: 3px solid var(--primary); outline-offset: 4px; }
+@media (min-width: 641px) { .automotivo-grade-produtos { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1100px) { .automotivo-grade-produtos { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 .home-automotivo .automotivo-banner img {
   display: block; width: 100%; height: clamp(320px, 29vw, 420px);
   object-fit: cover; object-position: center;
@@ -834,17 +853,14 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
 /* Categorias em escala compatível com o banner: a grade usa toda a largura
    da loja, sem esconder itens numa faixa horizontal rolável. */
 .home-automotivo .atalhos-cat-grade .atalhos-cat-tira {
-  display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 6px; width: 100vw; max-width: none;
-  margin-inline: calc(50% - 50vw); padding: 0;
+  display: flex; flex-wrap: wrap; gap: 12px; width: 100%; max-width: 1152px;
+  margin-inline: auto; padding-block: 1rem; overflow: visible;
 }
 .home-automotivo .atalhos-cat-grade .atalhos-cat-tira > a {
-  position: relative; display: block; grid-column: span 3; min-width: 0; aspect-ratio: 1.55 / 1;
-  overflow: hidden; border: 0; border-radius: 0;
+  position: relative; display: block; flex: 1 1 calc(25% - 12px); min-width: 0; height: clamp(140px, 16vw, 185px);
+  overflow: hidden; border: 0; border-radius: 12px;
   background: var(--muted); text-align: left;
 }
-.home-automotivo .atalhos-cat-grade .atalhos-cat-tira:has(> a:nth-child(7):last-child) > a:nth-child(5) { grid-column: 1 / span 4; aspect-ratio: 2.1 / 1; }
-.home-automotivo .atalhos-cat-grade .atalhos-cat-tira:has(> a:nth-child(7):last-child) > a:nth-child(6) { grid-column: 5 / span 4; aspect-ratio: 2.1 / 1; }
-.home-automotivo .atalhos-cat-grade .atalhos-cat-tira:has(> a:nth-child(7):last-child) > a:nth-child(7) { grid-column: 9 / span 4; aspect-ratio: 2.1 / 1; }
 .home-automotivo .atalhos-cat-grade .atalhos-cat-foto {
   position: absolute; inset: 0; display: grid; width: 100%; height: 100%;
   place-items: center; border: 0; border-radius: 0;
@@ -863,11 +879,7 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
   text-align: left; text-shadow: 0 1px 8px rgb(0 0 0 / 65%);
 }
 @media (min-width: 641px) and (max-width: 1023px) {
-  .home-automotivo .atalhos-cat-grade .atalhos-cat-tira { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .home-automotivo .atalhos-cat-grade .atalhos-cat-tira > a { grid-column: span 1; }
-  .home-automotivo .atalhos-cat-grade .atalhos-cat-tira:has(> a:nth-child(7):last-child) > a:nth-child(5) { grid-column: 1; }
-  .home-automotivo .atalhos-cat-grade .atalhos-cat-tira:has(> a:nth-child(7):last-child) > a:nth-child(6) { grid-column: 2; }
-  .home-automotivo .atalhos-cat-grade .atalhos-cat-tira:has(> a:nth-child(7):last-child) > a:nth-child(7) { grid-column: 3; }
+  .home-automotivo .atalhos-cat-grade .atalhos-cat-tira > a { flex-basis: calc(33.333% - 12px); }
 }
 @media (max-width: 640px) {
   .home-automotivo .automotivo-banner img { height: clamp(220px, 58vw, 280px); object-position: center 18%; }
@@ -881,18 +893,14 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
   .ap-produto-grade { grid-template-columns: minmax(0, 1fr); }
   .ap-produto-grade > * { min-width: 0; width: 100%; }
   .home-automotivo .atalhos-cat-grade .atalhos-cat-tira {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 4px !important;
-    width: 100vw; max-width: none; margin-inline: calc(50% - 50vw); padding: 0;
+    display: flex;
+    gap: 8px;
+    width: 100%; margin-inline: auto; padding: .75rem 1rem;
     overflow: visible;
   }
   .home-automotivo .atalhos-cat-grade .atalhos-cat-tira > a {
-    grid-column: auto !important; min-width: 0; aspect-ratio: 1.25 / 1 !important;
-    border-radius: 0;
-  }
-  .home-automotivo .atalhos-cat-grade .atalhos-cat-tira:has(> a:nth-child(7):last-child) > a:nth-child(7) {
-    grid-column: 1 / -1 !important; aspect-ratio: 2.5 / 1 !important;
+    flex-basis: calc(50% - 8px); min-width: 0; height: 120px;
+    border-radius: 10px;
   }
   .home-automotivo .atalhos-cat-grade .atalhos-cat-nome { padding: .75rem !important; font-size: .95rem !important; }
   /* Atalhos colados na busca, e a abertura institucional depois deles.
@@ -908,9 +916,9 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
      da campanha. A trilha didática fica depois da vitrine, sem separar os três. */
   .home-automotivo > .mercado-abertura { order: 1; }
   .home-automotivo > .atalhos-cat { order: 2; }
-  .home-automotivo > .mercado-produtos { order: 3; }
-  .home-automotivo > .mercado-departamentos { order: 4; }
-  .home-automotivo > .container-loja:has(.beneficios-barra) { order: 5; }
+  .home-automotivo > .mercado-produtos { order: 4; }
+  .home-automotivo > .mercado-departamentos { order: 5; }
+  .home-automotivo > .container-loja:has(.beneficios-barra) { order: 3; margin-top: 0; }
   .home-automotivo > .automotivo-trilha { order: 6; }
 }
 

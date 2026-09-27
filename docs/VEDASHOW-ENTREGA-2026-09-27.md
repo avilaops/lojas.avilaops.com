@@ -27,3 +27,9 @@ Build local standalone; scripts/empacotar.sh reúne static/public/prisma, binár
 Reversão manual: parar o container lojas pelo docker compose de /opt/lojas, mover app para um nome de falha ainda inexistente, restaurar app.anterior (ou a cópia nomeada), iniciar o compose e reconectar à rede odoo-avilaops_default. Conferir health, CSS e conteúdo da home.
 
 GitHub Actions não iniciou a execução do PR por falha de faturamento/limite da conta (anotação do check image / build); não é resultado de teste. Verificações locais são registradas junto à entrega. O deploy autorizado segue SSH.
+
+## Publicação concorrente preservada
+
+Durante a validação, a entrega da Brilhax substituiu o build inicial por 91ONMw6C_SUm0nR5_GQHV. As alterações publicadas em Header, Automotivo, ProductCard, AddToCartButton e globals.css foram incorporadas antes de publicar a VedaShow. O backup rollback/vedashow-20260927 corresponde a essa versão mais recente.
+
+Consultas sem texto usam paginação e contagem no banco. Buscas dimensionais pré-filtram candidatos pelo índice existente antes da comparação exata. Pares de medidas só correspondem a pares explícitos no nome e na mesma ordem; não se atribui significado técnico a cada número.

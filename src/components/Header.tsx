@@ -21,7 +21,7 @@ export default function Header({ loja, logoUrl, categorias, exemploBusca, mostra
         <Link href="/" className="marca-loja flex items-center gap-2.5 font-bold" aria-label={loja.nome}>
           {logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={logoUrl} alt={loja.nome} className="h-11 w-auto sm:h-12" />
+            <><img src={logoUrl} alt="" className="h-11 w-auto sm:h-12" /><span className="marca-loja-nome">{loja.nome}</span></>
           ) : (
             <><span className="marca-loja-icone"><Store className="h-4 w-4" /></span><span className="text-lg tracking-tight">{loja.nome}</span></>
           )}

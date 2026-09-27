@@ -42,14 +42,18 @@ export default function Automotivo({ t, identidade, categorias, vitrine, temDest
     <main className="home-mercado home-automotivo">
       <section className={`mercado-abertura${t.bannerUrl ? " mercado-abertura-com-banner" : ""}`}>
         {t.bannerUrl ? (
-          <Link href="/produtos" className="automotivo-banner" aria-label="Ver produtos da loja">
+          <Link href="/produtos" className="automotivo-banner">
             <picture>
               {bannerMobileUrl && bannerMobileUrl !== t.bannerUrl && (
                 <source media="(max-width: 640px)" srcSet={bannerMobileUrl} />
               )}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={bannerDesktopUrl!} alt="" fetchPriority="high" />
             </picture>
+            <div className="container-loja automotivo-banner-conteudo">
+              <p className="home-selo">{t.nome}</p>
+              <h1>{t.slogan || "Cuidado em cada detalhe"}</h1>
+              <span className="btn-primario">Explorar produtos <ArrowRight aria-hidden="true" /></span>
+            </div>
           </Link>
         ) : (
           <div className="container-loja mercado-abertura-grid">
@@ -141,8 +145,8 @@ export default function Automotivo({ t, identidade, categorias, vitrine, temDest
         {vitrine.length === 0 ? (
           <p className="home-vazio">Os primeiros produtos estão sendo organizados para esta vitrine.</p>
         ) : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-            {vitrine.slice(0, 10).map((produto) => <ProductCard key={produto.id} produto={produto} vende={vende} whatsapp={t.whatsapp} moto={moto} />)}
+          <div className="automotivo-grade-produtos">
+            {vitrine.slice(0, 12).map((produto) => <ProductCard key={produto.id} produto={produto} vende={vende} whatsapp={t.whatsapp} moto={moto} compacto />)}
           </div>
         )}
       </section>
