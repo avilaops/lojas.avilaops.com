@@ -32,4 +32,8 @@ GitHub Actions não iniciou a execução do PR por falha de faturamento/limite d
 
 Durante a validação, a entrega da Brilhax substituiu o build inicial por 91ONMw6C_SUm0nR5_GQHV. As alterações publicadas em Header, Automotivo, ProductCard, AddToCartButton e globals.css foram incorporadas antes de publicar a VedaShow. O backup rollback/vedashow-20260927 corresponde a essa versão mais recente.
 
-Consultas sem texto usam paginação e contagem no banco. Buscas dimensionais pré-filtram candidatos pelo índice existente antes da comparação exata. Pares de medidas só correspondem a pares explícitos no nome e na mesma ordem; não se atribui significado técnico a cada número.
+Consultas sem texto usam paginação e contagem no banco. Buscas dimensionais comparam os atributos originais, sem pré-filtro decimal no índice textual: nomes e atributos usam grafias diferentes (8,5 e 8.5). Pares de medidas só correspondem a pares explícitos no nome e na mesma ordem; não se atribui significado técnico a cada número.
+
+Também incorporada a segunda publicação da Brilhax, build rx-99AgFSYjaMlK64rKiK, com campos de identidade no tema, troca de imagem por opção do layout e artes/fotografias públicas existentes. A versão para reversão imediatamente anterior à VedaShow é essa publicação.
+
+Validação local final: TypeScript/build aprovados, 417 testes aprovados, lint dos componentes alterados e da busca aprovado. Main sem verificações obrigatórias configuradas; GitHub Actions não executou por faturamento. Prévia com agendador desligado e uploads montados somente para leitura. No celular, o atalho flutuante duplicado é ocultado nas listagens que já oferecem orçamento em cada card.
