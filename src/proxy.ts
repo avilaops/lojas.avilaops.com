@@ -89,11 +89,10 @@ export function proxy(request: NextRequest) {
   return resposta;
 }
 
-/** As páginas que qualquer visitante vê igual: home, catálogo, promoções, produto, institucionais. */
+/** As páginas que qualquer visitante vê igual: home, catálogo, produto, institucionais. */
 function paginaDeVitrine(pathname: string): boolean {
   return (
     pathname === "/" ||
-    pathname === "/promocoes" ||
     pathname === "/produtos" ||
     pathname.startsWith("/produtos/") ||
     pathname.startsWith("/categoria/") ||

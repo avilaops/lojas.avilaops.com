@@ -5,7 +5,7 @@ import { metadataDeListagem } from "@/lib/seo-listagem";
 import PaginacaoLoja, { POR_PAGINA, paginaDaUrl } from "@/components/PaginacaoLoja";
 import { exigirTenant, lojaVende, temaDo } from "@/lib/tenant";
 import CategoriasPremium from "@/components/templates/automotivo-premium/Categorias";
-import { listarCategorias, listarProdutos, marcasDaLoja, medidasDaLoja, type ChaveDeMedida, type OrdemCatalogo } from "@/lib/catalogo";
+import { listarCategorias, listarProdutos, facetasTecnicas, medidasDaLoja, type ChaveDeMedida, type OrdemCatalogo } from "@/lib/catalogo";
 import ProductCard from "@/components/ProductCard";
 import FiltrosProdutos from "@/components/FiltrosProdutos";
 import { minhaMoto } from "@/lib/minha-moto";
@@ -33,7 +33,8 @@ const reais = (v?: string) => {
 /** "20", "20,5" ou "20.5" → 20.5. Milímetro aceita vírgula: é como se escreve aqui. */
 const mm = (v?: string) => {
   if (!v) return undefined;
-  const n = Number.parseFloat(v.replace(",", "."));
+  if (!/^\d+(?:[.,]\d+)?$/.test(v.trim())) return undefined;
+  const n = Number(v.replace(",", "."));
   return Number.isFinite(n) && n >= 0 ? n : undefined;
 };
 
@@ -47,6 +48,8 @@ function faixasDaUrl(sp: Record<string, string | undefined>) {
     ["diametroInternoMm", "di"],
     ["diametroExternoMm", "de"],
     ["alturaMm", "alt"],
+    ["espessuraMm", "esp"],
+    ["secaoMm", "sec"],
   ];
   const fora: Partial<Record<ChaveDeMedida, { de?: number; ate?: number }>> = {};
   for (const [campo, prefixo] of campos) {
@@ -64,21 +67,18 @@ export default async function Produtos({ searchParams }: { searchParams: Promise
   const ordem = ORDENS.has(sp.ordem as OrdemCatalogo) ? (sp.ordem as OrdemCatalogo) : "relevancia";
   const moto = t.segmento === "motopecas" ? await minhaMoto(sp) : null;
   const medidas = faixasDaUrl(sp);
-  // Paginado, e pedindo um a mais do que mostra: é assim que se sabe se há
-  // "Próxima" sem contar o catálogo (contagem é informação de estoque, não
-  // de compra). Antes esta página mandava os 5.591 cards da Vedashow de uma
-  // vez: 5 s até o primeiro byte e um HTML que o celular não segurava.
+  // Conta e pagina o mesmo conjunto já filtrado, inclusive medidas e relevância.
   const pagina = paginaDaUrl(sp);
-  const [categorias, lote, temMedida, fabricantes] = await Promise.all([
+  const [categorias, lote, temMedida, facetas] = await Promise.all([
     listarCategorias(t.id),
-    listarProdutos(t.id, { busca: sp.q?.trim() || undefined, fabricante: sp.fabricante?.trim() || undefined, categoriaSlug: sp.categoria || undefined, ordem, minCentavos: reais(sp.min), maxCentavos: reais(sp.max), moto, medidas, limite: POR_PAGINA + 1, pular: (pagina - 1) * POR_PAGINA }),
+    listarProdutos(t.id, { busca: sp.q?.trim() || undefined, perfil: sp.perfil || undefined, fabricante: sp.fabricante?.trim() || undefined, categoriaSlug: sp.categoria || undefined, ordem, minCentavos: reais(sp.min), maxCentavos: reais(sp.max), moto, medidas }),
     // O filtro de medida só aparece onde faz sentido: loja de roupa não tem
     // diâmetro interno, e campo que nunca filtra nada é ruído no formulário.
-    medidasDaLoja(t.id),
-    premium ? marcasDaLoja(t.id) : [],
+    medidasDaLoja(t.id, sp.categoria || undefined),
+    facetasTecnicas(t.id, sp.categoria || undefined),
   ]);
-  const produtos = lote.slice(0, POR_PAGINA);
-  const temProxima = lote.length > POR_PAGINA;
+  const produtos = lote.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
+  const temProxima = lote.length > pagina * POR_PAGINA;
   // Página além do fim é 404, não "nada encontrado" com 200: senão qualquer
   // ?pagina=999999 vira uma URL válida a mais para o Google guardar.
   if (produtos.length === 0 && pagina > 1) notFound();
@@ -91,15 +91,14 @@ export default async function Produtos({ searchParams }: { searchParams: Promise
       {premium && <CategoriasPremium categorias={[...categorias].sort((a,b)=>a.ordem-b.ordem)} atual={sp.categoria ?? "todas"}/>}
       <h1 className="mb-1 text-2xl font-bold">{titulo}</h1>
       <p className="mb-4 text-sm text-muted-foreground">
-        {/* Sem contagem: o número de itens é informação de estoque, não de
-            compra, e o comprador decide pelo produto que está vendo. */}
+        {lote.length} {lote.length === 1 ? "produto encontrado" : "produtos encontrados"} · Página {pagina}
         {moto && (sp.q || categoriaAtual) && <>Mostrando o que serve na {nomeDaMoto(moto)}</>}
         {moto && <> · <Link href="/produtos?moto=todas" className="underline">ver catálogo completo</Link></>}
       </p>
-      <FiltrosProdutos categorias={categorias} valores={sp} medidas={temMedida} fabricantes={fabricantes} />
+      <FiltrosProdutos categorias={categorias} valores={sp} medidas={temMedida} fabricantes={facetas.fabricantes} perfis={facetas.perfis} />
       {produtos.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-          Nada encontrado com esses filtros. <Link href="/produtos" className="underline">Limpar filtros</Link>
+          Nada encontrado com esses filtros. Confira o código ou a referência, tente apenas o nome da peça ou reduza os filtros. Medidas: interno × externo × altura, em mm. <Link href="/produtos" className="underline">Limpar filtros</Link>
         </p>
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">

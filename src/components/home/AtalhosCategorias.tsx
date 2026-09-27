@@ -5,7 +5,7 @@ import { categoriasParaVitrine } from "@/lib/catalogo";
 import type { TemaLoja } from "@/lib/tema";
 
 /**
- * Atalhos redondos de categoria, na primeira tela.
+ * Cartões visuais de categoria, logo após o banner da loja.
  *
  * É o padrão que o Mercado Livre e a Amazon usam no topo do celular, e existe
  * por um motivo prático: quem abre uma loja de peça pelo telefone ou busca pelo
@@ -21,9 +21,11 @@ import type { TemaLoja } from "@/lib/tema";
 export default function AtalhosCategorias({
   categorias,
   semImagem,
+  destaque = false,
 }: {
   categorias: Array<{ id: string; slug: string; nome: string; imagemUrl: string | null }>;
   semImagem: TemaLoja["categoriaSemImagem"];
+  destaque?: boolean;
 }) {
   const lista = categoriasParaVitrine(categorias, semImagem);
   // Menos de três atalhos não formam uma fileira: viram dois círculos soltos
@@ -31,7 +33,7 @@ export default function AtalhosCategorias({
   if (lista.length < 3) return null;
 
   return (
-    <nav className="atalhos-cat" aria-label="Categorias em destaque">
+    <nav className={`atalhos-cat${destaque ? " atalhos-cat-grade" : ""}`} aria-label="Categorias em destaque">
       <div className="container-loja atalhos-cat-tira">
         {lista.slice(0, PRINCIPAIS).map((c) => (
           <Link key={c.id} href={`/categoria/${c.slug}`} aria-label={c.nome} title={c.nome}>
@@ -41,8 +43,8 @@ export default function AtalhosCategorias({
                 // 19 emite <link rel=preload> para todo <img> não-lazy do
                 // shell, até dez. Com `eager` as oito fotos de categoria iam
                 // para o <head> e disputavam banda com o banner, que é o LCP.
-                // O círculo tem 3,5rem fixos no CSS, então não há salto de
-                // layout enquanto a foto chega.
+                // O espaço visual da categoria permanece reservado enquanto
+                // a foto da faixa termina de carregar.
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={c.imagemUrl} alt="" loading="lazy" decoding="async" width={56} height={56} />
               ) : (

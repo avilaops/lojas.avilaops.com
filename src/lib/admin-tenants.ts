@@ -135,8 +135,8 @@ export async function importarProdutos(tenantId: string, produtos: ProdutoPlanil
       avisos.push(`${p.sku ?? p.nome ?? "Produto"}: informe a imagem antes de classificar sua origem.`);
       continue;
     }
-    if (p.confirmarImagemExata && ((p.imagemOrigem ?? existente?.imagemOrigem ?? "propria") !== "propria" || !((p.imagens?.length ?? 0) || (existente?.imagens.length ?? 0)))) {
-      avisos.push(`${p.sku ?? p.nome ?? "Produto"}: confirmação exige foto principal e origem própria.`);
+    if ((p.confirmarImagemExata || p.correspondenciaImagem) && ((p.imagemOrigem ?? existente?.imagemOrigem ?? "propria") !== "propria" || !((p.imagens?.length ?? 0) || (existente?.imagens.length ?? 0)))) {
+      avisos.push(`${p.sku ?? p.nome ?? "Produto"}: classificação da correspondência exige foto principal e origem própria.`);
       continue;
     }
 
@@ -204,10 +204,12 @@ export async function importarProdutos(tenantId: string, produtos: ProdutoPlanil
     };
 
     if (existente) {
-      await salvarProdutoNoCatalogo(tenantId, existente.id, dados, { origem: "importacao", ...((confirmarImagemExata || correspondenciaImagem) ? { metadadosMidia: { fonte: "painel", correspondencia: confirmarImagemExata ? "confirmada" : correspondenciaImagem, somentePrincipal: true } } : {}) });
+      const correspondencia = confirmarImagemExata ? "confirmada" : correspondenciaImagem;
+      await salvarProdutoNoCatalogo(tenantId, existente.id, dados, { origem: "importacao", ...(correspondencia ? { metadadosMidia: { fonte: "planilha", correspondencia, somentePrincipal: true } } : {}) });
       atualizados++;
     } else {
-      await salvarProdutoNoCatalogo(tenantId, null, dados, { origem: "importacao", ...((confirmarImagemExata || correspondenciaImagem) ? { metadadosMidia: { fonte: "painel", correspondencia: confirmarImagemExata ? "confirmada" : correspondenciaImagem, somentePrincipal: true } } : {}) });
+      const correspondencia = confirmarImagemExata ? "confirmada" : correspondenciaImagem;
+      await salvarProdutoNoCatalogo(tenantId, null, dados, { origem: "importacao", ...(correspondencia ? { metadadosMidia: { fonte: "planilha", correspondencia, somentePrincipal: true } } : {}) });
       criados++;
     }
   }

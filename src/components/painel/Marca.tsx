@@ -293,6 +293,10 @@ export default function Marca({
               <Campo label="Descrição acessível da imagem" ajuda="Texto para leitores de tela. Não aparece sobre o banner.">
                 <input className={inputClasse} value={campanha.alt} maxLength={180} onChange={(e) => atualizarCampanha(indice, { alt: e.target.value })} />
               </Campo>
+              {(campanha.imagemUrl || campanha.imagemMobileUrl) && <div className="grid gap-3 sm:col-span-2 sm:grid-cols-2">
+                {campanha.imagemUrl && <figure className="grid gap-1"><img className="max-h-56 w-full rounded-lg border border-border bg-muted object-contain" src={campanha.imagemUrl} alt="" /><figcaption className="text-xs text-muted-foreground">Prévia desktop</figcaption></figure>}
+                {campanha.imagemMobileUrl && <figure className="grid gap-1"><img className="mx-auto max-h-72 rounded-lg border border-border bg-muted object-contain" src={campanha.imagemMobileUrl} alt="" /><figcaption className="text-center text-xs text-muted-foreground">Prévia móvel</figcaption></figure>}
+              </div>}
             </div>)}
             {campanhas.length < 5 && <button type="button" className="btn-secundario w-fit" onClick={() => setTema((atual) => ({ ...atual, campanhasHome: [...(atual.campanhasHome ?? []), { imagemUrl: "", link: "/produtos", alt: "Campanha da loja" }] }))}>Adicionar arte</button>}
           </fieldset>}

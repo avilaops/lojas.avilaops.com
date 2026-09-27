@@ -8,6 +8,12 @@ test("não força uma categoria para abraçadeiras de uso não confirmado", () =
   assert.equal(categoriaGoogle("Acessórios"), undefined);
 });
 
+test("classifica apenas o produto confirmado Abraçadeira 5/8", () => {
+  assert.equal(categoriaGoogleProduto("Abraçadeira 5/8", "Abraçadeiras"), 502978);
+  assert.equal(categoriaGoogleProduto("Abraçadeira", "Abraçadeiras"), undefined);
+  assert.equal(categoriaGoogleProduto("Abraçadeira 5/8", "Outros"), undefined);
+});
+
 test("mapeia categorias com nome exato na taxonomia do Google", () => {
   assert.equal(categoriaGoogle("Alicates"), 1958);
   assert.equal(categoriaGoogle("Arruelas"), 2195);
@@ -15,8 +21,6 @@ test("mapeia categorias com nome exato na taxonomia do Google", () => {
   assert.equal(categoriaGoogle("Estiletes"), 2198);
   assert.equal(categoriaGoogle("Ferragens"), 632);
   assert.equal(categoriaGoogle("Ferramentas"), 1167);
-  assert.equal(categoriaGoogle("Tintas Spray"), 1361);
-  assert.equal(categoriaGoogle("Tintas spray"), 1361);
   assert.equal(categoriaGoogle("Molas"), 499933);
   assert.equal(categoriaGoogle("Parafusos"), 2251);
   assert.equal(categoriaGoogle("Serras"), 1235);
@@ -26,9 +30,16 @@ test("mapeia categorias com nome exato na taxonomia do Google", () => {
   assert.equal(categoriaGoogle("Conjuntos"), undefined);
 });
 
-test("classifica apenas fita adesiva para embalagem pela finalidade", () => {
-  assert.equal(categoriaGoogle("Fita ades. p/emb 48mm"), 975);
-  assert.equal(categoriaGoogle("Fitas dupla face"), undefined);
+test("classifica tintas spray na categoria oficial de tintas", () => {
+  assert.equal(categoriaGoogle("Tintas Spray"), 1361);
+  assert.equal(categoriaGoogle("Tinta spray"), 1361);
+  assert.equal(categoriaGoogle("Fitas"), undefined);
+});
+
+test("classifica fita adesiva para embalagem pela finalidade do produto", () => {
+  assert.equal(categoriaGoogleProduto("Fita ADES.P/EMB.TRANSP.45MMX40M", "Fitas"), 975);
+  assert.equal(categoriaGoogleProduto("Fita ADES.P/EMB.MARROM 3M 48 X 50", null), 975);
+  assert.equal(categoriaGoogleProduto("Fita dupla FACE 18MMX200CM", "Fitas"), undefined);
 });
 
 test("classifica produtos de categorias amplas quando o nome informa a finalidade", () => {
@@ -81,6 +92,7 @@ test("reconhece o vocabulário do ramo, não só o nome exato", () => {
 });
 
 test("categoria de outro ramo não recebe prateleira chutada", () => {
+  // Deixar o Google adivinhar é melhor do que afirmar a prateleira errada.
   assert.equal(categoriaGoogle("Retentores"), undefined);
   assert.equal(categoriaGoogle("Camisetas"), undefined);
 });
@@ -95,6 +107,8 @@ test("não quebra com categoria ausente", () => {
 const BRILHAX = ["Lavagem", "Polimento", "Vitrificação", "Proteção", "Acessórios", "Kits Completos", "Produtos para Moto"];
 
 test("nome genérico sozinho não recebe prateleira", () => {
+  // Sem saber o ramo, "Acessórios" tanto é pincel de roda quanto presilha de
+  // cabelo. O Google adivinha melhor do que nós aqui.
   assert.equal(categoriaGoogle("Acessórios"), undefined);
   assert.equal(categoriaGoogle("Produtos para Moto"), undefined);
 });
@@ -111,12 +125,17 @@ test("nenhuma das sete categorias da Brilhax fica sem prateleira", () => {
 });
 
 test("o ramo de uma loja não vaza para outra", () => {
+  // Numa pet e numa de beleza, "Acessórios" continua sem prateleira: mandar
+  // 2894 poria coleira e presilha em "escovas para limpeza de carro".
   assert.equal(prateleirasDaLoja(["Rações", "Higiene", "Brinquedos", "Acessórios"])("Acessórios"), undefined);
   assert.equal(prateleirasDaLoja(["Cabelo", "Unhas", "Acessórios"])("Acessórios"), undefined);
+  // "Kit festa" não prova ramo nenhum: "kit" é palavra de toda loja.
   assert.equal(prateleirasDaLoja(["Bolos", "Kit festa", "Acessórios"])("Acessórios"), undefined);
 });
 
 test("o sinal do ramo não se confunde com palavra parecida", () => {
+  // "automotivo" contém "mot", e "motor" contém "moto": nenhum dos dois pode
+  // fazer uma categoria virar lava-motos.
   const prateleira = prateleirasDaLoja(BRILHAX);
   assert.equal(prateleira("Óleo de motor"), undefined);
   assert.equal(prateleira("Motosserras"), undefined);

@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { temaDo } from "@/lib/tenant";
+import { PRINCIPAIS } from "@/components/Header";
+import { categoriasParaVitrine } from "@/lib/catalogo";
 import { ArrowRight, Search, Sparkles } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import BeneficiosBarra from "./BeneficiosBarra";
@@ -27,37 +29,55 @@ import type { DadosHome } from "./tipos";
 
 export default function Automotivo({ t, identidade, categorias, vitrine, temDestaques, vende, moto }: DadosHome) {
   const { trilha, restantes, mostrar: mostrarTrilha } = montarTrilha(categorias);
+  const categoriasDosAtalhos = new Set(
+    categoriasParaVitrine(categorias, temaDo(t).categoriaSemImagem)
+      .slice(0, PRINCIPAIS)
+      .map((categoria) => categoria.id),
+  );
+  const categoriasAdicionais = restantes.filter((categoria) => !categoriasDosAtalhos.has(categoria.id));
+  const bannerDesktopUrl = t.bannerUrl && `${t.bannerUrl}${t.bannerUrl.includes("?") ? "&" : "?"}v=2`;
+  const bannerMobileUrl = bannerDesktopUrl?.replace(/-desktop(?=\.[a-z0-9]+(?:[?#]|$))/i, "-mobile");
 
   return (
     <main className="home-mercado home-automotivo">
       <section className={`mercado-abertura${t.bannerUrl ? " mercado-abertura-com-banner" : ""}`}>
-        <div className="container-loja mercado-abertura-grid">
-          <div>
-            <p className="home-selo text-primary">{identidade.palavrasChave[0] || "Estética automotiva"}</p>
-            <h1>{t.slogan ?? t.nome}</h1>
-            <p>{t.sobre || identidade.diferencial || "Os produtos e o passo a passo para o acabamento durar."}</p>
-            <div className="mercado-acoes">
-              <Link href="/produtos" className="btn-primario">Ver produtos <Search /></Link>
-              {t.whatsapp && <Link href="/contato" className="btn-secundario">Tirar dúvida técnica</Link>}
-            </div>
-            {/* Quem compra aqui costuma procurar pela marca que já usa na
-                oficina, e não pela categoria. */}
-            <p className="mercado-dica">Busque por produto, marca ou volume.</p>
-          </div>
-          {t.bannerUrl && (
-            <aside className="distribuidora-arte">
+        {t.bannerUrl ? (
+          <Link href="/produtos" className="automotivo-banner" aria-label="Ver produtos da loja">
+            <picture>
+              {bannerMobileUrl && bannerMobileUrl !== t.bannerUrl && (
+                <source media="(max-width: 640px)" srcSet={bannerMobileUrl} />
+              )}
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={t.bannerUrl} alt="" />
-            </aside>
-          )}
-        </div>
+              <img src={bannerDesktopUrl!} alt="" fetchPriority="high" />
+            </picture>
+          </Link>
+        ) : (
+          <div className="container-loja mercado-abertura-grid">
+            <div>
+              <p className="home-selo text-primary">{identidade.palavrasChave[0] || "Estética automotiva"}</p>
+              <h1>{t.slogan ?? t.nome}</h1>
+              <p>{t.sobre || identidade.diferencial || "Os produtos e o passo a passo para o acabamento durar."}</p>
+              <div className="mercado-acoes">
+                <Link href="/produtos" className="btn-primario">Ver produtos <Search /></Link>
+                {t.whatsapp && <Link href="/contato" className="btn-secundario">Tirar dúvida técnica</Link>}
+              </div>
+              <p className="mercado-dica">Busque por produto, marca ou volume.</p>
+            </div>
+            {t.bannerUrl && (
+              <aside className="distribuidora-arte">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={t.bannerUrl} alt="" />
+              </aside>
+            )}
+          </div>
+        )}
       </section>
 
-      <AtalhosCategorias categorias={categorias} semImagem={temaDo(t).categoriaSemImagem} />
+      <AtalhosCategorias categorias={categorias} semImagem={temaDo(t).categoriaSemImagem} destaque />
 
       <div className="container-loja"><BeneficiosBarra t={t} /></div>
 
-      {mostrarTrilha && (
+      {mostrarTrilha && !t.bannerUrl && (
         <section className="container-loja automotivo-trilha">
           <header>
             <div>
@@ -87,7 +107,7 @@ export default function Automotivo({ t, identidade, categorias, vitrine, temDest
         </section>
       )}
 
-      {restantes.length > 0 && (
+      {categoriasAdicionais.length > 0 && (
         <section className="container-loja mercado-departamentos">
           <header>
             <div>
@@ -97,7 +117,7 @@ export default function Automotivo({ t, identidade, categorias, vitrine, temDest
             <Link href="/produtos">Ver tudo <ArrowRight /></Link>
           </header>
           <div className="mercado-grade-categorias">
-            {restantes.slice(0, 10).map((categoria, indice) => (
+            {categoriasAdicionais.slice(0, 10).map((categoria, indice) => (
               <Link key={categoria.id} href={`/categoria/${categoria.slug}`} className={indice === 0 && !mostrarTrilha ? "mercado-categoria-principal" : ""}>
                 {categoria.imagemUrl && (
                   // eslint-disable-next-line @next/next/no-img-element

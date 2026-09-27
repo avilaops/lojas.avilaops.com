@@ -153,11 +153,6 @@ export function lerCsvProdutos(texto: string) {
     // `destaque` só é escrito quando a coluna existe: antes, toda planilha sem
     // ela tirava a estrela de todo produto importado, sem aviso nenhum.
     const destaque = pega("destaque");
-    const correspondenciaImagem = pega("correspondencia_imagem")?.toLowerCase();
-    if (correspondenciaImagem && !["nao_confirmada", "confirmada", "rejeitada"].includes(correspondenciaImagem)) {
-      erros.push(`Linha ${i + 2}: correspondencia_imagem deve ser nao_confirmada, confirmada ou rejeitada.`);
-      return;
-    }
     const googleProductCategory = pega("google_product_category");
     const imagensBrutas = pega("imagens");
     const imagens = imagensBrutas
@@ -188,6 +183,11 @@ export function lerCsvProdutos(texto: string) {
     const confirmarImagemExata = pega("confirmar_imagem_exata")?.toLowerCase();
     if (confirmarImagemExata && !SIM.test(confirmarImagemExata) && !NAO.test(confirmarImagemExata)) {
       erros.push(`Linha ${i + 2}: confirmar_imagem_exata deve ser sim ou nao.`);
+      return;
+    }
+    const correspondenciaImagem = pega("correspondencia_imagem")?.toLowerCase();
+    if (correspondenciaImagem && !["nao_confirmada", "confirmada", "rejeitada"].includes(correspondenciaImagem)) {
+      erros.push(`Linha ${i + 2}: correspondencia_imagem deve ser nao_confirmada, confirmada ou rejeitada.`);
       return;
     }
     produtos.push({

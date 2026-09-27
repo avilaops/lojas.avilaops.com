@@ -15,38 +15,27 @@ export default function Distribuidora({ t, identidade, categorias, vitrine, temD
   const campanhas = campanhasDaLoja(tema);
   const distribuidoraVisual = campanhas.length > 0 || Boolean(t.bannerUrl);
 
-  // A Vedashow usa as chamadas comerciais dentro das artes e abre a home
-  // diretamente nas campanhas, categorias e produtos.
-  if (campanhas.length > 0) {
-    return (
-      <main className="home-mercado home-distribuidora home-campanhas">
-        <BannerCarousel campanhas={campanhas.map(({ imagemUrl, imagemMobileUrl, link, alt }) => ({ imagemUrl, imagemMobileUrl, link, alt }))} />
-        <AtalhosCategorias categorias={categorias} semImagem={tema.categoriaSemImagem} />
-        {vitrine.length > 0 && (
-          <section className="container-loja campanhas-produtos" aria-label="Produtos em destaque">
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-              {vitrine.slice(0, 10).map((produto) => <ProductCard key={produto.id} produto={produto} vende={vende} whatsapp={t.whatsapp} moto={moto} />)}
-            </div>
-          </section>
-        )}
-      </main>
-    );
-  }
   if (distribuidoraVisual) {
-    const bannerFallback = t.bannerUrl?.endsWith("/campanha-geral-v2.webp")
-      ? "/media/vedashow/campanha-geral-v3-desktop.svg"
-      : t.bannerUrl;
+    const banners = campanhas.length ? campanhas : [{ imagemUrl: t.bannerUrl!, link: "/produtos", alt: "Campanha da loja" }];
     return (
       <main className="home-mercado home-distribuidora home-campanhas">
-        {bannerFallback && <BannerCarousel campanhas={[{ imagemUrl: bannerFallback, imagemMobileUrl: bannerFallback.endsWith("campanha-geral-v3-desktop.svg") ? "/media/vedashow/campanha-geral-v3-mobile.svg" : undefined, link: "/produtos", alt: "Campanha da loja" }]} />}
-        <AtalhosCategorias categorias={categorias} semImagem={tema.categoriaSemImagem} />
-        {vitrine.length > 0 && (
-          <section className="container-loja campanhas-produtos" aria-label="Produtos">
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-              {vitrine.slice(0, 10).map((produto) => <ProductCard key={produto.id} produto={produto} vende={vende} whatsapp={t.whatsapp} moto={moto} />)}
-            </div>
-          </section>
-        )}
+        <h1 className="sr-only">{t.nome} — {t.slogan || "Catálogo de produtos"}</h1>
+        <BannerCarousel campanhas={banners} />
+        <section className="campanhas-categorias" aria-labelledby="categorias-titulo">
+          <div className="container-loja"><h2 id="categorias-titulo">Compre por categoria</h2></div>
+          <AtalhosCategorias categorias={categorias} semImagem={tema.categoriaSemImagem} />
+        </section>
+        <section className="container-loja campanhas-busca" aria-label="Busca no catálogo">
+          <div><h2>Encontre a peça certa</h2><p>Busque por nome, código, referência ou marca. Para medidas, use diâmetro interno × externo × altura, em mm.</p></div>
+          <Link href="/produtos" className="btn-secundario">Buscar e filtrar produtos <Search size={18} /></Link>
+        </section>
+        <section className="container-loja campanhas-produtos" aria-labelledby="produtos-titulo">
+          <header><h2 id="produtos-titulo">{temDestaques ? "Destaques do catálogo" : "Explore nossos produtos"}</h2><Link href="/produtos">Ver catálogo completo <ArrowRight size={18} /></Link></header>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {vitrine.slice(0, 8).map(produto => <ProductCard key={produto.id} produto={produto} vende={vende} whatsapp={t.whatsapp} moto={moto} />)}
+          </div>
+          <Link href="/produtos" className="btn-primario campanhas-ver-todos">Ver todos os produtos <ArrowRight size={18} /></Link>
+        </section>
       </main>
     );
   }

@@ -52,7 +52,7 @@ export async function GET(request: Request) {
   return Response.json({ ...p, estoque:simples?.saldos.find(s=>s.local==="principal")?.fisico ?? p.estoque, mpn:simples?.mpn??null, identificadoresEstado:simples?.identificadoresEstado??"desconhecido", categoria: p.categoria?.nome ?? null, definicoesCampos: lerDefinicoes(loja.camposPersonalizados) });
 }
 
-const Edicao = conferirImagem(ProdutoEntradaSchema.partial().extend({ id: z.string(), versaoCatalogo: z.number().int().positive().optional(), confirmarImagemExata: z.boolean().optional(), associarFotoSku: z.boolean().optional() }));
+const Edicao = conferirImagem(ProdutoEntradaSchema.partial().extend({ id: z.string(), versaoCatalogo: z.number().int().positive().optional(), confirmarImagemExata: z.boolean().optional(), correspondenciaImagem: z.enum(["nao_confirmada", "confirmada", "rejeitada"]).optional(), associarFotoSku: z.boolean().optional() }));
 
 /** PATCH — edita um produto (qualquer campo; categoria por nome, criada se não existir). */
 export async function PATCH(request: Request) {
@@ -95,8 +95,9 @@ export async function PATCH(request: Request) {
   }
 
   let atualizado;
+  if (confirmarImagemExata && ((campos.imagemOrigem ?? p.imagemOrigem) !== "propria" || !((campos.imagens?.length ?? 0) || p.imagens.length))) return Response.json({ erro: "Confirme somente uma foto principal própria que esteja associada ao produto." }, { status: 422 });
   const correspondenciaFinal = confirmarImagemExata ? "confirmada" : correspondenciaImagem;
-  if (correspondenciaFinal && ((campos.imagemOrigem ?? p.imagemOrigem) !== "propria" || !((campos.imagens?.length ?? 0) || p.imagens.length))) return Response.json({ erro: "A conferência da imagem exige foto própria associada ao produto." }, { status: 422 });
+  if (correspondenciaFinal && ((campos.imagemOrigem ?? p.imagemOrigem) !== "propria" || !((campos.imagens?.length ?? 0) || p.imagens.length))) return Response.json({ erro: "A correspondência da imagem exige foto principal própria associada ao produto." }, { status: 422 });
   try { atualizado = await salvarProdutoNoCatalogo(loja.id, id, { ...campos, ...(valoresCampos ? { camposPersonalizados: valoresCampos as unknown as Prisma.InputJsonValue } : {}), ...(slug ? { slug: slugificar(slug) } : {}), ...(categoriaId !== undefined ? { categoriaId } : {}), ...(atributos ? { atributos: atributos as Prisma.InputJsonValue } : {}), ...(compatibilidade ? { compatibilidade: compatibilidade as unknown as Prisma.InputJsonValue } : {}) }, { origem: "painel", versao: versaoCatalogo, exigirSemImagem: associarFotoSku, ...(correspondenciaFinal ? { metadadosMidia: { fonte: "painel", correspondencia: correspondenciaFinal, somentePrincipal: true } } : {}) });
   } catch(e) { return respostaErroCatalogo(e); }
   invalidarCatalogo(loja.id);

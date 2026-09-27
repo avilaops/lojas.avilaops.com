@@ -15,7 +15,12 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 SAIDA="${1:-/tmp/lojas-standalone.tgz}"
-APP=".next/standalone"
+APP=".next/standalone/lojas.avilaops.com"
+if [ ! -d "$APP" ] && [ -f ".next/standalone/server.js" ]; then
+  # Quando o build roda dentro da pasta do app, o Next escreve o standalone
+  # direto na raiz. Em monorepo ele mantém a pasta lojas.avilaops.com.
+  APP=".next/standalone"
+fi
 
 [ -d "$APP" ] || { echo "!! falta $APP; rode 'npm run build' antes" >&2; exit 1; }
 
@@ -46,6 +51,9 @@ rm -rf "$APP/.next/static" "$APP/public" "$APP/prisma"
 cp -r .next/static "$APP/.next/static"
 cp -r public "$APP/public"
 cp -r prisma "$APP/prisma"
+# A revisão acompanha o pacote para permitir auditar o domínio após o SSH.
+git rev-parse HEAD > "$APP/REVISION"
+node -e 'const fs=require("fs"),cp=require("child_process"); fs.writeFileSync(process.argv[1],JSON.stringify({commit:cp.execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),buildId:fs.readFileSync(".next/BUILD_ID","utf8").trim()}))' "$APP/public/versao.json"
 # O ONNX é externalizado pelo Next, mas o binário standalone não copia a
 # biblioteca Linux que o binding carrega em runtime. Sem ela, /uploads retorna
 # 500 ao tentar otimizar imagens, embora o health check simples siga verde.
@@ -61,10 +69,16 @@ rm -f "$SAIDA"
 # o deploy só descobre ao descompactar, com o container já parando.
 tmp="$SAIDA.parcial"
 rm -f "$tmp"
-stage=$(mktemp -d "${SAIDA%/*}/lojas-stage.XXXXXX")
+# O /tmp do servidor é tmpfs. Montar o estágio ao lado de .next evita duplicar
+# 180 MB temporários na RAM e preserva espaço para o runtime dos containers.
+stage=$(mktemp -d ".next/lojas-stage.XXXXXX")
 mkdir -p "$stage/lojas.avilaops.com"
 cp -a "$APP/." "$stage/lojas.avilaops.com/"
-if ! tar --force-local -czf "$tmp" -C "$stage" .; then
+if ! tar --force-local \
+  --exclude='./lojas.avilaops.com/output' --exclude='./lojas.avilaops.com/output/**' \
+  --exclude='./output' --exclude='./output/**' \
+  --exclude='.env*' --exclude='evidencias' --exclude='tmp' \
+  -czf "$tmp" -C "$stage" .; then
   rm -rf "$stage"
   rm -f "$tmp"
   echo "!! tar falhou; nada foi gerado" >&2

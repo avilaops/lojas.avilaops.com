@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Categoria } from "@prisma/client";
 import type { ChaveDeMedida } from "@/lib/catalogo";
 
@@ -9,6 +10,8 @@ const PREFIXO: Record<ChaveDeMedida, string> = {
   diametroInternoMm: "di",
   diametroExternoMm: "de",
   alturaMm: "alt",
+  espessuraMm: "esp",
+  secaoMm: "sec",
 };
 
 /** Arredonda para o mm cheio, só no texto de ajuda. */
@@ -27,16 +30,18 @@ export default function FiltrosProdutos({
   valores,
   medidas = [],
   fabricantes = [],
+  perfis = [],
 }: {
   categorias: Categoria[];
   valores: Record<string, string | undefined>;
   medidas?: MedidaDisponivel[];
   fabricantes?: string[];
+  perfis?: string[];
 }) {
   const usandoMedida = medidas.some((m) => valores[`${PREFIXO[m.campo]}_de`] || valores[`${PREFIXO[m.campo]}_ate`]);
   return (
     <form action="/produtos" className="filtros-produtos mb-6 grid gap-2 rounded-xl border border-border bg-card p-3">
-      <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto_auto_auto_auto]">
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
         {valores.marca && valores.modelo && (
           <>
             <input type="hidden" name="marca" value={valores.marca} />
@@ -45,22 +50,23 @@ export default function FiltrosProdutos({
           </>
         )}
         {valores.moto === "todas" && <input type="hidden" name="moto" value="todas" />}
-        <input name="q" type="search" aria-label="Buscar produtos" defaultValue={valores.q ?? ""} placeholder="Buscar" className="h-10 rounded-lg border border-border bg-background px-3 text-sm" />
+        <input name="q" type="search" aria-label="Buscar produtos" defaultValue={valores.q ?? ""} placeholder="Nome, código, referência ou marca" className="h-10 rounded-lg border border-border bg-background px-3 text-sm" />
         {/* Categoria, preço e ordem empilhavam no celular e empurravam o
             primeiro produto para quase uma tela inteira de rolagem (medido em
             0,95 tela). Aqui eles vão para uma gaveta que só existe no celular:
             a partir de 640px o CSS a dissolve e os campos voltam para a linha.
             A busca continua sempre visível, que é por onde a maioria chega. */}
-        <input type="checkbox" id="filtros-mais" className="filtros-gaveta" defaultChecked={!!(valores.categoria || valores.min || valores.max || valores.ordem || valores.fabricante)} />
+        <input type="checkbox" id="filtros-mais" className="filtros-gaveta" defaultChecked={!!(valores.categoria || valores.min || valores.max || valores.ordem || valores.fabricante || valores.perfil)} />
         <label htmlFor="filtros-mais" className="filtros-abrir">Categoria, preço e ordem</label>
         <div className="filtros-campos contents">
+          {perfis.length > 0 && <select name="perfil" aria-label="Perfil" defaultValue={valores.perfil ?? ""} className="h-10 rounded-lg border border-border bg-background px-3 text-sm"><option value="">Todos os perfis cadastrados</option>{perfis.map(p => <option key={p}>{p}</option>)}</select>}
           {fabricantes.length > 0 && <select name="fabricante" aria-label="Marca do produto" defaultValue={valores.fabricante ?? ""} className="h-10 rounded-lg border border-border bg-background px-3 text-sm"><option value="">Todas as marcas</option>{fabricantes.map(m => <option key={m}>{m}</option>)}</select>}
           <select name="categoria" aria-label="Categoria" defaultValue={valores.categoria ?? ""} className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
             <option value="">Todas as categorias</option>
             {categorias.map((c) => <option key={c.id} value={c.slug}>{c.nome}</option>)}
           </select>
-          <input name="min" defaultValue={valores.min ?? ""} placeholder="R$ mín." inputMode="decimal" className="h-10 rounded-lg border border-border bg-background px-3 text-sm sm:w-24" />
-          <input name="max" defaultValue={valores.max ?? ""} placeholder="R$ máx." inputMode="decimal" className="h-10 rounded-lg border border-border bg-background px-3 text-sm sm:w-24" />
+          <input name="min" defaultValue={valores.min ?? ""} aria-label="Preço mínimo" placeholder="R$ mín." inputMode="decimal" className="h-10 min-w-0 rounded-lg border border-border bg-background px-3 text-sm" />
+          <input name="max" defaultValue={valores.max ?? ""} aria-label="Preço máximo" placeholder="R$ máx." inputMode="decimal" className="h-10 min-w-0 rounded-lg border border-border bg-background px-3 text-sm" />
           <select name="ordem" aria-label="Ordenar por" defaultValue={valores.ordem ?? "relevancia"} className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
             <option value="relevancia">Relevância</option>
             <option value="menor-preco">Menor preço</option>
@@ -72,6 +78,10 @@ export default function FiltrosProdutos({
         <button className="btn-primario h-10 px-4 text-xs">Filtrar</button>
       </div>
 
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+        <p>Medidas em mm: interno × externo × altura. Selecione a categoria para ver os atributos cadastrados.</p>
+        <Link href="/produtos" className="inline-flex min-h-11 items-center underline">Limpar busca e filtros</Link>
+      </div>
       {medidas.length > 0 && (
         // `open` quando já há medida na URL: quem chegou por um link filtrado
         // precisa ver o que está filtrando, senão a lista parece curta sem motivo.
@@ -89,10 +99,10 @@ export default function FiltrosProdutos({
                     {m.rotulo} <span className="opacity-60">({mm(m.min)}–{mm(m.max)})</span>
                   </span>
                   <span className="flex items-center gap-1">
-                    <input name={`${p}_de`} defaultValue={valores[`${p}_de`] ?? ""} placeholder="de" inputMode="decimal"
+                    <input name={`${p}_de`} aria-label={`${m.rotulo} mínimo em mm`} defaultValue={valores[`${p}_de`] ?? ""} placeholder="de" inputMode="decimal"
                       className="h-11 w-full rounded-lg border border-border bg-background px-2 text-sm" />
                     <span aria-hidden>–</span>
-                    <input name={`${p}_ate`} defaultValue={valores[`${p}_ate`] ?? ""} placeholder="até" inputMode="decimal"
+                    <input name={`${p}_ate`} aria-label={`${m.rotulo} máximo em mm`} defaultValue={valores[`${p}_ate`] ?? ""} placeholder="até" inputMode="decimal"
                       className="h-11 w-full rounded-lg border border-border bg-background px-2 text-sm" />
                   </span>
                 </label>

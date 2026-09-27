@@ -156,7 +156,7 @@ export const ProdutoEntradaSchema = z.object({
   precoDeCentavos: z.number().int().nonnegative().nullable().optional(),
   descricaoCurta: z.string().max(300).optional(),
   descricao: z.string().max(8000).optional(),
-  imagens: z.array(z.string().url()).max(10).optional(),
+  imagens: z.array(z.string().url()).max(20).optional(),
   /**
    * O que a imagem é deste item: `propria` (SKU exato), `representativa`
    * (família visual, a vitrine avisa) ou `ilustracao` (desenho das medidas).
@@ -167,8 +167,6 @@ export const ProdutoEntradaSchema = z.object({
   imagemOrigem: z.enum(["propria", "representativa", "ilustracao"]).optional(),
   /** Família da imagem representativa ("6200", "UCP"): obrigatória nela. */
   imagemFamilia: z.string().trim().min(1).max(40).nullable().optional(),
-  correspondenciaImagem: z.enum(["nao_confirmada", "confirmada", "rejeitada"]).optional(),
-  confirmarImagemExata: z.boolean().optional(),
   destaque: z.boolean().optional(),
   ativo: z.boolean().optional(),
   disponibilidade: z.enum(["in_stock", "out_of_stock", "backorder"]).optional(),
@@ -241,9 +239,14 @@ export function conferirImagem<T extends { imagemOrigem?: string | null; imagemF
 /** Importação em lote: o produto vem inteiro, então as regras valem sempre. */
 export const ProdutoImportadoSchema = conferirImagem(ProdutoEntradaSchema);
 
-/** Atualização por planilha: campos podem ser enviados isoladamente para um
- * produto existente identificado por SKU. A criação ainda exige nome e preço. */
-export const ProdutoPlanilhaSchema = ProdutoEntradaSchema.partial()
+/** Atualização por planilha: qualquer campo pode ser enviado isoladamente
+ * quando a linha identifica um produto existente por SKU. A criação continua
+ * exigindo nome e preço no importador. */
+export const ProdutoPlanilhaSchema = ProdutoEntradaSchema.partial().extend({
+  /** Confirma apenas a foto principal depois de conferir produto, SKU e apresentação. */
+  confirmarImagemExata: z.boolean().optional(),
+  correspondenciaImagem: z.enum(["nao_confirmada", "confirmada", "rejeitada"]).optional(),
+})
   .refine((p) => p.imagemOrigem !== "representativa" || Boolean(p.imagemFamilia), {
     message: "Imagem representativa exige imagemFamilia (a série de que ela veio).",
     path: ["imagemFamilia"],

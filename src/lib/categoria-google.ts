@@ -57,9 +57,24 @@ const REGRAS: Array<{ termos: RegExp; id: number; prateleira: string }> = [
     prateleira: "Correntes",
   },
   {
+    termos: /^cadeados?$/i,
+    id: 1974,
+    prateleira: "Cadeados e chaves",
+  },
+  {
+    termos: /^discos?\s+flap$/i,
+    id: 4487,
+    prateleira: "Acessórios para ferramentas > Acessórios para lixamento",
+  },
+  {
     termos: /^estiletes?$/i,
     id: 2198,
     prateleira: "Estiletes",
+  },
+  {
+    termos: /^tintas?\s+spray$/i,
+    id: 1361,
+    prateleira: "Consumíveis para construção > Consumíveis para pintura > Tinta",
   },
   {
     termos: /^ferragens?$/i,
@@ -72,11 +87,6 @@ const REGRAS: Array<{ termos: RegExp; id: number; prateleira: string }> = [
     prateleira: "Ferramentas",
   },
   {
-    termos: /^tintas?\s+spray$/i,
-    id: 1361,
-    prateleira: "Ferragens > Consumíveis para construção > Consumíveis para pintura > Tinta",
-  },
-  {
     termos: /^molas?$/i,
     id: 499933,
     prateleira: "Molas",
@@ -85,6 +95,11 @@ const REGRAS: Array<{ termos: RegExp; id: number; prateleira: string }> = [
     termos: /^parafusos?$/i,
     id: 2251,
     prateleira: "Parafusos",
+  },
+  {
+    termos: /^porcas?$/i,
+    id: 1739,
+    prateleira: "Porcas e parafusos",
   },
   {
     termos: /^serras?$/i,
@@ -142,11 +157,11 @@ const SINAL_DO_RAMO = /vitrifica|coating|polimento|boina|automotiv|limpa[\s-]?ro
  * deixar o Merchant inferir a área pelo título. Só usar o pai depois que as
  * próprias categorias provarem que esta é uma loja industrial.
  */
-const SINAL_INDUSTRIAL = /retentores?|rolamentos?|o[\s-]?rings?|gaxetas?|raspadores?|mancais?|correias?|buchas?|an[ée]is\s+(?:backup|el[áa]sticos?)|vedações?|hidráulica/i;
+const SINAL_INDUSTRIAL = /retentores?|rolamentos?|o[\s-]?rings?|gaxetas?|raspadores?|mancais?|correias?|buchas?|rodas\s+dentadas?|an[ée]is\s+(?:backup|el[áa]sticos?)|vedações?|hidráulica/i;
 // O fallback 111 só é apropriado para estas famílias da Vedashow, cujo
 // catálogo observado é de componentes industriais. Categorias genéricas ou
 // com mistura de itens domésticos, elétricos e industriais ficam sem chute.
-const CATEGORIAS_INDUSTRIAIS = /^(?:rolamentos?|correias?|mancais?|buchas?|mangueiras?|retentores?|gaxetas?|raspadores?|o[\s-]?rings?|an[ée]is\s+(?:backup|el[áa]sticos?)|guias)$/i;
+const CATEGORIAS_INDUSTRIAIS = /^(?:rolamentos?|correias?|mancais?|buchas?|mangueiras?|retentores?|gaxetas?|raspadores?|o[\s-]?rings?|rodas\s+dentadas?|an[ée]is\s+(?:backup|el[áa]sticos?)|guias|acoplamentos?|polias|cord[õo]es|veda[çc][õo]es)$/i;
 
 /**
  * Regras que só valem com o ramo já provado pelo SINAL_DO_RAMO. Sozinhos,
@@ -174,10 +189,10 @@ const REGRAS_DO_RAMO: Array<{ termos: RegExp; id: number; prateleira: string }> 
  */
 export function categoriaGoogle(nomeDaCategoria: string | null | undefined): number | undefined {
   if (!nomeDaCategoria) return undefined;
-  if (/^fita ades\.?\s*p\/emb\b/i.test(nomeDaCategoria.trim())) return 975;
   return REGRAS.find((r) => r.termos.test(nomeDaCategoria))?.id;
 }
 
+/** Corrige produtos cuja família real é mais específica que a categoria da loja. */
 export function categoriaGoogleProduto(
   nomeProduto: string,
   nomeDaCategoria: string | null | undefined,
@@ -186,8 +201,8 @@ export function categoriaGoogleProduto(
   const nome = nomeProduto.normalize("NFD").replace(/\p{M}+/gu, "").trim().toLowerCase();
   const categoria = (nomeDaCategoria ?? "").normalize("NFD").replace(/\p{M}+/gu, "").trim().toLowerCase();
   if (/^fita ades\.?\s*p\/emb\b/.test(nome)) return 975;
-  if ((/^bom-?13(?:04|05|21)\b.*\b(?:demarcacao|marcacao)\b|^fita\b.*\b(?:demarcacao|marcacao)\b.*(?:\bpiso\b|\bsinalizacao\b)/.test(nome)) && /^fitas?$/.test(categoria)) return 976;
-  if ((/\bbom-?1314\b|^fita\b.*\b(?:impermeavel|ipermeavel)\b/.test(nome)) && /^fitas?$/.test(categoria)) return 503744;
+  if (/^bom-?13(?:04|05|21)\b.*\b(?:demarcacao|marcacao)\b|^fita\b.*\b(?:demarcacao|marcacao)\b.*(?:\bpiso\b|\bsinalizacao\b)/.test(nome) && /^fitas?$/.test(categoria)) return 976;
+  if (/\bbom-?1314\b|^fita\b.*\b(?:impermeavel|ipermeavel)\b/.test(nome) && /^fitas?$/.test(categoria)) return 503744;
   if (/^cantoneira eva estacionamento\b/.test(nome) && /^cantoneiras?$/.test(categoria)) return 503744;
   if (/^sabonete\b/.test(nome) && /^(?:quimicos|outros)$/.test(categoria)) return 2503;
   if (/^lanca jato turbo\b/.test(nome) && /^hidraulica$/.test(categoria)) return 6328;

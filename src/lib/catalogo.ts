@@ -1,3 +1,4 @@
+import { consultaDimensional, confereDimensoes, codigoExato } from "./busca-tecnica";
 import type { Prisma, Produto, Categoria } from "@prisma/client";
 import type { ItemCarrinho } from "@avilaops/checkout";
 import { cache } from "react";
@@ -7,7 +8,7 @@ import { INCLUIR_CATALOGO } from "./catalogo-qualidade";
 import { marcaConfirmada } from "./marca-confirmada";
 import { encaixe, lerCompatibilidade, type Moto } from "./motos";
 import type { TemaLoja } from "./tema";
-import { publicavel, WHERE_COMPLETO } from "./produto-regras";
+import { publicavel, WHERE_COMPLETO, WHERE_COMPRAVEL } from "./produto-regras";
 import { NECESSIDADES, equivalentes as equivalentesFarmacia } from "./farmacia";
 
 export type ProdutoComCategoria = Produto & { categoria: Categoria | null };
@@ -79,8 +80,11 @@ export type OrdemCatalogo = "relevancia" | "menor-preco" | "maior-preco" | "rece
 export interface FiltroCatalogo {
   categoriaSlug?: string;
   busca?: string;
+  perfil?: string;
   fabricante?: string;
   destaque?: boolean;
+  /** Remove itens sem preço atual, inativos ou sem disponibilidade para compra. */
+  compraveis?: boolean;
   /** Só produtos cuja imagem foi declarada como foto do próprio item. */
   imagemOrigem?: "propria" | "representativa" | "ilustracao";
   minCentavos?: number;
@@ -114,6 +118,8 @@ export const MEDIDAS_FILTRAVEIS = {
   diametroInternoMm: "Diâmetro interno",
   diametroExternoMm: "Diâmetro externo",
   alturaMm: "Altura",
+  espessuraMm: "Espessura",
+  secaoMm: "Seção do cordão",
 } as const;
 
 export type ChaveDeMedida = keyof typeof MEDIDAS_FILTRAVEIS;
@@ -201,11 +207,16 @@ function singular(t: string): string {
 }
 
 export async function listarProdutos(tenantId: string, filtro?: FiltroCatalogo) {
+  const dimensional = filtro?.busca ? consultaDimensional(filtro.busca) : null;
+  const termos = termosDeBusca(dimensional?.texto ?? filtro?.busca ?? "");
+  const posFiltro = Boolean(filtro?.moto || filtro?.medidas || filtro?.busca);
+
   const produtos = await prisma.produto.findMany({
     where: {
       tenantId,
       ativo: true,
       ...(filtro?.destaque ? { destaque: true } : {}),
+      ...(filtro?.compraveis ? WHERE_COMPRAVEL : {}),
       ...(filtro?.imagemOrigem ? { imagemOrigem: filtro.imagemOrigem } : {}),
       ...(filtro?.fabricante ? { marca: { equals: filtro.fabricante, mode: "insensitive" } } : {}),
       ...(filtro?.categoriaSlug ? { categoria: { slug: filtro.categoriaSlug } } : {}),
@@ -213,12 +224,13 @@ export async function listarProdutos(tenantId: string, filtro?: FiltroCatalogo) 
       ...(filtro?.minCentavos != null || filtro?.maxCentavos != null
         ? { precoCentavos: { ...(filtro.minCentavos != null ? { gte: filtro.minCentavos } : {}), ...(filtro.maxCentavos != null ? { lte: filtro.maxCentavos } : {}) } }
         : {}),
-      ...(filtro?.busca ? { AND: termosDeBusca(filtro.busca).map((t) => ({ busca: { contains: t } })) } : {}),
+      ...(termos.length ? { AND: termos.map((t) => ({ busca: { contains: t } })) } : {}),
+      ...(filtro?.perfil ? { atributos: { path: ["perfil"], equals: filtro.perfil } } : {}),
     },
-    include: { categoria: true },
+    include: { categoria: true, variantes: { where: { tenantId, ativo: true }, select: { sku: true, mpn: true, gtin: true } } },
     orderBy: ORDENS[filtro?.ordem ?? "relevancia"],
     // Com moto ou medida escolhida o corte é feito depois, então o limite também.
-    ...(filtro?.limite && !filtro.moto && !filtro.medidas ? { take: filtro.limite, skip: filtro.pular ?? 0 } : {}),
+    ...(filtro?.limite && !posFiltro ? { take: filtro.limite, skip: filtro.pular ?? 0 } : {}),
   });
   const janela = <T>(lista: T[]) => (filtro?.limite ? lista.slice(filtro.pular ?? 0, (filtro.pular ?? 0) + filtro.limite) : lista);
 
@@ -226,7 +238,10 @@ export async function listarProdutos(tenantId: string, filtro?: FiltroCatalogo) 
   // faixa. Filtrar aqui segue o mesmo caminho já usado pela compatibilidade de
   // moto: o catálogo de uma loja cabe na memória, e a alternativa seria SQL
   // cru, perdendo a tipagem em troca de milissegundos que ninguém percebe.
-  let lista = produtos;
+  let lista = dimensional ? produtos.filter(p => confereDimensoes(p.atributos, dimensional.valores)) : produtos;
+  if (filtro?.busca && (!filtro.ordem || filtro.ordem === "relevancia")) {
+    lista.sort((a, b) => Number(codigoExato(b, filtro.busca!)) - Number(codigoExato(a, filtro.busca!)));
+  }
   if (filtro?.medidas) {
     const faixas = Object.entries(filtro.medidas) as Array<[ChaveDeMedida, { de?: number; ate?: number }]>;
     lista = lista.filter((p) => {
@@ -244,7 +259,7 @@ export async function listarProdutos(tenantId: string, filtro?: FiltroCatalogo) 
     });
   }
 
-  if (!filtro?.moto) return filtro?.medidas ? janela(lista) : lista;
+  if (!filtro?.moto) return posFiltro ? janela(lista) : lista;
   const moto = filtro.moto;
   const servem = lista.filter((p) => encaixe(p.compatibilidade, moto) === "serve");
   const universais = lista.filter((p) => encaixe(p.compatibilidade, moto) === "universal");
@@ -266,17 +281,17 @@ export const produtoPublicavel = publicavel;
  * Com moto escolhida o corte é por compatibilidade e continua em memória,
  * como em `listarProdutos`: aí a ordem por foto se aplica sobre o que serve.
  */
-export async function vitrineDaLoja(tenantId: string, opcoes: { moto?: Moto | null; limite?: number; imagemOrigem?: "propria" | "representativa" | "ilustracao" } = {}) {
+export async function vitrineDaLoja(tenantId: string, opcoes: { moto?: Moto | null; limite?: number; imagemOrigem?: "propria" | "representativa" | "ilustracao"; compraveis?: boolean } = {}) {
   const limite = opcoes.limite ?? 12;
   const completude = (p: Produto) => (p.imagens.length > 0 ? 1 : 0) + (p.precoCentavos > 0 ? 1 : 0);
 
   if (opcoes.moto) {
-    const todos = await listarProdutos(tenantId, { moto: opcoes.moto, imagemOrigem: opcoes.imagemOrigem });
+    const todos = await listarProdutos(tenantId, { moto: opcoes.moto, imagemOrigem: opcoes.imagemOrigem, compraveis: opcoes.compraveis });
     return todos.sort((a, b) => completude(b) - completude(a)).slice(0, limite);
   }
 
   const completos = await prisma.produto.findMany({
-    where: { tenantId, ...WHERE_COMPLETO, ...(opcoes.imagemOrigem ? { imagemOrigem: opcoes.imagemOrigem } : {}) },
+    where: { tenantId, ...WHERE_COMPLETO, ...(opcoes.compraveis ? WHERE_COMPRAVEL : {}), ...(opcoes.imagemOrigem ? { imagemOrigem: opcoes.imagemOrigem } : {}) },
     include: { categoria: true },
     orderBy: ORDENS.relevancia,
     take: limite,
@@ -284,7 +299,7 @@ export async function vitrineDaLoja(tenantId: string, opcoes: { moto?: Moto | nu
   if (completos.length >= limite) return completos;
 
   const resto = await prisma.produto.findMany({
-    where: { tenantId, ativo: true, ...(opcoes.imagemOrigem ? { imagemOrigem: opcoes.imagemOrigem } : {}), id: { notIn: completos.map((p) => p.id) } },
+    where: { tenantId, ativo: true, ...(opcoes.compraveis ? WHERE_COMPRAVEL : {}), ...(opcoes.imagemOrigem ? { imagemOrigem: opcoes.imagemOrigem } : {}), id: { notIn: completos.map((p) => p.id) } },
     include: { categoria: true },
     orderBy: ORDENS.relevancia,
     take: limite * 4,
@@ -300,16 +315,16 @@ export async function vitrineDaLoja(tenantId: string, opcoes: { moto?: Moto | nu
  * a decisão sai do dado, nenhuma loja precisa de configuração — e a de peças
  * ganha a navegação sozinha.
  */
-export async function medidasDaLoja(tenantId: string) {
+export async function medidasDaLoja(tenantId: string, categoriaSlug?: string) {
   // Cinco minutos em memória, por loja. Esta função lê o JSON de atributos de
   // TODOS os produtos ativos a cada visita ao catálogo, só para desenhar três
   // faixas de formulário que mudam quando o lojista importa planilha, não a
   // cada pedido de página. Na Vedashow são 5.591 linhas por visita.
-  return unstable_cache(medidasDaLojaSemCache, ["medidas-da-loja"], { revalidate: 300, tags: [etiquetaDoCatalogo(tenantId)] })(tenantId);
+  return unstable_cache(medidasDaLojaSemCache, ["medidas-da-loja"], { revalidate: 300, tags: [etiquetaDoCatalogo(tenantId)] })(tenantId, categoriaSlug);
 }
 
-async function medidasDaLojaSemCache(tenantId: string) {
-  const linhas = await prisma.produto.findMany({ where: { tenantId, ativo: true }, select: { atributos: true } });
+async function medidasDaLojaSemCache(tenantId: string, categoriaSlug?: string) {
+  const linhas = await prisma.produto.findMany({ where: { tenantId, ativo: true, ...(categoriaSlug ? { categoria: { slug: categoriaSlug } } : {}) }, select: { atributos: true } });
   const valores = new Map<ChaveDeMedida, number[]>();
   for (const l of linhas) {
     const attr = (l.atributos ?? {}) as Record<string, unknown>;
@@ -329,7 +344,7 @@ async function medidasDaLojaSemCache(tenantId: string) {
   // que 98% das peças cabem; quem digitar fora dela continua atendido, porque
   // o filtro usa o valor digitado, não a faixa.
   const percentil = (lista: number[], p: number) => lista[Math.min(lista.length - 1, Math.floor(lista.length * p))];
-  // Menos de 20 produtos com a medida não é navegação, é campo vazio na tela.
+  // Uma medida só aparece se houver algum produto da família com o atributo.
   return (Object.keys(MEDIDAS_FILTRAVEIS) as ChaveDeMedida[])
     .map((campo) => {
       const lista = (valores.get(campo) ?? []).sort((a, b) => a - b);
@@ -341,7 +356,7 @@ async function medidasDaLojaSemCache(tenantId: string) {
         itens: lista.length,
       };
     })
-    .filter((m) => m.itens >= 20);
+    .filter((m) => m.itens > 0);
 }
 
 /**
@@ -562,4 +577,15 @@ async function necessidadesSemCache(tenantId: string) {
     ),
   );
   return NECESSIDADES.filter((_, i) => achou[i] !== null);
+}
+
+/** Facetas pertencem à loja e à família selecionada; só valores cadastrados. */
+export async function facetasTecnicas(tenantId: string, categoriaSlug?: string) {
+  const linhas = await prisma.produto.findMany({
+    where: { tenantId, ativo: true, ...(categoriaSlug ? { categoria: { slug: categoriaSlug } } : {}) },
+    select: { marca: true, atributos: true },
+  });
+  const fabricantes = [...new Set(linhas.map(p => p.marca).filter((m): m is string => !!m && m.toLowerCase() !== "diversos"))].sort();
+  const perfis = categoriaSlug ? [...new Set(linhas.map(p => (p.atributos as Record<string, unknown> | null)?.perfil).filter((p): p is string => typeof p === "string" && !!p.trim()))].sort() : [];
+  return { fabricantes, perfis };
 }

@@ -108,6 +108,7 @@ export default async function Categoria({ params, searchParams }: Props) {
         ) : null}
       </p>
 
+      <Link href={`/produtos?categoria=${encodeURIComponent(categoria.slug)}`} className="btn-secundario mb-6">Buscar e filtrar nesta categoria</Link>
       {produtos.length === 0 ? (
         <section className="rounded-xl border border-dashed border-border bg-card p-8 text-center" aria-labelledby="categoria-vazia-titulo">
           <h2 id="categoria-vazia-titulo" className="font-semibold">Nenhum produto encontrado</h2>

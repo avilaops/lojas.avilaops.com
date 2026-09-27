@@ -175,7 +175,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
         )}
       </nav>
 
-      <div className="grid gap-8 md:grid-cols-2 ap-produto-grade">
+      <div className="grid items-start gap-8 md:grid-cols-2 ap-produto-grade">
         {temaDo(t).layout === "automotivo-premium" ? <GaleriaPremium imagens={p.imagens} alt={p.nome} origem={p.imagemOrigem}/> : <GaleriaProduto imagens={p.imagens} alt={p.nome} origem={p.imagemOrigem} />}
 
         <div className="ap-produto-info">

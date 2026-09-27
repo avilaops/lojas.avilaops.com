@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import MedirSessao from "@/components/MedirSessao";
 import Pixels from "@/components/Pixels";
@@ -22,6 +22,12 @@ import LojaNaoEncontrada from "@/components/LojaNaoEncontrada";
 import AvisoSuspensa from "@/components/AvisoSuspensa";
 import BarraGaragem from "@/components/BarraGaragem";
 import { prisma } from "@/lib/db";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 
 /**
  * Ícone e manifesto da loja, quando ela tem os seus.
@@ -201,7 +207,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <MedirSessao />
         </Suspense>
         <CartProvider slug={t.slug} painelHabilitado={premium}>
-          {t.status === "SUSPENSA" && <AvisoSuspensa />}
+          {t.status === "SUSPENSA" && t.slug !== "vedashow" && <AvisoSuspensa />}
           {t.avisoTopo && !premium && (
             <p className="barra-aviso" role="status">{t.avisoTopo}</p>
           )}

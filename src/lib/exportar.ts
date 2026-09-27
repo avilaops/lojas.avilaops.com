@@ -203,6 +203,7 @@ export async function produtosEmLinhas(tenantId: string, filtro: FiltroCatalogo 
 
   return [[...COLUNAS_PRODUTO], ...produtos.map((p) => linhaDoProduto({
     ...p,
+    atributos: p.atributos && typeof p.atributos === "object" && !Array.isArray(p.atributos) ? p.atributos as Record<string, unknown> : null,
     mpn: p.variantes[0]?.mpn ?? null,
     identificadoresEstado: (p.variantes[0]?.identificadoresEstado ?? "desconhecido") as ProdutoDePlanilha["identificadoresEstado"],
     imagemConfirmada: p.midias[0]?.correspondencia === "confirmada",

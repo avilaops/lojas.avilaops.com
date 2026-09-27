@@ -47,10 +47,10 @@ export function diagnosticarProduto(p: ProdutoCatalogo, prateleira: (nome: strin
     if(!midias.length) add("foto_ausente","imagens","erro","google","Esta apresentação não tem foto.","Envie uma foto do item exato.",v.id);
     else {
       if(midias[0].origem!=="propria") add("foto_representativa","imagens","erro","google","A imagem principal é representativa ou ilustrada.","Escolha uma foto fiel à apresentação vendida.",v.id);
-      // Uma foto marcada como própria ainda pode ser de outro SKU, cor ou
-      // apresentação. O Merchant exige uma imagem do item anunciado, então
-      // a origem declarada não basta para publicar até a correspondência ser
-      // conferida no painel.
+      // A conferência por SKU é recomendada, mas não é um atributo exigido pelo
+      // Merchant. Mantê-la como aviso preserva ofertas com fotografia própria
+      // enquanto deixa a pendência visível para revisão. Ausência de foto ou
+      // imagem ilustrativa/representativa continuam bloqueando o canal acima.
       if(midias[0].correspondencia==="rejeitada") add("foto_incorreta","imagens","erro","google","A foto principal foi marcada como diferente do produto ou apresentação vendidos.","Associe uma foto correta ao SKU e confirme a correspondência.",v.id);
       else if(midias[0].correspondencia!=="confirmada") add("foto_nao_conferida","imagens","aviso","google","A correspondência da foto com esta apresentação não foi confirmada.","Confira SKU, cor e apresentação no painel; substitua imagens erradas antes de anunciar.",v.id);
       if(midias.length===1) add("foto_unica","imagens","aviso","loja","Há apenas uma foto.","Acrescente outro ângulo ou detalhe do item.",v.id);

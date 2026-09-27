@@ -50,7 +50,7 @@ test("o catálogo exportado volta inteiro pela importação", () => {
   assert.equal(p.sku, "ROL6205");
   assert.equal(p.gtin, "0789123456789");
   assert.equal(p.descricaoCurta, PRODUTO.descricaoCurta);
-  assert.deepEqual(p.imagens, ["https://exemplo.com/6205.jpg"]);
+  assert.deepEqual(p.imagens, PRODUTO.imagens);
   assert.equal(p.correspondenciaImagem, "nao_confirmada");
   assert.equal(p.destaque, true);
   assert.equal(p.ativo, true);

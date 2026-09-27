@@ -1,3 +1,4 @@
+import { fichaDoProduto } from "@/lib/ficha";
 import Link from "next/link";
 import * as regras from "@/lib/produto-regras";
 import type { Produto } from "@prisma/client";
@@ -13,6 +14,8 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null, ocu
   const modelos = lerCompatibilidade(produto.compatibilidade);
   const imagem = produto.imagens[0];
   const segundaImagem = produto.imagens[1];
+  const ficha = fichaDoProduto(produto.atributos as Record<string, unknown> | null);
+  const tecnicos = ficha.filter(l => l.unidade === "mm" || ["referencia", "perfil"].includes(l.chave)).slice(0, 5);
   const marca = marcaConfirmada(produto.marca);
   const miniatura = imagem && /\/uploads\//.test(imagem) && !/\.svg$/i.test(imagem) ? `${imagem}?w=480` : imagem;
   const miniatura2 = segundaImagem && /\/uploads\//.test(segundaImagem) && !/\.svg$/i.test(segundaImagem) ? `${segundaImagem}?w=480` : segundaImagem;
@@ -49,7 +52,7 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null, ocu
               src={miniatura}
               alt={produto.nome}
               loading="lazy"
-              className={`h-full w-full object-cover transition-all duration-500 ${
+              className={`h-full w-full object-contain transition-all duration-500 ${
                 segundaImagem ? "group-hover:opacity-0 group-hover:scale-105" : "group-hover:scale-105"
               }`}
             />
@@ -60,7 +63,7 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null, ocu
                 src={miniatura2}
                 alt={`${produto.nome} - ângulo secundário`}
                 loading="lazy"
-                className="absolute inset-0 h-full w-full object-cover opacity-0 transition-all duration-500 group-hover:opacity-100 group-hover:scale-105"
+                className="absolute inset-0 h-full w-full object-contain opacity-0 transition-all duration-500 group-hover:opacity-100 group-hover:scale-105"
               />
             )}
           </>
@@ -120,9 +123,13 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null, ocu
             {modelos.slice(0, 2).map((c) => c.modelo).join(" · ")}{modelos.length > 2 ? ` +${modelos.length - 2}` : ""}
           </p>
         ) : null}
-        <Link href={`/produtos/${produto.slug}`} className="line-clamp-2 text-sm font-semibold hover:text-primary transition-colors">
+        <Link href={`/produtos/${produto.slug}`} className="cartao-produto-nome text-sm font-semibold hover:text-primary transition-colors">
           {produto.nome}
         </Link>
+        {produto.sku && <p className="text-xs text-muted-foreground break-words">Código: {produto.sku}</p>}
+        {tecnicos.length > 0 && <dl className="cartao-produto-tecnica">{tecnicos.map(l => <div key={l.chave}><dt>{l.rotulo}</dt><dd>{l.valor}</dd></div>)}</dl>}
+        <p className="text-xs text-muted-foreground">{esgotado ? "Indisponível no momento" : produto.disponibilidade === "backorder" ? "Sob encomenda" : "Em estoque"}</p>
+        <Link href={`/produtos/${produto.slug}`} className="text-xs underline underline-offset-4">Ver detalhes</Link>
         <div className="mt-auto pt-1">
           {produto.precoDeCentavos && produto.precoDeCentavos > produto.precoCentavos && (
             <p className="text-xs text-muted-foreground line-through">{formatarBRL(produto.precoDeCentavos)}</p>
@@ -152,6 +159,8 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null, ocu
               Ver detalhes
             </Link>
           )
+        ) : esgotado ? (
+          <Link href={`/produtos/${produto.slug}`} className="btn-secundario w-full text-xs">Ver disponibilidade</Link>
         ) : vende && produto.opcoes.length > 0 ? (
           <Link href={`/produtos/${produto.slug}`} className="btn-secundario w-full text-xs">
             Ver opções

@@ -1,8 +1,8 @@
 import type { MetadataRoute } from "next";
 import { headers } from "next/headers";
 import { tenantAtual, temaDo, urlDaLoja } from "@/lib/tenant";
-import { campanhasDaLoja } from "@/lib/campanhas";
 import { listarCategorias, listarProdutos, produtoPublicavel } from "@/lib/catalogo";
+import { campanhasDaLoja } from "@/lib/campanhas";
 import { postsPublicados } from "@/lib/blog";
 import { listarPublicadas } from "@/lib/publicacoes-consulta";
 import { politicasPublicadas } from "@/lib/politicas";

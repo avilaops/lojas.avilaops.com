@@ -101,7 +101,8 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoSalvar 
           id: produtoId, versaoCatalogo:f.versaoCatalogo, mpn:f.temVariacoes?undefined:(f.mpn||null), identificadoresEstado:f.temVariacoes?undefined:f.identificadoresEstado, googleProductCategory:f.googleProductCategory.trim() || null, nome: f.nome, categoria: f.categoria, marca: f.marca || undefined, sku: f.temVariacoes?undefined:f.sku, gtin:f.temVariacoes?undefined:f.gtin.trim(), precoCentavos:f.temVariacoes?undefined:preco,
           ...(!f.temVariacoes ? { precoDeCentavos: precoDe ?? null } : {}),
           descricaoCurta: f.descricaoCurta || undefined, descricao: f.descricao || undefined, imagens: f.imagens, imagemOrigem:f.imagemOrigem, imagemFamilia:f.imagemFamilia.trim()||null, destaque: f.destaque, ativo: f.ativo,
-          ...(f.imagemOrigem === "propria" && f.imagens.length ? { correspondenciaImagem: f.correspondenciaImagem } : {}),
+          ...(f.imagemConfirmada && f.imagemOrigem === "propria" && f.imagens.length ? { confirmarImagemExata: true } : {}),
+          ...(f.imagemOrigem === "propria" && f.imagens.length && f.correspondenciaImagem !== "confirmada" ? { correspondenciaImagem: f.correspondenciaImagem } : {}),
           disponibilidade:f.temVariacoes?undefined:f.disponibilidade, ...(!f.temVariacoes ? { estoque:f.estoque.trim()?Number(f.estoque):null } : {}), ...(f.pesoKg.trim() ? { pesoKg: Number.parseFloat(f.pesoKg.replace(",", ".")) } : {}),
         ...medida("alturaCm", f.alturaCm), ...medida("larguraCm", f.larguraCm), ...medida("comprimentoCm", f.comprimentoCm),
           codigoOriginal: f.codigoOriginal.trim() || null,
@@ -194,7 +195,11 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoSalvar 
         </Campo>
         {f.imagemOrigem === "representativa" && <Campo label="Família representada"><input id="catalogo-imagem-familia" className={inputClasse} value={f.imagemFamilia} onChange={(e) => set("imagemFamilia", e.target.value)} placeholder="Ex.: série 6200" maxLength={40} /></Campo>}
       </div>
-      <Campo label="Correspondência da foto com o SKU"><select className={inputClasse} value={f.correspondenciaImagem} disabled={!f.imagens.length || f.imagemOrigem !== "propria"} onChange={(e) => setF({ ...f, correspondenciaImagem: e.target.value as Form["correspondenciaImagem"], imagemConfirmada: e.target.value === "confirmada" })}><option value="nao_confirmada">Ainda não conferida</option><option value="confirmada">Confirmada para este SKU</option><option value="rejeitada">Incorreta para este SKU</option></select></Campo>
+      <div className="grid gap-2 sm:grid-cols-2">
+        <Campo label="Correspondência da foto" ajuda="Uma imagem marcada como incorreta fica fora do feed do Google até ser substituída e revisada.">
+          <select className={inputClasse} value={f.correspondenciaImagem} disabled={!f.imagens.length || f.imagemOrigem !== "propria"} onChange={(e) => setF({ ...f, correspondenciaImagem: e.target.value as Form["correspondenciaImagem"], imagemConfirmada: e.target.value === "confirmada" })}><option value="nao_confirmada">Ainda não conferida</option><option value="confirmada">Confirmada para este SKU</option><option value="rejeitada">Incorreta para este SKU</option></select>
+        </Campo>
+      </div>
 
       <Recolhivel titulo="Identificação" resumo="marca, SKU, GTIN, MPN" aviso={semIdentificador ? "sem GTIN nem MPN" : null}>
         <div className="grid min-w-0 gap-4 sm:grid-cols-2">

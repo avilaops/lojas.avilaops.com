@@ -67,6 +67,19 @@ export interface EnderecoEntregaView { logradouro: string; numero: string; compl
 export interface PedidoView { id: string; numero: number; referencia: string; status: string; clienteNome: string; clienteEmail: string; clienteTelefone: string; clienteDocumento: string; totalCentavos: number; subtotalCentavos: number; freteCentavos: number; descontoCentavos: number; cupomCodigo: string | null; meioPagamento: string; freteNome: string; rastreio: string | null; entrega: EnderecoEntregaView | null; etiqueta: { status: string; codigoObjeto: string | null; pdf: string | null; custoCentavos: number } | null; criadoEm: string; itens: Array<{ nome: string; quantidade: number; sku: string | null; precoUnitarioCentavos: number }> }
 
 const STATUS: Record<string, string> = { ATIVA: "No ar", PROVISIONANDO: "Configurando", SUSPENSA: "Suspensa", CANCELADA: "Cancelada" };
+const CAMPOS_IMPORTACAO = [
+  ["nome", "nome"], ["precoCentavos", "preço"], ["precoDeCentavos", "preço de"], ["categoria", "categoria"],
+  ["googleProductCategory", "categoria Google"], ["marca", "marca"], ["sku", "SKU"], ["gtin", "GTIN"],
+  ["mpn", "MPN"], ["identificadoresEstado", "estado dos identificadores"], ["descricaoCurta", "descrição curta"],
+  ["descricao", "descrição"], ["imagens", "foto"], ["imagemOrigem", "origem da foto"], ["imagemFamilia", "família da foto"],
+  ["confirmarImagemExata", "confirmação da foto exata"], ["destaque", "destaque"], ["estoque", "estoque"],
+  ["pesoKg", "peso"], ["alturaCm", "altura"], ["larguraCm", "largura"], ["comprimentoCm", "comprimento"], ["ativo", "status"],
+] as const;
+
+function camposDaImportacao(produto: Record<string, unknown>) {
+  return CAMPOS_IMPORTACAO.filter(([chave]) => produto[chave] !== undefined).map(([, rotulo]) => rotulo);
+}
+
 /**
  * Cada seção é um endereço.
  *
@@ -263,7 +276,7 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
 
           <Secao titulo="Importar planilha" descricao="Produto com o mesmo SKU é atualizado, não duplicado.">
             <p className="text-xs text-muted-foreground">Colunas: <code>nome, preco, categoria, google_product_category, marca, sku, gtin, mpn, identificadores_estado, preco_de, descricao_curta, descricao, imagem, imagem_origem, imagem_familia, confirmar_imagem_exata, correspondencia_imagem, destaque, peso_kg, altura_cm, largura_cm, comprimento_cm, estoque, ativo</code></p>
-            <p className="text-xs text-muted-foreground">Use MPN somente para o código do fabricante. Em <code>google_product_category</code>, informe o ID ou o caminho oficial confirmado. Em atualização por planilha, a célula vazia mantém o valor salvo; escreva <code>auto</code> para remover uma substituição e voltar à classificação automática. Em <code>identificadores_estado</code>, informe <code>desconhecido</code>, <code>informado</code> ou <code>sem_identificador</code>, conforme embalagem ou fornecedor. Em <code>correspondencia_imagem</code>, use <code>confirmada</code> somente após verificar foto e SKU, <code>rejeitada</code> para imagem incorreta e <code>nao_confirmada</code> enquanto aguarda revisão. Imagem rejeitada fica fora do feed Merchant. Em produtos com variantes, a planilha atualiza a apresentação padrão.</p>
+            <p className="text-xs text-muted-foreground">Use MPN somente para o código do fabricante. Em <code>google_product_category</code>, informe o ID ou o caminho oficial confirmado. Em atualização por planilha, a célula vazia mantém o valor salvo; escreva <code>auto</code> para remover uma substituição e voltar à classificação automática. Em <code>identificadores_estado</code>, informe <code>desconhecido</code>, <code>informado</code> ou <code>sem_identificador</code>, conforme embalagem ou fornecedor. Em <code>confirmar_imagem_exata</code>, informe <code>sim</code> só depois de conferir que a foto principal mostra exatamente o produto e a apresentação daquele SKU. Em <code>correspondencia_imagem</code>, use <code>confirmada</code> ou <code>rejeitada</code> após conferir a foto principal. A rejeição bloqueia o item do Merchant até substituir a foto e revisar o estado. Em produtos com variantes, a planilha atualiza a apresentação padrão.</p>
             {/* São as mesmas colunas que a exportação do Catálogo grava: o
                 caminho de corrigir em lote é baixar, mexer e devolver. Coluna
                 que não vier no arquivo não é mexida no produto. */}
@@ -283,6 +296,15 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
                     {csv.produtos.length.toLocaleString("pt-BR")} produto(s) prontos para importar
                   </span>
                 </p>
+                {csv.produtos.length > 0 && <div className="mt-3 max-h-72 overflow-auto rounded-lg border border-border">
+                  <ul aria-label="Prévia dos produtos e campos da importação" className="divide-y divide-border">
+                    {csv.produtos.slice(0, 10).map((produto, indice) => <li key={`${String(produto.sku ?? produto.slug ?? produto.nome ?? "produto")}-${indice}`} className="grid gap-1 px-3 py-2 text-xs sm:grid-cols-[minmax(10rem,1fr)_minmax(12rem,1.2fr)] sm:items-start">
+                      <span className="min-w-0 break-words font-medium">{produto.sku ? `SKU ${String(produto.sku)}` : "Novo produto"}{produto.nome ? ` · ${String(produto.nome)}` : ""}</span>
+                      <span className="text-muted-foreground">Campos: {camposDaImportacao(produto).join(", ") || "nenhum"}</span>
+                    </li>)}
+                  </ul>
+                  {csv.produtos.length > 10 && <p className="border-t border-border px-3 py-2 text-xs text-muted-foreground">Prévia das primeiras 10 linhas de {csv.produtos.length.toLocaleString("pt-BR")}.</p>}
+                </div>}
                 {/* O erro aparece antes de importar, e não depois: planilha de
                     fornecedor quase sempre tem linha torta, e descobrir isso
                     com metade do catálogo gravado é pior. */}
