@@ -209,9 +209,10 @@ function singular(t: string): string {
 function condicaoProdutos(tenantId: string, filtro?: FiltroCatalogo): Prisma.ProdutoWhereInput {
   const dimensional = filtro?.busca ? consultaDimensional(filtro.busca) : null;
   const par = !dimensional && filtro?.busca ? consultaParDeMedidas(filtro.busca) : null;
-  // O índice já contém as medidas normalizadas pelo gatilho. Reduz os
-  // candidatos antes de conferir valor, ordem e unidade no atributo original.
-  const termos = [...termosDeBusca(dimensional?.texto ?? par?.texto ?? filtro?.busca ?? ""), ...(dimensional?.valores.map(String) ?? [])];
+  // O índice textual usa a grafia original (8,5 ou 8.50) e não indexa todos
+  // os atributos. Medidas são conferidas no JSON, sem um pré-filtro textual
+  // que descartaria valores numericamente equivalentes.
+  const termos = termosDeBusca(dimensional?.texto ?? par?.texto ?? filtro?.busca ?? "");
   return {
       tenantId,
       ativo: true,
