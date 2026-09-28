@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { mapearPedidoMl, meioDePagamentoMl, statusDoPedidoMl, type OrdemMl } from "./mercadolivre-pedidos";
+import { mapearPedidoMl, meioDePagamentoMl, resolverVariante, statusDoPedidoMl, type OrdemMl, type ProdutoCasado } from "./mercadolivre-pedidos";
 import { lerAviso } from "./mercadolivre-avisos";
 
 /**
@@ -9,7 +9,10 @@ import { lerAviso } from "./mercadolivre-avisos";
  * estoque casado com o produto certo, e o pedido que não pode virar dois.
  */
 
-const casar = (mlb: string) => (mlb === "MLB111" ? { produtoId: "prod-1", sku: "SKU-1" } : undefined);
+const casar = (mlb: string) =>
+  mlb === "MLB111"
+    ? { produtoId: "prod-1", sku: "SKU-1", variantes: [{ id: "v-unica", nome: "Padrão", sku: "SKU-1", padrao: true, valores: {} }] }
+    : undefined;
 
 const ORDEM: OrdemMl = {
   id: 2000003508419013,
@@ -115,4 +118,100 @@ test("o aviso do ML diz qual recurso buscar, nas duas formas que chegam", () => 
   assert.deepEqual(lerAviso("mercadolivre.items", { resource: "/items/MLB111" }), { topico: "items", id: "MLB111" });
   assert.equal(lerAviso("mercadolivre.orders_v2", {}), null, "sem recurso não há o que buscar");
   assert.equal(lerAviso("mercadolivre.orders_v2", null), null);
+});
+
+/**
+ * Qual apresentação o Mercado Livre vendeu.
+ *
+ * Até 19/09/2026 o pedido nascia sem variante e o estoque saía da **padrão**,
+ * seja qual fosse a vendida. Numa loja de camiseta, vender o G tirava o P: o P
+ * some da prateleira enquanto está lá, o G continua à venda depois de acabar, e
+ * a segunda venda do G vira cancelamento — que no ML custa reputação.
+ */
+const CAMISETA: ProdutoCasado = {
+  produtoId: "prod-camiseta",
+  sku: "CAM",
+  variantes: [
+    { id: "v-p", nome: "P / Azul", sku: "CAM-P-AZ", padrao: true, valores: { Tamanho: "P", Cor: "Azul" } },
+    { id: "v-g", nome: "G / Azul", sku: "CAM-G-AZ", padrao: false, valores: { Tamanho: "G", Cor: "Azul" } },
+    { id: "v-g-vm", nome: "G / Vermelho", sku: null, valores: { Tamanho: "G", Cor: "Vermelho" }, padrao: false },
+  ],
+};
+
+test("o SKU da variação decide, e não a apresentação padrão", () => {
+  const r = resolverVariante({ seller_sku: "CAM-G-AZ" }, CAMISETA);
+  assert.equal(r.varianteId, "v-g");
+  assert.equal(r.por, "sku");
+});
+
+test("sem SKU, os atributos escolhidos pelo comprador decidem", () => {
+  const r = resolverVariante(
+    { variation_attributes: [{ name: "Tamanho", value_name: "G" }, { name: "Cor", value_name: "Vermelho" }] },
+    CAMISETA,
+  );
+  assert.equal(r.varianteId, "v-g-vm");
+  assert.equal(r.por, "atributos");
+});
+
+test("acento e caixa não atrapalham o casamento por atributo", () => {
+  const produto: ProdutoCasado = {
+    produtoId: "p", sku: null,
+    variantes: [
+      { id: "a", nome: "Único", sku: null, padrao: true, valores: { "Tamanho padrão": "Único" } },
+      { id: "b", nome: "Grande", sku: null, padrao: false, valores: { "Tamanho padrão": "Grande" } },
+    ],
+  };
+  const r = resolverVariante({ variation_attributes: [{ name: "TAMANHO PADRAO", value_name: "unico" }] }, produto);
+  assert.equal(r.varianteId, "a");
+});
+
+test("atributo que casa com duas variantes é ambiguidade, não resposta", () => {
+  // "Tamanho G" sozinho serve para G/Azul e G/Vermelho. Escolher uma seria
+  // chutar — e chutar aqui estraga duas apresentações de uma vez.
+  const r = resolverVariante({ variation_attributes: [{ name: "Tamanho", value_name: "G" }] }, CAMISETA);
+  assert.equal(r.varianteId, null);
+  assert.equal(r.por, "nao-identificada");
+});
+
+test("produto de uma apresentação só não tem o que escolher", () => {
+  const r = resolverVariante({}, { produtoId: "p", sku: "S", variantes: [{ id: "v", nome: "Padrão", sku: "S", padrao: true, valores: {} }] });
+  assert.equal(r.varianteId, "v");
+  assert.equal(r.por, "unica");
+});
+
+test("variação irreconhecível não vira a padrão", () => {
+  const r = resolverVariante({ seller_sku: "SKU-QUE-NAO-EXISTE" }, CAMISETA);
+  assert.equal(r.varianteId, null, "chutar a padrão é exatamente o bug que isto corrige");
+  assert.equal(r.por, "nao-identificada");
+});
+
+test("anúncio sem produto casado não resolve variante nenhuma", () => {
+  const r = resolverVariante({ seller_sku: "X" }, undefined);
+  assert.equal(r.varianteId, null);
+  assert.equal(r.por, "sem-produto");
+});
+
+test("o pedido do ML carrega a variante vendida, e avisa quando não a reconhece", () => {
+  const comVariacao: OrdemMl = {
+    ...ORDEM,
+    order_items: [
+      { item: { id: "MLB222", title: "Camiseta", seller_sku: "CAM-G-AZ", variation_id: 99 }, quantity: 1, unit_price: 50 },
+    ],
+    total_amount: 50,
+  };
+  const casarCamiseta = (mlb: string) => (mlb === "MLB222" ? CAMISETA : undefined);
+
+  const certo = mapearPedidoMl(comVariacao, casarCamiseta);
+  assert.equal(certo.itens[0].varianteId, "v-g");
+  assert.equal(certo.itens[0].varianteNome, "G / Azul");
+  assert.deepEqual(certo.avisos, []);
+
+  const perdido = mapearPedidoMl(
+    { ...comVariacao, order_items: [{ item: { id: "MLB222", title: "Camiseta", seller_sku: "NAO-EXISTE", variation_id: 99 }, quantity: 1, unit_price: 50 }] },
+    casarCamiseta,
+  );
+  assert.equal(perdido.itens[0].varianteId, null);
+  // O aviso precisa ensinar o que fazer, não só constatar.
+  assert.match(perdido.avisos[0] ?? "", /estoque NÃO foi baixado/);
+  assert.match(perdido.avisos[0] ?? "", /SKU da variação/);
 });
