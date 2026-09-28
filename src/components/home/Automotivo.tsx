@@ -148,7 +148,7 @@ export default function Automotivo({ t, identidade, categorias, vitrine, temDest
           <p className="home-vazio">Os primeiros produtos estão sendo organizados para esta vitrine.</p>
         ) : (
           <div className="automotivo-grade-produtos">
-            {vitrine.slice(0, 12).map((produto) => <ProductCard key={produto.id} produto={produto} vende={vende} whatsapp={t.whatsapp} moto={moto} compacto alternarImagem={false} />)}
+            {vitrine.slice(0, 12).map((produto) => <ProductCard loja={t} key={produto.id} produto={produto} vende={vende} whatsapp={t.whatsapp} moto={moto} compacto alternarImagem={false} />)}
           </div>
         )}
       </section>

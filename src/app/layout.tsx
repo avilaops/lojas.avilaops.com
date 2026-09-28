@@ -198,7 +198,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             complemento; quem indexa continua sendo sitemap + páginas. */}
         <link rel="describedby" href="/llms.txt" />
       </head>
-      <body className="flex min-h-screen flex-col">
+      <body className="flex min-h-screen flex-col" data-layout={tema.layout}>
         <Pixels p={pixels} />
         {/* Medição da própria vitrine, no próprio domínio. `useSearchParams`
             obriga o Suspense: sem ele a página inteira cairia em renderização

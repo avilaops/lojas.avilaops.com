@@ -39,7 +39,7 @@ export default async function Promocoes() {
       {produtos.length > 0 && (
         <section className="container-loja campanhas-produtos" aria-label="Ofertas com desconto ativo">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-            {produtos.map((produto) => <ProductCard key={produto.id} produto={produto} vende={lojaVende(t)} whatsapp={t.whatsapp} />)}
+            {produtos.map((produto) => <ProductCard loja={t} key={produto.id} produto={produto} vende={lojaVende(t)} whatsapp={t.whatsapp} />)}
           </div>
         </section>
       )}

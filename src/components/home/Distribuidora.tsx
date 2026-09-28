@@ -32,7 +32,7 @@ export default function Distribuidora({ t, identidade, categorias, vitrine, temD
         <section className="container-loja campanhas-produtos" aria-labelledby="produtos-titulo">
           <header><h2 id="produtos-titulo">{temDestaques ? "Destaques do catálogo" : "Explore nossos produtos"}</h2><Link href="/produtos">Ver catálogo completo <ArrowRight size={18} /></Link></header>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            {vitrine.slice(0, 8).map(produto => <ProductCard key={produto.id} produto={produto} vende={vende} whatsapp={t.whatsapp} moto={moto} />)}
+            {vitrine.slice(0, 8).map(produto => <ProductCard loja={t} key={produto.id} produto={produto} vende={vende} whatsapp={t.whatsapp} moto={moto} />)}
           </div>
           <Link href="/produtos" className="btn-primario campanhas-ver-todos">Ver todos os produtos <ArrowRight size={18} /></Link>
         </section>
@@ -89,7 +89,7 @@ export default function Distribuidora({ t, identidade, categorias, vitrine, temD
           <p className="home-vazio">Os primeiros produtos estão sendo organizados para esta vitrine.</p>
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-            {vitrine.slice(0, 10).map((produto) => <ProductCard key={produto.id} produto={produto} vende={vende} whatsapp={t.whatsapp} moto={moto} />)}
+            {vitrine.slice(0, 10).map((produto) => <ProductCard loja={t} key={produto.id} produto={produto} vende={vende} whatsapp={t.whatsapp} moto={moto} />)}
           </div>
         )}
       </section>
