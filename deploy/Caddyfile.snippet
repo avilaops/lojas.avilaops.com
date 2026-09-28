@@ -66,3 +66,15 @@ lojas.avilaops.com, *.lojas.avilaops.com {
 
 	reverse_proxy 127.0.0.1:3080
 }
+
+# ---------------------------------------------------------------------------
+# 28/09/2026 — receptor do ProCommerce da VedaShow.
+#
+# A tarefa agendada no SERVIDOR da loja física manda o cadastro de produtos
+# para /integracoes/erp/vedashow/*, que não é da plataforma: é o serviço
+# vedashow-sync (vedashow.com.br/etl/receptor_erp.py) em 127.0.0.1:5191. O
+# handle entra no bloco das lojas, antes do reverse_proxy da plataforma:
+#
+#	handle /integracoes/erp/* {
+#		reverse_proxy 127.0.0.1:5191
+#	}
