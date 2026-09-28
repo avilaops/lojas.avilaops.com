@@ -248,9 +248,20 @@ export async function reenviar(eventId: string, slug: string): Promise<Resultado
   });
   if (reaberto.count === 0) return { ok: false, motivo: "ja-reenviado" };
 
+  // O reenvio herda os canais que já saíram: se o e-mail chegou e só o
+  // WhatsApp falhou, o comprador não recebe a confirmação de novo.
   await prisma.automacaoEvento.create({
-    data: { eventId: novo, tipo: e.tipo, slug: e.slug, versao: e.versao, correlationId: e.correlationId, payload: envelope as unknown as Prisma.InputJsonValue, tentativas: e.tentativas + 1 },
+    data: { eventId: novo, tipo: e.tipo, slug: e.slug, versao: e.versao, correlationId: e.correlationId, payload: envelope as unknown as Prisma.InputJsonValue, tentativas: e.tentativas + 1, canaisFeitos: e.canaisFeitos },
   });
-  await entregar(envelope, novo, e.tipo);
+  // Tipo que a plataforma executa não volta para o n8n: seria o mesmo aviso
+  // saindo pelos dois lados.
+  if (executamos(e.tipo)) {
+    const { processarEventosProprios } = await import("./automacoes-consumo");
+    await processarEventosProprios({ eventId: novo }).catch((erro) => {
+      console.error("[eventos] reenvio falhou", novo, erro);
+    });
+  } else {
+    await entregar(envelope, novo, e.tipo);
+  }
   return { ok: true, eventId, novoEventId: novo };
 }
