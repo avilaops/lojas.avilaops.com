@@ -193,6 +193,28 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
 .distribuidora-arte-numeros p { display: flex; align-items: baseline; gap: .35rem; }
 .distribuidora-arte-numeros strong { font-size: 1.2rem; font-weight: 780; }
 .distribuidora-arte-numeros span { font-size: .72rem; color: var(--muted-foreground); }
+.home-campanhas { display: flex; flex-direction: column; gap: clamp(1.25rem, 3vw, 2.5rem); padding-bottom: 3rem; }
+.banner-campanhas { position: relative; width: min(100%, 1440px); margin-inline: auto; }
+.banner-campanhas-trilho { display: flex; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scrollbar-width: none; }
+.banner-campanhas-trilho::-webkit-scrollbar { display: none; }
+.banner-campanha { flex: 0 0 100%; overflow: hidden; aspect-ratio: 16 / 9; scroll-snap-align: start; background: #101d39; }
+.banner-campanha img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.banner-campanhas-seta { position: absolute; top: 50%; z-index: 2; display: grid; width: 2.75rem; height: 2.75rem; place-items: center; transform: translateY(-50%); border: 1px solid rgba(255,255,255,.65); border-radius: 999px; background: rgba(12,20,39,.76); color: #fff; box-shadow: 0 4px 16px rgba(0,0,0,.2); }
+.banner-campanhas-seta:disabled { opacity: .38; }
+.banner-campanhas-seta svg { width: 1.35rem; height: 1.35rem; }
+.banner-campanhas-seta.anterior { left: .8rem; }
+.banner-campanhas-seta.proxima { right: .8rem; }
+.banner-campanhas-pontos { position: absolute; right: 0; bottom: .9rem; left: 0; z-index: 2; display: flex; justify-content: center; gap: .45rem; }
+.banner-campanhas-pontos button { width: .55rem; height: .55rem; padding: 0; border: 1px solid rgba(255,255,255,.9); border-radius: 999px; background: rgba(255,255,255,.55); box-shadow: 0 1px 4px rgba(0,0,0,.45); }
+.banner-campanhas-pontos button[aria-current="true"] { width: 1.45rem; background: #fff; }
+.campanhas-produtos { width: min(100% - 2rem, 1200px); margin-inline: auto; }
+@media (max-width: 640px) {
+  .banner-campanhas-seta { width: 2.25rem; height: 2.25rem; }
+  .banner-campanhas-seta.anterior { left: .5rem; }
+  .banner-campanhas-seta.proxima { right: .5rem; }
+  .banner-campanhas-pontos { bottom: .6rem; }
+  .campanhas-produtos { width: min(100% - 1rem, 1200px); }
+}
 /* Layout Automotivo: o Mercado com a trilha do serviço antes das categorias.
    Herda .home-mercado inteiro; só a trilha mora aqui. Loja sem etapas
    reconhecidas não renderiza a seção e a tela fica idêntica à do Mercado. */
@@ -764,6 +786,22 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 
+/* Campanhas editoriais inteiras na arte: a home mostra a peça, categorias e
+   catálogo sem duplicar a chamada promocional em texto ao redor. */
+.home-promocional { padding-bottom: 3rem; }
+.campanha-hero { overflow: hidden; background: #111; }
+.campanha-hero > a { display: block; width: 100%; max-width: 1680px; margin-inline: auto; }
+.campanha-hero picture, .campanha-hero img { display: block; width: 100%; }
+.campanha-home { display: block; overflow: hidden; }
+.campanhas-home { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; padding-top: 1.5rem; }
+.campanhas-home > a { display: block; overflow: hidden; border: 1px solid var(--border); border-radius: calc(var(--radius) * 1.5); background: var(--card); }
+.campanhas-home picture, .campanhas-home img { display: block; width: 100%; }
+.campanhas-home img { height: auto; transition: transform .35s ease; }
+.campanhas-home > a:hover img { transform: scale(1.025); }
+.campanha-produtos { position: relative; padding-top: 1.5rem; }
+.campanha-ver-tudo { display: grid; width: 2.75rem; height: 2.75rem; place-items: center; margin: 1.25rem auto 0; border: 1px solid var(--border); border-radius: 50%; color: var(--primary); }
+.campanha-ver-tudo svg { width: 1.15rem; }
+
 @media (max-width: 640px) {
   .atalhos-cat { position: relative; }
   .atalhos-cat::after {
@@ -772,9 +810,13 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
     pointer-events: none;
   }
 
-  /* No celular, o cabeçalho completo preso ao topo escondia parte das etapas
-     durante a rolagem. A busca continua logo no início da página. */
+  /* Mantém a barra móvel presa ao topo nas homes de campanha da Brilhax. */
   body:has(.home-automotivo) .cabecalho-loja { position: static; }
+  body:has(.home-promocional) .cabecalho-loja { position: sticky; }
+
+  .campanhas-home { grid-template-columns: 1fr; gap: .75rem; padding-top: 1rem; }
+  .campanha-produtos { padding-top: 1rem; }
+  .campanha-ver-tudo { min-width: 44px; min-height: 44px; }
 
   /* Embalagens precisam aparecer inteiras. O recorte quadrado continua, mas a
      foto não amplia até cortar o rótulo. */

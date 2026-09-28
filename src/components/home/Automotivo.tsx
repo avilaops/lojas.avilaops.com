@@ -26,7 +26,64 @@ import type { DadosHome } from "./tipos";
  */
 
 export default function Automotivo({ t, identidade, categorias, vitrine, temDestaques, vende, moto }: DadosHome) {
+  const tema = temaDo(t);
   const { trilha, restantes, mostrar: mostrarTrilha } = montarTrilha(categorias);
+  const campanhas = tema.campanhasHome?.filter((campanha) => campanha.imagemUrl) ?? [];
+  const campanhaPrincipal = campanhas[0];
+  const bannerPrincipal = campanhaPrincipal?.imagemUrl || t.bannerUrl || "";
+  const bannerMobile = campanhaPrincipal?.imagemMobileUrl || "";
+
+  // Uma arte carregada no tema ativa a vitrine de campanha: as chamadas
+  // comerciais vivem dentro das imagens, e a home passa direto para categoria
+  // e produto. Lojas sem campanha continuam com a composição automotiva padrão.
+  if (bannerPrincipal && campanhas.length > 0) {
+    const campanhasSecundarias = campanhas.slice(1);
+
+    return (
+      <main className="home-mercado home-automotivo home-promocional">
+        <section className="campanha-hero" aria-label={`Campanha da ${t.nome}`}>
+          <Link href={campanhaPrincipal?.link ?? "/produtos"} aria-label={campanhaPrincipal?.alt ?? `Ver produtos da ${t.nome}`}>
+            <picture>
+              {bannerMobile && <source media="(max-width: 640px)" srcSet={bannerMobile} />}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={bannerPrincipal} alt={campanhaPrincipal?.alt ?? `Campanha ${t.nome}: cuidados e produtos automotivos`} fetchPriority="high" />
+            </picture>
+          </Link>
+        </section>
+
+        <AtalhosCategorias categorias={categorias} semImagem={tema.categoriaSemImagem} />
+
+        {campanhasSecundarias.length > 0 && (
+          <section className="container-loja campanhas-home" aria-label="Campanhas e ofertas">
+            {campanhasSecundarias.map((campanha, indice) => (
+              <Link key={`${campanha.imagemUrl}-${indice}`} href={campanha.link} aria-label={campanha.alt}>
+                <picture>
+                  {campanha.imagemMobileUrl && <source media="(max-width: 640px)" srcSet={campanha.imagemMobileUrl} />}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={campanha.imagemUrl} alt={campanha.alt} loading="lazy" />
+                </picture>
+              </Link>
+            ))}
+          </section>
+        )}
+
+        <section className="container-loja campanha-produtos" aria-label="Produtos em destaque">
+          {vitrine.length === 0 ? (
+            <p className="home-vazio">Os primeiros produtos estão sendo organizados para esta vitrine.</p>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+                {vitrine.slice(0, 10).map((produto) => <ProductCard key={produto.id} produto={produto} vende={vende} whatsapp={t.whatsapp} moto={moto} />)}
+              </div>
+              <Link className="campanha-ver-tudo" href="/produtos" aria-label="Ver todos os produtos">
+                <ArrowRight aria-hidden="true" />
+              </Link>
+            </>
+          )}
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main className="home-mercado home-automotivo">
