@@ -124,7 +124,7 @@ export default function Farmacia({ t, identidade, categorias, vitrine, temDestaq
           <p className="home-vazio">Os primeiros produtos estão sendo organizados para esta vitrine.</p>
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-            {vitrine.slice(0, 10).map((produto) => <ProductCard key={produto.id} produto={produto} vende={vende} whatsapp={t.whatsapp} />)}
+            {vitrine.slice(0, 10).map((produto) => <ProductCard loja={t} key={produto.id} produto={produto} vende={vende} whatsapp={t.whatsapp} />)}
           </div>
         )}
       </section>

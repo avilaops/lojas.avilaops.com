@@ -260,7 +260,6 @@ body:has(.home-automotivo) .rodape-loja { margin-top: 1rem; }
 @media (max-width: 640px) {
   .banner-campanha picture { aspect-ratio: 4 / 5; overflow: hidden; }
   .banner-campanha picture img { width: 100%; height: 100%; object-fit: contain; }
-  .banner-campanha-mobile-vertical picture { aspect-ratio: 2 / 3; }
   .banner-campanhas-seta { width: 2.25rem; height: 2.25rem; }
   .banner-campanhas-seta.anterior { left: .5rem; }
   .banner-campanhas-seta.proxima { right: .5rem; }
@@ -1061,4 +1060,33 @@ body:has(.home-automotivo) .rodape-loja { margin-top: 1rem; }
    medidas e ações na segunda coluna durante a rolagem. */
 @media (max-width: 640px) {
   body:has(.cartao-produto a[href^="https://wa.me/"]) .whatsapp-flutuante { display: none; }
+}
+
+/* Catálogo técnico: nome e medidas primeiro; referências de ERP ficam na ficha. */
+.cartao-produto-tecnico .cartao-produto-imagem { aspect-ratio: 4 / 3; background: #fff; }
+.cartao-produto-tecnico .cartao-produto-imagem img { padding: .65rem; }
+.cartao-produto-tecnico .cartao-produto-conteudo { gap: .375rem; padding: .875rem; }
+.cartao-produto-tecnico .cartao-produto-nome { min-height: 3.9em; line-height: 1.3; font-size: .95rem; font-weight: 700; }
+.cartao-produto-tecnico .cartao-produto-tecnica { color: var(--foreground); font-size: .8125rem; line-height: 1.45; }
+.cartao-produto-tecnico .cartao-produto-tecnica dd { font-weight: 650; }
+.cartao-produto-identificacao { display: flex; flex-wrap: wrap; gap: .25rem .6rem; font-size: .6875rem; color: var(--muted-foreground); }
+.cartao-produto-disponibilidade { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .25rem .5rem; }
+.cartao-produto-tecnico .cartao-produto-disponibilidade > * { font-size: .6875rem; }
+.cartao-produto-tecnico .cartao-produto-preco { padding-top: .5rem; }
+.cartao-produto-tecnico .btn-primario, .cartao-produto-tecnico .btn-secundario { min-height: 44px; padding: .5rem; }
+/* O contato já está nos cards: em qualquer largura, nada flutua sobre a compra. */
+body:has(.cartao-produto-tecnico a[href^="https://wa.me/"]) .whatsapp-flutuante { display: none; }
+[data-layout="distribuidora"] .marca-loja img { height: 58px; max-width: 190px; }
+[data-layout="distribuidora"] .banner-campanha picture { height: clamp(260px, 32vw, 440px); }
+[data-layout="distribuidora"] .banner-campanha img { height: 100%; object-fit: contain; }
+[data-layout="distribuidora"] .home-campanhas { gap: 1.5rem; padding-bottom: 0; }
+[data-layout="distribuidora"] .rodape-loja { margin-top: 2rem; }
+[data-layout="distribuidora"] .campanhas-ver-todos { margin-top: 1rem; }
+@media (max-width: 640px) {
+  [data-layout="distribuidora"] .marca-loja img { height: 52px; max-width: 170px; }
+  [data-layout="distribuidora"] .banner-campanha picture { aspect-ratio: auto; height: min(105vw, 400px, 52svh); }
+  [data-layout="distribuidora"] .home-campanhas { gap: 1.25rem; }
+  .cartao-produto-tecnico .cartao-produto-conteudo { padding: .625rem; }
+  .cartao-produto-tecnico .cartao-produto-nome { font-size: .875rem; }
+  .cartao-produto-tecnico .cartao-produto-disponibilidade > a { min-height: 44px; display: inline-flex; align-items: center; }
 }

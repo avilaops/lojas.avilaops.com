@@ -67,7 +67,7 @@ export default function Mercado({ t, identidade, categorias, vitrine, temDestaqu
           <p className="home-vazio">Os primeiros produtos estão sendo organizados para esta vitrine.</p>
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-            {vitrine.slice(0, 10).map((produto) => <ProductCard key={produto.id} produto={produto} vende={vende} whatsapp={t.whatsapp} moto={moto} />)}
+            {vitrine.slice(0, 10).map((produto) => <ProductCard loja={t} key={produto.id} produto={produto} vende={vende} whatsapp={t.whatsapp} moto={moto} />)}
           </div>
         )}
       </section>

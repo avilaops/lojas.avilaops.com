@@ -103,7 +103,7 @@ export default async function Produtos({ searchParams }: { searchParams: Promise
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {produtos.map((p) => (
-            <ProductCard key={p.id} produto={p} vende={vende} whatsapp={t.whatsapp} moto={moto} />
+            <ProductCard loja={t} key={p.id} produto={p} vende={vende} whatsapp={t.whatsapp} moto={moto} />
           ))}
         </div>
       )}

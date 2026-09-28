@@ -36,7 +36,7 @@ export default function Classico({ t, identidade, categorias, vitrine, temDestaq
           <p className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">Os produtos desta loja estão sendo cadastrados.</p>
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {vitrine.slice(0, 8).map((p) => <ProductCard key={p.id} produto={p} vende={vende} whatsapp={t.whatsapp} />)}
+            {vitrine.slice(0, 8).map((p) => <ProductCard loja={t} key={p.id} produto={p} vende={vende} whatsapp={t.whatsapp} />)}
           </div>
         )}
       </section>

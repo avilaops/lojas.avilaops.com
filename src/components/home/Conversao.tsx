@@ -59,7 +59,7 @@ export default function Conversao({ t, identidade, categorias, vitrine, temDesta
           <p className="home-vazio">Esta seleção está sendo preparada. O catálogo completo aparecerá aqui em breve.</p>
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {vitrine.slice(0, 8).map((produto) => <ProductCard key={produto.id} produto={produto} vende={vende} whatsapp={t.whatsapp} moto={moto} />)}
+            {vitrine.slice(0, 8).map((produto) => <ProductCard loja={t} key={produto.id} produto={produto} vende={vende} whatsapp={t.whatsapp} moto={moto} />)}
           </div>
         )}
       </section>
