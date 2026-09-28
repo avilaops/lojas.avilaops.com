@@ -4,7 +4,7 @@ O que está aqui é a cópia versionada do fluxo vivo. **O fluxo vivo manda**:
 antes de editar este JSON, baixe o atual pela API (`GET
 /api/v1/workflows/p063mxq8dQijjBDL`), aplique a mudança sobre ele e suba com
 `PUT`. Editar o arquivo do repositório sem baixar antes é o erro que já
-derrubou uma revisão inteira (ver `ROTINAS-N8N.md`).
+derrubou uma revisão inteira (ver `ROTINAS.md`).
 
 ## Divisão de responsabilidades
 

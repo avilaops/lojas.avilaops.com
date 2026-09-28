@@ -6,6 +6,9 @@ import { z } from "zod";
  * preço e checkout continuam compartilhados. Nenhuma condição por loja.
  */
 export const TemaSchema = z.object({
+  heroTitulo: z.string().max(120).optional(),
+  heroTexto: z.string().max(220).optional(),
+  mostrarNomeNoCabecalho: z.boolean().default(true),
   corPrimaria: z.string().regex(/^#[0-9a-f]{6}$/i).default("#2563eb"),
   corPrimariaTexto: z.string().regex(/^#[0-9a-f]{6}$/i).default("#ffffff"),
   corFundo: z.string().regex(/^#[0-9a-f]{6}$/i).optional(),
@@ -54,13 +57,20 @@ export const TemaSchema = z.object({
    * escolha da loja, com o padrão do lado da decisão original.
    */
   categoriaSemImagem: z.enum(["ocultar", "icone"]).default("ocultar"),
+  /** Banners promocionais da home. Copy e preço ficam na própria arte. */
+  campanhasHome: z.array(z.object({
+    imagemUrl: z.string().max(1000).regex(/^(https:\/\/|\/(?!\/))[^<>"\\]*$/).or(z.literal("")),
+    imagemMobileUrl: z.string().max(1000).regex(/^(https:\/\/|\/(?!\/))[^<>"\\]*$/).or(z.literal("")).optional(),
+    link: z.string().max(300).regex(/^\/(?!\/)[A-Za-z0-9._~!$&'()*+,;=:@%/?#-]*$/),
+    alt: z.string().trim().min(3).max(180),
+  })).max(5).optional(),
 });
 
 export const LAYOUTS: Array<{ valor: TemaLoja["layout"]; rotulo: string; descricao: string }> = [
   { valor: "automotivo-premium", rotulo: "Automotivo Premium", descricao: "Experiência completa: navegação fotográfica, banner editorial, galeria ampliada e carrinho lateral. Mantém a identidade da marca em toda a compra." },
   { valor: "spotlight", rotulo: "Spotlight", descricao: "Hero de alto impacto, produto principal e navegação visual. Ideal para performance e marca." },
   { valor: "mercado", rotulo: "Mercado", descricao: "Catálogo denso, departamentos e mais produtos por tela. Ideal para distribuidoras." },
-  { valor: "distribuidora", rotulo: "Distribuidora", descricao: "O catálogo denso do Mercado com a sua imagem de banner na abertura. Para distribuidora que já tem arte de marca." },
+  { valor: "distribuidora", rotulo: "Distribuidora", descricao: "Vitrine de campanhas em imagem, navegação por categoria e produtos em destaque. Para lojas que anunciam com artes próprias." },
   { valor: "farmacia", rotulo: "Farmácia", descricao: "Abre pela busca da substância e pelo que a pessoa está sentindo, não pela vitrine. Departamentos de drogaria, selo de receita no card e o farmacêutico responsável à vista. Para farmácia e drogaria." },
   { valor: "automotivo", rotulo: "Automotivo", descricao: "Mostra o catálogo na ordem do serviço: lavar, corrigir, proteger. Para estética automotiva, acessórios e oficina, onde a ordem de aplicação é o que o cliente não sabe." },
   { valor: "conversao", rotulo: "Conversão", descricao: "Oferta clara, benefícios e caminho curto até a compra. Ideal para campanhas." },

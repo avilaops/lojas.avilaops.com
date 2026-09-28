@@ -1,0 +1,164 @@
+[
+ {
+  "id": "cmtv7ccui003kpd01yful05kk",
+  "slug": "escova-caixa-de-roda-cabo-curto-detailer",
+  "campo": "atributos.Cerdas",
+  "de": "Longas, macias e não abrasivas; nylon e fibras sintéticas, segundo a ficha da apresentação com GTIN correspondente",
+  "para": "Longas, macias e não abrasivas; nylon e fibras sintéticas",
+  "motivo": "Nota interna publicada na ficha (Cerdas: '…segundo a ficha da apresentação com GTIN correspondente')",
+  "aplicado": false
+ },
+ {
+  "id": "cmtv7ccfq0014pd01jxe9hvub",
+  "slug": "arominha-carro-novo-scent",
+  "campo": "nome",
+  "de": "AROMINHA CARRO NOVO SCENT",
+  "para": "Arominha Carro Novo Scent — Aromatizante Spray 100 ml (após confirmar marca e volume)",
+  "motivo": "Título em caixa alta ('AROMINHA CARRO NOVO SCENT'), fora do padrão dos demais e da regra de título do Google",
+  "aplicado": false
+ },
+ {
+  "id": "cmtv7cd5w005kpd01h0s1i9p8",
+  "slug": "kit-escova-drill-detailer",
+  "campo": "categoria",
+  "de": "Kits Completos",
+  "para": "Acessórios (decisão do lojista)",
+  "motivo": "Categoria 'Kits Completos' para um conjunto de escovas de furadeira; comprador tende a procurar em 'Acessórios'",
+  "aplicado": false
+ },
+ {
+  "id": "cmtv7ccxr0042pd01v8u0s07s",
+  "slug": "extractus-desengraxante",
+  "campo": "descricao",
+  "de": "Este cadastro corresponde à embalagem de 1 L mostrada nas fotos.",
+  "para": "(remover a frase)",
+  "motivo": "Nota interna publicada na descrição ('Este cadastro corresponde à embalagem de 1 L mostrada nas fotos.'); Sem GTIN",
+  "aplicado": false
+ },
+ {
+  "id": "cmtv7cd0m004mpd01wi9psepk",
+  "slug": "focus-240ml",
+  "campo": "atributos.pH",
+  "de": "Equilibrado, conforme o fabricante; FDS: não aplicável",
+  "para": "Equilibrado, conforme o fabricante",
+  "motivo": "Ficha pH com nota de conferência ('FDS: não aplicável')",
+  "aplicado": false
+ },
+ {
+  "id": "cmtv7cd4q005cpd01lzv7ggje",
+  "slug": "izer-500ml",
+  "campo": "atributos.Odor",
+  "de": "Característico; a linha é apresentada com odor reduzido no catálogo do fabricante.",
+  "para": "Característico",
+  "motivo": "Linha 'Gtin' repetida na ficha (corrigido no código: GTIN deixa de sair como característica); Ficha 'Odor' com nota sobre o catálogo do fabricante",
+  "aplicado": false
+ },
+ {
+  "id": "cmtv7cd8m005ypd01p3t59vdo",
+  "slug": "lamax",
+  "campo": "atributos.Tipo",
+  "de": "Químico",
+  "para": "Desengraxante alcalino concentrado",
+  "motivo": "Sem GTIN; Ficha 'Tipo: Químico' genérica; Ficha de composição com nota de pesquisa ('…não foi publicada nas fontes consultadas'); Quatro imagens adicionais com texto de campanha e marca d'água de outra loja ('V-ONE store'); remover da galeria e do feed",
+  "aplicado": false
+ },
+ {
+  "id": "cmtv7cd8m005ypd01p3t59vdo",
+  "slug": "lamax",
+  "campo": "atributos.Composição informada no rótulo",
+  "de": "…; a composição integral não foi publicada nas fontes consultadas.",
+  "para": "(remover o trecho após o ponto e vírgula)",
+  "motivo": "Sem GTIN; Ficha 'Tipo: Químico' genérica; Ficha de composição com nota de pesquisa ('…não foi publicada nas fontes consultadas'); Quatro imagens adicionais com texto de campanha e marca d'água de outra loja ('V-ONE store'); remover da galeria e do feed",
+  "aplicado": false
+ },
+ {
+  "id": "cmtv7cd8m005ypd01p3t59vdo",
+  "slug": "lamax",
+  "campo": "imagens (remover)",
+  "de": "nitro-lamax-500ml-espuma-pre-lavagem.webp | nitro-lamax-500ml-desengraxe-duplo.webp | nitro-lamax-500ml-limpeza-roda.webp | nitro-lamax-500ml-limpeza-lama.webp",
+  "para": "(retirar da galeria; manter mtv7byad, muabe2fw, muabe310)",
+  "motivo": "Sem GTIN; Ficha 'Tipo: Químico' genérica; Ficha de composição com nota de pesquisa ('…não foi publicada nas fontes consultadas'); Quatro imagens adicionais com texto de campanha e marca d'água de outra loja ('V-ONE store'); remover da galeria e do feed",
+  "aplicado": false
+ },
+ {
+  "id": "cmtv7cdp4008wpd018m0ei0oz",
+  "slug": "prizm-500ml",
+  "campo": "atributos.Tipo",
+  "de": "Químico",
+  "para": "Restaurador de vidros automotivos",
+  "motivo": "Ficha 'Tipo: Químico' genérica",
+  "aplicado": false
+ },
+ {
+  "id": "cmtv7cdvw00a4pd019epdqjbv",
+  "slug": "shampoo-v-floc-1-5l-vonixx",
+  "campo": "atributos.Tipo",
+  "de": "Químico",
+  "para": "Shampoo automotivo concentrado",
+  "motivo": "Ficha 'Tipo: Químico' genérica",
+  "aplicado": false
+ },
+ {
+  "id": "cmtv7ccm90022pd01zn4tudtp",
+  "slug": "boina-micro-wolf-133mm-5-25pol-ventilado",
+  "campo": "nome",
+  "de": "Boina Micro Wolf Wolf Pads 133 mm Ventilada",
+  "para": "Boina de Microfibra Micro Wolf 133 mm Ventilada — Wolf Pads",
+  "motivo": "Título repete 'Wolf' ('Boina Micro Wolf Wolf Pads')",
+  "aplicado": false
+ },
+ {
+  "id": "cmtv7ccmm0024pd01tf2oanf9",
+  "slug": "boina-micro-wolf-152mm-6pol-ventilado",
+  "campo": "nome",
+  "de": "Boina Micro Wolf Wolf Pads 152 mm Ventilada",
+  "para": "Boina de Microfibra Micro Wolf 152 mm Ventilada — Wolf Pads",
+  "motivo": "Título repete 'Wolf' ('Boina Micro Wolf Wolf Pads')",
+  "aplicado": false
+ },
+ {
+  "id": "cmtv7cdhi007ipd01rvuag04h",
+  "slug": "massa-de-polir-vintex-1-8k",
+  "campo": "imagens (remover)",
+  "de": "massa-de-polir-vintex-18kg-aplicacao.jpg",
+  "para": "(retirar da galeria)",
+  "motivo": "Imagem adicional 2 com logo de outra loja ('Arthur') no canto; remover",
+  "aplicado": false
+ },
+ {
+  "id": "cmtv7cdnf008mpd01ii3oub02",
+  "slug": "plus-cera-carnauba-de-limpeza-cleaner-waz-500ml",
+  "campo": "atributos.Tipo",
+  "de": "Químico",
+  "para": "Cera limpadora de carnaúba",
+  "motivo": "Ficha 'Tipo: Químico' genérica",
+  "aplicado": false
+ },
+ {
+  "id": "cmtv7cdr7009apd018vc5c3tt",
+  "slug": "restaurax-1-5l",
+  "campo": "atributos.Estado físico",
+  "de": "Não disponível na FDS consultada",
+  "para": "(remover a linha)",
+  "motivo": "Ficha com linha 'Estado fisico: Não disponível na FDS consultada' (nota de pesquisa)",
+  "aplicado": false
+ },
+ {
+  "id": "cmtv7cdrj009cpd01phbndar6",
+  "slug": "restaurax-500ml",
+  "campo": "atributos.Tipo",
+  "de": "Químico",
+  "para": "Restaurador de plásticos automotivos",
+  "motivo": "Ficha 'Tipo: Químico' genérica",
+  "aplicado": false
+ },
+ {
+  "id": "cmtv7cdtu009qpd01yylmkjyb",
+  "slug": "revox-selante-sintetico-para-pneus-500ml-vonixx",
+  "campo": "atributos.pH",
+  "de": "Não disponível na FDS",
+  "para": "(remover a linha)",
+  "motivo": "Ficha com linha 'pH: Não disponível na FDS' (nota de pesquisa)",
+  "aplicado": false
+ }
+]

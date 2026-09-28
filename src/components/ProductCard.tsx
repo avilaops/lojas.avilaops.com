@@ -1,17 +1,36 @@
+import { fichaDoProduto } from "@/lib/ficha";
+import { codigoPublico, rotuloDoCodigo } from "@/lib/codigo-publico";
 import Link from "next/link";
 import * as regras from "@/lib/produto-regras";
-import type { Produto } from "@prisma/client";
+import type { Produto, Tenant } from "@prisma/client";
 import { formatarBRL } from "@/lib/catalogo";
 import AddToCartButton from "@/components/cart/AddToCartButton";
 import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
 import { encaixe, lerCompatibilidade, type Moto } from "@/lib/motos";
 import { exigeReceita, lerMedicamento, vendaRemotaProibida } from "@/lib/farmacia";
+import { marcaConfirmada } from "@/lib/marca-confirmada";
+import { temaDo, urlDaLoja } from "@/lib/tenant";
+import { mensagemDoProduto } from "@/lib/whatsapp-produto";
 
-export default function ProductCard({ produto, vende, whatsapp, moto = null }: { produto: Produto; vende: boolean; whatsapp: string | null; moto?: Moto | null }) {
+const ROTULOS_COMPACTOS: Record<string, string> = {
+  diametroInternoMm: "DI", diametroExternoMm: "DE", alturaMm: "Alt.",
+  medidaEixoMm: "Eixo", larguraMm: "Larg.", comprimentoMm: "Comp.",
+  espessuraMm: "Esp.", secaoMm: "Seção",
+};
+
+export default function ProductCard({ produto, loja, vende, whatsapp, moto = null, ocultarSeloDestaque = false, compacto = false, alternarImagem = true }: { produto: Produto; loja: Tenant; vende: boolean; whatsapp: string | null; moto?: Moto | null; ocultarSeloDestaque?: boolean; compacto?: boolean; alternarImagem?: boolean }) {
+  const tecnico = temaDo(loja).layout === "distribuidora";
   const serve = moto != null && encaixe(produto.compatibilidade, moto) === "serve";
   const modelos = lerCompatibilidade(produto.compatibilidade);
   const imagem = produto.imagens[0];
-  const segundaImagem = produto.imagens[1];
+  const segundaImagem = alternarImagem && !tecnico ? produto.imagens[1] : undefined;
+  const ficha = fichaDoProduto(produto.atributos as Record<string, unknown> | null);
+  // Catálogo técnico decide pela medida e pelo material cadastrado; a
+  // referência do ERP fica na página do produto, não disputa espaço no card.
+  const tecnicos = ficha.filter(l => l.unidade === "mm" || (tecnico ? ["perfil", "material"] : ["referencia", "perfil", "material"]).includes(l.chave)).slice(0, 5);
+  const marca = marcaConfirmada(produto.marca);
+  const codigo = codigoPublico(produto.sku);
+  const rotuloCodigo = rotuloDoCodigo(produto.sku, produto.gtin);
   const miniatura = imagem && /\/uploads\//.test(imagem) && !/\.svg$/i.test(imagem) ? `${imagem}?w=480` : imagem;
   const miniatura2 = segundaImagem && /\/uploads\//.test(segundaImagem) && !/\.svg$/i.test(segundaImagem) ? `${segundaImagem}?w=480` : segundaImagem;
   // Preço zero é "ainda não precificado", não "de graça". Catálogo importado
@@ -21,7 +40,11 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null }: {
   // a mesma coisa para o mesmo produto.
   const sobConsulta = regras.sobConsulta(produto);
   const disponivel = regras.compravel(produto);
-  const esgotado = regras.esgotado(produto);
+  // Selo, linha de disponibilidade e botão saem da mesma resposta que a
+  // página do produto e a busca usam: nenhum card pode dizer "Esgotado" e
+  // oferecer pedido ao mesmo tempo.
+  const estado = regras.estadoDeVenda(produto, { vende });
+  const esgotado = estado.esgotado;
   const estoqueBaixo = regras.estoqueBaixo(produto);
   // Farmácia: a tarja decide se o item pode sair pela internet. Medicamento sob
   // controle especial continua na vitrine — quem procura tem que achar e ver o
@@ -37,8 +60,8 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null }: {
       : null;
 
   return (
-    <article className="cartao-produto group flex flex-col overflow-hidden rounded-xl border border-border bg-card">
-      <Link href={`/produtos/${produto.slug}`} className="cartao-produto-imagem relative block aspect-square overflow-hidden bg-muted">
+    <article className={`cartao-produto${tecnico ? " cartao-produto-tecnico" : ""} group flex flex-col overflow-hidden rounded-xl border border-border bg-card`}>
+      <Link href={`/produtos/${produto.slug}`} className={`cartao-produto-imagem relative block overflow-hidden bg-muted${imagem ? " aspect-square" : " cartao-produto-sem-imagem"}`}>
         {imagem ? (
           <>
             {/* Imagem Principal */}
@@ -47,7 +70,7 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null }: {
               src={miniatura}
               alt={produto.nome}
               loading="lazy"
-              className={`h-full w-full object-cover transition-all duration-500 ${
+              className={`h-full w-full object-contain transition-all duration-500 ${
                 segundaImagem ? "group-hover:opacity-0 group-hover:scale-105" : "group-hover:scale-105"
               }`}
             />
@@ -58,22 +81,32 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null }: {
                 src={miniatura2}
                 alt={`${produto.nome} - ângulo secundário`}
                 loading="lazy"
-                className="absolute inset-0 h-full w-full object-cover opacity-0 transition-all duration-500 group-hover:opacity-100 group-hover:scale-105"
+                className="absolute inset-0 h-full w-full object-contain opacity-0 transition-all duration-500 group-hover:opacity-100 group-hover:scale-105"
               />
             )}
           </>
         ) : (
-          <div className="produto-sem-foto flex h-full items-center justify-center text-xs text-muted-foreground">Imagem em preparação</div>
+          <div className="produto-sem-foto flex h-full items-center justify-center text-xs text-muted-foreground">Sem foto do produto</div>
         )}
 
         {/* Badges Flutuantes */}
         <div className="absolute left-2.5 top-2.5 flex flex-col gap-1 z-10">
+          {produto.imagemOrigem === "representativa" && (
+            <span className="rounded-md bg-zinc-900/90 px-2 py-1 text-[10px] font-semibold text-white shadow-sm backdrop-blur-sm">
+              Imagem representativa
+            </span>
+          )}
+          {produto.imagemOrigem === "ilustracao" && (
+            <span className="rounded-md bg-zinc-900/90 px-2 py-1 text-[10px] font-semibold text-white shadow-sm backdrop-blur-sm">
+              Ilustração técnica
+            </span>
+          )}
           {percentualDesconto && (
             <span className="rounded-md bg-red-600 px-2 py-0.5 text-[11px] font-black uppercase text-white shadow-sm">
               -{percentualDesconto}% OFF
             </span>
           )}
-          {produto.destaque && (
+          {produto.destaque && !ocultarSeloDestaque && (
             <span className="rounded-md bg-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary-foreground shadow-sm">
               Destaque
             </span>
@@ -99,8 +132,8 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null }: {
           ) : null}
         </div>
       </Link>
-      <div className="flex flex-1 flex-col gap-2 p-4">
-        {produto.marca && <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{produto.marca}</p>}
+      <div className="cartao-produto-conteudo flex flex-1 flex-col gap-2 p-4">
+        {!tecnico && marca && <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{marca}</p>}
         {serve ? (
           <p className="selo-serve">✔ Serve na sua moto</p>
         ) : modelos.length > 0 ? (
@@ -108,10 +141,17 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null }: {
             {modelos.slice(0, 2).map((c) => c.modelo).join(" · ")}{modelos.length > 2 ? ` +${modelos.length - 2}` : ""}
           </p>
         ) : null}
-        <Link href={`/produtos/${produto.slug}`} className="line-clamp-2 text-sm font-semibold hover:text-primary transition-colors">
+        <Link href={`/produtos/${produto.slug}`} className="cartao-produto-nome text-sm font-semibold hover:text-primary transition-colors">
           {produto.nome}
         </Link>
-        <div className="mt-auto pt-1">
+        {!tecnico && codigo && <p className="text-xs text-muted-foreground break-words">{rotuloCodigo}: {codigo}</p>}
+        {tecnicos.length > 0 && <dl className="cartao-produto-tecnica">{tecnicos.map(l => <div key={l.chave}><dt>{tecnico && ROTULOS_COMPACTOS[l.chave] ? <abbr title={l.rotulo}>{ROTULOS_COMPACTOS[l.chave]}</abbr> : l.rotulo}</dt><dd>{l.valor}</dd></div>)}</dl>}
+        {tecnico && <p className="cartao-produto-identificacao">{marca && <span>{marca}</span>}{codigo && <span>{rotuloCodigo}: {codigo}</span>}</p>}
+        <div className={tecnico ? "cartao-produto-disponibilidade" : "contents"}>
+          <p className={`cartao-produto-estoque text-xs ${esgotado ? "text-muted-foreground" : "esta-disponivel"}`}>{estado.disponibilidade}</p>
+          <Link href={`/produtos/${produto.slug}`} className="text-xs underline underline-offset-4">Ver detalhes</Link>
+        </div>
+        <div className="cartao-produto-preco mt-auto pt-1">
           {produto.precoDeCentavos && produto.precoDeCentavos > produto.precoCentavos && (
             <p className="text-xs text-muted-foreground line-through">{formatarBRL(produto.precoDeCentavos)}</p>
           )}
@@ -128,11 +168,13 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null }: {
           <Link href={`/produtos/${produto.slug}`} className="btn-secundario w-full text-xs">
             Ver informações
           </Link>
-        ) : sobConsulta ? (
+        ) : estado.acao === "aviso-reposicao" ? (
+          <Link href={`/produtos/${produto.slug}`} className="btn-secundario w-full text-xs">Ver disponibilidade</Link>
+        ) : estado.acao === "consulta-preco" ? (
           // Sem preço não há carrinho: o caminho é falar com a loja. É assim
           // que peça de catálogo técnico é comprada mesmo quando tem preço.
           whatsapp ? (
-            <a className="btn-primario w-full text-xs" href={linkWhatsApp(whatsapp, `Olá! Quero saber o preço de: ${produto.nome}`)} target="_blank" rel="noopener">
+            <a className="btn-primario acao-whatsapp w-full text-xs" href={linkWhatsApp(whatsapp, mensagemDoProduto(produto, urlDaLoja(loja), true))} target="_blank" rel="noopener">
               Consultar preço
             </a>
           ) : (
@@ -140,17 +182,18 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null }: {
               Ver detalhes
             </Link>
           )
-        ) : vende && produto.opcoes.length > 0 ? (
+        ) : estado.acao === "carrinho" && produto.opcoes.length > 0 ? (
           <Link href={`/produtos/${produto.slug}`} className="btn-secundario w-full text-xs">
             Ver opções
           </Link>
-        ) : vende ? (
+        ) : estado.acao === "carrinho" ? (
           <AddToCartButton
+            compacto={compacto}
             item={{ id: produto.id, slug: produto.slug, nome: produto.nome, precoCentavos: produto.precoCentavos, imagem }}
             disponivel={disponivel}
           />
         ) : whatsapp ? (
-          <a className="btn-primario w-full text-xs" href={linkWhatsApp(whatsapp, `Olá! Tenho interesse em: ${produto.nome}`)} target="_blank" rel="noopener">
+          <a className="btn-primario acao-whatsapp w-full text-xs" href={linkWhatsApp(whatsapp, mensagemDoProduto(produto, urlDaLoja(loja)))} target="_blank" rel="noopener">
             Pedir pelo WhatsApp
           </a>
         ) : null}

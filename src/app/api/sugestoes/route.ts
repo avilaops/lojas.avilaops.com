@@ -7,9 +7,13 @@ import { prisma } from "@/lib/db";
  * é o cliente: manda os ids que já tem e recebe até quatro produtos ativos das
  * mesmas categorias, sem repetir o que já está lá.
  *
- * Público de propósito — é o mesmo que qualquer visitante vê na vitrine.
+ * Rota pública por propósito, com os mesmos itens que qualquer visitante vê.
  */
-const Entrada = z.object({ ids: z.array(z.string().max(40)).max(50) });
+// O item do carrinho é `produto` ou `produto:variante` (ver a página do
+// produto); a sugestão é por produto. Com o limite antigo de 40 caracteres o
+// par de ids passava de 40, a rota respondia 422 para todo carrinho e o
+// "Leve também" nunca aparecia.
+const Entrada = z.object({ ids: z.array(z.string().max(100)).max(50) });
 
 export async function POST(request: Request) {
   const t = await tenantAtual();
@@ -17,12 +21,12 @@ export async function POST(request: Request) {
 
   const r = Entrada.safeParse(await request.json().catch(() => null));
   if (!r.success) return Response.json({ erro: "Dados inválidos." }, { status: 422 });
-  const ids = r.data.ids;
+  const ids = [...new Set(r.data.ids.map((id) => id.split(":")[0]).filter(Boolean))];
 
   const noCarrinho = ids.length ? await prisma.produto.findMany({ where: { tenantId: t.id, id: { in: ids } }, select: { categoriaId: true } }) : [];
   const categorias = [...new Set(noCarrinho.map((p) => p.categoriaId).filter((c): c is string => Boolean(c)))];
 
-  const comum = { tenantId: t.id, ativo: true, disponibilidade: { not: "out_of_stock" }, id: { notIn: ids } };
+  const comum = { tenantId: t.id, ativo: true, precoCentavos: { gt: 0 }, disponibilidade: { not: "out_of_stock" }, id: { notIn: ids } };
   const seleciona = { id: true, slug: true, nome: true, precoCentavos: true, imagens: true } as const;
 
   // Primeiro o que combina com o carrinho; se a loja ainda tem poucas

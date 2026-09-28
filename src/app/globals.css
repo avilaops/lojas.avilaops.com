@@ -49,9 +49,29 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+
+@media (pointer: coarse) {
+  /* Keeps double taps on controls from triggering browser zoom. Pinch zoom stays available. */
+  button, a, summary, [role="button"] { touch-action: manipulation; }
+}
+
 ::selection { background: color-mix(in srgb, var(--primary) 24%, transparent); }
 
 .cabecalho-loja { box-shadow: 0 1px 0 color-mix(in srgb, var(--border) 70%, transparent); }
+.menu-mobile-botao { display: none; }
+.menu-mobile-dialog {
+  position: fixed; inset: 0 0 0 auto; margin: 0; width: min(24rem, calc(100vw - 2rem));
+  max-width: 100vw; height: 100dvh; max-height: 100dvh; overflow-y: auto; padding: 0;
+  border: 1px solid var(--border); background: var(--background); color: var(--foreground);
+}
+.menu-mobile-dialog::backdrop { background: rgb(0 0 0 / 48%); backdrop-filter: blur(3px); }
+.menu-mobile-cabecalho { display: flex; min-height: 68px; align-items: center; justify-content: space-between; gap: 1rem; border-bottom: 1px solid var(--border); padding: .75rem 1.125rem; }
+.menu-mobile-cabecalho strong { overflow: hidden; font-size: 1rem; text-overflow: ellipsis; white-space: nowrap; }
+.menu-mobile-cabecalho button { display: grid; width: 44px; height: 44px; flex: 0 0 auto; place-items: center; border: 1px solid var(--border); border-radius: 999px; background: var(--card); }
+.menu-mobile-dialog nav { display: grid; padding: .5rem 1.125rem 1.5rem; }
+.menu-mobile-dialog nav a { display: flex; min-height: 48px; align-items: center; border-bottom: 1px solid var(--border); font-size: .9375rem; font-weight: 600; }
+.menu-mobile-separador { padding: 1.125rem 0 .5rem; color: var(--muted-foreground); font-size: .7rem; font-weight: 750; letter-spacing: .12em; text-transform: uppercase; }
 .marca-loja-icone { display: grid; place-items: center; width: 34px; height: 34px; color: var(--primary-foreground); border-radius: calc(var(--radius) * 1.1); background: var(--primary); }
 .busca-loja { transition: border-color .2s, box-shadow .2s; }
 .busca-loja:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 12%, transparent); }
@@ -172,6 +192,32 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
 /* O anel decorativo nasceu para preencher a direita vazia da abertura do
    Mercado. Com a arte ali, ele só polui. */
 .mercado-abertura-com-banner::after { display: none; }
+.home-automotivo .mercado-abertura-com-banner { border: 0; background: #090a0d; }
+.home-automotivo .automotivo-banner, .home-automotivo .automotivo-banner picture { display: block; width: 100%; }
+.home-automotivo .automotivo-banner { position: relative; isolation: isolate; }
+.automotivo-banner::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgb(0 0 0 / 85%), rgb(0 0 0 / 35%) 60%, transparent); pointer-events: none; }
+.automotivo-banner-conteudo { position: absolute; z-index: 1; inset: 0; display: flex; flex-direction: column; align-items: start; justify-content: center; gap: 1rem; color: #fff; }
+.automotivo-banner-conteudo h1 { max-width: 16ch; line-height: 1.08; text-wrap: balance; }
+.automotivo-banner-resumo { max-width: 42ch; font-size: clamp(.875rem, 1.2vw, 1rem); line-height: 1.5; color: #fff; }
+.automotivo-banner-conteudo .home-selo { color: #fff; }
+.automotivo-banner-conteudo .btn-primario { margin-top: .5rem; }
+.marca-loja-nome { max-width: 15ch; font-size: 1.3rem; line-height: 1.15; overflow-wrap: anywhere; }
+.marca-loja img { max-width: 140px; object-fit: contain; }
+.automotivo-grade-produtos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.home-automotivo { padding-bottom: 2rem; }
+body:has(.home-automotivo) .rodape-loja { margin-top: 1rem; }
+.home-automotivo .cartao-produto { min-width: 0; box-shadow: 0 3px 12px rgb(0 0 0 / 4%); }
+.home-automotivo .cartao-produto-imagem { background: #fff; }
+.home-automotivo .cartao-produto-imagem img { object-fit: contain; padding: 1rem; }
+.home-automotivo .cartao-produto .btn-primario { box-shadow: 0 3px 0 color-mix(in srgb, var(--primary) 70%, #000); }
+.home-automotivo .cartao-produto .btn-primario:active { transform: translateY(2px); box-shadow: none; }
+.home-automotivo a:focus-visible, .home-automotivo button:focus-visible { outline: 3px solid var(--primary); outline-offset: 4px; }
+@media (min-width: 641px) { .automotivo-grade-produtos { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1100px) { .automotivo-grade-produtos { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.home-automotivo .automotivo-banner img {
+  display: block; width: 100%; height: clamp(320px, 29vw, 420px);
+  object-fit: cover; object-position: center;
+}
 /* O título do layout divide a tela com o da arte: sem o tamanho gigante do
    Mercado, senão os dois competem mesmo lado a lado. */
 .mercado-abertura-com-banner h1 { font-size: clamp(2rem, 3.4vw, 3.25rem); letter-spacing: -.04em; }
@@ -193,6 +239,40 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
 .distribuidora-arte-numeros p { display: flex; align-items: baseline; gap: .35rem; }
 .distribuidora-arte-numeros strong { font-size: 1.2rem; font-weight: 780; }
 .distribuidora-arte-numeros span { font-size: .72rem; color: var(--muted-foreground); }
+
+.home-campanhas { display: flex; flex-direction: column; gap: clamp(1.25rem, 3vw, 2.5rem); padding-bottom: 3rem; }
+.banner-campanhas { position: relative; width: min(100%, 1440px); margin-inline: auto; }
+.banner-campanhas-trilho { display: flex; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scrollbar-width: none; scroll-behavior: smooth; }
+.banner-campanhas-trilho::-webkit-scrollbar { display: none; }
+.banner-campanha { flex: 0 0 100%; overflow: hidden; scroll-snap-align: start; background: #101d39; }
+.banner-campanha img { display: block; width: 100%; height: auto; }
+.banner-campanha picture { display: block; }
+.banner-campanhas-seta { position: absolute; top: 50%; z-index: 2; display: grid; width: 2.75rem; height: 2.75rem; place-items: center; transform: translateY(-50%); border: 1px solid rgba(255,255,255,.65); border-radius: 999px; background: rgba(12,20,39,.76); color: #fff; box-shadow: 0 4px 16px rgba(0,0,0,.2); }
+.banner-campanhas-seta:disabled { opacity: .38; }
+.banner-campanhas-seta svg { width: 1.35rem; height: 1.35rem; }
+.banner-campanhas-seta.anterior { left: .8rem; }
+.banner-campanhas-seta.proxima { right: .8rem; }
+.banner-campanhas-pontos { position: absolute; right: 0; bottom: .9rem; left: 0; z-index: 2; display: flex; justify-content: center; gap: .45rem; }
+.banner-campanhas-pontos button { width: .55rem; height: .55rem; padding: 0; border: 1px solid rgba(255,255,255,.9); border-radius: 999px; background: rgba(255,255,255,.55); box-shadow: 0 1px 4px rgba(0,0,0,.45); }
+.banner-campanhas-pontos button[aria-current=true] { width: 1.45rem; background: #fff; }
+@media (prefers-reduced-motion: reduce) { .banner-campanhas-trilho { scroll-behavior: auto; } }
+.campanhas-produtos { width: min(100% - 2rem, 1200px); margin-inline: auto; }
+@media (max-width: 640px) {
+  .banner-campanha picture { aspect-ratio: 4 / 5; overflow: hidden; }
+  .banner-campanha picture img { width: 100%; height: 100%; object-fit: contain; }
+  .banner-campanhas-seta { width: 2.25rem; height: 2.25rem; }
+  .banner-campanhas-seta.anterior { left: .5rem; }
+  .banner-campanhas-seta.proxima { right: .5rem; }
+  .banner-campanhas-pontos { bottom: .6rem; }
+  .campanhas-produtos { width: min(100% - 1rem, 1200px); }
+  body:has(.home-campanhas) .nav-loja { display: block; }
+}
+/* Evita o zoom automático do Safari iOS ao focar campos menores que 16px. */
+@media (max-width: 640px) {
+  input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="reset"]):not([type="file"]):not([type="range"]),
+  textarea,
+  select { font-size: 16px !important; }
+}
 /* Layout Automotivo: o Mercado com a trilha do serviço antes das categorias.
    Herda .home-mercado inteiro; só a trilha mora aqui. Loja sem etapas
    reconhecidas não renderiza a seção e a tela fica idêntica à do Mercado. */
@@ -539,28 +619,33 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
   background: var(--card);
 }
 
+/* A capa identifica a categoria; não pode ser a primeira tela inteira. No
+   celular ela vira uma linha (miniatura + título) e o primeiro produto aparece
+   sem rolar; no computador fica baixa, com a foto à esquerda. */
+.capa-categoria { grid-template-columns: 96px 1fr; margin-bottom: 16px; }
 @media (min-width: 860px) {
-  .capa-categoria { grid-template-columns: 420px 1fr; align-items: stretch; }
+  .capa-categoria { grid-template-columns: 280px 1fr; align-items: stretch; margin-bottom: 20px; }
 }
 
 .capa-categoria-imagem {
   position: relative;
   display: grid;
   place-items: center;
-  min-height: 180px;
+  min-height: 96px;
   background: color-mix(in srgb, var(--primary) 12%, var(--muted));
 }
 
-@media (min-width: 860px) { .capa-categoria-imagem { min-height: 230px; } }
+@media (min-width: 860px) { .capa-categoria-imagem { min-height: 150px; } }
 
 .capa-categoria-inicial {
-  font-size: 5rem;
+  font-size: clamp(2.5rem, 6vw, 4rem);
   font-weight: 800;
   line-height: 1;
   color: color-mix(in srgb, var(--primary) 55%, transparent);
 }
 
-.capa-categoria-texto { display: flex; flex-direction: column; justify-content: center; gap: 9px; padding: 26px; }
+.capa-categoria-texto { display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 14px 18px; }
+.capa-categoria-texto p { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .capa-categoria-texto h1 { font-size: clamp(1.6rem, 3.5vw, 2.3rem); font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; }
 .capa-categoria-texto p { max-width: 60ch; color: var(--muted-foreground); font-size: 0.95rem; line-height: 1.6; }
 
@@ -635,6 +720,13 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
   .cabecalho-loja > .container-loja > .busca-loja-caixa { flex-basis: 100%; order: 10; }
   .cabecalho-loja .marca-loja { min-height: 44px; }
   .cabecalho-loja .marca-loja span:last-child { font-size: 1.0625rem; }
+  .menu-mobile-botao { display: grid; width: 44px; height: 44px; flex: 0 0 44px; place-items: center; border: 1px solid var(--border); border-radius: 12px; background: var(--card); color: var(--foreground); }
+  .menu-mobile-botao svg { width: 21px; height: 21px; }
+  .menu-mobile-dialog nav a { min-height: 48px; }
+
+  /* Safari amplifica a página ao focar campos menores que 16 px. Mantém o
+     texto legível em toda a loja, incluindo formulários e filtros de catálogo. */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea { font-size: max(16px, 1em); }
 
   /* O campo de busca ocupa a linha inteira e tem 44px de toque. A fonte de 16px
      não é estética: abaixo disso o Safari do iPhone dá zoom sozinho ao focar o
@@ -735,22 +827,21 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
   .rodape-loja { padding-bottom: max(1.5rem, env(safe-area-inset-bottom)); }
 }
 
-/* Atalhos redondos de categoria (ver AtalhosCategorias.tsx).
-   Fileira que rola de lado, no padrão que o comprador já conhece do Mercado
-   Livre. A foto é o que diferencia "Aço baixa liga" de "Aço de baixo e médio
-   teor de carbono" num relance. */
+/* Categorias da vitrine: ganham presença compatível com a campanha acima e
+   ocupam a largura disponível em vez de ficarem como miniaturas numa tira. */
 .atalhos-cat { border-bottom: 1px solid var(--border); background: var(--background); }
 .atalhos-cat-tira {
-  display: flex; gap: 1.25rem; overflow-x: auto; padding-block: .875rem;
-  scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+  justify-items: center; gap: clamp(1.25rem, 2.8vw, 2.5rem);
+  width: min(100% - 3rem, 1100px); margin-inline: auto;
+  padding-block: clamp(1.5rem, 3vw, 2.75rem);
 }
-.atalhos-cat-tira::-webkit-scrollbar { display: none; }
 .atalhos-cat-tira > a {
-  display: grid; justify-items: center; gap: .375rem; flex: 0 0 auto;
-  width: 4.5rem; text-align: center;
+  display: grid; justify-items: center; align-content: start; gap: .75rem;
+  width: 100%; text-align: center;
 }
 .atalhos-cat-foto {
-  display: grid; place-items: center; width: 3.5rem; height: 3.5rem;
+  display: grid; place-items: center; width: clamp(7rem, 13vw, 10.5rem); height: clamp(7rem, 13vw, 10.5rem);
   overflow: hidden; border-radius: 50%; border: 1px solid var(--border);
   background: var(--muted); transition: border-color .2s, transform .2s;
 }
@@ -758,13 +849,66 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
 .atalhos-cat-foto svg { width: 2.55rem; height: 2.55rem; color: var(--primary); }
 .atalhos-cat-tira > a:hover .atalhos-cat-foto { border-color: var(--primary); transform: translateY(-2px); }
 .atalhos-cat-nome {
-  font-size: .6875rem; line-height: 1.25; color: var(--muted-foreground);
+  font-size: clamp(.875rem, 1.2vw, 1rem); line-height: 1.3; color: var(--muted-foreground);
   /* Duas linhas no máximo: uma categoria de nome longo não pode dobrar a
      altura da fileira inteira. */
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 
+/* Categorias em escala compatível com o banner: a grade usa toda a largura
+   da loja, sem esconder itens numa faixa horizontal rolável. */
+.home-automotivo .atalhos-cat-grade .atalhos-cat-tira {
+  display: flex; flex-wrap: wrap; gap: 12px; width: 100%; max-width: 1152px;
+  margin-inline: auto; padding-block: 1rem; overflow: visible;
+}
+.home-automotivo .atalhos-cat-grade .atalhos-cat-tira > a {
+  position: relative; display: block; flex: 1 1 calc(25% - 12px); min-width: 0; height: clamp(140px, 16vw, 185px);
+  overflow: hidden; border: 0; border-radius: 12px;
+  background: var(--muted); text-align: left;
+}
+.home-automotivo .atalhos-cat-grade .atalhos-cat-foto {
+  position: absolute; inset: 0; display: grid; width: 100%; height: 100%;
+  place-items: center; border: 0; border-radius: 0;
+}
+.home-automotivo .atalhos-cat-grade .atalhos-cat-foto::after {
+  content: ""; position: absolute; inset: 28% 0 0;
+  background: linear-gradient(transparent, rgb(0 0 0 / 78%)); pointer-events: none;
+}
+.home-automotivo .atalhos-cat-grade .atalhos-cat-foto img { width: 100%; height: 100%; object-fit: cover; transition: transform .35s; }
+.home-automotivo .atalhos-cat-grade .atalhos-cat-tira > a:hover .atalhos-cat-foto img { transform: scale(1.055); }
+.home-automotivo .atalhos-cat-grade .atalhos-cat-foto svg { width: 3.25rem; height: 3.25rem; color: #fff; }
+.home-automotivo .atalhos-cat-grade .atalhos-cat-nome {
+  position: absolute; z-index: 1; right: 0; bottom: 0; left: 0;
+  display: block; padding: clamp(1rem, 2vw, 1.75rem); color: #fff;
+  font-size: clamp(1.125rem, 2vw, 1.75rem); font-weight: 800; line-height: 1.2;
+  text-align: left; text-shadow: 0 1px 8px rgb(0 0 0 / 65%);
+}
+@media (min-width: 641px) and (max-width: 1023px) {
+  .home-automotivo .atalhos-cat-grade .atalhos-cat-tira > a { flex-basis: calc(33.333% - 12px); }
+}
 @media (max-width: 640px) {
+  .home-automotivo .automotivo-banner img { height: clamp(220px, 58vw, 280px); object-position: center 18%; }
+  .home-automotivo .automotivo-banner:has(.automotivo-banner-resumo) img { min-height: 320px; }
+  .atalhos-cat-tira {
+    grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.25rem .5rem;
+    width: min(100% - 1.5rem, 34rem); padding-block: 1.5rem;
+  }
+  .atalhos-cat-tira > a { gap: .55rem; }
+  .atalhos-cat-foto { width: clamp(5.75rem, 27vw, 7rem); height: clamp(5.75rem, 27vw, 7rem); }
+  .atalhos-cat-nome { font-size: .8125rem; }
+  .ap-produto-grade { grid-template-columns: minmax(0, 1fr); }
+  .ap-produto-grade > * { min-width: 0; width: 100%; }
+  .home-automotivo .atalhos-cat-grade .atalhos-cat-tira {
+    display: flex;
+    gap: 8px;
+    width: 100%; margin-inline: auto; padding: .75rem 1rem;
+    overflow: visible;
+  }
+  .home-automotivo .atalhos-cat-grade .atalhos-cat-tira > a {
+    flex-basis: calc(50% - 8px); min-width: 0; height: 120px;
+    border-radius: 10px;
+  }
+  .home-automotivo .atalhos-cat-grade .atalhos-cat-nome { padding: .75rem !important; font-size: .95rem !important; }
   /* Atalhos colados na busca, e a abertura institucional depois deles.
      É a ordem do Mercado Livre e da Amazon: busca, caminho, produto. O texto de
      apresentação é para quem chegou pelo Google sem saber quem é a empresa, e
@@ -774,6 +918,14 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
   .home-mercado > .mercado-abertura { order: 3; }
   .home-mercado > .mercado-departamentos { order: 4; }
   .home-mercado > .container-loja:has(.beneficios-barra) { order: 5; }
+  /* Na vitrine automotiva, manter banner, categorias e produtos na sequência
+     da campanha. A trilha didática fica depois da vitrine, sem separar os três. */
+  .home-automotivo > .mercado-abertura { order: 1; }
+  .home-automotivo > .atalhos-cat { order: 2; }
+  .home-automotivo > .mercado-produtos { order: 4; }
+  .home-automotivo > .mercado-departamentos { order: 5; }
+  .home-automotivo > .container-loja:has(.beneficios-barra) { order: 3; margin-top: 0; }
+  .home-automotivo > .automotivo-trilha { order: 6; }
 }
 
 /* Dica abaixo dos botões da abertura: ensina o gesto que a busca entende
@@ -858,3 +1010,110 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
 
 .rodape-farmacia p { line-height: 1.6; }
 .rodape-farmacia-aviso { margin-top: .5rem; font-size: .6875rem; letter-spacing: .04em; }
+
+/* Vídeo da ficha do produto. Fora da lista de duas colunas de propósito:
+   <iframe> dentro de <dd> não cabe em 393px e quebra a tabela inteira. */
+.ficha-video { margin-top: 28px; }
+.ficha-video h2 { margin-bottom: 12px; font-size: 1.05rem; font-weight: 700; }
+.ficha-video-moldura { position: relative; aspect-ratio: 16 / 9; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--muted); }
+.ficha-video-moldura iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+
+/* Gráfico de sessões por canal (Painel › Análises › Atribuição).
+   As cores das séries ficam no componente, não aqui: a sequência foi
+   conferida para daltonismo e contraste, e ter a lista em dois lugares
+   convidaria a mexer num só. */
+.graf-canais { margin: 0; }
+.graf-svg { display: block; width: 100%; height: auto; }
+.graf-grade { stroke: var(--border); stroke-width: 1; }
+.graf-eixo-texto { fill: var(--muted-foreground); font-size: 11px; }
+.graf-legenda { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 12px; font-size: .8rem; color: var(--muted-foreground); }
+.graf-legenda span { display: inline-flex; align-items: center; gap: 6px; }
+.graf-legenda i { width: 10px; height: 10px; flex: none; border-radius: 3px; }
+
+/* Tabela de canais e de campanhas. Rolagem horizontal própria: em 393px cinco
+   colunas não cabem, e deixar a página rolar de lado estraga o resto da tela. */
+.atr-tabela-rolagem { overflow-x: auto; margin-inline: -4px; }
+.atr-tabela { width: 100%; min-width: 520px; border-collapse: collapse; font-size: .875rem; }
+.atr-tabela th, .atr-tabela td { padding: 10px 8px; text-align: right; border-bottom: 1px solid var(--border); }
+.atr-tabela thead th { font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--muted-foreground); }
+.atr-tabela tbody th { text-align: left; font-weight: 600; }
+.atr-tabela tbody th small { display: block; margin-top: 2px; font-weight: 400; font-size: .72rem; color: var(--muted-foreground); }
+.atr-tabela tbody tr:last-child th, .atr-tabela tbody tr:last-child td { border-bottom: 0; }
+
+/* Campanhas com catálogo legível, sem altura reservada para blocos ausentes. */
+.home-campanhas { padding-bottom: 2rem; }
+.campanhas-categorias h2, .campanhas-produtos h2, .campanhas-busca h2 { font-size: clamp(1.2rem, 2vw, 1.65rem); font-weight: 750; }
+.campanhas-categorias .atalhos-cat { border: 0; padding-bottom: 0; }
+.campanhas-categorias .atalhos-cat-tira { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); overflow: visible; }
+.campanhas-categorias .atalhos-cat-tira a { width: auto; min-width: 0; }
+.campanhas-busca { display: flex; align-items: center; justify-content: space-between; gap: 1rem; border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; }
+.campanhas-busca p { max-width: 65ch; margin-top: .5rem; font-size: .875rem; color: var(--muted-foreground); }
+.campanhas-produtos > header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; }
+.campanhas-produtos > header > a { display: inline-flex; gap: .4rem; align-items: center; color: var(--primary); font-size: .875rem; font-weight: 650; }
+.campanhas-ver-todos { display: flex; width: fit-content; margin: 1.5rem auto 0; }
+.cartao-produto-nome { overflow-wrap: anywhere; }
+.cartao-produto-tecnica { font-size: .72rem; color: var(--muted-foreground); overflow-wrap: anywhere; }
+.cartao-produto-tecnica dt { display: inline; }
+.cartao-produto-tecnica dt::after { content: ": "; }
+.cartao-produto-tecnica dd { display: inline; font-weight: 550; }
+.cartao-produto .btn-primario, .cartao-produto .btn-secundario { white-space: normal; text-align: center; min-height: 44px; height: auto; }
+@media (min-width: 1024px) { .campanhas-categorias .atalhos-cat-tira { grid-template-columns: repeat(8, minmax(0, 1fr)); } }
+@media (max-width: 639px) { .campanhas-busca { flex-direction: column; align-items: stretch; } .cartao-produto > div:last-child { padding: .75rem; } .campanhas-produtos > header > a { min-height: 44px; } }
+
+.home-campanhas .atalhos-cat-foto { width: min(4rem, 100%); height: auto; aspect-ratio: 1; }
+
+/* Catálogo técnico: nome e medidas primeiro; referências de ERP ficam na ficha. */
+.cartao-produto-tecnico .cartao-produto-imagem { aspect-ratio: 4 / 3; background: #fff; }
+.cartao-produto-tecnico .cartao-produto-imagem img { padding: .65rem; }
+.cartao-produto-tecnico .cartao-produto-conteudo { gap: .375rem; padding: .875rem; }
+.cartao-produto-tecnico .cartao-produto-nome { min-height: 2.6em; line-height: 1.3; font-size: .95rem; font-weight: 700; }
+.cartao-produto-tecnico .cartao-produto-tecnica { display: flex; flex-wrap: wrap; gap: .125rem .5rem; color: var(--foreground); font-size: .8125rem; line-height: 1.45; }
+.cartao-produto-tecnico .cartao-produto-tecnica > div { white-space: nowrap; }
+.cartao-produto-tecnico .cartao-produto-tecnica abbr { text-decoration: none; }
+.cartao-produto-tecnico .cartao-produto-tecnica dd { font-weight: 650; }
+.cartao-produto-identificacao { display: flex; flex-wrap: wrap; gap: .25rem .6rem; font-size: .6875rem; color: var(--muted-foreground); }
+.cartao-produto-disponibilidade { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .25rem .5rem; }
+.cartao-produto-tecnico .cartao-produto-disponibilidade > * { font-size: .6875rem; }
+.cartao-produto-tecnico .cartao-produto-preco { padding-top: .5rem; }
+.cartao-produto-tecnico .btn-primario, .cartao-produto-tecnico .btn-secundario { min-height: 44px; padding: .5rem; }
+[data-layout="distribuidora"] .marca-loja img { height: 62px; max-width: 190px; }
+/* A arte de campanha é 8:3 no computador e 4:5 no celular. A altura acompanha
+   a proporção da arte até um teto, para o catálogo aparecer na primeira tela;
+   `contain` preserva o texto da arte, e a faixa lateral usa a cor do fundo. */
+[data-layout="distribuidora"] .banner-campanha picture { height: min(calc(100vw * 3 / 8), 340px); min-height: 180px; }
+[data-layout="distribuidora"] .banner-campanha img { height: 100%; object-fit: contain; }
+[data-layout="distribuidora"] .home-campanhas { gap: 1.5rem; padding-bottom: 0; }
+[data-layout="distribuidora"] .rodape-loja { margin-top: 2rem; }
+[data-layout="distribuidora"] .campanhas-ver-todos { margin-top: .75rem; margin-bottom: 0; }
+@media (max-width: 640px) {
+  [data-layout="distribuidora"] .marca-loja img { height: 60px; max-width: 170px; }
+  [data-layout="distribuidora"] .banner-campanha picture { aspect-ratio: auto; height: min(calc(100vw * 5 / 4), 42svh); min-height: 0; }
+  [data-layout="distribuidora"] .home-campanhas { gap: 1.25rem; }
+  .cartao-produto-tecnico .cartao-produto-conteudo { padding: .625rem; }
+  .cartao-produto-tecnico .cartao-produto-nome { font-size: .875rem; }
+  .cartao-produto-tecnico .cartao-produto-disponibilidade > a { min-height: 44px; display: inline-flex; align-items: center; }
+}
+
+/* Card sem foto: faixa curta em vez de um quadrado vazio. Em família sem
+   foto (o-ring, gaxeta) o quadrado ocupava metade do card e empurrava medida,
+   preço e disponibilidade para baixo da dobra. O selo continua à esquerda e o
+   aviso vai para a direita, para os dois não se sobreporem. */
+.cartao-produto .cartao-produto-sem-imagem { height: 2.75rem; flex: none; aspect-ratio: auto; }
+.cartao-produto-sem-imagem .produto-sem-foto { justify-content: flex-end; padding-inline: .75rem; background: var(--muted); font-size: .6875rem; }
+.cartao-produto-sem-imagem::after { display: none; }
+.esta-disponivel { color: #15803d; font-weight: 600; }
+.cartao-produto-tecnico .cartao-produto-tecnica { font-size: .875rem; }
+
+/* WhatsApp flutuante: onde a página já tem a ação no card ou na ficha do
+   produto, ele sai — em qualquer largura. Um atalho que cobre o botão de
+   pedido do último card atrapalha exatamente o que ele quer facilitar. Nas
+   demais páginas, o rodapé ganha folga para nada ficar embaixo dele. */
+body:has(.cartao-produto, .ap-produto-info, .acao-whatsapp) .whatsapp-flutuante { display: none; }
+body:has(.whatsapp-flutuante) .rodape-loja { padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)); }
+@media (max-width: 640px) {
+  /* Card estreito: o selo ("Esgotado") ocupa a faixa, e o aviso de foto sai. */
+  .cartao-produto-sem-imagem:has(span) .produto-sem-foto { color: transparent; }
+  /* A dica de medida repete o que o próprio campo diz; no celular ela só
+     empurrava o primeiro produto para a segunda tela. */
+  .filtros-produtos .filtros-ajuda { display: none; }
+}

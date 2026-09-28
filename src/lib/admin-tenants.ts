@@ -3,9 +3,10 @@ import { prisma } from "./db";
 import { cifrar } from "./cofre";
 import { slugificar } from "./catalogo";
 import { esquecerTenantEmCache } from "./tenant";
-import type { ProdutoEntrada, TenantEntrada } from "./admin-schemas";
+import type { ProdutoPlanilha, TenantEntrada } from "./admin-schemas";
 import { invalidarCatalogo } from "./catalogo-cache";
 import { salvarProdutoNoCatalogo } from "./catalogo-escrita";
+import { ErroCampo, lerDefinicoes, normalizarValor } from "./campos-personalizados";
 
 function dadosDoTenant(entrada: Partial<TenantEntrada>): Prisma.TenantUpdateInput {
   const { mercadoPago, tema, identidade, endereco, tabelaFrete, entregaLocal, ...resto } = entrada;
@@ -95,24 +96,64 @@ export async function slugLivre(
  * O endereço da página (`slug`) é derivado, não é a chave: quando o slug
  * desejado já é de outro produto, ganha um sufixo em vez de derrubar o lote.
  */
-export async function importarProdutos(tenantId: string, produtos: ProdutoEntrada[]) {
-  const categorias = new Map<string, string>();
-  for (const c of await prisma.categoria.findMany({ where: { tenantId } })) categorias.set(c.slug, c.id);
+export async function importarProdutos(tenantId: string, produtos: ProdutoPlanilha[]) {
+  const categorias = new Map<string, string | null>();
+  const registrarChaveCategoria = (chave: string, id: string) => {
+    if (!categorias.has(chave)) categorias.set(chave, id);
+    else if (categorias.get(chave) !== id) categorias.set(chave, null);
+  };
+  for (const c of await prisma.categoria.findMany({ where: { tenantId } })) {
+    registrarChaveCategoria(c.slug, c.id);
+    registrarChaveCategoria(slugificar(c.nome), c.id);
+  }
   const nomesCorrigidos = new Set<string>();
+
+  // As definições de campo da loja, uma vez por lote: é por elas que um valor
+  // de planilha vira número, data ou opção válida.
+  const definicoes = lerDefinicoes(
+    (await prisma.tenant.findUnique({ where: { id: tenantId }, select: { camposPersonalizados: true } }))?.camposPersonalizados,
+  );
 
   let criados = 0;
   let atualizados = 0;
+  /** Célula recusada: a importação segue, e o painel mostra o que ficou de fora. */
+  const avisos: string[] = [];
 
   for (const p of produtos) {
+    const desejado = p.slug ? slugificar(p.slug) : p.nome ? slugificar(p.nome) : null;
+    let existente = p.sku
+      ? await prisma.produto.findFirst({ where: { tenantId, sku: p.sku } })
+      : null;
+    if (!existente && desejado) {
+      existente = await prisma.produto.findUnique({ where: { tenantId_slug: { tenantId, slug: desejado } } });
+    }
+    if (!existente && (!p.nome?.trim() || p.precoCentavos === undefined)) {
+      avisos.push(`${p.sku ?? p.slug ?? "Linha sem identificação"}: SKU não encontrado; um produto novo exige nome e preço.`);
+      continue;
+    }
+    if (p.imagemOrigem && p.imagemOrigem !== "propria" && !(p.imagens?.length || existente?.imagens.length)) {
+      avisos.push(`${p.sku ?? p.nome ?? "Produto"}: informe a imagem antes de classificar sua origem.`);
+      continue;
+    }
+    if ((p.confirmarImagemExata || p.correspondenciaImagem) && ((p.imagemOrigem ?? existente?.imagemOrigem ?? "propria") !== "propria" || !((p.imagens?.length ?? 0) || (existente?.imagens.length ?? 0)))) {
+      avisos.push(`${p.sku ?? p.nome ?? "Produto"}: classificação da correspondência exige foto principal e origem própria.`);
+      continue;
+    }
+
     let categoriaId: string | null = null;
     if (p.categoria) {
       const cslug = slugificar(p.categoria);
+      const categoriaConhecida = categorias.has(cslug);
       categoriaId = categorias.get(cslug) ?? null;
-      if (!categoriaId) {
-        const c = await prisma.categoria.create({ data: { tenantId, slug: cslug, nome: p.categoria, ordem: categorias.size } });
-        categorias.set(cslug, c.id);
+      if (categoriaConhecida && !categoriaId) {
+        avisos.push(`${p.sku ?? p.nome ?? "Produto"}: nome de categoria ambíguo; a categoria atual foi preservada.`);
+      } else if (!categoriaConhecida) {
+        const categoriasUnicas = new Set([...categorias.values()].filter((id): id is string => Boolean(id)));
+        const c = await prisma.categoria.create({ data: { tenantId, slug: cslug, nome: p.categoria, ordem: categoriasUnicas.size } });
+        registrarChaveCategoria(cslug, c.id);
+        registrarChaveCategoria(slugificar(c.nome), c.id);
         categoriaId = c.id;
-      } else if (!nomesCorrigidos.has(cslug)) {
+      } else if (categoriaId && !nomesCorrigidos.has(cslug)) {
         // O slug ignora acento, então "Eletrica" e "Elétrica" são a mesma
         // categoria — mas o nome exibido continuava o da primeira importação.
         // Corrigir a planilha não corrigia a vitrine, e o menu ficava com o
@@ -122,14 +163,32 @@ export async function importarProdutos(tenantId: string, produtos: ProdutoEntrad
       }
     }
 
-    const desejado = p.slug ? slugificar(p.slug) : slugificar(p.nome);
-    const { categoria: _c, compatibilidade, atributos, ...campos } = p;
+    const { categoria: _c, compatibilidade, atributos, camposPersonalizados, confirmarImagemExata, correspondenciaImagem, ...campos } = p;
     void _c;
-    const existente = p.sku
-      ? await prisma.produto.findFirst({ where: { tenantId, sku: p.sku } })
-      : await prisma.produto.findUnique({ where: { tenantId_slug: { tenantId, slug: desejado } } });
+    const slug = await slugLivre(tenantId, desejado ?? existente!.slug, existente?.id ?? null);
 
-    const slug = await slugLivre(tenantId, desejado, existente?.id ?? null);
+    /**
+     * Uma célula ruim não derruba a planilha inteira.
+     *
+     * Importação de 2.000 linhas que para na 1.700ª porque alguém escreveu
+     * "doze" num campo numérico deixa o lojista com o catálogo pela metade e
+     * sem saber onde parou. Aqui a linha entra sem aquele campo e o problema
+     * volta como aviso, junto do resultado.
+     */
+    let valoresCampos: Record<string, string> | undefined;
+    if (camposPersonalizados && definicoes.length) {
+      valoresCampos = {};
+      for (const campo of definicoes) {
+        if (!(campo.chave in camposPersonalizados)) continue;
+        try {
+          const valor = normalizarValor(campo, camposPersonalizados[campo.chave]);
+          if (valor !== null) valoresCampos[campo.chave] = valor;
+        } catch (e) {
+          if (!(e instanceof ErroCampo)) throw e;
+          avisos.push(`${p.nome}: ${e.message}`);
+        }
+      }
+    }
 
     const dados = {
       ...campos,
@@ -138,16 +197,19 @@ export async function importarProdutos(tenantId: string, produtos: ProdutoEntrad
       // null aqui tirava da prateleira todo produto de uma carga que só queria
       // atualizar preço ou foto: aconteceu com 872 retentores em 02/09/2026,
       // que sumiram do menu sem erro nenhum aparecer.
-      ...(p.categoria ? { categoriaId } : {}),
+      ...(p.categoria && categoriaId ? { categoriaId } : {}),
       ...(atributos !== undefined ? { atributos: atributos as Prisma.InputJsonValue } : {}),
       ...(compatibilidade ? { compatibilidade: compatibilidade as unknown as Prisma.InputJsonValue } : {}),
+      ...(valoresCampos ? { camposPersonalizados: valoresCampos as unknown as Prisma.InputJsonValue } : {}),
     };
 
     if (existente) {
-      await salvarProdutoNoCatalogo(tenantId, existente.id, dados, { origem: "importacao" });
+      const correspondencia = confirmarImagemExata ? "confirmada" : correspondenciaImagem;
+      await salvarProdutoNoCatalogo(tenantId, existente.id, dados, { origem: "importacao", ...(correspondencia ? { metadadosMidia: { fonte: "planilha", correspondencia, somentePrincipal: true } } : {}) });
       atualizados++;
     } else {
-      await salvarProdutoNoCatalogo(tenantId, null, dados, { origem: "importacao" });
+      const correspondencia = confirmarImagemExata ? "confirmada" : correspondenciaImagem;
+      await salvarProdutoNoCatalogo(tenantId, null, dados, { origem: "importacao", ...(correspondencia ? { metadadosMidia: { fonte: "planilha", correspondencia, somentePrincipal: true } } : {}) });
       criados++;
     }
   }
@@ -155,5 +217,5 @@ export async function importarProdutos(tenantId: string, produtos: ProdutoEntrad
   // por loja caem agora, não daqui a cinco minutos.
   invalidarCatalogo(tenantId);
 
-  return { criados, atualizados };
+  return { criados, atualizados, ...(avisos.length ? { avisosTotal: avisos.length, avisos: avisos.slice(0, 50) } : {}) };
 }

@@ -4,11 +4,21 @@ import { notFound } from "next/navigation";
 import PainelLoja, { type SecaoPainel } from "@/components/painel/PainelLoja";
 import Dominio from "@/components/painel/Dominio";
 import Canais from "@/components/painel/Canais";
+import PerguntasMl from "@/components/painel/PerguntasMl";
+import ReputacaoMl from "@/components/painel/ReputacaoMl";
+import { perguntasPendentes } from "@/lib/mercadolivre-perguntas";
+import { pendenciasDoCatalogo } from "@/lib/mercadolivre-preparo";
+import { lerRegrasDoCanal } from "@/lib/canais";
+import { Secao } from "@/components/painel/campos";
 import Descoberta from "@/components/painel/Descoberta";
 import Automacoes from "@/components/painel/Automacoes";
 import { estadoDescoberta } from "@/lib/descoberta";
 import { headers } from "next/headers";
 import Equipe from "@/components/painel/Equipe";
+import Politicas from "@/components/painel/Politicas";
+import CamposPersonalizados from "@/components/painel/CamposPersonalizados";
+import { lerDefinicoes } from "@/lib/campos-personalizados";
+import { TIPOS_POLITICA, lerRegrasDevolucao, modeloDePolitica, politicaPublicada } from "@/lib/politicas";
 import { prisma } from "@/lib/db";
 import { lojistaAtual, sessaoDoPainel } from "@/lib/sessao";
 import { listarOperadores, permite } from "@/lib/operadores";
@@ -68,7 +78,7 @@ export default async function Pagina({ params, searchParams }: {
   if (secao === "canais") {
     const [loja, sp] = await Promise.all([lojistaAtual(), searchParams]);
     if (!loja) notFound();
-    const [porEstado, candidatos] = await Promise.all([
+    const [porEstado, candidatos, perguntas, reputacao, pendencias] = await Promise.all([
       prisma.anuncioMercadoLivre.groupBy({
         by: ["estado"],
         where: { tenantId: loja.id },
@@ -88,6 +98,9 @@ export default async function Pagina({ params, searchParams }: {
         orderBy: { preparadoEm: "desc" },
         take: 50,
       }),
+      perguntasPendentes(loja.id),
+      prisma.reputacaoMercadoLivre.findUnique({ where: { tenantId: loja.id } }),
+      pendenciasDoCatalogo(loja.id),
     ]);
     const conta = (e: string) => porEstado.find((p) => p.estado === e)?._count._all ?? 0;
     return (
@@ -98,9 +111,15 @@ export default async function Pagina({ params, searchParams }: {
             produtoId,
             nome: produto.nome,
             preco: new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(produto.precoCentavos / 100),
+            precoCentavos: produto.precoCentavos,
             estoque: produto.estoque ?? 0,
             imagem: produto.imagens[0] ?? null,
           }))}
+          regras={lerRegrasDoCanal(loja.canais, "mercadolivre")}
+          pendencias={pendencias}
+          // O aplicativo do ML é da plataforma, não da loja: sem ele o botão de
+          // conectar levaria a uma tela de erro do próprio Mercado Livre.
+          integracaoDisponivel={Boolean(process.env.ML_APP_ID && process.env.ML_APP_SECRET)}
           retorno={sp.ml}
           ml={{
             conectado: Boolean(loja.mlAccessTokenEnc && loja.mlRefreshTokenEnc),
@@ -117,6 +136,46 @@ export default async function Pagina({ params, searchParams }: {
             },
           }}
         />
+        {reputacao && (
+          <Secao
+            titulo="Saúde da conta no Mercado Livre"
+            descricao="É o Mercado Livre quem calcula. O que a loja faz é mostrar o número junto do que muda ele."
+          >
+            <ReputacaoMl
+              r={{
+                nivel: reputacao.nivel,
+                selo: reputacao.selo,
+                transacoes: reputacao.transacoes,
+                concluidas: reputacao.concluidas,
+                canceladas: reputacao.canceladas,
+                reclamacoes: reputacao.reclamacoes,
+                atrasos: reputacao.atrasos,
+                cancelamentos: reputacao.cancelamentos,
+                positivas: reputacao.positivas,
+                alertas: Array.isArray(reputacao.alertas) ? (reputacao.alertas as string[]) : [],
+                medidoEm: reputacao.medidoEm.toISOString(),
+              }}
+            />
+          </Secao>
+        )}
+        {perguntas.length > 0 && (
+          <Secao
+            titulo={`Perguntas do Mercado Livre (${perguntas.length})`}
+            descricao="Quem pergunta está decidindo agora. Responder rápido é o que converte no canal — e a resposta vai direto para o anúncio."
+          >
+            <PerguntasMl
+              perguntas={perguntas.map((p) => ({
+                id: p.id,
+                texto: p.texto,
+                autor: p.autor,
+                mlbId: p.mlbId,
+                perguntadaEm: p.perguntadaEm.toISOString(),
+                motivoErro: p.motivoErro,
+                produtoNome: p.produto?.nome ?? null,
+              }))}
+            />
+          </Secao>
+        )}
       </div>
     );
   }
@@ -140,6 +199,43 @@ export default async function Pagina({ params, searchParams }: {
         <div className="grid gap-6"><Automacoes /></div>
       </Suspense>
     );
+  }
+
+  // Políticas: o que o cliente lê no rodapé da loja. Também não passa pelo
+  // PainelLoja — precisa das categorias (para marcar venda final), não do
+  // catálogo inteiro nem dos pedidos.
+  if (secao === "politicas") {
+    const loja = await lojistaAtual();
+    if (!loja) notFound();
+    const categorias = await prisma.categoria.findMany({
+      where: { tenantId: loja.id },
+      select: { slug: true, nome: true },
+      orderBy: [{ ordem: "asc" }, { nome: "asc" }],
+    });
+    return (
+      <div className="grid gap-6">
+        <Politicas
+          politicas={TIPOS_POLITICA.map((tipo) => {
+            const publicada = politicaPublicada(loja, tipo);
+            return {
+              tipo,
+              publicado: publicada?.paragrafos.join("\n\n") ?? "",
+              modelo: modeloDePolitica(loja, tipo).join("\n\n"),
+              propria: publicada?.propria ?? false,
+            };
+          })}
+          regras={lerRegrasDevolucao(loja.regrasDevolucao)}
+          categorias={categorias}
+        />
+      </div>
+    );
+  }
+
+  // Campos personalizados: a loja declara o que pergunta em cada produto.
+  if (secao === "campos") {
+    const loja = await lojistaAtual();
+    if (!loja) notFound();
+    return <CamposPersonalizados iniciais={lerDefinicoes(loja.camposPersonalizados)} />;
   }
 
   // Domínio não é uma seção do PainelLoja: é tela própria, com verificação de

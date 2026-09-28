@@ -68,7 +68,7 @@ export default function Spotlight({ t, identidade, categorias, vitrine, temDesta
           <p className="home-vazio">O catálogo está sendo preparado. Volte em breve para ver os produtos.</p>
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {vitrine.slice(0, 8).map((produto) => <ProductCard key={produto.id} produto={produto} vende={vende} whatsapp={t.whatsapp} moto={moto} />)}
+            {vitrine.slice(0, 8).map((produto) => <ProductCard loja={t} key={produto.id} produto={produto} vende={vende} whatsapp={t.whatsapp} moto={moto} />)}
           </div>
         )}
       </section>

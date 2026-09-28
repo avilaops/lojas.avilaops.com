@@ -1,6 +1,7 @@
 import Link from "next/link";
 import ProductCard from "@/components/ProductCard";
 import type { DadosHome } from "./tipos";
+import { retiradaPublicaDisponivel } from "@/lib/tenant";
 
 export default function Classico({ t, identidade, categorias, vitrine, temDestaques, vende }: DadosHome) {
   return (
@@ -11,7 +12,7 @@ export default function Classico({ t, identidade, categorias, vitrine, temDestaq
         {(t.sobre || identidade.diferencial) && <p className="mt-3 max-w-xl text-sm opacity-90 line-clamp-3">{t.sobre || identidade.diferencial}</p>}
         <div className="mt-6 flex flex-wrap gap-3">
           <Link href="/produtos" className="inline-flex h-11 items-center rounded-full bg-background px-6 text-sm font-semibold text-foreground transition hover:-translate-y-0.5">Explorar produtos</Link>
-          {t.retiradaNaLoja && <span className="inline-flex h-11 items-center text-sm opacity-90">Retire na loja sem custo</span>}
+          {retiradaPublicaDisponivel(t) && <span className="inline-flex h-11 items-center text-sm opacity-90">Retire na loja sem custo</span>}
         </div>
       </section>
 
@@ -35,7 +36,7 @@ export default function Classico({ t, identidade, categorias, vitrine, temDestaq
           <p className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">Os produtos desta loja estão sendo cadastrados.</p>
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {vitrine.slice(0, 8).map((p) => <ProductCard key={p.id} produto={p} vende={vende} whatsapp={t.whatsapp} />)}
+            {vitrine.slice(0, 8).map((p) => <ProductCard loja={t} key={p.id} produto={p} vende={vende} whatsapp={t.whatsapp} />)}
           </div>
         )}
       </section>

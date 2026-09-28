@@ -15,8 +15,27 @@ import type { TenantPublico } from "@/lib/tenant";
  * decidir o que mostrar depois (PIX, boleto, aprovado).
  */
 
+/**
+ * A referência é segredo, não identificador.
+ *
+ * `/pedido/[referencia]` mostra nome, e-mail, itens, total e rastreio sem pedir
+ * sessão — quem tem o link vê o pedido. Então o que separa o cliente de um
+ * estranho é só a dificuldade de adivinhar esta string.
+ *
+ * `Math.random()` não serve para isso: não é criptográfico, e seis caracteres
+ * de base 36 davam por volta de 31 bits, ao lado de um timestamp em
+ * milissegundos que se estreita sozinho quando se sabe mais ou menos quando a
+ * compra foi feita. `randomUUID` são 122 bits de fonte criptográfica.
+ *
+ * Continua nascendo no navegador de propósito: é ela que dá idempotência
+ * quando o POST do checkout é repetido, então precisa existir antes da
+ * primeira tentativa. E não há reserva para `crypto.randomUUID` ausente —
+ * cair de volta em `Math.random()` devolveria o furo em silêncio, que é pior
+ * do que falhar à vista.
+ */
 function novaReferencia(slug: string) {
-  return `${slug}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`.toUpperCase();
+  const segredo = crypto.randomUUID().replace(/-/g, "");
+  return `${slug}-${Date.now().toString(36)}-${segredo}`.toUpperCase();
 }
 
 export default function CheckoutClient({ loja, conta }: { loja: TenantPublico; conta: { nome: string; email: string; telefone: string | null; documento: string | null; endereco: { cep: string; logradouro: string; numero: string; complemento: string | null; bairro: string; cidade: string; uf: string } | null } | null }) {

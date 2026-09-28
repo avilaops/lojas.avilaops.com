@@ -1,10 +1,133 @@
-# Rotinas que o n8n precisa chamar
+# As rotinas da plataforma
 
-A plataforma nunca manda e-mail nem WhatsApp por conta própria: ela emite o
-evento e expõe o endpoint. Quem executa é o fluxo **Lojas, Onboarding e
-Pedidos** (`p063mxq8dQijjBDL`). **O fluxo vivo é a fonte da verdade** — não
-existe mais cópia em código dele neste repositório (a que existia ficou fora
-de sincronia e induziu uma revisão inteira a erro).
+**A plataforma se agenda sozinha.** O relógio mora no mesmo container que
+serve a loja (`src/instrumentation.ts` → `src/lib/rotinas-agendador.ts`), acorda
+de minuto em minuto e roda o que venceu. Até 19/09/2026 quem chamava os
+endpoints de tempos em tempos era o n8n — isto é, a parte mais crítica da
+operação dependia de um serviço de fora estar de pé, sem ninguém ser avisado
+quando não estava.
+
+O catálogo do que roda sozinho é `ROTINAS`, em `src/lib/rotinas.ts`. O nome é
+chave estável e vai para a tabela `Rotina`: renomear é migração, não
+refatoração.
+
+## O que roda, quando e o que faz
+
+Cada rotina tem um nome de chave (estável, vai para o banco), um **título**
+curto e uma descrição. O título existe porque a frase inteira não cabe como
+título de linha num celular — no painel da Ávila Ops ela saía cortada em "Gera
+e publica em lote o …". O teto é de 22 caracteres, medido num iPhone de 375 px
+e preso por teste. Quem muda um deles mexe em `ROTINAS`, não na tela.
+
+| Rotina | Título | Quando | O que faz | Disparo manual |
+|---|---|---|---|---|
+| `mercadolivre.avisos` | Vendas do ML | a cada 5 min | processa a fila de notificações do Mercado Livre: venda vira pedido e baixa estoque, envio vira rastreio, anúncio mexido vira pendência. **Quanto mais espaçado, maior a janela de vender a mesma peça duas vezes** | `POST /api/admin/canais/mercadolivre/avisos` |
+| `mercadolivre.rodar` | Anúncios do ML | a cada hora | publica o que o lojista aprovou e empurra preço e estoque para os anúncios | `POST /api/admin/canais/mercadolivre/rodar` |
+| `carrinhos.verificar` | Carrinho abandonado | a cada hora | marca carrinho parado há 45 min e emite `carrinho.abandonado` | `POST /api/admin/carrinhos/verificar` |
+| `estoque.avisos` | Voltou ao estoque | a cada hora | avisa quem esperava produto que voltou | `POST /api/admin/estoque/avisos` |
+| `pedidos.verificar` | Pagamento pendente | a cada hora | confere no gateway os pedidos aguardando pagamento (Pix, boleto) dos últimos 7 dias. Rede de segurança do webhook | `POST /api/admin/pedidos/verificar` |
+| `seo.categorias` | SEO de categoria | todo dia às 3h | gera e publica SEO pendente em lote, sem IA no acesso público | `POST /api/admin/seo/categorias` |
+| `cobranca.verificar` | Régua de cobrança | todo dia às 6h | suspende quem passou da tolerância | `POST /api/admin/cobranca/verificar` |
+| `relatorios.semanal` | Relatório semanal | segunda às 7h | emite `loja.relatorio-semanal` por loja com movimento | `POST /api/admin/relatorios/semanal` |
+
+Horário é o de São Paulo (`America/Sao_Paulo`), não o do servidor: "3h" é 3h de
+quem usa a loja. Os endpoints continuam existindo e continuam pedindo
+`Authorization: Bearer $LOJAS_ADMIN_TOKEN` — o que mudou é que eles viraram o
+disparo manual, não mais o agendamento.
+
+## Enquanto o agendamento antigo do n8n não for desligado
+
+Os nós de Schedule do fluxo `p063mxq8dQijjBDL` continuam apontando para os
+mesmos endpoints. Até serem desligados, cada rotina é chamada **duas vezes** no
+mesmo horário — uma pelo agendador, outra pelo n8n. Nenhuma das duas sabe da
+outra, então quem tem que aguentar isso é o trabalho em si:
+
+| Rotina | Chamada duas vezes faz mal? |
+|---|---|
+| `mercadolivre.avisos` | não — cada aviso é reivindicado antes do efeito |
+| `mercadolivre.rodar` | não — publica só o aprovado e sincroniza o que mudou |
+| `carrinhos.verificar` | não — o checkout vira `LEMBRADO` e sai da fila |
+| `estoque.avisos` | não — `AvisoEstoque.avisadoEm` |
+| `pedidos.verificar` | não — só lê o gateway e concilia |
+| `seo.categorias` | não — trava de 15 min por categoria |
+| `cobranca.verificar` | não — fatura é upsert por `externalId`, e `suspender()` confere de novo |
+| `relatorios.semanal` | **fazia** — ver abaixo |
+
+O relatório semanal era o único que não se defendia: cada execução emitia outro
+`loja.relatorio-semanal`, e o lojista receberia dois e-mails na segunda de
+manhã. Passou a valer **uma vez por loja por semana**, olhando o próprio
+`AutomacaoEvento` para saber o que já saiu — o que também protege contra um
+disparo manual no mesmo dia. A janela é de 6 dias, não 7, para o relatório
+legítimo da semana seguinte não ser recusado por alguns segundos de diferença.
+
+Desligar os Schedule do n8n continua valendo, mas deixou de ser condição para
+este deploy.
+
+## Como um container não atropela o outro
+
+A linha da tabela `Rotina` **é** a trava. Reivindicar é um
+`UPDATE … WHERE proximaEm <= agora AND (executandoDesde IS NULL OR trava
+vencida)`: dois containers do mesmo deploy tentam e só um recebe `count = 1`.
+É o mesmo padrão do `AutomacaoEvento` e da fila de perguntas do Mercado Livre.
+
+Decisões que estão no código e valem a pena conhecer:
+
+- **Intervalo conta do fim da execução anterior**, não de um relógio fixo.
+  Rotina que demorou 7 min não dispara duas vezes seguidas "recuperando o
+  atraso".
+- **O horário avança mesmo quando a rotina falha.** Rotina quebrada que não
+  avança vira laço apertado a cada tique, martelando um serviço que já está com
+  problema. Quem sinaliza a quebra é `falhasSeguidas`, não a fila parada.
+- **Rotina de intervalo nasce vencida; rotina de horário, não.** Subir o
+  container numa terça não pode disparar o relatório semanal de segunda.
+- **Uma rotina por vez, em série.** São trabalhos de fundo no mesmo processo
+  que serve a vitrine; disparar oito de uma vez às 3h competiria com o
+  comprador.
+- **Trava vencida volta para a fila.** Container que morreu no meio não deixa a
+  rotina presa para sempre (`travaMinutos` por rotina).
+
+## Como saber que ainda está rodando
+
+`GET /api/admin/rotinas` devolve, por rotina, quando rodou, quanto demorou, o
+que devolveu, há quantas execuções está falhando e se está atrasada. O campo
+`saudavel` no topo é a pergunta que um monitor deve fazer.
+
+```bash
+curl -s -H "Authorization: Bearer $LOJAS_ADMIN_TOKEN" \
+  https://lojas.avilaops.com/api/admin/rotinas | jq '.saudavel, .rotinas[] | {nome, ultimaEm, falhasSeguidas}'
+```
+
+`POST /api/admin/rotinas/:nome` roda uma rotina agora, fora do horário,
+respeitando a trava (apertar duas vezes não coloca duas execuções no ar).
+
+Atraso é medido contra a própria cadência: 9 minutos de atraso não são nada no
+relatório semanal e são sintoma na fila do Mercado Livre.
+
+**O que ainda falta:** uma tela. Hoje a saúde das rotinas só existe como JSON
+nesse endpoint — o lugar natural dela é o módulo Lojas do painel da Ávila OS,
+que já lê esta API. Enquanto a tela não existe, o rastro de cada execução sai
+no log do container, uma linha por rodada (`[rotina] <nome> <ms> <resumo>`).
+
+## Desligar o relógio num container
+
+`ROTINAS_AGENDADOR=0` desliga; `=1` liga. Sem a variável, o agendador fica
+ligado em produção e desligado em desenvolvimento — `next dev` reinicia o
+processo a cada salvamento, e disparar cobrança ou e-mail a partir daí seria um
+acidente esperando acontecer. A variável é o que permite subir um container só
+para servir requisições, sem relógio.
+
+---
+
+# O que ainda depende do n8n
+
+O agendamento saiu; **executar o evento, não.** A plataforma continua emitindo
+o evento e expondo o endpoint, e quem manda e-mail e WhatsApp ainda é o fluxo
+**Lojas, Onboarding e Pedidos** (`p063mxq8dQijjBDL`). **O fluxo vivo é a fonte
+da verdade** — não existe mais cópia em código dele neste repositório (a que
+existia ficou fora de sincronia e induziu uma revisão inteira a erro).
+
+Enquanto isso não for trazido para dentro, evento emitido sem o n8n de pé é
+mensagem que não chega a ninguém.
 
 ## Contrato dos eventos (v1) e o caminho de entrada: 29/08/2026
 
@@ -76,32 +199,20 @@ O fluxo novo depende dos endpoints novos. Ordem obrigatória:
 Publicar antes do deploy faz `Reivindicar Evento` receber 404 e nenhum aviso
 sair.
 
-Todos os POST abaixo vão com `Authorization: Bearer $LOJAS_ADMIN_TOKEN`.
-
-| Quando | Endpoint | O que faz |
-|---|---|---|
-| a cada hora | `POST /api/admin/carrinhos/verificar` | marca carrinho parado há 45 min e emite `carrinho.abandonado` |
-| a cada hora | `POST /api/admin/estoque/avisos` | avisa quem esperava produto que voltou |
-| a cada hora | `POST /api/admin/pedidos/verificar` | confere no gateway os pedidos aguardando pagamento (Pix, boleto) dos últimos 7 dias. Rede de segurança do webhook; agendado no `A Cada Hora` em 12/09/2026 |
-| diário, 3h | `POST /api/admin/seo/categorias` | gera e publica SEO pendente em lote, sem IA no acesso público |
-| diário | `POST /api/admin/cobranca/verificar` | suspende quem passou da tolerância |
-| segunda 7h | `POST /api/admin/relatorios/semanal` | emite `loja.relatorio-semanal` por loja com movimento |
-
 ## SEO de categorias V1
 
 O roteador (`Rotear por Tipo de Evento`) conhece `categoria.seo-pendente` e
 `categoria.seo-publicado` desde 29/08/2026 (saídas 18 e 19 → `Encerrar:
 Processado`); a saída extra do fallback é a 20 e continua em `Encerrar: Ignorado`.
 
-O fluxo diário envia `{ "limite": 10 }` para
-`POST /api/admin/seo/categorias`. O endpoint reivindica cada categoria com uma
+A rotina `seo.categorias` processa 10 por vez. O endpoint reivindica cada categoria com uma
 trava de 15 minutos, gera o texto com Gemini ou fallback determinístico,
 publica no Postgres e avisa o IndexNow. Execuções concorrentes não processam a
 mesma categoria; falhas liberam a trava e mantêm `seoPendente=true`.
 
 Para monitorar sem consumir IA, use `GET /api/admin/seo/categorias`. A resposta
 informa `pendentes`, `processando`, `comErro` e `maisAntigaEm`. O evento
-`categoria.seo-pendente` permite uma execução antecipada; o agendamento diário
+`categoria.seo-pendente` permite uma execução antecipada; a rotina diária
 continua sendo a rede de segurança. Depois da publicação sai
 `categoria.seo-publicado`.
 
@@ -112,9 +223,9 @@ execução, regra 12 do QUADRO). Primeira rodada manual em 29/08 processou `dron
 (avila-ops-store) e `Pneus` (sandromotos) por fallback; a loja `demo` está
 SUSPENSA e o lote só pega tenant ATIVA.
 
-Nós sugeridos: **Schedule Trigger (3h)** → **HTTP Request / lote** →
-**IF falhas.length > 0** → alerta operacional. Não coloque o token administrativo
-no corpo ou na URL; use a credencial de header do n8n.
+Desde 19/09/2026 quem chama às 3h é o agendador da plataforma, não o
+`Todo Dia às 3h` do fluxo: o nó do n8n pode sair, e o alerta de falha passa a
+sair de `falhasSeguidas` em `GET /api/admin/rotinas`.
 
 ## `loja.voltou-ao-estoque`: ligado em 26/08/2026
 

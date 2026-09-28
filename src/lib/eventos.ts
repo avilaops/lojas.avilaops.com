@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
-import type { Prisma } from "@prisma/client";
+import type { Prisma, Tenant } from "@prisma/client";
 import { prisma } from "./db";
+import { urlDaLoja } from "./tenant";
 
 /**
  * Eventos da plataforma → n8n.
@@ -61,7 +62,13 @@ export type EventoPlataforma =
   | { tipo: "categoria.seo-pendente"; slug: string; nome: string; categoriaId: string; categoriaSlug: string; categoriaNome: string; url: string }
   | { tipo: "categoria.seo-publicado"; slug: string; nome: string; categoriaId: string; categoriaSlug: string; categoriaNome: string; url: string; origem: string }
   | ({ tipo: "pedido.criado"; slug: string; referencia: string; numero?: number; totalCentavos: number; meioPagamento: string; clienteNome: string; clienteEmail: string; clienteTelefone: string } & Lojista)
-  | ({ tipo: "pedido.pago"; slug: string; referencia: string; numero?: number; totalCentavos: number; clienteNome: string; clienteEmail: string; clienteTelefone: string; itens: ItemEvento[]; itensTexto: string } & Lojista)
+  /**
+   * `canal` diz de onde veio a venda ("loja" quando ausente). O fluxo do n8n
+   * precisa dele: em pedido do Mercado Livre não há e-mail nem telefone do
+   * comprador — falar com ele acontece dentro do ML —, e disparar a
+   * confirmação de sempre contra campo vazio só produz automação falhada.
+   */
+  | ({ tipo: "pedido.pago"; slug: string; referencia: string; numero?: number; totalCentavos: number; clienteNome: string; clienteEmail: string; clienteTelefone: string; itens: ItemEvento[]; itensTexto: string; canal?: string } & Lojista)
   | ({ tipo: "pedido.recusado"; slug: string; referencia: string; clienteNome: string; clienteEmail: string; clienteTelefone: string; motivo?: string } & Lojista)
   | { tipo: "lojista.recuperar-senha"; slug: string; nome: string; email: string; link: string }
   | { tipo: "loja.suspensa"; slug: string; nome: string; motivo: string; link: string; emailContato: string | null; whatsapp: string | null }
@@ -75,6 +82,17 @@ export type EventoPlataforma =
   | { tipo: "loja.relatorio-semanal"; slug: string; nome: string; url: string; emailContato: string | null; whatsapp: string | null; periodo: string; pedidosPagos: number; receitaCentavos: number; ticketMedioCentavos: number; topProdutos: string; carrinhosAbandonados: number; novasAvaliacoes: number }
   | ({ tipo: "pedido.em-separacao"; slug: string; referencia: string; numero: number; clienteNome: string; clienteEmail: string; clienteTelefone: string; linkPedido: string } & Lojista)
   | ({ tipo: "pedido.entregue"; slug: string; referencia: string; numero: number; clienteNome: string; clienteEmail: string; clienteTelefone: string; linkPedido: string } & Lojista)
+  /**
+   * Pergunta de comprador num canal externo (hoje só o Mercado Livre). O
+   * prefixo é `canal.` e não `mercadolivre.` de propósito: esse outro prefixo
+   * é da fila de **entrada**, gravada pelo webhook, e um evento de saída com
+   * ele seria reprocessado como se fosse aviso do ML.
+   *
+   * Não leva contato de quem perguntou: o canal não entrega, e a conversa
+   * acontece lá dentro. O que o lojista precisa é saber que existe e abrir o
+   * painel — responder rápido é o que converte no Mercado Livre.
+   */
+  | ({ tipo: "canal.pergunta-recebida"; slug: string; canal: string; perguntaId: string; produtoNome: string; texto: string; linkPainel: string } & Lojista)
   | ({ tipo: "pedido.cancelado"; slug: string; referencia: string; numero: number; clienteNome: string; clienteEmail: string; clienteTelefone: string; totalCentavos: number; motivo: string; linkPedido: string } & Lojista);
 
 export type TipoEvento = EventoPlataforma["tipo"];
@@ -92,6 +110,15 @@ function correlacaoDe(evento: EventoPlataforma): string {
 export const REENVIOS_MAXIMOS = 3;
 
 /** "2x Retentor XPTO, 1x Rolamento ABC" — o texto que vai em WhatsApp e e-mail. */
+/**
+ * Os dados do lojista que acompanham todo evento de pedido. Vive aqui, junto
+ * do contrato `Lojista`, porque agora tem mais de um emissor: o checkout
+ * próprio e o canal do Mercado Livre.
+ */
+export function lojista(t: Tenant): Lojista {
+  return { lojaNome: t.nome, lojaUrl: urlDaLoja(t), lojistaWhatsapp: t.whatsapp, lojistaEmail: t.loginEmail ?? t.emailContato, emailRemetente: t.emailRemetente };
+}
+
 export function itensParaTexto(itens: ItemEvento[]): string {
   return itens.map((i) => `${i.quantidade}x ${i.nome}`).join(", ");
 }

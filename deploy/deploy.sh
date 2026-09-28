@@ -16,6 +16,11 @@ cd /opt/lojas
 
 [ -f standalone.tgz ] || { echo "!! falta /opt/lojas/standalone.tgz" >&2; exit 1; }
 
+# Só mantemos uma versão anterior ao vivo para rollback. Liberar a cópia de
+# rollback mais velha antes da extração, que precisa de espaço para a nova
+# versão completa, sem remover a aplicação que está respondendo agora.
+rm -rf app.anterior
+
 if ! docker image inspect lojas-base >/dev/null 2>&1; then
   echo "==> imagem base ausente; construindo"
   docker build -q -f Dockerfile.base -t lojas-base . >/dev/null
@@ -31,6 +36,9 @@ echo "==> extraindo a nova versão"
 rm -rf app.novo
 mkdir -p app.novo
 tar xzf standalone.tgz -C app.novo
+# O pacote pode trazer `./` com permissão 700, herdada de um mktemp; o processo
+# Node (uid 1000) precisa atravessar a raiz montada em /app.
+chmod 755 app.novo
 
 # O build vem do Windows: o sharp de lá não roda aqui, e o Turbopack referencia
 # @prisma/client-<hash>. Os dois ajustes rodam dentro da própria base, que é
@@ -45,9 +53,12 @@ docker run --rm -v /opt/lojas/app.novo:/app lojas-base sh -c '
   # sharp quebra no require com "Cannot find module semver/functions/coerce".
   # Foi assim, em silencio, de 02/09 a 10/09/2026: a rota /uploads caia no
   # "sem otimizacao" e todo card de produto recebia o original de 1000 px
-  # no lugar da miniatura de 480. Copia so o que falta, sem sobrescrever.
+  # no lugar da miniatura de 480. O standalone pode conter pastas parciais
+  # (por exemplo, semver/package.json sem functions/coerce.js), entao copia
+  # o conteudo da base Linux por cima, em vez de testar apenas a pasta.
   for dep in semver detect-libc @emnapi; do
-    [ -e "/app/lojas.avilaops.com/node_modules/$dep" ] || cp -r "/opt/sharp/node_modules/$dep" "/app/lojas.avilaops.com/node_modules/$dep"
+    mkdir -p "/app/lojas.avilaops.com/node_modules/$dep"
+    cp -r "/opt/sharp/node_modules/$dep/." "/app/lojas.avilaops.com/node_modules/$dep/"
   done
   cd /app/lojas.avilaops.com/node_modules/@prisma
   for h in $(grep -rhoE "@prisma/client-[0-9a-f]{16}" /app/lojas.avilaops.com/.next/server/chunks | sort -u | sed "s#@prisma/##"); do ln -sfn client "$h"; done
@@ -56,6 +67,12 @@ docker run --rm -v /opt/lojas/app.novo:/app lojas-base sh -c '
   # a rota /uploads serve o original no lugar da miniatura (10/09/2026).
   cd /app/lojas.avilaops.com/node_modules
   for h in $(grep -rhoE "\"sharp-[0-9a-f]{16}\"" /app/lojas.avilaops.com/.next/server/chunks | tr -d "\"" | sort -u); do ln -sfn sharp "$h"; done
+  # O ONNX tambem e externalizado com hash; o wrapper nativo precisa da biblioteca
+  # Linux (incluida pelo empacotador) junto ao pacote e deste alias no runtime.
+  for h in $(grep -rhoE "\"onnxruntime-node-[0-9a-f]{16}\"" /app/lojas.avilaops.com/.next/server/chunks | tr -d "\"" | sort -u); do ln -sfn onnxruntime-node "$h"; done
+  # Falhar antes da troca se o pacote não carregar os módulos de imagem Linux.
+  # Health e CSS isolados não detectam esse erro na rota de uploads.
+  node -e "require(\"/app/lojas.avilaops.com/node_modules/onnxruntime-node\"); require(\"/app/lojas.avilaops.com/node_modules/sharp\")"
 '
 
 echo "==> trocando a versão no ar"
@@ -85,12 +102,26 @@ conferir_estilo() {
   local html folha bytes
   html=$(curl -sf -H "host: lojas.avilaops.com" http://127.0.0.1:3080/) || {
     echo "!! a vitrine não respondeu" >&2; return 1; }
-  folha=$(printf '%s' "$html" | grep -oE '/_next/static/css/[^"]+\.css' | head -1)
+  folha=$(printf '%s' "$html" | grep -oE '/_next/static/(css|chunks)/[^"]+\.css' | head -1)
   [ -n "$folha" ] || { echo "!! a vitrine não referencia folha de estilo própria (pacote sem .next/static?)" >&2; return 1; }
   bytes=$(curl -sf -o /dev/null -w '%{size_download}' -H "host: lojas.avilaops.com" "http://127.0.0.1:3080$folha") || {
     echo "!! $folha não foi servida; a loja abriria sem CSS" >&2; return 1; }
   [ "$bytes" -gt 1000 ] || { echo "!! $folha veio com $bytes bytes" >&2; return 1; }
   echo "==> folha de estilo servida ($folha, $bytes bytes)"
+}
+
+# A rota /uploads serve as fotos de todas as lojas. Em 28/09/2026 ela passou a
+# responder 500 em qualquer caminho (o módulo não carregava porque o binding
+# Linux do ONNX faltava no pacote), com health e CSS verdes, e a vitrine ficou
+# sem foto fora do cache da borda. Um arquivo que não existe precisa voltar
+# 404: 500 aqui significa que a rota nem chegou a rodar. Não depende do
+# conteúdo do volume.
+conferir_uploads() {
+  local codigo
+  codigo=$(curl -s -o /dev/null -w '%{http_code}' -H "host: lojas.avilaops.com" \
+    "http://127.0.0.1:3080/uploads/conferencia-deploy/nao-existe.webp") || true
+  [ "$codigo" = "404" ] || { echo "!! /uploads respondeu $codigo para arquivo inexistente (esperado 404)" >&2; return 1; }
+  echo "==> rota de fotos carregando (/uploads → 404 para inexistente)"
 }
 
 for i in $(seq 1 30); do
@@ -99,6 +130,10 @@ for i in $(seq 1 30); do
     echo "==> saudável na tentativa $i"
     if ! conferir_estilo; then
       echo "!! respondeu, mas sem a folha de estilo; tratando como versão quebrada" >&2
+      break
+    fi
+    if ! conferir_uploads; then
+      echo "!! respondeu, mas a rota de fotos não carrega; tratando como versão quebrada" >&2
       break
     fi
     docker image prune -f >/dev/null

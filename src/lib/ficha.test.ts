@@ -29,3 +29,19 @@ test("sem zeros à toa", () => {
   assert.equal(formatarMm(14), "14 mm");
   assert.equal(formatarMm(15.875), "15,875 mm");
 });
+
+test("rótulo gerado da chave sai acentuado, com sigla e unidade", () => {
+  const f = fichaDoProduto({
+    codigoFabricante: "2050652", estadoFisico: "Líquido", classificacaoGhs: "Não classificado",
+    fixacao: "Velcro", diametroMm: "133", rotativaRpm: "1.500", codigoOnu: "UN 3264",
+    notificacaoAnvisa: "25351", emissaoDePo: "Baixa", cor: "Azul",
+  });
+  assert.deepEqual(f.map((l) => l.rotulo), [
+    "Código fabricante", "Estado físico", "Classificação GHS", "Fixação", "Diâmetro (mm)",
+    "Rotativa (RPM)", "Código ONU", "Notificação ANVISA", "Emissão de pó", "Cor",
+  ]);
+});
+
+test("GTIN não se repete como característica", () => {
+  assert.deepEqual(fichaDoProduto({ gtin: "7898511028094", tipo: "Descontaminante" }).map((l) => l.rotulo), ["Tipo"]);
+});

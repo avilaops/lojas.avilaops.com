@@ -2,6 +2,7 @@ import { z } from "zod";
 import { validarCnpj } from "@avilaops/checkout";
 import { TemaSchema } from "./tema";
 import { IdentidadeSchema, LIMITE_SLOGAN } from "./identidade";
+import { categoriaGoogleValida } from "./google-product-taxonomy";
 
 /**
  * Contratos da API administrativa. É o que o formulário de onboarding do
@@ -22,6 +23,7 @@ const whatsappBrasil = z.string().transform((s, ctx) => {
 export const EnderecoSchema = z.object({
   logradouro: z.string().max(120).optional(),
   numero: z.string().max(20).optional(),
+  complemento: z.string().max(80).optional(),
   bairro: z.string().max(80).optional(),
   cidade: z.string().max(80).optional(),
   uf: z.string().length(2).optional(),
@@ -144,13 +146,17 @@ export const ProdutoEntradaSchema = z.object({
   marca: z.string().max(80).optional(),
   sku: z.string().max(60).optional(),
   gtin: z.string().max(20).optional(),
+  googleProductCategory: z.string().trim().max(300).nullable().optional().refine(
+    categoriaGoogleValida,
+    "Use um ID ou caminho existente na taxonomia oficial do Google em português.",
+  ),
   mpn: z.string().trim().max(60).nullable().optional(),
   identificadoresEstado: z.enum(["desconhecido", "informado", "sem_identificador"]).optional(),
   precoCentavos: z.number().int().nonnegative(),
   precoDeCentavos: z.number().int().nonnegative().nullable().optional(),
   descricaoCurta: z.string().max(300).optional(),
   descricao: z.string().max(8000).optional(),
-  imagens: z.array(z.string().url()).max(10).optional(),
+  imagens: z.array(z.string().url()).max(20).optional(),
   /**
    * O que a imagem é deste item: `propria` (SKU exato), `representativa`
    * (família visual, a vitrine avisa) ou `ilustracao` (desenho das medidas).
@@ -170,6 +176,13 @@ export const ProdutoEntradaSchema = z.object({
   larguraCm: z.number().positive().optional(),
   comprimentoCm: z.number().positive().optional(),
   atributos: z.record(z.string(), z.unknown()).optional(),
+  /**
+   * Valores dos campos que a loja definiu em Configurações › Campos do
+   * produto. Tipo e obrigatoriedade não cabem aqui: quem valida é
+   * `normalizarValores`, que precisa das definições da loja para saber que
+   * "Safra" é número e "Corpo" só aceita três opções.
+   */
+  camposPersonalizados: z.record(z.string(), z.unknown()).optional(),
   // Farmácia (segmento farmacia). Ver src/lib/farmacia.ts.
   //
   // A tarja é o único campo aqui que restringe a venda, e por isso é enum
@@ -226,5 +239,29 @@ export function conferirImagem<T extends { imagemOrigem?: string | null; imagemF
 /** Importação em lote: o produto vem inteiro, então as regras valem sempre. */
 export const ProdutoImportadoSchema = conferirImagem(ProdutoEntradaSchema);
 
+/** Atualização por planilha: qualquer campo pode ser enviado isoladamente
+ * quando a linha identifica um produto existente por SKU. A criação continua
+ * exigindo nome e preço no importador. */
+export const ProdutoPlanilhaSchema = ProdutoEntradaSchema.partial().extend({
+  /** Confirma apenas a foto principal depois de conferir produto, SKU e apresentação. */
+  confirmarImagemExata: z.boolean().optional(),
+  correspondenciaImagem: z.enum(["nao_confirmada", "confirmada", "rejeitada"]).optional(),
+})
+  .refine((p) => p.imagemOrigem !== "representativa" || Boolean(p.imagemFamilia), {
+    message: "Imagem representativa exige imagemFamilia (a série de que ela veio).",
+    path: ["imagemFamilia"],
+  })
+  .refine((p) => !p.imagemOrigem || p.imagemOrigem === "propria" || p.imagens === undefined || p.imagens.length > 0, {
+    message: "Origem de imagem declarada sem nenhuma imagem.",
+    path: ["imagens"],
+  })
+  .refine((p) => Boolean(p.sku?.trim() || p.slug?.trim() || p.nome?.trim()), {
+    message: "Informe SKU, slug ou nome para localizar o produto.",
+  })
+  .refine((p) => Object.entries(p).some(([k, v]) => !["sku", "slug"].includes(k) && v !== undefined), {
+    message: "Informe pelo menos um campo para atualizar.",
+  });
+
 export type TenantEntrada = z.infer<typeof TenantEntradaSchema>;
 export type ProdutoEntrada = z.infer<typeof ProdutoEntradaSchema>;
+export type ProdutoPlanilha = z.infer<typeof ProdutoPlanilhaSchema>;

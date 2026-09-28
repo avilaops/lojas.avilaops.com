@@ -1,6 +1,80 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { categoriaGoogle, prateleirasDaLoja } from "./categoria-google";
+import { categoriaGoogle, categoriaGoogleProduto, prateleirasDaLoja } from "./categoria-google";
+
+test("não força uma categoria para abraçadeiras de uso não confirmado", () => {
+  assert.equal(categoriaGoogle("Abraçadeiras"), undefined);
+  assert.equal(categoriaGoogle("Abraçadeira"), undefined);
+  assert.equal(categoriaGoogle("Acessórios"), undefined);
+});
+
+test("classifica apenas o produto confirmado Abraçadeira 5/8", () => {
+  assert.equal(categoriaGoogleProduto("Abraçadeira 5/8", "Abraçadeiras"), 502978);
+  assert.equal(categoriaGoogleProduto("Abraçadeira", "Abraçadeiras"), undefined);
+  assert.equal(categoriaGoogleProduto("Abraçadeira 5/8", "Outros"), undefined);
+});
+
+test("mapeia categorias com nome exato na taxonomia do Google", () => {
+  assert.equal(categoriaGoogle("Alicates"), 1958);
+  assert.equal(categoriaGoogle("Arruelas"), 2195);
+  assert.equal(categoriaGoogle("Correntes"), 1492);
+  assert.equal(categoriaGoogle("Estiletes"), 2198);
+  assert.equal(categoriaGoogle("Ferragens"), 632);
+  assert.equal(categoriaGoogle("Ferramentas"), 1167);
+  assert.equal(categoriaGoogle("Molas"), 499933);
+  assert.equal(categoriaGoogle("Parafusos"), 2251);
+  assert.equal(categoriaGoogle("Serras"), 1235);
+  assert.equal(categoriaGoogle("Torneiras"), 2032);
+  assert.equal(categoriaGoogle("Anéis"), undefined);
+  assert.equal(categoriaGoogle("Discos"), undefined);
+  assert.equal(categoriaGoogle("Conjuntos"), undefined);
+});
+
+test("classifica tintas spray na categoria oficial de tintas", () => {
+  assert.equal(categoriaGoogle("Tintas Spray"), 1361);
+  assert.equal(categoriaGoogle("Tinta spray"), 1361);
+  assert.equal(categoriaGoogle("Fitas"), undefined);
+});
+
+test("classifica fita adesiva para embalagem pela finalidade do produto", () => {
+  assert.equal(categoriaGoogleProduto("Fita ADES.P/EMB.TRANSP.45MMX40M", "Fitas"), 975);
+  assert.equal(categoriaGoogleProduto("Fita ADES.P/EMB.MARROM 3M 48 X 50", null), 975);
+  assert.equal(categoriaGoogleProduto("Fita dupla FACE 18MMX200CM", "Fitas"), undefined);
+});
+
+test("classifica produtos de categorias amplas quando o nome informa a finalidade", () => {
+  assert.equal(categoriaGoogleProduto("BOM-1302 Fita dupla FACE 1.7 280CM", "Fitas"), undefined);
+  assert.equal(categoriaGoogleProduto("Fita Crepe 24MMX50M Tapefix", "Fitas"), undefined);
+  assert.equal(categoriaGoogleProduto("BOM-1318 Fita Espanta Passaros 4.8CM 45M", "Fitas"), 7137);
+  assert.equal(categoriaGoogleProduto("Feltros Autoadesivos Quadrados BOM-1333", "Colas"), 7214);
+  assert.equal(categoriaGoogleProduto("CAPA P/CHUVA PVC Forr.amar. G Nikol", "Outros"), 3066);
+  assert.equal(categoriaGoogleProduto("JOGO Allen (plastico)", "Outros"), 1439);
+  assert.equal(categoriaGoogleProduto("Suporte para Fita Lacradora Masterprint Mp-901", "Fitas"), 503746);
+  assert.equal(categoriaGoogleProduto("KAOL P/POLIMENTO 200 ml", "Químicos"), 2590);
+  assert.equal(categoriaGoogleProduto("ORBI CERA Polidora", "Outros"), 2643);
+  assert.equal(categoriaGoogleProduto("ETANIZ Grafite Spray Etaniz 300ML180G", "Grafite"), 1753);
+  assert.equal(categoriaGoogleProduto("Carga GAS P/MACAR/FOG Original 227G", "Elétrica"), 543575);
+  assert.equal(categoriaGoogleProduto("KIT Anel Milimitro(azul)", "Anéis"), 111);
+  assert.equal(categoriaGoogleProduto("Fita Guia LISA Teflon com Bronze 10x2.5", "Fitas"), 111);
+  assert.equal(categoriaGoogleProduto("VONDER Macaco Garrafa 12TON", "Outros"), 503771);
+  assert.equal(categoriaGoogleProduto("ORION Reparo Motor Danfoss OMS 160", "Outros"), 111);
+  assert.equal(categoriaGoogleProduto("IBIRA Borracha Esponjosa 1021 16x8 20344", "Outros"), 503744);
+  assert.equal(categoriaGoogleProduto("Assento Alumasa ROMA branco", "Outros"), 1865);
+  assert.equal(categoriaGoogleProduto("Tampa Lavatorio EVA", "Hidráulica"), 1963);
+  assert.equal(categoriaGoogleProduto("Tampa NBR 47x7", "Hidráulica"), 111);
+  assert.equal(categoriaGoogleProduto("Cantoneira P/MOV OVER BIC.11/2 C/04", "Cantoneiras"), 632);
+});
+
+test("classifica fitas de demarcação, vedação e sabonetes pelo uso declarado", () => {
+  assert.equal(categoriaGoogleProduto("BOM-1305 Fita de Marcacao para PISO", "Fitas"), 976);
+  assert.equal(categoriaGoogleProduto("BOM-1321 Fita de Demarcacao para PISO", "Fitas"), 976);
+  assert.equal(categoriaGoogleProduto("Fita Adesiva - 1304 Bomvink P/DEMARCACAO E Sinalizacao", "Fitas"), 976);
+  assert.equal(categoriaGoogleProduto("Fita Ipermeavel 10CM 1.5M", "Fitas"), 503744);
+  assert.equal(categoriaGoogleProduto("Cantoneira EVA Estacionamento 750x100x100x10", "Cantoneiras"), 503744);
+  assert.equal(categoriaGoogleProduto("Sabonete Liq.prem.erva DOCE C/T 1LT", "Químicos"), 2503);
+  assert.equal(categoriaGoogleProduto("Lança JATO Turbo IBIRA", "Hidráulica"), 6328);
+  assert.equal(categoriaGoogleProduto("BOM-1305 Fita de Marcacao para PISO", "Outros"), undefined);
+});
 
 test("põe cada categoria da Brilhax na prateleira certa", () => {
   assert.equal(categoriaGoogle("Lavagem"), 2590);
@@ -73,4 +147,27 @@ test("o resolvedor da loja preserva o que já decidia pelo nome", () => {
     assert.equal(prateleira(nome), categoriaGoogle(nome), nome);
   assert.equal(prateleira(null), undefined);
   assert.equal(prateleira(""), undefined);
+});
+
+test("estética automotiva: o nome do item refina a etapa do serviço", () => {
+  const brilhax = prateleirasDaLoja(["Lavagem", "Polimento", "Proteção", "Acessórios", "Aromatizantes", "Kits Completos", "Produtos para Moto", "Vitrificação"]);
+  // Boina não é "solução de limpeza": fica no pai, que não afirma nada errado.
+  assert.equal(categoriaGoogleProduto("Boina Arctic Wool Wolf Pads 133 mm Ventilada", "Polimento", brilhax), 2895);
+  assert.equal(categoriaGoogleProduto("Massa de Polir Vintex 1,8 kg", "Polimento", brilhax), 2643);
+  assert.equal(categoriaGoogleProduto("V40 Vonixx Polidor 4 em 1 500 ml", "Polimento", brilhax), 2643);
+  assert.equal(categoriaGoogleProduto("Makker 2.0 Vonixx Maquiador Automotivo 500 ml", "Polimento", brilhax), 2643);
+  assert.equal(categoriaGoogleProduto("Revelax Vonixx Revelador de Hologramas 500 ml", "Polimento", brilhax), 2590);
+  assert.equal(categoriaGoogleProduto("Aromatizante Carro Novo Vintex Spray 60 ml", "Aromatizantes", brilhax), 2789);
+  assert.equal(categoriaGoogleProduto("AROMINHA CARRO NOVO SCENT", "Aromatizantes", brilhax), 2789);
+  assert.equal(categoriaGoogleProduto("Sanitizante Carro Novo Vintex 1,5 L", "Aromatizantes", brilhax), 2590);
+  assert.equal(categoriaGoogleProduto("Extractus Vonixx Limpador de Estofados 1 L", "Lavagem", brilhax), 2704);
+  assert.equal(categoriaGoogleProduto("Glazy Vonixx Limpador de Vidros 4 em 1 500 ml", "Lavagem", brilhax), 2846);
+  assert.equal(categoriaGoogleProduto("Focus Vonixx Removedor de Marcas d’Água 240 ml", "Lavagem", brilhax), 2846);
+  assert.equal(categoriaGoogleProduto("Glazy Anti-Fog Vonixx 500 ml", "Proteção", brilhax), 2846);
+  assert.equal(categoriaGoogleProduto("Kit de Escovas Drill Detailer", "Kits Completos", brilhax), 2894);
+  assert.equal(categoriaGoogleProduto("Moto-V Vonixx Shampoo para Motos 500 ml", "Produtos para Moto", brilhax), 2590);
+  assert.equal(categoriaGoogleProduto("Revox Vonixx Selante para Pneus 500 ml", "Proteção", brilhax), 2643);
+  // Fora do ramo, "Aromatizantes" continua sem chute e o nome não refina nada.
+  const casa = prateleirasDaLoja(["Aromatizantes", "Velas"]);
+  assert.equal(categoriaGoogleProduto("Aromatizante de ambiente lavanda", "Aromatizantes", casa), undefined);
 });

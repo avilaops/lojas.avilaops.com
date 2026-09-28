@@ -32,7 +32,9 @@ export default function ProdutoDetalhe({ id, nome, urlNaLoja, temVariacoes, segm
   const [revisao, setRevisao] = useState(0);
 
   return (
-    <div className="grid gap-6">
+    // `min-w-0`: sem isto um campo largo do formulário estica a grade inteira
+    // e a página passa a rolar de lado no celular — o padding da direita some.
+    <div className="grid min-w-0 gap-6">
       <div className="flex flex-wrap items-center gap-3">
         <Link href="/painel/produtos" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:underline">
           <ArrowLeft size={15} /> Produtos
@@ -48,7 +50,7 @@ export default function ProdutoDetalhe({ id, nome, urlNaLoja, temVariacoes, segm
       </div>
 
       {ok && <p className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-700">{ok}</p>}
-      <QualidadeProduto produtoId={id} revisao={revisao} aoAbrirVariantes={()=>setGrade(true)} />
+      <QualidadeProduto produtoId={id} revisao={revisao} temVariacoes={temVariacoes} aoAbrirVariantes={()=>setGrade(true)} />
 
       {grade && (
         <GradeVariantes
@@ -63,7 +65,6 @@ export default function ProdutoDetalhe({ id, nome, urlNaLoja, temVariacoes, segm
         key={revisao}
         produtoId={id}
         segmento={segmento}
-        aoFechar={() => router.push("/painel/produtos")}
         aoSalvar={(m) => { setOk(m); setRevisao(r=>r+1); router.refresh(); }}
       />
     </div>

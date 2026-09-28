@@ -1,5 +1,5 @@
 import { headers } from "next/headers";
-import { tenantAtual, urlDaLoja, identidadeDa, enderecoCompleto, lojaVende, prazoDeDespacho } from "@/lib/tenant";
+import { tenantAtual, urlDaLoja, identidadeDa, enderecoCompleto, lojaVende, prazoDeDespacho, retiradaPublicaDisponivel } from "@/lib/tenant";
 import { listarCategorias, listarProdutos, formatarBRL } from "@/lib/catalogo";
 
 /**
@@ -85,7 +85,7 @@ políticas dela. Este arquivo descreve a plataforma, não uma loja.
       : t.whatsapp
         ? `- Pedidos e orçamentos pelo WhatsApp`
         : "",
-    t.retiradaNaLoja ? `- Retirada na loja disponível` : `- Entrega para todo o Brasil`,
+    retiradaPublicaDisponivel(t) ? `- Retirada na loja disponível` : `- Entrega para todo o Brasil`,
     vende ? `- Envio ${prazoDeDespacho(t.despachoDiasUteis)} após o pagamento` : "",
     vende && t.freteGratisAcima != null ? `- Frete grátis acima de ${formatarBRL(t.freteGratisAcima)}` : "",
     "",

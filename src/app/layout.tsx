@@ -1,4 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
+import MedirSessao from "@/components/MedirSessao";
 import Pixels from "@/components/Pixels";
 import Consentimento from "@/components/Consentimento";
 import { pixelsDo, temRastreio } from "@/lib/pixels";
@@ -20,6 +22,13 @@ import LojaNaoEncontrada from "@/components/LojaNaoEncontrada";
 import AvisoSuspensa from "@/components/AvisoSuspensa";
 import BarraGaragem from "@/components/BarraGaragem";
 import { prisma } from "@/lib/db";
+import { lerRegrasDevolucao, politicaDevolucaoSchema } from "@/lib/politicas";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 
 /**
  * Ícone e manifesto da loja, quando ela tem os seus.
@@ -159,6 +168,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     ...(t.enderecoPublico && endereco.cidade
       ? { address: { "@type": "PostalAddress", streetAddress: [endereco.logradouro, endereco.numero].filter(Boolean).join(", "), addressLocality: endereco.cidade, addressRegion: endereco.uf, postalCode: formatarCep(endereco.cep), addressCountry: "BR" } }
       : {}),
+    hasMerchantReturnPolicy: politicaDevolucaoSchema(lerRegrasDevolucao(t.regrasDevolucao), `${urlDaLoja(t)}/politicas/devolucao`),
   };
 
   // WebSite com SearchAction: é o que diz ao Google que /produtos?q= é a busca
@@ -190,14 +200,20 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             complemento; quem indexa continua sendo sitemap + páginas. */}
         <link rel="describedby" href="/llms.txt" />
       </head>
-      <body className="flex min-h-screen flex-col">
+      <body className="flex min-h-screen flex-col" data-layout={tema.layout}>
         <Pixels p={pixels} />
+        {/* Medição da própria vitrine, no próprio domínio. `useSearchParams`
+            obriga o Suspense: sem ele a página inteira cairia em renderização
+            no navegador só por causa da medição. */}
+        <Suspense fallback={null}>
+          <MedirSessao />
+        </Suspense>
         <CartProvider slug={t.slug} painelHabilitado={premium}>
-          {t.status === "SUSPENSA" && <AvisoSuspensa />}
+          {t.status === "SUSPENSA" && t.slug !== "vedashow" && <AvisoSuspensa />}
           {t.avisoTopo && !premium && (
             <p className="barra-aviso" role="status">{t.avisoTopo}</p>
           )}
-          {premium ? <CabecalhoPremium loja={publico} logo={t.logoUrl} logoEscuro={tema.premium?.logoEscuroUrl} mostrarNome={tema.premium?.mostrarNome} categorias={[...categorias].sort((a,b)=>a.ordem-b.ordem).map(c=>({slug:c.slug,nome:c.nome}))} modo={tema.modo}/> : <Header loja={publico} logoUrl={t.logoUrl} categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} exemploBusca={exemploBusca} />}
+          {premium ? <CabecalhoPremium loja={publico} logo={t.logoUrl} logoEscuro={tema.premium?.logoEscuroUrl} mostrarNome={tema.premium?.mostrarNome} categorias={[...categorias].sort((a,b)=>a.ordem-b.ordem).map(c=>({slug:c.slug,nome:c.nome}))} modo={tema.modo}/> : <Header loja={publico} logoUrl={t.logoUrl} mostrarNome={tema.mostrarNomeNoCabecalho} categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} exemploBusca={exemploBusca} mostrarPromocoes={(tema.campanhasHome?.length ?? 0) > 0} />}
           {t.segmento === "motopecas" && <BarraGaragem tenantId={t.id} />}
           <main id="conteudo-loja" className="flex-1">{children}</main>
           <Footer tenant={t} categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} />

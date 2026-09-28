@@ -53,7 +53,7 @@ export default function Editorial({ t, identidade, categorias, vitrine, temDesta
           <p className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">Os produtos desta loja estão sendo cadastrados.</p>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {vitrine.slice(0, 6).map((p) => <ProductCard key={p.id} produto={p} vende={vende} whatsapp={t.whatsapp} />)}
+            {vitrine.slice(0, 6).map((p) => <ProductCard loja={t} key={p.id} produto={p} vende={vende} whatsapp={t.whatsapp} />)}
           </div>
         )}
       </section>
