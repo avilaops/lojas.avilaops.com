@@ -145,6 +145,36 @@ async function main() {
   const carrinho = await pegar("/carrinho");
   ok("carrinho sem cache compartilhado", /no-store/.test(carrinho.cabecalhos.get("cache-control") ?? ""), carrinho.cabecalhos.get("cache-control") ?? "");
 
+  // 8. Dá para falar com a loja, e o texto entregue é texto de gente
+  //
+  // Uma auditoria da Vedashow achou /contato servindo um <main> de nove
+  // caracteres — " Contato " — porque nenhum canal estava preenchido no
+  // tenant. As três políticas mandavam falar conosco "pelos nossos canais de
+  // atendimento" e não havia canal nenhum: o caminho de troca e devolução
+  // terminava em nada, e o Decreto 7.962/2013 exige endereço físico e
+  // eletrônico à vista. A conferência passava em tudo, porque só olhava
+  // buscador. Passa a olhar o comprador também.
+  const contato = await pegar("/contato");
+  const semScriptNem = (html: string) => html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g, "");
+  ok("GET /contato 200", contato.status === 200, String(contato.status));
+  ok(
+    "/contato oferece ao menos um canal (telefone, e-mail, WhatsApp ou endereço)",
+    /tel:|mailto:|wa\.me|api\.whatsapp\.com|<address/i.test(semScriptNem(contato.corpo)),
+    "nenhum canal no HTML entregue",
+  );
+
+  // Texto de template vazando é o que faz o site parecer inacabado. Os três
+  // padrões abaixo apareceram em produção ao mesmo tempo: o placeholder de
+  // plural, a preposição que não concorda com o que vem depois dela, e o
+  // preço zero — que é "sob consulta", nunca "de graça".
+  const envio = await pegar("/politicas/envio");
+  for (const [nome, corpo] of [["home", home.corpo], ["contato", contato.corpo], ["política de envio", envio.corpo]] as const) {
+    const limpo = semScriptNem(corpo);
+    ok(`${nome} sem placeholder de plural`, !/dia\(s\)|útil\(eis\)|item\(ns\)/i.test(limpo));
+    ok(`${nome} sem erro de concordância "pelo nossos"`, !/\bpelo\s+nossos\b/i.test(limpo));
+    ok(`${nome} sem preço zero à mostra`, !/R\$\s*0,00/.test(limpo));
+  }
+
   const falhas = resultados.filter((r) => !r.ok);
   for (const r of resultados) console.log(`${r.ok ? "ok " : "FALHOU"}  ${r.nome}${r.detalhe && !r.ok ? `  ← ${r.detalhe}` : ""}`);
   console.log(`\n${resultados.length - falhas.length}/${resultados.length} verificações passaram em ${base} (host oficial: ${hostOficial})`);

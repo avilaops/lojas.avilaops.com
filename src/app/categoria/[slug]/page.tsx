@@ -7,7 +7,7 @@ import { facetasTecnicas, grafiasDaMarca, listarCategorias, medidasDaLoja, pagin
 import FiltrosProdutos from "@/components/FiltrosProdutos";
 import { filtroDaUrl, temFiltroAtivo } from "@/lib/filtros-url";
 import CategoriasPremium from "@/components/templates/automotivo-premium/Categorias";
-import PaginacaoLoja, { POR_PAGINA, paginaDaUrl } from "@/components/PaginacaoLoja";
+import PaginacaoLoja, { paginaDaUrl, porPaginaDaUrl } from "@/components/PaginacaoLoja";
 import ProductCard from "@/components/ProductCard";
 import { minhaMoto } from "@/lib/minha-moto";
 import { nomeDaMoto } from "@/lib/motos";
@@ -76,12 +76,17 @@ export default async function Categoria({ params, searchParams }: Props) {
   const [{ slug }, sp] = await Promise.all([params, searchParams]);
   const categoria = await resolverCategoria(t, slug);
   if (!categoria) notFound();
-  if (categoria.slug !== slug) permanentRedirect(`/categoria/${categoria.slug}`);
+  if (categoria.slug !== slug) {
+    // Link antigo com filtro continua filtrado depois do redirecionamento.
+    const query = new URLSearchParams(Object.entries(sp).filter((e): e is [string, string] => Boolean(e[1]))).toString();
+    permanentRedirect(`/categoria/${categoria.slug}${query ? `?${query}` : ""}`);
+  }
   const moto = t.segmento === "motopecas" ? await minhaMoto(sp) : null;
   // Paginado e filtrado como /produtos, pela mesma leitura da URL: medida,
   // marca, preço, disponibilidade e ordem. Antes a categoria só listava e
   // mandava filtrar em outra página, que perdia o título e a trilha.
   const pagina = paginaDaUrl(sp);
+  const porPagina = porPaginaDaUrl(sp);
   const filtro = filtroDaUrl(sp, categoria.slug);
   const facetasP = facetasTecnicas(t.id, categoria.slug);
   const [categorias, medidas, facetas, lote] = await Promise.all([
@@ -89,10 +94,10 @@ export default async function Categoria({ params, searchParams }: Props) {
     medidasDaLoja(t.id, categoria.slug),
     facetasP,
     (filtro.fabricante ? facetasP.then((f) => grafiasDaMarca(f.fabricantes, filtro.fabricante)) : Promise.resolve(undefined))
-      .then((fabricante) => paginaDeProdutos(t.id, { ...filtro, fabricante, moto }, POR_PAGINA, (pagina - 1) * POR_PAGINA)),
+      .then((fabricante) => paginaDeProdutos(t.id, { ...filtro, fabricante, moto }, porPagina, (pagina - 1) * porPagina)),
   ]);
   const produtos = lote.produtos;
-  const temProxima = lote.total > pagina * POR_PAGINA;
+  const temProxima = lote.total > pagina * porPagina;
   const filtrando = temFiltroAtivo(sp);
   // Página além do fim é 404, não "nada encontrado" com 200: senão qualquer
   // ?pagina=999999 vira uma URL válida a mais para o Google guardar.
@@ -110,7 +115,7 @@ export default async function Categoria({ params, searchParams }: Props) {
         fotoDoPrimeiroProduto={produtos.find((p) => p.imagens[0])?.imagens[0] ?? null}
       />
       <p className="mb-3 text-sm text-muted-foreground">
-        {lote.total} {lote.total === 1 ? "produto" : "produtos"}{filtrando ? " com esses filtros" : ""} · Página {pagina} de {Math.max(1, Math.ceil(lote.total / POR_PAGINA))}
+        {lote.total} {lote.total === 1 ? "produto" : "produtos"}{filtrando ? " com esses filtros" : ""} · Página {pagina} de {Math.max(1, Math.ceil(lote.total / porPagina))}
         {moto ? (
           <>
             {" "}· Mostrando o que serve na {nomeDaMoto(moto)} ·{" "}
@@ -145,7 +150,7 @@ export default async function Categoria({ params, searchParams }: Props) {
           ))}
         </div>
       )}
-      <PaginacaoLoja base={`/categoria/${categoria.slug}`} sp={sp} pagina={pagina} temProxima={temProxima} total={lote.total} />
+      <PaginacaoLoja base={`/categoria/${categoria.slug}`} sp={sp} pagina={pagina} temProxima={temProxima} total={lote.total} porPagina={porPagina} />
     </div>
   );
 }

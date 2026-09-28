@@ -6,16 +6,18 @@
   "de": "Longas, macias e não abrasivas; nylon e fibras sintéticas, segundo a ficha da apresentação com GTIN correspondente",
   "para": "Longas, macias e não abrasivas; nylon e fibras sintéticas",
   "motivo": "Nota interna publicada na ficha (Cerdas: '…segundo a ficha da apresentação com GTIN correspondente')",
-  "aplicado": false
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
  },
  {
   "id": "cmtv7ccfq0014pd01jxe9hvub",
   "slug": "arominha-carro-novo-scent",
   "campo": "nome",
   "de": "AROMINHA CARRO NOVO SCENT",
-  "para": "Aromatizante Spray Carro Novo Aromas City 100 ml (após confirmar a marca)",
+  "para": "Arominha Carro Novo Scent — Aromatizante Spray 100 ml (após confirmar marca e volume)",
   "motivo": "Título em caixa alta ('AROMINHA CARRO NOVO SCENT'), fora do padrão dos demais e da regra de título do Google",
-  "aplicado": false
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
  },
  {
   "id": "cmtv7cd5w005kpd01h0s1i9p8",
@@ -24,7 +26,8 @@
   "de": "Kits Completos",
   "para": "Acessórios (decisão do lojista)",
   "motivo": "Categoria 'Kits Completos' para um conjunto de escovas de furadeira; comprador tende a procurar em 'Acessórios'",
-  "aplicado": false
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
  },
  {
   "id": "cmtv7ccxr0042pd01v8u0s07s",
@@ -33,7 +36,8 @@
   "de": "Este cadastro corresponde à embalagem de 1 L mostrada nas fotos.",
   "para": "(remover a frase)",
   "motivo": "Nota interna publicada na descrição ('Este cadastro corresponde à embalagem de 1 L mostrada nas fotos.'); Sem GTIN",
-  "aplicado": false
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
  },
  {
   "id": "cmtv7cd0m004mpd01wi9psepk",
@@ -42,7 +46,8 @@
   "de": "Equilibrado, conforme o fabricante; FDS: não aplicável",
   "para": "Equilibrado, conforme o fabricante",
   "motivo": "Ficha pH com nota de conferência ('FDS: não aplicável')",
-  "aplicado": false
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
  },
  {
   "id": "cmtv7cd4q005cpd01lzv7ggje",
@@ -51,7 +56,8 @@
   "de": "Característico; a linha é apresentada com odor reduzido no catálogo do fabricante.",
   "para": "Característico",
   "motivo": "Linha 'Gtin' repetida na ficha (corrigido no código: GTIN deixa de sair como característica); Ficha 'Odor' com nota sobre o catálogo do fabricante",
-  "aplicado": false
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
  },
  {
   "id": "cmtv7cd8m005ypd01p3t59vdo",
@@ -59,8 +65,9 @@
   "campo": "atributos.Tipo",
   "de": "Químico",
   "para": "Desengraxante alcalino concentrado",
-  "motivo": "Sem GTIN; Ficha 'Tipo: Químico' genérica; Ficha de composição com nota de pesquisa ('…não foi publicada nas fontes consultadas'); Quatro imagens adicionais com texto de campanha e marca d'água de outra loja ('V-ONE store'); remover da galeria e do feed; Imagens adicionais 1 e 2 com o logo 'MONARCAR' de outra loja; só a principal fica limpa",
-  "aplicado": false
+  "motivo": "Sem GTIN; Ficha 'Tipo: Químico' genérica; Ficha de composição com nota de pesquisa ('…não foi publicada nas fontes consultadas'); Quatro imagens adicionais com texto de campanha e marca d'água de outra loja ('V-ONE store'); remover da galeria e do feed",
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
  },
  {
   "id": "cmtv7cd8m005ypd01p3t59vdo",
@@ -68,17 +75,19 @@
   "campo": "atributos.Composição informada no rótulo",
   "de": "…; a composição integral não foi publicada nas fontes consultadas.",
   "para": "(remover o trecho após o ponto e vírgula)",
-  "motivo": "Sem GTIN; Ficha 'Tipo: Químico' genérica; Ficha de composição com nota de pesquisa ('…não foi publicada nas fontes consultadas'); Quatro imagens adicionais com texto de campanha e marca d'água de outra loja ('V-ONE store'); remover da galeria e do feed; Imagens adicionais 1 e 2 com o logo 'MONARCAR' de outra loja; só a principal fica limpa",
-  "aplicado": false
+  "motivo": "Sem GTIN; Ficha 'Tipo: Químico' genérica; Ficha de composição com nota de pesquisa ('…não foi publicada nas fontes consultadas'); Quatro imagens adicionais com texto de campanha e marca d'água de outra loja ('V-ONE store'); remover da galeria e do feed",
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
  },
  {
   "id": "cmtv7cd8m005ypd01p3t59vdo",
   "slug": "lamax",
   "campo": "imagens (remover)",
-  "de": "muabe2fw-f38f54b7.webp | muabe310-24aa7d34.webp | nitro-lamax-500ml-espuma-pre-lavagem.webp | nitro-lamax-500ml-desengraxe-duplo.webp | nitro-lamax-500ml-limpeza-roda.webp | nitro-lamax-500ml-limpeza-lama.webp",
-  "para": "(retirar da galeria; manter mtv7byad-a508bfdb.webp e acrescentar fotos próprias)",
-  "motivo": "Sem GTIN; Ficha 'Tipo: Químico' genérica; Ficha de composição com nota de pesquisa ('…não foi publicada nas fontes consultadas'); Quatro imagens adicionais com texto de campanha e marca d'água de outra loja ('V-ONE store'); remover da galeria e do feed; Imagens adicionais 1 e 2 com o logo 'MONARCAR' de outra loja; só a principal fica limpa",
-  "aplicado": false
+  "de": "nitro-lamax-500ml-espuma-pre-lavagem.webp | nitro-lamax-500ml-desengraxe-duplo.webp | nitro-lamax-500ml-limpeza-roda.webp | nitro-lamax-500ml-limpeza-lama.webp",
+  "para": "(retirar da galeria; manter mtv7byad, muabe2fw, muabe310)",
+  "motivo": "Sem GTIN; Ficha 'Tipo: Químico' genérica; Ficha de composição com nota de pesquisa ('…não foi publicada nas fontes consultadas'); Quatro imagens adicionais com texto de campanha e marca d'água de outra loja ('V-ONE store'); remover da galeria e do feed",
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
  },
  {
   "id": "cmtv7cdp4008wpd018m0ei0oz",
@@ -87,7 +96,8 @@
   "de": "Químico",
   "para": "Restaurador de vidros automotivos",
   "motivo": "Ficha 'Tipo: Químico' genérica",
-  "aplicado": false
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
  },
  {
   "id": "cmtv7cdvw00a4pd019epdqjbv",
@@ -96,7 +106,8 @@
   "de": "Químico",
   "para": "Shampoo automotivo concentrado",
   "motivo": "Ficha 'Tipo: Químico' genérica",
-  "aplicado": false
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
  },
  {
   "id": "cmtv7ccm90022pd01zn4tudtp",
@@ -104,8 +115,9 @@
   "campo": "nome",
   "de": "Boina Micro Wolf Wolf Pads 133 mm Ventilada",
   "para": "Boina de Microfibra Micro Wolf 133 mm Ventilada — Wolf Pads",
-  "motivo": "Título repete 'Wolf' ('Boina Micro Wolf Wolf Pads'); Fotos adicionais 3 e 4 mostram camada laranja de interface de espuma, que o título e a ficha não mencionam",
-  "aplicado": false
+  "motivo": "Título repete 'Wolf' ('Boina Micro Wolf Wolf Pads')",
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
  },
  {
   "id": "cmtv7ccmm0024pd01tf2oanf9",
@@ -114,7 +126,8 @@
   "de": "Boina Micro Wolf Wolf Pads 152 mm Ventilada",
   "para": "Boina de Microfibra Micro Wolf 152 mm Ventilada — Wolf Pads",
   "motivo": "Título repete 'Wolf' ('Boina Micro Wolf Wolf Pads')",
-  "aplicado": false
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
  },
  {
   "id": "cmtv7cdhi007ipd01rvuag04h",
@@ -123,7 +136,8 @@
   "de": "massa-de-polir-vintex-18kg-aplicacao.jpg",
   "para": "(retirar da galeria)",
   "motivo": "Imagem adicional 2 com logo de outra loja ('Arthur') no canto; remover",
-  "aplicado": false
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
  },
  {
   "id": "cmtv7cdnf008mpd01ii3oub02",
@@ -131,17 +145,9 @@
   "campo": "atributos.Tipo",
   "de": "Químico",
   "para": "Cera limpadora de carnaúba",
-  "motivo": "Ficha 'Tipo: Químico' genérica; Imagem abaixo de 500 px no menor lado (mínimo do Google a partir de 31/01/2027): principal 379×496",
-  "aplicado": false
- },
- {
-  "id": "cmtv7cd4i005apd01zj8phmwj",
-  "slug": "intense-500ml",
-  "campo": "imagens (remover)",
-  "de": "20260921-vonixx-intense-500ml-situacao-interna.webp",
-  "para": "(retirar da galeria)",
-  "motivo": "Imagem adicional 2 com marca '@POLIBOX' (perfil de outra loja); remover",
-  "aplicado": false
+  "motivo": "Ficha 'Tipo: Químico' genérica",
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
  },
  {
   "id": "cmtv7cdr7009apd018vc5c3tt",
@@ -150,7 +156,8 @@
   "de": "Não disponível na FDS consultada",
   "para": "(remover a linha)",
   "motivo": "Ficha com linha 'Estado fisico: Não disponível na FDS consultada' (nota de pesquisa)",
-  "aplicado": false
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
  },
  {
   "id": "cmtv7cdrj009cpd01phbndar6",
@@ -159,7 +166,8 @@
   "de": "Químico",
   "para": "Restaurador de plásticos automotivos",
   "motivo": "Ficha 'Tipo: Químico' genérica",
-  "aplicado": false
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
  },
  {
   "id": "cmtv7cdtu009qpd01yylmkjyb",
@@ -168,6 +176,177 @@
   "de": "Não disponível na FDS",
   "para": "(remover a linha)",
   "motivo": "Ficha com linha 'pH: Não disponível na FDS' (nota de pesquisa)",
-  "aplicado": false
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
+ },
+ {
+  "id": "cmtv7ccra0030pd01yelz0uz6",
+  "slug": "delet-vonixx-5l",
+  "campo": "imagemPrincipal",
+  "de": "https://lojas.avilaops.com/uploads/brilhax/mtv7brn9-eacc48e6.webp",
+  "para": "(foto oficial a obter)",
+  "motivo": "Foto principal gerada ou redesenhada, com texto de rótulo ilegível e errado ('LIMPA PEHUS E BORRACHAS')",
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
+ },
+ {
+  "id": "cmtv7ccxr0042pd01v8u0s07s",
+  "slug": "extractus-desengraxante",
+  "campo": "imagemPrincipal",
+  "de": "https://lojas.avilaops.com/uploads/brilhax/mtv7bu11-ff27452b.webp",
+  "para": "(foto oficial a obter)",
+  "motivo": "Foto principal gerada ou redesenhada, com nome errado no rótulo ('EXRACTUS') e texto sem sentido ('PIRAS LAVAGEM EXTRATORAS… INMUNDEZAL')",
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
+ },
+ {
+  "id": "cmtv7ccxr0042pd01v8u0s07s",
+  "slug": "extractus-desengraxante",
+  "campo": "imagens",
+  "de": "https://lojas.avilaops.com/uploads/brilhax/muaailkj-3651126d.webp",
+  "para": "(remover)",
+  "motivo": "Imagem adicional 4 com trechos de texto apagados a borrão",
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
+ },
+ {
+  "id": "cmtv7cdvw00a4pd019epdqjbv",
+  "slug": "shampoo-v-floc-1-5l-vonixx",
+  "campo": "imagens",
+  "de": "https://lojas.avilaops.com/uploads/brilhax/muagfbgs-d7014d95.webp",
+  "para": "(remover)",
+  "motivo": "Imagem adicional 2 com etiqueta 'Vonixx Mossoró' e moldura azul de outra loja",
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
+ },
+ {
+  "id": "cmtv7cdvw00a4pd019epdqjbv",
+  "slug": "shampoo-v-floc-1-5l-vonixx",
+  "campo": "imagens",
+  "de": "https://lojas.avilaops.com/uploads/brilhax/muagfb8x-c18755c1.webp",
+  "para": "(remover)",
+  "motivo": "Imagem adicional 3 com selo 'E' de outra loja no canto",
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
+ },
+ {
+  "id": "cmtv7cd3z0056pd01dr8p8jvr",
+  "slug": "hydrox-fast-500ml-vonix",
+  "campo": "imagemPrincipal",
+  "de": "https://lojas.avilaops.com/uploads/brilhax/mtv7bwn9-74849cf2.webp",
+  "para": "https://lojas.avilaops.com/uploads/brilhax/muacdh5k-703c391a.webp",
+  "motivo": "Foto principal gerada ou redesenhada, com texto de rótulo errado ('EFFETTO IDROFOBICO', 'Psicó automático')",
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
+ },
+ {
+  "id": "cmtv7cd4i005apd01zj8phmwj",
+  "slug": "intense-500ml",
+  "campo": "imagens",
+  "de": "https://lojas.avilaops.com/uploads/brilhax/mtv7bxi5-47ad919a.webp",
+  "para": "(remover)",
+  "motivo": "Imagem adicional 1 com logo de outra loja no canto superior direito",
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
+ },
+ {
+  "id": "cmtv7cd4i005apd01zj8phmwj",
+  "slug": "intense-500ml",
+  "campo": "imagens",
+  "de": "https://lojas.avilaops.com/uploads/brilhax/20260921-vonixx-intense-500ml-situacao-interna.webp",
+  "para": "(remover)",
+  "motivo": "Imagem adicional 2 com marca d'água '@POLIBOX' (perfil de outra loja)",
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
+ },
+ {
+  "id": "cmtv7cdtu009qpd01yylmkjyb",
+  "slug": "revox-selante-sintetico-para-pneus-500ml-vonixx",
+  "campo": "imagemPrincipal",
+  "de": "https://lojas.avilaops.com/uploads/brilhax/mtv7c67p-a0a36dda.webp",
+  "para": "https://lojas.avilaops.com/uploads/brilhax/fonte-27dffcb6b5966392990ab7c7.png",
+  "motivo": "Foto principal gerada ou redesenhada, com nome errado no rótulo ('REYOX') e texto de rótulo sem sentido",
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
+ },
+ {
+  "id": "cmtv7cdy600agpd01mhy6bjhs",
+  "slug": "sinergy-vonixx-500ml",
+  "campo": "imagemPrincipal",
+  "de": "https://lojas.avilaops.com/uploads/brilhax/mtv7c6s4-af4ab858.webp",
+  "para": "(foto oficial a obter)",
+  "motivo": "Foto principal gerada ou redesenhada, com nome errado no rótulo ('SNERGY') e texto ilegível",
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
+ },
+ {
+  "id": "cmtv7ce6c00bupd0186u6dpb8",
+  "slug": "tryon-finalizador-restaurador-de-plastico-3-em-1",
+  "campo": "imagemPrincipal",
+  "de": "https://lojas.avilaops.com/uploads/brilhax/mtv7c98k-2e74750f.webp",
+  "para": "https://lojas.avilaops.com/uploads/brilhax/muaamsp0-a0563adc.webp",
+  "motivo": "Foto principal gerada ou redesenhada, com texto de outro produto no rótulo ('Repele a água', 'Brilho pneus')",
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
+ },
+ {
+  "id": "cmtv7ce0200aqpd01nobvkifl",
+  "slug": "sio2-vonixx-500ml",
+  "campo": "imagemPrincipal",
+  "de": "https://lojas.avilaops.com/uploads/brilhax/mtv7c7bb-a011fde4.webp",
+  "para": "(foto oficial a obter)",
+  "motivo": "Foto principal gerada ou redesenhada, com texto errado no rótulo ('BILHO INTENS', 'PROTECCO DURADOURA')",
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
+ },
+ {
+  "id": "cmtv7cdhi007ipd01rvuag04h",
+  "slug": "massa-de-polir-vintex-1-8k",
+  "campo": "imagemPrincipal",
+  "de": "https://lojas.avilaops.com/uploads/brilhax/massa-de-polir-vintex-18kg-packshot-confirmado.png",
+  "para": "(foto oficial a obter)",
+  "motivo": "Foto principal com etiqueta 'Vonixx Mossoró' e moldura azul de outra loja (mesmo modelo da adicional 2 do V-Floc 1,5 L)",
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
+ },
+ {
+  "id": "cmtv7cd8m005ypd01p3t59vdo",
+  "slug": "lamax",
+  "campo": "imagens",
+  "de": "https://lojas.avilaops.com/uploads/brilhax/muabe2fw-f38f54b7.webp | https://lojas.avilaops.com/uploads/brilhax/muabe310-24aa7d34.webp",
+  "para": "(remover)",
+  "motivo": "Duas imagens com a marca 'MONARCAR', de outra loja",
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
+ },
+ {
+  "id": "cmtv7ccfq0014pd01jxe9hvub",
+  "slug": "arominha-carro-novo-scent",
+  "campo": "marca",
+  "de": "Scent",
+  "para": "Aromas City",
+  "motivo": "Marca impressa no rótulo das fotos",
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
+ },
+ {
+  "id": "cmtv7ccxr0042pd01v8u0s07s",
+  "slug": "extractus-desengraxante",
+  "campo": "nome · atributos.volumeMl · descricaoCurta · imagemOrigem",
+  "de": "1 L · 1000 · 'Embalagem de 1 L.' · representativa",
+  "para": "1,5 L · 1500 · 'Embalagem de 1,5 L.' · propria",
+  "motivo": "A Vonixx só fabrica o Extractus em 1,5 L, 3 L e 5 L; o '1 L' vinha da foto gerada e da nota interna que a descrevia",
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
+ },
+ {
+  "id": "cmtv7ccmv0026pd01cb3byuro",
+  "slug": "carnauba-hybrid-wax-240ml",
+  "campo": "imagens",
+  "de": "principal 400×348 + pote de 120 ml",
+  "para": "principal mtv7bpdn-3544fea8.webp (1170×1250)",
+  "motivo": "Principal abaixo de 500 px e imagem de outra apresentação",
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
  }
 ]

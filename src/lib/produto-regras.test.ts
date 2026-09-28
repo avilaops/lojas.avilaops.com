@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { compravel, disponibilidadeMerchant, elegivelMerchant, esgotado, estadoDeVenda, publicavel, sobConsulta } from "./produto-regras";
+import { compravel, disponibilidadeMerchant, elegivelMerchant, esgotado, estadoDeVenda, estoqueBaixo, publicavel, sobConsulta } from "./produto-regras";
 
 /**
  * As cinco perguntas que a vitrine faz a um produto, com o caso que cada
@@ -77,4 +77,23 @@ test("saldo negativo do ERP é esgotado, e o JSON-LD concorda", () => {
   const p = { ...base, estoque: -2 };
   assert.equal(esgotado(p), true);
   assert.equal(disponibilidadeMerchant(p), "out_of_stock");
+});
+
+test("casos da VedaShow: saldo, selo, disponibilidade e compra concordam", () => {
+  const casos = [
+    { sku: "4919", estoque: 205, disponibilidade: "in_stock", precoCentavos: 20, tem: true },
+    { sku: "1445", estoque: 0, disponibilidade: "out_of_stock", precoCentavos: 25, tem: false },
+    { sku: "2259", estoque: 1, disponibilidade: "in_stock", precoCentavos: 3380, tem: true },
+    { sku: "2254", estoque: 0, disponibilidade: "out_of_stock", precoCentavos: 3380, tem: false },
+    { sku: "bloqueado", estoque: 2, disponibilidade: "out_of_stock", precoCentavos: 100, tem: false },
+    { sku: "negativo", estoque: -1, disponibilidade: "in_stock", precoCentavos: 100, tem: false },
+  ];
+  for (const c of casos) {
+    const p = { ...base, ...c };
+    assert.equal(compravel(p), c.tem, c.sku);
+    assert.equal(esgotado(p), !c.tem, c.sku);
+    assert.equal(estadoDeVenda(p, { vende: false }).disponibilidade, c.tem ? "Em estoque" : "Indisponível no momento", c.sku);
+    assert.equal(disponibilidadeMerchant(p), c.tem ? "in_stock" : "out_of_stock", c.sku);
+    if (!c.tem) assert.equal(estoqueBaixo(p), false, c.sku);
+  }
 });

@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { tenantAtual, temaDo } from "@/lib/tenant";
+import { marcaQuadradaDa, tenantAtual, temaDo } from "@/lib/tenant";
 import { corTextoLegivel } from "@/lib/tema";
 
 /**
@@ -8,7 +8,9 @@ import { corTextoLegivel } from "@/lib/tema";
  * A plataforma (lojas.avilaops.com) tem a própria em src/app/plataforma/.
  */
 export const runtime = "nodejs";
-export const alt = "Loja";
+// O alt é estático (o Next avalia fora do request), então ele descreve o que a
+// imagem é, e não de que loja — "Loja" não dizia nem uma coisa nem outra.
+export const alt = "Imagem de compartilhamento da loja";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -19,13 +21,17 @@ export default async function Image() {
   const texto = corTextoLegivel(fundo, tema?.corPrimariaTexto ?? "#ffffff");
   const nome = t?.nome ?? "Lojas by Avila Ops";
   const slogan = t?.slogan ?? "";
+  const marca = t ? marcaQuadradaDa(t) : null;
   return new ImageResponse(
     (
       <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", padding: 72, background: fundo, color: texto, fontFamily: "sans-serif" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
-          {t?.logoUrl ? (
+          {marca ? (
+            // O ladrilho do favicon, não o logo cru: arte transparente feita
+            // para papel branco pode sumir sobre a cor primária da loja. Ver
+            // `marcaQuadradaDa`.
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={t.logoUrl} alt="" height={96} style={{ height: 96, objectFit: "contain" }} />
+            <img src={marca} alt="" width={96} height={96} style={{ width: 96, height: 96, objectFit: "contain", borderRadius: 24 }} />
           ) : (
             <div style={{ width: 96, height: 96, borderRadius: 24, background: texto, color: fundo, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 56, fontWeight: 800 }}>{nome.slice(0, 1).toUpperCase()}</div>
           )}

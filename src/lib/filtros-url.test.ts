@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { filtroDaUrl, temFiltroAtivo } from "./filtros-url";
+import { filtroDaUrl, porPaginaDaUrl, temFiltroAtivo } from "./filtros-url";
 import { agruparMarcas, grafiasDaMarca } from "./catalogo";
 
 test("categoria da rota vence a da URL", () => {
@@ -31,4 +31,10 @@ test("marcas: grafias do ERP viram uma entrada, com contagem somada", () => {
   assert.deepEqual(f.map((m) => [m.nome, m.itens]), [["Ibirá", 4], ["Skf", 3]]);
   assert.deepEqual(new Set(grafiasDaMarca(f, "ibira") as string[]), new Set(["Ibira", "Ibirá", "IBIRÁ"]));
   assert.equal(grafiasDaMarca(f, "Timken"), "Timken");
+});
+
+test("produtos por página: só os tamanhos oferecidos, senão 48", () => {
+  for (const n of [24, 48, 96]) assert.equal(porPaginaDaUrl({ porPagina: String(n) }), n);
+  for (const v of ["999999", "-1", "0", "Infinity", "24.5", "abc", undefined]) assert.equal(porPaginaDaUrl({ porPagina: v }), 48);
+  assert.equal(temFiltroAtivo({ porPagina: "96" }), false);
 });

@@ -13,6 +13,8 @@ import Link from "next/link";
  */
 export const POR_PAGINA = 48;
 
+export { TAMANHOS_PAGINA, porPaginaDaUrl } from "@/lib/filtros-url";
+
 export function paginaDaUrl(sp: Record<string, string | undefined>): number {
   return Math.max(1, Math.floor(Number(sp.pagina)) || 1);
 }
@@ -31,6 +33,7 @@ export default function PaginacaoLoja({
   pagina,
   temProxima,
   total,
+  porPagina = POR_PAGINA,
 }: {
   base: string;
   sp: Record<string, string | undefined>;
@@ -38,8 +41,9 @@ export default function PaginacaoLoja({
   temProxima: boolean;
   /** Produtos no conjunto filtrado, quando a página já contou. */
   total?: number;
+  porPagina?: number;
 }) {
-  const paginas = total != null ? Math.max(1, Math.ceil(total / POR_PAGINA)) : null;
+  const paginas = total != null ? Math.max(1, Math.ceil(total / porPagina)) : null;
   if (pagina <= 1 && !temProxima) return null;
   const apagado = "inline-flex h-11 items-center px-4 text-muted-foreground/50";
   return (

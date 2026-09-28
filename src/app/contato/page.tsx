@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { enderecoCompleto, exigirTenant, temaDo } from "@/lib/tenant";
+import { contatoConfigurado, enderecoCompleto, exigirTenant, temaDo } from "@/lib/tenant";
+import { mascararDocumento } from "@avilaops/checkout";
 import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
 import { ArrowUpRight, Clock3, MapPin, MessageCircle, Phone, Mail } from "lucide-react";
 
@@ -8,6 +9,28 @@ export const metadata: Metadata = { title: "Contato" , alternates: { canonical: 
 export default async function Contato() {
   const t = await exigirTenant();
   const endereco = t.enderecoPublico ? enderecoCompleto(t) : "";
+
+  // Cada campo é opcional, e com todos vazios esta página servia um <h1> e uma
+  // lista sem itens: nove caracteres de conteúdo. É o pior estado possível,
+  // porque parece que a loja respondeu e não respondeu nada — e as políticas
+  // mandam o comprador para cá justamente quando ele precisa de alguém.
+  // Enquanto o lojista não preenche, a página diz o que sabe (quem é a
+  // empresa) e admite o que falta, em vez de fingir uma resposta.
+  if (!contatoConfigurado(t)) return (
+    <div className="container-loja max-w-2xl py-10">
+      <h1 className="text-2xl font-bold">Contato</h1>
+      <p className="mt-4 text-sm text-muted-foreground">
+        {t.razaoSocial ?? t.nome}
+        {t.cnpj ? ` · CNPJ ${mascararDocumento(t.cnpj)}` : ""}
+      </p>
+      <p className="mt-4 text-sm">
+        Os canais de atendimento desta loja ainda não foram publicados. Se você
+        já fez um pedido, responda o e-mail de confirmação da compra — ele chega
+        pelo endereço cadastrado no checkout e é o caminho mais rápido até nós.
+      </p>
+    </div>
+  );
+
   if (temaDo(t).layout === "automotivo-premium") return (
     <section className="container-loja ap-contato">
       <div className="ap-contato-intro">
