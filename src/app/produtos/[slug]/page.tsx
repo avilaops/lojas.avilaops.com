@@ -5,7 +5,7 @@ import FichaTecnica from "@/components/FichaTecnica";
 import { lerDefinicoes, lerValores } from "@/lib/campos-personalizados";
 import { exigirTenant, lojaVende, urlDaLoja, temaDo, retiradaPublicaDisponivel } from "@/lib/tenant";
 import GaleriaPremium from "@/components/templates/automotivo-premium/Galeria";
-import { buscarProduto, equivalentesDoProduto, formatarBRL, listarProdutos, resumoAvaliacoes, slugDoEquivalente } from "@/lib/catalogo";
+import { buscarProduto, equivalentesDoProduto, formatarBRL, listarProdutos, mesmaSerie, resumoAvaliacoes, slugDoEquivalente } from "@/lib/catalogo";
 import * as regras from "@/lib/produto-regras";
 import { fichaDoProduto } from "@/lib/ficha";
 import AvisoEstoque from "@/components/AvisoEstoque";
@@ -82,13 +82,16 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
   // saber que a loja tem. Ver src/lib/farmacia.ts.
   const medicamento = lerMedicamento(p);
   const somenteNaLoja = vendaRemotaProibida(medicamento.tarja);
-  const [avaliacoes, resumo, relacionados, equivalentes] = await Promise.all([
+  const [avaliacoes, resumo, relacionados, equivalentes, serie] = await Promise.all([
     prisma.avaliacao.findMany({ where: { produtoId: p.id, aprovada: true }, orderBy: { criadoEm: "desc" }, take: 20 }),
     resumoAvaliacoes(p.id),
     listarProdutos(t.id, { categoriaSlug: p.categoria?.slug, excetoId: p.id, limite: 4, moto }),
     // Só a loja de farmácia pergunta: nas outras o campo está vazio e a
     // consulta seria uma ida ao banco por visita para nunca devolver nada.
     t.segmento === "farmacia" ? equivalentesDoProduto(t.id, p) : Promise.resolve([]),
+    // Outras medidas da mesma peça. Só existe onde o catálogo declarou a
+    // família da imagem; sem ela, a página cai na lista da categoria.
+    mesmaSerie(t.id, p),
   ]);
   const compat = lerCompatibilidade(p.compatibilidade);
   const ficha = fichaDoProduto((p.atributos as Record<string, unknown>) ?? {});
@@ -293,14 +296,26 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
         total={resumo.total}
       />
 
-      {relacionados.length > 0 && (
+      {serie.length > 0 ? (
         <section className="mt-12">
-          <h2 className="mb-4 text-base font-bold">Você também pode gostar</h2>
+          <h2 className="mb-1 text-base font-bold">Outras medidas desta série</h2>
+          {/* A ressalva importa: mesma construção não é mesma peça, e quem
+              erra a medida devolve. */}
+          <p className="mb-4 text-xs text-muted-foreground">Mesma construção, dimensões diferentes. Confira a medida antes de pedir.</p>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {serie.map((r) => <ProductCard loja={t} key={r.id} produto={r} vende={vende} whatsapp={t.whatsapp} moto={moto} />)}
+          </div>
+        </section>
+      ) : relacionados.length > 0 ? (
+        <section className="mt-12">
+          {/* "Você também pode gostar" é frase de loja de roupa e não diz o que
+              a lista é. Numa loja de peça, o que ela é: o resto da prateleira. */}
+          <h2 className="mb-4 text-base font-bold">{p.categoria ? `Mais em ${p.categoria.nome}` : "Outros itens da loja"}</h2>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             {relacionados.map((r) => <ProductCard loja={t} key={r.id} produto={r} vende={vende} whatsapp={t.whatsapp} moto={moto} />)}
           </div>
         </section>
-      )}
+      ) : null}
     </div>
   );
 }

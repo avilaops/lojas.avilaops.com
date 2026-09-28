@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, X, Expand } from "lucide-react";
+import { avisoDaImagem } from "@/lib/imagem-origem";
 
 /** Galeria adaptada do Gallery Grid with Lightbox, moumensoliman / 21st (10596).
  * Dialog nativo acrescenta focus trap, Escape e retorno do foco; sem imagens
@@ -14,7 +15,7 @@ export default function Galeria({ imagens, alt, origem = "propria" }: { imagens:
   const fotos = [...new Set(imagens)];
   const atual = fotos[Math.min(indice, fotos.length - 1)];
   const proxima = (delta: number) => setIndice(i => (i + delta + fotos.length) % fotos.length);
-  const aviso = origem === "representativa" ? "Imagem representativa da série. Confira as especificações desta apresentação." : origem === "ilustracao" ? "Ilustração técnica, não é foto do produto." : null;
+  const aviso = avisoDaImagem(origem, fotos.length > 0);
   return <div className="ap-galeria">
     <button className="ap-galeria-principal" disabled={!atual} onClick={() => dialog.current?.showModal()} aria-label={`Ampliar foto de ${alt}`}>
       {atual ? <Image unoptimized src={atual} alt={alt} width={900} height={900} loading="eager" fetchPriority="high"/> : <span>Imagem em preparação</span>}

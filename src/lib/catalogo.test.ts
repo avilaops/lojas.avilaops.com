@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { termosDeBusca } from "./catalogo";
+import { dicaDeMedidas, medidaResumida, ordenarPorMedida, termosDeBusca } from "./catalogo";
+import type { ChaveDeMedida } from "./catalogo";
 
 /**
  * Em catálogo técnico a pessoa digita a peça como ela é falada na oficina.
@@ -148,4 +149,131 @@ test("plural acha o singular do cadastro", () => {
 test("código nunca perde o s final", () => {
   assert.deepEqual(termosDeBusca("6205 2rs"), ["6205", "2rs"]);
   assert.deepEqual(termosDeBusca("abs"), ["abs"]);
+});
+
+/**
+ * A medida no card. O filtro por faixa já existia; a grade devolvia o
+ * resultado sem mostrar o critério que a pessoa acabou de usar.
+ */
+test("as três medidas saem na ordem do balcão", () => {
+  assert.equal(medidaResumida({ diametroInternoMm: 20, diametroExternoMm: 47, alturaMm: 14 }), "20 × 47 × 14 mm");
+});
+
+test("medida quebrada mostra vírgula, não ponto", () => {
+  assert.equal(medidaResumida({ diametroInternoMm: 20.5, diametroExternoMm: 47, alturaMm: 14 }), "20,5 × 47 × 14 mm");
+});
+
+test("medida vinda da planilha como texto continua valendo", () => {
+  // A importação grava em `atributos` o que veio da coluna, e nem toda
+  // planilha manda número.
+  assert.equal(medidaResumida({ diametroInternoMm: "20", diametroExternoMm: "47", alturaMm: "14" }), "20 × 47 × 14 mm");
+});
+
+test("com duas medidas cada uma leva o rótulo", () => {
+  // "20 × 47" sem dizer quais são as duas faz comprar a peça errada.
+  assert.equal(medidaResumida({ diametroInternoMm: 20, alturaMm: 14 }), "Ø int. 20 mm · alt. 14 mm");
+});
+
+test("espessura e seção não entram na sequência do balcão", () => {
+  // O catálogo indexa cinco medidas, mas só três têm forma falada: somar tudo
+  // num "20 × 47 × 14 × 2" seria uma medida que ninguém pede no balcão. O que
+  // sobra continua dito por extenso, em vez de desaparecer da tela.
+  assert.equal(
+    medidaResumida({ diametroInternoMm: 20, diametroExternoMm: 47, alturaMm: 14, espessuraMm: 2 }),
+    "20 × 47 × 14 mm · esp. 2 mm",
+  );
+  // Sem o trio completo, nenhuma sequência: cada medida com o seu rótulo.
+  assert.equal(medidaResumida({ espessuraMm: 2, secaoMm: 3.5 }), "esp. 2 mm · seção 3,5 mm");
+});
+
+test("código lido como medida não vira linha no card", () => {
+  // Mesmo teto do filtro: 5.176.168 mm é lixo de importação, não medida.
+  assert.equal(medidaResumida({ diametroInternoMm: 5176168 }), null);
+  assert.equal(medidaResumida({ diametroInternoMm: 0 }), null);
+});
+
+test("produto sem medida não mostra nada", () => {
+  assert.equal(medidaResumida({}), null);
+  assert.equal(medidaResumida(null), null);
+  // Farmácia e moda passam por aqui a cada card: o campo não existe.
+  assert.equal(medidaResumida({ volumeMl: 500, cor: "azul" }), null);
+});
+
+/**
+ * A série na página do produto. Quem está no 6205 quer o 6206, e uma lista de
+ * medidas fora de ordem obriga a comparar número a número.
+ */
+const item = (nome: string, atributos: Record<string, unknown>) => ({ nome, atributos });
+
+test("a série sai em ordem de medida, não de cadastro", () => {
+  const lista = [
+    item("6207", { diametroInternoMm: 35, diametroExternoMm: 72, alturaMm: 17 }),
+    item("6205", { diametroInternoMm: 25, diametroExternoMm: 52, alturaMm: 15 }),
+    item("6206", { diametroInternoMm: 30, diametroExternoMm: 62, alturaMm: 16 }),
+  ];
+  assert.deepEqual(ordenarPorMedida(lista).map((p) => p.nome), ["6205", "6206", "6207"]);
+});
+
+test("mesmo interno desempata pelo externo e depois pela altura", () => {
+  const lista = [
+    item("largo", { diametroInternoMm: 25, diametroExternoMm: 52, alturaMm: 20 }),
+    item("estreito", { diametroInternoMm: 25, diametroExternoMm: 52, alturaMm: 15 }),
+    item("menor externo", { diametroInternoMm: 25, diametroExternoMm: 47, alturaMm: 30 }),
+  ];
+  assert.deepEqual(ordenarPorMedida(lista).map((p) => p.nome), ["menor externo", "estreito", "largo"]);
+});
+
+test("item sem medida fica por último, não no começo", () => {
+  // `Number(undefined)` é NaN, e NaN em comparação devolve false: sem o
+  // tratamento o item sem medida embaralharia a lista inteira.
+  const lista = [
+    item("sem medida", {}),
+    item("6205", { diametroInternoMm: 25, diametroExternoMm: 52, alturaMm: 15 }),
+    item("código no lugar da medida", { diametroInternoMm: 5176168 }),
+  ];
+  assert.deepEqual(ordenarPorMedida(lista).map((p) => p.nome), ["6205", "sem medida", "código no lugar da medida"]);
+});
+
+test("ordenar não mexe na lista recebida", () => {
+  const lista = [item("b", { diametroInternoMm: 30 }), item("a", { diametroInternoMm: 20 })];
+  ordenarPorMedida(lista);
+  assert.deepEqual(lista.map((p) => p.nome), ["b", "a"]);
+});
+
+// A frase de ajuda das medidas descreve o catálogo desta loja, não um catálogo
+// imaginário: quem só cadastrou espessura não pode ser mandado procurar por
+// diâmetro interno.
+const medida = (campo: ChaveDeMedida, rotulo: string) => ({ campo, rotulo });
+
+test("loja sem medida não recebe frase nenhuma", () => {
+  assert.equal(dicaDeMedidas([]), null);
+});
+
+test("com o trio, a dica fala a sequência que o balcão lê", () => {
+  assert.equal(
+    dicaDeMedidas([
+      medida("diametroInternoMm", "Diâmetro interno"),
+      medida("diametroExternoMm", "Diâmetro externo"),
+      medida("alturaMm", "Altura"),
+    ]),
+    "Medidas em mm: interno × externo × altura.",
+  );
+});
+
+test("o que sobra do trio entra nomeado, não some da dica", () => {
+  assert.equal(
+    dicaDeMedidas([
+      medida("diametroInternoMm", "Diâmetro interno"),
+      medida("diametroExternoMm", "Diâmetro externo"),
+      medida("alturaMm", "Altura"),
+      medida("secaoMm", "Seção do cordão"),
+    ]),
+    "Medidas em mm: interno × externo × altura; também seção do cordão.",
+  );
+});
+
+test("sem o trio, a dica não promete medida que a loja não cadastrou", () => {
+  const dica = dicaDeMedidas([medida("espessuraMm", "Espessura"), medida("secaoMm", "Seção do cordão")]);
+  assert.equal(dica, "Medidas em mm: espessura, seção do cordão.");
+  assert.ok(!dica!.includes("interno"));
 });

@@ -15,10 +15,11 @@ import {
   type RegrasDoCanal,
 } from "./canais";
 import { atualizarReputacaoMl } from "./mercadolivre-reputacao";
+import { avisoDaImagem } from "./imagem-origem";
 
 type ProdutoPublicavel = Pick<
   Produto,
-  "id" | "nome" | "precoCentavos" | "estoque" | "imagens" | "descricaoCurta" | "descricao" | "ativo"
+  "id" | "nome" | "precoCentavos" | "estoque" | "imagens" | "descricaoCurta" | "descricao" | "ativo" | "imagemOrigem"
 >;
 
 type AnuncioParaPublicar = {
@@ -179,8 +180,24 @@ export function conteudoDoAnuncio(anuncio: AnuncioParaPublicar, base: string): C
     .filter((imagem): imagem is string => Boolean(imagem))
     .slice(0, 10)
     .map((source) => ({ source }));
+  /**
+   * A mesma declaração que a vitrine faz, no anúncio.
+   *
+   * A loja avisa quando a foto é da série ou uma ilustração; o anúncio, não —
+   * e o anúncio é onde a expectativa errada custa caro, porque vira
+   * reclamação, mediação e reputação, não só uma devolução. Com o plano de
+   * foto aprovado (família para rolamento, ilustração para retentor), publicar
+   * sem dizer seria espalhar no Mercado Livre exatamente o que a trava do
+   * banco existe para impedir dentro de casa.
+   *
+   * Vai antes do texto do lojista, que é venda: ressalva depois do argumento
+   * é ressalva que ninguém lê. O `hash` abaixo cobre a descrição, então
+   * anúncio publicado antes disso se corrige sozinho no próximo ciclo.
+   */
+  const aviso = avisoDaImagem(anuncio.produto.imagemOrigem, pictures.length > 0);
+  const texto = anuncio.produto.descricao ?? anuncio.produto.descricaoCurta ?? "";
   // O limite do ML é 50 000 caracteres; o corte é por segurança, não por gosto.
-  const descricao = textoCurto(anuncio.produto.descricao ?? anuncio.produto.descricaoCurta ?? "", 50_000);
+  const descricao = textoCurto([aviso, texto].filter(Boolean).join("\n\n"), 50_000);
   if (!title || !pictures.length) return null;
   const hash = createHash("sha256")
     .update(JSON.stringify({ title, pictures: pictures.map((p) => p.source), descricao }))

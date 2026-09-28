@@ -34,6 +34,7 @@ const anuncio = {
     descricaoCurta: null,
     descricao: null,
     ativo: true,
+    imagemOrigem: "propria",
   },
 };
 
@@ -169,4 +170,37 @@ test("estoque todo reservado para a loja não publica no canal", () => {
   });
   assert.equal(r.corpo, undefined);
   assert.match(r.erro ?? "", /reservado para a loja/);
+});
+
+/**
+ * A loja avisa quando a foto é da série ou uma ilustração; o anúncio precisa
+ * avisar também. Lá a expectativa errada não vira devolução: vira reclamação,
+ * mediação e reputação.
+ */
+const comOrigem = (imagemOrigem: string, descricao: string | null = "Texto do lojista.") =>
+  conteudoDoAnuncio(
+    {
+      id: "a1", categoriaMl: "MLB1",
+      preparo: { produtoId: "p1", nomeOriginal: "x", nomeEnriquecido: "Rolamento 6205", estado: "PRONTO", presentes: [] },
+      produto: { id: "p1", nome: "x", precoCentavos: 1000, estoque: 1, ativo: true, imagens: ["/a.webp"], descricaoCurta: null, descricao, imagemOrigem },
+    } as never,
+    "https://loja.exemplo",
+  )!;
+
+test("foto da série e ilustração se declaram no anúncio, antes do texto de venda", () => {
+  const serie = comOrigem("representativa").descricao;
+  assert.match(serie, /^Imagem representativa da série/, "ressalva depois do argumento é ressalva que ninguém lê");
+  assert.match(serie, /Texto do lojista\.$/);
+  assert.match(comOrigem("ilustracao").descricao, /^Ilustração técnica/);
+});
+
+test("foto do próprio item não acrescenta nada", () => {
+  assert.equal(comOrigem("propria").descricao, "Texto do lojista.");
+  // Produto sem descrição e com foto própria continua sem descrição: o
+  // caminho da escrita pula o endpoint quando não há texto.
+  assert.equal(comOrigem("propria", null).descricao, "");
+});
+
+test("declarar a origem muda a impressão digital, então anúncio antigo se corrige sozinho", () => {
+  assert.notEqual(comOrigem("representativa").hash, comOrigem("propria").hash);
 });

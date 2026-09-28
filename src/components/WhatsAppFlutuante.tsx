@@ -11,9 +11,10 @@ export default function WhatsAppFlutuante({ numero, nome }: { numero: string; no
       target="_blank"
       rel="noopener"
       aria-label="Falar no WhatsApp"
-      // A distância de baixo respeita a área segura do iPhone: com `bottom` fixo
-      // o botão encosta na barra inicial do aparelho e fica difícil de acertar.
-      style={{ bottom: "max(1.25rem, calc(env(safe-area-inset-bottom) + 0.75rem))" }}
+      // A distância de baixo mora no CSS (`.whatsapp-flutuante`), não aqui: ela
+      // respeita a área segura do iPhone, precisa subir acima da barra inferior
+      // no celular e sair de cena onde o card já oferece orçamento — e `style`
+      // inline ganharia das duas regras de @media.
       className="whatsapp-flutuante fixed right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg transition hover:scale-105 sm:right-5"
     >
       <MessageCircle className="h-7 w-7" />

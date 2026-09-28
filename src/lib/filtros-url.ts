@@ -17,10 +17,21 @@ export function ordemDaUrl(sp: ParametrosDaVitrine): OrdemCatalogo {
   return ORDENS.has(sp.ordem as OrdemCatalogo) ? (sp.ordem as OrdemCatalogo) : "relevancia";
 }
 
-/** "12,50", "12.5" ou "R$ 12" → centavos. */
+/**
+ * "R$ 1.234,50" → 123450. Dinheiro é centavos inteiros, nunca float.
+ *
+ * O ponto de milhar era lido como decimal: quem digitava `1.234,50` no campo
+ * de preço mínimo filtrava por R$ 1,23 e recebia o catálogo quase inteiro de
+ * volta. Com vírgula presente, todo ponto é milhar; sem vírgula, só é milhar
+ * quando separa grupos de três dígitos (`1.234`), senão `20.5` deixaria de
+ * ser vinte e cinquenta.
+ */
 export function reaisDaUrl(v?: string): number | undefined {
   if (!v) return undefined;
-  const n = Number.parseFloat(v.replace(/[^\d,.]/g, "").replace(",", "."));
+  let limpo = v.replace(/[^\d,.]/g, "");
+  if (limpo.includes(",")) limpo = limpo.replace(/\./g, "").replace(",", ".");
+  else if (/^\d{1,3}(\.\d{3})+$/.test(limpo)) limpo = limpo.replace(/\./g, "");
+  const n = Number.parseFloat(limpo);
   return Number.isFinite(n) ? Math.round(n * 100) : undefined;
 }
 
