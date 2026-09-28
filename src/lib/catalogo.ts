@@ -198,6 +198,25 @@ export function medidaResumida(atributos: unknown): string | null {
   return presentes.map(rotulada).join(" · ");
 }
 
+/**
+ * Como explicar, em uma frase, por quais medidas esta loja dá para filtrar.
+ *
+ * A frase não pode ser fixa no formulário: loja que só cadastrou espessura e
+ * seção não mede "interno × externo × altura", e mandar alguém procurar por
+ * medida que o catálogo não tem é pior que não dizer nada. Recebe o que
+ * `medidasDaLoja` achou; `null` quando não achou medida nenhuma.
+ */
+export function dicaDeMedidas(medidas: { campo: ChaveDeMedida; rotulo: string }[]): string | null {
+  if (medidas.length === 0) return null;
+  const chaves = new Set(medidas.map((m) => m.campo));
+  const sequencia = "Medidas em mm: interno × externo × altura";
+  if (TRIO_DO_BALCAO.every((c) => chaves.has(c))) {
+    const extras = medidas.filter((m) => !TRIO_DO_BALCAO.includes(m.campo as (typeof TRIO_DO_BALCAO)[number]));
+    return extras.length ? `${sequencia}; também ${extras.map((m) => m.rotulo.toLowerCase()).join(" e ")}.` : `${sequencia}.`;
+  }
+  return `Medidas em mm: ${medidas.map((m) => m.rotulo.toLowerCase()).join(", ")}.`;
+}
+
 const ORDENS: Record<OrdemCatalogo, Prisma.ProdutoOrderByWithRelationInput[]> = {
   relevancia: [{ destaque: "desc" }, { nome: "asc" }],
   "menor-preco": [{ precoCentavos: "asc" }],

@@ -5,7 +5,7 @@ import { metadataDeListagem } from "@/lib/seo-listagem";
 import PaginacaoLoja, { POR_PAGINA, paginaDaUrl } from "@/components/PaginacaoLoja";
 import { exigirTenant, lojaVende, temaDo } from "@/lib/tenant";
 import CategoriasPremium from "@/components/templates/automotivo-premium/Categorias";
-import { listarCategorias, paginaDeProdutos, facetasTecnicas, medidasDaLoja } from "@/lib/catalogo";
+import { listarCategorias, paginaDeProdutos, facetasTecnicas, medidasDaLoja, dicaDeMedidas } from "@/lib/catalogo";
 import { filtroDaUrl } from "@/lib/filtros-url";
 import ProductCard from "@/components/ProductCard";
 import FiltrosProdutos from "@/components/FiltrosProdutos";
@@ -48,6 +48,7 @@ export default async function Produtos({ searchParams }: { searchParams: Promise
   // ?pagina=999999 vira uma URL válida a mais para o Google guardar.
   if (produtos.length === 0 && pagina > 1) notFound();
   const vende = lojaVende(t);
+  const dica = dicaDeMedidas(temMedida);
   const categoriaAtual = categorias.find((c) => c.slug === sp.categoria);
   const titulo = sp.q ? `Resultados para “${sp.q}”` : categoriaAtual ? categoriaAtual.nome : moto ? `Peças para ${nomeDaMoto(moto)}` : "Todos os produtos";
 
@@ -63,7 +64,11 @@ export default async function Produtos({ searchParams }: { searchParams: Promise
       <FiltrosProdutos categorias={categorias} valores={sp} medidas={temMedida} fabricantes={facetas.fabricantes} perfis={facetas.perfis} />
       {produtos.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-          Nada encontrado com esses filtros. Confira o código ou a referência, tente apenas o nome da peça ou reduza os filtros. Medidas: interno × externo × altura, em mm. <Link href="/produtos" className="underline">Limpar filtros</Link>
+          Nada encontrado com esses filtros. Confira o nome, o código ou a referência do produto, ou reduza os filtros.
+          {dica && <> {dica}</>}{" "}
+          {/* A navegação completa restaura também os campos não controlados do formulário. */}
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+          <a href="/produtos" className="underline">Limpar filtros</a>
         </p>
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">

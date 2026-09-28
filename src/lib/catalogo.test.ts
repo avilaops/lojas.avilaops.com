@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { medidaResumida, ordenarPorMedida, termosDeBusca } from "./catalogo";
+import { dicaDeMedidas, medidaResumida, ordenarPorMedida, termosDeBusca } from "./catalogo";
+import type { ChaveDeMedida } from "./catalogo";
 
 /**
  * Em catálogo técnico a pessoa digita a peça como ela é falada na oficina.
@@ -237,4 +238,42 @@ test("ordenar não mexe na lista recebida", () => {
   const lista = [item("b", { diametroInternoMm: 30 }), item("a", { diametroInternoMm: 20 })];
   ordenarPorMedida(lista);
   assert.deepEqual(lista.map((p) => p.nome), ["b", "a"]);
+});
+
+// A frase de ajuda das medidas descreve o catálogo desta loja, não um catálogo
+// imaginário: quem só cadastrou espessura não pode ser mandado procurar por
+// diâmetro interno.
+const medida = (campo: ChaveDeMedida, rotulo: string) => ({ campo, rotulo });
+
+test("loja sem medida não recebe frase nenhuma", () => {
+  assert.equal(dicaDeMedidas([]), null);
+});
+
+test("com o trio, a dica fala a sequência que o balcão lê", () => {
+  assert.equal(
+    dicaDeMedidas([
+      medida("diametroInternoMm", "Diâmetro interno"),
+      medida("diametroExternoMm", "Diâmetro externo"),
+      medida("alturaMm", "Altura"),
+    ]),
+    "Medidas em mm: interno × externo × altura.",
+  );
+});
+
+test("o que sobra do trio entra nomeado, não some da dica", () => {
+  assert.equal(
+    dicaDeMedidas([
+      medida("diametroInternoMm", "Diâmetro interno"),
+      medida("diametroExternoMm", "Diâmetro externo"),
+      medida("alturaMm", "Altura"),
+      medida("secaoMm", "Seção do cordão"),
+    ]),
+    "Medidas em mm: interno × externo × altura; também seção do cordão.",
+  );
+});
+
+test("sem o trio, a dica não promete medida que a loja não cadastrou", () => {
+  const dica = dicaDeMedidas([medida("espessuraMm", "Espessura"), medida("secaoMm", "Seção do cordão")]);
+  assert.equal(dica, "Medidas em mm: espessura, seção do cordão.");
+  assert.ok(!dica!.includes("interno"));
 });

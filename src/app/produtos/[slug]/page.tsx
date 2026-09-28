@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { codigoPublico } from "@/lib/codigo-publico";
 import { notFound } from "next/navigation";
 import FichaTecnica from "@/components/FichaTecnica";
 import { lerDefinicoes, lerValores } from "@/lib/campos-personalizados";
@@ -254,10 +255,14 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
             {retiradaPublicaDisponivel(t) && <li>✔ Retirada na loja sem custo</li>}
             <li>✔ {t.despachoDiasUteis === 0
               ? "Despacho no mesmo dia útil para pagamentos confirmados durante o expediente"
-              : `Envio em até ${t.despachoDiasUteis} dias úteis após o pagamento`}</li>
+              : `Envio em até ${t.despachoDiasUteis} ${t.despachoDiasUteis === 1 ? "dia útil" : "dias úteis"} após o pagamento`}</li>
             {t.freteGratisAcima != null && <li>✔ Frete grátis acima de {formatarBRL(t.freteGratisAcima)}</li>}
-            {p.sku && <li className="text-xs">SKU {p.sku}</li>}
+            {codigoPublico(p.sku) && <li className="text-xs">Código {codigoPublico(p.sku)}</li>}
           </ul>
+          <nav className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm" aria-label="Informações de entrega e troca">
+            <Link className="underline underline-offset-4" href="/politicas/envio">Entrega e frete</Link>
+            <Link className="underline underline-offset-4" href="/politicas/devolucao">Trocas e devoluções</Link>
+          </nav>
 
           <FichaTecnica
             atributos={(p.atributos as Record<string, unknown>) ?? {}}

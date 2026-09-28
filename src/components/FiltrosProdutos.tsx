@@ -1,6 +1,5 @@
-import Link from "next/link";
 import type { Categoria } from "@prisma/client";
-import type { ChaveDeMedida } from "@/lib/catalogo";
+import { dicaDeMedidas, type ChaveDeMedida } from "@/lib/catalogo";
 import { PREFIXO_DE_MEDIDA as PREFIXO } from "@/lib/filtros-url";
 
 /** Uma medida que a loja usa, com a faixa real do catálogo. */
@@ -39,6 +38,7 @@ export default function FiltrosProdutos({
   acao?: string;
 }) {
   const usandoMedida = medidas.some((m) => valores[`${PREFIXO[m.campo]}_de`] || valores[`${PREFIXO[m.campo]}_ate`]);
+  const dica = dicaDeMedidas(medidas);
   return (
     <form action={acao} className="filtros-produtos mb-6 grid gap-2 rounded-xl border border-border bg-card p-3">
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
@@ -81,8 +81,12 @@ export default function FiltrosProdutos({
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-        <p>Medidas em mm: interno × externo × altura. Selecione a categoria para ver os atributos cadastrados.</p>
-        <Link href="/produtos" className="inline-flex min-h-11 items-center underline">Limpar busca e filtros</Link>
+        <p>{dica ? `${dica} Selecione a categoria para ver os atributos cadastrados.` : "Combine categoria, marca e preço para encontrar o produto."}</p>
+        {/* A navegação completa também limpa campos ainda não enviados. O Link
+            reutilizava selects não controlados e mantinha a seleção anterior.
+            Limpa para `acao`, não para `/produtos`: na página de uma categoria
+            limpar filtro não é sair da categoria. */}
+        <a href={acao} className="inline-flex min-h-11 items-center underline">Limpar busca e filtros</a>
       </div>
       {medidas.length > 0 && (
         // `open` quando já há medida na URL: quem chegou por um link filtrado
