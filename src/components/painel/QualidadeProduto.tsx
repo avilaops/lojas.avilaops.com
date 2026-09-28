@@ -7,7 +7,7 @@ export default function QualidadeProduto({produtoId,revisao,aoAbrirVariantes}:{p
   const [d,setD]=useState<Diagnostico|null>(null),[erro,setErro]=useState("");
   useEffect(()=>{const controller=new AbortController();fetch(`/api/painel/catalogo/qualidade?produtoId=${encodeURIComponent(produtoId)}`,{signal:controller.signal}).then(async r=>{if(!r.ok) throw new Error("Não foi possível conferir o catálogo.");return r.json();}).then(setD).catch(e=>{if(e.name!=="AbortError")setErro(e.message);});return()=>controller.abort();},[produtoId,revisao]);
   function corrigir(o:OcorrenciaCatalogo) {
-    if(o.campo==="variantes") return aoAbrirVariantes();
+    if(o.campo==="variantes" || o.varianteId) return aoAbrirVariantes();
     const campo=document.getElementById(`catalogo-${o.campo}`);
     if(campo instanceof HTMLInputElement && campo.readOnly) return aoAbrirVariantes();
     // O formulário guarda o que é raro em blocos fechados: sem abrir o que
