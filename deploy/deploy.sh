@@ -110,12 +110,32 @@ conferir_estilo() {
   echo "==> folha de estilo servida ($folha, $bytes bytes)"
 }
 
+# Em 28/09/2026 toda imagem da plataforma passou a responder 500 com health e
+# CSS verdes: a rota /uploads não carregava (binding nativo do ONNX). Arquivo
+# inexistente tem que dar 404 — 500 ali é o módulo da rota quebrado — e um
+# arquivo real do volume tem que voltar 200.
+conferir_uploads() {
+  local codigo real
+  codigo=$(curl -s -o /dev/null -w '%{http_code}' -H "host: lojas.avilaops.com" http://127.0.0.1:3080/uploads/verificacao-deploy/inexistente.png)
+  [ "$codigo" = "404" ] || { echo "!! /uploads respondeu $codigo para arquivo inexistente (esperado 404)" >&2; return 1; }
+  real=$(find uploads -mindepth 2 -maxdepth 2 -type f \( -name '*.png' -o -name '*.webp' -o -name '*.jpg' \) 2>/dev/null | head -1)
+  if [ -n "$real" ]; then
+    codigo=$(curl -s -o /dev/null -w '%{http_code}' -H "host: lojas.avilaops.com" "http://127.0.0.1:3080/$real?w=160")
+    [ "$codigo" = "200" ] || { echo "!! /$real respondeu $codigo (esperado 200)" >&2; return 1; }
+  fi
+  echo "==> /uploads servindo (inexistente 404${real:+, $real 200})"
+}
+
 for i in $(seq 1 30); do
   sleep 2
   if curl -sf -o /dev/null http://127.0.0.1:3080/api/health; then
     echo "==> saudável na tentativa $i"
     if ! conferir_estilo; then
       echo "!! respondeu, mas sem a folha de estilo; tratando como versão quebrada" >&2
+      break
+    fi
+    if ! conferir_uploads; then
+      echo "!! respondeu, mas sem servir imagens; tratando como versão quebrada" >&2
       break
     fi
     docker image prune -f >/dev/null

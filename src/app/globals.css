@@ -619,28 +619,33 @@ body:has(.home-automotivo) .rodape-loja { margin-top: 1rem; }
   background: var(--card);
 }
 
+/* A capa identifica a categoria; não pode ser a primeira tela inteira. No
+   celular ela vira uma linha (miniatura + título) e o primeiro produto aparece
+   sem rolar; no computador fica baixa, com a foto à esquerda. */
+.capa-categoria { grid-template-columns: 96px 1fr; margin-bottom: 16px; }
 @media (min-width: 860px) {
-  .capa-categoria { grid-template-columns: 420px 1fr; align-items: stretch; }
+  .capa-categoria { grid-template-columns: 280px 1fr; align-items: stretch; margin-bottom: 20px; }
 }
 
 .capa-categoria-imagem {
   position: relative;
   display: grid;
   place-items: center;
-  min-height: 180px;
+  min-height: 96px;
   background: color-mix(in srgb, var(--primary) 12%, var(--muted));
 }
 
-@media (min-width: 860px) { .capa-categoria-imagem { min-height: 230px; } }
+@media (min-width: 860px) { .capa-categoria-imagem { min-height: 150px; } }
 
 .capa-categoria-inicial {
-  font-size: 5rem;
+  font-size: clamp(2.5rem, 6vw, 4rem);
   font-weight: 800;
   line-height: 1;
   color: color-mix(in srgb, var(--primary) 55%, transparent);
 }
 
-.capa-categoria-texto { display: flex; flex-direction: column; justify-content: center; gap: 9px; padding: 26px; }
+.capa-categoria-texto { display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 14px 18px; }
+.capa-categoria-texto p { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .capa-categoria-texto h1 { font-size: clamp(1.6rem, 3.5vw, 2.3rem); font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; }
 .capa-categoria-texto p { max-width: 60ch; color: var(--muted-foreground); font-size: 0.95rem; line-height: 1.6; }
 
@@ -1056,11 +1061,6 @@ body:has(.home-automotivo) .rodape-loja { margin-top: 1rem; }
 @media (max-width: 639px) { .campanhas-busca { flex-direction: column; align-items: stretch; } .cartao-produto > div:last-child { padding: .75rem; } .campanhas-produtos > header > a { min-height: 44px; } }
 
 .home-campanhas .atalhos-cat-foto { width: min(4rem, 100%); height: auto; aspect-ratio: 1; }
-/* No celular, os cards já oferecem orçamento. O atalho duplicado cobria
-   medidas e ações na segunda coluna durante a rolagem. */
-@media (max-width: 640px) {
-  body:has(.cartao-produto a[href^="https://wa.me/"]) .whatsapp-flutuante { display: none; }
-}
 
 /* Catálogo técnico: nome e medidas primeiro; referências de ERP ficam na ficha. */
 .cartao-produto-tecnico .cartao-produto-imagem { aspect-ratio: 4 / 3; background: #fff; }
@@ -1076,19 +1076,44 @@ body:has(.home-automotivo) .rodape-loja { margin-top: 1rem; }
 .cartao-produto-tecnico .cartao-produto-disponibilidade > * { font-size: .6875rem; }
 .cartao-produto-tecnico .cartao-produto-preco { padding-top: .5rem; }
 .cartao-produto-tecnico .btn-primario, .cartao-produto-tecnico .btn-secundario { min-height: 44px; padding: .5rem; }
-/* O contato já está nos cards: em qualquer largura, nada flutua sobre a compra. */
-body:has(.cartao-produto-tecnico a[href^="https://wa.me/"]) .whatsapp-flutuante { display: none; }
 [data-layout="distribuidora"] .marca-loja img { height: 62px; max-width: 190px; }
-[data-layout="distribuidora"] .banner-campanha picture { height: clamp(260px, 32vw, 440px); }
+/* A arte de campanha é 8:3 no computador e 4:5 no celular. A altura acompanha
+   a proporção da arte até um teto, para o catálogo aparecer na primeira tela;
+   `contain` preserva o texto da arte, e a faixa lateral usa a cor do fundo. */
+[data-layout="distribuidora"] .banner-campanha picture { height: min(calc(100vw * 3 / 8), 340px); min-height: 180px; }
 [data-layout="distribuidora"] .banner-campanha img { height: 100%; object-fit: contain; }
 [data-layout="distribuidora"] .home-campanhas { gap: 1.5rem; padding-bottom: 0; }
 [data-layout="distribuidora"] .rodape-loja { margin-top: 2rem; }
-[data-layout="distribuidora"] .campanhas-ver-todos { margin-top: 1rem; }
+[data-layout="distribuidora"] .campanhas-ver-todos { margin-top: .75rem; margin-bottom: 0; }
 @media (max-width: 640px) {
   [data-layout="distribuidora"] .marca-loja img { height: 60px; max-width: 170px; }
-  [data-layout="distribuidora"] .banner-campanha picture { aspect-ratio: auto; height: min(105vw, 400px, 52svh); }
+  [data-layout="distribuidora"] .banner-campanha picture { aspect-ratio: auto; height: min(calc(100vw * 5 / 4), 42svh); min-height: 0; }
   [data-layout="distribuidora"] .home-campanhas { gap: 1.25rem; }
   .cartao-produto-tecnico .cartao-produto-conteudo { padding: .625rem; }
   .cartao-produto-tecnico .cartao-produto-nome { font-size: .875rem; }
   .cartao-produto-tecnico .cartao-produto-disponibilidade > a { min-height: 44px; display: inline-flex; align-items: center; }
+}
+
+/* Card sem foto: faixa curta em vez de um quadrado vazio. Em família sem
+   foto (o-ring, gaxeta) o quadrado ocupava metade do card e empurrava medida,
+   preço e disponibilidade para baixo da dobra. O selo continua à esquerda e o
+   aviso vai para a direita, para os dois não se sobreporem. */
+.cartao-produto .cartao-produto-sem-imagem { height: 2.75rem; flex: none; aspect-ratio: auto; }
+.cartao-produto-sem-imagem .produto-sem-foto { justify-content: flex-end; padding-inline: .75rem; background: var(--muted); font-size: .6875rem; }
+.cartao-produto-sem-imagem::after { display: none; }
+.esta-disponivel { color: #15803d; font-weight: 600; }
+.cartao-produto-tecnico .cartao-produto-tecnica { font-size: .875rem; }
+
+/* WhatsApp flutuante: onde a página já tem a ação no card ou na ficha do
+   produto, ele sai — em qualquer largura. Um atalho que cobre o botão de
+   pedido do último card atrapalha exatamente o que ele quer facilitar. Nas
+   demais páginas, o rodapé ganha folga para nada ficar embaixo dele. */
+body:has(.cartao-produto, .ap-produto-info, .acao-whatsapp) .whatsapp-flutuante { display: none; }
+body:has(.whatsapp-flutuante) .rodape-loja { padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)); }
+@media (max-width: 640px) {
+  /* Card estreito: o selo ("Esgotado") ocupa a faixa, e o aviso de foto sai. */
+  .cartao-produto-sem-imagem:has(span) .produto-sem-foto { color: transparent; }
+  /* A dica de medida repete o que o próprio campo diz; no celular ela só
+     empurrava o primeiro produto para a segunda tela. */
+  .filtros-produtos .filtros-ajuda { display: none; }
 }

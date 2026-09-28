@@ -46,9 +46,13 @@ export function emEstoque(p: Pick<ProdutoRegras, "disponibilidade" | "estoque">)
   return p.disponibilidade !== "out_of_stock" && (p.estoque == null || p.estoque > 0);
 }
 
-/** Marcado como esgotado, ou com contagem zerada. É o selo do card. */
+/**
+ * Marcado como esgotado, ou com contagem zerada (ou negativa, que o ERP grava
+ * quando vende além do saldo). É o complemento exato de `emEstoque`: o selo
+ * do card e o `availability` do JSON-LD não podem discordar.
+ */
 export function esgotado(p: Pick<ProdutoRegras, "disponibilidade" | "estoque">): boolean {
-  return p.disponibilidade === "out_of_stock" || p.estoque === 0;
+  return !emEstoque(p);
 }
 
 /** Vai acabar: o aviso "últimas unidades" do card. */
@@ -75,6 +79,44 @@ export function publicavel(p: Pick<ProdutoRegras, "ativo" | "imagens" | "precoCe
 /** O Google Merchant exige imagem e preço; sem eles o item é reprovado. */
 export function elegivelMerchant(p: Pick<ProdutoRegras, "ativo" | "imagens" | "precoCentavos">, imagemDeVariante = false): boolean {
   return p.ativo && (p.imagens.length > 0 || imagemDeVariante) && p.precoCentavos > 0;
+}
+
+/**
+ * O que a vitrine diz e oferece para um produto: selo, linha de
+ * disponibilidade e a ação do botão, numa resposta só.
+ *
+ * Antes cada tela montava a sua frase. O card dizia "Esgotado" e oferecia
+ * "Consultar preço" para item sem preço e sem estoque; a página do mesmo
+ * item não dizia se havia estoque; a sugestão da busca olhava só
+ * `disponibilidade` e anunciava preço de peça com contagem zerada. Três
+ * telas, três respostas para o mesmo cadastro.
+ *
+ * A precedência é o que resolve os conflitos:
+ *
+ *   1. esgotado vence tudo: não há pedido nem consulta de preço, só aviso de
+ *      reposição — perguntar o preço do que não existe é pedir o que a loja
+ *      não pode entregar;
+ *   2. sem preço, com estoque: consulta de preço;
+ *   3. com preço e estoque: carrinho quando a loja vende, senão pedido pelo
+ *      WhatsApp.
+ */
+export type AcaoDeVenda = "carrinho" | "pedido" | "consulta-preco" | "aviso-reposicao";
+
+export interface EstadoDeVenda {
+  esgotado: boolean;
+  /** Linha curta de disponibilidade, igual no card, na página e na busca. */
+  disponibilidade: "Indisponível no momento" | "Sob encomenda" | "Em estoque" | "Disponível para compra";
+  acao: AcaoDeVenda;
+}
+
+export function estadoDeVenda(
+  p: Pick<ProdutoRegras, "ativo" | "precoCentavos" | "disponibilidade" | "estoque">,
+  loja: { vende: boolean },
+): EstadoDeVenda {
+  if (!p.ativo || esgotado(p)) return { esgotado: true, disponibilidade: "Indisponível no momento", acao: "aviso-reposicao" };
+  const disponibilidade = p.disponibilidade === "backorder" ? "Sob encomenda" : p.estoque == null ? "Disponível para compra" : "Em estoque";
+  if (sobConsulta(p)) return { esgotado: false, disponibilidade, acao: "consulta-preco" };
+  return { esgotado: false, disponibilidade, acao: loja.vende ? "carrinho" : "pedido" };
 }
 
 /** O valor de `g:availability` do Merchant para este produto. */
@@ -109,6 +151,12 @@ export function dispensavelADistancia(p: { tarja?: string | null }): boolean {
 export const WHERE_COMPRAVEL: Prisma.ProdutoWhereInput = {
   ativo: true,
   precoCentavos: { gt: 0 },
+  disponibilidade: { not: "out_of_stock" },
+  OR: [{ estoque: null }, { estoque: { gt: 0 } }],
+};
+
+/** `emEstoque`, na forma que o Prisma entende: o filtro "só disponíveis". */
+export const WHERE_EM_ESTOQUE: Prisma.ProdutoWhereInput = {
   disponibilidade: { not: "out_of_stock" },
   OR: [{ estoque: null }, { estoque: { gt: 0 } }],
 };

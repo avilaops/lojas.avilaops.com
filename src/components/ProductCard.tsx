@@ -25,7 +25,9 @@ export default function ProductCard({ produto, loja, vende, whatsapp, moto = nul
   const imagem = produto.imagens[0];
   const segundaImagem = alternarImagem && !tecnico ? produto.imagens[1] : undefined;
   const ficha = fichaDoProduto(produto.atributos as Record<string, unknown> | null);
-  const tecnicos = ficha.filter(l => l.unidade === "mm" || (tecnico ? ["perfil"] : ["referencia", "perfil"]).includes(l.chave)).slice(0, 5);
+  // Catálogo técnico decide pela medida e pelo material cadastrado; a
+  // referência do ERP fica na página do produto, não disputa espaço no card.
+  const tecnicos = ficha.filter(l => l.unidade === "mm" || (tecnico ? ["perfil", "material"] : ["referencia", "perfil", "material"]).includes(l.chave)).slice(0, 5);
   const marca = marcaConfirmada(produto.marca);
   const codigo = codigoPublico(produto.sku);
   const miniatura = imagem && /\/uploads\//.test(imagem) && !/\.svg$/i.test(imagem) ? `${imagem}?w=480` : imagem;
@@ -37,7 +39,11 @@ export default function ProductCard({ produto, loja, vende, whatsapp, moto = nul
   // a mesma coisa para o mesmo produto.
   const sobConsulta = regras.sobConsulta(produto);
   const disponivel = regras.compravel(produto);
-  const esgotado = regras.esgotado(produto);
+  // Selo, linha de disponibilidade e botão saem da mesma resposta que a
+  // página do produto e a busca usam: nenhum card pode dizer "Esgotado" e
+  // oferecer pedido ao mesmo tempo.
+  const estado = regras.estadoDeVenda(produto, { vende });
+  const esgotado = estado.esgotado;
   const estoqueBaixo = regras.estoqueBaixo(produto);
   // Farmácia: a tarja decide se o item pode sair pela internet. Medicamento sob
   // controle especial continua na vitrine — quem procura tem que achar e ver o
@@ -54,7 +60,7 @@ export default function ProductCard({ produto, loja, vende, whatsapp, moto = nul
 
   return (
     <article className={`cartao-produto${tecnico ? " cartao-produto-tecnico" : ""} group flex flex-col overflow-hidden rounded-xl border border-border bg-card`}>
-      <Link href={`/produtos/${produto.slug}`} className="cartao-produto-imagem relative block aspect-square overflow-hidden bg-muted">
+      <Link href={`/produtos/${produto.slug}`} className={`cartao-produto-imagem relative block overflow-hidden bg-muted${imagem ? " aspect-square" : " cartao-produto-sem-imagem"}`}>
         {imagem ? (
           <>
             {/* Imagem Principal */}
@@ -79,7 +85,7 @@ export default function ProductCard({ produto, loja, vende, whatsapp, moto = nul
             )}
           </>
         ) : (
-          <div className="produto-sem-foto flex h-full items-center justify-center text-xs text-muted-foreground">Imagem em preparação</div>
+          <div className="produto-sem-foto flex h-full items-center justify-center text-xs text-muted-foreground">Sem foto do produto</div>
         )}
 
         {/* Badges Flutuantes */}
@@ -141,7 +147,7 @@ export default function ProductCard({ produto, loja, vende, whatsapp, moto = nul
         {tecnicos.length > 0 && <dl className="cartao-produto-tecnica">{tecnicos.map(l => <div key={l.chave}><dt>{tecnico && ROTULOS_COMPACTOS[l.chave] ? <abbr title={l.rotulo}>{ROTULOS_COMPACTOS[l.chave]}</abbr> : l.rotulo}</dt><dd>{l.valor}</dd></div>)}</dl>}
         {tecnico && <p className="cartao-produto-identificacao">{marca && <span>{marca}</span>}{codigo && <span>Código: {codigo}</span>}</p>}
         <div className={tecnico ? "cartao-produto-disponibilidade" : "contents"}>
-          <p className="text-xs text-muted-foreground">{esgotado ? "Indisponível no momento" : produto.disponibilidade === "backorder" ? "Sob encomenda" : produto.estoque == null ? "Disponível para compra" : "Em estoque"}</p>
+          <p className={`cartao-produto-estoque text-xs ${esgotado ? "text-muted-foreground" : "esta-disponivel"}`}>{estado.disponibilidade}</p>
           <Link href={`/produtos/${produto.slug}`} className="text-xs underline underline-offset-4">Ver detalhes</Link>
         </div>
         <div className="cartao-produto-preco mt-auto pt-1">
@@ -161,11 +167,13 @@ export default function ProductCard({ produto, loja, vende, whatsapp, moto = nul
           <Link href={`/produtos/${produto.slug}`} className="btn-secundario w-full text-xs">
             Ver informações
           </Link>
-        ) : sobConsulta ? (
+        ) : estado.acao === "aviso-reposicao" ? (
+          <Link href={`/produtos/${produto.slug}`} className="btn-secundario w-full text-xs">Ver disponibilidade</Link>
+        ) : estado.acao === "consulta-preco" ? (
           // Sem preço não há carrinho: o caminho é falar com a loja. É assim
           // que peça de catálogo técnico é comprada mesmo quando tem preço.
           whatsapp ? (
-            <a className="btn-primario w-full text-xs" href={linkWhatsApp(whatsapp, mensagemDoProduto(produto, urlDaLoja(loja), true))} target="_blank" rel="noopener">
+            <a className="btn-primario acao-whatsapp w-full text-xs" href={linkWhatsApp(whatsapp, mensagemDoProduto(produto, urlDaLoja(loja), true))} target="_blank" rel="noopener">
               Consultar preço
             </a>
           ) : (
@@ -173,20 +181,18 @@ export default function ProductCard({ produto, loja, vende, whatsapp, moto = nul
               Ver detalhes
             </Link>
           )
-        ) : esgotado ? (
-          <Link href={`/produtos/${produto.slug}`} className="btn-secundario w-full text-xs">Ver disponibilidade</Link>
-        ) : vende && produto.opcoes.length > 0 ? (
+        ) : estado.acao === "carrinho" && produto.opcoes.length > 0 ? (
           <Link href={`/produtos/${produto.slug}`} className="btn-secundario w-full text-xs">
             Ver opções
           </Link>
-        ) : vende ? (
+        ) : estado.acao === "carrinho" ? (
           <AddToCartButton
             compacto={compacto}
             item={{ id: produto.id, slug: produto.slug, nome: produto.nome, precoCentavos: produto.precoCentavos, imagem }}
             disponivel={disponivel}
           />
         ) : whatsapp ? (
-          <a className="btn-primario w-full text-xs" href={linkWhatsApp(whatsapp, mensagemDoProduto(produto, urlDaLoja(loja)))} target="_blank" rel="noopener">
+          <a className="btn-primario acao-whatsapp w-full text-xs" href={linkWhatsApp(whatsapp, mensagemDoProduto(produto, urlDaLoja(loja)))} target="_blank" rel="noopener">
             Pedir pelo WhatsApp
           </a>
         ) : null}

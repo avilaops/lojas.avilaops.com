@@ -13,7 +13,9 @@ import { removedorConfigurado, removerFundo } from "./fundo";
  * Só imagem, até 5 MB, tipo conferido pelos bytes (não pela extensão que o
  * navegador mandou).
  */
-export const UPLOADS_DIR = process.env.UPLOADS_DIR ?? path.join(process.cwd(), "uploads");
+import { MIME_POR_EXT, UPLOADS_DIR } from "./uploads-caminho";
+
+export { MIME_POR_EXT, UPLOADS_DIR };
 const LIMITE = 5 * 1024 * 1024;
 const BASE = process.env.LOJAS_BASE_DOMAIN ?? "lojas.avilaops.com";
 
@@ -92,13 +94,3 @@ export async function importarImagemDeUrl(slug: string, url: string, tratar = fa
  * loja mora aqui, junto do resto do que é dela. Sem eles a rota devolve 404 e
  * o navegador fica com o ícone padrão.
  */
-export const MIME_POR_EXT: Record<string, string> = {
-  png: "image/png",
-  jpg: "image/jpeg",
-  jpeg: "image/jpeg",
-  webp: "image/webp",
-  gif: "image/gif",
-  svg: "image/svg+xml",
-  ico: "image/x-icon",
-  webmanifest: "application/manifest+json",
-};

@@ -8,7 +8,7 @@ import { INCLUIR_CATALOGO } from "./catalogo-qualidade";
 import { marcaConfirmada } from "./marca-confirmada";
 import { encaixe, lerCompatibilidade, type Moto } from "./motos";
 import type { TemaLoja } from "./tema";
-import { publicavel, WHERE_COMPLETO, WHERE_COMPRAVEL } from "./produto-regras";
+import { publicavel, WHERE_COMPLETO, WHERE_COMPRAVEL, WHERE_EM_ESTOQUE } from "./produto-regras";
 import { NECESSIDADES, equivalentes as equivalentesFarmacia } from "./farmacia";
 
 export type ProdutoComCategoria = Produto & { categoria: Categoria | null };
@@ -81,10 +81,13 @@ export interface FiltroCatalogo {
   categoriaSlug?: string;
   busca?: string;
   perfil?: string;
-  fabricante?: string;
+  /** Marca, ou todas as grafias dela (ver `agruparMarcas`). */
+  fabricante?: string | string[];
   destaque?: boolean;
   /** Remove itens sem preço atual, inativos ou sem disponibilidade para compra. */
   compraveis?: boolean;
+  /** Só o que a loja diz que tem (`emEstoque`), com ou sem preço: o "só disponíveis" do filtro. */
+  somenteDisponiveis?: boolean;
   /** Só produtos cuja imagem foi declarada como foto do próprio item. */
   imagemOrigem?: "propria" | "representativa" | "ilustracao";
   minCentavos?: number;
@@ -219,13 +222,18 @@ function condicaoProdutos(tenantId: string, filtro?: FiltroCatalogo): Prisma.Pro
       ...(filtro?.destaque ? { destaque: true } : {}),
       ...(filtro?.compraveis ? WHERE_COMPRAVEL : {}),
       ...(filtro?.imagemOrigem ? { imagemOrigem: filtro.imagemOrigem } : {}),
-      ...(filtro?.fabricante ? { marca: { equals: filtro.fabricante, mode: "insensitive" } } : {}),
+      ...(typeof filtro?.fabricante === "string" && filtro.fabricante ? { marca: { equals: filtro.fabricante, mode: "insensitive" } } : {}),
+      ...(Array.isArray(filtro?.fabricante) && filtro.fabricante.length ? { marca: { in: filtro.fabricante, mode: "insensitive" } } : {}),
       ...(filtro?.categoriaSlug ? { categoria: { slug: filtro.categoriaSlug } } : {}),
       ...(filtro?.excetoId ? { id: { not: filtro.excetoId } } : {}),
       ...(filtro?.minCentavos != null || filtro?.maxCentavos != null
         ? { precoCentavos: { ...(filtro.minCentavos != null ? { gte: filtro.minCentavos } : {}), ...(filtro.maxCentavos != null ? { lte: filtro.maxCentavos } : {}) } }
         : {}),
-      ...(termos.length ? { AND: termos.map((t) => ({ busca: { contains: t } })) } : {}),
+      // Cada condição composta entra no AND: duas regras com `OR` próprio
+      // espalhadas no mesmo objeto se sobrescreveriam em silêncio.
+      ...(termos.length || filtro?.somenteDisponiveis
+        ? { AND: [...termos.map((t) => ({ busca: { contains: t } })), ...(filtro?.somenteDisponiveis ? [WHERE_EM_ESTOQUE] : [])] }
+        : {}),
       ...(filtro?.perfil ? { atributos: { path: ["perfil"], equals: filtro.perfil } } : {}),
     };
 }
@@ -419,6 +427,24 @@ export async function buscarProduto(tenantId: string, slug: string) {
 }
 
 /**
+ * Para onde vai o endereço de um cadastro repetido que saiu da vitrine.
+ *
+ * O ERP do lojista às vezes tem a mesma peça em dois ou três códigos (a
+ * Vedashow tinha o anel 2007 em 307, 1445 e 4919, só um com saldo). Quem
+ * importa pode tirar o repetido da vitrine declarando no produto inativo
+ * `atributos.equivalenteA` = SKU do cadastro que fica. O registro continua —
+ * com o mesmo SKU, que é o vínculo com o ERP —, e o endereço antigo leva ao
+ * produto que fica em vez de virar 404 para quem salvou o link.
+ */
+export async function slugDoEquivalente(tenantId: string, slug: string): Promise<string | null> {
+  const inativo = await prisma.produto.findFirst({ where: { tenantId, slug, ativo: false }, select: { atributos: true } });
+  const alvo = (inativo?.atributos as Record<string, unknown> | null)?.equivalenteA;
+  if (typeof alvo !== "string" || !alvo.trim()) return null;
+  const ativo = await prisma.produto.findFirst({ where: { tenantId, sku: alvo.trim(), ativo: true }, select: { slug: true } });
+  return ativo && ativo.slug !== slug ? ativo.slug : null;
+}
+
+/**
  * Resolve os itens do pedido pelo catálogo, no servidor.
  *
  * É a peça que o @avilaops/checkout exige: o preço nunca vem do navegador.
@@ -590,13 +616,51 @@ async function necessidadesSemCache(tenantId: string) {
   return NECESSIDADES.filter((_, i) => achou[i] !== null);
 }
 
+/** Uma marca do filtro, com quantos produtos ela tem no recorte. */
+export type FacetaMarca = { nome: string; itens: number; grafias: string[] };
+
+const semAcento = (t: string) => t.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+
+/**
+ * Marcas do filtro, uma por marca de verdade.
+ *
+ * O ERP grava a mesma marca de várias formas ("SKF" e "Skf", "Ibira", "Ibirá"
+ * e "IBIRÁ"), e o filtro listava cada grafia como uma marca — seis entradas
+ * para duas marcas, e escolher uma escondia os produtos das outras grafias.
+ * O filtro no banco já compara sem caixa; aqui agrupamos também sem acento e
+ * mostramos a grafia mais usada, com a contagem somada.
+ */
+export function agruparMarcas(marcas: Array<string | null | undefined>): FacetaMarca[] {
+  const grupos = new Map<string, Map<string, number>>();
+  for (const bruta of marcas) {
+    const m = bruta?.trim();
+    if (!m || !marcaConfirmada(m)) continue;
+    const chave = semAcento(m);
+    const grafias = grupos.get(chave) ?? new Map<string, number>();
+    grafias.set(m, (grafias.get(m) ?? 0) + 1);
+    grupos.set(chave, grafias);
+  }
+  return [...grupos.values()]
+    .map((grafias) => {
+      const [nome] = [...grafias.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0];
+      return { nome, itens: [...grafias.values()].reduce((a, b) => a + b, 0), grafias: [...grafias.keys()] };
+    })
+    .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR", { sensitivity: "base" }));
+}
+
+/** A marca escolhida no filtro vira todas as grafias dela; desconhecida segue como veio. */
+export function grafiasDaMarca(facetas: FacetaMarca[], escolhida?: string | string[]): string | string[] | undefined {
+  if (typeof escolhida !== "string" || !escolhida) return escolhida;
+  return facetas.find((f) => semAcento(f.nome) === semAcento(escolhida))?.grafias ?? escolhida;
+}
+
 /** Facetas pertencem à loja e à família selecionada; só valores cadastrados. */
 export async function facetasTecnicas(tenantId: string, categoriaSlug?: string) {
   const linhas = await prisma.produto.findMany({
     where: { tenantId, ativo: true, ...(categoriaSlug ? { categoria: { slug: categoriaSlug } } : {}) },
     select: { marca: true, atributos: true },
   });
-  const fabricantes = [...new Set(linhas.map(p => p.marca).filter((m): m is string => !!m && m.toLowerCase() !== "diversos"))].sort();
+  const fabricantes = agruparMarcas(linhas.map(p => p.marca));
   const perfis = categoriaSlug ? [...new Set(linhas.map(p => (p.atributos as Record<string, unknown> | null)?.perfil).filter((p): p is string => typeof p === "string" && !!p.trim()))].sort() : [];
   return { fabricantes, perfis };
 }

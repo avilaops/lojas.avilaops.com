@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { tenantAtual } from "@/lib/tenant";
 import { termosDeBusca, listarProdutos } from "@/lib/catalogo";
+import { esgotado } from "@/lib/produto-regras";
 
 /**
  * Sugestões enquanto a pessoa digita. Usa a mesma coluna normalizada da busca
@@ -27,7 +28,7 @@ export async function GET(request: Request) {
   ]);
 
   return Response.json({
-    produtos: produtos.map((p) => ({ slug: p.slug, nome: p.nome, precoCentavos: p.precoCentavos, imagem: p.imagens[0] ?? null, esgotado: p.disponibilidade === "out_of_stock" })),
+    produtos: produtos.map((p) => ({ slug: p.slug, nome: p.nome, precoCentavos: p.precoCentavos, imagem: p.imagens[0] ?? null, esgotado: esgotado(p) })),
     categorias,
   });
 }
