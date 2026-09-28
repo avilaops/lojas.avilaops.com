@@ -249,7 +249,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
             ) : null}
           </div>
 
-          {p.opcoes.length === 0 && (
+          {p.opcoes.length === 0 && !estado.esgotado && (
             <div className="mt-4"><EstoqueBaixo estoque={p.estoque} limite={t.estoqueBaixoEm} /></div>
           )}
 

@@ -56,8 +56,10 @@ export function esgotado(p: Pick<ProdutoRegras, "disponibilidade" | "estoque">):
 }
 
 /** Vai acabar: o aviso "últimas unidades" do card. */
-export function estoqueBaixo(p: Pick<ProdutoRegras, "estoque">, limite = 3): boolean {
-  return p.estoque != null && p.estoque > 0 && p.estoque <= limite;
+export function estoqueBaixo(p: Pick<ProdutoRegras, "estoque"> & Partial<Pick<ProdutoRegras, "disponibilidade">>, limite = 3): boolean {
+  // Marcado como esgotado com saldo no ERP (venda bloqueada): o selo diz
+  // "Esgotado", e "últimas unidades" ao lado seria contradição.
+  return p.disponibilidade !== "out_of_stock" && p.estoque != null && p.estoque > 0 && p.estoque <= limite;
 }
 
 /** Entra no carrinho. O checkout confere de novo, com a quantidade. */
