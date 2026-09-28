@@ -78,7 +78,7 @@ export default function FiltrosProdutos({
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-        <p>Medidas em mm: interno × externo × altura. Selecione a categoria para ver os atributos cadastrados.</p>
+        <p>{medidas.length > 0 ? "Medidas em mm: interno × externo × altura. Selecione a categoria para ver os atributos cadastrados." : "Combine categoria, marca e preço para encontrar o produto."}</p>
         {/* A navegação completa também limpa campos ainda não enviados. O Link
             reutilizava selects não controlados e mantinha a seleção anterior. */}
         {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
