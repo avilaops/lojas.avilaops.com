@@ -23,6 +23,9 @@ e preso por teste. Quem muda um deles mexe em `ROTINAS`, não na tela.
 |---|---|---|---|---|
 | `mercadolivre.avisos` | Vendas do ML | a cada 5 min | processa a fila de notificações do Mercado Livre: venda vira pedido e baixa estoque, envio vira rastreio, anúncio mexido vira pendência. **Quanto mais espaçado, maior a janela de vender a mesma peça duas vezes** | `POST /api/admin/canais/mercadolivre/avisos` |
 | `mercadolivre.rodar` | Anúncios do ML | a cada hora | publica o que o lojista aprovou e empurra preço e estoque para os anúncios | `POST /api/admin/canais/mercadolivre/rodar` |
+| `automacoes.eventos` | Fila de eventos | a cada minuto | executa os eventos que a plataforma resolve sozinha (`docs/MENSAGENS.md`) | — |
+| `pix.lembrete` | Lembrete de Pix | a cada 10 min | avisa quem gerou Pix há mais de 30 min e não pagou. Dorme enquanto `N8N_WEBHOOK_URL` existir | — |
+| `loja.indicacoes` | Pedido de indicações | todo dia às 10h | 3 dias depois de a loja entrar no ar, se continuar ATIVA. Dorme enquanto `N8N_WEBHOOK_URL` existir | — |
 | `carrinhos.verificar` | Carrinho abandonado | a cada hora | marca carrinho parado há 45 min e emite `carrinho.abandonado` | `POST /api/admin/carrinhos/verificar` |
 | `estoque.avisos` | Voltou ao estoque | a cada hora | avisa quem esperava produto que voltou | `POST /api/admin/estoque/avisos` |
 | `pedidos.verificar` | Pagamento pendente | a cada hora | confere no gateway os pedidos aguardando pagamento (Pix, boleto) dos últimos 7 dias. Rede de segurança do webhook | `POST /api/admin/pedidos/verificar` |
@@ -85,6 +88,18 @@ Decisões que estão no código e valem a pena conhecer:
   comprador.
 - **Trava vencida volta para a fila.** Container que morreu no meio não deixa a
   rotina presa para sempre (`travaMinutos` por rotina).
+- **A passada tem prazo: 10 minutos.** "Uma por vez" é uma trava dentro do
+  processo, e trava cria a falha que ela mesma não vê — passada que nunca
+  termina não falha, emudece: sem erro, sem `falhasSeguidas`, sem nada no
+  endpoint de saúde, e o relógio inteiro para até alguém reiniciar o container.
+  Não é hipótese: toda chamada de rede daqui tem prazo próprio, mas consulta ao
+  banco não tem, e um lock no Postgres segura o `await` pelo tempo que durar.
+  Vencido o prazo, o trabalho pendurado **não** é cancelado (não há como) — o
+  que acontece é a guarda ser solta, para o próximo tique andar. A rotina que
+  ficou pendurada segue com a linha travada até a `travaMinutos` dela vencer, o
+  que é o tratamento certo: do ponto de vista da tabela, passada pendurada e
+  container morto são a mesma coisa. Sai no log como
+  `[rotina] passada não voltou em 10 min`. Ver `src/lib/passada-unica.ts`.
 
 ## Como saber que ainda está rodando
 
