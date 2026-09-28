@@ -1,4 +1,3 @@
-import Link from "next/link";
 import type { Categoria } from "@prisma/client";
 import type { ChaveDeMedida } from "@/lib/catalogo";
 
@@ -80,7 +79,10 @@ export default function FiltrosProdutos({
 
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
         <p>Medidas em mm: interno × externo × altura. Selecione a categoria para ver os atributos cadastrados.</p>
-        <Link href="/produtos" className="inline-flex min-h-11 items-center underline">Limpar busca e filtros</Link>
+        {/* A navegação completa também limpa campos ainda não enviados. O Link
+            reutilizava selects não controlados e mantinha a seleção anterior. */}
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+        <a href="/produtos" className="inline-flex min-h-11 items-center underline">Limpar busca e filtros</a>
       </div>
       {medidas.length > 0 && (
         // `open` quando já há medida na URL: quem chegou por um link filtrado
