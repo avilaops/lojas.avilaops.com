@@ -3,13 +3,15 @@ import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import CapaCategoria from "@/components/CapaCategoria";
 import { exigirTenant, lojaVende, urlDaLoja, temaDo } from "@/lib/tenant";
-import { listarProdutos, listarCategorias, slugificar } from "@/lib/catalogo";
+import { paginaDeProdutos, listarCategorias, slugificar, medidasDaLoja, facetasTecnicas } from "@/lib/catalogo";
 import CategoriasPremium from "@/components/templates/automotivo-premium/Categorias";
-import PaginacaoLoja, { POR_PAGINA, paginaDaUrl } from "@/components/PaginacaoLoja";
+import PaginacaoLoja, { paginaDaUrl } from "@/components/PaginacaoLoja";
 import ProductCard from "@/components/ProductCard";
 import { minhaMoto } from "@/lib/minha-moto";
 import { nomeDaMoto } from "@/lib/motos";
 import { buscarCategoriaPublica } from "@/lib/categorias";
+import FiltrosProdutos from "@/components/FiltrosProdutos";
+import { filtrosDaUrl, porPaginaDaUrl } from "@/lib/filtros-catalogo";
 import Trilha from "@/components/Trilha";
 import { metadataDeListagem } from "@/lib/seo-listagem";
 
@@ -42,7 +44,7 @@ async function resolverCategoria(t: Awaited<ReturnType<typeof exigirTenant>>, sl
 
 type Props = {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ marca?: string; modelo?: string; ano?: string; moto?: string; pagina?: string }>;
+  searchParams: Promise<Record<string, string | undefined>>;
 };
 
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
@@ -74,14 +76,22 @@ export default async function Categoria({ params, searchParams }: Props) {
   const [{ slug }, sp] = await Promise.all([params, searchParams]);
   const categoria = await resolverCategoria(t, slug);
   if (!categoria) notFound();
-  if (categoria.slug !== slug) permanentRedirect(`/categoria/${categoria.slug}`);
+  if (categoria.slug !== slug) {
+    const query = new URLSearchParams(Object.entries(sp).filter((e): e is [string, string] => !!e[1])).toString();
+    permanentRedirect(`/categoria/${categoria.slug}${query ? `?${query}` : ""}`);
+  }
   const moto = t.segmento === "motopecas" ? await minhaMoto(sp) : null;
-  // Paginado como /produtos: "Retentores" na Vedashow são 2.003 cards, e
-  // mandar todos de uma vez é o que fazia a página demorar segundos.
   const pagina = paginaDaUrl(sp);
-  const lote = await listarProdutos(t.id, { categoriaSlug: slug, moto, limite: POR_PAGINA + 1, pular: (pagina - 1) * POR_PAGINA });
-  const produtos = lote.slice(0, POR_PAGINA);
-  const temProxima = lote.length > POR_PAGINA;
+  const porPagina = porPaginaDaUrl(sp);
+  const tecnico = temaDo(t).layout === "distribuidora";
+  const base = `/categoria/${categoria.slug}`;
+  const [lote, medidas, facetas] = await Promise.all([
+    paginaDeProdutos(t.id, { ...filtrosDaUrl(sp, categoria.slug), moto }, porPagina, (pagina - 1) * porPagina),
+    medidasDaLoja(t.id, categoria.slug),
+    facetasTecnicas(t.id, categoria.slug),
+  ]);
+  const produtos = lote.produtos;
+  const temProxima = lote.total > pagina * porPagina;
   // Página além do fim é 404, não "nada encontrado" com 200: senão qualquer
   // ?pagina=999999 vira uma URL válida a mais para o Google guardar.
   if (produtos.length === 0 && pagina > 1) notFound();
@@ -97,7 +107,9 @@ export default async function Categoria({ params, searchParams }: Props) {
         imagemUrl={categoria.imagemUrl}
         fotoDoPrimeiroProduto={produtos.find((p) => p.imagens[0])?.imagens[0] ?? null}
       />
-      <p className="mb-6 text-sm text-muted-foreground">
+      <p className="mb-4 text-sm text-muted-foreground">
+        {lote.total} {lote.total === 1 ? "produto encontrado" : "produtos encontrados"} · Página {pagina}
+        {moto && " · "}
         {moto ? (
           <>
             Mostrando o que serve na {nomeDaMoto(moto)} ·{" "}
@@ -108,14 +120,14 @@ export default async function Categoria({ params, searchParams }: Props) {
         ) : null}
       </p>
 
-      <Link href={`/produtos?categoria=${encodeURIComponent(categoria.slug)}`} className="btn-secundario mb-6">Buscar e filtrar nesta categoria</Link>
+      <FiltrosProdutos key={`${base}?${new URLSearchParams(Object.entries(sp).filter((e): e is [string, string] => !!e[1]))}`} categorias={[]} base={base} categoriaFixa={categoria.slug} valores={sp} medidas={medidas} fabricantes={facetas.fabricantes} perfis={facetas.perfis} />
       {produtos.length === 0 ? (
         <section className="rounded-xl border border-dashed border-border bg-card p-8 text-center" aria-labelledby="categoria-vazia-titulo">
           <h2 id="categoria-vazia-titulo" className="font-semibold">Nenhum produto encontrado</h2>
           <p className="mx-auto mt-2 max-w-lg text-sm text-muted-foreground">
             {moto
               ? `Não encontramos produtos desta categoria compatíveis com ${nomeDaMoto(moto)}.`
-              : "Ainda não há produtos disponíveis nesta categoria."}
+              : "Nenhum produto corresponde a esses filtros nesta categoria. Tente outras medidas ou limpe os filtros."}
           </p>
           {moto && (
             <Link href={`/produtos?categoria=${categoria.slug}&moto=todas`} className="btn-secundario mt-5">
@@ -124,9 +136,9 @@ export default async function Categoria({ params, searchParams }: Props) {
           )}
         </section>
       ) : (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        <div className={tecnico ? "catalogo-tecnico-lista" : "grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4"}>
           {produtos.map((produto) => (
-            <ProductCard loja={t} key={produto.id} produto={produto} vende={vende} whatsapp={t.whatsapp} moto={moto} />
+            <ProductCard emListagem={tecnico} loja={t} key={produto.id} produto={produto} vende={vende} whatsapp={t.whatsapp} moto={moto} />
           ))}
         </div>
       )}

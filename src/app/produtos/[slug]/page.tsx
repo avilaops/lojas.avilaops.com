@@ -222,7 +222,9 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
                 Este medicamento é dispensado <strong>somente presencialmente</strong>, mediante
                 receita retida. Consulte a disponibilidade com a loja antes de ir.
               </p>
-            ) : p.opcoes.length > 0 ? null : sobConsulta ? (
+            ) : p.opcoes.length > 0 ? null : regras.esgotado(p) ? (
+              <AvisoEstoque produtoId={p.id} />
+            ) : sobConsulta ? (
               t.whatsapp ? (
                 <a className="btn-primario w-full" href={linkWhatsApp(t.whatsapp, mensagemDoProduto(p, urlDaLoja(t), true))} target="_blank" rel="noopener">
                   Consultar preço
@@ -240,7 +242,10 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
           </div>
 
           {p.opcoes.length === 0 && (
-            <div className="mt-4"><EstoqueBaixo estoque={p.estoque} limite={t.estoqueBaixoEm} /></div>
+            <div className="mt-4 space-y-2">
+              <p className="text-sm text-muted-foreground">{regras.rotuloDisponibilidade(p)}</p>
+              {!regras.esgotado(p) && <EstoqueBaixo estoque={p.estoque} limite={t.estoqueBaixoEm} />}
+            </div>
           )}
 
           <Medicamento produto={p} precoCentavos={p.precoCentavos} equivalentes={equivalentes} />

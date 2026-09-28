@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { compravel, disponibilidadeMerchant, elegivelMerchant, esgotado, publicavel, sobConsulta } from "./produto-regras";
+import { compravel, disponibilidadeMerchant, elegivelMerchant, esgotado, publicavel, sobConsulta, estoqueBaixo, rotuloDisponibilidade } from "./produto-regras";
 
 /**
  * As cinco perguntas que a vitrine faz a um produto, com o caso que cada
@@ -41,4 +41,23 @@ test("backorder só quando a loja marcou backorder", () => {
   assert.equal(disponibilidadeMerchant({ disponibilidade: "backorder", estoque: 0 }), "backorder");
   assert.equal(disponibilidadeMerchant({ disponibilidade: "in_stock", estoque: 0 }), "out_of_stock");
   assert.equal(disponibilidadeMerchant({ disponibilidade: "in_stock", estoque: 5 }), "in_stock");
+});
+
+test("casos do catálogo: saldo, selo, disponibilidade e compra concordam", () => {
+  const casos = [
+    {sku: "4919", estoque: 205, disponibilidade: "in_stock", precoCentavos: 20, tem: true},
+    {sku: "1445", estoque: 0, disponibilidade: "out_of_stock", precoCentavos: 25, tem: false},
+    {sku: "2259", estoque: 1, disponibilidade: "in_stock", precoCentavos: 3380, tem: true},
+    {sku: "2254", estoque: 0, disponibilidade: "out_of_stock", precoCentavos: 3380, tem: false},
+    {sku: "bloqueado", estoque: 1, disponibilidade: "out_of_stock", precoCentavos: 100, tem: false},
+    {sku: "negativo", estoque: -1, disponibilidade: "in_stock", precoCentavos: 100, tem: false},
+  ];
+  for (const c of casos) {
+    const p = {...base, ...c};
+    assert.equal(compravel(p), c.tem, c.sku);
+    assert.equal(esgotado(p), !c.tem, c.sku);
+    assert.equal(rotuloDisponibilidade(p), c.tem ? "Em estoque" : "Indisponível no momento", c.sku);
+    assert.equal(disponibilidadeMerchant(p), c.tem ? "in_stock" : "out_of_stock", c.sku);
+    if (!c.tem) assert.equal(estoqueBaixo(p), false, c.sku);
+  }
 });

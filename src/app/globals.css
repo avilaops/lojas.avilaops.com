@@ -1092,3 +1092,34 @@ body:has(.cartao-produto-tecnico a[href^="https://wa.me/"]) .whatsapp-flutuante 
   .cartao-produto-tecnico .cartao-produto-nome { font-size: .875rem; }
   .cartao-produto-tecnico .cartao-produto-disponibilidade > a { min-height: 44px; display: inline-flex; align-items: center; }
 }
+
+/* Catálogo técnico: comparação por medidas, sem reservar uma foto grande ausente. */
+.catalogo-tecnico-lista { display: grid; gap: .75rem; }
+.catalogo-tecnico-lista .cartao-produto-lista { display: grid; grid-template-columns: 100px minmax(0, 1fr); align-items: center; }
+.cartao-produto-lista .cartao-produto-imagem { aspect-ratio: auto; align-self: stretch; display: flex; flex-direction: column; justify-content: center; min-width: 0; padding: .5rem; }
+.cartao-produto-lista .cartao-produto-imagem img { height: 90px; width: 100%; padding: .25rem; }
+.cartao-produto-lista .produto-sem-foto { min-height: 34px; height: auto; background: none; text-align: center; }
+.cartao-produto-lista .cartao-produto-selos { position: static; align-items: center; margin-top: .25rem; }
+.cartao-produto-lista .cartao-produto-selos > span { font-size: .6rem; text-align: center; }
+.cartao-produto-lista .cartao-produto-conteudo { display: grid; grid-template-columns: minmax(0, 1fr) 180px; gap: .35rem 1.25rem; }
+.cartao-produto-lista .cartao-produto-conteudo > * { grid-column: 1; }
+.cartao-produto-lista .cartao-produto-nome { min-height: 0; }
+.cartao-produto-lista .cartao-produto-conteudo > .cartao-produto-preco { grid-column: 2; grid-row: 1 / 3; margin: 0; padding: 0; align-self: end; }
+.cartao-produto-lista .cartao-produto-conteudo > .btn-primario,
+.cartao-produto-lista .cartao-produto-conteudo > .btn-secundario { grid-column: 2; grid-row: 3 / 6; align-self: start; }
+.cartao-produto-lista .cartao-produto-disponibilidade { justify-content: flex-start; gap: 1rem; }
+body[data-layout="distribuidora"] .capa-categoria { margin-bottom: 1rem; grid-template-columns: 160px minmax(0, 1fr); }
+body[data-layout="distribuidora"] .capa-categoria-imagem { min-height: 140px; }
+body[data-layout="distribuidora"] .capa-categoria-imagem img { object-fit: contain; padding: .5rem; }
+body[data-layout="distribuidora"] .capa-categoria-texto { padding: 1rem; }
+@media (max-width: 639px) {
+  .catalogo-tecnico-lista .cartao-produto-lista { grid-template-columns: 68px minmax(0, 1fr); }
+  .cartao-produto-lista .cartao-produto-imagem img { height: 60px; }
+  .cartao-produto-lista .cartao-produto-conteudo { display: flex; padding: .75rem; gap: .4rem; }
+  .cartao-produto-lista .cartao-produto-preco { margin-top: .15rem; }
+  .cartao-produto-lista .cartao-produto-disponibilidade > a { min-height: 28px; }
+  body[data-layout="distribuidora"] .capa-categoria { grid-template-columns: 96px minmax(0, 1fr); }
+  body[data-layout="distribuidora"] .capa-categoria-imagem { min-height: 108px; }
+  body[data-layout="distribuidora"] .capa-categoria-texto h1 { font-size: 1.4rem; }
+  body[data-layout="distribuidora"] .capa-categoria-texto p { font-size: .75rem; line-height: 1.4; }
+}

@@ -17,14 +17,18 @@ const ROTULOS_COMPACTOS: Record<string, string> = {
   espessuraMm: "Esp.", secaoMm: "Seção",
 };
 
-export default function ProductCard({ produto, loja, vende, whatsapp, moto = null, ocultarSeloDestaque = false, compacto = false, alternarImagem = true }: { produto: Produto; loja: Tenant; vende: boolean; whatsapp: string | null; moto?: Moto | null; ocultarSeloDestaque?: boolean; compacto?: boolean; alternarImagem?: boolean }) {
+export default function ProductCard({ produto, loja, vende, whatsapp, moto = null, ocultarSeloDestaque = false, compacto = false, alternarImagem = true, emListagem = false }: { produto: Produto; loja: Tenant; vende: boolean; whatsapp: string | null; moto?: Moto | null; ocultarSeloDestaque?: boolean; compacto?: boolean; alternarImagem?: boolean; emListagem?: boolean }) {
   const tecnico = temaDo(loja).layout === "distribuidora";
   const serve = moto != null && encaixe(produto.compatibilidade, moto) === "serve";
   const modelos = lerCompatibilidade(produto.compatibilidade);
   const imagem = produto.imagens[0];
   const segundaImagem = alternarImagem && !tecnico ? produto.imagens[1] : undefined;
   const ficha = fichaDoProduto(produto.atributos as Record<string, unknown> | null);
-  const tecnicos = ficha.filter(l => l.unidade === "mm" || (tecnico ? ["perfil"] : ["referencia", "perfil"]).includes(l.chave)).slice(0, 5);
+  const temSecao = ficha.some(l => l.chave === "secaoMm");
+  const tecnicos = ficha.filter(l => !(temSecao && l.chave === "alturaMm") &&
+    (l.unidade === "mm" || (tecnico ? ["perfil", "material", ...(emListagem ? ["unidade", "unidadeVenda"] : [])] : ["referencia", "perfil"]).includes(l.chave)))
+    .sort((a, b) => temSecao ? (["diametroInternoMm", "secaoMm", "diametroExternoMm"].indexOf(a.chave) + 1 || 9) - (["diametroInternoMm", "secaoMm", "diametroExternoMm"].indexOf(b.chave) + 1 || 9) : 0)
+    .slice(0, emListagem ? 7 : 5);
   const marca = marcaConfirmada(produto.marca);
   const miniatura = imagem && /\/uploads\//.test(imagem) && !/\.svg$/i.test(imagem) ? `${imagem}?w=480` : imagem;
   const miniatura2 = segundaImagem && /\/uploads\//.test(segundaImagem) && !/\.svg$/i.test(segundaImagem) ? `${segundaImagem}?w=480` : segundaImagem;
@@ -51,8 +55,8 @@ export default function ProductCard({ produto, loja, vende, whatsapp, moto = nul
       : null;
 
   return (
-    <article className={`cartao-produto${tecnico ? " cartao-produto-tecnico" : ""} group flex flex-col overflow-hidden rounded-xl border border-border bg-card`}>
-      <Link href={`/produtos/${produto.slug}`} className="cartao-produto-imagem relative block aspect-square overflow-hidden bg-muted">
+    <article className={`cartao-produto${tecnico ? " cartao-produto-tecnico" : ""}${emListagem ? " cartao-produto-lista" : ""} group flex flex-col overflow-hidden rounded-xl border border-border bg-card`}>
+      <Link href={`/produtos/${produto.slug}`} className={`cartao-produto-imagem relative block aspect-square overflow-hidden bg-muted${!imagem ? " cartao-produto-sem-imagem" : ""}`}>
         {imagem ? (
           <>
             {/* Imagem Principal */}
@@ -77,11 +81,11 @@ export default function ProductCard({ produto, loja, vende, whatsapp, moto = nul
             )}
           </>
         ) : (
-          <div className="produto-sem-foto flex h-full items-center justify-center text-xs text-muted-foreground">Imagem em preparação</div>
+          <div className="produto-sem-foto flex h-full items-center justify-center text-xs text-muted-foreground">{emListagem ? "Sem foto" : "Imagem em preparação"}</div>
         )}
 
         {/* Badges Flutuantes */}
-        <div className="absolute left-2.5 top-2.5 flex flex-col gap-1 z-10">
+        <div className="cartao-produto-selos absolute left-2.5 top-2.5 flex flex-col gap-1 z-10">
           {produto.imagemOrigem === "representativa" && (
             <span className="rounded-md bg-zinc-900/90 px-2 py-1 text-[10px] font-semibold text-white shadow-sm backdrop-blur-sm">
               Imagem representativa
@@ -139,7 +143,7 @@ export default function ProductCard({ produto, loja, vende, whatsapp, moto = nul
         {tecnicos.length > 0 && <dl className="cartao-produto-tecnica">{tecnicos.map(l => <div key={l.chave}><dt>{tecnico && ROTULOS_COMPACTOS[l.chave] ? <abbr title={l.rotulo}>{ROTULOS_COMPACTOS[l.chave]}</abbr> : l.rotulo}</dt><dd>{l.valor}</dd></div>)}</dl>}
         {tecnico && <p className="cartao-produto-identificacao">{marca && <span>{marca}</span>}{produto.sku && <span>Código: {produto.sku}</span>}</p>}
         <div className={tecnico ? "cartao-produto-disponibilidade" : "contents"}>
-          <p className="text-xs text-muted-foreground">{esgotado ? "Indisponível no momento" : produto.disponibilidade === "backorder" ? "Sob encomenda" : "Em estoque"}</p>
+          <p className="text-xs text-muted-foreground">{regras.rotuloDisponibilidade(produto)}</p>
           <Link href={`/produtos/${produto.slug}`} className="text-xs underline underline-offset-4">Ver detalhes</Link>
         </div>
         <div className="cartao-produto-preco mt-auto pt-1">
@@ -159,6 +163,8 @@ export default function ProductCard({ produto, loja, vende, whatsapp, moto = nul
           <Link href={`/produtos/${produto.slug}`} className="btn-secundario w-full text-xs">
             Ver informações
           </Link>
+        ) : esgotado ? (
+          <Link href={`/produtos/${produto.slug}`} className="btn-secundario w-full text-xs">Ver disponibilidade</Link>
         ) : sobConsulta ? (
           // Sem preço não há carrinho: o caminho é falar com a loja. É assim
           // que peça de catálogo técnico é comprada mesmo quando tem preço.
@@ -171,8 +177,6 @@ export default function ProductCard({ produto, loja, vende, whatsapp, moto = nul
               Ver detalhes
             </Link>
           )
-        ) : esgotado ? (
-          <Link href={`/produtos/${produto.slug}`} className="btn-secundario w-full text-xs">Ver disponibilidade</Link>
         ) : vende && produto.opcoes.length > 0 ? (
           <Link href={`/produtos/${produto.slug}`} className="btn-secundario w-full text-xs">
             Ver opções

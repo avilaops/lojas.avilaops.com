@@ -48,12 +48,17 @@ export function emEstoque(p: Pick<ProdutoRegras, "disponibilidade" | "estoque">)
 
 /** Marcado como esgotado, ou com contagem zerada. É o selo do card. */
 export function esgotado(p: Pick<ProdutoRegras, "disponibilidade" | "estoque">): boolean {
-  return p.disponibilidade === "out_of_stock" || p.estoque === 0;
+  return p.disponibilidade === "out_of_stock" || (p.estoque != null && p.estoque <= 0);
+}
+
+/** Mesmo texto no card e no detalhe, derivado do saldo e da disponibilidade. */
+export function rotuloDisponibilidade(p: Pick<ProdutoRegras, "disponibilidade" | "estoque">): string {
+  return esgotado(p) ? "Indisponível no momento" : p.disponibilidade === "backorder" ? "Sob encomenda" : "Em estoque";
 }
 
 /** Vai acabar: o aviso "últimas unidades" do card. */
-export function estoqueBaixo(p: Pick<ProdutoRegras, "estoque">, limite = 3): boolean {
-  return p.estoque != null && p.estoque > 0 && p.estoque <= limite;
+export function estoqueBaixo(p: Pick<ProdutoRegras, "estoque"> & Partial<Pick<ProdutoRegras, "disponibilidade">>, limite = 3): boolean {
+  return p.disponibilidade !== "out_of_stock" && p.estoque != null && p.estoque > 0 && p.estoque <= limite;
 }
 
 /** Entra no carrinho. O checkout confere de novo, com a quantidade. */
