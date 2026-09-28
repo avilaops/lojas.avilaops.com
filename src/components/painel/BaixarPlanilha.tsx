@@ -1,4 +1,5 @@
 import { Download } from "lucide-react";
+import { TETO_EXPORTACAO } from "@/lib/planilha-produtos";
 
 /**
  * Baixar o que está na tela, em planilha.
@@ -17,12 +18,20 @@ export default function BaixarPlanilha({
   filtros = {},
   rotulo,
   ajuda,
+  total,
 }: {
   tipo: "produtos" | "pedidos" | "clientes";
   filtros?: Record<string, string | undefined>;
   rotulo: string;
   ajuda?: string;
+  /** Quantos registros a tela está contando, para avisar se o arquivo cortar. */
+  total?: number;
 }) {
+  // Arquivo cortado é pior que arquivo que não existe: quem corrige o que
+  // baixou e reenvia conclui que o resto do catálogo sumiu.
+  const teto = tipo === "clientes" ? undefined : TETO_EXPORTACAO[tipo];
+  const cortado = teto !== undefined && total !== undefined && total > teto;
+
   const endereco = (formato: "csv" | "xlsx") => {
     const p = new URLSearchParams({ tipo, formato });
     for (const [chave, valor] of Object.entries(filtros)) if (valor) p.set(chave, valor);
@@ -43,6 +52,12 @@ export default function BaixarPlanilha({
           <Download size={16} aria-hidden="true" /> CSV
         </a>
       </div>
+      {cortado && (
+        <p className="text-xs text-amber-800">
+          O arquivo traz os primeiros {teto!.toLocaleString("pt-BR")} de {total!.toLocaleString("pt-BR")}. Use os filtros
+          acima para baixar o resto em partes.
+        </p>
+      )}
       {ajuda && <p className="text-xs text-muted-foreground">{ajuda}</p>}
     </div>
   );

@@ -253,13 +253,14 @@ export default function CatalogoLista({
           {dados.total > 0 && (
             <BaixarPlanilha
               tipo="produtos"
+              total={dados.total}
               filtros={{ q: aplicada, categoria, situacao }}
               rotulo={
                 filtrando
                   ? `Baixar estes ${dados.total.toLocaleString("pt-BR")} produtos:`
                   : "Baixar o catálogo:"
               }
-              ajuda="O CSV volta pela importação, com as mesmas colunas. O Excel preserva código e código de barras como texto."
+              ajuda="Os dois voltam pela importação, com as mesmas colunas. O Excel guarda código e código de barras como texto; o CSV abre em qualquer lugar."
             />
           )}
         </>
