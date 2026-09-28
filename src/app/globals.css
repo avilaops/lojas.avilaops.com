@@ -93,10 +93,28 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
 .filtros-gaveta { display: none; }
 .filtros-abrir { display: none; }
 @media (max-width: 639px) {
+  /* A caixa fica invisível, mas não `display: none`: sumida de vez, ela saía
+     da ordem do Tab e quem navega pelo teclado não abria a gaveta. */
+  .filtros-gaveta { display: block; position: absolute; width: 1px; height: 1px; opacity: 0; }
+  .filtros-gaveta:focus-visible + .filtros-abrir { outline: 2px solid var(--ring); outline-offset: 3px; }
   .filtros-abrir { display: block; cursor: pointer; border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); border-radius: var(--radius); padding: .5rem .75rem; font-size: .875rem; font-weight: 500; }
   .filtros-gaveta:not(:checked) ~ .filtros-campos { display: none; }
   .filtros-campos { display: grid; gap: .5rem; margin-top: .5rem; }
 }
+
+/* Ampliação da foto na ficha (GaleriaProduto). O zoom de mouse continua; o
+   diálogo é o caminho de quem está no celular ou no teclado. */
+.galeria-produto-principal { cursor: zoom-in; }
+.galeria-produto-principal:disabled { cursor: default; }
+.galeria-ampliar { position: absolute; right: .75rem; bottom: .75rem; display: inline-flex; align-items: center; gap: .4rem; padding: .5rem .75rem; border-radius: 99px; background: #fff; color: #27272a; border: 1px solid #e4e4e7; font-size: .75rem; pointer-events: none; }
+.galeria-dialog { margin: auto; width: min(94vw, 960px); max-height: 92dvh; padding: 1rem; border: 1px solid var(--border); border-radius: 1rem; background: var(--card); color: var(--foreground); }
+.galeria-dialog::backdrop { background: rgb(0 0 0 / .75); }
+.galeria-dialog-topo, .galeria-dialog-nav { display: flex; align-items: center; gap: 1rem; justify-content: space-between; }
+.galeria-dialog-topo p { font-size: .875rem; font-weight: 600; }
+.galeria-dialog button { display: grid; place-items: center; flex-shrink: 0; width: 44px; height: 44px; border-radius: .5rem; border: 1px solid var(--border); }
+.galeria-dialog-foto { display: block; width: 100%; height: min(65dvh, 700px); object-fit: contain; background: #fff; margin-block: .75rem; }
+.galeria-dialog-nav { justify-content: center; }
+.galeria-produto button:focus-visible, .galeria-dialog button:focus-visible, .cartao-produto a:focus-visible, .cartao-produto button:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
 
 .home-selo { font-size: .66rem; line-height: 1; font-weight: 750; letter-spacing: .18em; text-transform: uppercase; }
 .hero-loja::after { content: ""; position: absolute; width: 450px; height: 450px; right: -150px; top: -210px; border: 1px solid color-mix(in srgb, var(--primary-foreground) 22%, transparent); border-radius: 50%; box-shadow: 0 0 0 70px color-mix(in srgb, var(--primary-foreground) 4%, transparent), 0 0 0 140px color-mix(in srgb, var(--primary-foreground) 3%, transparent); pointer-events: none; }
