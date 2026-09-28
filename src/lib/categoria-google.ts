@@ -302,6 +302,9 @@ function itemDeLimpezaDeVeiculo(nome: string): number | undefined {
   // veículos" é o mais específico que não afirma coisa errada.
   if (/\b(?:boinas?|pads?)\b/.test(nome)) return 2895;
   if (/\b(?:escovas?|pinceis|pincel|aplicador(?:es)?|luvas?)\b/.test(nome)) return 2894;
+  // 2643 em inglês é "Vehicle Waxes, Polishes & Protectants": o pt-BR
+  // ("Ceras, graxas e protetores") perdeu o "polidores" na tradução.
+  if (/\b(?:massa de polir|polidor|composto polidor|maquiador)\b/.test(nome)) return 2643;
   if (/\bsanitizante\b/.test(nome)) return 2590;
   if (/\b(?:aromatizantes?|arominha|odorizador(?:es)?)\b/.test(nome)) return 2789;
   if (/\b(?:estofados?|carpetes?)\b/.test(nome)) return 2704;

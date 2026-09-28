@@ -153,7 +153,10 @@ test("estética automotiva: o nome do item refina a etapa do serviço", () => {
   const brilhax = prateleirasDaLoja(["Lavagem", "Polimento", "Proteção", "Acessórios", "Aromatizantes", "Kits Completos", "Produtos para Moto", "Vitrificação"]);
   // Boina não é "solução de limpeza": fica no pai, que não afirma nada errado.
   assert.equal(categoriaGoogleProduto("Boina Arctic Wool Wolf Pads 133 mm Ventilada", "Polimento", brilhax), 2895);
-  assert.equal(categoriaGoogleProduto("Massa de Polir Vintex 1,8 kg", "Polimento", brilhax), 2590);
+  assert.equal(categoriaGoogleProduto("Massa de Polir Vintex 1,8 kg", "Polimento", brilhax), 2643);
+  assert.equal(categoriaGoogleProduto("V40 Vonixx Polidor 4 em 1 500 ml", "Polimento", brilhax), 2643);
+  assert.equal(categoriaGoogleProduto("Makker 2.0 Vonixx Maquiador Automotivo 500 ml", "Polimento", brilhax), 2643);
+  assert.equal(categoriaGoogleProduto("Revelax Vonixx Revelador de Hologramas 500 ml", "Polimento", brilhax), 2590);
   assert.equal(categoriaGoogleProduto("Aromatizante Carro Novo Vintex Spray 60 ml", "Aromatizantes", brilhax), 2789);
   assert.equal(categoriaGoogleProduto("AROMINHA CARRO NOVO SCENT", "Aromatizantes", brilhax), 2789);
   assert.equal(categoriaGoogleProduto("Sanitizante Carro Novo Vintex 1,5 L", "Aromatizantes", brilhax), 2590);
