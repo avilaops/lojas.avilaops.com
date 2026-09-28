@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { codigoPublico } from "@/lib/codigo-publico";
-import { notFound } from "next/navigation";
+import { codigoPublico, rotuloDoCodigo } from "@/lib/codigo-publico";
+import { notFound, permanentRedirect } from "next/navigation";
 import FichaTecnica from "@/components/FichaTecnica";
 import { lerDefinicoes, lerValores } from "@/lib/campos-personalizados";
 import { exigirTenant, lojaVende, urlDaLoja, temaDo, retiradaPublicaDisponivel } from "@/lib/tenant";
 import GaleriaPremium from "@/components/templates/automotivo-premium/Galeria";
-import { buscarProduto, equivalentesDoProduto, formatarBRL, listarProdutos, mesmaSerie, resumoAvaliacoes } from "@/lib/catalogo";
+import { buscarProduto, equivalentesDoProduto, formatarBRL, listarProdutos, mesmaSerie, resumoAvaliacoes, slugDoEquivalente } from "@/lib/catalogo";
 import * as regras from "@/lib/produto-regras";
 import { fichaDoProduto } from "@/lib/ficha";
 import AvisoEstoque from "@/components/AvisoEstoque";
@@ -54,7 +54,12 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
   const t = await exigirTenant();
   const { slug } = await params;
   const p = await buscarProduto(t.id, slug);
-  if (!p) notFound();
+  if (!p) {
+    // Cadastro repetido fora da vitrine: o link antigo leva ao que ficou.
+    const destino = await slugDoEquivalente(t.id, slug);
+    if (destino) permanentRedirect(`/produtos/${destino}`);
+    notFound();
+  }
   const {variante:varianteId}=await searchParams;
   const ofertas=p.variantes.filter(v=>v.ativo).map(ofertaDaVariante);
   const escolhida=ofertas.find(v=>v.id===varianteId)??ofertas.find(v=>v.padrao);
@@ -67,7 +72,8 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
   // Mesma régua do card: antes a página ignorava `estoque` e oferecia
   // "Comprar" para peça zerada, que o checkout recusava em seguida.
   const sobConsulta = regras.sobConsulta(p);
-  const disponivel = regras.compravel(p);
+  // A mesma resposta do card e da busca: selo, linha de estoque e botão.
+  const estado = regras.estadoDeVenda(p, { vende });
   const moto = t.segmento === "motopecas" ? await minhaMoto() : null;
   // Farmácia: a tarja é o que decide se este item pode ser dispensado pela
   // internet. Tarja preta e tarja vermelha com retenção são de controle
@@ -123,6 +129,8 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
       url: `${urlDaLoja(t)}/produtos/${p.slug}${escolhida&&!escolhida.padrao?`?variante=${encodeURIComponent(escolhida.id)}`:""}`,
       priceCurrency: "BRL",
       price: (p.precoCentavos / 100).toFixed(2),
+      // O feed diz `condition=new` para todo item; a marcação acompanha.
+      itemCondition: "https://schema.org/NewCondition",
       availability: somenteNaLoja ? "https://schema.org/InStoreOnly" : `https://schema.org/${regras.disponibilidadeSchema(p)}`,
       seller: { "@id": `${urlDaLoja(t)}/#organization` },
     } : ofertas.some(v=>v.precoCentavos>0) ? {
@@ -134,7 +142,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
       offers: ofertas.filter(v=>v.precoCentavos>0).map(v=>({
         "@type":"Offer",sku:v.sku??undefined,
         url:`${urlDaLoja(t)}/produtos/${p.slug}?variante=${encodeURIComponent(v.id)}`,
-        priceCurrency:"BRL",price:(v.precoCentavos/100).toFixed(2),
+        priceCurrency:"BRL",price:(v.precoCentavos/100).toFixed(2),itemCondition:"https://schema.org/NewCondition",
         availability:`https://schema.org/${regras.disponibilidadeSchema({...p,...v})}`,
       })),
     } : undefined,
@@ -206,7 +214,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
             {sobConsulta ? (
               <>
                 <p className="text-2xl font-bold text-muted-foreground">Preço sob consulta</p>
-                <p className="text-xs text-muted-foreground">Fale com a loja para receber o preço e o prazo deste item.</p>
+                {!estado.esgotado && <p className="text-xs text-muted-foreground">Fale com a loja para receber o preço e o prazo deste item.</p>}
               </>
             ) : (
               <>
@@ -214,6 +222,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
                 {vende && t.meiosPagamento.includes("pix") && <p className="text-xs text-muted-foreground">no PIX, cartão ou boleto</p>}
               </>
             )}
+            <p className={`produto-estoque mt-2 text-sm font-medium${estado.esgotado ? " text-muted-foreground" : " esta-disponivel"}`}>{estado.disponibilidade}</p>
           </div>
           )}
 
@@ -226,24 +235,24 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
                 Este medicamento é dispensado <strong>somente presencialmente</strong>, mediante
                 receita retida. Consulte a disponibilidade com a loja antes de ir.
               </p>
-            ) : p.opcoes.length > 0 ? null : sobConsulta ? (
+            ) : p.opcoes.length > 0 ? null : estado.acao === "aviso-reposicao" ? (
+              <AvisoEstoque produtoId={p.id} />
+            ) : estado.acao === "consulta-preco" ? (
               t.whatsapp ? (
-                <a className="btn-primario w-full" href={linkWhatsApp(t.whatsapp, mensagemDoProduto(p, urlDaLoja(t), true))} target="_blank" rel="noopener">
+                <a className="btn-primario acao-whatsapp w-full" href={linkWhatsApp(t.whatsapp, mensagemDoProduto(p, urlDaLoja(t), true))} target="_blank" rel="noopener">
                   Consultar preço
                 </a>
               ) : null
-            ) : !disponivel || (p.estoque != null && p.estoque <= 0) ? (
-              <AvisoEstoque produtoId={p.id} />
-            ) : vende ? (
+            ) : estado.acao === "carrinho" ? (
               <AddToCartButton item={{ id: escolhida?`${p.id}:${escolhida.id}`:p.id, slug: p.slug, nome: p.nome, precoCentavos: p.precoCentavos, imagem: p.imagens[0] }} disponivel irParaCarrinho />
             ) : t.whatsapp ? (
-              <a className="btn-primario w-full" href={linkWhatsApp(t.whatsapp, mensagemDoProduto(p, urlDaLoja(t)))} target="_blank" rel="noopener">
+              <a className="btn-primario acao-whatsapp w-full" href={linkWhatsApp(t.whatsapp, mensagemDoProduto(p, urlDaLoja(t)))} target="_blank" rel="noopener">
                 Pedir pelo WhatsApp
               </a>
             ) : null}
           </div>
 
-          {p.opcoes.length === 0 && (
+          {p.opcoes.length === 0 && !estado.esgotado && (
             <div className="mt-4"><EstoqueBaixo estoque={p.estoque} limite={t.estoqueBaixoEm} /></div>
           )}
 
@@ -257,7 +266,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
               ? "Despacho no mesmo dia útil para pagamentos confirmados durante o expediente"
               : `Envio em até ${t.despachoDiasUteis} ${t.despachoDiasUteis === 1 ? "dia útil" : "dias úteis"} após o pagamento`}</li>
             {t.freteGratisAcima != null && <li>✔ Frete grátis acima de {formatarBRL(t.freteGratisAcima)}</li>}
-            {codigoPublico(p.sku) && <li className="text-xs">Código {codigoPublico(p.sku)}</li>}
+            {codigoPublico(p.sku) && <li className="text-xs">{rotuloDoCodigo(p.sku, p.gtin)} {codigoPublico(p.sku)}</li>}
           </ul>
           <nav className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm" aria-label="Informações de entrega e troca">
             <Link className="underline underline-offset-4" href="/politicas/envio">Entrega e frete</Link>

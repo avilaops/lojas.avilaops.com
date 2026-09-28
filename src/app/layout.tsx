@@ -23,6 +23,7 @@ import LojaNaoEncontrada from "@/components/LojaNaoEncontrada";
 import AvisoSuspensa from "@/components/AvisoSuspensa";
 import BarraGaragem from "@/components/BarraGaragem";
 import { prisma } from "@/lib/db";
+import { lerRegrasDevolucao, politicaDevolucaoSchema } from "@/lib/politicas";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -168,6 +169,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     ...(t.enderecoPublico && endereco.cidade
       ? { address: { "@type": "PostalAddress", streetAddress: [endereco.logradouro, endereco.numero].filter(Boolean).join(", "), addressLocality: endereco.cidade, addressRegion: endereco.uf, postalCode: formatarCep(endereco.cep), addressCountry: "BR" } }
       : {}),
+    hasMerchantReturnPolicy: politicaDevolucaoSchema(lerRegrasDevolucao(t.regrasDevolucao), `${urlDaLoja(t)}/politicas/devolucao`),
   };
 
   // WebSite com SearchAction: é o que diz ao Google que /produtos?q= é a busca

@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { metadataDeListagem } from "@/lib/seo-listagem";
-import PaginacaoLoja, { POR_PAGINA, paginaDaUrl } from "@/components/PaginacaoLoja";
+import PaginacaoLoja, { paginaDaUrl, porPaginaDaUrl } from "@/components/PaginacaoLoja";
 import { exigirTenant, lojaVende, temaDo } from "@/lib/tenant";
 import CategoriasPremium from "@/components/templates/automotivo-premium/Categorias";
-import { listarCategorias, paginaDeProdutos, facetasTecnicas, medidasDaLoja, dicaDeMedidas } from "@/lib/catalogo";
+import { listarCategorias, paginaDeProdutos, facetasTecnicas, grafiasDaMarca, medidasDaLoja } from "@/lib/catalogo";
 import { filtroDaUrl } from "@/lib/filtros-url";
 import ProductCard from "@/components/ProductCard";
 import FiltrosProdutos from "@/components/FiltrosProdutos";
@@ -30,25 +30,27 @@ export default async function Produtos({ searchParams }: { searchParams: Promise
   const sp = await searchParams;
   const moto = t.segmento === "motopecas" ? await minhaMoto(sp) : null;
   const filtro = filtroDaUrl(sp);
-  // Conta e pagina o mesmo conjunto já filtrado, inclusive medidas e
-  // relevância. Antes esta página mandava os 5.591 cards da Vedashow de uma
-  // vez: 5 s até o primeiro byte e um HTML que o celular não segurava.
+  // Conta e pagina o mesmo conjunto já filtrado, inclusive medidas e relevância.
   const pagina = paginaDaUrl(sp);
-  const [categorias, lote, temMedida, facetas] = await Promise.all([
+  const porPagina = porPaginaDaUrl(sp);
+  const facetasP = facetasTecnicas(t.id, sp.categoria || undefined);
+  const [categorias, temMedida, facetas, lote] = await Promise.all([
     listarCategorias(t.id),
-    paginaDeProdutos(t.id, { ...filtro, categoriaSlug: sp.categoria || undefined, moto }, POR_PAGINA, (pagina - 1) * POR_PAGINA),
     // O filtro de medida só aparece onde faz sentido: loja de roupa não tem
     // diâmetro interno, e campo que nunca filtra nada é ruído no formulário.
     medidasDaLoja(t.id, sp.categoria || undefined),
-    facetasTecnicas(t.id, sp.categoria || undefined),
+    facetasP,
+    // A marca escolhida vale para todas as grafias dela no cadastro; sem marca
+    // escolhida a consulta não espera pelas facetas.
+    (filtro.fabricante ? facetasP.then((f) => grafiasDaMarca(f.fabricantes, filtro.fabricante)) : Promise.resolve(undefined))
+      .then((fabricante) => paginaDeProdutos(t.id, { ...filtro, fabricante, moto }, porPagina, (pagina - 1) * porPagina)),
   ]);
   const produtos = lote.produtos;
-  const temProxima = lote.total > pagina * POR_PAGINA;
+  const temProxima = lote.total > pagina * porPagina;
   // Página além do fim é 404, não "nada encontrado" com 200: senão qualquer
   // ?pagina=999999 vira uma URL válida a mais para o Google guardar.
   if (produtos.length === 0 && pagina > 1) notFound();
   const vende = lojaVende(t);
-  const dica = dicaDeMedidas(temMedida);
   const categoriaAtual = categorias.find((c) => c.slug === sp.categoria);
   const titulo = sp.q ? `Resultados para “${sp.q}”` : categoriaAtual ? categoriaAtual.nome : moto ? `Peças para ${nomeDaMoto(moto)}` : "Todos os produtos";
 
@@ -65,7 +67,7 @@ export default async function Produtos({ searchParams }: { searchParams: Promise
       {produtos.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
           Nada encontrado com esses filtros. Confira o nome, o código ou a referência do produto, ou reduza os filtros.
-          {dica && <> {dica}</>}{" "}
+          {temMedida.length > 0 && <> Medidas: interno × externo × altura, em mm.</>}{" "}
           {/* A navegação completa restaura também os campos não controlados do formulário. */}
           {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
           <a href="/produtos" className="underline">Limpar filtros</a>
@@ -77,7 +79,7 @@ export default async function Produtos({ searchParams }: { searchParams: Promise
           ))}
         </div>
       )}
-      <PaginacaoLoja base="/produtos" sp={sp} pagina={pagina} temProxima={temProxima} />
+      <PaginacaoLoja base="/produtos" sp={sp} pagina={pagina} temProxima={temProxima} total={lote.total} porPagina={porPagina} />
     </div>
   );
 }

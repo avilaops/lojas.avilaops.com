@@ -4,14 +4,16 @@ import Link from "next/link";
  * Anterior / Próxima da vitrine pública.
  *
  * Links de verdade, não botões: o Google segue, o "voltar" do navegador
- * funciona e a página 3 tem endereço para mandar no WhatsApp. Sem "de N":
- * quantas páginas existem é o tamanho do estoque, e o comprador decide pelo
- * produto que está vendo, não pela quantidade que não viu.
+ * funciona e a página 3 tem endereço para mandar no WhatsApp. Quando a
+ * listagem já contou o conjunto filtrado (`total`), a página diz "de N": quem
+ * filtra o-ring por medida quer saber se sobraram duas páginas ou quarenta.
  *
  * Quem chama pede um item a mais do que mostra e passa `temProxima`: é o que
  * evita contar o catálogo inteiro só para saber se há mais uma página.
  */
 export const POR_PAGINA = 48;
+
+export { TAMANHOS_PAGINA, porPaginaDaUrl } from "@/lib/filtros-url";
 
 export function paginaDaUrl(sp: Record<string, string | undefined>): number {
   return Math.max(1, Math.floor(Number(sp.pagina)) || 1);
@@ -30,12 +32,18 @@ export default function PaginacaoLoja({
   sp,
   pagina,
   temProxima,
+  total,
+  porPagina = POR_PAGINA,
 }: {
   base: string;
   sp: Record<string, string | undefined>;
   pagina: number;
   temProxima: boolean;
+  /** Produtos no conjunto filtrado, quando a página já contou. */
+  total?: number;
+  porPagina?: number;
 }) {
+  const paginas = total != null ? Math.max(1, Math.ceil(total / porPagina)) : null;
   if (pagina <= 1 && !temProxima) return null;
   const apagado = "inline-flex h-11 items-center px-4 text-muted-foreground/50";
   return (
@@ -47,7 +55,7 @@ export default function PaginacaoLoja({
       ) : (
         <span className={apagado}>Anterior</span>
       )}
-      <span className="min-w-[6rem] text-center tabular-nums text-muted-foreground">Página {pagina}</span>
+      <span className="min-w-[6rem] text-center tabular-nums text-muted-foreground">Página {pagina}{paginas ? ` de ${paginas}` : ""}</span>
       {temProxima ? (
         <Link href={linkDaPagina(base, sp, pagina + 1)} rel="next" className="btn-secundario inline-flex h-11 items-center px-4">
           Próxima

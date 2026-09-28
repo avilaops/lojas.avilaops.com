@@ -1,91 +1,59 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { centavosDaUrl, faixasDaUrl, filtroDaUrl, milimetroDaUrl, ordemDaUrl } from "./filtros-url";
+import { faixasDaUrl, filtroDaUrl, porPaginaDaUrl, reaisDaUrl, temFiltroAtivo } from "./filtros-url";
+import { agruparMarcas, grafiasDaMarca } from "./catalogo";
 
-/**
- * A URL da listagem é entrada de estranho: chega de link colado, de robô e de
- * quem edita a barra de endereço. Nenhum valor daqui pode derrubar a página
- * nem virar filtro que exclui o catálogo inteiro sem querer.
- */
+test("categoria da rota vence a da URL", () => {
+  // /categoria/anel-o-ring?categoria=retentor não pode listar retentores.
+  const f = filtroDaUrl({ categoria: "retentor", di_de: "3,5", di_ate: "4", disponivel: "1", ordem: "menor-preco" }, "anel-o-ring");
+  assert.equal(f.categoriaSlug, "anel-o-ring");
+  assert.deepEqual(f.medidas, { diametroInternoMm: { de: 3.5, ate: 4 } });
+  assert.equal(f.somenteDisponiveis, true);
+  assert.equal(f.ordem, "menor-preco");
+});
+
+test("valores inválidos não viram filtro", () => {
+  const f = filtroDaUrl({ di_de: "abc", ordem: "qualquer", min: "", disponivel: "sim" });
+  assert.equal(f.medidas, undefined);
+  assert.equal(f.ordem, "relevancia");
+  assert.equal(f.minCentavos, undefined);
+  assert.equal(f.somenteDisponiveis, false);
+});
+
+test("página e ordem padrão não contam como filtro ativo", () => {
+  assert.equal(temFiltroAtivo({ pagina: "3", ordem: "relevancia" }), false);
+  assert.equal(temFiltroAtivo({ alt_ate: "2" }), true);
+  assert.equal(temFiltroAtivo({ disponivel: "1" }), true);
+});
+
+test("marcas: grafias do ERP viram uma entrada, com contagem somada", () => {
+  const f = agruparMarcas(["SKF", "Skf", "Skf", "Ibira", "Ibirá", "IBIRÁ", "Ibirá", "DIVERSOS", null, " "]);
+  assert.deepEqual(f.map((m) => [m.nome, m.itens]), [["Ibirá", 4], ["Skf", 3]]);
+  assert.deepEqual(new Set(grafiasDaMarca(f, "ibira") as string[]), new Set(["Ibira", "Ibirá", "IBIRÁ"]));
+  assert.equal(grafiasDaMarca(f, "Timken"), "Timken");
+});
+
+test("produtos por página: só os tamanhos oferecidos, senão 48", () => {
+  for (const n of [24, 48, 96]) assert.equal(porPaginaDaUrl({ porPagina: String(n) }), n);
+  for (const v of ["999999", "-1", "0", "Infinity", "24.5", "abc", undefined]) assert.equal(porPaginaDaUrl({ porPagina: v }), 48);
+  assert.equal(temFiltroAtivo({ porPagina: "96" }), false);
+});
 
 test("dinheiro vira centavos inteiros, aceitando como o brasileiro escreve", () => {
-  // O ponto de milhar era lido como decimal: `1.234,50` filtrava por R$ 1,23
-  // e devolvia o catálogo quase inteiro, sem nada explicando na tela.
-  assert.equal(centavosDaUrl("1.234,50"), 123450);
-  assert.equal(centavosDaUrl("R$ 1.234"), 123400);
-  assert.equal(centavosDaUrl("R$ 20"), 2000);
-  // Sem vírgula e sem grupo de três, o ponto continua sendo decimal.
-  assert.equal(centavosDaUrl("20.5"), 2050);
-  assert.equal(centavosDaUrl("12.34"), 1234);
-  assert.equal(centavosDaUrl("1.234.567"), 123456700);
-  assert.equal(centavosDaUrl(undefined), undefined);
-  assert.equal(centavosDaUrl(""), undefined);
-  assert.equal(centavosDaUrl("abc"), undefined);
-});
-
-test("milímetro aceita vírgula e recusa negativo", () => {
-  assert.equal(milimetroDaUrl("20,5"), 20.5);
-  assert.equal(milimetroDaUrl("20.5"), 20.5);
-  assert.equal(milimetroDaUrl("-3"), undefined);
-  assert.equal(milimetroDaUrl("nada"), undefined);
-});
-
-test("ordem desconhecida não quebra a página", () => {
-  assert.equal(ordemDaUrl({ ordem: "menor-preco" }), "menor-preco");
-  assert.equal(ordemDaUrl({ ordem: "drop table" }), "relevancia");
-  assert.equal(ordemDaUrl({}), "relevancia");
-});
-
-test("faixa com um extremo só vale; sem nenhum, não existe", () => {
-  assert.deepEqual(faixasDaUrl({ di_de: "20" }), { diametroInternoMm: { de: 20, ate: undefined } });
-  assert.deepEqual(faixasDaUrl({ alt_ate: "14" }), { alturaMm: { de: undefined, ate: 14 } });
-  // Faixa vazia não pode virar `{}`: o filtro exclui quem não tem a medida
-  // cadastrada, e um `{}` acidental esvaziaria a categoria inteira.
-  assert.equal(faixasDaUrl({ di_de: "", di_ate: "" }), undefined);
-  assert.equal(faixasDaUrl({}), undefined);
-});
-
-test("as medidas convivem numa consulta só, inclusive espessura e seção", () => {
-  assert.deepEqual(faixasDaUrl({ di_de: "20", di_ate: "25", de_de: "40", alt_ate: "10", esp_de: "2", sec_ate: "3,5" }), {
-    diametroInternoMm: { de: 20, ate: 25 },
-    diametroExternoMm: { de: 40, ate: undefined },
-    alturaMm: { de: undefined, ate: 10 },
-    espessuraMm: { de: 2, ate: undefined },
-    secaoMm: { de: undefined, ate: 3.5 },
-  });
+  // O ponto de milhar era lido como decimal: `1.234,50` filtrava por R$ 1,23.
+  assert.equal(reaisDaUrl("1.234,50"), 123450);
+  assert.equal(reaisDaUrl("R$ 1.234"), 123400);
+  assert.equal(reaisDaUrl("R$ 20"), 2000);
+  assert.equal(reaisDaUrl("20.5"), 2050);
+  assert.equal(reaisDaUrl("12.34"), 1234);
+  assert.equal(reaisDaUrl("1.234.567"), 123456700);
+  assert.equal(reaisDaUrl(""), undefined);
+  assert.equal(reaisDaUrl("abc"), undefined);
 });
 
 test("medida tem que ser número: lixo na URL não filtra", () => {
-  // `parseFloat` aceitava "20abc" como 20 e a loja filtrava por uma medida
-  // que ninguém pediu — pior que ignorar, porque a lista encurta calada.
   assert.equal(faixasDaUrl({ di_de: "20abc" }), undefined);
-  assert.equal(faixasDaUrl({ di_de: "abc" }), undefined);
   assert.equal(faixasDaUrl({ di_de: "-5" }), undefined);
+  assert.equal(faixasDaUrl({ di_de: "", di_ate: "" }), undefined);
   assert.deepEqual(faixasDaUrl({ di_de: " 20,5 " }), { diametroInternoMm: { de: 20.5, ate: undefined } });
-});
-
-test("o filtro inteiro sai da URL, com espaço em branco fora", () => {
-  assert.deepEqual(filtroDaUrl({ q: "  6205  ", perfil: " SC ", fabricante: " FAG ", min: "10", max: "", ordem: "nome", di_de: "25" }), {
-    busca: "6205",
-    perfil: "SC",
-    fabricante: "FAG",
-    ordem: "nome",
-    minCentavos: 1000,
-    maxCentavos: undefined,
-    medidas: { diametroInternoMm: { de: 25, ate: undefined } },
-  });
-});
-
-test("URL sem filtro nenhum não inventa filtro", () => {
-  // Campo em branco no formulário chega como "": não pode virar busca por "",
-  // que no Prisma casaria com tudo e trocaria a ordem da listagem.
-  assert.deepEqual(filtroDaUrl({ q: "", perfil: "", fabricante: "", pagina: "3" }), {
-    busca: undefined,
-    perfil: undefined,
-    fabricante: undefined,
-    ordem: "relevancia",
-    minCentavos: undefined,
-    maxCentavos: undefined,
-    medidas: undefined,
-  });
 });

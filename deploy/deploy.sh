@@ -110,12 +110,30 @@ conferir_estilo() {
   echo "==> folha de estilo servida ($folha, $bytes bytes)"
 }
 
+# A rota /uploads serve as fotos de todas as lojas. Em 28/09/2026 ela passou a
+# responder 500 em qualquer caminho (o módulo não carregava porque o binding
+# Linux do ONNX faltava no pacote), com health e CSS verdes, e a vitrine ficou
+# sem foto fora do cache da borda. Um arquivo que não existe precisa voltar
+# 404: 500 aqui significa que a rota nem chegou a rodar. Não depende do
+# conteúdo do volume.
+conferir_uploads() {
+  local codigo
+  codigo=$(curl -s -o /dev/null -w '%{http_code}' -H "host: lojas.avilaops.com" \
+    "http://127.0.0.1:3080/uploads/conferencia-deploy/nao-existe.webp") || true
+  [ "$codigo" = "404" ] || { echo "!! /uploads respondeu $codigo para arquivo inexistente (esperado 404)" >&2; return 1; }
+  echo "==> rota de fotos carregando (/uploads → 404 para inexistente)"
+}
+
 for i in $(seq 1 30); do
   sleep 2
   if curl -sf -o /dev/null http://127.0.0.1:3080/api/health; then
     echo "==> saudável na tentativa $i"
     if ! conferir_estilo; then
       echo "!! respondeu, mas sem a folha de estilo; tratando como versão quebrada" >&2
+      break
+    fi
+    if ! conferir_uploads; then
+      echo "!! respondeu, mas a rota de fotos não carrega; tratando como versão quebrada" >&2
       break
     fi
     docker image prune -f >/dev/null

@@ -1,27 +1,19 @@
-import { MEDIDAS_FILTRAVEIS, type ChaveDeMedida, type FiltroCatalogo, type OrdemCatalogo } from "./catalogo";
+import type { ChaveDeMedida, FiltroCatalogo, OrdemCatalogo } from "./catalogo";
 
 /**
- * A URL de uma listagem vira filtro de catálogo.
+ * Os filtros da vitrine lidos da URL — um lugar só para `/produtos` e
+ * `/categoria/<slug>`.
  *
- * Mora aqui, e não dentro de uma página, porque são duas as listagens que
- * filtram — `/produtos` e `/categoria/<slug>` — e um parser por página é a
- * receita para `?min=10` funcionar numa e ser ignorado na outra. É tudo puro:
- * serve ao servidor e ao teste, sem Prisma e sem React.
+ * A página de categoria não tinha filtro nenhum: mandava para
+ * `/produtos?categoria=...`, e quem estava em "O-Rings" perdia a página, o
+ * título e a trilha para filtrar por medida. Com a leitura aqui, as duas
+ * rotas entendem a mesma URL e contam o mesmo conjunto.
  */
-
-/** Prefixo curto de cada medida na URL: `di_de=20&di_ate=25`. */
-export const PREFIXO_DE_MEDIDA: Record<ChaveDeMedida, string> = {
-  diametroInternoMm: "di",
-  diametroExternoMm: "de",
-  alturaMm: "alt",
-  espessuraMm: "esp",
-  secaoMm: "sec",
-};
+export type ParametrosDaVitrine = Record<string, string | undefined>;
 
 const ORDENS = new Set<OrdemCatalogo>(["relevancia", "menor-preco", "maior-preco", "recentes", "nome"]);
 
-/** Ordem desconhecida na URL não quebra a página: vale a relevância. */
-export function ordemDaUrl(sp: Record<string, string | undefined>): OrdemCatalogo {
+export function ordemDaUrl(sp: ParametrosDaVitrine): OrdemCatalogo {
   return ORDENS.has(sp.ordem as OrdemCatalogo) ? (sp.ordem as OrdemCatalogo) : "relevancia";
 }
 
@@ -29,12 +21,12 @@ export function ordemDaUrl(sp: Record<string, string | undefined>): OrdemCatalog
  * "R$ 1.234,50" → 123450. Dinheiro é centavos inteiros, nunca float.
  *
  * O ponto de milhar era lido como decimal: quem digitava `1.234,50` no campo
- * de preço mínimo filtrava por **R$ 1,23** e recebia o catálogo quase inteiro
- * de volta, sem nada na tela explicando por quê. Com vírgula presente, todo
- * ponto é milhar; sem vírgula, só é milhar quando separa grupos de três
- * dígitos (`1.234`), senão `20.5` deixaria de ser vinte e cinquenta.
+ * de preço mínimo filtrava por R$ 1,23 e recebia o catálogo quase inteiro de
+ * volta. Com vírgula presente, todo ponto é milhar; sem vírgula, só é milhar
+ * quando separa grupos de três dígitos (`1.234`), senão `20.5` deixaria de
+ * ser vinte e cinquenta.
  */
-export function centavosDaUrl(v?: string): number | undefined {
+export function reaisDaUrl(v?: string): number | undefined {
   if (!v) return undefined;
   let limpo = v.replace(/[^\d,.]/g, "");
   if (limpo.includes(",")) limpo = limpo.replace(/\./g, "").replace(",", ".");
@@ -44,10 +36,10 @@ export function centavosDaUrl(v?: string): number | undefined {
 }
 
 /** "20", "20,5" ou "20.5" → 20.5. Milímetro aceita vírgula: é como se escreve aqui. */
-export function milimetroDaUrl(v?: string): number | undefined {
+export function mmDaUrl(v?: string): number | undefined {
   if (!v) return undefined;
   if (!/^\d+(?:[.,]\d+)?$/.test(v.trim())) return undefined;
-  const n = Number(v.trim().replace(",", "."));
+  const n = Number(v.replace(",", "."));
   return Number.isFinite(n) && n >= 0 ? n : undefined;
 }
 
@@ -56,29 +48,51 @@ export function milimetroDaUrl(v?: string): number | undefined {
  * medida que tem pelo menos um extremo: faixa vazia não filtra nada e não
  * pode virar `{}`, que excluiria todo produto sem aquele atributo.
  */
-export function faixasDaUrl(sp: Record<string, string | undefined>) {
+export function faixasDaUrl(sp: ParametrosDaVitrine): FiltroCatalogo["medidas"] {
+  const campos: Array<[ChaveDeMedida, string]> = [
+    ["diametroInternoMm", "di"],
+    ["diametroExternoMm", "de"],
+    ["alturaMm", "alt"],
+    ["espessuraMm", "esp"],
+    ["secaoMm", "sec"],
+  ];
   const fora: Partial<Record<ChaveDeMedida, { de?: number; ate?: number }>> = {};
-  for (const campo of Object.keys(MEDIDAS_FILTRAVEIS) as ChaveDeMedida[]) {
-    const prefixo = PREFIXO_DE_MEDIDA[campo];
-    const de = milimetroDaUrl(sp[`${prefixo}_de`]);
-    const ate = milimetroDaUrl(sp[`${prefixo}_ate`]);
-    if (de != null || ate != null) fora[campo] = { de, ate };
+  for (const [campo, prefixo] of campos) {
+    const d = mmDaUrl(sp[`${prefixo}_de`]);
+    const a = mmDaUrl(sp[`${prefixo}_ate`]);
+    if (d != null || a != null) fora[campo] = { de: d, ate: a };
   }
   return Object.keys(fora).length ? fora : undefined;
 }
 
-/**
- * O filtro que a URL descreve. Quem chama acrescenta o que é da página —
- * categoria fixa, moto, limite e página.
- */
-export function filtroDaUrl(sp: Record<string, string | undefined>): FiltroCatalogo {
+/** O filtro completo da URL. A categoria vem da rota quando a página é de categoria. */
+export function filtroDaUrl(sp: ParametrosDaVitrine, categoriaSlug?: string): FiltroCatalogo {
   return {
     busca: sp.q?.trim() || undefined,
-    perfil: sp.perfil?.trim() || undefined,
+    perfil: sp.perfil || undefined,
     fabricante: sp.fabricante?.trim() || undefined,
+    categoriaSlug: categoriaSlug ?? (sp.categoria || undefined),
     ordem: ordemDaUrl(sp),
-    minCentavos: centavosDaUrl(sp.min),
-    maxCentavos: centavosDaUrl(sp.max),
+    minCentavos: reaisDaUrl(sp.min),
+    maxCentavos: reaisDaUrl(sp.max),
     medidas: faixasDaUrl(sp),
+    somenteDisponiveis: sp.disponivel === "1",
   };
+}
+
+/**
+ * Quantos produtos por página o comprador escolheu. Só três tamanhos: valor
+ * livre na URL viraria consulta de 100 mil linhas ou divisão por zero.
+ */
+export const TAMANHOS_PAGINA = [24, 48, 96] as const;
+
+export function porPaginaDaUrl(sp: ParametrosDaVitrine): number {
+  const n = Number(sp.porPagina);
+  return TAMANHOS_PAGINA.some((t) => t === n) ? n : 48;
+}
+
+/** Algum filtro além da página? Decide se a gaveta de filtros abre sozinha. */
+export function temFiltroAtivo(sp: ParametrosDaVitrine): boolean {
+  return ["q", "perfil", "fabricante", "min", "max", "disponivel", "di_de", "di_ate", "de_de", "de_ate", "alt_de", "alt_ate", "esp_de", "esp_ate", "sec_de", "sec_ate"].some((k) => Boolean(sp[k]))
+    || Boolean(sp.ordem && sp.ordem !== "relevancia");
 }

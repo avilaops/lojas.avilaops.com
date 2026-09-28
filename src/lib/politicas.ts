@@ -1,6 +1,7 @@
 import type { Tenant } from "@prisma/client";
 import type { Endereco } from "./tenant";
 import { retiradaPublicaDisponivel } from "./retirada-publica";
+import { porOndeFalarCom, prazoDeDespacho } from "./textos-loja";
 import { mascararDocumento } from "@avilaops/checkout";
 
 /**
@@ -108,6 +109,30 @@ export function lerRegrasDevolucao(bruto: unknown): RegrasDevolucao {
   };
 }
 
+/**
+ * A política de troca como `MerchantReturnPolicy`, para a loja (`Store`) no
+ * JSON-LD. O Google prefere a política declarada no nível da organização a
+ * repeti-la em cada oferta. Sai do mesmo leitor que escreve o texto de
+ * `/politicas/devolucao`, então o dado estruturado e a página dizem o mesmo.
+ *
+ * `returnFees` só é afirmado quando é verdade para o prazo inteiro: no prazo
+ * legal o frete de volta é da loja (CDC, art. 49); depois dele, na cortesia,
+ * vale o que o lojista escolheu. Prazo maior que o legal com retorno pago pelo
+ * cliente é misto, e o schema não tem como dizer isso: fica sem o campo.
+ */
+export function politicaDevolucaoSchema(regras: RegrasDevolucao, url: string) {
+  const gratis = regras.prazoDias <= PRAZO_LEGAL_DIAS || regras.freteRetornoCortesia === "loja";
+  return {
+    "@type": "MerchantReturnPolicy",
+    applicableCountry: "BR",
+    returnPolicyCountry: "BR",
+    returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+    merchantReturnDays: regras.prazoDias,
+    ...(gratis && regras.taxaReposicaoPct === 0 ? { returnFees: "https://schema.org/FreeReturn" } : {}),
+    merchantReturnLink: url,
+  };
+}
+
 export interface PoliticaEscrita {
   corpo: string;
   atualizadoEm: string;
@@ -134,9 +159,6 @@ function vendedor(t: Tenant): string {
   return t.cnpj ? `${empresa}, CNPJ ${mascararDocumento(t.cnpj)}` : empresa;
 }
 
-function canalDeContato(t: Tenant): string {
-  return t.emailContato ?? (t.whatsapp ? "WhatsApp da loja" : "nossos canais de atendimento");
-}
 
 /**
  * O texto padrão da plataforma, preenchido com os dados da loja.
@@ -152,7 +174,7 @@ export function modeloDePolitica(t: Tenant, tipo: TipoPolitica): string[] {
   // servidor inteiro para o navegador, já que a tela de Políticas é cliente.
   const e = (t.endereco as Endereco | null) ?? {};
   const cidade = e.cidade ? `${e.cidade}${e.uf ? "/" + e.uf : ""}` : "nossa loja";
-  const contato = canalDeContato(t);
+  const contato = porOndeFalarCom(t);
   const regras = lerRegrasDevolucao(t.regrasDevolucao);
 
   switch (tipo) {
@@ -160,11 +182,11 @@ export function modeloDePolitica(t: Tenant, tipo: TipoPolitica): string[] {
       return [
         `${t.despachoDiasUteis === 0
           ? "Pedidos pagos durante o expediente em dia útil são despachados no mesmo dia; confirmações fora do expediente seguem no próximo dia útil."
-          : `Os pedidos são despachados em até ${t.despachoDiasUteis} dias úteis após a confirmação do pagamento.`} O prazo de entrega é o informado na cotação de frete no momento da compra e depende da transportadora e do CEP de destino.`,
+          : `Os pedidos são despachados ${prazoDeDespacho(t.despachoDiasUteis)} após a confirmação do pagamento.`} O prazo de entrega é o informado na cotação de frete no momento da compra e depende da transportadora e do CEP de destino.`,
         retiradaPublicaDisponivel(t)
           ? `Você pode retirar o pedido sem custo em ${cidade}, a partir do próximo dia útil após a confirmação. Aguarde o aviso de "pedido separado" antes de ir até a loja.`
           : "Esta loja não oferece retirada no balcão.",
-        `Em caso de avaria no transporte ou extravio, comunique-nos pelo ${contato} com fotos da embalagem. A reposição ou o estorno são por nossa conta.`,
+        `Em caso de avaria no transporte ou extravio, comunique-nos ${contato} com fotos da embalagem. A reposição ou o estorno são por nossa conta.`,
       ];
 
     case "devolucao":
@@ -174,7 +196,7 @@ export function modeloDePolitica(t: Tenant, tipo: TipoPolitica): string[] {
       return [
         `A ${vendedor(t)} é a controladora dos seus dados e coleta apenas os necessários para processar o pedido: nome, CPF/CNPJ, e-mail, telefone e endereço de entrega. Eles são usados para emitir a cobrança, entregar o produto e prestar atendimento, nos termos da Lei 13.709/2018 (LGPD).`,
         "Dados de cartão não passam por nossos servidores: são tokenizados pelo provedor de pagamento no seu navegador.",
-        `Você pode solicitar acesso, correção ou exclusão dos seus dados a qualquer momento pelo ${contato}. Os dados de pedidos são mantidos pelo prazo exigido pela legislação fiscal.`,
+        `Você pode solicitar acesso, correção ou exclusão dos seus dados a qualquer momento ${contato}. Os dados de pedidos são mantidos pelo prazo exigido pela legislação fiscal.`,
         "Esta loja usa cookies estritamente necessários para o funcionamento do carrinho e, quando configurado, ferramentas de medição de audiência.",
       ];
 
@@ -186,7 +208,7 @@ export function modeloDePolitica(t: Tenant, tipo: TipoPolitica): string[] {
         "As imagens são ilustrativas do produto anunciado. Embalagem, rótulo e apresentação podem mudar por conta do fabricante sem aviso prévio.",
         "Use os produtos conforme a orientação do fabricante no rótulo. Quando a instrução do rótulo divergir de qualquer texto desta loja, é o rótulo que vale.",
         "O conteúdo da loja (textos, fotos, marca e organização do catálogo) pertence a quem o produziu e não pode ser copiado sem autorização.",
-        `Dúvida sobre estes termos, sobre um pedido ou sobre um produto: fale conosco pelo ${contato}.`,
+        `Dúvida sobre estes termos, sobre um pedido ou sobre um produto: fale conosco ${contato}.`,
       ];
 
     /**
@@ -238,7 +260,7 @@ function textoDaDevolucao(regras: RegrasDevolucao, contato: string): string[] {
     );
   }
 
-  p.push(`Para iniciar uma troca, devolução ou cancelamento, fale conosco pelo ${contato} informando o número do pedido.`);
+  p.push(`Para iniciar uma troca, devolução ou cancelamento, fale conosco ${contato} informando o número do pedido.`);
   return p;
 }
 
