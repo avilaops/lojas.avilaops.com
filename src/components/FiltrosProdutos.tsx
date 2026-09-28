@@ -1,3 +1,4 @@
+import { TAMANHOS_PAGINA, porPaginaDaUrl } from "@/components/PaginacaoLoja";
 import type { Categoria } from "@prisma/client";
 import type { ChaveDeMedida, FacetaMarca } from "@/lib/catalogo";
 import { temFiltroAtivo } from "@/lib/filtros-url";
@@ -84,6 +85,9 @@ export default function FiltrosProdutos({
             <option value="maior-preco">Maior preço</option>
             <option value="recentes">Novidades</option>
             <option value="nome">Nome A–Z</option>
+          </select>
+          <select name="porPagina" aria-label="Produtos por página" defaultValue={String(porPaginaDaUrl(valores))} className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
+            {TAMANHOS_PAGINA.map((n) => <option key={n} value={n}>{n} por página</option>)}
           </select>
           <label className="filtro-disponivel flex h-10 items-center gap-2 rounded-lg border border-border bg-background px-3 text-sm">
             <input type="checkbox" name="disponivel" value="1" defaultChecked={valores.disponivel === "1"} />

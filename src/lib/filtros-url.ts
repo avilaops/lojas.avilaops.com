@@ -69,6 +69,17 @@ export function filtroDaUrl(sp: ParametrosDaVitrine, categoriaSlug?: string): Fi
   };
 }
 
+/**
+ * Quantos produtos por página o comprador escolheu. Só três tamanhos: valor
+ * livre na URL viraria consulta de 100 mil linhas ou divisão por zero.
+ */
+export const TAMANHOS_PAGINA = [24, 48, 96] as const;
+
+export function porPaginaDaUrl(sp: ParametrosDaVitrine): number {
+  const n = Number(sp.porPagina);
+  return TAMANHOS_PAGINA.some((t) => t === n) ? n : 48;
+}
+
 /** Algum filtro além da página? Decide se a gaveta de filtros abre sozinha. */
 export function temFiltroAtivo(sp: ParametrosDaVitrine): boolean {
   return ["q", "perfil", "fabricante", "min", "max", "disponivel", "di_de", "di_ate", "de_de", "de_ate", "alt_de", "alt_ate", "esp_de", "esp_ate", "sec_de", "sec_ate"].some((k) => Boolean(sp[k]))

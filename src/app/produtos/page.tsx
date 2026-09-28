@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { metadataDeListagem } from "@/lib/seo-listagem";
-import PaginacaoLoja, { POR_PAGINA, paginaDaUrl } from "@/components/PaginacaoLoja";
+import PaginacaoLoja, { paginaDaUrl, porPaginaDaUrl } from "@/components/PaginacaoLoja";
 import { exigirTenant, lojaVende, temaDo } from "@/lib/tenant";
 import CategoriasPremium from "@/components/templates/automotivo-premium/Categorias";
 import { listarCategorias, paginaDeProdutos, facetasTecnicas, grafiasDaMarca, medidasDaLoja } from "@/lib/catalogo";
@@ -32,6 +32,7 @@ export default async function Produtos({ searchParams }: { searchParams: Promise
   const filtro = filtroDaUrl(sp);
   // Conta e pagina o mesmo conjunto já filtrado, inclusive medidas e relevância.
   const pagina = paginaDaUrl(sp);
+  const porPagina = porPaginaDaUrl(sp);
   const facetasP = facetasTecnicas(t.id, sp.categoria || undefined);
   const [categorias, temMedida, facetas, lote] = await Promise.all([
     listarCategorias(t.id),
@@ -42,10 +43,10 @@ export default async function Produtos({ searchParams }: { searchParams: Promise
     // A marca escolhida vale para todas as grafias dela no cadastro; sem marca
     // escolhida a consulta não espera pelas facetas.
     (filtro.fabricante ? facetasP.then((f) => grafiasDaMarca(f.fabricantes, filtro.fabricante)) : Promise.resolve(undefined))
-      .then((fabricante) => paginaDeProdutos(t.id, { ...filtro, fabricante, moto }, POR_PAGINA, (pagina - 1) * POR_PAGINA)),
+      .then((fabricante) => paginaDeProdutos(t.id, { ...filtro, fabricante, moto }, porPagina, (pagina - 1) * porPagina)),
   ]);
   const produtos = lote.produtos;
-  const temProxima = lote.total > pagina * POR_PAGINA;
+  const temProxima = lote.total > pagina * porPagina;
   // Página além do fim é 404, não "nada encontrado" com 200: senão qualquer
   // ?pagina=999999 vira uma URL válida a mais para o Google guardar.
   if (produtos.length === 0 && pagina > 1) notFound();
@@ -78,7 +79,7 @@ export default async function Produtos({ searchParams }: { searchParams: Promise
           ))}
         </div>
       )}
-      <PaginacaoLoja base="/produtos" sp={sp} pagina={pagina} temProxima={temProxima} total={lote.total} />
+      <PaginacaoLoja base="/produtos" sp={sp} pagina={pagina} temProxima={temProxima} total={lote.total} porPagina={porPagina} />
     </div>
   );
 }
