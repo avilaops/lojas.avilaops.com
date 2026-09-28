@@ -390,6 +390,13 @@ model Produto {
 
   @@unique([tenantId, slug])
   @@unique([tenantId, id])
+  /// `sku` é a chave de idempotência da importação (`importarProdutos`), e era
+  /// sustentada só por convenção: a busca era `findFirst`, sem `orderBy`, então
+  /// dois produtos com o mesmo SKU faziam a reimportação atualizar um deles ao
+  /// acaso — e o outro nunca mais recebia preço nem estoque. Nulo não colide
+  /// (índice único do Postgres aceita vários NULL), então produto sem SKU
+  /// continua livre.
+  @@unique([tenantId, sku])
   @@index([tenantId, ativo, destaque])
   @@index([tenantId, busca])
   /// Trigramas para `busca LIKE '%termo%'`: o btree acima só resolve prefixo.
