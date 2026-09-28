@@ -154,8 +154,25 @@ async function fotosDaVitrine(html) {
   ok(`${caminho} servida com ${Math.round(bytes / 1024) || 1} kB de ${tipo.replace("image/", "")}`);
 }
 
+/**
+ * A rota de fotos carrega? Um arquivo inexistente tem que voltar 404.
+ *
+ * Em 28/09/2026 `/uploads` passou a responder 500 em qualquer caminho: o
+ * módulo da rota não carregava (binding Linux do ONNX ausente no pacote). A
+ * vitrine não referenciava foto nenhuma que furasse o cache da borda, então
+ * `fotosDaVitrine` não teria visto. Esta conferência não depende do catálogo
+ * nem do volume e vale em qualquer domínio — as fotos são servidas pelo da
+ * plataforma.
+ */
+async function rotaDeFotos() {
+  const r = await buscar(`/uploads/conferencia-smoke/nao-existe.webp?smoke=${Date.now()}`);
+  if (r.status !== 404) falhar(`/uploads devolveu ${r.status} para arquivo inexistente (esperado 404): a rota de fotos não está carregando`);
+  ok("/uploads carrega (404 para arquivo inexistente)");
+}
+
 console.log(`==> smoke em ${base}`);
 await saude();
 await sinalDeVida();
+await rotaDeFotos();
 await fotosDaVitrine(await vitrineComEstilo());
 console.log(`\n==> ${verdes.length} verificação(ões) verdes em ${base}`);
