@@ -7,6 +7,7 @@ import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
 import { encaixe, lerCompatibilidade, type Moto } from "@/lib/motos";
 import { exigeReceita, lerMedicamento, vendaRemotaProibida } from "@/lib/farmacia";
 import { marcaConfirmada } from "@/lib/marca-confirmada";
+import SafeProductImage from "@/components/SafeProductImage";
 
 export default function ProductCard({ produto, vende, whatsapp, moto = null, ocultarSeloDestaque = false }: { produto: Produto; vende: boolean; whatsapp: string | null; moto?: Moto | null; ocultarSeloDestaque?: boolean }) {
   const serve = moto != null && encaixe(produto.compatibilidade, moto) === "serve";
@@ -44,8 +45,7 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null, ocu
         {imagem ? (
           <>
             {/* Imagem Principal */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <SafeProductImage
               src={miniatura}
               alt={produto.nome}
               loading="lazy"
@@ -55,11 +55,11 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null, ocu
             />
             {/* Segunda Imagem no Hover (Hover Reveal) */}
             {segundaImagem && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <SafeProductImage
                 src={miniatura2}
                 alt={`${produto.nome} - ângulo secundário`}
                 loading="lazy"
+                secondary
                 className="absolute inset-0 h-full w-full object-cover opacity-0 transition-all duration-500 group-hover:opacity-100 group-hover:scale-105"
               />
             )}
