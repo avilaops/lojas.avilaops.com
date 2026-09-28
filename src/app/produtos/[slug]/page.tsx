@@ -17,6 +17,7 @@ import EventoVerProduto from "@/components/EventoVerProduto";
 import ProductCard from "@/components/ProductCard";
 import { prisma } from "@/lib/db";
 import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
+import { mensagemDoProduto } from "@/lib/whatsapp-produto";
 import Compatibilidade from "@/components/Compatibilidade";
 import Medicamento from "@/components/Medicamento";
 import { ehMedicamento, exigeReceita, lerMedicamento, vendaRemotaProibida } from "@/lib/farmacia";
@@ -226,7 +227,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
               </p>
             ) : p.opcoes.length > 0 ? null : sobConsulta ? (
               t.whatsapp ? (
-                <a className="btn-primario w-full" href={linkWhatsApp(t.whatsapp, `Olá! Quero saber o preço de: ${p.nome}`)} target="_blank" rel="noopener">
+                <a className="btn-primario w-full" href={linkWhatsApp(t.whatsapp, mensagemDoProduto(p, urlDaLoja(t), true))} target="_blank" rel="noopener">
                   Consultar preço
                 </a>
               ) : null
@@ -235,7 +236,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
             ) : vende ? (
               <AddToCartButton item={{ id: escolhida?`${p.id}:${escolhida.id}`:p.id, slug: p.slug, nome: p.nome, precoCentavos: p.precoCentavos, imagem: p.imagens[0] }} disponivel irParaCarrinho />
             ) : t.whatsapp ? (
-              <a className="btn-primario w-full" href={linkWhatsApp(t.whatsapp, `Olá! Tenho interesse em: ${p.nome}`)} target="_blank" rel="noopener">
+              <a className="btn-primario w-full" href={linkWhatsApp(t.whatsapp, mensagemDoProduto(p, urlDaLoja(t)))} target="_blank" rel="noopener">
                 Pedir pelo WhatsApp
               </a>
             ) : null}
@@ -288,7 +289,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
               erra a medida devolve. */}
           <p className="mb-4 text-xs text-muted-foreground">Mesma construção, dimensões diferentes. Confira a medida antes de pedir.</p>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {serie.map((r) => <ProductCard key={r.id} produto={r} vende={vende} whatsapp={t.whatsapp} moto={moto} />)}
+            {serie.map((r) => <ProductCard loja={t} key={r.id} produto={r} vende={vende} whatsapp={t.whatsapp} moto={moto} />)}
           </div>
         </section>
       ) : relacionados.length > 0 ? (
@@ -297,7 +298,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
               a lista é. Numa loja de peça, o que ela é: o resto da prateleira. */}
           <h2 className="mb-4 text-base font-bold">{p.categoria ? `Mais em ${p.categoria.nome}` : "Outros itens da loja"}</h2>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {relacionados.map((r) => <ProductCard key={r.id} produto={r} vende={vende} whatsapp={t.whatsapp} moto={moto} />)}
+            {relacionados.map((r) => <ProductCard loja={t} key={r.id} produto={r} vende={vende} whatsapp={t.whatsapp} moto={moto} />)}
           </div>
         </section>
       ) : null}
