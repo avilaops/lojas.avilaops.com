@@ -97,6 +97,34 @@ export function formatarCep(cep?: string): string {
   return d.length === 8 ? `${d.slice(0, 5)}-${d.slice(5)}` : (cep ?? "");
 }
 
+// Moram em textos-loja.ts, sem next/headers, porque as políticas também são
+// montadas na tela do painel, que roda no navegador.
+export { prazoDeDespacho, porOndeFalarCom } from "./textos-loja";
+
+/**
+ * A marca da loja em quadrado sólido, para usar sobre fundo colorido.
+ *
+ * O logo em si não serve: ele é arte com fundo transparente, desenhada para
+ * papel branco. Sobre a cor primária da loja ele pode sumir — na Vedashow o
+ * wordmark é `#2c2c79` e a primária é quase a mesma, então a imagem de
+ * compartilhamento saía com o logo invisível e o nome escrito do lado, isto
+ * é, a marca duplicada com uma das cópias quebrada.
+ *
+ * O `apple-touch-icon.png` do favicon resolve porque ele **é** um ladrilho:
+ * fundo sólido por especificação da Apple, margem já embutida, desenhado para
+ * ser lido pequeno e sobre qualquer coisa. Mesma pasta e mesma convenção de
+ * nomes que `iconesDa` usa em `layout.tsx`.
+ */
+export function marcaQuadradaDa(t: Tenant): string | null {
+  if (t.faviconUrl) return `${t.faviconUrl.replace(/\/+$/, "")}/apple-touch-icon.png`;
+  return t.logoUrl ?? null;
+}
+
+/** A loja tem ao menos um jeito de ser contatada? Se não, `/contato` mente. */
+export function contatoConfigurado(t: Tenant): boolean {
+  return Boolean(t.whatsapp || t.telefone || t.emailContato || t.enderecoPublico);
+}
+
 export function enderecoCompleto(t: Tenant): string {
   const e = enderecoDo(t);
   return [e.logradouro && `${e.logradouro}${e.numero ? ", " + e.numero : ""}`, e.bairro, e.cidade && `${e.cidade}${e.uf ? " - " + e.uf : ""}`, formatarCep(e.cep)]
