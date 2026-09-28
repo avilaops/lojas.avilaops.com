@@ -174,6 +174,13 @@ const REGRAS_DO_RAMO: Array<{ termos: RegExp; id: number; prateleira: string }> 
     prateleira: "Escovas para limpeza de carro",
   },
   {
+    // "Aromatizantes" numa loja de casa é fragrância doméstica; aqui é o
+    // odorizador de carro, que tem folha própria na taxonomia.
+    termos: /aromatiz|odoriz/i,
+    id: 2789,
+    prateleira: "Decoração automotiva > Odorizadores para carro",
+  },
+  {
     // \bmotos?\b não casa com "automotivo" nem com "motor".
     termos: /\bmotos?\b|motocicl/i,
     id: 2895,
@@ -275,7 +282,32 @@ export function categoriaGoogleProduto(
   if (/^fita isolante\b/.test(nome) && /^isolantes?$/.test(categoria)) return 127;
   if (/^pino (?:macho|femea|porta lampada)\b/.test(nome) && /^pinos?$/.test(categoria)) return 127;
   if (/^extensao (?:enrolavel|\d+\s*m\b)/.test(nome) && /^extensoes?$/.test(categoria)) return 4789;
-  return prateleira(nomeDaCategoria);
+  const daCategoria = prateleira(nomeDaCategoria);
+  return daCategoria !== undefined && LIMPEZA_DE_VEICULOS.has(daCategoria) ? itemDeLimpezaDeVeiculo(nome) ?? daCategoria : daCategoria;
+}
+
+/** As prateleiras de estética automotiva: só dentro delas o nome refina a família. */
+const LIMPEZA_DE_VEICULOS = new Set([2590, 2643, 2894, 2895, 2789]);
+
+/**
+ * A categoria da loja agrupa por etapa do serviço ("Polimento", "Lavagem"),
+ * o Google por natureza do item. Boina de polimento em "Polimento" caía em
+ * "Soluções para limpeza de carro", que é líquido; limpador de vidro e de
+ * estofado têm folha própria. Só roda com a categoria já resolvida para
+ * limpeza de veículos, então "boina" de loja de roupa não chega aqui.
+ * Recebe o nome já sem acento e em minúsculas.
+ */
+function itemDeLimpezaDeVeiculo(nome: string): number | undefined {
+  // A taxonomia não tem folha para boina de politriz: o pai "Limpeza de
+  // veículos" é o mais específico que não afirma coisa errada.
+  if (/\b(?:boinas?|pads?)\b/.test(nome)) return 2895;
+  if (/\b(?:escovas?|pinceis|pincel|aplicador(?:es)?|luvas?)\b/.test(nome)) return 2894;
+  if (/\bsanitizante\b/.test(nome)) return 2590;
+  if (/\b(?:aromatizantes?|arominha|odorizador(?:es)?)\b/.test(nome)) return 2789;
+  if (/\b(?:estofados?|carpetes?)\b/.test(nome)) return 2704;
+  if (/\bvidros?\b|\banti-?fog\b|\bmarcas d.agua\b/.test(nome)) return 2846;
+  if (/\bshampoo\b/.test(nome)) return 2590;
+  return undefined;
 }
 
 /**

@@ -148,3 +148,23 @@ test("o resolvedor da loja preserva o que já decidia pelo nome", () => {
   assert.equal(prateleira(null), undefined);
   assert.equal(prateleira(""), undefined);
 });
+
+test("estética automotiva: o nome do item refina a etapa do serviço", () => {
+  const brilhax = prateleirasDaLoja(["Lavagem", "Polimento", "Proteção", "Acessórios", "Aromatizantes", "Kits Completos", "Produtos para Moto", "Vitrificação"]);
+  // Boina não é "solução de limpeza": fica no pai, que não afirma nada errado.
+  assert.equal(categoriaGoogleProduto("Boina Arctic Wool Wolf Pads 133 mm Ventilada", "Polimento", brilhax), 2895);
+  assert.equal(categoriaGoogleProduto("Massa de Polir Vintex 1,8 kg", "Polimento", brilhax), 2590);
+  assert.equal(categoriaGoogleProduto("Aromatizante Carro Novo Vintex Spray 60 ml", "Aromatizantes", brilhax), 2789);
+  assert.equal(categoriaGoogleProduto("AROMINHA CARRO NOVO SCENT", "Aromatizantes", brilhax), 2789);
+  assert.equal(categoriaGoogleProduto("Sanitizante Carro Novo Vintex 1,5 L", "Aromatizantes", brilhax), 2590);
+  assert.equal(categoriaGoogleProduto("Extractus Vonixx Limpador de Estofados 1 L", "Lavagem", brilhax), 2704);
+  assert.equal(categoriaGoogleProduto("Glazy Vonixx Limpador de Vidros 4 em 1 500 ml", "Lavagem", brilhax), 2846);
+  assert.equal(categoriaGoogleProduto("Focus Vonixx Removedor de Marcas d’Água 240 ml", "Lavagem", brilhax), 2846);
+  assert.equal(categoriaGoogleProduto("Glazy Anti-Fog Vonixx 500 ml", "Proteção", brilhax), 2846);
+  assert.equal(categoriaGoogleProduto("Kit de Escovas Drill Detailer", "Kits Completos", brilhax), 2894);
+  assert.equal(categoriaGoogleProduto("Moto-V Vonixx Shampoo para Motos 500 ml", "Produtos para Moto", brilhax), 2590);
+  assert.equal(categoriaGoogleProduto("Revox Vonixx Selante para Pneus 500 ml", "Proteção", brilhax), 2643);
+  // Fora do ramo, "Aromatizantes" continua sem chute e o nome não refina nada.
+  const casa = prateleirasDaLoja(["Aromatizantes", "Velas"]);
+  assert.equal(categoriaGoogleProduto("Aromatizante de ambiente lavanda", "Aromatizantes", casa), undefined);
+});
