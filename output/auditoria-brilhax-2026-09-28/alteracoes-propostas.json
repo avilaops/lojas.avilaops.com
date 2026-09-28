@@ -13,7 +13,7 @@
   "slug": "arominha-carro-novo-scent",
   "campo": "nome",
   "de": "AROMINHA CARRO NOVO SCENT",
-  "para": "Arominha Carro Novo Scent — Aromatizante Spray 100 ml (após confirmar marca e volume)",
+  "para": "Aromatizante Spray Carro Novo Aromas City 100 ml (após confirmar a marca)",
   "motivo": "Título em caixa alta ('AROMINHA CARRO NOVO SCENT'), fora do padrão dos demais e da regra de título do Google",
   "aplicado": false
  },
@@ -59,7 +59,7 @@
   "campo": "atributos.Tipo",
   "de": "Químico",
   "para": "Desengraxante alcalino concentrado",
-  "motivo": "Sem GTIN; Ficha 'Tipo: Químico' genérica; Ficha de composição com nota de pesquisa ('…não foi publicada nas fontes consultadas'); Quatro imagens adicionais com texto de campanha e marca d'água de outra loja ('V-ONE store'); remover da galeria e do feed",
+  "motivo": "Sem GTIN; Ficha 'Tipo: Químico' genérica; Ficha de composição com nota de pesquisa ('…não foi publicada nas fontes consultadas'); Quatro imagens adicionais com texto de campanha e marca d'água de outra loja ('V-ONE store'); remover da galeria e do feed; Imagens adicionais 1 e 2 com o logo 'MONARCAR' de outra loja; só a principal fica limpa",
   "aplicado": false
  },
  {
@@ -68,16 +68,16 @@
   "campo": "atributos.Composição informada no rótulo",
   "de": "…; a composição integral não foi publicada nas fontes consultadas.",
   "para": "(remover o trecho após o ponto e vírgula)",
-  "motivo": "Sem GTIN; Ficha 'Tipo: Químico' genérica; Ficha de composição com nota de pesquisa ('…não foi publicada nas fontes consultadas'); Quatro imagens adicionais com texto de campanha e marca d'água de outra loja ('V-ONE store'); remover da galeria e do feed",
+  "motivo": "Sem GTIN; Ficha 'Tipo: Químico' genérica; Ficha de composição com nota de pesquisa ('…não foi publicada nas fontes consultadas'); Quatro imagens adicionais com texto de campanha e marca d'água de outra loja ('V-ONE store'); remover da galeria e do feed; Imagens adicionais 1 e 2 com o logo 'MONARCAR' de outra loja; só a principal fica limpa",
   "aplicado": false
  },
  {
   "id": "cmtv7cd8m005ypd01p3t59vdo",
   "slug": "lamax",
   "campo": "imagens (remover)",
-  "de": "nitro-lamax-500ml-espuma-pre-lavagem.webp | nitro-lamax-500ml-desengraxe-duplo.webp | nitro-lamax-500ml-limpeza-roda.webp | nitro-lamax-500ml-limpeza-lama.webp",
-  "para": "(retirar da galeria; manter mtv7byad, muabe2fw, muabe310)",
-  "motivo": "Sem GTIN; Ficha 'Tipo: Químico' genérica; Ficha de composição com nota de pesquisa ('…não foi publicada nas fontes consultadas'); Quatro imagens adicionais com texto de campanha e marca d'água de outra loja ('V-ONE store'); remover da galeria e do feed",
+  "de": "muabe2fw-f38f54b7.webp | muabe310-24aa7d34.webp | nitro-lamax-500ml-espuma-pre-lavagem.webp | nitro-lamax-500ml-desengraxe-duplo.webp | nitro-lamax-500ml-limpeza-roda.webp | nitro-lamax-500ml-limpeza-lama.webp",
+  "para": "(retirar da galeria; manter mtv7byad-a508bfdb.webp e acrescentar fotos próprias)",
+  "motivo": "Sem GTIN; Ficha 'Tipo: Químico' genérica; Ficha de composição com nota de pesquisa ('…não foi publicada nas fontes consultadas'); Quatro imagens adicionais com texto de campanha e marca d'água de outra loja ('V-ONE store'); remover da galeria e do feed; Imagens adicionais 1 e 2 com o logo 'MONARCAR' de outra loja; só a principal fica limpa",
   "aplicado": false
  },
  {
@@ -104,7 +104,7 @@
   "campo": "nome",
   "de": "Boina Micro Wolf Wolf Pads 133 mm Ventilada",
   "para": "Boina de Microfibra Micro Wolf 133 mm Ventilada — Wolf Pads",
-  "motivo": "Título repete 'Wolf' ('Boina Micro Wolf Wolf Pads')",
+  "motivo": "Título repete 'Wolf' ('Boina Micro Wolf Wolf Pads'); Fotos adicionais 3 e 4 mostram camada laranja de interface de espuma, que o título e a ficha não mencionam",
   "aplicado": false
  },
  {
@@ -131,7 +131,16 @@
   "campo": "atributos.Tipo",
   "de": "Químico",
   "para": "Cera limpadora de carnaúba",
-  "motivo": "Ficha 'Tipo: Químico' genérica",
+  "motivo": "Ficha 'Tipo: Químico' genérica; Imagem abaixo de 500 px no menor lado (mínimo do Google a partir de 31/01/2027): principal 379×496",
+  "aplicado": false
+ },
+ {
+  "id": "cmtv7cd4i005apd01zj8phmwj",
+  "slug": "intense-500ml",
+  "campo": "imagens (remover)",
+  "de": "20260921-vonixx-intense-500ml-situacao-interna.webp",
+  "para": "(retirar da galeria)",
+  "motivo": "Imagem adicional 2 com marca '@POLIBOX' (perfil de outra loja); remover",
   "aplicado": false
  },
  {
