@@ -14,6 +14,8 @@ import { emitirRelatoriosSemanais } from "./relatorio";
 import { processarSeoCategoriasPendentes } from "./seo-categorias";
 import { processarAvisosMl } from "./mercadolivre-avisos";
 import { rodarMercadoLivre } from "./mercadolivre-publicacao";
+import { processarEventosProprios } from "./automacoes-consumo";
+import { lembrarPixPendente, pedirIndicacoes } from "./avisos-que-esperam";
 
 /**
  * Quem faz o trabalho de cada rotina.
@@ -30,6 +32,13 @@ const TRABALHOS: Record<NomeDeRotina, () => Promise<unknown>> = {
   // fila crescer mais rápido do que é esvaziada.
   "mercadolivre.avisos": () => processarAvisosMl({ limite: 100 }),
   "mercadolivre.rodar": () => rodarMercadoLivre({}),
+  // Falha de envio não derruba a rotina: ela vira FALHOU no próprio evento,
+  // que é onde a tela de automações procura. O resumo carrega a contagem.
+  "automacoes.eventos": () => processarEventosProprios({ limite: 50 }),
+  // As duas dormem enquanto o n8n ainda receber o evento que as dispara; o
+  // resumo diz isso em vez de parecer que rodou e não achou ninguém.
+  "pix.lembrete": () => lembrarPixPendente(),
+  "loja.indicacoes": () => pedirIndicacoes(),
   "carrinhos.verificar": () => verificarCarrinhosAbandonados(),
   "estoque.avisos": () => avisarQuemEsperava(),
   "pedidos.verificar": () => reconciliarPagamentosPendentes(),

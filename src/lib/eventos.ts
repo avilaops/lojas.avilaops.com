@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { Prisma, Tenant } from "@prisma/client";
 import { prisma } from "./db";
 import { urlDaLoja } from "./tenant";
+import { executamos } from "./acoes-do-evento";
 
 /**
  * Eventos da plataforma → n8n.
@@ -93,6 +94,16 @@ export type EventoPlataforma =
    * painel — responder rápido é o que converte no Mercado Livre.
    */
   | ({ tipo: "canal.pergunta-recebida"; slug: string; canal: string; perguntaId: string; produtoNome: string; texto: string; linkPainel: string } & Lojista)
+  /**
+   * O Pix nasceu e não foi pago. Emitido pela rotina `pix.lembrete`, 30 min
+   * depois do pedido — não pelo checkout: é espera, não reação.
+   */
+  | ({ tipo: "pedido.pix-pendente"; slug: string; referencia: string; numero?: number; totalCentavos: number; clienteNome: string; clienteEmail: string; clienteTelefone: string; linkPedido: string } & Lojista)
+  /**
+   * Três dias depois de a loja entrar no ar, e só se ela continuar ATIVA.
+   * Emitido pela rotina `loja.indicacoes`.
+   */
+  | { tipo: "loja.indicacoes"; slug: string; nome: string; url: string; emailContato: string | null; whatsapp: string | null }
   | ({ tipo: "pedido.cancelado"; slug: string; referencia: string; numero: number; clienteNome: string; clienteEmail: string; clienteTelefone: string; totalCentavos: number; motivo: string; linkPedido: string } & Lojista);
 
 export type TipoEvento = EventoPlataforma["tipo"];
@@ -144,7 +155,38 @@ export async function emitir(evento: EventoPlataforma): Promise<void> {
     console.error("[eventos] não registrou", eventId, erro);
   }
 
+  // Quem executa este tipo: a própria plataforma ou o n8n?
+  //
+  // Sai daqui mesmo o tipo cujos canais este ambiente consegue cumprir
+  // inteiros (`CANAIS_POR_TIPO` em acoes-do-evento.ts). Faltando o SMTP ou o
+  // token do WhatsApp, o tipo volta inteiro para o n8n — é o que faz este
+  // caminho nascer desligado até alguém ligar, e o que impede metade do aviso
+  // de sumir sem ninguém notar.
+  if (executamos(evento.tipo)) {
+    // Sem `await`: quem emitiu está no meio de um checkout ou de um clique no
+    // painel, e não pode esperar uma conversa SMTP. A rotina `automacoes.eventos`
+    // é a rede de proteção — o que este disparo perder, ela pega em um minuto.
+    const { processarEventosProprios } = await import("./automacoes-consumo");
+    void processarEventosProprios({ eventId }).catch((erro) => {
+      console.error("[eventos] consumo imediato falhou", eventId, erro);
+    });
+    return;
+  }
+
   await entregar(envelope, eventId, evento.tipo);
+}
+
+/**
+ * O n8n ainda está no circuito?
+ *
+ * `N8N_WEBHOOK_URL` é o sinal: enquanto ela existir, o fluxo recebe os tipos
+ * que ainda são dele e faz o que sempre fez. As rotinas que substituem os dois
+ * avisos que **esperam** (`pix.lembrete`, `loja.indicacoes`) dormem enquanto
+ * isso — senão o comprador receberia o lembrete de Pix duas vezes, uma de cada
+ * lado, e ninguém saberia de onde veio a segunda.
+ */
+export function n8nAindaExecuta(): boolean {
+  return Boolean((process.env.N8N_WEBHOOK_URL ?? "").trim());
 }
 
 async function entregar(envelope: Record<string, unknown>, eventId: string, tipo: string): Promise<boolean> {

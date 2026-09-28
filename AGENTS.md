@@ -43,11 +43,18 @@
   próprio domínio, sem IP nem user-agent (`src/lib/atribuicao.ts`). Ligar a visita
   de hoje à de ontem é perfil e depende de "aceito" no banner. Número que a
   medição não tem não vira zero na tela: vira a explicação de por que não existe.
-- **O relógio é nosso; o envio do evento ainda não.** O que roda sozinho está
-  em `ROTINAS` (`src/lib/rotinas.ts`) e é o próprio container que dispara —
-  rotina nova é uma entrada no catálogo, não um agendamento em serviço de fora.
-  O nome vai para a tabela `Rotina`, então renomear é migração. Emitir evento
-  (`src/lib/eventos.ts`) continua sendo código e executá-lo continua sendo
-  fluxo do n8n, até isso também vir para dentro. Ver `docs/ROTINAS.md`.
+- **O relógio é nosso, e o e-mail também.** O que roda sozinho está em
+  `ROTINAS` (`src/lib/rotinas.ts`) e é o próprio container que dispara — rotina
+  nova é entrada no catálogo, não agendamento em serviço de fora; o nome vai
+  para a tabela `Rotina`, então renomear é migração (`docs/ROTINAS.md`).
+  Executar o evento também: `CANAIS_POR_TIPO` em `src/lib/acoes-do-evento.ts`
+  diz quais canais cada tipo usa, o texto de cada mensagem é função pura
+  (`emails-do-evento.ts`, `whatsapp-do-evento.ts`) e o envio fica em
+  `email.ts` e `whatsapp.ts` (`docs/MENSAGENS.md`). **Tipo só é nosso quando
+  todos os canais dele estão configurados** — executar metade faz o aviso do
+  lojista sumir sem ninguém notar, e canal que já saiu fica em
+  `AutomacaoEvento.canaisFeitos` para a nova tentativa não repetir. O que ainda
+  é do n8n é o que espera (`pix_pendente` aos 30 min, `loja_indicacoes` aos 3
+  dias), não um canal.
 - **Português nos nomes e comentários**, como no resto do monorepo.
 - **TypeScript estrito**; `npm run typecheck` antes de entregar.

@@ -77,6 +77,29 @@ export const ROTINAS = {
     travaMinutos: 30,
     falhasAteAlerta: 3,
   },
+  "automacoes.eventos": {
+    titulo: "Fila de eventos",
+    descricao: "Executa os eventos que a plataforma mesma resolve, hoje os que viram e-mail",
+    cadencia: { tipo: "intervalo", minutos: 1 },
+    travaMinutos: 5,
+    // A cada minuto: é por aqui que sai a recuperação de senha quando o
+    // disparo imediato não saiu (processo reiniciado, SMTP fora do ar).
+    falhasAteAlerta: 2,
+  },
+  "pix.lembrete": {
+    titulo: "Lembrete de Pix",
+    descricao: "Avisa quem gerou Pix há mais de 30 minutos e ainda não pagou",
+    cadencia: { tipo: "intervalo", minutos: 10 },
+    travaMinutos: 10,
+    falhasAteAlerta: 3,
+  },
+  "loja.indicacoes": {
+    titulo: "Pedido de indicações",
+    descricao: "Três dias depois de a loja entrar no ar, se ela continuar ATIVA",
+    cadencia: { tipo: "diaria", hora: 10 },
+    travaMinutos: 15,
+    falhasAteAlerta: 2,
+  },
   "carrinhos.verificar": {
     titulo: "Carrinho abandonado",
     descricao: "Marca carrinho parado há 45 min e emite carrinho.abandonado",
