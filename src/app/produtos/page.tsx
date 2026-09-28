@@ -98,7 +98,11 @@ export default async function Produtos({ searchParams }: { searchParams: Promise
       <FiltrosProdutos categorias={categorias} valores={sp} medidas={temMedida} fabricantes={facetas.fabricantes} perfis={facetas.perfis} />
       {produtos.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-          Nada encontrado com esses filtros. Confira o código ou a referência, tente apenas o nome da peça ou reduza os filtros. Medidas: interno × externo × altura, em mm. <Link href="/produtos" className="underline">Limpar filtros</Link>
+          Nada encontrado com esses filtros. Confira o nome, o código ou a referência do produto, ou reduza os filtros.
+          {temMedida.length > 0 && <> Medidas: interno × externo × altura, em mm.</>}{" "}
+          {/* A navegação completa restaura também os campos não controlados do formulário. */}
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+          <a href="/produtos" className="underline">Limpar filtros</a>
         </p>
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
