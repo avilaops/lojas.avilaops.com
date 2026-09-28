@@ -11,6 +11,12 @@ import { marcaConfirmada } from "@/lib/marca-confirmada";
 import { temaDo, urlDaLoja } from "@/lib/tenant";
 import { mensagemDoProduto } from "@/lib/whatsapp-produto";
 
+const ROTULOS_COMPACTOS: Record<string, string> = {
+  diametroInternoMm: "DI", diametroExternoMm: "DE", alturaMm: "Alt.",
+  medidaEixoMm: "Eixo", larguraMm: "Larg.", comprimentoMm: "Comp.",
+  espessuraMm: "Esp.", secaoMm: "Seção",
+};
+
 export default function ProductCard({ produto, loja, vende, whatsapp, moto = null, ocultarSeloDestaque = false, compacto = false, alternarImagem = true }: { produto: Produto; loja: Tenant; vende: boolean; whatsapp: string | null; moto?: Moto | null; ocultarSeloDestaque?: boolean; compacto?: boolean; alternarImagem?: boolean }) {
   const tecnico = temaDo(loja).layout === "distribuidora";
   const serve = moto != null && encaixe(produto.compatibilidade, moto) === "serve";
@@ -130,7 +136,7 @@ export default function ProductCard({ produto, loja, vende, whatsapp, moto = nul
           {produto.nome}
         </Link>
         {!tecnico && produto.sku && <p className="text-xs text-muted-foreground break-words">Código: {produto.sku}</p>}
-        {tecnicos.length > 0 && <dl className="cartao-produto-tecnica">{tecnicos.map(l => <div key={l.chave}><dt>{l.rotulo}</dt><dd>{l.valor}</dd></div>)}</dl>}
+        {tecnicos.length > 0 && <dl className="cartao-produto-tecnica">{tecnicos.map(l => <div key={l.chave}><dt>{tecnico && ROTULOS_COMPACTOS[l.chave] ? <abbr title={l.rotulo}>{ROTULOS_COMPACTOS[l.chave]}</abbr> : l.rotulo}</dt><dd>{l.valor}</dd></div>)}</dl>}
         {tecnico && <p className="cartao-produto-identificacao">{marca && <span>{marca}</span>}{produto.sku && <span>Código: {produto.sku}</span>}</p>}
         <div className={tecnico ? "cartao-produto-disponibilidade" : "contents"}>
           <p className="text-xs text-muted-foreground">{esgotado ? "Indisponível no momento" : produto.disponibilidade === "backorder" ? "Sob encomenda" : "Em estoque"}</p>
