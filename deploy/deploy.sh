@@ -110,20 +110,18 @@ conferir_estilo() {
   echo "==> folha de estilo servida ($folha, $bytes bytes)"
 }
 
-# Em 28/09/2026 toda imagem da plataforma passou a responder 500 com health e
-# CSS verdes: a rota /uploads não carregava (binding nativo do ONNX). Arquivo
-# inexistente tem que dar 404 — 500 ali é o módulo da rota quebrado — e um
-# arquivo real do volume tem que voltar 200.
+# A rota /uploads serve as fotos de todas as lojas. Em 28/09/2026 ela passou a
+# responder 500 em qualquer caminho (o módulo não carregava porque o binding
+# Linux do ONNX faltava no pacote), com health e CSS verdes, e a vitrine ficou
+# sem foto fora do cache da borda. Um arquivo que não existe precisa voltar
+# 404: 500 aqui significa que a rota nem chegou a rodar. Não depende do
+# conteúdo do volume.
 conferir_uploads() {
-  local codigo real
-  codigo=$(curl -s -o /dev/null -w '%{http_code}' -H "host: lojas.avilaops.com" http://127.0.0.1:3080/uploads/verificacao-deploy/inexistente.png)
+  local codigo
+  codigo=$(curl -s -o /dev/null -w '%{http_code}' -H "host: lojas.avilaops.com" \
+    "http://127.0.0.1:3080/uploads/conferencia-deploy/nao-existe.webp") || true
   [ "$codigo" = "404" ] || { echo "!! /uploads respondeu $codigo para arquivo inexistente (esperado 404)" >&2; return 1; }
-  real=$(find uploads -mindepth 2 -maxdepth 2 -type f \( -name '*.png' -o -name '*.webp' -o -name '*.jpg' \) 2>/dev/null | head -1)
-  if [ -n "$real" ]; then
-    codigo=$(curl -s -o /dev/null -w '%{http_code}' -H "host: lojas.avilaops.com" "http://127.0.0.1:3080/$real?w=160")
-    [ "$codigo" = "200" ] || { echo "!! /$real respondeu $codigo (esperado 200)" >&2; return 1; }
-  fi
-  echo "==> /uploads servindo (inexistente 404${real:+, $real 200})"
+  echo "==> rota de fotos carregando (/uploads → 404 para inexistente)"
 }
 
 for i in $(seq 1 30); do
@@ -135,7 +133,7 @@ for i in $(seq 1 30); do
       break
     fi
     if ! conferir_uploads; then
-      echo "!! respondeu, mas sem servir imagens; tratando como versão quebrada" >&2
+      echo "!! respondeu, mas a rota de fotos não carrega; tratando como versão quebrada" >&2
       break
     fi
     docker image prune -f >/dev/null

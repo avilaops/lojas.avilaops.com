@@ -1,5 +1,5 @@
 import { fichaDoProduto } from "@/lib/ficha";
-import { codigoPublico } from "@/lib/codigo-publico";
+import { codigoPublico, rotuloDoCodigo } from "@/lib/codigo-publico";
 import Link from "next/link";
 import * as regras from "@/lib/produto-regras";
 import type { Produto, Tenant } from "@prisma/client";
@@ -30,6 +30,7 @@ export default function ProductCard({ produto, loja, vende, whatsapp, moto = nul
   const tecnicos = ficha.filter(l => l.unidade === "mm" || (tecnico ? ["perfil", "material"] : ["referencia", "perfil", "material"]).includes(l.chave)).slice(0, 5);
   const marca = marcaConfirmada(produto.marca);
   const codigo = codigoPublico(produto.sku);
+  const rotuloCodigo = rotuloDoCodigo(produto.sku, produto.gtin);
   const miniatura = imagem && /\/uploads\//.test(imagem) && !/\.svg$/i.test(imagem) ? `${imagem}?w=480` : imagem;
   const miniatura2 = segundaImagem && /\/uploads\//.test(segundaImagem) && !/\.svg$/i.test(segundaImagem) ? `${segundaImagem}?w=480` : segundaImagem;
   // Preço zero é "ainda não precificado", não "de graça". Catálogo importado
@@ -143,9 +144,9 @@ export default function ProductCard({ produto, loja, vende, whatsapp, moto = nul
         <Link href={`/produtos/${produto.slug}`} className="cartao-produto-nome text-sm font-semibold hover:text-primary transition-colors">
           {produto.nome}
         </Link>
-        {!tecnico && codigo && <p className="text-xs text-muted-foreground break-words">Código: {codigo}</p>}
+        {!tecnico && codigo && <p className="text-xs text-muted-foreground break-words">{rotuloCodigo}: {codigo}</p>}
         {tecnicos.length > 0 && <dl className="cartao-produto-tecnica">{tecnicos.map(l => <div key={l.chave}><dt>{tecnico && ROTULOS_COMPACTOS[l.chave] ? <abbr title={l.rotulo}>{ROTULOS_COMPACTOS[l.chave]}</abbr> : l.rotulo}</dt><dd>{l.valor}</dd></div>)}</dl>}
-        {tecnico && <p className="cartao-produto-identificacao">{marca && <span>{marca}</span>}{codigo && <span>Código: {codigo}</span>}</p>}
+        {tecnico && <p className="cartao-produto-identificacao">{marca && <span>{marca}</span>}{codigo && <span>{rotuloCodigo}: {codigo}</span>}</p>}
         <div className={tecnico ? "cartao-produto-disponibilidade" : "contents"}>
           <p className={`cartao-produto-estoque text-xs ${esgotado ? "text-muted-foreground" : "esta-disponivel"}`}>{estado.disponibilidade}</p>
           <Link href={`/produtos/${produto.slug}`} className="text-xs underline underline-offset-4">Ver detalhes</Link>

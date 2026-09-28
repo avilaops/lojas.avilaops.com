@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { codigoPublico } from "@/lib/codigo-publico";
+import { codigoPublico, rotuloDoCodigo } from "@/lib/codigo-publico";
 import { notFound, permanentRedirect } from "next/navigation";
 import FichaTecnica from "@/components/FichaTecnica";
 import { lerDefinicoes, lerValores } from "@/lib/campos-personalizados";
@@ -126,6 +126,8 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
       url: `${urlDaLoja(t)}/produtos/${p.slug}${escolhida&&!escolhida.padrao?`?variante=${encodeURIComponent(escolhida.id)}`:""}`,
       priceCurrency: "BRL",
       price: (p.precoCentavos / 100).toFixed(2),
+      // O feed diz `condition=new` para todo item; a marcação acompanha.
+      itemCondition: "https://schema.org/NewCondition",
       availability: somenteNaLoja ? "https://schema.org/InStoreOnly" : `https://schema.org/${regras.disponibilidadeSchema(p)}`,
       seller: { "@id": `${urlDaLoja(t)}/#organization` },
     } : ofertas.some(v=>v.precoCentavos>0) ? {
@@ -137,7 +139,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
       offers: ofertas.filter(v=>v.precoCentavos>0).map(v=>({
         "@type":"Offer",sku:v.sku??undefined,
         url:`${urlDaLoja(t)}/produtos/${p.slug}?variante=${encodeURIComponent(v.id)}`,
-        priceCurrency:"BRL",price:(v.precoCentavos/100).toFixed(2),
+        priceCurrency:"BRL",price:(v.precoCentavos/100).toFixed(2),itemCondition:"https://schema.org/NewCondition",
         availability:`https://schema.org/${regras.disponibilidadeSchema({...p,...v})}`,
       })),
     } : undefined,
@@ -261,7 +263,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
               ? "Despacho no mesmo dia útil para pagamentos confirmados durante o expediente"
               : `Envio em até ${t.despachoDiasUteis} ${t.despachoDiasUteis === 1 ? "dia útil" : "dias úteis"} após o pagamento`}</li>
             {t.freteGratisAcima != null && <li>✔ Frete grátis acima de {formatarBRL(t.freteGratisAcima)}</li>}
-            {codigoPublico(p.sku) && <li className="text-xs">Código {codigoPublico(p.sku)}</li>}
+            {codigoPublico(p.sku) && <li className="text-xs">{rotuloDoCodigo(p.sku, p.gtin)} {codigoPublico(p.sku)}</li>}
           </ul>
           <nav className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm" aria-label="Informações de entrega e troca">
             <Link className="underline underline-offset-4" href="/politicas/envio">Entrega e frete</Link>

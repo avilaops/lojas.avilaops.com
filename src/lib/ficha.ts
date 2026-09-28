@@ -45,8 +45,12 @@ const MEDIDAS: Record<string, string> = {
   furoMm: "Furo",
 };
 
-/** Chaves que são do ERP, não do produto. */
-const INTERNAS = new Set(["grupoLegado"]);
+/**
+ * Chaves que são do ERP, não do produto. GTIN/EAN têm campo próprio e saem
+ * como identificador do produto; repetidos na ficha, viravam uma linha
+ * "Gtin 7898…" no meio das características.
+ */
+const INTERNAS = new Set(["grupoLegado", "gtin", "ean"]);
 
 const ROTULOS: Record<string, string> = {
   ncm: "NCM",
@@ -109,18 +113,44 @@ const ROTULOS: Record<string, string> = {
   liga: "Liga",
 };
 
-const SIGLAS = new Set(["aws", "din", "hb", "hrc", "mpa", "cc", "ca", "tig", "mig", "ncm", "sae", "iso", "abnt"]);
+const SIGLAS = new Set(["aws", "din", "hb", "hrc", "mpa", "cc", "ca", "tig", "mig", "ncm", "sae", "iso", "abnt", "fds", "ghs", "onu", "uv", "rpm", "sku", "anvisa"]);
+
+/**
+ * A chave do JSON não tem acento (`codigoFabricante`, `estadoFisico`), e a
+ * regra geral a devolvia assim para o comprador: "Codigo fabricante",
+ * "Estado fisico". O acento volta por palavra, e só para palavras cuja grafia
+ * sem acento não existe em português — nada aqui muda o sentido do rótulo.
+ */
+const ACENTOS: Record<string, string> = {
+  acao: "ação", advertencia: "advertência", agua: "água", aagua: "à água", aparencia: "aparência",
+  aplicacao: "aplicação", apresentacao: "apresentação", area: "área", ativacao: "ativação",
+  cinematica: "cinemática", classificacao: "classificação", codigo: "código", compativeis: "compatíveis",
+  composicao: "composição", conteudo: "conteúdo", diametro: "diâmetro", dimensoes: "dimensões",
+  dinamica: "dinâmica", emissao: "emissão", espumacao: "espumação", fisico: "físico", fixacao: "fixação",
+  fragrancia: "fragrância", frequencia: "frequência", informacoes: "informações", liquido: "líquido",
+  manutencao: "manutenção", maquina: "máquina", nao: "não", notificacao: "notificação", observacoes: "observações",
+  peliculas: "películas", po: "pó", precaucao: "precaução", precaucoes: "precauções", preparacao: "preparação",
+  principio: "princípio", protecao: "proteção", quimica: "química", referencia: "referência", repeticao: "repetição",
+  resistencia: "resistência", restricao: "restrição", restricoes: "restrições", rotacao: "rotação", rotulo: "rótulo",
+  seguranca: "segurança", superficie: "superfície", ventilacao: "ventilação",
+};
+
+/** Unidade no fim da chave (`diametroMm`, `rotativaRpm`) sai entre parênteses. */
+const UNIDADES = new Set(["mm", "ml", "pol", "polegadas", "gramas", "rpm"]);
 
 function rotuloGeral(chave: string): string {
-  const texto = chave
+  const palavras = chave
     .replace(/([a-z\d])([A-Z])/g, "$1 $2")
     .replace(/[_-]+/g, " ")
     .trim()
-    .toLowerCase();
-  return texto
-    .split(" ")
-    .map((p, i) => (SIGLAS.has(p) ? p.toUpperCase() : i === 0 ? p.charAt(0).toUpperCase() + p.slice(1) : p))
+    .toLowerCase()
+    .split(/\s+/);
+  const ultima = palavras.length > 1 && UNIDADES.has(palavras[palavras.length - 1]) ? palavras.pop()! : null;
+  const texto = palavras
+    .map((p) => (SIGLAS.has(p) ? p.toUpperCase() : ACENTOS[p] ?? p))
     .join(" ");
+  const rotulo = texto.charAt(0).toUpperCase() + texto.slice(1);
+  return ultima ? `${rotulo} (${SIGLAS.has(ultima) ? ultima.toUpperCase() : ultima})` : rotulo;
 }
 
 /** "101.6" → "101,6 mm". Sem zeros à toa: 14 é "14 mm", não "14,0 mm". */

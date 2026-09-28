@@ -9,6 +9,7 @@ import {
   modeloDePolitica,
   politicaPublicada,
   politicasPublicadas,
+  politicaDevolucaoSchema,
 } from "./politicas";
 
 /** Loja mínima: só o que os modelos leem. */
@@ -120,4 +121,17 @@ test("CNPJ e razão social entram nos modelos quando a loja os tem", () => {
   const t = loja({ razaoSocial: "Teste Comércio Ltda", cnpj: "12345678000190" });
   assert.match(modeloDePolitica(t, "termos")[0], /Teste Comércio Ltda/);
   assert.match(modeloDePolitica(t, "privacidade")[0], /CNPJ/);
+});
+
+test("política no JSON-LD: prazo legal é devolução grátis; cortesia paga pelo cliente não afirma frete", () => {
+  const url = "https://loja.com.br/politicas/devolucao";
+  const legal = politicaDevolucaoSchema(lerRegrasDevolucao({}), url);
+  assert.equal(legal.merchantReturnDays, PRAZO_LEGAL_DIAS);
+  assert.equal(legal.returnFees, "https://schema.org/FreeReturn");
+  assert.equal(legal.applicableCountry, "BR");
+  const mista = politicaDevolucaoSchema(lerRegrasDevolucao({ prazoDias: 30, freteRetornoCortesia: "cliente" }), url);
+  assert.equal(mista.merchantReturnDays, 30);
+  assert.equal("returnFees" in mista, false);
+  const cortesiaDaLoja = politicaDevolucaoSchema(lerRegrasDevolucao({ prazoDias: 30, freteRetornoCortesia: "loja" }), url);
+  assert.equal(cortesiaDaLoja.returnFees, "https://schema.org/FreeReturn");
 });

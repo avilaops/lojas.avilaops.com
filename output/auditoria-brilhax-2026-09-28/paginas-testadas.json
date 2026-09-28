@@ -1,0 +1,1210 @@
+[
+ {
+  "dispositivo": "desktop",
+  "nome": "home",
+  "caminho": "/",
+  "status": 200,
+  "titulo": "Brilhax | Produtos para Estética Automotiva",
+  "h1": "Do primeiro cuidado ao brilho final.",
+  "largura": 1366,
+  "janela": 1366,
+  "imgsVisiveis": 21,
+  "imgsQuebradas": 15,
+  "semAlt": 0,
+  "texto": "BRILHAX\n\nDo primeiro cuidado ao brilho final.\n\nProdutos e acessórios para lavar, proteger e finalizar seu carro em um só lugar.\n\nExplorar produtos\nLavagem\nPolimento\nProteção\nAcessórios\nKits Completos\nProdutos para Moto\nVitrificação\n\nDespacho em até 1 dia útil\nPrazo informado antes da compra\n\nFrete calculado pelo CEP\nOpções e prazo antes do pagamento\n\nRetirada disponível\nEconomize no frete quando preferir\n\nTAMBÉM NA LOJA\n\nAcessórios, kits e o resto do catálogo\nVer tudo\nAromatizantes\n\nSELEÇÃO DA LOJA\n\nProdutos disponíveis\nVer tudo\n\nVONIXX\n\nAcidus Fast Vonixx 500 ml\n\nCódigo: 7898511024485\n\nDispon",
+  "robots": null,
+  "canonical": "https://brilhax.com/",
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "desktop",
+  "nome": "produtos",
+  "caminho": "/produtos",
+  "status": 200,
+  "titulo": "Produtos · Brilhax",
+  "h1": "Todos os produtos",
+  "largura": 1366,
+  "janela": 1366,
+  "imgsVisiveis": 97,
+  "imgsQuebradas": 30,
+  "semAlt": 0,
+  "texto": "Todos os produtos\n\n79 produtos encontrados · Página 1\n\nTodas as marcas\nDetailer\nNitro\nScent\nVintex\nVonixx\nWolf Pads\nZacs\nTodas as categorias\nLavagem\nPolimento\nProteção\nAcessórios\nAromatizantes\nKits Completos\nProdutos para Moto\nVitrificação\nRelevância\nMenor preço\nMaior preço\nNovidades\nNome A–Z\nFiltrar\n\nCombine categoria, marca e preço para encontrar o produto.\n\nLimpar busca e filtros\n\nVONIXX\n\nAcidus Fast Vonixx 500 ml\n\nCódigo: 7898511024485\n\nDisponível para compra\n\nVer detalhes\n\nR$ 42,00\n\nAdicionar ao carrinho\n\nVINTEX\n\nAlumax Vintex Desincrustante Ácido 1,5 L\n\nDisponível para compra\n\nVer detalh",
+  "robots": null,
+  "canonical": "https://brilhax.com/produtos",
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "desktop",
+  "nome": "busca",
+  "caminho": "/produtos?q=shampoo",
+  "status": 200,
+  "titulo": "Busca: shampoo · Brilhax",
+  "h1": "Resultados para “shampoo”",
+  "largura": 1366,
+  "janela": 1366,
+  "imgsVisiveis": 10,
+  "imgsQuebradas": 10,
+  "semAlt": 0,
+  "texto": "Resultados para “shampoo”\n\n5 produtos encontrados · Página 1\n\nTodas as marcas\nDetailer\nNitro\nScent\nVintex\nVonixx\nWolf Pads\nZacs\nTodas as categorias\nLavagem\nPolimento\nProteção\nAcessórios\nAromatizantes\nKits Completos\nProdutos para Moto\nVitrificação\nRelevância\nMenor preço\nMaior preço\nNovidades\nNome A–Z\nFiltrar\n\nCombine categoria, marca e preço para encontrar o produto.\n\nLimpar busca e filtros\n\nVONIXX\n\nMoto-V Vonixx Shampoo para Motos 500 ml\n\nCódigo: 7898511031964\n\nDisponível para compra\n\nVer detalhes\n\nR$ 38,20\n\nAdicionar ao carrinho\n\nVONIXX\n\nV-Floc Vonixx Shampoo Concentrado 1,5 L\n\nCódigo: 201100",
+  "robots": "noindex, follow",
+  "canonical": "https://brilhax.com/produtos",
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "desktop",
+  "nome": "busca-vazia",
+  "caminho": "/produtos?q=xyzqwe123",
+  "status": 200,
+  "titulo": "Busca: xyzqwe123 · Brilhax",
+  "h1": "Resultados para “xyzqwe123”",
+  "largura": 1366,
+  "janela": 1366,
+  "imgsVisiveis": 1,
+  "imgsQuebradas": 1,
+  "semAlt": 0,
+  "texto": "Resultados para “xyzqwe123”\n\n0 produtos encontrados · Página 1\n\nTodas as marcas\nDetailer\nNitro\nScent\nVintex\nVonixx\nWolf Pads\nZacs\nTodas as categorias\nLavagem\nPolimento\nProteção\nAcessórios\nAromatizantes\nKits Completos\nProdutos para Moto\nVitrificação\nRelevância\nMenor preço\nMaior preço\nNovidades\nNome A–Z\nFiltrar\n\nCombine categoria, marca e preço para encontrar o produto.\n\nLimpar busca e filtros\n\nNada encontrado com esses filtros. Confira o nome, o código ou a referência do produto, ou reduza os filtros. Limpar filtros",
+  "robots": "noindex, follow",
+  "canonical": "https://brilhax.com/produtos",
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "desktop",
+  "nome": "busca-ordem-preco",
+  "caminho": "/produtos?ordem=preco-asc",
+  "status": 200,
+  "titulo": "Produtos · Brilhax",
+  "h1": "Todos os produtos",
+  "largura": 1366,
+  "janela": 1366,
+  "imgsVisiveis": 97,
+  "imgsQuebradas": 30,
+  "semAlt": 0,
+  "texto": "Todos os produtos\n\n79 produtos encontrados · Página 1\n\nTodas as marcas\nDetailer\nNitro\nScent\nVintex\nVonixx\nWolf Pads\nZacs\nTodas as categorias\nLavagem\nPolimento\nProteção\nAcessórios\nAromatizantes\nKits Completos\nProdutos para Moto\nVitrificação\nRelevância\nMenor preço\nMaior preço\nNovidades\nNome A–Z\nFiltrar\n\nCombine categoria, marca e preço para encontrar o produto.\n\nLimpar busca e filtros\n\nVONIXX\n\nAcidus Fast Vonixx 500 ml\n\nCódigo: 7898511024485\n\nDisponível para compra\n\nVer detalhes\n\nR$ 42,00\n\nAdicionar ao carrinho\n\nVINTEX\n\nAlumax Vintex Desincrustante Ácido 1,5 L\n\nDisponível para compra\n\nVer detalh",
+  "robots": "noindex, follow",
+  "canonical": "https://brilhax.com/produtos",
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "desktop",
+  "nome": "categoria-lavagem",
+  "caminho": "/categoria/lavagem",
+  "status": 200,
+  "titulo": "Lavagem · Brilhax",
+  "h1": "Lavagem",
+  "largura": 1366,
+  "janela": 1366,
+  "imgsVisiveis": 55,
+  "imgsQuebradas": 33,
+  "semAlt": 0,
+  "texto": "Início\nProdutos\nLavagem\nLavagem\n\nShampoos neutros, desengraxantes, espumas ativas e removedores de contaminantes para uma limpeza segura.\n\nBuscar e filtrar nesta categoria\n\nVONIXX\n\nAcidus Fast Vonixx 500 ml\n\nCódigo: 7898511024485\n\nDisponível para compra\n\nVer detalhes\n\nR$ 42,00\n\nAdicionar ao carrinho\n\nVINTEX\n\nAlumax Vintex Desincrustante Ácido 1,5 L\n\nDisponível para compra\n\nVer detalhes\n\nR$ 49,75\n\nAdicionar ao carrinho\n\nVINTEX\n\nAlumax Vintex Desincrustante Ácido 5 L\n\nDisponível para compra\n\nVer detalhes\n\nR$ 60,33\n\nAdicionar ao carrinho\n\nDETAILER\n\nCanhão de Espuma Detailer Bico Vermelho 1 L\n\nCód",
+  "robots": null,
+  "canonical": "https://brilhax.com/categoria/lavagem",
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "desktop",
+  "nome": "categoria-aromatizantes",
+  "caminho": "/categoria/aromatizantes",
+  "status": 200,
+  "titulo": "Aromatizantes · Brilhax",
+  "h1": "Aromatizantes",
+  "largura": 1366,
+  "janela": 1366,
+  "imgsVisiveis": 8,
+  "imgsQuebradas": 5,
+  "semAlt": 0,
+  "texto": "Início\nProdutos\nAromatizantes\nAromatizantes\n\nFragrâncias e aromatizantes para o interior do veículo.\n\nBuscar e filtrar nesta categoria\n\nVINTEX\n\nAromatizante Carro Novo Vintex Spray 60 ml\n\nCódigo: 7898511020364\n\nDisponível para compra\n\nVer detalhes\n\nR$ 21,90\n\nAdicionar ao carrinho\n\nSCENT\n\nAROMINHA CARRO NOVO SCENT\n\nDisponível para compra\n\nVer detalhes\n\nR$ 15,00\n\nAdicionar ao carrinho\n\nVINTEX\n\nSanitizante Carro Novo Vintex 1,5 L\n\nDisponível para compra\n\nVer detalhes\n\nR$ 42,99\n\nAdicionar ao carrinho",
+  "robots": null,
+  "canonical": "https://brilhax.com/categoria/aromatizantes",
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "desktop",
+  "nome": "categoria-acessorios",
+  "caminho": "/categoria/acessorios",
+  "status": 200,
+  "titulo": "Acessórios · Brilhax",
+  "h1": "Acessórios",
+  "largura": 1366,
+  "janela": 1366,
+  "imgsVisiveis": 16,
+  "imgsQuebradas": 15,
+  "semAlt": 0,
+  "texto": "Início\nProdutos\nAcessórios\nAcessórios\n\nToalhas de microfibra premium, aplicadores de espuma, pincéis de detalhamento e borrifadores.\n\nBuscar e filtrar nesta categoria\n\nVONIXX\n\nAplicador de Microfibra Vonixx com Encaixe de Mão 200 GSM\n\nCódigo: 7898511034255\n\nDisponível para compra\n\nVer detalhes\n\nR$ 21,28\n\nAdicionar ao carrinho\n\nVINTEX\n\nAplicador para Pneus Vintex — Pacote com 2 Unidades\n\nCódigo: 7898511032855\n\nDisponível para compra\n\nVer detalhes\n\nR$ 22,39\n\nAdicionar ao carrinho\n\nVONIXX\n\nEscova Angular de Microfibra Vonixx Grande 50 cm\n\nCódigo: 7898511029282\n\nDisponível para compra\n\nVer detalhe",
+  "robots": null,
+  "canonical": "https://brilhax.com/categoria/acessorios",
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "desktop",
+  "nome": "promocoes",
+  "caminho": "/promocoes",
+  "status": 200,
+  "titulo": "Promoções e campanhas · Brilhax",
+  "h1": "Promoções e campanhas",
+  "largura": 1366,
+  "janela": 1366,
+  "imgsVisiveis": 2,
+  "imgsQuebradas": 1,
+  "semAlt": 0,
+  "texto": "Promoções e campanhas\n\nConfira as ofertas disponíveis na loja.\n\nNenhum produto com desconto ativo no momento\n\nNosso catálogo continua disponível. Explore os produtos e encontre o que você precisa.\n\nExplorar produtos",
+  "robots": null,
+  "canonical": "https://brilhax.com/promocoes",
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "desktop",
+  "nome": "produto-quimico",
+  "caminho": "/produtos/v-floc-500ml",
+  "status": 200,
+  "titulo": "V-Floc Vonixx Shampoo Concentrado 500 ml · Brilhax",
+  "h1": "V-Floc Vonixx Shampoo Concentrado 500 ml",
+  "largura": 1366,
+  "janela": 1366,
+  "imgsVisiveis": 14,
+  "imgsQuebradas": 6,
+  "semAlt": 0,
+  "texto": "Início / Produtos / Lavagem\n\nVONIXX\n\nV-Floc Vonixx Shampoo Concentrado 500 ml\n\nShampoo automotivo concentrado de pH neutro, com alta lubrificação para lavagem externa da pintura.\n\nR$ 31,40\n\nno PIX, cartão ou boleto\n\nAdicionar ao carrinho\n✔ Retirada na loja sem custo\n✔ Envio em até 1 dia útil após o pagamento\nCódigo 7898511030653\nEntrega e frete\nTrocas e devoluções\nCaracterísticas\npH\n6,5 a 7,5 segundo a FDS; pH 7,0 informado na FAQ oficial\nCor\nRoxo\nTipo\nShampoo automotivo concentrado\nFunção\nLavagem externa e condicionamento da pintura\nDiluição\nBalde: 1:400, aproximadamente 10 ml em 4 L de água.",
+  "robots": null,
+  "canonical": "https://brilhax.com/produtos/v-floc-500ml",
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "desktop",
+  "nome": "produto-boina",
+  "caminho": "/produtos/boina-micro-wolf-133mm-5-25pol-ventilado",
+  "status": 200,
+  "titulo": "Boina Micro Wolf Wolf Pads 133 mm Ventilada · Brilhax",
+  "h1": "Boina Micro Wolf Wolf Pads 133 mm Ventilada",
+  "largura": 1366,
+  "janela": 1366,
+  "imgsVisiveis": 15,
+  "imgsQuebradas": 15,
+  "semAlt": 0,
+  "texto": "Início / Produtos / Polimento\n\nWOLF PADS\n\nBoina Micro Wolf Wolf Pads 133 mm Ventilada\n\nBoina Micro Wolf ventilada de 133 mm (5,25 pol), indicada para corte leve a moderado e refino de pintura automotiva.\n\nR$ 70,47\n\nno PIX, cartão ou boleto\n\nAdicionar ao carrinho\n✔ Retirada na loja sem custo\n✔ Envio em até 1 dia útil após o pagamento\nCódigo WP-505\nEntrega e frete\nTrocas e devoluções\nCaracterísticas\nTipo\nBoina de microfibra\nFixacao\nVelcro de alta resistência\nLimpeza\nApós o uso, remova do suporte e lave somente com água corrente. Não use querosene, alvejantes ou produtos com cloro. Não use secado",
+  "robots": null,
+  "canonical": "https://brilhax.com/produtos/boina-micro-wolf-133mm-5-25pol-ventilado",
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "desktop",
+  "nome": "produto-acessorio",
+  "caminho": "/produtos/escova-para-lavagem-de-pneus",
+  "status": 200,
+  "titulo": "Escova para Pneus Detailer E07 · Brilhax",
+  "h1": "Escova para Pneus Detailer E07",
+  "largura": 1366,
+  "janela": 1366,
+  "imgsVisiveis": 16,
+  "imgsQuebradas": 16,
+  "semAlt": 0,
+  "texto": "Início / Produtos / Acessórios\n\nDETAILER\n\nEscova para Pneus Detailer E07\n\nEscova Detailer E07 com cerdas rígidas de nylon e formato côncavo para acompanhar o contorno dos pneus e remover sujeiras incrustadas.\n\nR$ 39,90\n\nno PIX, cartão ou boleto\n\nAdicionar ao carrinho\n✔ Retirada na loja sem custo\n✔ Envio em até 1 dia útil após o pagamento\nCódigo 7898671780016\nEntrega e frete\nTrocas e devoluções\nCaracterísticas\nCabo\nPlástico com revestimento antiderrapante e formato ergonômico\nTipo\nEscova de limpeza para pneus\nMarca\nDetailer\nCerdas\nNylon rígido e resistente\nFunção\nRemover sujeira e resíduos acum",
+  "robots": null,
+  "canonical": "https://brilhax.com/produtos/escova-para-lavagem-de-pneus",
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "desktop",
+  "nome": "produto-aroma",
+  "caminho": "/produtos/arominha-carro-novo-scent",
+  "status": 200,
+  "titulo": "AROMINHA CARRO NOVO SCENT · Brilhax",
+  "h1": "AROMINHA CARRO NOVO SCENT",
+  "largura": 1366,
+  "janela": 1366,
+  "imgsVisiveis": 11,
+  "imgsQuebradas": 9,
+  "semAlt": 0,
+  "texto": "Início / Produtos / Aromatizantes\n\nSCENT\n\nAROMINHA CARRO NOVO SCENT\n\nAromatizante spray Aromas City Novo Scent, 100 ml, com fragrância Carro Novo para perfumar o interior do veículo.\n\nR$ 15,00\n\nno PIX, cartão ou boleto\n\nAdicionar ao carrinho\n✔ Retirada na loja sem custo\n✔ Envio em até 1 dia útil após o pagamento\nEntrega e frete\nTrocas e devoluções\nCaracterísticas\nTipo\nAromatizante automotivo em spray\nAroma\nCarro Novo\nFormato\nFrasco com borrifador\nVolume (ml)\n100\nAplicação\nPerfumar o ambiente interno do veículo\nBenefícios\nFragrância premium; neutraliza odores; frescor prolongado\nDurabilidade\nLo",
+  "robots": null,
+  "canonical": "https://brilhax.com/produtos/arominha-carro-novo-scent",
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "desktop",
+  "nome": "carrinho",
+  "caminho": "/carrinho",
+  "status": 200,
+  "titulo": "Carrinho · Brilhax",
+  "h1": "Seu carrinho está vazio",
+  "largura": 1366,
+  "janela": 1366,
+  "imgsVisiveis": 1,
+  "imgsQuebradas": 1,
+  "semAlt": 0,
+  "texto": "Seu carrinho está vazio\nVer produtos",
+  "robots": "noindex",
+  "canonical": null,
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "desktop",
+  "nome": "checkout",
+  "caminho": "/checkout",
+  "status": 200,
+  "titulo": "Finalizar compra · Brilhax",
+  "h1": null,
+  "largura": 1366,
+  "janela": 1366,
+  "imgsVisiveis": 1,
+  "imgsQuebradas": 1,
+  "semAlt": 0,
+  "texto": "Seu carrinho está vazio.\n\nVer produtos",
+  "robots": "noindex",
+  "canonical": null,
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "desktop",
+  "nome": "conta",
+  "caminho": "/conta",
+  "status": 200,
+  "titulo": "Minha conta · Brilhax",
+  "h1": "Minha conta",
+  "largura": 1366,
+  "janela": 1366,
+  "imgsVisiveis": 1,
+  "imgsQuebradas": 1,
+  "semAlt": 0,
+  "texto": "Minha conta\n\nAcompanhe seus pedidos e guarde seu endereço para comprar mais rápido da próxima vez.\n\nJá tenho conta\nCriar conta\nEntrar\n\nComprar não exige conta, ela serve para acompanhar pedidos e salvar endereço.",
+  "robots": "noindex",
+  "canonical": null,
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "desktop",
+  "nome": "contato",
+  "caminho": "/contato",
+  "status": 200,
+  "titulo": "Contato · Brilhax",
+  "h1": "Contato",
+  "largura": 1366,
+  "janela": 1366,
+  "imgsVisiveis": 1,
+  "imgsQuebradas": 1,
+  "semAlt": 0,
+  "texto": "Contato\nWhatsApp\nIniciar conversa\nTelefone\n(16) 3432-0745\nE-mail\necommerce@brilhax.com\nEndereço\nR. Holanda, 1200 · Vila Mariana · Ribeirão Preto - SP · 14075-240\nHorário\nSeg a Sex: 08:00 às 18:00 | Sábado: 08:00 às 13:00",
+  "robots": null,
+  "canonical": "https://brilhax.com/contato",
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "desktop",
+  "nome": "sobre",
+  "caminho": "/sobre",
+  "status": 200,
+  "titulo": "Sobre · Brilhax",
+  "h1": "Sobre a Brilhax",
+  "largura": 1366,
+  "janela": 1366,
+  "imgsVisiveis": 1,
+  "imgsQuebradas": 1,
+  "semAlt": 0,
+  "texto": "Sobre a Brilhax\n\nProdutos Vonixx para lavagem, polimento, proteção e detalhamento automotivo, com orientação especializada e atendimento em Ribeirão Preto.",
+  "robots": null,
+  "canonical": "https://brilhax.com/sobre",
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "desktop",
+  "nome": "politica-privacidade",
+  "caminho": "/politicas/privacidade",
+  "status": 200,
+  "titulo": "Política de privacidade · Brilhax",
+  "h1": "Política de privacidade",
+  "largura": 1366,
+  "janela": 1366,
+  "imgsVisiveis": 1,
+  "imgsQuebradas": 1,
+  "semAlt": 0,
+  "texto": "Política de privacidade\n\nA Brilhax é a controladora dos seus dados e coleta apenas os necessários para processar o pedido: nome, CPF/CNPJ, e-mail, telefone e endereço de entrega. Eles são usados para emitir a cobrança, entregar o produto e prestar atendimento, nos termos da Lei 13.709/2018 (LGPD).\n\nDados de cartão não passam por nossos servidores: são tokenizados pelo provedor de pagamento no seu navegador.\n\nVocê pode solicitar acesso, correção ou exclusão dos seus dados a qualquer momento pelo ecommerce@brilhax.com. Os dados de pedidos são mantidos pelo prazo exigido pela legislação fiscal.\n\n",
+  "robots": null,
+  "canonical": "https://brilhax.com/politicas/privacidade",
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "desktop",
+  "nome": "politica-devolucao",
+  "caminho": "/politicas/devolucao",
+  "status": 200,
+  "titulo": "Política de devolução e reembolso · Brilhax",
+  "h1": "Política de devolução e reembolso",
+  "largura": 1366,
+  "janela": 1366,
+  "imgsVisiveis": 1,
+  "imgsQuebradas": 1,
+  "semAlt": 0,
+  "texto": "Política de devolução e reembolso\n\nCompras feitas pela internet podem ser desfeitas em até 7 dias corridos após o recebimento, sem necessidade de justificativa, conforme o art. 49 do Código de Defesa do Consumidor. O produto deve ser devolvido sem uso e na embalagem original; o valor pago, incluindo o frete, é estornado integralmente pelo mesmo meio de pagamento, e o frete de retorno é por nossa conta.\n\nProduto com defeito pode ser trocado em até 30 dias (não duráveis) ou 90 dias (duráveis) a contar do recebimento, conforme o art. 26 do Código de Defesa do Consumidor. Nesses casos o custo do r",
+  "robots": null,
+  "canonical": "https://brilhax.com/politicas/devolucao",
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "desktop",
+  "nome": "politica-envio",
+  "caminho": "/politicas/envio",
+  "status": 200,
+  "titulo": "Política de envio · Brilhax",
+  "h1": "Política de envio",
+  "largura": 1366,
+  "janela": 1366,
+  "imgsVisiveis": 1,
+  "imgsQuebradas": 1,
+  "semAlt": 0,
+  "texto": "Política de envio\n\nOs pedidos são despachados em até 1 dias úteis após a confirmação do pagamento. O prazo de entrega é o informado na cotação de frete no momento da compra e depende da transportadora e do CEP de destino.\n\nVocê pode retirar o pedido sem custo em Ribeirão Preto/SP, a partir do próximo dia útil após a confirmação. Aguarde o aviso de \"pedido separado\" antes de ir até a loja.\n\nEm caso de avaria no transporte ou extravio, comunique-nos pelo ecommerce@brilhax.com com fotos da embalagem. A reposição ou o estorno são por nossa conta.\n\nQuem vende\n\nBrilhax\n\nR. Holanda, 1200 · Vila Maria",
+  "robots": null,
+  "canonical": "https://brilhax.com/politicas/envio",
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "desktop",
+  "nome": "politica-termos",
+  "caminho": "/politicas/termos",
+  "status": 200,
+  "titulo": "Termos de serviço · Brilhax",
+  "h1": "Termos de serviço",
+  "largura": 1366,
+  "janela": 1366,
+  "imgsVisiveis": 1,
+  "imgsQuebradas": 1,
+  "semAlt": 0,
+  "texto": "Termos de serviço\n\nEstes termos valem para o uso da loja da Brilhax. Navegar e comprar significa concordar com eles.\n\nA loja apresenta os produtos, o preço e as condições de entrega, e a compra é feita aqui mesmo: você monta o carrinho, escolhe o frete e paga online. O contrato de venda se forma quando o pagamento é confirmado pelo provedor de pagamento.\n\nPreço, disponibilidade e prazo são os exibidos no momento da compra. Erros evidentes de cadastro (preço incompatível com o produto, por exemplo) não obrigam a loja à venda: nesse caso o pedido é cancelado e o valor devolvido integralmente.\n\nA",
+  "robots": null,
+  "canonical": "https://brilhax.com/politicas/termos",
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "desktop",
+  "nome": "404",
+  "caminho": "/produtos/nao-existe-xyz",
+  "status": 404,
+  "titulo": "Produto · Brilhax",
+  "h1": "Página não encontrada",
+  "largura": 1366,
+  "janela": 1366,
+  "imgsVisiveis": 1,
+  "imgsQuebradas": 1,
+  "semAlt": 0,
+  "texto": "Página não encontrada\nVoltar ao início",
+  "robots": "noindex",
+  "canonical": null,
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "404 https://brilhax.com/produtos/nao-existe-xyz",
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 3
+ },
+ {
+  "dispositivo": "desktop",
+  "nome": "pagina-inexistente",
+  "caminho": "/xyz-inexistente",
+  "status": 404,
+  "titulo": "Brilhax | Produtos para Estética Automotiva",
+  "h1": "Página não encontrada",
+  "largura": 1366,
+  "janela": 1366,
+  "imgsVisiveis": 1,
+  "imgsQuebradas": 1,
+  "semAlt": 0,
+  "texto": "Página não encontrada\nVoltar ao início",
+  "robots": "noindex",
+  "canonical": null,
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "404 https://brilhax.com/xyz-inexistente",
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 3
+ },
+ {
+  "dispositivo": "celular",
+  "nome": "home",
+  "caminho": "/",
+  "status": 200,
+  "titulo": "Brilhax | Produtos para Estética Automotiva",
+  "h1": "Do primeiro cuidado ao brilho final.",
+  "largura": 390,
+  "janela": 390,
+  "imgsVisiveis": 21,
+  "imgsQuebradas": 12,
+  "semAlt": 0,
+  "texto": "BRILHAX\n\nDo primeiro cuidado ao brilho final.\n\nProdutos e acessórios para lavar, proteger e finalizar seu carro em um só lugar.\n\nExplorar produtos\nLavagem\nPolimento\nProteção\nAcessórios\nKits Completos\nProdutos para Moto\nVitrificação\n\nDespacho em até 1 dia útil\nPrazo informado antes da compra\n\nFrete calculado pelo CEP\nOpções e prazo antes do pagamento\n\nRetirada disponível\nEconomize no frete quando preferir\n\nTAMBÉM NA LOJA\n\nAcessórios, kits e o resto do catálogo\nAromatizantes\n\nSELEÇÃO DA LOJA\n\nProdutos disponíveis\n\nVONIXX\n\nAcidus Fast Vonixx 500 ml\n\nCódigo: 7898511024485\n\nDisponível para compra\n\n",
+  "robots": null,
+  "canonical": "https://brilhax.com/",
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "celular",
+  "nome": "produtos",
+  "caminho": "/produtos",
+  "status": 200,
+  "titulo": "Produtos · Brilhax",
+  "h1": "Todos os produtos",
+  "largura": 390,
+  "janela": 390,
+  "imgsVisiveis": 97,
+  "imgsQuebradas": 15,
+  "semAlt": 0,
+  "texto": "Todos os produtos\n\n79 produtos encontrados · Página 1\n\nCategoria, preço e ordem\nFiltrar\n\nCombine categoria, marca e preço para encontrar o produto.\n\nLimpar busca e filtros\n\nVONIXX\n\nAcidus Fast Vonixx 500 ml\n\nCódigo: 7898511024485\n\nDisponível para compra\n\nVer detalhes\n\nR$ 42,00\n\nAdicionar ao carrinho\n\nVINTEX\n\nAlumax Vintex Desincrustante Ácido 1,5 L\n\nDisponível para compra\n\nVer detalhes\n\nR$ 49,75\n\nAdicionar ao carrinho\n\nVINTEX\n\nAlumax Vintex Desincrustante Ácido 5 L\n\nDisponível para compra\n\nVer detalhes\n\nR$ 60,33\n\nAdicionar ao carrinho\n\nVONIXX\n\nAplicador de Microfibra Vonixx com Encaixe de Mão ",
+  "robots": null,
+  "canonical": "https://brilhax.com/produtos",
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "celular",
+  "nome": "busca",
+  "caminho": "/produtos?q=shampoo",
+  "status": 200,
+  "titulo": "Busca: shampoo · Brilhax",
+  "h1": "Resultados para “shampoo”",
+  "largura": 390,
+  "janela": 390,
+  "imgsVisiveis": 10,
+  "imgsQuebradas": 10,
+  "semAlt": 0,
+  "texto": "Resultados para “shampoo”\n\n5 produtos encontrados · Página 1\n\nCategoria, preço e ordem\nFiltrar\n\nCombine categoria, marca e preço para encontrar o produto.\n\nLimpar busca e filtros\n\nVONIXX\n\nMoto-V Vonixx Shampoo para Motos 500 ml\n\nCódigo: 7898511031964\n\nDisponível para compra\n\nVer detalhes\n\nR$ 38,20\n\nAdicionar ao carrinho\n\nVONIXX\n\nV-Floc Vonixx Shampoo Concentrado 1,5 L\n\nCódigo: 2011004\n\nDisponível para compra\n\nVer detalhes\n\nR$ 61,82\n\nAdicionar ao carrinho\n\nVONIXX\n\nV-Floc Vonixx Shampoo Concentrado 500 ml\n\nCódigo: 7898511030653\n\nDisponível para compra\n\nVer detalhes\n\nR$ 31,40\n\nAdicionar ao carrin",
+  "robots": "noindex, follow",
+  "canonical": "https://brilhax.com/produtos",
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "celular",
+  "nome": "busca-vazia",
+  "caminho": "/produtos?q=xyzqwe123",
+  "status": 200,
+  "titulo": "Busca: xyzqwe123 · Brilhax",
+  "h1": "Resultados para “xyzqwe123”",
+  "largura": 390,
+  "janela": 390,
+  "imgsVisiveis": 1,
+  "imgsQuebradas": 1,
+  "semAlt": 0,
+  "texto": "Resultados para “xyzqwe123”\n\n0 produtos encontrados · Página 1\n\nCategoria, preço e ordem\nFiltrar\n\nCombine categoria, marca e preço para encontrar o produto.\n\nLimpar busca e filtros\n\nNada encontrado com esses filtros. Confira o nome, o código ou a referência do produto, ou reduza os filtros. Limpar filtros",
+  "robots": "noindex, follow",
+  "canonical": "https://brilhax.com/produtos",
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "celular",
+  "nome": "busca-ordem-preco",
+  "caminho": "/produtos?ordem=preco-asc",
+  "status": 200,
+  "titulo": "Produtos · Brilhax",
+  "h1": "Todos os produtos",
+  "largura": 390,
+  "janela": 390,
+  "imgsVisiveis": 97,
+  "imgsQuebradas": 11,
+  "semAlt": 0,
+  "texto": "Todos os produtos\n\n79 produtos encontrados · Página 1\n\nCategoria, preço e ordem\nTodas as marcas\nDetailer\nNitro\nScent\nVintex\nVonixx\nWolf Pads\nZacs\nTodas as categorias\nLavagem\nPolimento\nProteção\nAcessórios\nAromatizantes\nKits Completos\nProdutos para Moto\nVitrificação\nRelevância\nMenor preço\nMaior preço\nNovidades\nNome A–Z\nFiltrar\n\nCombine categoria, marca e preço para encontrar o produto.\n\nLimpar busca e filtros\n\nVONIXX\n\nAcidus Fast Vonixx 500 ml\n\nCódigo: 7898511024485\n\nDisponível para compra\n\nVer detalhes\n\nR$ 42,00\n\nAdicionar ao carrinho\n\nVINTEX\n\nAlumax Vintex Desincrustante Ácido 1,5 L\n\nDisponíve",
+  "robots": "noindex, follow",
+  "canonical": "https://brilhax.com/produtos",
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "celular",
+  "nome": "categoria-lavagem",
+  "caminho": "/categoria/lavagem",
+  "status": 200,
+  "titulo": "Lavagem · Brilhax",
+  "h1": "Lavagem",
+  "largura": 390,
+  "janela": 390,
+  "imgsVisiveis": 55,
+  "imgsQuebradas": 13,
+  "semAlt": 0,
+  "texto": "Início\nProdutos\nLavagem\nLavagem\n\nShampoos neutros, desengraxantes, espumas ativas e removedores de contaminantes para uma limpeza segura.\n\nBuscar e filtrar nesta categoria\n\nVONIXX\n\nAcidus Fast Vonixx 500 ml\n\nCódigo: 7898511024485\n\nDisponível para compra\n\nVer detalhes\n\nR$ 42,00\n\nAdicionar ao carrinho\n\nVINTEX\n\nAlumax Vintex Desincrustante Ácido 1,5 L\n\nDisponível para compra\n\nVer detalhes\n\nR$ 49,75\n\nAdicionar ao carrinho\n\nVINTEX\n\nAlumax Vintex Desincrustante Ácido 5 L\n\nDisponível para compra\n\nVer detalhes\n\nR$ 60,33\n\nAdicionar ao carrinho\n\nDETAILER\n\nCanhão de Espuma Detailer Bico Vermelho 1 L\n\nCód",
+  "robots": null,
+  "canonical": "https://brilhax.com/categoria/lavagem",
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "celular",
+  "nome": "categoria-aromatizantes",
+  "caminho": "/categoria/aromatizantes",
+  "status": 200,
+  "titulo": "Aromatizantes · Brilhax",
+  "h1": "Aromatizantes",
+  "largura": 390,
+  "janela": 390,
+  "imgsVisiveis": 8,
+  "imgsQuebradas": 5,
+  "semAlt": 0,
+  "texto": "Início\nProdutos\nAromatizantes\nAromatizantes\n\nFragrâncias e aromatizantes para o interior do veículo.\n\nBuscar e filtrar nesta categoria\n\nVINTEX\n\nAromatizante Carro Novo Vintex Spray 60 ml\n\nCódigo: 7898511020364\n\nDisponível para compra\n\nVer detalhes\n\nR$ 21,90\n\nAdicionar ao carrinho\n\nSCENT\n\nAROMINHA CARRO NOVO SCENT\n\nDisponível para compra\n\nVer detalhes\n\nR$ 15,00\n\nAdicionar ao carrinho\n\nVINTEX\n\nSanitizante Carro Novo Vintex 1,5 L\n\nDisponível para compra\n\nVer detalhes\n\nR$ 42,99\n\nAdicionar ao carrinho",
+  "robots": null,
+  "canonical": "https://brilhax.com/categoria/aromatizantes",
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "celular",
+  "nome": "categoria-acessorios",
+  "caminho": "/categoria/acessorios",
+  "status": 200,
+  "titulo": "Acessórios · Brilhax",
+  "h1": "Acessórios",
+  "largura": 390,
+  "janela": 390,
+  "imgsVisiveis": 16,
+  "imgsQuebradas": 13,
+  "semAlt": 0,
+  "texto": "Início\nProdutos\nAcessórios\nAcessórios\n\nToalhas de microfibra premium, aplicadores de espuma, pincéis de detalhamento e borrifadores.\n\nBuscar e filtrar nesta categoria\n\nVONIXX\n\nAplicador de Microfibra Vonixx com Encaixe de Mão 200 GSM\n\nCódigo: 7898511034255\n\nDisponível para compra\n\nVer detalhes\n\nR$ 21,28\n\nAdicionar ao carrinho\n\nVINTEX\n\nAplicador para Pneus Vintex — Pacote com 2 Unidades\n\nCódigo: 7898511032855\n\nDisponível para compra\n\nVer detalhes\n\nR$ 22,39\n\nAdicionar ao carrinho\n\nVONIXX\n\nEscova Angular de Microfibra Vonixx Grande 50 cm\n\nCódigo: 7898511029282\n\nDisponível para compra\n\nVer detalhe",
+  "robots": null,
+  "canonical": "https://brilhax.com/categoria/acessorios",
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "celular",
+  "nome": "promocoes",
+  "caminho": "/promocoes",
+  "status": 200,
+  "titulo": "Promoções e campanhas · Brilhax",
+  "h1": "Promoções e campanhas",
+  "largura": 390,
+  "janela": 390,
+  "imgsVisiveis": 2,
+  "imgsQuebradas": 1,
+  "semAlt": 0,
+  "texto": "Promoções e campanhas\n\nConfira as ofertas disponíveis na loja.\n\nNenhum produto com desconto ativo no momento\n\nNosso catálogo continua disponível. Explore os produtos e encontre o que você precisa.\n\nExplorar produtos",
+  "robots": null,
+  "canonical": "https://brilhax.com/promocoes",
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "celular",
+  "nome": "produto-quimico",
+  "caminho": "/produtos/v-floc-500ml",
+  "status": 200,
+  "titulo": "V-Floc Vonixx Shampoo Concentrado 500 ml · Brilhax",
+  "h1": "V-Floc Vonixx Shampoo Concentrado 500 ml",
+  "largura": 390,
+  "janela": 390,
+  "imgsVisiveis": 14,
+  "imgsQuebradas": 6,
+  "semAlt": 0,
+  "texto": "Início / Produtos / Lavagem\n\nVONIXX\n\nV-Floc Vonixx Shampoo Concentrado 500 ml\n\nShampoo automotivo concentrado de pH neutro, com alta lubrificação para lavagem externa da pintura.\n\nR$ 31,40\n\nno PIX, cartão ou boleto\n\nAdicionar ao carrinho\n✔ Retirada na loja sem custo\n✔ Envio em até 1 dia útil após o pagamento\nCódigo 7898511030653\nEntrega e frete\nTrocas e devoluções\nCaracterísticas\npH\n6,5 a 7,5 segundo a FDS; pH 7,0 informado na FAQ oficial\nCor\nRoxo\nTipo\nShampoo automotivo concentrado\nFunção\nLavagem externa e condicionamento da pintura\nDiluição\nBalde: 1:400, aproximadamente 10 ml em 4 L de água.",
+  "robots": null,
+  "canonical": "https://brilhax.com/produtos/v-floc-500ml",
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "celular",
+  "nome": "produto-boina",
+  "caminho": "/produtos/boina-micro-wolf-133mm-5-25pol-ventilado",
+  "status": 200,
+  "titulo": "Boina Micro Wolf Wolf Pads 133 mm Ventilada · Brilhax",
+  "h1": "Boina Micro Wolf Wolf Pads 133 mm Ventilada",
+  "largura": 390,
+  "janela": 390,
+  "imgsVisiveis": 15,
+  "imgsQuebradas": 7,
+  "semAlt": 0,
+  "texto": "Início / Produtos / Polimento\n\nWOLF PADS\n\nBoina Micro Wolf Wolf Pads 133 mm Ventilada\n\nBoina Micro Wolf ventilada de 133 mm (5,25 pol), indicada para corte leve a moderado e refino de pintura automotiva.\n\nR$ 70,47\n\nno PIX, cartão ou boleto\n\nAdicionar ao carrinho\n✔ Retirada na loja sem custo\n✔ Envio em até 1 dia útil após o pagamento\nCódigo WP-505\nEntrega e frete\nTrocas e devoluções\nCaracterísticas\nTipo\nBoina de microfibra\nFixacao\nVelcro de alta resistência\nLimpeza\nApós o uso, remova do suporte e lave somente com água corrente. Não use querosene, alvejantes ou produtos com cloro. Não use secado",
+  "robots": null,
+  "canonical": "https://brilhax.com/produtos/boina-micro-wolf-133mm-5-25pol-ventilado",
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "celular",
+  "nome": "produto-acessorio",
+  "caminho": "/produtos/escova-para-lavagem-de-pneus",
+  "status": 200,
+  "titulo": "Escova para Pneus Detailer E07 · Brilhax",
+  "h1": "Escova para Pneus Detailer E07",
+  "largura": 390,
+  "janela": 390,
+  "imgsVisiveis": 16,
+  "imgsQuebradas": 8,
+  "semAlt": 0,
+  "texto": "Início / Produtos / Acessórios\n\nDETAILER\n\nEscova para Pneus Detailer E07\n\nEscova Detailer E07 com cerdas rígidas de nylon e formato côncavo para acompanhar o contorno dos pneus e remover sujeiras incrustadas.\n\nR$ 39,90\n\nno PIX, cartão ou boleto\n\nAdicionar ao carrinho\n✔ Retirada na loja sem custo\n✔ Envio em até 1 dia útil após o pagamento\nCódigo 7898671780016\nEntrega e frete\nTrocas e devoluções\nCaracterísticas\nCabo\nPlástico com revestimento antiderrapante e formato ergonômico\nTipo\nEscova de limpeza para pneus\nMarca\nDetailer\nCerdas\nNylon rígido e resistente\nFunção\nRemover sujeira e resíduos acum",
+  "robots": null,
+  "canonical": "https://brilhax.com/produtos/escova-para-lavagem-de-pneus",
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "celular",
+  "nome": "produto-aroma",
+  "caminho": "/produtos/arominha-carro-novo-scent",
+  "status": 200,
+  "titulo": "AROMINHA CARRO NOVO SCENT · Brilhax",
+  "h1": "AROMINHA CARRO NOVO SCENT",
+  "largura": 390,
+  "janela": 390,
+  "imgsVisiveis": 11,
+  "imgsQuebradas": 9,
+  "semAlt": 0,
+  "texto": "Início / Produtos / Aromatizantes\n\nSCENT\n\nAROMINHA CARRO NOVO SCENT\n\nAromatizante spray Aromas City Novo Scent, 100 ml, com fragrância Carro Novo para perfumar o interior do veículo.\n\nR$ 15,00\n\nno PIX, cartão ou boleto\n\nAdicionar ao carrinho\n✔ Retirada na loja sem custo\n✔ Envio em até 1 dia útil após o pagamento\nEntrega e frete\nTrocas e devoluções\nCaracterísticas\nTipo\nAromatizante automotivo em spray\nAroma\nCarro Novo\nFormato\nFrasco com borrifador\nVolume (ml)\n100\nAplicação\nPerfumar o ambiente interno do veículo\nBenefícios\nFragrância premium; neutraliza odores; frescor prolongado\nDurabilidade\nLo",
+  "robots": null,
+  "canonical": "https://brilhax.com/produtos/arominha-carro-novo-scent",
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "celular",
+  "nome": "carrinho",
+  "caminho": "/carrinho",
+  "status": 200,
+  "titulo": "Carrinho · Brilhax",
+  "h1": "Seu carrinho está vazio",
+  "largura": 390,
+  "janela": 390,
+  "imgsVisiveis": 1,
+  "imgsQuebradas": 1,
+  "semAlt": 0,
+  "texto": "Seu carrinho está vazio\nVer produtos",
+  "robots": "noindex",
+  "canonical": null,
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "celular",
+  "nome": "checkout",
+  "caminho": "/checkout",
+  "status": 200,
+  "titulo": "Finalizar compra · Brilhax",
+  "h1": null,
+  "largura": 390,
+  "janela": 390,
+  "imgsVisiveis": 1,
+  "imgsQuebradas": 1,
+  "semAlt": 0,
+  "texto": "Seu carrinho está vazio.\n\nVer produtos",
+  "robots": "noindex",
+  "canonical": null,
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "celular",
+  "nome": "conta",
+  "caminho": "/conta",
+  "status": 200,
+  "titulo": "Minha conta · Brilhax",
+  "h1": "Minha conta",
+  "largura": 390,
+  "janela": 390,
+  "imgsVisiveis": 1,
+  "imgsQuebradas": 1,
+  "semAlt": 0,
+  "texto": "Minha conta\n\nAcompanhe seus pedidos e guarde seu endereço para comprar mais rápido da próxima vez.\n\nJá tenho conta\nCriar conta\nEntrar\n\nComprar não exige conta, ela serve para acompanhar pedidos e salvar endereço.",
+  "robots": "noindex",
+  "canonical": null,
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "celular",
+  "nome": "contato",
+  "caminho": "/contato",
+  "status": 200,
+  "titulo": "Contato · Brilhax",
+  "h1": "Contato",
+  "largura": 390,
+  "janela": 390,
+  "imgsVisiveis": 1,
+  "imgsQuebradas": 1,
+  "semAlt": 0,
+  "texto": "Contato\nWhatsApp\nIniciar conversa\nTelefone\n(16) 3432-0745\nE-mail\necommerce@brilhax.com\nEndereço\nR. Holanda, 1200 · Vila Mariana · Ribeirão Preto - SP · 14075-240\nHorário\nSeg a Sex: 08:00 às 18:00 | Sábado: 08:00 às 13:00",
+  "robots": null,
+  "canonical": "https://brilhax.com/contato",
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "celular",
+  "nome": "sobre",
+  "caminho": "/sobre",
+  "status": 200,
+  "titulo": "Sobre · Brilhax",
+  "h1": "Sobre a Brilhax",
+  "largura": 390,
+  "janela": 390,
+  "imgsVisiveis": 1,
+  "imgsQuebradas": 1,
+  "semAlt": 0,
+  "texto": "Sobre a Brilhax\n\nProdutos Vonixx para lavagem, polimento, proteção e detalhamento automotivo, com orientação especializada e atendimento em Ribeirão Preto.",
+  "robots": null,
+  "canonical": "https://brilhax.com/sobre",
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "celular",
+  "nome": "politica-privacidade",
+  "caminho": "/politicas/privacidade",
+  "status": 200,
+  "titulo": "Política de privacidade · Brilhax",
+  "h1": "Política de privacidade",
+  "largura": 390,
+  "janela": 390,
+  "imgsVisiveis": 1,
+  "imgsQuebradas": 1,
+  "semAlt": 0,
+  "texto": "Política de privacidade\n\nA Brilhax é a controladora dos seus dados e coleta apenas os necessários para processar o pedido: nome, CPF/CNPJ, e-mail, telefone e endereço de entrega. Eles são usados para emitir a cobrança, entregar o produto e prestar atendimento, nos termos da Lei 13.709/2018 (LGPD).\n\nDados de cartão não passam por nossos servidores: são tokenizados pelo provedor de pagamento no seu navegador.\n\nVocê pode solicitar acesso, correção ou exclusão dos seus dados a qualquer momento pelo ecommerce@brilhax.com. Os dados de pedidos são mantidos pelo prazo exigido pela legislação fiscal.\n\n",
+  "robots": null,
+  "canonical": "https://brilhax.com/politicas/privacidade",
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "celular",
+  "nome": "politica-devolucao",
+  "caminho": "/politicas/devolucao",
+  "status": 200,
+  "titulo": "Política de devolução e reembolso · Brilhax",
+  "h1": "Política de devolução e reembolso",
+  "largura": 390,
+  "janela": 390,
+  "imgsVisiveis": 1,
+  "imgsQuebradas": 1,
+  "semAlt": 0,
+  "texto": "Política de devolução e reembolso\n\nCompras feitas pela internet podem ser desfeitas em até 7 dias corridos após o recebimento, sem necessidade de justificativa, conforme o art. 49 do Código de Defesa do Consumidor. O produto deve ser devolvido sem uso e na embalagem original; o valor pago, incluindo o frete, é estornado integralmente pelo mesmo meio de pagamento, e o frete de retorno é por nossa conta.\n\nProduto com defeito pode ser trocado em até 30 dias (não duráveis) ou 90 dias (duráveis) a contar do recebimento, conforme o art. 26 do Código de Defesa do Consumidor. Nesses casos o custo do r",
+  "robots": null,
+  "canonical": "https://brilhax.com/politicas/devolucao",
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "celular",
+  "nome": "politica-envio",
+  "caminho": "/politicas/envio",
+  "status": 200,
+  "titulo": "Política de envio · Brilhax",
+  "h1": "Política de envio",
+  "largura": 390,
+  "janela": 390,
+  "imgsVisiveis": 1,
+  "imgsQuebradas": 1,
+  "semAlt": 0,
+  "texto": "Política de envio\n\nOs pedidos são despachados em até 1 dias úteis após a confirmação do pagamento. O prazo de entrega é o informado na cotação de frete no momento da compra e depende da transportadora e do CEP de destino.\n\nVocê pode retirar o pedido sem custo em Ribeirão Preto/SP, a partir do próximo dia útil após a confirmação. Aguarde o aviso de \"pedido separado\" antes de ir até a loja.\n\nEm caso de avaria no transporte ou extravio, comunique-nos pelo ecommerce@brilhax.com com fotos da embalagem. A reposição ou o estorno são por nossa conta.\n\nQuem vende\n\nBrilhax\n\nR. Holanda, 1200 · Vila Maria",
+  "robots": null,
+  "canonical": "https://brilhax.com/politicas/envio",
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "celular",
+  "nome": "politica-termos",
+  "caminho": "/politicas/termos",
+  "status": 200,
+  "titulo": "Termos de serviço · Brilhax",
+  "h1": "Termos de serviço",
+  "largura": 390,
+  "janela": 390,
+  "imgsVisiveis": 1,
+  "imgsQuebradas": 1,
+  "semAlt": 0,
+  "texto": "Termos de serviço\n\nEstes termos valem para o uso da loja da Brilhax. Navegar e comprar significa concordar com eles.\n\nA loja apresenta os produtos, o preço e as condições de entrega, e a compra é feita aqui mesmo: você monta o carrinho, escolhe o frete e paga online. O contrato de venda se forma quando o pagamento é confirmado pelo provedor de pagamento.\n\nPreço, disponibilidade e prazo são os exibidos no momento da compra. Erros evidentes de cadastro (preço incompatível com o produto, por exemplo) não obrigam a loja à venda: nesse caso o pedido é cancelado e o valor devolvido integralmente.\n\nA",
+  "robots": null,
+  "canonical": "https://brilhax.com/politicas/termos",
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 2
+ },
+ {
+  "dispositivo": "celular",
+  "nome": "404",
+  "caminho": "/produtos/nao-existe-xyz",
+  "status": 404,
+  "titulo": "Produto · Brilhax",
+  "h1": "Página não encontrada",
+  "largura": 390,
+  "janela": 390,
+  "imgsVisiveis": 1,
+  "imgsQuebradas": 1,
+  "semAlt": 0,
+  "texto": "Página não encontrada\nVoltar ao início",
+  "robots": "noindex",
+  "canonical": null,
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "404 https://brilhax.com/produtos/nao-existe-xyz",
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 4
+ },
+ {
+  "dispositivo": "celular",
+  "nome": "pagina-inexistente",
+  "caminho": "/xyz-inexistente",
+  "status": 404,
+  "titulo": "Brilhax | Produtos para Estética Automotiva",
+  "h1": "Página não encontrada",
+  "largura": 390,
+  "janela": 390,
+  "imgsVisiveis": 1,
+  "imgsQuebradas": 1,
+  "semAlt": 0,
+  "texto": "Página não encontrada\nVoltar ao início",
+  "robots": "noindex",
+  "canonical": null,
+  "botoesSemNome": 0,
+  "erros": [
+   "Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "falhas": [
+   "404 https://brilhax.com/xyz-inexistente",
+   "500 https://brilhax.com/uploads/brilhax/favicon.svg",
+   "500 https://brilhax.com/uploads/brilhax/favicon-96x96.png"
+  ],
+  "nFalhas": 3
+ }
+]

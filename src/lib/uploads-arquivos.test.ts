@@ -14,6 +14,6 @@ test("rota /uploads não importa módulo com dependência nativa estática", () 
   assert.ok(!imports.some((i) => /fundo|removedor|onnx|sharp/.test(i)), `import proibido: ${imports.join(", ")}`);
   const imagens = readFileSync("src/lib/imagens.ts", "utf8");
   assert.ok(!/^import .* from "sharp"/m.test(imagens), "imagens.ts precisa carregar o sharp sob demanda");
-  const caminho = readFileSync("src/lib/uploads-caminho.ts", "utf8");
+  const caminho = readFileSync("src/lib/uploads-arquivos.ts", "utf8");
   assert.deepEqual([...caminho.matchAll(/from\s+"([^"]+)"/g)].map((m) => m[1]), ["node:path"]);
 });

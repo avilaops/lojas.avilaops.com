@@ -3,6 +3,9 @@ import { randomBytes } from "node:crypto";
 import path from "node:path";
 import { otimizarAoEntrar } from "./imagens";
 import { removedorConfigurado, removerFundo } from "./fundo";
+import { UPLOADS_DIR } from "./uploads-arquivos";
+
+export { MIME_POR_EXT, UPLOADS_DIR } from "./uploads-arquivos";
 
 /**
  * Fotos de produto e logo. Ficam em disco (volume /opt/lojas/uploads no
@@ -13,9 +16,6 @@ import { removedorConfigurado, removerFundo } from "./fundo";
  * Só imagem, até 5 MB, tipo conferido pelos bytes (não pela extensão que o
  * navegador mandou).
  */
-import { MIME_POR_EXT, UPLOADS_DIR } from "./uploads-caminho";
-
-export { MIME_POR_EXT, UPLOADS_DIR };
 const LIMITE = 5 * 1024 * 1024;
 const BASE = process.env.LOJAS_BASE_DOMAIN ?? "lojas.avilaops.com";
 
@@ -88,9 +88,3 @@ export async function importarImagemDeUrl(slug: string, url: string, tratar = fa
   const salvo = await salvarBytes(slug, bytes, ext);
   return { url: salvo.url, tratada: false };
 }
-
-/**
- * O `ico` e o `webmanifest` não são foto de produto: entram porque o ícone da
- * loja mora aqui, junto do resto do que é dela. Sem eles a rota devolve 404 e
- * o navegador fica com o ícone padrão.
- */

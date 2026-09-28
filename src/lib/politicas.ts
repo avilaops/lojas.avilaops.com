@@ -108,6 +108,30 @@ export function lerRegrasDevolucao(bruto: unknown): RegrasDevolucao {
   };
 }
 
+/**
+ * A política de troca como `MerchantReturnPolicy`, para a loja (`Store`) no
+ * JSON-LD. O Google prefere a política declarada no nível da organização a
+ * repeti-la em cada oferta. Sai do mesmo leitor que escreve o texto de
+ * `/politicas/devolucao`, então o dado estruturado e a página dizem o mesmo.
+ *
+ * `returnFees` só é afirmado quando é verdade para o prazo inteiro: no prazo
+ * legal o frete de volta é da loja (CDC, art. 49); depois dele, na cortesia,
+ * vale o que o lojista escolheu. Prazo maior que o legal com retorno pago pelo
+ * cliente é misto, e o schema não tem como dizer isso: fica sem o campo.
+ */
+export function politicaDevolucaoSchema(regras: RegrasDevolucao, url: string) {
+  const gratis = regras.prazoDias <= PRAZO_LEGAL_DIAS || regras.freteRetornoCortesia === "loja";
+  return {
+    "@type": "MerchantReturnPolicy",
+    applicableCountry: "BR",
+    returnPolicyCountry: "BR",
+    returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+    merchantReturnDays: regras.prazoDias,
+    ...(gratis && regras.taxaReposicaoPct === 0 ? { returnFees: "https://schema.org/FreeReturn" } : {}),
+    merchantReturnLink: url,
+  };
+}
+
 export interface PoliticaEscrita {
   corpo: string;
   atualizadoEm: string;

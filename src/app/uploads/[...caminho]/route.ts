@@ -1,7 +1,6 @@
 import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
-// Nunca "@/lib/uploads": ver o comentário em uploads-caminho.ts.
-import { MIME_POR_EXT, UPLOADS_DIR } from "@/lib/uploads-caminho";
+import { MIME_POR_EXT, UPLOADS_DIR } from "@/lib/uploads-arquivos";
 import { variante } from "@/lib/imagens";
 
 /** Serve as imagens enviadas pelo painel. Cache longo: o nome do arquivo é único. */
