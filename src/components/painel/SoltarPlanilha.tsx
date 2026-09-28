@@ -14,6 +14,10 @@ import { FileSpreadsheet, Upload } from "lucide-react";
  * O `<input>` continua existindo, escondido: é ele que abre o seletor do
  * sistema e é ele que o leitor de tela anuncia. Trocar por um `<div>` com
  * `onClick` deixaria a tela inacessível pelo teclado.
+ *
+ * Aceita os dois formatos que a exportação gera. Só aceitar .csv obrigava
+ * quem baixou o .xlsx a "Salvar como CSV" no Excel — e era nessa hora que o
+ * GTIN virava 7,89123E+12.
  */
 export default function SoltarPlanilha({
   onArquivo,
@@ -28,10 +32,14 @@ export default function SoltarPlanilha({
 
   function receber(arquivo: File | undefined) {
     if (!arquivo) return;
-    // O nome é o que dá para conferir sem abrir: o tipo MIME de CSV varia entre
-    // Excel, LibreOffice e Google Planilhas, e barrar por ele recusa arquivo bom.
-    if (!/\.csv$/i.test(arquivo.name)) {
-      setErro("Envie um arquivo .csv. No Excel ou no Google Planilhas: Arquivo → Baixar → CSV.");
+    // O nome é o que dá para conferir sem abrir: o tipo MIME varia entre Excel,
+    // LibreOffice e Google Planilhas, e barrar por ele recusa arquivo bom.
+    if (/\.xls$/i.test(arquivo.name)) {
+      setErro("O formato .xls é antigo. No Excel: Arquivo → Salvar como → Pasta de Trabalho do Excel (.xlsx).");
+      return;
+    }
+    if (!/\.(csv|xlsx)$/i.test(arquivo.name)) {
+      setErro("Envie um arquivo .xlsx ou .csv — os mesmos que o botão “Baixar o catálogo” gera.");
       return;
     }
     setErro(null);
@@ -67,12 +75,12 @@ export default function SoltarPlanilha({
           </button>
           <span className="mt-2 block text-muted-foreground">ou arraste o arquivo até aqui</span>
         </p>
-        <p className="mt-1 text-xs text-muted-foreground">Arquivo .csv</p>
+        <p className="mt-1 text-xs text-muted-foreground">Excel (.xlsx) ou .csv</p>
 
         <input
           ref={campo}
           type="file"
-          accept=".csv,text/csv"
+          accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
           className="sr-only"
           disabled={desabilitado}
           onChange={(e) => {
