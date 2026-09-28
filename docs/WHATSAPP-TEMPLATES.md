@@ -1,7 +1,13 @@
 # WhatsApp: templates a aprovar no Meta Business Manager
 
-O fluxo n8n `Lojas — Onboarding e Pedidos` envia WhatsApp pela **API oficial da
-Meta** (Cloud API), sem Twilio. Toda mensagem que a loja inicia (fora da janela
+**Desde 19/09/2026 quem envia é a plataforma** (`src/lib/whatsapp.ts`,
+`docs/MENSAGENS.md`), pela mesma **API oficial da Meta** (Cloud API), sem
+Twilio. Ficam no n8n só os dois que esperam — `pix_pendente` (30 min) e
+`loja_indicacoes` (3 dias) —, porque não são reação a um evento.
+
+As credenciais mudam de lugar: `WHATSAPP_TOKEN` e `WHATSAPP_PHONE_ID` no
+ambiente do Lojas, em vez da credencial do n8n. Sem elas, os cinco templates de
+evento voltam inteiros para o fluxo. Toda mensagem que a loja inicia (fora da janela
 de 24 h) exige um **template aprovado**; por isso os sete envios abaixo usam
 `type: "template"`.
 

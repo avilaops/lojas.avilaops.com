@@ -248,6 +248,7 @@ export default function Pedidos({
       {dados && dados.total > 0 && (
         <BaixarPlanilha
           tipo="pedidos"
+          total={dados.total}
           rotulo="Baixar pedidos:"
           ajuda="Documento e telefone saem como texto, do jeito que foram digitados."
         />

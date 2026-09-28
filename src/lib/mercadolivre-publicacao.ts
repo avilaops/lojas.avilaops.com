@@ -264,6 +264,55 @@ async function escreverDescricao(loja: Tenant, mlbId: string, descricao: string)
   }
 }
 
+/** O estado do anúncio no ML, no recorte que a decisão de sincronia usa. */
+export interface ItemNoMl {
+  status?: string;
+  price?: number;
+  available_quantity?: number;
+  variations?: Array<{ id?: number | string }> | null;
+}
+
+/**
+ * O que fazer com um anúncio publicado, decidido antes de qualquer chamada.
+ *
+ * Função pura porque as três saídas são regras de negócio que erram em
+ * silêncio, não detalhes de transporte: anúncio fechado que volta a receber
+ * estoque, anúncio com variações que o ML recusa todo ciclo, produto inativo
+ * que continua à venda. Dentro do laço, com rede e banco por perto, nenhuma
+ * delas tem como ser provada.
+ */
+export type PlanoDeSincronia =
+  | { acao: "pausar" }
+  /** O ML recusa quantidade no item com variações: preço e estoque ficam com o lojista. */
+  | { acao: "so-conteudo" }
+  | { acao: "sincronizar"; precoCentavos: number; preco: number; estoque: number; mudouPreco: boolean; mudouEstoque: boolean };
+
+export function planejarSincronia(
+  produto: { ativo: boolean; precoCentavos: number; estoque: number | null },
+  atual: ItemNoMl,
+  regras: RegrasDoCanal,
+): PlanoDeSincronia {
+  // Fechado no ML é decisão de lá, e é final para este ciclo: mandar estoque
+  // para anúncio fechado não o traz de volta, só gasta chamada.
+  if (atual.status === "closed") return { acao: "pausar" };
+  if (atual.variations?.length) return { acao: "so-conteudo" };
+
+  // Produto inativo vai a zero, que é como o ML tira do ar sem fechar.
+  const estoque = produto.ativo ? estoqueDoCanal(produto.estoque, regras) : 0;
+  const precoCentavos = precoDoCanal(produto.precoCentavos, regras);
+  const preco = Number((precoCentavos / 100).toFixed(2));
+  return {
+    acao: "sincronizar",
+    precoCentavos,
+    preco,
+    estoque,
+    mudouEstoque: atual.available_quantity !== estoque,
+    // Preço zero não é preço: produto sem valor cadastrado não derruba o que
+    // está no ar para R$ 0,00.
+    mudouPreco: precoCentavos > 0 && atual.price !== preco,
+  };
+}
+
 async function publicarAprovados(loja: Tenant, limite: number, resumo: ResumoMercadoLivre, regras: RegrasDoCanal) {
   const regrasDoProduto = resolverRegrasDoCanal(regras);
   const anuncios = await prisma.anuncioMercadoLivre.findMany({
@@ -333,15 +382,28 @@ async function sincronizarPublicados(loja: Tenant, limite: number, resumo: Resum
   const anuncios = await prisma.anuncioMercadoLivre.findMany({
     where: { tenantId: loja.id, estado: "publicado", mlbId: { not: null } },
     include: { produto: true },
-    orderBy: [{ sincronizadoEm: "asc" }, { atualizadoEm: "asc" }],
+    // `nulls: "first"` é o ponto: no Postgres, ASC joga NULL para o fim, e
+    // anúncio adotado nasce com `sincronizadoEm` nulo. Sem isto, justamente
+    // quem nunca sincronizou ia para trás da fila e, com o teto do lote,
+    // podia não ser alcançado nunca.
+    orderBy: [{ sincronizadoEm: { sort: "asc", nulls: "first" } }, { atualizadoEm: "asc" }],
     take: limite,
   });
 
   for (const anuncio of anuncios) {
     if (!anuncio.mlbId) continue;
     try {
-      const atual = await chamarMl<{ status?: string; price?: number; available_quantity?: number; permalink?: string }>(loja, `/items/${encodeURIComponent(anuncio.mlbId)}`);
-      if (atual.status === "closed") {
+      const atual = await chamarMl<{
+        status?: string;
+        price?: number;
+        available_quantity?: number;
+        permalink?: string;
+        variations?: Array<{ id?: number | string }> | null;
+      }>(loja, `/items/${encodeURIComponent(anuncio.mlbId)}`);
+      const doProduto = regrasDoProduto({ categoriaMl: anuncio.categoriaMl });
+      const plano = planejarSincronia(anuncio.produto, atual, doProduto);
+
+      if (plano.acao === "pausar") {
         await prisma.anuncioMercadoLivre.update({
           where: { id: anuncio.id },
           data: { estado: "pausado", statusMl: "closed", permalink: atual.permalink ?? anuncio.permalink, sincronizadoEm: new Date() },
@@ -352,7 +414,10 @@ async function sincronizarPublicados(loja: Tenant, limite: number, resumo: Resum
 
       // Conteúdo antes de preço: o lojista que corrigiu a foto errada quer ver
       // a foto certa no ar, e isso não depende de o preço ter mudado.
-      const conteudo = conteudoDoAnuncio(anuncio, urlDaLoja(loja));
+      //
+      // Anúncio adotado fica de fora: o título, as fotos e a descrição são
+      // dele, e adotar autorizou preço e estoque, não trocar o anúncio.
+      const conteudo = anuncio.origem === "adotada" ? null : conteudoDoAnuncio(anuncio, urlDaLoja(loja));
       const escrita: EscritaDeConteudo = conteudo && conteudo.hash !== anuncio.conteudoHash
         ? await escreverConteudo(loja, anuncio.mlbId, conteudo)
         : { avisos: [], pendente: false };
@@ -360,12 +425,39 @@ async function sincronizarPublicados(loja: Tenant, limite: number, resumo: Resum
       // Preço e estoque do canal, não da loja: é o acréscimo e a reserva que
       // o lojista definiu que vão para o anúncio. Produto inativo vai a zero,
       // que é como o ML tira do ar sem fechar o anúncio.
-      const doProduto = regrasDoProduto({ categoriaMl: anuncio.categoriaMl });
-      const estoque = anuncio.produto.ativo ? estoqueDoCanal(anuncio.produto.estoque, doProduto) : 0;
-      const precoCanalCentavos = precoDoCanal(anuncio.produto.precoCentavos, doProduto);
-      const preco = Number((precoCanalCentavos / 100).toFixed(2));
-      const mudouEstoque = atual.available_quantity !== estoque;
-      const mudouPreco = precoCanalCentavos > 0 && atual.price !== preco;
+      /**
+       * Anúncio com variações não recebe preço nem estoque daqui.
+       *
+       * O ML recusa `available_quantity` no item quando ele tem variações: a
+       * quantidade mora em cada uma. Empurrar assim mesmo faria todo ciclo
+       * falhar, para sempre, num anúncio que está perfeitamente no ar.
+       *
+       * Só preço e estoque param. O **conteúdo acima segue**, e é o caso do
+       * lojista que acrescentou variações a um anúncio que nós publicamos: o
+       * título e as fotos continuam sendo nossos, e não há razão para congelá-los
+       * junto. Em anúncio adotado o conteúdo já não é escrito, por `origem`.
+       *
+       * A venda continua certa dos dois lados: `resolverVariante` reconhece a
+       * apresentação vendida pelo SKU ou pelos atributos.
+       */
+      if (plano.acao === "so-conteudo") {
+        await prisma.anuncioMercadoLivre.update({
+          where: { id: anuncio.id },
+          data: {
+            statusMl: atual.status ?? null,
+            permalink: atual.permalink ?? anuncio.permalink,
+            motivoErro: escrita.avisos.length
+              ? escrita.avisos.join(" ")
+              : "Anúncio com variações: preço e estoque continuam sendo editados por você no Mercado Livre. As vendas são reconhecidas e baixam a apresentação certa do estoque.",
+            conteudoHash: conteudo && !escrita.pendente ? conteudo.hash : anuncio.conteudoHash,
+            sincronizadoEm: new Date(),
+          },
+        });
+        resumo.ignorados++;
+        continue;
+      }
+
+      const { estoque, preco, precoCentavos: precoCanalCentavos, mudouEstoque, mudouPreco } = plano;
 
       if (mudouEstoque || mudouPreco) {
         const corpo: Record<string, number> = {};

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { corpoDaPublicacaoMl, conteudoDoAnuncio } from "./mercadolivre-publicacao";
+import { corpoDaPublicacaoMl, conteudoDoAnuncio, planejarSincronia } from "./mercadolivre-publicacao";
+import { REGRAS_PADRAO } from "./canais";
 
 const pronto = {
   produtoId: "p1",
@@ -203,4 +204,57 @@ test("foto do próprio item não acrescenta nada", () => {
 
 test("declarar a origem muda a impressão digital, então anúncio antigo se corrige sozinho", () => {
   assert.notEqual(comOrigem("representativa").hash, comOrigem("propria").hash);
+});
+
+/**
+ * O que fazer com um anúncio já publicado. As três saídas erram em silêncio se
+ * ficarem só na leitura atenta do laço.
+ */
+const NO_AR = { ativo: true, precoCentavos: 10000, estoque: 7 };
+
+test("anúncio fechado no Mercado Livre não recebe mais nada", () => {
+  const p = planejarSincronia(NO_AR, { status: "closed", price: 100, available_quantity: 7 }, REGRAS_PADRAO);
+  assert.equal(p.acao, "pausar");
+});
+
+test("anúncio com variações para preço e estoque, e só", () => {
+  // O ML recusa available_quantity no item quando há variações; insistir faria
+  // todo ciclo falhar num anúncio que está perfeitamente no ar.
+  const p = planejarSincronia(NO_AR, { status: "active", variations: [{ id: 1 }] }, REGRAS_PADRAO);
+  assert.equal(p.acao, "so-conteudo");
+});
+
+test("fechado manda mais que variação: nada sobe para anúncio fechado", () => {
+  const p = planejarSincronia(NO_AR, { status: "closed", variations: [{ id: 1 }] }, REGRAS_PADRAO);
+  assert.equal(p.acao, "pausar");
+});
+
+test("o que sobe é o preço do canal, com acréscimo e arredondamento", () => {
+  const p = planejarSincronia(NO_AR, { status: "active", price: 100, available_quantity: 7 }, {
+    ...REGRAS_PADRAO, acrescimoPercentual: 16.3, arredondamento: "noventa",
+  });
+  assert.equal(p.acao === "sincronizar" && p.preco, 116.9);
+  assert.equal(p.acao === "sincronizar" && p.mudouPreco, true);
+});
+
+test("nada mudou, nada sobe", () => {
+  const p = planejarSincronia(NO_AR, { status: "active", price: 100, available_quantity: 7 }, REGRAS_PADRAO);
+  assert.equal(p.acao === "sincronizar" && p.mudouPreco, false);
+  assert.equal(p.acao === "sincronizar" && p.mudouEstoque, false);
+});
+
+test("produto inativo na loja vai a zero, que é como o ML tira do ar sem fechar", () => {
+  const p = planejarSincronia({ ...NO_AR, ativo: false }, { status: "active", price: 100, available_quantity: 7 }, REGRAS_PADRAO);
+  assert.equal(p.acao === "sincronizar" && p.estoque, 0);
+  assert.equal(p.acao === "sincronizar" && p.mudouEstoque, true);
+});
+
+test("o estoque reservado para a loja não sobe para o canal", () => {
+  const p = planejarSincronia(NO_AR, { status: "active", available_quantity: 7 }, { ...REGRAS_PADRAO, estoqueReservado: 2 });
+  assert.equal(p.acao === "sincronizar" && p.estoque, 5);
+});
+
+test("produto sem preço não derruba o anúncio para R$ 0,00", () => {
+  const p = planejarSincronia({ ...NO_AR, precoCentavos: 0 }, { status: "active", price: 100, available_quantity: 7 }, REGRAS_PADRAO);
+  assert.equal(p.acao === "sincronizar" && p.mudouPreco, false, "preço zero não é preço");
 });

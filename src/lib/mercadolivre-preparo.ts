@@ -552,7 +552,7 @@ export async function prepararCatalogo(
       categoria: { select: { nome: true } },
       // A escolha manual do lojista, quando existe. É ela que decide se o
       // preditor sequer roda para este produto.
-      anunciosMl: { select: { categoriaMl: true, categoriaOrigem: true, preparoEstado: true } },
+      anunciosMl: { select: { categoriaMl: true, categoriaOrigem: true, preparoEstado: true, origem: true } },
     },
     take: opcoes.limite,
     orderBy: { criadoEm: "asc" },
@@ -562,6 +562,17 @@ export async function prepararCatalogo(
 
   for (const [i, p] of produtos.entries()) {
     const { categoria, anunciosMl, ...produto } = p;
+
+    // Anúncio adotado não se prepara. O preparo existe para decidir o que
+    // publicar, e ele já está publicado — pelo lojista. Rodar o preditor aqui
+    // trocaria a categoria **real** do Mercado Livre por um palpite a partir
+    // do nome, e é a categoria real que vale para um anúncio no ar.
+    if (anunciosMl[0]?.origem === "adotada") {
+      contar(contagem, anunciosMl[0]?.preparoEstado);
+      opcoes.aoAndar?.(i + 1, produtos.length);
+      continue;
+    }
+
     const escolhido = categoriaEscolhidaAMao(anunciosMl[0]);
 
     let r: Preparo;
