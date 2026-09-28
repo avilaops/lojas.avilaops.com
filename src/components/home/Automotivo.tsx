@@ -27,37 +27,52 @@ import type { DadosHome } from "./tipos";
 
 export default function Automotivo({ t, identidade, categorias, vitrine, temDestaques, vende, moto }: DadosHome) {
   const { trilha, restantes, mostrar: mostrarTrilha } = montarTrilha(categorias);
+  const politicaCategorias = temaDo(t).categoriaSemImagem;
+  const categoriasVisuais = categorias.filter((categoria) => politicaCategorias !== "ocultar" || categoria.imagemUrl);
+  const atalhosVisiveis = categoriasVisuais.length >= 3;
+  const bannerDesktopUrl = t.bannerUrl && `${t.bannerUrl}${t.bannerUrl.includes("?") ? "&" : "?"}v=2`;
+  const bannerMobileUrl = bannerDesktopUrl?.replace(/-desktop(?=\.[a-z0-9]+(?:[?#]|$))/i, "-mobile");
 
   return (
     <main className="home-mercado home-automotivo">
       <section className={`mercado-abertura${t.bannerUrl ? " mercado-abertura-com-banner" : ""}`}>
-        <div className="container-loja mercado-abertura-grid">
-          <div>
-            <p className="home-selo text-primary">{identidade.palavrasChave[0] || "Estética automotiva"}</p>
-            <h1>{t.slogan ?? t.nome}</h1>
-            <p>{t.sobre || identidade.diferencial || "Os produtos e o passo a passo para o acabamento durar."}</p>
-            <div className="mercado-acoes">
-              <Link href="/produtos" className="btn-primario">Ver produtos <Search /></Link>
-              {t.whatsapp && <Link href="/contato" className="btn-secundario">Tirar dúvida técnica</Link>}
-            </div>
-            {/* Quem compra aqui costuma procurar pela marca que já usa na
-                oficina, e não pela categoria. */}
-            <p className="mercado-dica">Busque por produto, marca ou volume.</p>
-          </div>
-          {t.bannerUrl && (
-            <aside className="distribuidora-arte">
+        {t.bannerUrl ? (
+          <Link href="/produtos" className="automotivo-banner" aria-label="Ver produtos da loja">
+            <picture>
+              {bannerMobileUrl && bannerMobileUrl !== t.bannerUrl && (
+                <source media="(max-width: 640px)" srcSet={bannerMobileUrl} />
+              )}
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={t.bannerUrl} alt="" />
-            </aside>
-          )}
-        </div>
+              <img src={bannerDesktopUrl!} alt="" fetchPriority="high" />
+            </picture>
+          </Link>
+        ) : (
+          <div className="container-loja mercado-abertura-grid">
+            <div>
+              <p className="home-selo text-primary">{identidade.palavrasChave[0] || "Estética automotiva"}</p>
+              <h1>{t.slogan ?? t.nome}</h1>
+              <p>{t.sobre || identidade.diferencial || "Os produtos e o passo a passo para o acabamento durar."}</p>
+              <div className="mercado-acoes">
+                <Link href="/produtos" className="btn-primario">Ver produtos <Search /></Link>
+                {t.whatsapp && <Link href="/contato" className="btn-secundario">Tirar dúvida técnica</Link>}
+              </div>
+              <p className="mercado-dica">Busque por produto, marca ou volume.</p>
+            </div>
+            {t.bannerUrl && (
+              <aside className="distribuidora-arte">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={t.bannerUrl} alt="" />
+              </aside>
+            )}
+          </div>
+        )}
       </section>
 
-      <AtalhosCategorias categorias={categorias} semImagem={temaDo(t).categoriaSemImagem} />
+      <AtalhosCategorias categorias={categorias} semImagem={politicaCategorias} grande />
 
       <div className="container-loja"><BeneficiosBarra t={t} /></div>
 
-      {mostrarTrilha && (
+      {mostrarTrilha && !t.bannerUrl && (
         <section className="container-loja automotivo-trilha">
           <header>
             <div>
@@ -87,7 +102,10 @@ export default function Automotivo({ t, identidade, categorias, vitrine, temDest
         </section>
       )}
 
-      {restantes.length > 0 && (
+      {/* Os atalhos já exibem o catálogo todo quando há imagens suficientes.
+          Repetir aqui as categorias fora da trilha de serviço criava uma
+          segunda grade pequena logo abaixo da vitrine principal. */}
+      {!atalhosVisiveis && restantes.length > 0 && (
         <section className="container-loja mercado-departamentos">
           <header>
             <div>

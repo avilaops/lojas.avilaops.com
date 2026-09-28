@@ -27,11 +27,14 @@ export default function GaleriaProduto({ imagens, alt, origem = "propria" }: { i
     <div className="grid gap-2">
       <div
         className="relative aspect-square overflow-hidden rounded-xl bg-muted"
-        onMouseMove={(e) => {
+        onPointerMove={(e) => {
+          // O zoom por posição é útil com mouse, mas um gesto de toque no
+          // celular não deve deixar a foto ampliada depois de rolar a página.
+          if (e.pointerType !== "mouse") return;
           const r = e.currentTarget.getBoundingClientRect();
           setZoom({ x: ((e.clientX - r.left) / r.width) * 100, y: ((e.clientY - r.top) / r.height) * 100 });
         }}
-        onMouseLeave={() => setZoom(null)}
+        onPointerLeave={() => setZoom(null)}
       >
         {grande ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -48,7 +51,7 @@ export default function GaleriaProduto({ imagens, alt, origem = "propria" }: { i
       {aviso && <p className="text-xs leading-snug text-muted-foreground">{aviso}</p>}
       {imagens.length > 1 && (
         <div className="grid grid-cols-5 gap-2">
-          {imagens.slice(0, 10).map((img, i) => (
+          {imagens.slice(0, 20).map((img, i) => (
             <button key={img} type="button" onClick={() => setAtual(i)} className={`aspect-square overflow-hidden rounded-lg border-2 ${i === atual ? "border-primary" : "border-transparent"}`} aria-label={`Foto ${i + 1}`}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={/\/uploads\//.test(img) && !/\.svg$/i.test(img) ? `${img}?w=160` : img} alt="" className="h-full w-full object-cover" />

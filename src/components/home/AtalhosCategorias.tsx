@@ -21,9 +21,11 @@ import type { TemaLoja } from "@/lib/tema";
 export default function AtalhosCategorias({
   categorias,
   semImagem,
+  grande = false,
 }: {
   categorias: Array<{ id: string; slug: string; nome: string; imagemUrl: string | null }>;
   semImagem: TemaLoja["categoriaSemImagem"];
+  grande?: boolean;
 }) {
   const lista = categoriasParaVitrine(categorias, semImagem);
   // Menos de três atalhos não formam uma fileira: viram dois círculos soltos
@@ -32,7 +34,7 @@ export default function AtalhosCategorias({
 
   return (
     <nav className="atalhos-cat" aria-label="Categorias em destaque">
-      <div className="container-loja atalhos-cat-tira">
+      <div className={grande ? "atalhos-cat-tira" : "container-loja atalhos-cat-tira"}>
         {lista.slice(0, PRINCIPAIS).map((c) => (
           <Link key={c.id} href={`/categoria/${c.slug}`}>
             <span className="atalhos-cat-foto">

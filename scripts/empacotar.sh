@@ -15,7 +15,12 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 SAIDA="${1:-/tmp/lojas-standalone.tgz}"
-APP=".next/standalone"
+APP=".next/standalone/lojas.avilaops.com"
+if [ ! -d "$APP" ] && [ -f ".next/standalone/server.js" ]; then
+  # Quando o build roda dentro da pasta do app, o Next escreve o standalone
+  # direto na raiz. Em monorepo ele mantém a pasta lojas.avilaops.com.
+  APP=".next/standalone"
+fi
 
 [ -d "$APP" ] || { echo "!! falta $APP; rode 'npm run build' antes" >&2; exit 1; }
 
@@ -61,10 +66,12 @@ rm -f "$SAIDA"
 # o deploy só descobre ao descompactar, com o container já parando.
 tmp="$SAIDA.parcial"
 rm -f "$tmp"
-stage=$(mktemp -d "${SAIDA%/*}/lojas-stage.XXXXXX")
+# O /tmp do servidor é tmpfs. Montar o estágio ao lado de .next evita duplicar
+# 180 MB temporários na RAM e preserva espaço para o runtime dos containers.
+stage=$(mktemp -d ".next/lojas-stage.XXXXXX")
 mkdir -p "$stage/lojas.avilaops.com"
 cp -a "$APP/." "$stage/lojas.avilaops.com/"
-if ! tar --force-local -czf "$tmp" -C "$stage" .; then
+if ! tar --force-local --exclude='./lojas.avilaops.com/output' --exclude='./lojas.avilaops.com/output/**' -czf "$tmp" -C "$stage" .; then
   rm -rf "$stage"
   rm -f "$tmp"
   echo "!! tar falhou; nada foi gerado" >&2
@@ -88,7 +95,7 @@ tar --force-local -tzf "$SAIDA" > "$lista"
 falta=0
 tem() { grep -q "$1" "$lista" || { echo "  !! $2" >&2; falta=1; }; }
 
-css=$(grep -c '\.next/static/chunks/.*\.css$' "$lista" || true)
+css=$(grep -E -c '\.next/static/(css|chunks)/.*\.css$' "$lista" || true)
 [ "$css" -gt 0 ] || { echo "  !! nenhum CSS em .next/static" >&2; falta=1; }
 tem 'lojas\.avilaops\.com/public/'            'public/ ausente'
 tem 'lojas\.avilaops\.com/prisma/schema\.prisma' 'prisma/ ausente'

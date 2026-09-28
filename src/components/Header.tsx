@@ -3,6 +3,7 @@ import { Store } from "lucide-react";
 import type { TenantPublico } from "@/lib/tenant";
 import CartButton from "@/components/cart/CartButton";
 import BuscaLoja from "@/components/BuscaLoja";
+import MenuMobile from "@/components/MenuMobile";
 
 /**
  * Quantas categorias entram na barra e nos atalhos com foto.
@@ -36,6 +37,7 @@ export default function Header({ loja, logoUrl, categorias, exemploBusca, mostra
             Minha conta
           </Link>
         )}
+        <MenuMobile className="ml-auto sm:hidden" nome={loja.nome} vende={loja.vende} mostrarPromocoes={mostrarPromocoes} categorias={categorias} />
         {loja.vende && <CartButton />}
       </div>
 

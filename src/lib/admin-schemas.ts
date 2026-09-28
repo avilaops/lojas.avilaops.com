@@ -150,7 +150,7 @@ export const ProdutoEntradaSchema = z.object({
   precoDeCentavos: z.number().int().nonnegative().nullable().optional(),
   descricaoCurta: z.string().max(300).optional(),
   descricao: z.string().max(8000).optional(),
-  imagens: z.array(z.string().url()).max(10).optional(),
+  imagens: z.array(z.string().url()).max(20).optional(),
   /**
    * O que a imagem é deste item: `propria` (SKU exato), `representativa`
    * (família visual, a vitrine avisa) ou `ilustracao` (desenho das medidas).

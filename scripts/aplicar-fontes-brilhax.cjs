@@ -15,7 +15,7 @@ async function aplicarFontes(plano, aplicar=false) {
     if(!p||p.tenantId!==item.tenantId||p.slug!==item.slug||p.nome!==item.nome)throw new Error('Identidade divergente: '+item.id);
     if(new Date(p.atualizadoEm).getTime()!==new Date(item.atualizadoEm).getTime())throw new Error('Cadastro mudou após a conferência: '+p.nome);
     const campos=item.campos;
-    const permitidos=['descricao','descricaoCurta','imagens','atributos','imagemOrigem','imagemFamilia','gtin','marca'];
+    const permitidos=['nome','descricao','descricaoCurta','imagens','atributos','imagemOrigem','imagemFamilia','gtin','marca'];
     if(Object.keys(campos).some(k=>!permitidos.includes(k)))throw new Error('Campo fora do lote revisado');
     if(campos.gtin!==undefined) {
       const g=campos.gtin;
@@ -44,6 +44,7 @@ async function aplicarFontes(plano, aplicar=false) {
       try { require('node:assert/strict').deepEqual(depois[k],v); }
       catch { throw new Error('Dado não persistiu: '+k); }
     }
-    console.log(JSON.stringify({etapa:'gravado',id:item.id,nome:item.nome,fotos:depois.imagens.length,atualizadoEm:depois.atualizadoEm}));
+    console.log(JSON.stringify({etapa:'gravado',id:item.id,nome:depois.nome,fotos:depois.imagens.length,atualizadoEm:depois.atualizadoEm}));
   }
 }
+module.exports={aplicarFontes};
