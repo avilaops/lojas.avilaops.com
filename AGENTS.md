@@ -49,5 +49,13 @@
   O nome vai para a tabela `Rotina`, então renomear é migração. Emitir evento
   (`src/lib/eventos.ts`) continua sendo código e executá-lo continua sendo
   fluxo do n8n, até isso também vir para dentro. Ver `docs/ROTINAS.md`.
+- **Versão antiga mora no GitHub, não no servidor.** O deploy é
+  `deploy/deploy.sh`: ele guarda `app.anterior` só enquanto roda, para o
+  rollback automático, e apaga a cópia quando a nova passa. Não copie `app`,
+  `standalone.tgz` nem pastas de build para `/opt/lojas/rollback`,
+  `releases` ou `backups` "por segurança": a raiz do servidor tem 38 GB e
+  chegou a 97% em 28/09/2026 com essas cópias. Voltar versão é republicar o
+  commit. Antes de mexer em dado, faça dump do banco; é o único backup que o
+  GitHub não substitui.
 - **Português nos nomes e comentários**, como no resto do monorepo.
 - **TypeScript estrito**; `npm run typecheck` antes de entregar.
