@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { AlertTriangle, ArrowRight, Check, ExternalLink, Info, Link2, ListChecks, RefreshCw, Send, Tags, Unlink } from "lucide-react";
 import { Campo, Secao, inputClasse } from "./campos";
 import CategoriaMl from "./CategoriaMl";
+import AdotarAnunciosMl from "./AdotarAnunciosMl";
 import {
   CANAIS,
   acrescimoQueCobreComissao,
@@ -211,6 +212,8 @@ export default function Canais({ loja, ml, regras, pendencias, candidatos, integ
           </>
         )}
       </Secao>
+
+      {ml.conectado && <AdotarAnunciosMl />}
 
       <RegrasDoCanalForm regras={regras} ocupado={ocupado === "regras"} aoSalvar={(novas) =>
         void chamar("regras", "/api/painel/canais/mercadolivre/regras", {

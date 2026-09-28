@@ -39,7 +39,15 @@ export interface OrdemMl {
   total_amount?: number;
   paid_amount?: number;
   order_items?: Array<{
-    item?: { id?: string; title?: string; seller_sku?: string | null; seller_custom_field?: string | null; variation_id?: number | string | null };
+    item?: {
+      id?: string;
+      title?: string;
+      seller_sku?: string | null;
+      seller_custom_field?: string | null;
+      variation_id?: number | string | null;
+      /** O que o comprador escolheu: [{ name: "Cor", value_name: "Azul" }]. */
+      variation_attributes?: Array<{ id?: string; name?: string; value_name?: string | null }> | null;
+    };
     quantity?: number;
     unit_price?: number;
   }>;
@@ -54,10 +62,33 @@ export type StatusPedido = "AGUARDANDO_PAGAMENTO" | "PAGO" | "CANCELADO";
 export interface ItemMapeado {
   mlbId: string;
   produtoId: string | null;
+  /**
+   * A apresentação que realmente saiu do estoque.
+   *
+   * Nulo em produto sem variação — e nulo também quando o anúncio vendeu uma
+   * variação que não conseguimos reconhecer, que é caso de parar, não de
+   * chutar: ver `resolverVariante`.
+   */
+  varianteId: string | null;
+  varianteNome: string | null;
   nome: string;
   sku: string | null;
   quantidade: number;
   precoUnitarioCentavos: number;
+}
+
+/** O que a loja sabe do produto casado com o anúncio. */
+export interface ProdutoCasado {
+  produtoId: string;
+  sku: string | null;
+  variantes: Array<{
+    id: string;
+    nome: string;
+    sku: string | null;
+    padrao: boolean;
+    /** { "Tamanho": "P", "Cor": "Azul" } — ver Variante.valores. */
+    valores: Record<string, string>;
+  }>;
 }
 
 export interface PedidoMlMapeado {
@@ -108,6 +139,85 @@ export function meioDePagamentoMl(tipo: string | undefined): string {
   return tipo;
 }
 
+/** Para comparar rótulo e valor sem depender de acento, caixa ou espaço. */
+function chave(texto: string): string {
+  return texto
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .replace(/\s+/g, " ");
+}
+
+/** Resultado da tentativa de descobrir QUAL apresentação foi vendida. */
+export interface VarianteResolvida {
+  varianteId: string | null;
+  varianteNome: string | null;
+  /** Como se chegou nela — vai para o aviso do pedido quando não é óbvio. */
+  por: "sku" | "atributos" | "unica" | "nao-identificada" | "sem-produto";
+}
+
+/**
+ * Qual variante do catálogo o Mercado Livre vendeu.
+ *
+ * É a peça que faltava para o canal não estragar estoque. O ML manda
+ * `variation_id`, que é um número do catálogo **dele** e não diz nada sobre o
+ * nosso; até aqui o pedido nascia sem variante e quem baixava o estoque caía
+ * na apresentação **padrão** do produto (ver `confirmarEstoqueDoPedido`).
+ * Numa loja de camiseta, vender o G tirava o P do estoque: o P some enquanto
+ * está na prateleira, o G continua à venda depois de acabar, e a segunda venda
+ * do G vira cancelamento — que no Mercado Livre custa reputação.
+ *
+ * A escada tem três degraus reais e um fim honesto, nesta ordem:
+ *
+ * 1. **SKU.** `Variante.sku` é único por loja, então bate é bate. É também o
+ *    degrau que funciona em anúncio criado à mão no próprio ML, que é como a
+ *    maioria das variações existe hoje.
+ * 2. **Atributos.** O ML manda o que o comprador escolheu
+ *    (`variation_attributes`), e `Variante.valores` guarda exatamente isso.
+ *    Compara sem acento nem caixa, e só aceita quando **uma** variante casa em
+ *    todos os atributos — duas casando é ambiguidade, não resposta.
+ * 3. **Variante única.** Produto simples tem uma só: não há o que escolher.
+ * 4. **Não identificada.** Devolve nulo, de propósito. Chutar a padrão é o bug
+ *    que esta função existe para matar, e errar aqui corrompe **duas**
+ *    apresentações de uma vez — a que saiu a mais e a que saiu a menos.
+ */
+export function resolverVariante(
+  linha: { seller_sku?: string | null; seller_custom_field?: string | null; variation_attributes?: Array<{ name?: string; value_name?: string | null }> | null },
+  produto: ProdutoCasado | undefined,
+): VarianteResolvida {
+  if (!produto) return { varianteId: null, varianteNome: null, por: "sem-produto" };
+  const variantes = produto.variantes;
+  if (!variantes.length) return { varianteId: null, varianteNome: null, por: "nao-identificada" };
+
+  const achada = (v: ProdutoCasado["variantes"][number], por: VarianteResolvida["por"]): VarianteResolvida =>
+    ({ varianteId: v.id, varianteNome: v.nome, por });
+
+  // 1. SKU da linha (o do ML vem da variação, quando é variação).
+  const skuDaLinha = (linha.seller_sku ?? linha.seller_custom_field ?? "").trim();
+  if (skuDaLinha) {
+    const porSku = variantes.filter((v) => v.sku && chave(v.sku) === chave(skuDaLinha));
+    if (porSku.length === 1) return achada(porSku[0], "sku");
+  }
+
+  // 2. Atributos escolhidos pelo comprador.
+  const escolhidos = (linha.variation_attributes ?? []).filter((a) => a.name && a.value_name);
+  if (escolhidos.length) {
+    const casam = variantes.filter((v) =>
+      escolhidos.every((a) => {
+        const nosso = Object.entries(v.valores).find(([rotulo]) => chave(rotulo) === chave(a.name!));
+        return nosso ? chave(String(nosso[1])) === chave(String(a.value_name)) : false;
+      }),
+    );
+    if (casam.length === 1) return achada(casam[0], "atributos");
+  }
+
+  // 3. Produto de uma apresentação só.
+  if (variantes.length === 1) return achada(variantes[0], "unica");
+
+  return { varianteId: null, varianteNome: null, por: "nao-identificada" };
+}
+
 /**
  * Traduz a ordem do ML para o pedido da loja.
  *
@@ -117,7 +227,7 @@ export function meioDePagamentoMl(tipo: string | undefined): string {
  */
 export function mapearPedidoMl(
   ordem: OrdemMl,
-  casar: (mlbId: string) => { produtoId: string; sku: string | null } | undefined,
+  casar: (mlbId: string) => ProdutoCasado | undefined,
 ): PedidoMlMapeado {
   const avisos: string[] = [];
   const itens: ItemMapeado[] = [];
@@ -133,12 +243,21 @@ export function mapearPedidoMl(
     if (!casado) {
       avisos.push(`O anúncio ${mlbId} não está ligado a nenhum produto desta loja: o item entrou no pedido sem baixar estoque.`);
     }
-    if (linha.item?.variation_id) {
-      avisos.push(`O anúncio ${mlbId} vendeu uma variação do Mercado Livre; confira qual apresentação sair do estoque.`);
+    const variante = resolverVariante(linha.item ?? {}, casado);
+    if (casado && variante.por === "nao-identificada") {
+      // Aviso específico, e não "confira qual apresentação sair": o lojista
+      // precisa saber o que fazer para isto não se repetir na próxima venda.
+      avisos.push(
+        `O anúncio ${mlbId} vendeu uma variação que não bate com nenhuma apresentação cadastrada. ` +
+          `O estoque NÃO foi baixado — tirar da apresentação errada estragaria duas de uma vez. ` +
+          `Informe o SKU da variação no anúncio do Mercado Livre, igual ao SKU da variante na loja, e o próximo pedido se resolve sozinho.`,
+      );
     }
     itens.push({
       mlbId,
       produtoId: casado?.produtoId ?? null,
+      varianteId: variante.varianteId,
+      varianteNome: variante.varianteNome,
       nome: String(linha.item?.title ?? mlbId).slice(0, 200),
       sku: linha.item?.seller_sku ?? linha.item?.seller_custom_field ?? casado?.sku ?? null,
       quantidade,
@@ -196,10 +315,41 @@ export async function registrarPedidoMl(loja: Tenant, ordemId: string) {
   const anuncios = mlbIds.length
     ? await prisma.anuncioMercadoLivre.findMany({
         where: { tenantId: loja.id, mlbId: { in: mlbIds } },
-        select: { mlbId: true, produtoId: true, produto: { select: { sku: true } } },
+        select: {
+          mlbId: true,
+          produtoId: true,
+          produto: {
+            select: {
+              sku: true,
+              // As variantes vêm junto porque é com elas que se descobre qual
+              // apresentação o Mercado Livre vendeu. Sem isto o pedido nasce
+              // sem variante e o estoque sai da padrão, seja qual for.
+              variantes: {
+                where: { ativo: true },
+                select: { id: true, nome: true, sku: true, padrao: true, valores: true },
+                orderBy: { ordem: "asc" },
+              },
+            },
+          },
+        },
       })
     : [];
-  const porMlb = new Map(anuncios.map((a) => [a.mlbId!, { produtoId: a.produtoId, sku: a.produto.sku }]));
+  const porMlb = new Map<string, ProdutoCasado>(
+    anuncios.map((a) => [
+      a.mlbId!,
+      {
+        produtoId: a.produtoId,
+        sku: a.produto.sku,
+        variantes: a.produto.variantes.map((v) => ({
+          id: v.id,
+          nome: v.nome,
+          sku: v.sku,
+          padrao: v.padrao,
+          valores: (v.valores ?? {}) as Record<string, string>,
+        })),
+      },
+    ]),
+  );
   const mapeado = mapearPedidoMl(ordem, (mlb) => porMlb.get(mlb));
 
   const existente = await prisma.pedido.findUnique({
@@ -241,6 +391,8 @@ export async function registrarPedidoMl(loja: Tenant, ordemId: string) {
           itens: {
             create: mapeado.itens.map((i) => ({
               produtoId: i.produtoId,
+              varianteId: i.varianteId,
+              varianteNome: i.varianteNome,
               nome: i.nome,
               sku: i.sku,
               quantidade: i.quantidade,

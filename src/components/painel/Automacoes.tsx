@@ -174,7 +174,20 @@ export default function Automacoes() {
                     {e.concluidoEm && e.status === "PROCESSADO" ? ` · feito às ${new Date(e.concluidoEm).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}` : ""}
                     {e.tentativas > 0 ? ` · ${e.tentativas}ª tentativa` : ""}
                   </div>
-                  {e.status === "FALHOU" && e.detalhe && <div className="mt-1 text-xs text-red-700">{e.detalhe}</div>}
+                  {/* Falha é vermelha; ressalva é âmbar. Um aviso que sobrou de
+                      um evento que deu certo — "a venda entrou, mas não baixei o
+                      estoque porque não reconheci a variação" — some da tela se
+                      só a falha tiver onde aparecer, e é justamente o que pede
+                      ação do lojista.
+
+                      IGNORADO fica de fora de propósito: o detalhe dele é
+                      sempre "tópico X ainda não tem tratamento", chega em
+                      volume (mensagens de pós-venda, reclamações) e não tem
+                      ação do outro lado. Âmbar em toda linha é âmbar que se
+                      aprende a ignorar — e levaria junto o que é de verdade. */}
+                  {e.detalhe && (e.status === "FALHOU" || e.status === "PROCESSADO") && (
+                    <div className={`mt-1 text-xs ${e.status === "FALHOU" ? "text-red-700" : "text-amber-700"}`}>{e.detalhe}</div>
+                  )}
                 </div>
                 <span className={`text-sm ${sit.classe}`}>{sit.rotulo}</span>
                 {e.status === "FALHOU" && (
