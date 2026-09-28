@@ -4,9 +4,10 @@ import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import { prisma } from "./db";
 import { INCLUIR_CATALOGO } from "./catalogo-qualidade";
+import { marcaConfirmada } from "./marca-confirmada";
 import { encaixe, lerCompatibilidade, type Moto } from "./motos";
 import type { TemaLoja } from "./tema";
-import { publicavel, WHERE_COMPLETO } from "./produto-regras";
+import { publicavel, WHERE_COMPLETO, WHERE_COMPRAVEL } from "./produto-regras";
 import { NECESSIDADES, equivalentes as equivalentesFarmacia } from "./farmacia";
 
 export type ProdutoComCategoria = Produto & { categoria: Categoria | null };
@@ -80,6 +81,10 @@ export interface FiltroCatalogo {
   busca?: string;
   fabricante?: string;
   destaque?: boolean;
+  /** Remove itens sem preço atual, inativos ou sem disponibilidade para compra. */
+  compraveis?: boolean;
+  /** Só produtos cuja imagem foi declarada como foto do próprio item. */
+  imagemOrigem?: "propria" | "representativa" | "ilustracao";
   minCentavos?: number;
   maxCentavos?: number;
   ordem?: OrdemCatalogo;
@@ -203,6 +208,8 @@ export async function listarProdutos(tenantId: string, filtro?: FiltroCatalogo) 
       tenantId,
       ativo: true,
       ...(filtro?.destaque ? { destaque: true } : {}),
+      ...(filtro?.compraveis ? WHERE_COMPRAVEL : {}),
+      ...(filtro?.imagemOrigem ? { imagemOrigem: filtro.imagemOrigem } : {}),
       ...(filtro?.fabricante ? { marca: { equals: filtro.fabricante, mode: "insensitive" } } : {}),
       ...(filtro?.categoriaSlug ? { categoria: { slug: filtro.categoriaSlug } } : {}),
       ...(filtro?.excetoId ? { id: { not: filtro.excetoId } } : {}),
@@ -262,17 +269,17 @@ export const produtoPublicavel = publicavel;
  * Com moto escolhida o corte é por compatibilidade e continua em memória,
  * como em `listarProdutos`: aí a ordem por foto se aplica sobre o que serve.
  */
-export async function vitrineDaLoja(tenantId: string, opcoes: { moto?: Moto | null; limite?: number } = {}) {
+export async function vitrineDaLoja(tenantId: string, opcoes: { moto?: Moto | null; limite?: number; imagemOrigem?: "propria" | "representativa" | "ilustracao"; compraveis?: boolean } = {}) {
   const limite = opcoes.limite ?? 12;
   const completude = (p: Produto) => (p.imagens.length > 0 ? 1 : 0) + (p.precoCentavos > 0 ? 1 : 0);
 
   if (opcoes.moto) {
-    const todos = await listarProdutos(tenantId, { moto: opcoes.moto });
+    const todos = await listarProdutos(tenantId, { moto: opcoes.moto, imagemOrigem: opcoes.imagemOrigem, compraveis: opcoes.compraveis });
     return todos.sort((a, b) => completude(b) - completude(a)).slice(0, limite);
   }
 
   const completos = await prisma.produto.findMany({
-    where: { tenantId, ...WHERE_COMPLETO },
+    where: { tenantId, ...WHERE_COMPLETO, ...(opcoes.compraveis ? WHERE_COMPRAVEL : {}), ...(opcoes.imagemOrigem ? { imagemOrigem: opcoes.imagemOrigem } : {}) },
     include: { categoria: true },
     orderBy: ORDENS.relevancia,
     take: limite,
@@ -280,7 +287,7 @@ export async function vitrineDaLoja(tenantId: string, opcoes: { moto?: Moto | nu
   if (completos.length >= limite) return completos;
 
   const resto = await prisma.produto.findMany({
-    where: { tenantId, ativo: true, id: { notIn: completos.map((p) => p.id) } },
+    where: { tenantId, ativo: true, ...(opcoes.compraveis ? WHERE_COMPRAVEL : {}), ...(opcoes.imagemOrigem ? { imagemOrigem: opcoes.imagemOrigem } : {}), id: { notIn: completos.map((p) => p.id) } },
     include: { categoria: true },
     orderBy: ORDENS.relevancia,
     take: limite * 4,
@@ -375,7 +382,7 @@ async function motosDaLojaSemCache(tenantId: string) {
 /** Marcas de produto (fabricantes de peças) da loja, mais frequentes primeiro. */
 export async function marcasDaLoja(tenantId: string): Promise<string[]> {
   const grupos = await prisma.produto.groupBy({ by: ["marca"], where: { tenantId, ativo: true, marca: { not: null } }, _count: { _all: true }, orderBy: [{ _count: { marca: "desc" } }, { marca: "asc" }], take: 24 });
-  return grupos.map((g) => g.marca).filter((m): m is string => !!m);
+  return grupos.map((g) => marcaConfirmada(g.marca)).filter((m): m is string => m !== null);
 }
 
 /** Média e contagem das avaliações aprovadas de um produto. */
@@ -439,13 +446,16 @@ export interface DiagnosticoFeed {
  */
 export async function diagnosticoDoFeed(tenantId: string): Promise<DiagnosticoFeed> {
   const { diagnosticarProduto } = await import("./catalogo-qualidade");
+  const { prateleirasDaLoja } = await import("./categoria-google");
+  const categorias=await prisma.categoria.findMany({where:{tenantId},select:{nome:true}});
+  const prateleira=prateleirasDaLoja(categorias.map(c=>c.nome));
   const problemas: ProblemaDeFeed[] = [];
   let total=0, prontos=0, cursor:string|undefined;
   do {
     const produtos=await prisma.produto.findMany({where:{tenantId,ativo:true},include:INCLUIR_CATALOGO,orderBy:{id:"asc"},take:200,...(cursor?{cursor:{id:cursor},skip:1}:{})});
     for(const p of produtos) {
       total++;
-      const ocorrencias=diagnosticarProduto(p);
+      const ocorrencias=diagnosticarProduto(p,prateleira);
       const bloqueios=[...new Set(ocorrencias.filter(o=>o.severidade==="erro").map(o=>o.mensagem))];
       const avisos=[...new Set(ocorrencias.filter(o=>o.severidade==="aviso").map(o=>o.mensagem))];
       if(!bloqueios.length)prontos++;

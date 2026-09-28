@@ -2,17 +2,18 @@ import Link from "next/link";
 import { temaDo } from "@/lib/tenant";
 import { ArrowRight, Search, Tags } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
-import BeneficiosBarra from "./BeneficiosBarra";
 import BannerCarousel from "./BannerCarousel";
+import BeneficiosBarra from "./BeneficiosBarra";
 import AtalhosCategorias from "./AtalhosCategorias";
 import { campanhasDaLoja } from "@/lib/campanhas";
 import type { DadosHome } from "./tipos";
 
-/** Vitrine de campanha da Vedashow ou catálogo padrão de distribuidora. */
+/** Vitrine de campanha para lojas com artes promocionais e catálogo. */
 export default function Distribuidora({ t, identidade, categorias, vitrine, temDestaques, vende, moto }: DadosHome) {
   const tema = temaDo(t);
   const motopecas = t.segmento === "motopecas";
   const campanhas = campanhasDaLoja(tema);
+  const distribuidoraVisual = campanhas.length > 0 || Boolean(t.bannerUrl);
 
   // A Vedashow usa as chamadas comerciais dentro das artes e abre a home
   // diretamente nas campanhas, categorias e produtos.
@@ -20,11 +21,29 @@ export default function Distribuidora({ t, identidade, categorias, vitrine, temD
     return (
       <main className="home-mercado home-distribuidora home-campanhas">
         <BannerCarousel campanhas={campanhas.map(({ imagemUrl, imagemMobileUrl, link, alt }) => ({ imagemUrl, imagemMobileUrl, link, alt }))} />
-        <AtalhosCategorias categorias={categorias} semImagem={tema.categoriaSemImagem} />
+        <AtalhosCategorias categorias={categorias} semImagem={tema.categoriaSemImagem} somenteImagem />
         {vitrine.length > 0 && (
           <section className="container-loja campanhas-produtos" aria-label="Produtos em destaque">
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-              {vitrine.slice(0, 10).map((produto) => <ProductCard key={produto.id} produto={produto} vende={vende} whatsapp={t.whatsapp} moto={moto} />)}
+              {vitrine.slice(0, 10).map((produto) => <ProductCard key={produto.id} produto={produto} vende={vende} whatsapp={t.whatsapp} moto={moto} ocultarSeloDestaque somenteImagem />)}
+            </div>
+          </section>
+        )}
+      </main>
+    );
+  }
+  if (distribuidoraVisual) {
+    const bannerFallback = t.bannerUrl?.endsWith("/campanha-geral-v2.webp")
+      ? "/media/vedashow/campanha-geral-v3-desktop.svg"
+      : t.bannerUrl;
+    return (
+      <main className="home-mercado home-distribuidora home-campanhas">
+        {bannerFallback && <BannerCarousel campanhas={[{ imagemUrl: bannerFallback, imagemMobileUrl: bannerFallback.endsWith("campanha-geral-v3-desktop.svg") ? "/media/vedashow/campanha-geral-v3-mobile.svg" : undefined, link: "/produtos", alt: "Campanha da loja" }]} />}
+        <AtalhosCategorias categorias={categorias} semImagem={tema.categoriaSemImagem} somenteImagem />
+        {vitrine.length > 0 && (
+          <section className="container-loja campanhas-produtos" aria-label="Produtos">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+              {vitrine.slice(0, 10).map((produto) => <ProductCard key={produto.id} produto={produto} vende={vende} whatsapp={t.whatsapp} moto={moto} somenteImagem />)}
             </div>
           </section>
         )}

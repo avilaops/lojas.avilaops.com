@@ -13,16 +13,17 @@ import IconeCuidado from "./IconeCuidado";
 
 export default function HomePremium({ t, identidade, categorias, vitrine, vende }: DadosHome) {
   const conteudo = temaDo(t).premium ?? {};
+  const bannerComArteCompleta = t.slug === "brilhax" && Boolean(t.bannerUrl);
   const etapas = etapasDoPremium(conteudo, categorias);
   const acessorios = categoriaPorPictograma("acessorios", categorias);
   const atendimento = t.whatsapp ? linkWhatsApp(t.whatsapp, "Olá! Quero ajuda para escolher os produtos e montar meu kit de cuidados.") : "/contato";
   return <div className="ap-home">
     <section className="ap-busca container-loja" aria-label="Encontrar produtos"><label htmlFor="ap-busca">{conteudo.buscaTitulo ?? "O que você procura para o seu carro?"}</label><form action="/produtos" className="ap-busca-form"><Search size={19}/><input id="ap-busca" type="search" name="q" placeholder={conteudo.buscaExemplo ?? "Produto, marca ou aplicação…"}/><button type="submit">Buscar</button></form></section>
-    <div className="ap-faixa-categorias"><Categorias categorias={[...categorias].filter(c=>c.imagemUrl || temaDo(t).categoriaSemImagem === "icone").sort((a,b)=>a.ordem-b.ordem)}/></div>
-    <section className="container-loja ap-hero-area"><div className="ap-hero">
+    <section className="ap-hero-area"><div className={`ap-hero${bannerComArteCompleta ? " ap-hero-arte" : ""}`}>
       {t.bannerUrl && <Image src={t.bannerUrl} alt="" fill sizes="(max-width: 768px) 100vw, 1200px" preload unoptimized className="ap-hero-imagem"/>}
-      <div className="ap-hero-conteudo">{conteudo.heroSelo && <p className="ap-selo">{conteudo.heroSelo}</p>}<h1>{conteudo.heroTitulo ?? t.slogan ?? t.nome}</h1><p>{conteudo.heroTexto ?? identidade.diferencial}</p><div className="ap-hero-acoes"><Link className="btn-primario" href="/produtos">Explorar produtos <ArrowRight size={17}/></Link><a href={atendimento} {...(t.whatsapp ? { target: "_blank", rel: "noopener noreferrer" } : {})}>Montar meu kit <ArrowRight size={14}/></a></div></div>
+      {bannerComArteCompleta ? <Link href="/produtos" className="ap-hero-link" aria-label="Ver produtos da Brilhax" /> : <div className="ap-hero-conteudo">{conteudo.heroSelo && <p className="ap-selo">{conteudo.heroSelo}</p>}<h1>{conteudo.heroTitulo ?? t.slogan ?? t.nome}</h1><p>{conteudo.heroTexto ?? identidade.diferencial}</p><div className="ap-hero-acoes"><Link className="btn-primario" href="/produtos">Explorar produtos <ArrowRight size={17}/></Link><a href={atendimento} {...(t.whatsapp ? { target: "_blank", rel: "noopener noreferrer" } : {})}>Montar meu kit <ArrowRight size={14}/></a></div></div>}
     </div></section>
+    <div className="ap-faixa-categorias"><Categorias categorias={[...categorias].filter(c=>c.imagemUrl || temaDo(t).categoriaSemImagem === "icone").sort((a,b)=>a.ordem-b.ordem)}/></div>
     <section className="container-loja ap-secao"><div className="ap-secao-titulo"><div><p className="ap-sobretitulo">Escolhidos para a sua rotina</p><h2>Destaques</h2></div><Link href="/produtos">Ver catálogo <ArrowRight size={16}/></Link></div><Trilho titulo="Produtos em destaque">{vitrine.map(p => <ProductCard key={p.id} produto={p} vende={vende} whatsapp={t.whatsapp}/>)}</Trilho></section>
     <div className="container-loja ap-beneficios"><BeneficiosBarra t={t}/></div>
     {etapas.length > 0 && <section className="container-loja ap-secao"><div className="ap-secao-titulo"><div><p className="ap-sobretitulo">Cada etapa tem seu produto</p><h2>O cuidado começa na escolha.</h2><p>Encontre o que precisa pelo que você quer fazer.</p></div></div><div className="ap-etapas">{etapas.map((e,i) => <Link href={`/categoria/${e.categoria}`} key={e.categoria}><span className="ap-etapa-numero">0{i+1}</span><IconeCuidado tipo={e.icone}/><h3>{e.titulo}</h3><p>{e.texto}</p><ArrowRight className="ap-etapa-seta" size={19}/></Link>)}</div></section>}

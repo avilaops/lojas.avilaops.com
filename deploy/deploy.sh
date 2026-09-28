@@ -16,6 +16,11 @@ cd /opt/lojas
 
 [ -f standalone.tgz ] || { echo "!! falta /opt/lojas/standalone.tgz" >&2; exit 1; }
 
+# Só mantemos uma versão anterior ao vivo para rollback. Liberar a cópia de
+# rollback mais velha antes da extração, que precisa de espaço para a nova
+# versão completa, sem remover a aplicação que está respondendo agora.
+rm -rf app.anterior
+
 if ! docker image inspect lojas-base >/dev/null 2>&1; then
   echo "==> imagem base ausente; construindo"
   docker build -q -f Dockerfile.base -t lojas-base . >/dev/null

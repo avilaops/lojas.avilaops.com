@@ -49,9 +49,29 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+
+@media (pointer: coarse) {
+  /* Keeps double taps on controls from triggering browser zoom. Pinch zoom stays available. */
+  button, a, summary, [role="button"] { touch-action: manipulation; }
+}
+
 ::selection { background: color-mix(in srgb, var(--primary) 24%, transparent); }
 
 .cabecalho-loja { box-shadow: 0 1px 0 color-mix(in srgb, var(--border) 70%, transparent); }
+.menu-mobile-botao { display: none; }
+.menu-mobile-dialog {
+  position: fixed; inset: 0 0 0 auto; margin: 0; width: min(24rem, calc(100vw - 2rem));
+  max-width: 100vw; height: 100dvh; max-height: 100dvh; overflow-y: auto; padding: 0;
+  border: 1px solid var(--border); background: var(--background); color: var(--foreground);
+}
+.menu-mobile-dialog::backdrop { background: rgb(0 0 0 / 48%); backdrop-filter: blur(3px); }
+.menu-mobile-cabecalho { display: flex; min-height: 68px; align-items: center; justify-content: space-between; gap: 1rem; border-bottom: 1px solid var(--border); padding: .75rem 1.125rem; }
+.menu-mobile-cabecalho strong { overflow: hidden; font-size: 1rem; text-overflow: ellipsis; white-space: nowrap; }
+.menu-mobile-cabecalho button { display: grid; width: 44px; height: 44px; flex: 0 0 auto; place-items: center; border: 1px solid var(--border); border-radius: 999px; background: var(--card); }
+.menu-mobile-dialog nav { display: grid; padding: .5rem 1.125rem 1.5rem; }
+.menu-mobile-dialog nav a { display: flex; min-height: 48px; align-items: center; border-bottom: 1px solid var(--border); font-size: .9375rem; font-weight: 600; }
+.menu-mobile-separador { padding: 1.125rem 0 .5rem; color: var(--muted-foreground); font-size: .7rem; font-weight: 750; letter-spacing: .12em; text-transform: uppercase; }
 .marca-loja-icone { display: grid; place-items: center; width: 34px; height: 34px; color: var(--primary-foreground); border-radius: calc(var(--radius) * 1.1); background: var(--primary); }
 .busca-loja { transition: border-color .2s, box-shadow .2s; }
 .busca-loja:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 12%, transparent); }
@@ -172,6 +192,12 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
 /* O anel decorativo nasceu para preencher a direita vazia da abertura do
    Mercado. Com a arte ali, ele só polui. */
 .mercado-abertura-com-banner::after { display: none; }
+.home-automotivo .mercado-abertura-com-banner { border: 0; background: #090a0d; }
+.home-automotivo .automotivo-banner, .home-automotivo .automotivo-banner picture { display: block; width: 100%; }
+.home-automotivo .automotivo-banner img {
+  display: block; width: 100%; height: clamp(260px, 22vw, 320px);
+  object-fit: cover; object-position: center;
+}
 /* O título do layout divide a tela com o da arte: sem o tamanho gigante do
    Mercado, senão os dois competem mesmo lado a lado. */
 .mercado-abertura-com-banner h1 { font-size: clamp(2rem, 3.4vw, 3.25rem); letter-spacing: -.04em; }
@@ -211,9 +237,13 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
 .banner-campanhas-pontos button[aria-current=true] { width: 1.45rem; background: #fff; }
 @media (prefers-reduced-motion: reduce) { .banner-campanhas-trilho { scroll-behavior: auto; } }
 .campanhas-produtos { width: min(100% - 2rem, 1200px); margin-inline: auto; }
+.home-campanhas .atalhos-cat-visual { align-self: center; }
+.home-campanhas .atalhos-cat-visual .atalhos-cat-foto { width: 4.25rem; height: 4.25rem; }
+.home-campanhas .atalhos-cat-visual img { width: 100%; height: 100%; object-fit: cover; }
 @media (max-width: 640px) {
   .banner-campanha picture { aspect-ratio: 4 / 5; overflow: hidden; }
   .banner-campanha picture img { width: 100%; height: 100%; object-fit: contain; }
+  .banner-campanha-mobile-vertical picture { aspect-ratio: 2 / 3; }
   .banner-campanhas-seta { width: 2.25rem; height: 2.25rem; }
   .banner-campanhas-seta.anterior { left: .5rem; }
   .banner-campanhas-seta.proxima { right: .5rem; }
@@ -652,6 +682,16 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
 
    Vale para todas as lojas, porque está no tema e não numa página. */
 @media (max-width: 640px) {
+  /* Impede que um componente largo provoque deslocamento horizontal e deixe o
+     navegador reposicionar a página durante o toque. O zoom de leitura do
+     Safari continua disponível, mas o foco dos campos não amplia a tela. */
+  html, body { max-width: 100%; overflow-x: clip; overscroll-behavior-x: none; }
+  .cabecalho-loja, .home-mercado, .home-automotivo { min-width: 0; }
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea {
+    min-width: 0;
+    font-size: 16px !important;
+    line-height: 1.25;
+  }
   /* --- Cabeçalho: busca em primeiro lugar ---------------------------------
      A lupa de 40px no canto era o único caminho até a busca. Quem compra peça
      chega sabendo o código: o campo vira a primeira coisa da tela, como no
@@ -663,6 +703,13 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
   .cabecalho-loja > .container-loja > .busca-loja-caixa { flex-basis: 100%; order: 10; }
   .cabecalho-loja .marca-loja { min-height: 44px; }
   .cabecalho-loja .marca-loja span:last-child { font-size: 1.0625rem; }
+  .menu-mobile-botao { display: grid; width: 44px; height: 44px; flex: 0 0 44px; place-items: center; border: 1px solid var(--border); border-radius: 12px; background: var(--card); color: var(--foreground); }
+  .menu-mobile-botao svg { width: 21px; height: 21px; }
+  .menu-mobile-dialog nav a { min-height: 48px; }
+
+  /* Safari amplifica a página ao focar campos menores que 16 px. Mantém o
+     texto legível em toda a loja, incluindo formulários e filtros de catálogo. */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea { font-size: max(16px, 1em); }
 
   /* O campo de busca ocupa a linha inteira e tem 44px de toque. A fonte de 16px
      não é estética: abaixo disso o Safari do iPhone dá zoom sozinho ao focar o
@@ -763,22 +810,21 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
   .rodape-loja { padding-bottom: max(1.5rem, env(safe-area-inset-bottom)); }
 }
 
-/* Atalhos redondos de categoria (ver AtalhosCategorias.tsx).
-   Fileira que rola de lado, no padrão que o comprador já conhece do Mercado
-   Livre. A foto é o que diferencia "Aço baixa liga" de "Aço de baixo e médio
-   teor de carbono" num relance. */
+/* Categorias da vitrine: ganham presença compatível com a campanha acima e
+   ocupam a largura disponível em vez de ficarem como miniaturas numa tira. */
 .atalhos-cat { border-bottom: 1px solid var(--border); background: var(--background); }
 .atalhos-cat-tira {
-  display: flex; gap: 1.25rem; overflow-x: auto; padding-block: .875rem;
-  scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+  justify-items: center; gap: clamp(1.25rem, 2.8vw, 2.5rem);
+  width: min(100% - 3rem, 1100px); margin-inline: auto;
+  padding-block: clamp(1.5rem, 3vw, 2.75rem);
 }
-.atalhos-cat-tira::-webkit-scrollbar { display: none; }
 .atalhos-cat-tira > a {
-  display: grid; justify-items: center; gap: .375rem; flex: 0 0 auto;
-  width: 4.5rem; text-align: center;
+  display: grid; justify-items: center; align-content: start; gap: .75rem;
+  width: 100%; text-align: center;
 }
 .atalhos-cat-foto {
-  display: grid; place-items: center; width: 3.5rem; height: 3.5rem;
+  display: grid; place-items: center; width: clamp(7rem, 13vw, 10.5rem); height: clamp(7rem, 13vw, 10.5rem);
   overflow: hidden; border-radius: 50%; border: 1px solid var(--border);
   background: var(--muted); transition: border-color .2s, transform .2s;
 }
@@ -786,132 +832,99 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
 .atalhos-cat-foto svg { width: 2.55rem; height: 2.55rem; color: var(--primary); }
 .atalhos-cat-tira > a:hover .atalhos-cat-foto { border-color: var(--primary); transform: translateY(-2px); }
 .atalhos-cat-nome {
-  font-size: .6875rem; line-height: 1.25; color: var(--muted-foreground);
+  font-size: clamp(.875rem, 1.2vw, 1rem); line-height: 1.3; color: var(--muted-foreground);
   /* Duas linhas no máximo: uma categoria de nome longo não pode dobrar a
      altura da fileira inteira. */
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 
-@media (max-width: 640px) {
-  /* Atalhos colados na busca, e a abertura institucional depois deles.
-     É a ordem do Mercado Livre e da Amazon: busca, caminho, produto. O texto de
-     apresentação é para quem chegou pelo Google sem saber quem é a empresa, e
-     não pode ficar entre o comprador e o catálogo. */
-  .home-mercado > .atalhos-cat { order: 1; }
-  .home-mercado > .mercado-produtos { order: 2; }
-  .home-mercado > .mercado-abertura { order: 3; }
-  .home-mercado > .mercado-departamentos { order: 4; }
-  .home-mercado > .container-loja:has(.beneficios-barra) { order: 5; }
+/* A campanha e as categorias formam a primeira vitrine. A grade acompanha a
+   largura da página sem 100vw ou margem negativa, que causavam rolagem lateral. */
+.home-automotivo .mercado-abertura-com-banner .automotivo-banner img {
+  height: clamp(240px, 24vw, 340px);
+  object-fit: cover;
+  object-position: center;
 }
-
-/* Dica abaixo dos botões da abertura: ensina o gesto que a busca entende
-   (medida, código) sem virar um bloco de ajuda. */
-.mercado-dica { margin-top: .625rem; font-size: .8125rem; color: var(--muted-foreground); }
-
-/* Trilha (Início › Produtos › Rolamento). */
-.trilha { margin-bottom: 1rem; font-size: .8125rem; color: var(--muted-foreground); }
-.trilha ol { display: flex; flex-wrap: wrap; align-items: center; gap: .25rem; }
-.trilha li { display: flex; align-items: center; gap: .25rem; }
-.trilha a { transition: color .2s; }
-.trilha a:hover { color: var(--foreground); text-decoration: underline; }
-.trilha [aria-current="page"] { color: var(--foreground); font-weight: 500; }
-
-/* Painel mais enxuto no celular.
-   Os cartões usavam o mesmo respiro do computador: no iPhone o resumo de
-   vendas ocupava quase 700px para mostrar quatro zeros. Aqui o espaço interno
-   encolhe e o número perde peso — informação de apoio não precisa do mesmo
-   tamanho do valor principal. */
-@media (max-width: 640px) {
-  .painel-vendas { gap: .75rem; padding: 1rem; }
-  .painel-vendas header strong { font-size: 1.5rem; }
-  .painel-vendas-numeros { gap: .5rem .75rem; }
-  .painel-vendas-numeros strong { font-size: 1rem; }
-  .painel-vendas-numeros small, .painel-vendas header small { font-size: .65rem; letter-spacing: .03em; }
-  .painel-vazio { font-size: .8125rem; }
+.home-automotivo .atalhos-cat-grade .atalhos-cat-tira {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 6px;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
 }
-
-/* A tira de categorias rola de lado sem mostrar a barra cinza do sistema.
-   Ela aparecia no computador logo abaixo dos nomes e parecia parte do desenho,
-   quando é só o navegador dizendo que há mais conteúdo. O desvanecimento na
-   borda direita já diz isso melhor. */
-.nav-loja-tira { scrollbar-width: none; -ms-overflow-style: none; }
-.nav-loja-tira::-webkit-scrollbar { display: none; }
-
-/* ── Farmácia e drogaria (layout "farmacia" e segmento "farmacia") ─────────
-   A cor das tarjas não vem do tema da loja: vermelho e preto são o que a
-   embalagem usa e o que o comprador reconhece de longe. Uma farmácia de
-   identidade azul não pode ter tarja azul. */
-.farmacia-abertura { padding: clamp(2.5rem, 6vw, 4rem) 0 2rem; background: color-mix(in srgb, var(--primary) 6%, var(--background)); }
-.farmacia-abertura h1 { margin-top: .5rem; font-size: clamp(1.75rem, 4vw, 2.5rem); font-weight: 800; letter-spacing: -.02em; }
-.farmacia-abertura > div > p:not(.home-selo) { max-width: 38rem; margin-top: .75rem; line-height: 1.6; color: var(--muted-foreground); }
-.farmacia-busca { display: flex; align-items: center; gap: .5rem; max-width: 34rem; margin-top: 1.5rem; padding: .375rem .375rem .375rem .875rem; border: 1px solid var(--border); border-radius: 999px; background: var(--card); }
-.farmacia-busca svg { width: 1.05rem; height: 1.05rem; flex: none; color: var(--muted-foreground); }
-.farmacia-busca input { flex: 1; min-width: 0; height: 2.5rem; border: 0; background: transparent; font-size: .9375rem; outline: none; color: var(--foreground); }
-.farmacia-busca .btn-primario { height: 2.5rem; padding-inline: 1.125rem; border-radius: 999px; font-size: .8125rem; }
-.farmacia-necessidades { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
-.farmacia-necessidades a { display: inline-flex; align-items: center; height: 2.125rem; padding-inline: .875rem; border: 1px solid var(--border); border-radius: 999px; background: var(--card); font-size: .8125rem; font-weight: 600; transition: border-color .2s, background .2s; }
-.farmacia-necessidades a:hover { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 10%, var(--card)); }
-.farmacia-responsavel-topo { display: flex; align-items: center; gap: .4rem; margin-top: 1.25rem; font-size: .8125rem; color: var(--muted-foreground); }
-.farmacia-responsavel-topo svg { width: .95rem; height: .95rem; flex: none; }
-.farmacia-orientacao { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; margin-top: 3rem; padding: 1.25rem 1.5rem; border: 1px solid var(--border); border-radius: calc(var(--radius) * 1.5); background: var(--card); }
-.farmacia-orientacao > svg { width: 1.75rem; height: 1.75rem; flex: none; color: var(--primary); }
-.farmacia-orientacao > div { flex: 1 1 18rem; }
-.farmacia-orientacao h2 { font-size: 1rem; font-weight: 700; }
-.farmacia-orientacao p { margin-top: .25rem; font-size: .8125rem; line-height: 1.55; color: var(--muted-foreground); }
-
-.medicamento-tarja { border-radius: calc(var(--radius) * 1.2); padding: .75rem .875rem; font-size: .8125rem; line-height: 1.5; margin-bottom: 1rem; border-left: 4px solid currentColor; }
-.medicamento-tarja-livre { background: color-mix(in srgb, #0ea5e9 10%, var(--card)); color: #0369a1; }
-[data-ck-theme="dark"] .medicamento-tarja-livre { color: #7dd3fc; }
-.medicamento-tarja-vermelha { background: color-mix(in srgb, #dc2626 10%, var(--card)); color: #b91c1c; }
-[data-ck-theme="dark"] .medicamento-tarja-vermelha { color: #fca5a5; }
-.medicamento-tarja-vermelha-retencao, .medicamento-tarja-preta { background: color-mix(in srgb, #18181b 10%, var(--card)); color: #18181b; }
-[data-ck-theme="dark"] .medicamento-tarja-vermelha-retencao, [data-ck-theme="dark"] .medicamento-tarja-preta { color: #e4e4e7; }
-.medicamento-ficha { display: grid; gap: .5rem; font-size: .8125rem; }
-.medicamento-ficha > div { display: grid; grid-template-columns: 9rem 1fr; gap: .75rem; padding-block: .375rem; border-top: 1px solid var(--border); }
-.medicamento-ficha dt { color: var(--muted-foreground); }
-.medicamento-ficha a { font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
-.medicamento-presencial { border-radius: calc(var(--radius) * 1.2); border: 1px solid var(--border); padding: .875rem 1rem; font-size: .8125rem; line-height: 1.55; color: var(--muted-foreground); }
-.medicamento-equivalentes { margin-top: 1.5rem; }
-.medicamento-equivalentes h3 { font-size: .9375rem; font-weight: 700; }
-.medicamento-equivalentes-nota { margin-top: .25rem; font-size: .75rem; line-height: 1.5; color: var(--muted-foreground); }
-.medicamento-equivalentes ul { display: grid; gap: .375rem; margin-top: .75rem; }
-.medicamento-equivalentes a { display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem; padding: .625rem .75rem; border: 1px solid var(--border); border-radius: calc(var(--radius) * 1.2); background: var(--card); font-size: .8125rem; transition: border-color .2s; }
-.medicamento-equivalentes a:hover { border-color: var(--primary); }
-.medicamento-eq-nome { flex: 1 1 12rem; font-weight: 600; }
-.medicamento-eq-nome em { margin-left: .4rem; font-style: normal; font-size: .66rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted-foreground); }
-.medicamento-eq-apresentacao { color: var(--muted-foreground); }
-.medicamento-eq-preco { margin-left: auto; font-weight: 700; white-space: nowrap; }
-.medicamento-eq-preco strong { margin-left: .4rem; color: #15803d; }
-[data-ck-theme="dark"] .medicamento-eq-preco strong { color: #4ade80; }
-
-.rodape-farmacia p { line-height: 1.6; }
-.rodape-farmacia-aviso { margin-top: .5rem; font-size: .6875rem; letter-spacing: .04em; }
-
-/* Vídeo da ficha do produto. Fora da lista de duas colunas de propósito:
-   <iframe> dentro de <dd> não cabe em 393px e quebra a tabela inteira. */
-.ficha-video { margin-top: 28px; }
-.ficha-video h2 { margin-bottom: 12px; font-size: 1.05rem; font-weight: 700; }
-.ficha-video-moldura { position: relative; aspect-ratio: 16 / 9; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--muted); }
-.ficha-video-moldura iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-
-/* Gráfico de sessões por canal (Painel › Análises › Atribuição).
-   As cores das séries ficam no componente, não aqui: a sequência foi
-   conferida para daltonismo e contraste, e ter a lista em dois lugares
-   convidaria a mexer num só. */
-.graf-canais { margin: 0; }
-.graf-svg { display: block; width: 100%; height: auto; }
-.graf-grade { stroke: var(--border); stroke-width: 1; }
-.graf-eixo-texto { fill: var(--muted-foreground); font-size: 11px; }
-.graf-legenda { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 12px; font-size: .8rem; color: var(--muted-foreground); }
-.graf-legenda span { display: inline-flex; align-items: center; gap: 6px; }
-.graf-legenda i { width: 10px; height: 10px; flex: none; border-radius: 3px; }
-
-/* Tabela de canais e de campanhas. Rolagem horizontal própria: em 393px cinco
-   colunas não cabem, e deixar a página rolar de lado estraga o resto da tela. */
-.atr-tabela-rolagem { overflow-x: auto; margin-inline: -4px; }
-.atr-tabela { width: 100%; min-width: 520px; border-collapse: collapse; font-size: .875rem; }
-.atr-tabela th, .atr-tabela td { padding: 10px 8px; text-align: right; border-bottom: 1px solid var(--border); }
-.atr-tabela thead th { font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--muted-foreground); }
-.atr-tabela tbody th { text-align: left; font-weight: 600; }
-.atr-tabela tbody th small { display: block; margin-top: 2px; font-weight: 400; font-size: .72rem; color: var(--muted-foreground); }
-.atr-tabela tbody tr:last-child th, .atr-tabela tbody tr:last-child td { border-bottom: 0; }
+.home-automotivo .atalhos-cat-grade .atalhos-cat-tira > a {
+  grid-column: span 3;
+  aspect-ratio: 1.55 / 1;
+}
+.home-automotivo .atalhos-cat-grade .atalhos-cat-tira:has(> a:nth-child(5):last-child) > a:nth-child(5) { grid-column: 4 / span 6; }
+.home-automotivo .atalhos-cat-grade .atalhos-cat-tira:has(> a:nth-child(6):last-child) > a:nth-child(n+5) { grid-column: span 6; }
+.home-automotivo .atalhos-cat-grade .atalhos-cat-tira:has(> a:nth-child(7):last-child) > a:nth-child(5) { grid-column: 1 / span 4 !important; aspect-ratio: 1.55 / 1 !important; }
+.home-automotivo .atalhos-cat-grade .atalhos-cat-tira:has(> a:nth-child(7):last-child) > a:nth-child(6) { grid-column: 5 / span 4 !important; aspect-ratio: 1.55 / 1 !important; }
+.home-automotivo .atalhos-cat-grade .atalhos-cat-tira:has(> a:nth-child(7):last-child) > a:nth-child(7) { grid-column: 9 / span 4 !important; aspect-ratio: 1.55 / 1 !important; }
+.home-automotivo .atalhos-cat-grade .atalhos-cat-foto {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  border: 0;
+  border-radius: 0;
+}
+.home-automotivo .atalhos-cat-grade .atalhos-cat-foto::after {
+  content: "";
+  position: absolute;
+  inset: 28% 0 0;
+  background: linear-gradient(transparent, rgb(0 0 0 / 78%));
+  pointer-events: none;
+}
+.home-automotivo .atalhos-cat-grade .atalhos-cat-foto img { width: 100%; height: 100%; object-fit: cover; transition: transform .35s; }
+.home-automotivo .atalhos-cat-grade .atalhos-cat-tira > a:hover .atalhos-cat-foto img { transform: scale(1.055); }
+.home-automotivo .atalhos-cat-grade .atalhos-cat-foto svg { width: 3.25rem; height: 3.25rem; color: #fff; }
+.home-automotivo .atalhos-cat-grade .atalhos-cat-nome {
+  position: absolute;
+  z-index: 1;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: block;
+  padding: clamp(1rem, 2vw, 1.75rem);
+  color: #fff;
+  font-size: clamp(1.125rem, 2vw, 1.75rem);
+  font-weight: 800;
+  line-height: 1.2;
+  text-align: left;
+  text-shadow: 0 1px 8px rgb(0 0 0 / 65%);
+}
+@media (min-width: 641px) and (max-width: 1023px) {
+  .home-automotivo .atalhos-cat-grade .atalhos-cat-tira { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .home-automotivo .atalhos-cat-grade .atalhos-cat-tira > a { grid-column: auto; aspect-ratio: 1.35 / 1; }
+}
+@media (max-width: 640px) {
+  .home-automotivo .mercado-abertura-com-banner .automotivo-banner img {
+    height: clamp(190px, 56vw, 235px);
+    object-position: center 18%;
+  }
+  .home-automotivo .atalhos-cat-grade .atalhos-cat-tira {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px;
+  }
+  .home-automotivo .atalhos-cat-grade .atalhos-cat-tira > a,
+  .home-automotivo .atalhos-cat-grade .atalhos-cat-tira:has(> a:nth-child(5):last-child) > a:nth-child(n),
+  .home-automotivo .atalhos-cat-grade .atalhos-cat-tira:has(> a:nth-child(6):last-child) > a:nth-child(n),
+  .home-automotivo .atalhos-cat-grade .atalhos-cat-tira:has(> a:nth-child(7):last-child) > a:nth-child(n) {
+    grid-column: auto !important;
+    aspect-ratio: 1.05 / 1 !important;
+  }
+  .home-automotivo .atalhos-cat-grade .atalhos-cat-tira:has(> a:nth-child(5):last-child) > a:nth-child(5),
+  .home-automotivo .atalhos-cat-grade .atalhos-cat-tira:has(> a:nth-child(7):last-child) > a:nth-child(7) {
+    grid-column: 1 / -1 !important;
+    aspect-ratio: 2 / 1 !important;
+  }
+  .home-automotivo .atalhos-cat-grade .atalhos-cat-nome {
+    padding: .875rem !important;
+    font-size: clamp(.875rem, 4vw, 1.125rem) !important;
+  }
+}

@@ -8,6 +8,7 @@ import Paginacao from "@/components/aplicacao/Paginacao";
 import Filtros from "@/components/aplicacao/Filtros";
 import Vazio from "@/components/aplicacao/Vazio";
 import BaixarPlanilha from "./BaixarPlanilha";
+import ImportarFotosPorSku from "./ImportarFotosPorSku";
 
 /**
  * O catálogo do painel: busca, filtro e página.
@@ -27,6 +28,7 @@ type Item = {
   id: string;
   nome: string;
   categoria: string | null;
+  marca: string | null;
   sku: string | null;
   precoCentavos: number;
   estoque: number | null;
@@ -34,6 +36,8 @@ type Item = {
   destaque: boolean;
   opcoes: string[];
   variantes: number;
+  identificadoresPendentes: boolean;
+  fotoMerchantRevisar: boolean;
   temFoto: boolean;
 };
 
@@ -46,7 +50,13 @@ const SITUACOES = [
   { valor: "", rotulo: "Todos" },
   { valor: "esgotado", rotulo: "Esgotados" },
   { valor: "sem-foto", rotulo: "Sem foto" },
+  { valor: "imagem-merchant-revisar", rotulo: "Revisar imagem Merchant" },
   { valor: "sem-preco", rotulo: "Sem preço" },
+  { valor: "sem-preco-com-saldo", rotulo: "Saldo positivo, preço pendente" },
+  { valor: "sem-categoria", rotulo: "Sem categoria" },
+  { valor: "sem-descricao", rotulo: "Sem descrição" },
+  { valor: "sem-marca", rotulo: "Marca a confirmar" },
+  { valor: "identificadores-pendentes", rotulo: "GTIN/MPN a confirmar" },
   // Sem medida é o que faz o frete sair pela caixa padrão da loja, quase
   // sempre mais caro que o real — o aviso do topo da tela vira trabalho aqui.
   { valor: "sem-medida", rotulo: "Sem medida" },
@@ -146,6 +156,8 @@ export default function CatalogoLista({
         }
       />
 
+      <ImportarFotosPorSku ocupado={ocupado} aoConcluir={() => void carregar()} />
+
       {dados && (
         <>
           <ListaDeRegistros
@@ -171,6 +183,9 @@ export default function CatalogoLista({
                     <ImageOff size={10} aria-hidden="true" /> sem foto
                   </span>
                 )}
+                {p.fotoMerchantRevisar && p.temFoto && <span className="rounded bg-amber-50 px-1.5 py-0.5 text-amber-800">imagem Merchant a revisar</span>}
+                {!p.marca && <span className="rounded bg-amber-50 px-1.5 py-0.5 text-amber-800">sem marca</span>}
+                {p.identificadoresPendentes && <span className="rounded bg-amber-50 px-1.5 py-0.5 text-amber-800">GTIN/MPN a confirmar</span>}
               </>
             )}
             colunas={[
@@ -184,6 +199,9 @@ export default function CatalogoLista({
                       <ImageOff size={10} aria-hidden="true" /> sem foto
                     </span>
                   )}
+                  {p.fotoMerchantRevisar && p.temFoto && <span className="ml-2 inline-flex rounded bg-amber-50 px-1.5 py-0.5 text-[11px] text-amber-800">imagem Merchant a revisar</span>}
+                  {!p.marca && <span className="ml-2 inline-flex rounded bg-amber-50 px-1.5 py-0.5 text-[11px] text-amber-800">sem marca</span>}
+                  {p.identificadoresPendentes && <span className="ml-2 inline-flex rounded bg-amber-50 px-1.5 py-0.5 text-[11px] text-amber-800">GTIN/MPN a confirmar</span>}
                 </>
               ) },
               { rotulo: "Categoria", celula: (p) => p.categoria ?? "—", largura: "w-32" },

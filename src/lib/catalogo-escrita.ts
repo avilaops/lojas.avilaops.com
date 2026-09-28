@@ -52,10 +52,10 @@ async function gravarSaldo(tx: Tx, tenantId: string, varianteId: string, fisico:
   if (antes?.fisico !== fisico) await tx.movimentoEstoque.create({ data: { tenantId, varianteId, chave: `ajuste:${crypto.randomUUID()}`, quantidade: (fisico ?? 0) - (antes?.fisico ?? 0), motivo } });
 }
 
-type MetadadosMidia = { fonte: string; correspondencia: "nao_confirmada" | "confirmada" | "rejeitada" };
+type MetadadosMidia = { fonte: string; correspondencia?: "nao_confirmada" | "confirmada" | "rejeitada"; somentePrincipal?: boolean };
 
 async function gravarMidiasLegadas(tx: Tx, p: Awaited<ReturnType<typeof travarProduto>>, campos: CamposProduto, metadados?: MetadadosMidia) {
-  if (!CAMPOS_MIDIA.some(k => campos[k] !== undefined)) return;
+  if (!CAMPOS_MIDIA.some(k => campos[k] !== undefined) && !metadados?.correspondencia) return;
   const urls = [...new Set((campos.imagens as string[] | undefined ?? p.imagens).map(u=>u.trim()).filter(Boolean))];
   const origem = campos.imagemOrigem ?? p.imagemOrigem;
   const familia = campos.imagemFamilia !== undefined ? campos.imagemFamilia : p.imagemFamilia;
@@ -64,15 +64,18 @@ async function gravarMidiasLegadas(tx: Tx, p: Awaited<ReturnType<typeof travarPr
   await tx.midiaProduto.deleteMany({ where: { tenantId: p.tenantId, produtoId: p.id, varianteId: null, url: { notIn: urls } } });
   for (const [ordem, url] of urls.entries()) {
     const existente = p.midias.find(m=>m.url===url && !m.varianteId);
+    const dadosConfirmacao = metadados && (!metadados.somentePrincipal || ordem === 0)
+      ? { fonte: metadados.fonte, ...(metadados.correspondencia ? { correspondencia: metadados.correspondencia } : {}) }
+      : undefined;
     await tx.midiaProduto.upsert({ where: { produtoId_escopo_url: { produtoId: p.id, escopo: "produto", url } },
-      create: { tenantId: p.tenantId, produtoId: p.id, url, ordem, origem, familia, finalidade: ordem===0 ? "principal" : "galeria", fonte: metadados?.fonte ?? "cadastro", correspondencia: metadados?.correspondencia ?? "nao_confirmada" },
-      update: { ordem, origem, familia, finalidade: ordem===0 ? "principal" : "galeria", ...(metadados ? metadados : existente?.origem !== origem ? { correspondencia: "nao_confirmada" } : {}) },
+      create: { tenantId: p.tenantId, produtoId: p.id, url, ordem, origem, familia, finalidade: ordem===0 ? "principal" : "galeria", fonte: dadosConfirmacao?.fonte ?? "cadastro", correspondencia: dadosConfirmacao?.correspondencia ?? "nao_confirmada" },
+      update: { ordem, origem, familia, finalidade: ordem===0 ? "principal" : "galeria", ...(dadosConfirmacao ? dadosConfirmacao : existente?.origem !== origem ? { correspondencia: "nao_confirmada" } : {}) },
     });
   }
 }
 
 /** Única escrita comercial de painel, importação e MCP. Legado é só projeção. */
-export async function salvarProdutoNoCatalogo(tenantId: string, id: string | null, campos: CamposProduto, contexto: { origem?: string; versao?: number; metadadosMidia?: MetadadosMidia } = {}) {
+export async function salvarProdutoNoCatalogo(tenantId: string, id: string | null, campos: CamposProduto, contexto: { origem?: string; versao?: number; metadadosMidia?: MetadadosMidia; exigirSemImagem?: boolean } = {}) {
   return prisma.$transaction(async tx => {
     await permitirProjecao(tx);
     if (campos.categoriaId && !await tx.categoria.findFirst({ where: { id: campos.categoriaId, tenantId } })) throw new ErroCatalogo("Categoria não pertence à loja.");
@@ -93,6 +96,7 @@ export async function salvarProdutoNoCatalogo(tenantId: string, id: string | nul
     }
     const p = await travarProduto(tx, tenantId, id);
     if (contexto.versao !== undefined && p.versaoCatalogo !== contexto.versao) throw new ErroCatalogo("Este produto mudou desde que você abriu o cadastro. Recarregue antes de salvar.", 409);
+    if (contexto.exigirSemImagem && p.imagens.length > 0) throw new ErroCatalogo("Este produto já recebeu uma imagem. Recarregue o cadastro antes de associar outra.", 409);
     const simples = p.variantes.find(v=>v.padrao && v.ativo);
     const editorial = { ...campos };
     delete editorial.mpn;

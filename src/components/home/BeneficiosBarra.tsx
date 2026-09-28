@@ -1,5 +1,6 @@
 import { BadgeCheck, PackageCheck, Store, Truck } from "lucide-react";
 import type { Tenant } from "@prisma/client";
+import { retiradaPublicaDisponivel } from "@/lib/tenant";
 
 export default function BeneficiosBarra({ t }: { t: Tenant }) {
   const itens = [
@@ -19,7 +20,7 @@ export default function BeneficiosBarra({ t }: { t: Tenant }) {
           titulo: "Frete calculado pelo CEP",
           texto: "Opções e prazo antes do pagamento",
         },
-    t.retiradaNaLoja
+    retiradaPublicaDisponivel(t)
       ? { Icone: Store, titulo: "Retirada disponível", texto: "Economize no frete quando preferir" }
       : { Icone: BadgeCheck, titulo: "Pedido acompanhado", texto: "Status da compra em um só lugar" },
   ];

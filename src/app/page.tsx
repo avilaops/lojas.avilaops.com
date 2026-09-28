@@ -1,6 +1,7 @@
 import { exigirTenant, identidadeDa, lojaVende, temaDo } from "@/lib/tenant";
 import { listarCategorias, listarProdutos, marcasDaLoja, motosDaLoja, necessidadesDaLoja, provaSocialDa, vitrineDaLoja } from "@/lib/catalogo";
 import { minhaMoto } from "@/lib/minha-moto";
+import * as regrasProduto from "@/lib/produto-regras";
 import Automotivo from "@/components/home/Automotivo";
 import Farmacia from "@/components/home/Farmacia";
 import HomePremium from "@/components/templates/automotivo-premium/Home";
@@ -38,23 +39,24 @@ export default async function Home() {
   const t = await exigirTenant();
   const motopecas = t.segmento === "motopecas";
   const moto = motopecas ? await minhaMoto() : null;
+  const tema = temaDo(t);
+  const layoutAtual = tema.layout;
+  const campanhaVisual = layoutAtual === "distribuidora" && ((tema.campanhasHome?.length ?? 0) > 0 || Boolean(t.bannerUrl));
   const [categorias, destaques, prova, motos, marcas, necessidades] = await Promise.all([
     listarCategorias(t.id),
     // Nenhum layout mostra mais de 10 destaques: pedir mais é carregar o que
     // o lojista marcou ao longo de meses para descartar na tela.
-    listarProdutos(t.id, { destaque: true, moto, limite: 12 }),
-    provaSocialDa(t.id),
+    listarProdutos(t.id, { destaque: true, moto, limite: 12, ...(campanhaVisual ? { imagemOrigem: "propria" as const, compraveis: true } : {}) }),
+    campanhaVisual ? { media: null, total: 0, avaliacoes: [] } : provaSocialDa(t.id),
     motopecas ? motosDaLoja(t.id) : null,
     motopecas ? marcasDaLoja(t.id) : [],
     t.segmento === "farmacia" ? necessidadesDaLoja(t.id) : undefined,
   ]);
-  const layoutAtual = temaDo(t).layout;
-  const campanhaVisual = layoutAtual === "distribuidora" && (temaDo(t).campanhasHome?.length ?? 0) > 0;
   const vitrine = campanhaVisual
       ? await (async () => {
-        const destaquesProntos = destaques.filter((produto) => produto.precoCentavos > 0 && produto.imagens.length > 0);
-        const completas = (await vitrineDaLoja(t.id, { moto, limite: 24 }))
-          .filter((produto) => produto.precoCentavos > 0 && produto.imagens.length > 0);
+        const destaquesProntos = destaques.filter((produto) => produto.imagemOrigem === "propria" && produto.imagens.length > 0 && regrasProduto.compravel(produto));
+        const completas = (await vitrineDaLoja(t.id, { moto, limite: 24, imagemOrigem: "propria", compraveis: true }))
+          .filter((produto) => produto.imagens.length > 0 && regrasProduto.compravel(produto));
         const idsDestaques = new Set(destaquesProntos.map((produto) => produto.id));
         return [...destaquesProntos, ...completas.filter((produto) => !idsDestaques.has(produto.id))].slice(0, 12);
       })()
@@ -78,8 +80,8 @@ export default async function Home() {
     <>
       {layout}
       {motos && <Garagem moto={moto} motos={motos} marcas={marcas} nomeDaLoja={t.nome} />}
-      <ProvaSocial dados={prova} nomeDaLoja={t.nome} />
-      {prova.media !== null && prova.total >= 3 && (
+      {!campanhaVisual && <ProvaSocial dados={prova} nomeDaLoja={t.nome} />}
+      {!campanhaVisual && prova.media !== null && prova.total >= 3 && (
         // A nota só entra no JSON-LD porque está visível na própria página,
         // que é o que o Google exige de dado estruturado de avaliação.
         <script

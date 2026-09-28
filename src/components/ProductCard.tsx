@@ -6,12 +6,14 @@ import AddToCartButton from "@/components/cart/AddToCartButton";
 import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
 import { encaixe, lerCompatibilidade, type Moto } from "@/lib/motos";
 import { exigeReceita, lerMedicamento, vendaRemotaProibida } from "@/lib/farmacia";
+import { marcaConfirmada } from "@/lib/marca-confirmada";
 
-export default function ProductCard({ produto, vende, whatsapp, moto = null }: { produto: Produto; vende: boolean; whatsapp: string | null; moto?: Moto | null }) {
+export default function ProductCard({ produto, vende, whatsapp, moto = null, ocultarSeloDestaque = false, somenteImagem = false }: { produto: Produto; vende: boolean; whatsapp: string | null; moto?: Moto | null; ocultarSeloDestaque?: boolean; somenteImagem?: boolean }) {
   const serve = moto != null && encaixe(produto.compatibilidade, moto) === "serve";
   const modelos = lerCompatibilidade(produto.compatibilidade);
   const imagem = produto.imagens[0];
   const segundaImagem = produto.imagens[1];
+  const marca = marcaConfirmada(produto.marca);
   const miniatura = imagem && /\/uploads\//.test(imagem) && !/\.svg$/i.test(imagem) ? `${imagem}?w=480` : imagem;
   const miniatura2 = segundaImagem && /\/uploads\//.test(segundaImagem) && !/\.svg$/i.test(segundaImagem) ? `${segundaImagem}?w=480` : segundaImagem;
   // Preço zero é "ainda não precificado", não "de graça". Catálogo importado
@@ -35,6 +37,35 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null }: {
     produto.precoDeCentavos && produto.precoDeCentavos > produto.precoCentavos
       ? Math.round(((produto.precoDeCentavos - produto.precoCentavos) / produto.precoDeCentavos) * 100)
       : null;
+
+  if (somenteImagem) {
+    return (
+      <article className="cartao-produto cartao-produto-visual-only group overflow-hidden rounded-xl border-0 bg-transparent shadow-none">
+        <Link href={`/produtos/${produto.slug}`} aria-label={`Ver ${produto.nome}`} className="cartao-produto-imagem relative block aspect-square overflow-hidden rounded-xl bg-muted">
+          {imagem ? (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={miniatura}
+                alt={produto.nome}
+                loading="lazy"
+                className={`h-full w-full object-cover transition-all duration-500 ${segundaImagem ? "group-hover:opacity-0 group-hover:scale-105" : "group-hover:scale-105"}`}
+              />
+              {segundaImagem && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={miniatura2}
+                  alt=""
+                  loading="lazy"
+                  className="absolute inset-0 h-full w-full object-cover opacity-0 transition-all duration-500 group-hover:opacity-100 group-hover:scale-105"
+                />
+              )}
+            </>
+          ) : null}
+        </Link>
+      </article>
+    );
+  }
 
   return (
     <article className="cartao-produto group flex flex-col overflow-hidden rounded-xl border border-border bg-card">
@@ -68,12 +99,22 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null }: {
 
         {/* Badges Flutuantes */}
         <div className="absolute left-2.5 top-2.5 flex flex-col gap-1 z-10">
+          {produto.imagemOrigem === "representativa" && (
+            <span className="rounded-md bg-zinc-900/90 px-2 py-1 text-[10px] font-semibold text-white shadow-sm backdrop-blur-sm">
+              Imagem representativa
+            </span>
+          )}
+          {produto.imagemOrigem === "ilustracao" && (
+            <span className="rounded-md bg-zinc-900/90 px-2 py-1 text-[10px] font-semibold text-white shadow-sm backdrop-blur-sm">
+              Ilustração técnica
+            </span>
+          )}
           {percentualDesconto && (
             <span className="rounded-md bg-red-600 px-2 py-0.5 text-[11px] font-black uppercase text-white shadow-sm">
               -{percentualDesconto}% OFF
             </span>
           )}
-          {produto.destaque && (
+          {produto.destaque && !ocultarSeloDestaque && (
             <span className="rounded-md bg-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary-foreground shadow-sm">
               Destaque
             </span>
@@ -100,7 +141,7 @@ export default function ProductCard({ produto, vende, whatsapp, moto = null }: {
         </div>
       </Link>
       <div className="flex flex-1 flex-col gap-2 p-4">
-        {produto.marca && <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{produto.marca}</p>}
+        {marca && <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{marca}</p>}
         {serve ? (
           <p className="selo-serve">✔ Serve na sua moto</p>
         ) : modelos.length > 0 ? (

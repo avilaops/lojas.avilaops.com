@@ -1,5 +1,6 @@
 import type { Tenant } from "@prisma/client";
 import { FRETE_RETIRADA_ID, type ItemCarrinho, type OpcaoFrete } from "@avilaops/checkout";
+import { retiradaPublicaDisponivel } from "@/lib/tenant";
 
 /**
  * Cotação de frete da plataforma. Herdado de Websites/brilhax.com/src/lib/frete.ts
@@ -235,7 +236,7 @@ export function entregaLocal(t: Tenant, cepBruto: string, subtotalCentavos: numb
 }
 
 function retirada(t: Tenant): OpcaoFrete[] {
-  if (!t.retiradaNaLoja) return [];
+  if (!retiradaPublicaDisponivel(t)) return [];
   return [{ id: FRETE_RETIRADA_ID, nome: "Retirar na loja", preco: 0, prazoDiasUteis: t.despachoDiasUteis }];
 }
 

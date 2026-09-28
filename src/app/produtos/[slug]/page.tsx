@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import FichaTecnica from "@/components/FichaTecnica";
 import { lerDefinicoes, lerValores } from "@/lib/campos-personalizados";
-import { exigirTenant, lojaVende, urlDaLoja, temaDo } from "@/lib/tenant";
+import { exigirTenant, lojaVende, urlDaLoja, temaDo, retiradaPublicaDisponivel } from "@/lib/tenant";
 import GaleriaPremium from "@/components/templates/automotivo-premium/Galeria";
 import { buscarProduto, equivalentesDoProduto, formatarBRL, listarProdutos, resumoAvaliacoes } from "@/lib/catalogo";
 import * as regras from "@/lib/produto-regras";
@@ -25,6 +25,7 @@ import { lerCompatibilidade } from "@/lib/motos";
 import { descricaoDoProduto, textoPuro } from "@/lib/seo-texto";
 import { ofertaDaVariante,gtinValido } from "@/lib/catalogo-oferta";
 import { midiasDaOferta } from "@/lib/catalogo-qualidade";
+import { marcaConfirmada } from "@/lib/marca-confirmada";
 
 type Props = { params: Promise<{ slug: string }>; searchParams:Promise<{variante?:string}> };
 
@@ -88,7 +89,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
     "@context": "https://schema.org",
     "@type": "Product",
     name: p.nome,
-    ...(p.marca ? { brand: { "@type": "Brand", name: p.marca } } : {}),
+    ...(marcaConfirmada(p.marca) ? { brand: { "@type": "Brand", name: marcaConfirmada(p.marca)! } } : {}),
     ...(p.sku ? { sku: p.sku } : {}),
     ...(gtinValido(p.gtin) ? { gtin: p.gtin } : {}),
     ...(escolhida?.mpn ? { mpn: escolhida.mpn } : {}),
@@ -174,7 +175,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
         )}
       </nav>
 
-      <div className="grid gap-8 md:grid-cols-2 ap-produto-grade">
+      <div className="grid items-start gap-8 md:grid-cols-2 ap-produto-grade">
         {temaDo(t).layout === "automotivo-premium" ? <GaleriaPremium imagens={p.imagens} alt={p.nome} origem={p.imagemOrigem}/> : <GaleriaProduto imagens={p.imagens} alt={p.nome} origem={p.imagemOrigem} />}
 
         <div className="ap-produto-info">
@@ -246,7 +247,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
           <Compatibilidade compatibilidade={p.compatibilidade} codigoOriginal={p.codigoOriginal} codigosEquivalentes={p.codigosEquivalentes} moto={moto} />
 
           <ul className="mt-6 space-y-1 text-sm text-muted-foreground">
-            {t.retiradaNaLoja && <li>✔ Retirada na loja sem custo</li>}
+            {retiradaPublicaDisponivel(t) && <li>✔ Retirada na loja sem custo</li>}
             <li>✔ {t.despachoDiasUteis === 0
               ? "Despacho no mesmo dia útil para pagamentos confirmados durante o expediente"
               : `Envio em até ${t.despachoDiasUteis} dias úteis após o pagamento`}</li>

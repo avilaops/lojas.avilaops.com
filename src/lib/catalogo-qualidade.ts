@@ -1,5 +1,8 @@
 import type { Prisma } from "@prisma/client";
 import { gtinValido, INCLUIR_OFERTA, ofertaDaVariante } from "./catalogo-oferta";
+import { marcaConfirmada } from "./marca-confirmada";
+import { categoriaGoogle, categoriaGoogleProduto } from "./categoria-google";
+import { idDaCategoriaGoogle } from "./google-product-taxonomy";
 
 export const INCLUIR_CATALOGO = { categoria: true, midias: { orderBy: { ordem: "asc" as const } }, variantes: { include: { ...INCLUIR_OFERTA, publicacoes: true }, orderBy: { ordem: "asc" as const } } } satisfies Prisma.ProdutoInclude;
 export type ProdutoCatalogo = Prisma.ProdutoGetPayload<{ include: typeof INCLUIR_CATALOGO }>;
@@ -13,25 +16,43 @@ export function midiasDaOferta(p: ProdutoCatalogo, varianteId: string) {
 }
 
 /** Regras locais explícitas. Não atesta fidelidade da foto nem aprovação externa. */
-export function diagnosticarProduto(p: ProdutoCatalogo): OcorrenciaCatalogo[] {
+export function diagnosticarProduto(p: ProdutoCatalogo, prateleira: (nome: string | null | undefined) => number | undefined = categoriaGoogle): OcorrenciaCatalogo[] {
   const ocorrencias: OcorrenciaCatalogo[]=[];
   const add=(regra:string,campo:string,severidade:"erro"|"aviso",canal:"loja"|"google",mensagem:string,acao:string,varianteId?:string)=>ocorrencias.push({regra,versao:1,campo,severidade,canal,mensagem,acao,varianteId});
+  const nomeNormalizado=p.nome.normalize("NFD").replace(/\p{M}+/gu, "").trim().toLowerCase();
+  if (/^(?:unitario|produto|item|diversos?|pecas plasticas diversas)$/.test(nomeNormalizado)) add("titulo_insuficiente","nome","erro","google","O título não identifica qual produto o cliente vai receber.","Confirme tipo, modelo ou aplicação na embalagem ou ficha do fornecedor antes de anunciar.");
+  const googleCategoriaManual=idDaCategoriaGoogle(p.googleProductCategory);
+  const googleCategoriaAutomatica=categoriaGoogleProduto(p.nome,p.categoria?.nome,prateleira);
+  if (!googleCategoriaManual && !googleCategoriaAutomatica) add("categoria_google_ausente","googleProductCategory","aviso","google","Não há categoria Google confirmada para esta categoria da loja.","Escolha um caminho ou ID na taxonomia Google, ou reorganize o produto numa categoria já classificada.");
   if(!p.categoriaId) add("categoria_ausente","categoria","aviso","loja","Produto sem categoria.","Escolha a categoria do produto.");
+  if(!marcaConfirmada(p.marca)) add("marca_ausente","marca","aviso","google",p.marca?.trim()?"O cadastro contém “DIVERSOS”, que não identifica o fabricante.":"Falta a marca do fabricante.","Confirme a marca na embalagem, ficha técnica ou com o fornecedor.");
   if(!p.descricao?.trim() && !p.descricaoCurta?.trim()) add("descricao_ausente","descricao","erro","google","Falta uma descrição do produto.","Descreva o uso e as características confirmadas.");
   for(const original of p.variantes.filter(v=>v.ativo)) {
     const v=ofertaDaVariante(original);
     if(v.precoCentavos<=0) add("preco_ausente","preco","erro","loja","Preço ainda não definido.","Informe o preço da apresentação para habilitar a compra.",v.id);
+    if(v.precoDeCentavos!=null&&v.precoDeCentavos<=v.precoCentavos) add("preco_comparacao_nao_maior","precoDe","aviso","loja","O preço “de” precisa ser maior que o preço atual para formar uma promoção.","Ajuste o preço anterior ou remova esse valor.",v.id);
     if(!v.sku) add("sku_ausente","sku","aviso","loja","SKU ainda não informado.","Informe o código interno desta apresentação.",v.id);
     else if(/^https?:\/\//i.test(v.sku)) add("sku_url","sku","aviso","loja","O SKU contém uma URL.","Confira o código interno na origem do cadastro.",v.id);
     if(v.gtin && !gtinValido(v.gtin)) add("gtin_invalido","gtin","erro","google","O GTIN não passa na validação de formato e dígito verificador.","Confira os dígitos na embalagem ou com o fabricante.",v.id);
     if(v.identificadoresEstado==="sem_identificador" && (v.gtin || v.mpn)) add("identificador_contraditorio","gtin","erro","google","Há identificadores cadastrados, mas o item está marcado como sem identificador.","Corrija a declaração da apresentação.",v.id);
     if(!v.gtin && !v.mpn && v.identificadoresEstado!=="sem_identificador") add("identificador_desconhecido","gtin","aviso","google","Identificador ainda desconhecido.","Confirme o GTIN/MPN; vazio não significa que o fabricante não atribuiu um.",v.id);
     if(v.disponibilidade==="backorder") add("prazo_encomenda","disponibilidade","erro","google","A encomenda ainda não tem data confirmada para o canal.","Confirme a data de disponibilidade antes de anunciar.",v.id);
+    const dimensoesEmbalagem=[v.comprimentoCm,v.larguraCm,v.alturaCm];
+    const dimensoesGoogleValidas=dimensoesEmbalagem.every(n=>typeof n==="number"&&Number.isFinite(n)&&n>=1&&n<=400);
+    if(v.pesoKg==null||!Number.isFinite(v.pesoKg)||v.pesoKg<=0) add("peso_embalagem_ausente","pesoKg","aviso","loja","Falta o peso do produto embalado para calcular o frete.","Pese o produto já dentro da embalagem de envio.",v.id);
+    else if(v.pesoKg>1000) add("peso_embalagem_fora_faixa","pesoKg","aviso","google","O peso do pacote supera o limite aceito pelo Merchant.","Confira a unidade e o peso real da embalagem.",v.id);
+    if(!dimensoesEmbalagem.every(n=>typeof n==="number"&&Number.isFinite(n)&&n>0)) add("dimensoes_embalagem_ausentes","alturaCm","aviso","loja","Falta uma ou mais dimensões da embalagem.","Informe altura, largura e comprimento externos da embalagem de envio.",v.id);
+    if(dimensoesEmbalagem.some(n=>n!=null)&&!dimensoesGoogleValidas) add("dimensoes_merchant_incompletas","alturaCm","aviso","google","O Merchant só recebe dimensões quando altura, largura e comprimento estão entre 1 e 400 cm.","Informe as três medidas externas da embalagem dentro dos limites aceitos.",v.id);
     const midias=midiasDaOferta(p,v.id);
     if(!midias.length) add("foto_ausente","imagens","erro","google","Esta apresentação não tem foto.","Envie uma foto do item exato.",v.id);
     else {
       if(midias[0].origem!=="propria") add("foto_representativa","imagens","erro","google","A imagem principal é representativa ou ilustrada.","Escolha uma foto fiel à apresentação vendida.",v.id);
-      if(midias[0].correspondencia!=="confirmada") add("foto_nao_conferida","imagens","aviso","google","A correspondência entre foto e item não foi conferida.","Confira a embalagem, cor e apresentação da foto.",v.id);
+      // A conferência por SKU é recomendada, mas não é um atributo exigido pelo
+      // Merchant. Mantê-la como aviso preserva ofertas com fotografia própria
+      // enquanto deixa a pendência visível para revisão. Ausência de foto ou
+      // imagem ilustrativa/representativa continuam bloqueando o canal acima.
+      if(midias[0].correspondencia==="rejeitada") add("foto_incorreta","imagens","erro","google","A foto principal foi marcada como diferente do produto ou apresentação vendidos.","Associe uma foto correta ao SKU e confirme a correspondência.",v.id);
+      else if(midias[0].correspondencia!=="confirmada") add("foto_nao_conferida","imagens","aviso","google","A correspondência da foto com esta apresentação não foi confirmada.","Confira SKU, cor e apresentação no painel; substitua imagens erradas antes de anunciar.",v.id);
       if(midias.length===1) add("foto_unica","imagens","aviso","loja","Há apenas uma foto.","Acrescente outro ângulo ou detalhe do item.",v.id);
     }
   }
