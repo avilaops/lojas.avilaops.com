@@ -135,9 +135,9 @@
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Detailer, modelo E09 na ficha",
-  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Código exibido passa a ser rotulado 'EAN' (PR #34) • Alteração de dados PROPOSTA (não aplicada; ver alteracoes-propostas.json)",
+  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Código exibido passa a ser rotulado 'EAN' (PR #34) • Alterações propostas aplicadas em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 5 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação",
-  "Situação": "Pendente — dados propostos"
+  "Situação": "Conferido"
  },
  {
   "#": 5,
@@ -255,8 +255,8 @@
   "Categoria Google (feed atual)": "ausente",
   "Categoria Google (após PR)": 2789,
   "Marca": "Aromas City",
-  "Nome atual": "AROMINHA CARRO NOVO SCENT",
-  "Nome proposto": "Arominha Carro Novo Scent — Aromatizante Spray 100 ml (após confirmar marca e volume)",
+  "Nome atual": "Arominha Carro Novo Scent — Aromatizante Spray 100 ml",
+  "Nome proposto": "manter",
   "Imagem principal": "https://lojas.avilaops.com/uploads/brilhax/scent-carro-novo-recorte-20260927.png",
   "Qtd. imagens adicionais": 4,
   "Imagens adicionais": "https://lojas.avilaops.com/uploads/brilhax/mtv7bn94-7b9bd6a2.webp | https://lojas.avilaops.com/uploads/brilhax/mtv7bnjw-d7ff6b3a.webp | https://lojas.avilaops.com/uploads/brilhax/mtv7bnxm-446b7c6d.webp | https://lojas.avilaops.com/uploads/brilhax/mtv7bobe-61d3a62d.webp",
@@ -275,9 +275,9 @@
   "Suspeitas a verificar": "Volume de 100 ml aparece só no texto; confirmar no rótulo",
   "Dados indisponíveis": "GTIN • Fabricante/CNPJ do rótulo • Classificação de transporte (spray aromatizante costuma ser inflamável; sem FDS) • Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Descrição cita 'Aromas City' / 'Novo Scent' / 'material de divulgação'",
-  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Alteração de dados PROPOSTA (não aplicada; ver alteracoes-propostas.json) • Marca 'Aromas City' gravada em 28/09, conforme o rótulo",
+  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Marca 'Aromas City' gravada em 28/09, conforme o rótulo • Alterações propostas aplicadas em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 5 imagens conferidas em 28/09, depois do deploy da correção: conferem com o título, com ressalva (ver Suspeitas)",
-  "Situação": "Pendente — dados propostos + confirmação"
+  "Situação": "Pendente — confirmação"
  },
  {
   "#": 9,
@@ -306,13 +306,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Sem google_product_category (corrigido no código → 2789) • Foto principal com o frasco cortado na lateral direita (rótulo truncado em 'conte… 60') • Categoria Google ausente → 2789 (Odorizadores para carro) — corrigido no código (PR #34)",
+  "Problemas confirmados": "Sem google_product_category (corrigido no código → 2789) • Categoria Google ausente → 2789 (Odorizadores para carro) — corrigido no código (PR #34)",
   "Suspeitas a verificar": "Produto inflamável (ONU 1993, classe 3, GE II): Correios (PAC/SEDEX) aparecem no frete; confirmar se a transportadora aceita",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Vintex, modelo 2010008; FDS: ONU 1993 classe 3",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: Principal conferida: frasco Vintex Aroma Carro Novo 60 ml, rótulo 'Odorizador para veículos' — confere com o cadastro",
-  "Situação": "Pendente — foto + confirmação"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: Principal conferida: frasco Vintex Aroma Carro Novo 60 ml, rótulo 'Odorizador para veículos' — confere com o cadastro; revisto em 28/09: o texto 'conte… 60' some na curvatura do frasco no próprio render oficial da Vintex, não é corte da imagem",
+  "Situação": "Pendente — confirmação"
  },
  {
   "#": 10,
@@ -355,8 +355,8 @@
   "SKU interno": "7898671782935",
   "Código exibido ao cliente": "7898671782935",
   "URL": "https://brilhax.com/produtos/kit-escova-drill-detailer",
-  "Categoria atual": "Kits Completos",
-  "Categoria proposta": "Acessórios (decisão do lojista)",
+  "Categoria atual": "Acessórios",
+  "Categoria proposta": "manter",
   "Categoria Google (feed atual)": 2895,
   "Categoria Google (após PR)": 2894,
   "Marca": "Detailer",
@@ -380,7 +380,7 @@
   "Suspeitas a verificar": "Categoria 'Kits Completos' para um conjunto de escovas de furadeira; comprador tende a procurar em 'Acessórios'",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Detailer; 4 escovas descritas na ficha",
-  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Código exibido passa a ser rotulado 'EAN' (PR #34) • Alteração de dados PROPOSTA (não aplicada; ver alteracoes-propostas.json)",
+  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Código exibido passa a ser rotulado 'EAN' (PR #34) • Alterações propostas aplicadas em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 10 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação",
   "Situação": "Pendente — confirmação"
  },
@@ -555,7 +555,7 @@
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
-  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34) • Galeria corrigida em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
+  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34) • Galeria corrigida em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28') • Alterações propostas aplicadas em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 3 imagens conferidas em 28/09, depois do deploy da correção: com problemas (ver Problemas confirmados)",
   "Situação": "Conferido"
  },
@@ -605,7 +605,7 @@
   "Categoria Google (feed atual)": 2590,
   "Categoria Google (após PR)": 2704,
   "Marca": "Vonixx",
-  "Nome atual": "Extractus Vonixx Limpador de Estofados 1 L",
+  "Nome atual": "Extractus Vonixx Limpador de Estofados 1,5 L",
   "Nome proposto": "manter",
   "Imagem principal": "https://lojas.avilaops.com/uploads/brilhax/mtv7bu11-ff27452b.webp",
   "Qtd. imagens adicionais": 4,
@@ -621,13 +621,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Nota interna publicada na descrição ('Este cadastro corresponde à embalagem de 1 L mostrada nas fotos.') • Sem GTIN • Categoria Google 2590 → 2704 (Limpadores de estofados) — corrigido no código (PR #34) • Foto principal gerada ou redesenhada, com nome errado no rótulo ('EXRACTUS') e texto sem sentido ('PIRAS LAVAGEM EXTRATORAS… INMUNDEZAL'); substituir pela foto oficial da Vonixx • Imagem adicional 4 com trechos de texto apagados a borrão; remover",
-  "Suspeitas a verificar": "Slug diz 'desengraxante'; produto é limpador de estofados — renomear só com 301 • O título diz 1 L, mas a Vonixx vende o Extractus em 1,5 L, 3 L e 5 L, e as artes da galeria mostram 1,5 L. Confirmar o volume vendido. Até lá a foto principal é a embalagem oficial de 1,5 L marcada como 'representativa', o que mostra aviso na loja e deixa o item fora do feed do Google",
+  "Problemas confirmados": "Sem GTIN • Categoria Google 2590 → 2704 (Limpadores de estofados) — corrigido no código (PR #34) • Foto principal gerada ou redesenhada, com nome errado no rótulo ('EXRACTUS') e texto sem sentido ('PIRAS LAVAGEM EXTRATORAS… INMUNDEZAL'); substituir pela foto oficial da Vonixx • Imagem adicional 4 com trechos de texto apagados a borrão; remover",
+  "Suspeitas a verificar": "Slug diz 'desengraxante'; produto é limpador de estofados — renomear só com 301",
   "Dados indisponíveis": "GTIN do frasco de 1 L • Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
-  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34) • Alteração de dados PROPOSTA (não aplicada; ver alteracoes-propostas.json) • Galeria corrigida em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
+  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34) • Galeria corrigida em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28') • Alterações propostas aplicadas em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 5 imagens conferidas em 28/09, depois do deploy da correção: com problemas (ver Problemas confirmados); adicionais 1 a 3 são artes oficiais Vonixx",
-  "Situação": "Pendente — dados propostos + confirmação"
+  "Situação": "Pendente — confirmação"
  },
  {
   "#": 19,
@@ -695,9 +695,9 @@
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
-  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34) • Alteração de dados PROPOSTA (não aplicada; ver alteracoes-propostas.json)",
+  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34) • Alterações propostas aplicadas em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 3 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação; principal e adicional 1 mostram versões diferentes do rótulo",
-  "Situação": "Pendente — dados propostos"
+  "Situação": "Conferido"
  },
  {
   "#": 21,
@@ -835,9 +835,9 @@
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
-  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34) • Alteração de dados PROPOSTA (não aplicada; ver alteracoes-propostas.json)",
+  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34) • Alterações propostas aplicadas em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 4 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação",
-  "Situação": "Pendente — dados propostos"
+  "Situação": "Conferido"
  },
  {
   "#": 25,
@@ -870,9 +870,9 @@
   "Suspeitas a verificar": "Preço R$ 10,00 destoa do restante do catálogo (500 ml de desengraxante concentrado); confirmar com o lojista — preço não alterado",
   "Dados indisponíveis": "GTIN • Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Nitro Automotive Line (texto do fabricante na descrição)",
-  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Alteração de dados PROPOSTA (não aplicada; ver alteracoes-propostas.json) • Galeria corrigida em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28'); a galeria ficou só com a foto principal",
+  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Galeria corrigida em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28'); a galeria ficou só com a foto principal • Alterações propostas aplicadas em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: Adicionais 3–6 conferidas: frasco Nitro Lamax 500 ml em artes de campanha",
-  "Situação": "Pendente — dados propostos + confirmação"
+  "Situação": "Pendente — confirmação"
  },
  {
   "#": 26,
@@ -905,9 +905,9 @@
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
-  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34) • Alteração de dados PROPOSTA (não aplicada; ver alteracoes-propostas.json)",
+  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34) • Alterações propostas aplicadas em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 5 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação",
-  "Situação": "Pendente — dados propostos"
+  "Situação": "Conferido"
  },
  {
   "#": 27,
@@ -1150,9 +1150,9 @@
   "Suspeitas a verificar": "Código exibido 2011004 (código Vonixx), diferente das outras apresentações que exibem o EAN — padronizar SKU",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
-  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Alteração de dados PROPOSTA (não aplicada; ver alteracoes-propostas.json) • Galeria corrigida em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
+  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Galeria corrigida em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28') • Alterações propostas aplicadas em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 4 imagens conferidas em 28/09, depois do deploy da correção: com problemas (ver Problemas confirmados)",
-  "Situação": "Pendente — dados propostos + confirmação"
+  "Situação": "Pendente — confirmação"
  },
  {
   "#": 34,
@@ -1620,8 +1620,8 @@
   "Categoria Google (feed atual)": 2590,
   "Categoria Google (após PR)": 2895,
   "Marca": "Wolf Pads",
-  "Nome atual": "Boina Micro Wolf Wolf Pads 133 mm Ventilada",
-  "Nome proposto": "Boina de Microfibra Micro Wolf 133 mm Ventilada — Wolf Pads",
+  "Nome atual": "Boina de Microfibra Micro Wolf 133 mm Ventilada — Wolf Pads",
+  "Nome proposto": "manter",
   "Imagem principal": "https://lojas.avilaops.com/uploads/brilhax/fonte-df87f85a05bcbb19d3e555d7.webp",
   "Qtd. imagens adicionais": 4,
   "Imagens adicionais": "https://lojas.avilaops.com/uploads/brilhax/muabjlqw-9e985fa2.webp | https://lojas.avilaops.com/uploads/brilhax/muabjm1n-f521d52e.webp | https://lojas.avilaops.com/uploads/brilhax/muabjmce-4647c74f.webp | https://lojas.avilaops.com/uploads/brilhax/muabjmnf-5786d084.webp",
@@ -1640,9 +1640,9 @@
   "Suspeitas a verificar": "A foto mostra camada laranja entre a microfibra e o velcro (aparência de interface de espuma), mas ficha e título não mencionam interface",
   "Dados indisponíveis": "GTIN (fabricante não publicou; se não existir, declarar ausência com MPN = código WP) • Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Wolf Pads — imagens e textos do fornecedor (arquivos 'fonte-*'), código WP-xxx",
-  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34) • Alteração de dados PROPOSTA (não aplicada; ver alteracoes-propostas.json)",
+  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34) • Alterações propostas aplicadas em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: Principal conferida (1080×1080): cor, material e formato conferem com a linha do título",
-  "Situação": "Pendente — dados propostos + confirmação"
+  "Situação": "Pendente — confirmação"
  },
  {
   "#": 48,
@@ -1655,8 +1655,8 @@
   "Categoria Google (feed atual)": 2590,
   "Categoria Google (após PR)": 2895,
   "Marca": "Wolf Pads",
-  "Nome atual": "Boina Micro Wolf Wolf Pads 152 mm Ventilada",
-  "Nome proposto": "Boina de Microfibra Micro Wolf 152 mm Ventilada — Wolf Pads",
+  "Nome atual": "Boina de Microfibra Micro Wolf 152 mm Ventilada — Wolf Pads",
+  "Nome proposto": "manter",
   "Imagem principal": "https://lojas.avilaops.com/uploads/brilhax/fonte-94804e91c208a1de98985b99.webp",
   "Qtd. imagens adicionais": 5,
   "Imagens adicionais": "https://lojas.avilaops.com/uploads/brilhax/muabrf0l-89c2b01d.webp | https://lojas.avilaops.com/uploads/brilhax/muabrfbp-2e05e15a.webp | https://lojas.avilaops.com/uploads/brilhax/muabrfmb-c5c4f131.webp | https://lojas.avilaops.com/uploads/brilhax/muabrfwc-5a3ecce4.webp | https://lojas.avilaops.com/uploads/brilhax/muabrg46-2bdb60d7.webp",
@@ -1675,9 +1675,9 @@
   "Suspeitas a verificar": "Ficha diz 'com interface' / 'Interface: Espuma', mas o título e a versão 133 mm não; confirmar com a Wolf Pads",
   "Dados indisponíveis": "GTIN (fabricante não publicou; se não existir, declarar ausência com MPN = código WP) • Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Wolf Pads — imagens e textos do fornecedor (arquivos 'fonte-*'), código WP-xxx",
-  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34) • Alteração de dados PROPOSTA (não aplicada; ver alteracoes-propostas.json)",
+  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34) • Alterações propostas aplicadas em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: Principal conferida (1080×1080): cor, material e formato conferem com a linha do título; camada laranja visível, coerente com 'Interface: Espuma' da ficha",
-  "Situação": "Pendente — dados propostos + confirmação"
+  "Situação": "Pendente — confirmação"
  },
  {
   "#": 49,
@@ -1955,9 +1955,9 @@
   "Suspeitas a verificar": "Principal tem grafismos de moldura nos cantos (azul-marinho); o Google pede imagem sem borda",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Vintex; FDS citada",
-  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34) • Alteração de dados PROPOSTA (não aplicada; ver alteracoes-propostas.json) • Galeria corrigida em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
+  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34) • Galeria corrigida em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28') • Alterações propostas aplicadas em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: Principal e adicional 2 conferidas: frasco Vintex Massa de Polir; a principal traz etiqueta de outra loja (revisto em 28/09 depois do deploy)",
-  "Situação": "Pendente — dados propostos + confirmação"
+  "Situação": "Pendente — confirmação"
  },
  {
   "#": 57,
@@ -2217,9 +2217,9 @@
   "Marca": "Vonixx",
   "Nome atual": "Carnaúba Hybrid Wax Vonixx 240 ml",
   "Nome proposto": "manter",
-  "Imagem principal": "https://lojas.avilaops.com/uploads/brilhax/carnauba-hybrid-wax-240ml-vonixx-oficial-com-aplicador-20260921.png",
-  "Qtd. imagens adicionais": 2,
-  "Imagens adicionais": "https://lojas.avilaops.com/uploads/brilhax/mtv7bpdn-3544fea8.webp | https://lojas.avilaops.com/uploads/brilhax/mtv7bpl6-42279b79.webp",
+  "Imagem principal": "https://lojas.avilaops.com/uploads/brilhax/mtv7bpdn-3544fea8.webp",
+  "Qtd. imagens adicionais": 1,
+  "Imagens adicionais": "https://lojas.avilaops.com/uploads/brilhax/carnauba-hybrid-wax-240ml-vonixx-oficial-com-aplicador-20260921.png",
   "Descrição curta (caracteres)": 114,
   "Descrição longa (caracteres)": 1064,
   "Atributos técnicos (qtd.)": 19,
@@ -2231,13 +2231,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Foto principal com 400×348 px, abaixo do mínimo de 500×500 do Google",
+  "Problemas confirmados": "",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
-  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34)",
+  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34) • Galeria corrigida em 28/09: principal passa a ser o packshot oficial de 1170×1250; saiu a imagem do pote de 120 ml (selo 30)",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: Principal conferida: pote Carnaúba Hybrid Wax Vonixx com aplicador — confere",
-  "Situação": "Pendente — foto"
+  "Situação": "Conferido"
  },
  {
   "#": 65,
@@ -2270,9 +2270,9 @@
   "Suspeitas a verificar": "Slug com erro ('cleaner-waz'); renomear só com 301",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
-  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34) • Alteração de dados PROPOSTA (não aplicada; ver alteracoes-propostas.json)",
+  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34) • Alterações propostas aplicadas em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 5 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação; principal com 379×496 px, baixa resolução",
-  "Situação": "Pendente — dados propostos + confirmação"
+  "Situação": "Pendente — confirmação"
  },
  {
   "#": 66,
@@ -2445,7 +2445,7 @@
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
-  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Galeria corrigida em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
+  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Galeria corrigida em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28') • Alterações propostas aplicadas em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 4 imagens conferidas em 28/09, depois do deploy da correção: com problemas (ver Problemas confirmados)",
   "Situação": "Conferido"
  },
@@ -2480,7 +2480,7 @@
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
-  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34) • Galeria corrigida em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
+  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34) • Galeria corrigida em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28') • Alterações propostas aplicadas em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 7 imagens conferidas em 28/09, depois do deploy da correção: com problemas (ver Problemas confirmados)",
   "Situação": "Conferido"
  },
@@ -2550,9 +2550,9 @@
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
-  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34) • Alteração de dados PROPOSTA (não aplicada; ver alteracoes-propostas.json)",
+  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34) • Alterações propostas aplicadas em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 2 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação",
-  "Situação": "Pendente — dados propostos"
+  "Situação": "Conferido"
  },
  {
   "#": 74,
@@ -2585,9 +2585,9 @@
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
-  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34) • Alteração de dados PROPOSTA (não aplicada; ver alteracoes-propostas.json)",
+  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34) • Alterações propostas aplicadas em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 6 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação",
-  "Situação": "Pendente — dados propostos"
+  "Situação": "Conferido"
  },
  {
   "#": 75,
@@ -2620,9 +2620,9 @@
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
-  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Alteração de dados PROPOSTA (não aplicada; ver alteracoes-propostas.json) • Galeria corrigida em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
+  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Galeria corrigida em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28') • Alterações propostas aplicadas em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 3 imagens conferidas em 28/09, depois do deploy da correção: com problemas (ver Problemas confirmados)",
-  "Situação": "Pendente — dados propostos"
+  "Situação": "Conferido"
  },
  {
   "#": 76,
@@ -2655,7 +2655,7 @@
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
-  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34) • Galeria corrigida em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
+  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34) • Galeria corrigida em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28') • Alterações propostas aplicadas em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 3 imagens conferidas em 28/09, depois do deploy da correção: com problemas (ver Problemas confirmados); adicionais 1 e 2 têm só 300 px",
   "Situação": "Conferido"
  },
@@ -2690,7 +2690,7 @@
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "GTIN • Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
-  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Galeria corrigida em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
+  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Galeria corrigida em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28') • Alterações propostas aplicadas em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 2 imagens conferidas em 28/09, depois do deploy da correção: com problemas (ver Problemas confirmados)",
   "Situação": "Conferido"
  },
@@ -2760,7 +2760,7 @@
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
-  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34) • Galeria corrigida em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
+  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34) • Galeria corrigida em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28') • Alterações propostas aplicadas em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 4 imagens conferidas em 28/09, depois do deploy da correção: com problemas (ver Problemas confirmados)",
   "Situação": "Conferido"
  }
