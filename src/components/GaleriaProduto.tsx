@@ -27,7 +27,9 @@ export default function GaleriaProduto({ imagens, alt, origem = "propria" }: { i
   return (
     <div className="grid gap-2">
       <div
-        className="relative aspect-square overflow-hidden rounded-xl bg-muted"
+        // Sem foto, a moldura vira uma faixa: um quadrado vazio do tamanho da
+        // tela empurrava preço, disponibilidade e pedido para baixo da dobra.
+        className={`relative overflow-hidden rounded-xl bg-muted ${imagens.length ? "aspect-square" : "aspect-[5/1] md:aspect-[3/1]"}`}
         onPointerMove={(e) => {
           if (e.pointerType !== "mouse") return;
           const r = e.currentTarget.getBoundingClientRect();
@@ -44,7 +46,7 @@ export default function GaleriaProduto({ imagens, alt, origem = "propria" }: { i
             style={zoom ? { transform: "scale(2)", transformOrigin: `${zoom.x}% ${zoom.y}%` } : undefined}
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-xs text-muted-foreground">Imagem em preparação</div>
+          <div className="flex h-full items-center justify-center text-xs text-muted-foreground">Sem foto do produto</div>
         )}
       </div>
       {aviso && <p className="text-xs leading-snug text-muted-foreground">{aviso}</p>}
