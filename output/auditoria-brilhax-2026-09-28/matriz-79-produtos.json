@@ -26,13 +26,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy)",
+  "Problemas confirmados": "",
   "Suspeitas a verificar": "Tamanho '12 x 2,5 cm' sem fonte registrada; conferir na embalagem",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Código exibido passa a ser rotulado 'EAN' (PR #34)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto + confirmação"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 3 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação",
+  "Situação": "Pendente — confirmação"
  },
  {
   "#": 2,
@@ -61,13 +61,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy)",
-  "Suspeitas a verificar": "Slug 'aplicador-esp-pct-2und-2' é pouco descritivo; renomear só com redirecionamento 301",
+  "Problemas confirmados": "",
+  "Suspeitas a verificar": "Slug 'aplicador-esp-pct-2und-2' é pouco descritivo; renomear só com redirecionamento 301 • As 3 fotos mostram 1 aplicador, e o título diz pacote com 2 unidades. Conferir o que é entregue e, se for pacote, incluir foto do pacote",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Código Vintex 2019013 na ficha",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto + confirmação"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 3 imagens conferidas em 28/09, depois do deploy da correção: conferem com o título, com ressalva (ver Suspeitas)",
+  "Situação": "Pendente — confirmação"
  },
  {
   "#": 3,
@@ -96,13 +96,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy)",
+  "Problemas confirmados": "",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Código Vonixx 2050652 na ficha",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 3 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação",
+  "Situação": "Conferido"
  },
  {
   "#": 4,
@@ -131,13 +131,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Nota interna publicada na ficha (Cerdas: '…segundo a ficha da apresentação com GTIN correspondente')",
+  "Problemas confirmados": "Nota interna publicada na ficha (Cerdas: '…segundo a ficha da apresentação com GTIN correspondente')",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Detailer, modelo E09 na ficha",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Código exibido passa a ser rotulado 'EAN' (PR #34) • Alteração de dados PROPOSTA (não aplicada; ver alteracoes-propostas.json)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto + dados propostos"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 5 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação",
+  "Situação": "Pendente — dados propostos"
  },
  {
   "#": 5,
@@ -166,13 +166,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy)",
+  "Problemas confirmados": "",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Detailer, modelo E07 na ficha",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Código exibido passa a ser rotulado 'EAN' (PR #34)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 6 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação",
+  "Situação": "Conferido"
  },
  {
   "#": 6,
@@ -201,13 +201,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy)",
+  "Problemas confirmados": "",
   "Suspeitas a verificar": "GTIN 17898511034382 tem 14 dígitos com indicador '1' (padrão de caixa/embalagem de agrupamento). Confirmar no rótulo da unidade vendida se existe EAN-13 próprio; não derivar",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Zacs; dimensões e materiais na ficha",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Código exibido passa a ser rotulado 'EAN' (PR #34)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto + confirmação"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 5 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação",
+  "Situação": "Pendente — confirmação"
  },
  {
   "#": 7,
@@ -236,13 +236,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy)",
+  "Problemas confirmados": "",
   "Suspeitas a verificar": "GTIN 17898511034375 tem 14 dígitos com indicador '1' (padrão de caixa). Confirmar EAN-13 da unidade no rótulo; não derivar",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Zacs; dimensões e materiais na ficha",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Código exibido passa a ser rotulado 'EAN' (PR #34)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto + confirmação"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 5 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação",
+  "Situação": "Pendente — confirmação"
  },
  {
   "#": 8,
@@ -254,7 +254,7 @@
   "Categoria proposta": "manter",
   "Categoria Google (feed atual)": "ausente",
   "Categoria Google (após PR)": 2789,
-  "Marca": "Scent",
+  "Marca": "Aromas City",
   "Nome atual": "AROMINHA CARRO NOVO SCENT",
   "Nome proposto": "Arominha Carro Novo Scent — Aromatizante Spray 100 ml (após confirmar marca e volume)",
   "Imagem principal": "https://lojas.avilaops.com/uploads/brilhax/scent-carro-novo-recorte-20260927.png",
@@ -271,13 +271,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Título em caixa alta ('AROMINHA CARRO NOVO SCENT'), fora do padrão dos demais e da regra de título do Google • Sem GTIN e sem google_product_category (esta corrigida no código, 2789) • Categoria Google ausente → 2789 (Odorizadores para carro) — corrigido no código (PR #34)",
-  "Suspeitas a verificar": "Marca incerta: cadastro diz 'Scent', descrição diz 'Aromas City … Novo Scent'. Confirmar fabricante e marca no rótulo • Volume de 100 ml aparece só no texto; confirmar no rótulo",
+  "Problemas confirmados": "Título em caixa alta ('AROMINHA CARRO NOVO SCENT'), fora do padrão dos demais e da regra de título do Google • Sem GTIN e sem google_product_category (esta corrigida no código, 2789) • Categoria Google ausente → 2789 (Odorizadores para carro) — corrigido no código (PR #34)",
+  "Suspeitas a verificar": "Volume de 100 ml aparece só no texto; confirmar no rótulo",
   "Dados indisponíveis": "GTIN • Fabricante/CNPJ do rótulo • Classificação de transporte (spray aromatizante costuma ser inflamável; sem FDS) • Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Descrição cita 'Aromas City' / 'Novo Scent' / 'material de divulgação'",
-  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Alteração de dados PROPOSTA (não aplicada; ver alteracoes-propostas.json)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto + dados propostos + confirmação"
+  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Alteração de dados PROPOSTA (não aplicada; ver alteracoes-propostas.json) • Marca 'Aromas City' gravada em 28/09, conforme o rótulo",
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 5 imagens conferidas em 28/09, depois do deploy da correção: conferem com o título, com ressalva (ver Suspeitas)",
+  "Situação": "Pendente — dados propostos + confirmação"
  },
  {
   "#": 9,
@@ -306,7 +306,7 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Sem google_product_category (corrigido no código → 2789) • Foto principal com o frasco cortado na lateral direita (rótulo truncado em 'conte… 60') • Categoria Google ausente → 2789 (Odorizadores para carro) — corrigido no código (PR #34)",
+  "Problemas confirmados": "Sem google_product_category (corrigido no código → 2789) • Foto principal com o frasco cortado na lateral direita (rótulo truncado em 'conte… 60') • Categoria Google ausente → 2789 (Odorizadores para carro) — corrigido no código (PR #34)",
   "Suspeitas a verificar": "Produto inflamável (ONU 1993, classe 3, GE II): Correios (PAC/SEDEX) aparecem no frete; confirmar se a transportadora aceita",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Vintex, modelo 2010008; FDS: ONU 1993 classe 3",
@@ -341,13 +341,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Sem google_product_category (corrigido no código → 2590, sanitizante) • Categoria Google ausente → 2590 (Soluções para limpeza de carro) — corrigido no código (PR #34)",
+  "Problemas confirmados": "Sem google_product_category (corrigido no código → 2590, sanitizante) • Categoria Google ausente → 2590 (Soluções para limpeza de carro) — corrigido no código (PR #34)",
   "Suspeitas a verificar": "Alegação 'elimina 99,99% das bactérias' é do fabricante; saneante com ação antimicrobiana exige registro Anvisa — pedir número ao fornecedor antes de anunciar em marketplace • Slug 'aroma-carro-novo-vintex-1-5l' diz aroma; produto é sanitizante",
   "Dados indisponíveis": "Número de registro/notificação Anvisa • Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Vintex; FDS rev. 30/07/2025 (não perigoso)",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto + confirmação"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 2 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação",
+  "Situação": "Pendente — confirmação"
  },
  {
   "#": 11,
@@ -376,13 +376,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • JSON-LD lista mais imagens que o feed (feed limita a 1+9; a página tem 10) — sem impacto de preço • Categoria Google 2895 → 2894 (Escovas para limpeza de carro) — corrigido no código (PR #34)",
+  "Problemas confirmados": "JSON-LD lista mais imagens que o feed (feed limita a 1+9; a página tem 10) — sem impacto de preço • Categoria Google 2895 → 2894 (Escovas para limpeza de carro) — corrigido no código (PR #34)",
   "Suspeitas a verificar": "Categoria 'Kits Completos' para um conjunto de escovas de furadeira; comprador tende a procurar em 'Acessórios'",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Detailer; 4 escovas descritas na ficha",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Código exibido passa a ser rotulado 'EAN' (PR #34) • Alteração de dados PROPOSTA (não aplicada; ver alteracoes-propostas.json)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto + confirmação"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 10 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação",
+  "Situação": "Pendente — confirmação"
  },
  {
   "#": 12,
@@ -411,13 +411,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy)",
+  "Problemas confirmados": "",
   "Suspeitas a verificar": "Limpador ácido (pH 2,5–4,5): Shopee proíbe ácidos na política de restritos — confirmar antes de anunciar lá • Banner com texto na galeria; no feed do Google usar só fotos sem texto sobreposto",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Código exibido passa a ser rotulado 'EAN' (PR #34)",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: Adicionais 1–2 conferidas: frasco Acidus Fast Vonixx; a 2 é banner 1600×675 com texto de marketing",
-  "Situação": "Pendente — foto + confirmação"
+  "Situação": "Pendente — confirmação"
  },
  {
   "#": 13,
@@ -446,13 +446,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Produto corrosivo (UN 3264, classe 8) com PAC/SEDEX oferecidos no frete; Correios não aceitam corrosivos",
+  "Problemas confirmados": "Produto corrosivo (UN 3264, classe 8) com PAC/SEDEX oferecidos no frete; Correios não aceitam corrosivos",
   "Suspeitas a verificar": "Shopee: ácido corrosivo, provável proibição",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Vintex; FDS: UN 3264 classe 8",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto + confirmação"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 6 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação; adicionais 1 a 5 mostram o rótulo anterior (preto) e a principal mostra o atual (roxo)",
+  "Situação": "Pendente — confirmação"
  },
  {
   "#": 14,
@@ -481,13 +481,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Produto corrosivo (UN 3264, classe 8) com PAC/SEDEX oferecidos no frete • Frete cotado igual ao de um frasco de 500 ml (sem peso/medidas); 5 L subcotado",
+  "Problemas confirmados": "Produto corrosivo (UN 3264, classe 8) com PAC/SEDEX oferecidos no frete • Frete cotado igual ao de um frasco de 500 ml (sem peso/medidas); 5 L subcotado",
   "Suspeitas a verificar": "Shopee: ácido corrosivo, provável proibição",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Vintex; FDS: UN 3264 classe 8",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto + confirmação"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 6 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação",
+  "Situação": "Pendente — confirmação"
  },
  {
   "#": 15,
@@ -516,13 +516,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy)",
+  "Problemas confirmados": "",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Detailer, modelo CNE Snow Foam",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Código exibido passa a ser rotulado 'EAN' (PR #34)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 3 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação",
+  "Situação": "Conferido"
  },
  {
   "#": 16,
@@ -551,13 +551,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Frete cotado sem peso real (5 L)",
+  "Problemas confirmados": "Frete cotado sem peso real (5 L) • Foto principal gerada ou redesenhada, com texto de rótulo ilegível e errado ('LIMPA PEHUS E BORRACHAS'); substituir pela foto oficial da Vonixx",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
-  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto"
+  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34) • Galeria corrigida em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 3 imagens conferidas em 28/09, depois do deploy da correção: com problemas (ver Problemas confirmados)",
+  "Situação": "Conferido"
  },
  {
   "#": 17,
@@ -586,13 +586,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy)",
+  "Problemas confirmados": "",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 3 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação",
+  "Situação": "Conferido"
  },
  {
   "#": 18,
@@ -621,13 +621,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Nota interna publicada na descrição ('Este cadastro corresponde à embalagem de 1 L mostrada nas fotos.') • Sem GTIN • Categoria Google 2590 → 2704 (Limpadores de estofados) — corrigido no código (PR #34)",
-  "Suspeitas a verificar": "Slug diz 'desengraxante'; produto é limpador de estofados — renomear só com 301",
+  "Problemas confirmados": "Nota interna publicada na descrição ('Este cadastro corresponde à embalagem de 1 L mostrada nas fotos.') • Sem GTIN • Categoria Google 2590 → 2704 (Limpadores de estofados) — corrigido no código (PR #34) • Foto principal gerada ou redesenhada, com nome errado no rótulo ('EXRACTUS') e texto sem sentido ('PIRAS LAVAGEM EXTRATORAS… INMUNDEZAL'); substituir pela foto oficial da Vonixx • Imagem adicional 4 com trechos de texto apagados a borrão; remover",
+  "Suspeitas a verificar": "Slug diz 'desengraxante'; produto é limpador de estofados — renomear só com 301 • O título diz 1 L, mas a Vonixx vende o Extractus em 1,5 L, 3 L e 5 L, e as artes da galeria mostram 1,5 L. Confirmar o volume vendido. Até lá a foto principal é a embalagem oficial de 1,5 L marcada como 'representativa', o que mostra aviso na loja e deixa o item fora do feed do Google",
   "Dados indisponíveis": "GTIN do frasco de 1 L • Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
-  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34) • Alteração de dados PROPOSTA (não aplicada; ver alteracoes-propostas.json)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto + dados propostos + confirmação"
+  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34) • Alteração de dados PROPOSTA (não aplicada; ver alteracoes-propostas.json) • Galeria corrigida em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 5 imagens conferidas em 28/09, depois do deploy da correção: com problemas (ver Problemas confirmados); adicionais 1 a 3 são artes oficiais Vonixx",
+  "Situação": "Pendente — dados propostos + confirmação"
  },
  {
   "#": 19,
@@ -656,13 +656,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy)",
+  "Problemas confirmados": "",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 3 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação",
+  "Situação": "Conferido"
  },
  {
   "#": 20,
@@ -691,13 +691,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Ficha pH com nota de conferência ('FDS: não aplicável') • Categoria Google 2590 → 2846 (Limpadores de vidro) — corrigido no código (PR #34)",
+  "Problemas confirmados": "Ficha pH com nota de conferência ('FDS: não aplicável') • Categoria Google 2590 → 2846 (Limpadores de vidro) — corrigido no código (PR #34)",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34) • Alteração de dados PROPOSTA (não aplicada; ver alteracoes-propostas.json)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto + dados propostos"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 3 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação; principal e adicional 1 mostram versões diferentes do rótulo",
+  "Situação": "Pendente — dados propostos"
  },
  {
   "#": 21,
@@ -726,13 +726,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Categoria Google 2590 → 2846 (Limpadores de vidro) — corrigido no código (PR #34)",
+  "Problemas confirmados": "Categoria Google 2590 → 2846 (Limpadores de vidro) — corrigido no código (PR #34)",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 4 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação; principal e adicional 1 mostram versões diferentes do rótulo",
+  "Situação": "Conferido"
  },
  {
   "#": 22,
@@ -761,13 +761,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy)",
+  "Problemas confirmados": "",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 5 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação",
+  "Situação": "Conferido"
  },
  {
   "#": 23,
@@ -796,13 +796,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy)",
+  "Problemas confirmados": "",
   "Suspeitas a verificar": "FDS citada classifica como corrosivo (H314); confirmar classe de transporte antes de oferecer Correios",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto + confirmação"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 3 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação",
+  "Situação": "Pendente — confirmação"
  },
  {
   "#": 24,
@@ -831,13 +831,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Linha 'Gtin' repetida na ficha (corrigido no código: GTIN deixa de sair como característica) • Ficha 'Odor' com nota sobre o catálogo do fabricante",
+  "Problemas confirmados": "Linha 'Gtin' repetida na ficha (corrigido no código: GTIN deixa de sair como característica) • Ficha 'Odor' com nota sobre o catálogo do fabricante",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34) • Alteração de dados PROPOSTA (não aplicada; ver alteracoes-propostas.json)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto + dados propostos"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 4 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação",
+  "Situação": "Pendente — dados propostos"
  },
  {
   "#": 25,
@@ -866,13 +866,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Sem GTIN • Ficha 'Tipo: Químico' genérica • Ficha de composição com nota de pesquisa ('…não foi publicada nas fontes consultadas') • Quatro imagens adicionais com texto de campanha e marca d'água de outra loja ('V-ONE store'); remover da galeria e do feed",
+  "Problemas confirmados": "Sem GTIN • Ficha 'Tipo: Químico' genérica • Ficha de composição com nota de pesquisa ('…não foi publicada nas fontes consultadas') • Quatro imagens adicionais com texto de campanha e marca d'água de outra loja ('V-ONE store'); remover da galeria e do feed • Imagens adicionais 1 e 2 com a marca 'MONARCAR', de outra loja; removidas",
   "Suspeitas a verificar": "Preço R$ 10,00 destoa do restante do catálogo (500 ml de desengraxante concentrado); confirmar com o lojista — preço não alterado",
   "Dados indisponíveis": "GTIN • Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Nitro Automotive Line (texto do fabricante na descrição)",
-  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Alteração de dados PROPOSTA (não aplicada; ver alteracoes-propostas.json)",
+  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Alteração de dados PROPOSTA (não aplicada; ver alteracoes-propostas.json) • Galeria corrigida em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28'); a galeria ficou só com a foto principal",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: Adicionais 3–6 conferidas: frasco Nitro Lamax 500 ml em artes de campanha",
-  "Situação": "Pendente — foto + dados propostos + confirmação"
+  "Situação": "Pendente — dados propostos + confirmação"
  },
  {
   "#": 26,
@@ -901,13 +901,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Ficha 'Tipo: Químico' genérica • Categoria Google 2590 → 2846 (Limpadores de vidro) — corrigido no código (PR #34)",
+  "Problemas confirmados": "Ficha 'Tipo: Químico' genérica • Categoria Google 2590 → 2846 (Limpadores de vidro) — corrigido no código (PR #34)",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34) • Alteração de dados PROPOSTA (não aplicada; ver alteracoes-propostas.json)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto + dados propostos"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 5 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação",
+  "Situação": "Pendente — dados propostos"
  },
  {
   "#": 27,
@@ -936,13 +936,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy)",
+  "Problemas confirmados": "",
   "Suspeitas a verificar": "Corrosivo (H314 cat. 1A) — confirmar classe de transporte antes de oferecer Correios",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Vintex; FDS: corrosão cutânea 1A",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto + confirmação"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 4 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação",
+  "Situação": "Pendente — confirmação"
  },
  {
   "#": 28,
@@ -971,13 +971,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy)",
+  "Problemas confirmados": "",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 3 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação",
+  "Situação": "Conferido"
  },
  {
   "#": 29,
@@ -1006,13 +1006,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy)",
+  "Problemas confirmados": "",
   "Suspeitas a verificar": "FDS: corrosão cutânea 1C — confirmar classe de transporte",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto + confirmação"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 5 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação",
+  "Situação": "Pendente — confirmação"
  },
  {
   "#": 30,
@@ -1041,13 +1041,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy)",
-  "Suspeitas a verificar": "",
+  "Problemas confirmados": "",
+  "Suspeitas a verificar": "Imagem adicional 1 é arte de rede social ('Mais um pedido realizado'); confirmar se é arte oficial Vonixx antes de manter",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 2 imagens conferidas em 28/09, depois do deploy da correção: conferem com o título, com ressalva (ver Suspeitas)",
+  "Situação": "Pendente — confirmação"
  },
  {
   "#": 31,
@@ -1076,13 +1076,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy)",
+  "Problemas confirmados": "",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 9 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação",
+  "Situação": "Conferido"
  },
  {
   "#": 32,
@@ -1111,13 +1111,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy)",
+  "Problemas confirmados": "",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 4 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação",
+  "Situação": "Conferido"
  },
  {
   "#": 33,
@@ -1146,13 +1146,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Ficha 'Tipo: Químico' genérica",
+  "Problemas confirmados": "Ficha 'Tipo: Químico' genérica • Imagem adicional 2 com etiqueta 'Vonixx Mossoró' e moldura azul de outra loja; remover • Imagem adicional 3 com selo 'E' de outra loja no canto; remover",
   "Suspeitas a verificar": "Código exibido 2011004 (código Vonixx), diferente das outras apresentações que exibem o EAN — padronizar SKU",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
-  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Alteração de dados PROPOSTA (não aplicada; ver alteracoes-propostas.json)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto + dados propostos + confirmação"
+  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Alteração de dados PROPOSTA (não aplicada; ver alteracoes-propostas.json) • Galeria corrigida em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 4 imagens conferidas em 28/09, depois do deploy da correção: com problemas (ver Problemas confirmados)",
+  "Situação": "Pendente — dados propostos + confirmação"
  },
  {
   "#": 34,
@@ -1181,13 +1181,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Frete cotado sem peso real (5 L)",
+  "Problemas confirmados": "Frete cotado sem peso real (5 L)",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 3 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação",
+  "Situação": "Conferido"
  },
  {
   "#": 35,
@@ -1216,13 +1216,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy)",
+  "Problemas confirmados": "",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 4 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação",
+  "Situação": "Conferido"
  },
  {
   "#": 36,
@@ -1251,13 +1251,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Uma única foto (aviso do próprio diagnóstico da plataforma)",
+  "Problemas confirmados": "Uma única foto (aviso do próprio diagnóstico da plataforma)",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 1 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação",
+  "Situação": "Conferido"
  },
  {
   "#": 37,
@@ -1286,13 +1286,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy)",
+  "Problemas confirmados": "",
   "Suspeitas a verificar": "Ficha diz 'Não classificado como perigoso para transporte' e, ao mesmo tempo, 'corrosivo 1C (H314)'; conferir FDS • Código exibido 2050427 (código Vonixx) — padronizar SKU",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto + confirmação"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 3 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação; principal com 450×420 px, baixa resolução",
+  "Situação": "Pendente — confirmação"
  },
  {
   "#": 38,
@@ -1321,13 +1321,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy)",
+  "Problemas confirmados": "",
   "Suspeitas a verificar": "FDS: corrosivo 1C (H314) — confirmar classe de transporte",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34)",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: Adicionais 2–3 conferidas: frasco verde Vexus Vonixx com gatilho — confere",
-  "Situação": "Pendente — foto + confirmação"
+  "Situação": "Pendente — confirmação"
  },
  {
   "#": 39,
@@ -1356,13 +1356,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Categoria Google 2590 → 2895 (Limpeza de veículos) — corrigido no código (PR #34)",
+  "Problemas confirmados": "Categoria Google 2590 → 2895 (Limpeza de veículos) — corrigido no código (PR #34)",
   "Suspeitas a verificar": "Preço (R$ 56,87) maior que a versão 152 mm (R$ 56,39); confirmar tabela",
   "Dados indisponíveis": "GTIN (fabricante não publicou; se não existir, declarar ausência com MPN = código WP) • Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Wolf Pads — imagens e textos do fornecedor (arquivos 'fonte-*'), código WP-xxx",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34)",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: Principal conferida (1080×1080): cor, material e formato conferem com a linha do título; a foto não prova o diâmetro — 133 e 152 mm têm imagens do mesmo enquadramento",
-  "Situação": "Pendente — foto + confirmação"
+  "Situação": "Pendente — confirmação"
  },
  {
   "#": 40,
@@ -1391,13 +1391,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Categoria Google 2590 → 2895 (Limpeza de veículos) — corrigido no código (PR #34)",
+  "Problemas confirmados": "Categoria Google 2590 → 2895 (Limpeza de veículos) — corrigido no código (PR #34)",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "GTIN (fabricante não publicou; se não existir, declarar ausência com MPN = código WP) • Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Wolf Pads — imagens e textos do fornecedor (arquivos 'fonte-*'), código WP-xxx",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34)",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: Principal conferida (1080×1080): cor, material e formato conferem com a linha do título; a foto não prova o diâmetro — 133 e 152 mm têm imagens do mesmo enquadramento",
-  "Situação": "Pendente — foto + confirmação"
+  "Situação": "Pendente — confirmação"
  },
  {
   "#": 41,
@@ -1426,13 +1426,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Categoria Google 2590 → 2895 (Limpeza de veículos) — corrigido no código (PR #34)",
+  "Problemas confirmados": "Categoria Google 2590 → 2895 (Limpeza de veículos) — corrigido no código (PR #34)",
   "Suspeitas a verificar": "Preço menor que a versão 133 mm; confirmar tabela",
   "Dados indisponíveis": "GTIN (fabricante não publicou; se não existir, declarar ausência com MPN = código WP) • Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Wolf Pads — imagens e textos do fornecedor (arquivos 'fonte-*'), código WP-xxx",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34)",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: Principal conferida (1080×1080): cor, material e formato conferem com a linha do título; a foto não prova o diâmetro — 133 e 152 mm têm imagens do mesmo enquadramento",
-  "Situação": "Pendente — foto + confirmação"
+  "Situação": "Pendente — confirmação"
  },
  {
   "#": 42,
@@ -1461,13 +1461,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Categoria Google 2590 → 2895 (Limpeza de veículos) — corrigido no código (PR #34)",
+  "Problemas confirmados": "Categoria Google 2590 → 2895 (Limpeza de veículos) — corrigido no código (PR #34)",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "GTIN (fabricante não publicou; se não existir, declarar ausência com MPN = código WP) • Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Wolf Pads — imagens e textos do fornecedor (arquivos 'fonte-*'), código WP-xxx",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34)",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: Principal conferida (1080×1080): cor, material e formato conferem com a linha do título; a foto não prova o diâmetro — 133 e 152 mm têm imagens do mesmo enquadramento",
-  "Situação": "Pendente — foto + confirmação"
+  "Situação": "Pendente — confirmação"
  },
  {
   "#": 43,
@@ -1496,13 +1496,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Categoria Google 2590 → 2895 (Limpeza de veículos) — corrigido no código (PR #34)",
+  "Problemas confirmados": "Categoria Google 2590 → 2895 (Limpeza de veículos) — corrigido no código (PR #34)",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Wolf Pads — imagens e textos do fornecedor (arquivos 'fonte-*'), código WP-xxx; GTIN 7898970675075 no cadastro",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34)",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: Principal conferida (1080×1080): cor, material e formato conferem com a linha do título; a foto não prova o diâmetro — 133 e 152 mm têm imagens do mesmo enquadramento",
-  "Situação": "Pendente — foto"
+  "Situação": "Conferido"
  },
  {
   "#": 44,
@@ -1531,13 +1531,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Categoria Google 2590 → 2895 (Limpeza de veículos) — corrigido no código (PR #34)",
+  "Problemas confirmados": "Categoria Google 2590 → 2895 (Limpeza de veículos) — corrigido no código (PR #34)",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "GTIN (fabricante não publicou; se não existir, declarar ausência com MPN = código WP) • Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Wolf Pads — imagens e textos do fornecedor (arquivos 'fonte-*'), código WP-xxx",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34)",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: Principal conferida (1080×1080): cor, material e formato conferem com a linha do título; a foto não prova o diâmetro — 133 e 152 mm têm imagens do mesmo enquadramento",
-  "Situação": "Pendente — foto + confirmação"
+  "Situação": "Pendente — confirmação"
  },
  {
   "#": 45,
@@ -1566,13 +1566,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Categoria Google 2590 → 2895 (Limpeza de veículos) — corrigido no código (PR #34)",
+  "Problemas confirmados": "Categoria Google 2590 → 2895 (Limpeza de veículos) — corrigido no código (PR #34)",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "GTIN (fabricante não publicou; se não existir, declarar ausência com MPN = código WP) • Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Wolf Pads — imagens e textos do fornecedor (arquivos 'fonte-*'), código WP-xxx",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34)",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: Principal conferida (1080×1080): cor, material e formato conferem com a linha do título; a foto não prova o diâmetro — 133 e 152 mm têm imagens do mesmo enquadramento",
-  "Situação": "Pendente — foto + confirmação"
+  "Situação": "Pendente — confirmação"
  },
  {
   "#": 46,
@@ -1601,13 +1601,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Categoria Google 2590 → 2895 (Limpeza de veículos) — corrigido no código (PR #34)",
+  "Problemas confirmados": "Categoria Google 2590 → 2895 (Limpeza de veículos) — corrigido no código (PR #34)",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "GTIN (fabricante não publicou; se não existir, declarar ausência com MPN = código WP) • Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Wolf Pads — imagens e textos do fornecedor (arquivos 'fonte-*'), código WP-xxx",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34)",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: Principal conferida (1080×1080): cor, material e formato conferem com a linha do título; a foto não prova o diâmetro — 133 e 152 mm têm imagens do mesmo enquadramento",
-  "Situação": "Pendente — foto + confirmação"
+  "Situação": "Pendente — confirmação"
  },
  {
   "#": 47,
@@ -1636,13 +1636,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Título repete 'Wolf' ('Boina Micro Wolf Wolf Pads') • Categoria Google 2590 → 2895 (Limpeza de veículos) — corrigido no código (PR #34)",
+  "Problemas confirmados": "Título repete 'Wolf' ('Boina Micro Wolf Wolf Pads') • Categoria Google 2590 → 2895 (Limpeza de veículos) — corrigido no código (PR #34)",
   "Suspeitas a verificar": "A foto mostra camada laranja entre a microfibra e o velcro (aparência de interface de espuma), mas ficha e título não mencionam interface",
   "Dados indisponíveis": "GTIN (fabricante não publicou; se não existir, declarar ausência com MPN = código WP) • Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Wolf Pads — imagens e textos do fornecedor (arquivos 'fonte-*'), código WP-xxx",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34) • Alteração de dados PROPOSTA (não aplicada; ver alteracoes-propostas.json)",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: Principal conferida (1080×1080): cor, material e formato conferem com a linha do título",
-  "Situação": "Pendente — foto + dados propostos + confirmação"
+  "Situação": "Pendente — dados propostos + confirmação"
  },
  {
   "#": 48,
@@ -1671,13 +1671,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Título repete 'Wolf' ('Boina Micro Wolf Wolf Pads') • Categoria Google 2590 → 2895 (Limpeza de veículos) — corrigido no código (PR #34)",
+  "Problemas confirmados": "Título repete 'Wolf' ('Boina Micro Wolf Wolf Pads') • Categoria Google 2590 → 2895 (Limpeza de veículos) — corrigido no código (PR #34)",
   "Suspeitas a verificar": "Ficha diz 'com interface' / 'Interface: Espuma', mas o título e a versão 133 mm não; confirmar com a Wolf Pads",
   "Dados indisponíveis": "GTIN (fabricante não publicou; se não existir, declarar ausência com MPN = código WP) • Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Wolf Pads — imagens e textos do fornecedor (arquivos 'fonte-*'), código WP-xxx",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34) • Alteração de dados PROPOSTA (não aplicada; ver alteracoes-propostas.json)",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: Principal conferida (1080×1080): cor, material e formato conferem com a linha do título; camada laranja visível, coerente com 'Interface: Espuma' da ficha",
-  "Situação": "Pendente — foto + dados propostos + confirmação"
+  "Situação": "Pendente — dados propostos + confirmação"
  },
  {
   "#": 49,
@@ -1706,13 +1706,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Categoria Google 2590 → 2895 (Limpeza de veículos) — corrigido no código (PR #34)",
+  "Problemas confirmados": "Categoria Google 2590 → 2895 (Limpeza de veículos) — corrigido no código (PR #34)",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "GTIN (fabricante não publicou; se não existir, declarar ausência com MPN = código WP) • Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Wolf Pads — imagens e textos do fornecedor (arquivos 'fonte-*'), código WP-xxx",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34)",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: Principal conferida (1080×1080): cor, material e formato conferem com a linha do título; a foto não prova o diâmetro — 133 e 152 mm têm imagens do mesmo enquadramento",
-  "Situação": "Pendente — foto + confirmação"
+  "Situação": "Pendente — confirmação"
  },
  {
   "#": 50,
@@ -1741,13 +1741,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Categoria Google 2590 → 2895 (Limpeza de veículos) — corrigido no código (PR #34)",
+  "Problemas confirmados": "Categoria Google 2590 → 2895 (Limpeza de veículos) — corrigido no código (PR #34)",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "GTIN (fabricante não publicou; se não existir, declarar ausência com MPN = código WP) • Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Wolf Pads — imagens e textos do fornecedor (arquivos 'fonte-*'), código WP-xxx",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34)",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: Principal conferida (1080×1080): cor, material e formato conferem com a linha do título; a foto não prova o diâmetro — 133 e 152 mm têm imagens do mesmo enquadramento",
-  "Situação": "Pendente — foto + confirmação"
+  "Situação": "Pendente — confirmação"
  },
  {
   "#": 51,
@@ -1776,13 +1776,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Categoria Google 2590 → 2895 (Limpeza de veículos) — corrigido no código (PR #34)",
+  "Problemas confirmados": "Categoria Google 2590 → 2895 (Limpeza de veículos) — corrigido no código (PR #34)",
   "Suspeitas a verificar": "Slug com erro de digitação ('foan'); renomear só com 301",
   "Dados indisponíveis": "GTIN (fabricante não publicou; se não existir, declarar ausência com MPN = código WP) • Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Wolf Pads — imagens e textos do fornecedor (arquivos 'fonte-*'), código WP-xxx",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34)",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: Principal conferida (1080×1080): cor, material e formato conferem com a linha do título; a foto não prova o diâmetro — 133 e 152 mm têm imagens do mesmo enquadramento",
-  "Situação": "Pendente — foto + confirmação"
+  "Situação": "Pendente — confirmação"
  },
  {
   "#": 52,
@@ -1811,13 +1811,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Categoria Google 2590 → 2895 (Limpeza de veículos) — corrigido no código (PR #34)",
+  "Problemas confirmados": "Categoria Google 2590 → 2895 (Limpeza de veículos) — corrigido no código (PR #34)",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "GTIN (fabricante não publicou; se não existir, declarar ausência com MPN = código WP) • Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Wolf Pads — imagens e textos do fornecedor (arquivos 'fonte-*'), código WP-xxx",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34)",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: Principal conferida (1080×1080): cor, material e formato conferem com a linha do título; a foto não prova o diâmetro — 133 e 152 mm têm imagens do mesmo enquadramento",
-  "Situação": "Pendente — foto + confirmação"
+  "Situação": "Pendente — confirmação"
  },
  {
   "#": 53,
@@ -1846,13 +1846,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Categoria Google 2590 → 2895 (Limpeza de veículos) — corrigido no código (PR #34)",
+  "Problemas confirmados": "Categoria Google 2590 → 2895 (Limpeza de veículos) — corrigido no código (PR #34)",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "GTIN (fabricante não publicou; se não existir, declarar ausência com MPN = código WP) • Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Wolf Pads — imagens e textos do fornecedor (arquivos 'fonte-*'), código WP-xxx",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34)",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: Principal conferida (1080×1080): cor, material e formato conferem com a linha do título; a foto não prova o diâmetro — 133 e 152 mm têm imagens do mesmo enquadramento",
-  "Situação": "Pendente — foto + confirmação"
+  "Situação": "Pendente — confirmação"
  },
  {
   "#": 54,
@@ -1881,13 +1881,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Categoria Google 2590 → 2895 (Limpeza de veículos) — corrigido no código (PR #34)",
+  "Problemas confirmados": "Categoria Google 2590 → 2895 (Limpeza de veículos) — corrigido no código (PR #34)",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "GTIN (fabricante não publicou; se não existir, declarar ausência com MPN = código WP) • Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Wolf Pads — imagens e textos do fornecedor (arquivos 'fonte-*'), código WP-xxx",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34)",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: Principal conferida (1080×1080): cor, material e formato conferem com a linha do título; a foto não prova o diâmetro — 133 e 152 mm têm imagens do mesmo enquadramento",
-  "Situação": "Pendente — foto + confirmação"
+  "Situação": "Pendente — confirmação"
  },
  {
   "#": 55,
@@ -1916,13 +1916,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Categoria Google 2590 → 2643 (Ceras, graxas e protetores) — corrigido no código (PR #34)",
+  "Problemas confirmados": "Categoria Google 2590 → 2643 (Ceras, graxas e protetores) — corrigido no código (PR #34)",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34)",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: Adicionais 1–2 conferidas: frasco Makker Vonixx em uso — confere",
-  "Situação": "Pendente — foto"
+  "Situação": "Conferido"
  },
  {
   "#": 56,
@@ -1951,13 +1951,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Imagem adicional 2 com logo de outra loja ('Arthur') no canto; remover • Categoria Google 2590 → 2643 (Ceras, graxas e protetores) — corrigido no código (PR #34)",
+  "Problemas confirmados": "Imagem adicional 2 com logo de outra loja ('Arthur') no canto; remover • Categoria Google 2590 → 2643 (Ceras, graxas e protetores) — corrigido no código (PR #34) • Foto principal com etiqueta 'Vonixx Mossoró' e moldura azul de outra loja (mesmo modelo da adicional 2 do V-Floc 1,5 L); substituir pela embalagem sem marca de terceiros",
   "Suspeitas a verificar": "Principal tem grafismos de moldura nos cantos (azul-marinho); o Google pede imagem sem borda",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Vintex; FDS citada",
-  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34) • Alteração de dados PROPOSTA (não aplicada; ver alteracoes-propostas.json)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: Principal e adicional 2 conferidas: frasco Vintex Massa de Polir — confere",
-  "Situação": "Pendente — foto + dados propostos + confirmação"
+  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34) • Alteração de dados PROPOSTA (não aplicada; ver alteracoes-propostas.json) • Galeria corrigida em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: Principal e adicional 2 conferidas: frasco Vintex Massa de Polir; a principal traz etiqueta de outra loja (revisto em 28/09 depois do deploy)",
+  "Situação": "Pendente — dados propostos + confirmação"
  },
  {
   "#": 57,
@@ -1986,13 +1986,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Categoria Google 2590 → 2643 (Ceras, graxas e protetores) — corrigido no código (PR #34)",
+  "Problemas confirmados": "Categoria Google 2590 → 2643 (Ceras, graxas e protetores) — corrigido no código (PR #34)",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Vintex; FDS citada",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 4 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação",
+  "Situação": "Conferido"
  },
  {
   "#": 58,
@@ -2021,13 +2021,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Líquido inflamável (FDS) com PAC/SEDEX oferecidos no frete",
+  "Problemas confirmados": "Líquido inflamável (FDS) com PAC/SEDEX oferecidos no frete",
   "Suspeitas a verificar": "Shopee proíbe álcool isopropílico na lista de restritos — confirmar • Adicionais 2–3 fotografadas em prateleira de outra loja; confirmar direito de uso",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha; FDS: isopropanol 30–40%, ponto de fulgor 23–30 °C",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34)",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: Principal e 5 adicionais conferidas: frasco Revelax Vonixx — confere; adicional 1 tem 500×500 (no limite mínimo)",
-  "Situação": "Pendente — foto + confirmação"
+  "Situação": "Pendente — confirmação"
  },
  {
   "#": 59,
@@ -2056,13 +2056,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Categoria Google 2590 → 2643 (Ceras, graxas e protetores) — corrigido no código (PR #34)",
+  "Problemas confirmados": "Categoria Google 2590 → 2643 (Ceras, graxas e protetores) — corrigido no código (PR #34)",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 4 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação",
+  "Situação": "Conferido"
  },
  {
   "#": 60,
@@ -2091,13 +2091,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Categoria Google 2895 → 2590 (Soluções para limpeza de carro) — corrigido no código (PR #34)",
+  "Problemas confirmados": "Categoria Google 2895 → 2590 (Soluções para limpeza de carro) — corrigido no código (PR #34)",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 6 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação",
+  "Situação": "Conferido"
  },
  {
   "#": 61,
@@ -2126,13 +2126,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy)",
+  "Problemas confirmados": "",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "GTIN • Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34)",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: Principal conferida (1080×1080): pote Blend Cleaner Wax Vonixx — confere",
-  "Situação": "Pendente — foto + confirmação"
+  "Situação": "Pendente — confirmação"
  },
  {
   "#": 62,
@@ -2161,13 +2161,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy)",
+  "Problemas confirmados": "",
   "Suspeitas a verificar": "Slug com erros ('blende-blck'); renomear só com 301",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Código exibido passa a ser rotulado 'EAN' (PR #34)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto + confirmação"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 4 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação",
+  "Situação": "Pendente — confirmação"
  },
  {
   "#": 63,
@@ -2196,13 +2196,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy)",
+  "Problemas confirmados": "",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Código exibido passa a ser rotulado 'EAN' (PR #34)",
   "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: Adicionais 3 e 5 conferidas: fotos de aplicação/hidrorrepelência sem o produto — ilustrativas",
-  "Situação": "Pendente — foto"
+  "Situação": "Conferido"
  },
  {
   "#": 64,
@@ -2231,7 +2231,7 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Foto principal com 400×348 px, abaixo do mínimo de 500×500 do Google",
+  "Problemas confirmados": "Foto principal com 400×348 px, abaixo do mínimo de 500×500 do Google",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
@@ -2266,13 +2266,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Ficha 'Tipo: Químico' genérica",
+  "Problemas confirmados": "Ficha 'Tipo: Químico' genérica",
   "Suspeitas a verificar": "Slug com erro ('cleaner-waz'); renomear só com 301",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34) • Alteração de dados PROPOSTA (não aplicada; ver alteracoes-propostas.json)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto + dados propostos + confirmação"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 5 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação; principal com 379×496 px, baixa resolução",
+  "Situação": "Pendente — dados propostos + confirmação"
  },
  {
   "#": 66,
@@ -2301,13 +2301,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy)",
+  "Problemas confirmados": "",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 3 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação; principal com 346×721 px, baixa resolução; a adicional 1 (922×1920) é a mesma embalagem em resolução maior",
+  "Situação": "Conferido"
  },
  {
   "#": 67,
@@ -2336,13 +2336,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy)",
+  "Problemas confirmados": "",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Vintex; FDS citada",
-  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto"
+  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34) • Galeria corrigida em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 3 imagens conferidas em 28/09, depois do deploy da correção: conferem com o título, com ressalva (ver Suspeitas)",
+  "Situação": "Conferido"
  },
  {
   "#": 68,
@@ -2371,13 +2371,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Categoria Google 2643 → 2846 (Limpadores de vidro) — corrigido no código (PR #34)",
+  "Problemas confirmados": "Categoria Google 2643 → 2846 (Limpadores de vidro) — corrigido no código (PR #34)",
   "Suspeitas a verificar": "Contém isopropanol: confirmar classe de transporte e restrição da Shopee • Categoria 'Proteção' para um limpador de vidros antiembaçante; avaliar 'Lavagem'",
   "Dados indisponíveis": "GTIN • Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha; FDS: álcool isopropílico 25–35%",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Categoria Google corrigida no código • Rótulos da ficha acentuados pelo código (PR #34)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto + confirmação"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 3 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação",
+  "Situação": "Pendente — confirmação"
  },
  {
   "#": 69,
@@ -2406,13 +2406,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy)",
+  "Problemas confirmados": "",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 3 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação",
+  "Situação": "Conferido"
  },
  {
   "#": 70,
@@ -2441,13 +2441,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy)",
+  "Problemas confirmados": "Foto principal gerada ou redesenhada, com texto de rótulo errado ('EFFETTO IDROFOBICO', 'Psicó automático'); substituir pela adicional 1, que é a embalagem oficial",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
-  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto"
+  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Galeria corrigida em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 4 imagens conferidas em 28/09, depois do deploy da correção: com problemas (ver Problemas confirmados)",
+  "Situação": "Conferido"
  },
  {
   "#": 71,
@@ -2476,13 +2476,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy)",
+  "Problemas confirmados": "Imagem adicional 1 com logo de outra loja no canto superior direito; remover • Imagem adicional 2 com marca d'água '@POLIBOX' (perfil de outra loja); remover",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
-  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto"
+  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34) • Galeria corrigida em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 7 imagens conferidas em 28/09, depois do deploy da correção: com problemas (ver Problemas confirmados)",
+  "Situação": "Conferido"
  },
  {
   "#": 72,
@@ -2511,13 +2511,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy)",
+  "Problemas confirmados": "",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Vintex",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 5 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação",
+  "Situação": "Conferido"
  },
  {
   "#": 73,
@@ -2546,13 +2546,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Ficha com linha 'Estado fisico: Não disponível na FDS consultada' (nota de pesquisa)",
+  "Problemas confirmados": "Ficha com linha 'Estado fisico: Não disponível na FDS consultada' (nota de pesquisa)",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34) • Alteração de dados PROPOSTA (não aplicada; ver alteracoes-propostas.json)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto + dados propostos"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 2 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação",
+  "Situação": "Pendente — dados propostos"
  },
  {
   "#": 74,
@@ -2581,13 +2581,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Ficha 'Tipo: Químico' genérica",
+  "Problemas confirmados": "Ficha 'Tipo: Químico' genérica",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34) • Alteração de dados PROPOSTA (não aplicada; ver alteracoes-propostas.json)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto + dados propostos"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 6 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação",
+  "Situação": "Pendente — dados propostos"
  },
  {
   "#": 75,
@@ -2616,13 +2616,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Ficha com linha 'pH: Não disponível na FDS' (nota de pesquisa)",
+  "Problemas confirmados": "Ficha com linha 'pH: Não disponível na FDS' (nota de pesquisa) • Foto principal gerada ou redesenhada, com nome errado no rótulo ('REYOX') e texto de rótulo sem sentido; substituir pela adicional 2, que é a embalagem oficial",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
-  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Alteração de dados PROPOSTA (não aplicada; ver alteracoes-propostas.json)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto + dados propostos"
+  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Alteração de dados PROPOSTA (não aplicada; ver alteracoes-propostas.json) • Galeria corrigida em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 3 imagens conferidas em 28/09, depois do deploy da correção: com problemas (ver Problemas confirmados)",
+  "Situação": "Pendente — dados propostos"
  },
  {
   "#": 76,
@@ -2651,13 +2651,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy)",
+  "Problemas confirmados": "Foto principal gerada ou redesenhada, com nome errado no rótulo ('SNERGY') e texto ilegível; substituir pela embalagem oficial",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
-  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto"
+  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34) • Galeria corrigida em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 3 imagens conferidas em 28/09, depois do deploy da correção: com problemas (ver Problemas confirmados); adicionais 1 e 2 têm só 300 px",
+  "Situação": "Conferido"
  },
  {
   "#": 77,
@@ -2686,13 +2686,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy) • Duas fotos apenas",
+  "Problemas confirmados": "Duas fotos apenas • Foto principal gerada ou redesenhada, com texto de outro produto no rótulo ('Repele a água', 'Brilho pneus'); substituir pela adicional 1, que é a embalagem oficial",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "GTIN • Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
-  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto + confirmação"
+  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Galeria corrigida em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 2 imagens conferidas em 28/09, depois do deploy da correção: com problemas (ver Problemas confirmados)",
+  "Situação": "Conferido"
  },
  {
   "#": 78,
@@ -2721,13 +2721,13 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy)",
+  "Problemas confirmados": "",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
   "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto"
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 3 imagens conferidas em 28/09, depois do deploy da correção: conferem com título, marca e apresentação",
+  "Situação": "Conferido"
  },
  {
   "#": 79,
@@ -2756,12 +2756,12 @@
   "Estoque": "não controlado (snapshot 12/09)",
   "Disponibilidade (feed/página)": "InStock",
   "Status": "ativo",
-  "Problemas confirmados": "Fotos inacessíveis ao público: /uploads responde HTTP 500 (corrigido no PR #34, aguardando deploy)",
+  "Problemas confirmados": "Foto principal gerada ou redesenhada, com texto errado no rótulo ('BILHO INTENS', 'PROTECCO DURADOURA'); substituir pela embalagem oficial",
   "Suspeitas a verificar": "",
   "Dados indisponíveis": "Peso e dimensões da embalagem de envio (nenhum item no feed tem shipping_weight) • Controle de estoque: snapshot de 12/09 mostra estoque não controlado; página e feed dizem 'em estoque'",
   "Fonte usada": "Ficha/descrição já publicadas (textos atribuídos ao fabricante Vonixx); FDS citada na própria ficha",
-  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34)",
-  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: não conferida visualmente — rota de imagens fora do ar e sem cópia local",
-  "Situação": "Pendente — foto"
+  "Ação tomada": "Conferido: título, marca, GTIN, preço, disponibilidade e categoria idênticos entre card, página, JSON-LD e feed • Rótulos da ficha acentuados pelo código (PR #34) • Código exibido passa a ser rotulado 'EAN' (PR #34) • Galeria corrigida em produção em 28/09 pela escrita do catálogo (histórico 'auditoria-2026-09-28')",
+  "Resultado da conferência": "Texto/preço/identificadores conferidos em 28/09. Foto: as 4 imagens conferidas em 28/09, depois do deploy da correção: com problemas (ver Problemas confirmados)",
+  "Situação": "Conferido"
  }
 ]
