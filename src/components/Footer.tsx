@@ -1,11 +1,12 @@
 import Link from "next/link";
 import type { Tenant } from "@prisma/client";
-import { enderecoCompleto } from "@/lib/tenant";
+import { enderecoCompleto, lojaVende } from "@/lib/tenant";
 import { PreferenciasCookies } from "@/components/Consentimento";
 import { pixelsDo, temRastreio } from "@/lib/pixels";
 import { mascararDocumento } from "@avilaops/checkout";
 import { AVISO_MEDICAMENTO, lerResponsavel, responsavelCompleto } from "@/lib/farmacia";
 import { politicasPublicadas } from "@/lib/politicas";
+import BandeirasPagamento from "@/components/BandeirasPagamento";
 
 /**
  * Rodapé. O "Loja por Avila Ops" não é opcional nem negociável por desconto
@@ -97,6 +98,9 @@ export default function Footer({ tenant, categorias }: { tenant: Tenant; categor
           </div>
         </div>
       )}
+      {/* Só onde há checkout: numa vitrine do plano SITE a lista prometeria um
+          pagamento que a loja não processa. */}
+      {lojaVende(tenant) && <BandeirasPagamento meios={tenant.meiosPagamento} />}
       <div className="border-t border-border">
         <div className="container-loja flex flex-col items-center justify-between gap-2 py-4 text-xs text-muted-foreground sm:flex-row">
           <span>

@@ -3,7 +3,8 @@ import { codigoPublico, rotuloDoCodigo } from "@/lib/codigo-publico";
 import Link from "next/link";
 import * as regras from "@/lib/produto-regras";
 import type { Produto, Tenant } from "@prisma/client";
-import { formatarBRL } from "@/lib/catalogo";
+import { formatarBRL, medidaResumida } from "@/lib/catalogo";
+import { avisoDaImagem, seloDaImagem } from "@/lib/imagem-origem";
 import AddToCartButton from "@/components/cart/AddToCartButton";
 import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
 import { encaixe, lerCompatibilidade, type Moto } from "@/lib/motos";
@@ -54,6 +55,15 @@ export default function ProductCard({ produto, loja, vende, whatsapp, moto = nul
   const somenteNaLoja = vendaRemotaProibida(medicamento.tarja);
   const pedeReceita = exigeReceita(medicamento.tarja);
 
+  // O que a foto é. Em catálogo técnico a mesma imagem cobre uma série
+  // inteira (ver docs/VEDASHOW-FOTOS.md); sem dizer isso na grade, dez itens
+  // diferentes aparecem como dez fotos iguais e a economia de fotografia vira
+  // devolução. A regra mora em imagem-origem.ts, com a galeria.
+  const seloImagem = seloDaImagem(produto.imagemOrigem, !!imagem);
+  const avisoImagem = avisoDaImagem(produto.imagemOrigem, !!imagem);
+  // A medida com que a peça é pedida no balcão, quando o cadastro tem.
+  const medida = medidaResumida(produto.atributos);
+
   const percentualDesconto =
     produto.precoDeCentavos && produto.precoDeCentavos > produto.precoCentavos
       ? Math.round(((produto.precoDeCentavos - produto.precoCentavos) / produto.precoDeCentavos) * 100)
@@ -91,16 +101,6 @@ export default function ProductCard({ produto, loja, vende, whatsapp, moto = nul
 
         {/* Badges Flutuantes */}
         <div className="absolute left-2.5 top-2.5 flex flex-col gap-1 z-10">
-          {produto.imagemOrigem === "representativa" && (
-            <span className="rounded-md bg-zinc-900/90 px-2 py-1 text-[10px] font-semibold text-white shadow-sm backdrop-blur-sm">
-              Imagem representativa
-            </span>
-          )}
-          {produto.imagemOrigem === "ilustracao" && (
-            <span className="rounded-md bg-zinc-900/90 px-2 py-1 text-[10px] font-semibold text-white shadow-sm backdrop-blur-sm">
-              Ilustração técnica
-            </span>
-          )}
           {percentualDesconto && (
             <span className="rounded-md bg-red-600 px-2 py-0.5 text-[11px] font-black uppercase text-white shadow-sm">
               -{percentualDesconto}% OFF
@@ -131,6 +131,17 @@ export default function ProductCard({ produto, loja, vende, whatsapp, moto = nul
             </span>
           ) : null}
         </div>
+
+        {seloImagem && (
+          // Embaixo e discreto: é ressalva, não chamada. As tarjas de preço e
+          // estoque ficam no topo e continuam mandando na atenção.
+          <span
+            className="absolute bottom-2 left-2 z-10 rounded-md bg-background/85 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground shadow-sm backdrop-blur-sm"
+            title={avisoImagem ?? undefined}
+          >
+            {seloImagem}
+          </span>
+        )}
       </Link>
       <div className="cartao-produto-conteudo flex flex-1 flex-col gap-2 p-4">
         {!tecnico && marca && <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{marca}</p>}
@@ -144,6 +155,14 @@ export default function ProductCard({ produto, loja, vende, whatsapp, moto = nul
         <Link href={`/produtos/${produto.slug}`} className="cartao-produto-nome text-sm font-semibold hover:text-primary transition-colors">
           {produto.nome}
         </Link>
+        {/* A medida do balcão fica fora do modo técnico: lá o `dl` compacto
+            abaixo já diz as mesmas medidas, com rótulo abreviado e feito para
+            aquele layout — as duas juntas seriam a mesma medida duas vezes. */}
+        {!tecnico && medida && (
+          <p className="w-fit rounded-md bg-muted px-1.5 py-0.5 text-[11px] font-semibold tabular-nums text-foreground" title="Medida cadastrada deste item">
+            {medida}
+          </p>
+        )}
         {!tecnico && codigo && <p className="text-xs text-muted-foreground break-words">{rotuloCodigo}: {codigo}</p>}
         {tecnicos.length > 0 && <dl className="cartao-produto-tecnica">{tecnicos.map(l => <div key={l.chave}><dt>{tecnico && ROTULOS_COMPACTOS[l.chave] ? <abbr title={l.rotulo}>{ROTULOS_COMPACTOS[l.chave]}</abbr> : l.rotulo}</dt><dd>{l.valor}</dd></div>)}</dl>}
         {tecnico && <p className="cartao-produto-identificacao">{marca && <span>{marca}</span>}{codigo && <span>{rotuloCodigo}: {codigo}</span>}</p>}

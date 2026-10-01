@@ -142,6 +142,84 @@ export function medidaValida(v: unknown): v is number {
   return typeof v === "number" && Number.isFinite(v) && v > 0 && v <= MEDIDA_MAXIMA_MM;
 }
 
+/** Como a medida é falada no balcão quando ela vai sozinha. */
+const ABREVIACAO: Record<ChaveDeMedida, string> = {
+  diametroInternoMm: "Ø int.",
+  diametroExternoMm: "Ø ext.",
+  alturaMm: "alt.",
+  espessuraMm: "esp.",
+  secaoMm: "seção",
+};
+
+/**
+ * A ordem em que a peça é pedida: interno × externo × altura.
+ *
+ * É este trio, e não "todas as medidas cadastradas", que tem forma falada —
+ * espessura e seção do cordão entram cadastradas em outras famílias e não
+ * fazem parte da sequência. Somar tudo num `20 × 47 × 14 × 2 × 3` seria uma
+ * medida que ninguém diz.
+ */
+const TRIO_DO_BALCAO = ["diametroInternoMm", "diametroExternoMm", "alturaMm"] as const;
+
+/** Milímetro com vírgula e sem zero à toa: 14, 14,5 — nunca 14.50. */
+const mm = (v: number) => String(Math.round(v * 100) / 100).replace(".", ",");
+
+/**
+ * A medida do item numa linha, para o card da vitrine.
+ *
+ * A loja já deixa buscar e filtrar por faixa de medida (`medidasDaLoja`), mas
+ * quem filtrava "20 a 25 mm de diâmetro interno" recebia uma grade em que o
+ * critério da escolha estava diluído no meio do nome do produto. Num catálogo
+ * onde dez itens da mesma série só diferem em milímetros, a medida não é
+ * detalhe da ficha: é o que decide a compra, e merece linha própria.
+ *
+ * Com as três, sai na ordem que o setor lê — 20 × 47 × 14 mm, interno, externo
+ * e altura — que é como a peça é pedida e como a busca já a entende. Com uma
+ * ou duas, cada uma leva o seu rótulo: "20 × 47" sem dizer quais são as duas
+ * é um palpite que faz comprar a peça errada.
+ *
+ * Nada aqui é por loja: a farmácia não tem estes campos em `atributos`, e o
+ * card simplesmente não mostra a linha.
+ */
+export function medidaResumida(atributos: unknown): string | null {
+  const attr = (atributos ?? {}) as Record<string, unknown>;
+  const ler = (campo: ChaveDeMedida) => {
+    const v = Number(attr[campo]);
+    return medidaValida(v) ? { campo, v } : null;
+  };
+  const presentes = (Object.keys(MEDIDAS_FILTRAVEIS) as ChaveDeMedida[]).map(ler).filter((m) => m !== null);
+  if (presentes.length === 0) return null;
+  const trio = TRIO_DO_BALCAO.map(ler);
+  const rotulada = (m: { campo: ChaveDeMedida; v: number }) => `${ABREVIACAO[m.campo]} ${mm(m.v)} mm`;
+  if (trio.every((m) => m !== null)) {
+    // O trio na forma falada; o que houver além dele continua dito por extenso,
+    // senão a espessura cadastrada desapareceria da tela.
+    const sequencia = `${trio.map((m) => mm(m!.v)).join(" × ")} mm`;
+    const extras = presentes.filter((m) => !TRIO_DO_BALCAO.includes(m.campo as (typeof TRIO_DO_BALCAO)[number]));
+    return extras.length ? `${sequencia} · ${extras.map(rotulada).join(" · ")}` : sequencia;
+  }
+  return presentes.map(rotulada).join(" · ");
+}
+
+/**
+ * Como explicar, em uma frase, por quais medidas esta loja dá para filtrar.
+ *
+ * A frase não pode ser fixa no formulário: loja que só cadastrou espessura e
+ * seção não mede "interno × externo × altura", e mandar alguém procurar por
+ * medida que o catálogo não tem é pior que não dizer nada. Recebe o que
+ * `medidasDaLoja` achou; `null` quando não achou medida nenhuma.
+ */
+export function dicaDeMedidas(medidas: { campo: ChaveDeMedida; rotulo: string }[]): string | null {
+  if (medidas.length === 0) return null;
+  const chaves = new Set(medidas.map((m) => m.campo));
+  const sequencia = "Medidas em mm: interno × externo × altura";
+  if (TRIO_DO_BALCAO.every((c) => chaves.has(c))) {
+    const extras = medidas.filter((m) => !TRIO_DO_BALCAO.includes(m.campo as (typeof TRIO_DO_BALCAO)[number]));
+    return extras.length ? `${sequencia}; também ${extras.map((m) => m.rotulo.toLowerCase()).join(" e ")}.` : `${sequencia}.`;
+  }
+  return `Medidas em mm: ${medidas.map((m) => m.rotulo.toLowerCase()).join(", ")}.`;
+}
+
 const ORDENS: Record<OrdemCatalogo, Prisma.ProdutoOrderByWithRelationInput[]> = {
   relevancia: [{ destaque: "desc" }, { nome: "asc" }],
   "menor-preco": [{ precoCentavos: "asc" }],
@@ -283,6 +361,57 @@ export async function listarProdutos(tenantId: string, filtro?: FiltroCatalogo) 
   const servem = lista.filter((p) => encaixe(p.compatibilidade, moto) === "serve");
   const universais = lista.filter((p) => encaixe(p.compatibilidade, moto) === "universal");
   return janela([...servem, ...universais]);
+}
+
+/**
+ * Outras medidas da mesma série.
+ *
+ * "Você também pode gostar" é pergunta de loja de roupa. Quem está na página
+ * de um 6205 não quer descobrir um produto novo: quer o 6206, porque mediu o
+ * eixo errado ou porque precisa do vizinho na mesma máquina. Numa categoria
+ * com 881 retentores, quatro itens da mesma categoria são quatro itens ao
+ * acaso; quatro medidas da mesma série são a pergunta respondida.
+ *
+ * A série sai de `Produto.imagemFamilia`, que a política de imagem já exige
+ * de quem herda foto (ver `docs/VEDASHOW-FOTOS.md`): itens da mesma família
+ * são a mesma construção mudando de milímetro — que é exatamente a definição
+ * de série. Não é relação inventada nem inferida do código da peça; é a que o
+ * catálogo declara. O alcance, portanto, é o da declaração: item cuja foto é
+ * própria não tem família, e a loja simplesmente não mostra o bloco. Ele
+ * cresce junto com a cobertura de foto, sem nenhuma migração.
+ *
+ * A ordem é a da medida, não a da relevância: uma lista de medidas fora de
+ * ordem obriga a comparar número a número.
+ */
+export async function mesmaSerie(tenantId: string, produto: { id: string; imagemFamilia: string | null }, limite = 6) {
+  if (!produto.imagemFamilia) return [];
+  const irmaos = await prisma.produto.findMany({
+    // Teto de sanidade: família é um punhado de medidas da mesma peça. Se
+    // alguém carimbar a mesma família em mil itens, a página não paga por isso.
+    take: 60,
+    where: { tenantId, ativo: true, imagemFamilia: produto.imagemFamilia, id: { not: produto.id } },
+  });
+  return ordenarPorMedida(irmaos).slice(0, limite);
+}
+
+/**
+ * Ordena pela medida: interno, depois externo, depois altura.
+ *
+ * Item sem a medida cadastrada vai para o fim — continua sendo da série, mas
+ * não tem número para entrar na fila de quem tem. Pura e separada porque é a
+ * única parte com regra: o resto de `mesmaSerie` é uma consulta.
+ */
+export function ordenarPorMedida<T extends { atributos: unknown }>(lista: T[]): T[] {
+  const medidas = (p: T) =>
+    (Object.keys(MEDIDAS_FILTRAVEIS) as ChaveDeMedida[]).map((campo) => {
+      const v = Number(((p.atributos ?? {}) as Record<string, unknown>)[campo]);
+      return medidaValida(v) ? v : Number.POSITIVE_INFINITY;
+    });
+  return [...lista].sort((a, b) => {
+    const [ax, ay, az] = medidas(a);
+    const [bx, by, bz] = medidas(b);
+    return ax - bx || ay - by || az - bz;
+  });
 }
 
 /** A régua do sitemap, do noindex e da primeira vitrine. Mora em produto-regras. */

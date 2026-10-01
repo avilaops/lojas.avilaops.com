@@ -93,10 +93,28 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
 .filtros-gaveta { display: none; }
 .filtros-abrir { display: none; }
 @media (max-width: 639px) {
+  /* A caixa fica invisível, mas não `display: none`: sumida de vez, ela saía
+     da ordem do Tab e quem navega pelo teclado não abria a gaveta. */
+  .filtros-gaveta { display: block; position: absolute; width: 1px; height: 1px; opacity: 0; }
+  .filtros-gaveta:focus-visible + .filtros-abrir { outline: 2px solid var(--ring); outline-offset: 3px; }
   .filtros-abrir { display: block; cursor: pointer; border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); border-radius: var(--radius); padding: .5rem .75rem; font-size: .875rem; font-weight: 500; }
   .filtros-gaveta:not(:checked) ~ .filtros-campos { display: none; }
   .filtros-campos { display: grid; gap: .5rem; margin-top: .5rem; }
 }
+
+/* Ampliação da foto na ficha (GaleriaProduto). O zoom de mouse continua; o
+   diálogo é o caminho de quem está no celular ou no teclado. */
+.galeria-produto-principal { cursor: zoom-in; }
+.galeria-produto-principal:disabled { cursor: default; }
+.galeria-ampliar { position: absolute; right: .75rem; bottom: .75rem; display: inline-flex; align-items: center; gap: .4rem; padding: .5rem .75rem; border-radius: 99px; background: #fff; color: #27272a; border: 1px solid #e4e4e7; font-size: .75rem; pointer-events: none; }
+.galeria-dialog { margin: auto; width: min(94vw, 960px); max-height: 92dvh; padding: 1rem; border: 1px solid var(--border); border-radius: 1rem; background: var(--card); color: var(--foreground); }
+.galeria-dialog::backdrop { background: rgb(0 0 0 / .75); }
+.galeria-dialog-topo, .galeria-dialog-nav { display: flex; align-items: center; gap: 1rem; justify-content: space-between; }
+.galeria-dialog-topo p { font-size: .875rem; font-weight: 600; }
+.galeria-dialog button { display: grid; place-items: center; flex-shrink: 0; width: 44px; height: 44px; border-radius: .5rem; border: 1px solid var(--border); }
+.galeria-dialog-foto { display: block; width: 100%; height: min(65dvh, 700px); object-fit: contain; background: #fff; margin-block: .75rem; }
+.galeria-dialog-nav { justify-content: center; }
+.galeria-produto button:focus-visible, .galeria-dialog button:focus-visible, .cartao-produto a:focus-visible, .cartao-produto button:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
 
 .home-selo { font-size: .66rem; line-height: 1; font-weight: 750; letter-spacing: .18em; text-transform: uppercase; }
 .hero-loja::after { content: ""; position: absolute; width: 450px; height: 450px; right: -150px; top: -210px; border: 1px solid color-mix(in srgb, var(--primary-foreground) 22%, transparent); border-radius: 50%; box-shadow: 0 0 0 70px color-mix(in srgb, var(--primary-foreground) 4%, transparent), 0 0 0 140px color-mix(in srgb, var(--primary-foreground) 3%, transparent); pointer-events: none; }
@@ -1039,6 +1057,111 @@ body:has(.home-automotivo) .rodape-loja { margin-top: 1rem; }
 .atr-tabela tbody th { text-align: left; font-weight: 600; }
 .atr-tabela tbody th small { display: block; margin-top: 2px; font-weight: 400; font-size: .72rem; color: var(--muted-foreground); }
 .atr-tabela tbody tr:last-child th, .atr-tabela tbody tr:last-child td { border-bottom: 0; }
+
+/* ─── Barra inferior do celular ───────────────────────────────────────────
+   Navegação fixa no alcance do polegar. Só existe abaixo de 768px: no
+   desktop o cabeçalho já está sempre visível e a barra seria uma faixa presa
+   no rodapé sem motivo.
+
+   O `@media` cuida de três vizinhos que também moram no rodapé da tela — o
+   conteúdo (que terminaria embaixo da barra), o botão do WhatsApp e o aviso
+   de cookies. Levantar os três aqui, junto da barra, evita a descoberta por
+   sobreposição em produção. */
+.whatsapp-flutuante { bottom: max(1.25rem, calc(env(safe-area-inset-bottom) + 0.75rem)); }
+
+.barra-inferior { display: none; }
+
+@media (max-width: 767px) {
+  .barra-inferior {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 40;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    border-top: 1px solid var(--border);
+    background: color-mix(in srgb, var(--background) 92%, transparent);
+    backdrop-filter: blur(12px);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .barra-inferior-aba {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    /* 3,25rem de conteúdo mais o respiro dá os 44px que o dedo precisa. */
+    min-height: 3.25rem;
+    padding: .45rem .25rem .5rem;
+    font-size: .6875rem;
+    font-weight: 500;
+    color: var(--muted-foreground);
+    background: none;
+    border: 0;
+  }
+  .barra-inferior-aba svg { width: 1.25rem; height: 1.25rem; }
+  .barra-inferior-aba[aria-current="page"], .barra-inferior-aba[data-ativo] { color: var(--primary); }
+  .barra-inferior-icone { position: relative; display: inline-flex; }
+  .barra-inferior-contador {
+    position: absolute;
+    top: -.4rem;
+    left: .7rem;
+    min-width: 1.05rem;
+    height: 1.05rem;
+    padding-inline: .2rem;
+    border-radius: 999px;
+    background: var(--primary);
+    color: var(--primary-foreground);
+    font-size: .625rem;
+    font-weight: 700;
+    line-height: 1.05rem;
+    text-align: center;
+  }
+
+  /* Os três só se desviam onde a barra existe de fato: o painel em
+     /plataforma monta o mesmo <body> e não tem barra nenhuma, então ganharia
+     uma tira de espaço morto no rodapé. Mesmo `:has` que a barra de categorias
+     já usa acima. */
+  /* O rodapé da loja terminava embaixo da barra. */
+  body:has(.barra-inferior) { padding-bottom: calc(3.75rem + env(safe-area-inset-bottom)); }
+  /* O botão do WhatsApp sobe junto, senão fica pela metade. */
+  body:has(.barra-inferior) .whatsapp-flutuante { bottom: calc(4.5rem + env(safe-area-inset-bottom)); }
+  /* E o aviso de cookies, que é temporário mas cobre a barra enquanto dura. */
+  body:has(.barra-inferior) .aviso-cookies { bottom: calc(4rem + env(safe-area-inset-bottom)); }
+}
+
+@media (max-width: 767px) and (prefers-reduced-transparency: reduce) {
+  /* Sem desfoque, a barra precisa de fundo opaco para o texto não brigar com
+     a foto do produto que passa por baixo. */
+  .barra-inferior { background: var(--background); backdrop-filter: none; }
+}
+
+/* ─── Card de produto: duas correções de caixa, vistas no iPhone ──────────
+   Medidas tiradas do aparelho, não do olho: iPhone 14 Pro, grade de duas
+   colunas, que é como a loja é usada. */
+
+/* 1. O nome mostrava quatro pixels da terceira linha.
+      `line-clamp-2` monta uma caixa de 40px (duas linhas de 20), mas a regra
+      de toque abaixo dava 44px de altura mínima a TODO link do card — e a
+      caixa esticada deixa vazar o topo da linha que o clamp cortou. Quem
+      manda na altura aqui é o clamp; o alvo de toque do card continua sendo
+      a foto, que ocupa um quadrado inteiro, e o botão. */
+.cartao-produto a.line-clamp-2 { min-height: 0; }
+
+/* 2. "Adicionar ao carrinho" transbordava para fora do botão.
+      `.btn-primario` tem altura fixa de 44px e o rótulo ocupa 52px quando
+      quebra em duas linhas num card estreito — o texto saía por cima do
+      cartão. A altura passa a ser mínima, não fixa: 44px continua sendo o
+      piso de toque, e o botão cresce quando o rótulo precisa. */
+.cartao-produto .btn-primario,
+.cartao-produto .btn-secundario {
+  height: auto;
+  min-height: 2.75rem;
+  padding-block: .4rem;
+  line-height: 1.2;
+  text-align: center;
+}
 
 /* Campanhas com catálogo legível, sem altura reservada para blocos ausentes. */
 .home-campanhas { padding-bottom: 2rem; }

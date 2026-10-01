@@ -1,4 +1,5 @@
 import { executarRotinasDevidas } from "./rotinas-executor";
+import { passadaUnica, type EstadoDaPassada } from "./passada-unica";
 
 /**
  * O relógio da plataforma.
@@ -18,9 +19,19 @@ const INTERVALO_MS = 60_000;
 /** Um respiro depois do boot: o container precisa responder ao healthcheck. */
 const ESPERA_INICIAL_MS = 15_000;
 
+/**
+ * Quanto tempo esperar por uma passada antes de dá-la por perdida.
+ *
+ * Folgado de propósito: nenhuma passada saudável chega perto — todas são
+ * lotes com teto, e a mais cara delas, a do Mercado Livre, mede segundos. O
+ * prazo não existe para apertar rotina lenta, existe para o relógio não
+ * emudecer quando uma passada não voltar nunca. Ver `passada-unica.ts`.
+ */
+const PRAZO_DA_PASSADA_MS = 10 * 60_000;
+
 const globalParaAgendador = globalThis as unknown as {
   agendadorDeRotinas?: NodeJS.Timeout;
-  rotinasEmAndamento?: boolean;
+  passada?: EstadoDaPassada;
 };
 
 /**
@@ -40,23 +51,31 @@ export function agendadorLigado(): boolean {
 }
 
 async function tique(): Promise<void> {
-  // Uma passada por vez neste processo. Uma rotina longa não pode empilhar
-  // tiques até o Postgres ficar sem conexão.
-  if (globalParaAgendador.rotinasEmAndamento) return;
-  globalParaAgendador.rotinasEmAndamento = true;
-  try {
-    const feitas = await executarRotinasDevidas();
-    for (const feita of feitas) {
-      // Uma linha por execução, com o resumo. É o rastro que substitui a lista
-      // de execuções do n8n enquanto a tela de operação não existe.
-      const cauda = feita.erro ? `ERRO ${feita.erro}` : JSON.stringify(feita.resumo ?? null);
-      console.log(`[rotina] ${feita.nome} ${feita.duracaoMs}ms ${cauda}`);
+  // Uma passada por vez neste processo, e com prazo: uma rotina longa não pode
+  // empilhar tiques até o Postgres ficar sem conexão, e uma passada que não
+  // volta não pode desligar o relógio em silêncio.
+  const estado = (globalParaAgendador.passada ??= {});
+  const { perdida } = await passadaUnica(estado, PRAZO_DA_PASSADA_MS, async () => {
+    try {
+      const feitas = await executarRotinasDevidas();
+      for (const feita of feitas) {
+        // Uma linha por execução, com o resumo. É o rastro que substitui a lista
+        // de execuções do n8n enquanto a tela de operação não existe.
+        const cauda = feita.erro ? `ERRO ${feita.erro}` : JSON.stringify(feita.resumo ?? null);
+        console.log(`[rotina] ${feita.nome} ${feita.duracaoMs}ms ${cauda}`);
+      }
+    } catch (erro) {
+      // Banco fora, por exemplo. O próximo tique tenta de novo.
+      console.error("[rotina] passada falhou:", erro instanceof Error ? erro.message : erro);
     }
-  } catch (erro) {
-    // Banco fora, por exemplo. O próximo tique tenta de novo.
-    console.error("[rotina] passada falhou:", erro instanceof Error ? erro.message : erro);
-  } finally {
-    globalParaAgendador.rotinasEmAndamento = false;
+  });
+  if (perdida) {
+    // Não é "falhou": é "não voltou". A rotina que ficou pendurada continua
+    // com a linha travada no banco até a `travaMinutos` dela vencer; as outras
+    // já andam no próximo tique.
+    console.error(
+      `[rotina] passada não voltou em ${PRAZO_DA_PASSADA_MS / 60_000} min e foi dada por perdida; o relógio segue`,
+    );
   }
 }
 

@@ -7,6 +7,8 @@ import Recolhivel from "./Recolhivel";
 import { ANO_MAX, ANO_MIN, MOTOS_BRASIL, lerCompatibilidade, type Compatibilidade } from "@/lib/motos";
 import { PRINCIPIOS_COMUNS, TARJAS, TIPOS_MEDICAMENTO, pendenciasDe } from "@/lib/farmacia";
 import { AJUDA_TIPO, lerDefinicoes, lerValores, type CampoPersonalizado } from "@/lib/campos-personalizados";
+import { ORIGENS_DE_IMAGEM, SELO_IMAGEM, declaracaoDaImagem } from "@/lib/imagem-origem";
+import { detalharErro } from "@/lib/erro-de-formulario";
 
 /** Campo vazio não vira 0: sem medida, o frete usa a caixa padrão da loja. */
 const medida = (chave: string, valor: string) =>
@@ -62,7 +64,8 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoSalvar 
         versaoCatalogo:p.versaoCatalogo, temVariacoes:p.opcoes.length>0, mpn:p.mpn??"", identificadoresEstado:p.identificadoresEstado??"desconhecido", googleProductCategory:p.googleProductCategory??"",
         nome: p.nome, categoria: p.categoria ?? "", marca: p.marca ?? "", sku: p.sku ?? "", gtin: p.gtin ?? "",
         preco: (p.precoCentavos / 100).toFixed(2).replace(".", ","), precoDe: p.precoDeCentavos != null ? (p.precoDeCentavos / 100).toFixed(2).replace(".", ",") : "",
-        descricaoCurta: p.descricaoCurta ?? "", descricao: p.descricao ?? "", imagens: p.imagens ?? [], destaque: p.destaque, ativo: p.ativo,
+        descricaoCurta: p.descricaoCurta ?? "", descricao: p.descricao ?? "", imagens: p.imagens ?? [],
+        destaque: p.destaque, ativo: p.ativo,
         disponibilidade: p.disponibilidade, estoque: p.estoque != null ? String(p.estoque) : "", pesoKg: p.pesoKg != null ? String(p.pesoKg) : "",
         alturaCm: p.alturaCm != null ? String(p.alturaCm) : "", larguraCm: p.larguraCm != null ? String(p.larguraCm) : "", comprimentoCm: p.comprimentoCm != null ? String(p.comprimentoCm) : "",
         codigoOriginal: p.codigoOriginal ?? "", codigosEquivalentes: (p.codigosEquivalentes ?? []).join(", "), compatibilidade: paraLinhas(p.compatibilidade),
@@ -92,6 +95,11 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoSalvar 
     if (!f) return;
     const preco = centavos(f.preco);
     if (!f.nome.trim() || !Number.isFinite(preco)) return setErro("Nome e preço são obrigatórios.");
+    // O banco recusaria isso com um 422 genérico. A cobrança tem que ser aqui,
+    // dizendo para que serve: sem a série não há como achar todos os produtos
+    // que usam a foto no dia em que ela for trocada.
+    if (f.imagens.length && f.imagemOrigem === "representativa" && !f.imagemFamilia.trim())
+      return setErro("Diga de que série a foto veio — é o que permite trocar a imagem de toda a família depois.");
     setErro(null); setOcupado(true);
     try {
       const precoDe = f.precoDe.trim() ? centavos(f.precoDe) : undefined;
@@ -100,7 +108,10 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoSalvar 
         body: JSON.stringify({
           id: produtoId, versaoCatalogo:f.versaoCatalogo, mpn:f.temVariacoes?undefined:(f.mpn||null), identificadoresEstado:f.temVariacoes?undefined:f.identificadoresEstado, googleProductCategory:f.googleProductCategory.trim() || null, nome: f.nome, categoria: f.categoria, marca: f.marca || undefined, sku: f.temVariacoes?undefined:f.sku, gtin:f.temVariacoes?undefined:f.gtin.trim(), precoCentavos:f.temVariacoes?undefined:preco,
           ...(!f.temVariacoes ? { precoDeCentavos: precoDe ?? null } : {}),
-          descricaoCurta: f.descricaoCurta || undefined, descricao: f.descricao || undefined, imagens: f.imagens, imagemOrigem:f.imagemOrigem, imagemFamilia:f.imagemFamilia.trim()||null, destaque: f.destaque, ativo: f.ativo,
+          descricaoCurta: f.descricaoCurta || undefined, descricao: f.descricao || undefined, imagens: f.imagens, destaque: f.destaque, ativo: f.ativo,
+          // A regra de o que pode ser declarado mora no lib, com o resto da
+          // política de imagem — não aqui.
+          ...declaracaoDaImagem(f.imagens, f.imagemOrigem, f.imagemFamilia),
           ...(f.imagemConfirmada && f.imagemOrigem === "propria" && f.imagens.length ? { confirmarImagemExata: true } : {}),
           ...(f.imagemOrigem === "propria" && f.imagens.length && f.correspondenciaImagem !== "confirmada" ? { correspondenciaImagem: f.correspondenciaImagem } : {}),
           disponibilidade:f.temVariacoes?undefined:f.disponibilidade, ...(!f.temVariacoes ? { estoque:f.estoque.trim()?Number(f.estoque):null } : {}), ...(f.pesoKg.trim() ? { pesoKg: Number.parseFloat(f.pesoKg.replace(",", ".")) } : {}),
@@ -121,7 +132,11 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoSalvar 
         }),
       });
       const d = await r.json();
-      if (!r.ok) throw new Error(d?.erro ?? "Falha ao salvar.");
+      // "Dados inválidos." sozinho é beco sem saída: a resposta diz QUAL campo
+      // recusou, e essa parte ficava no console. Num formulário com trinta
+      // campos, saber que é a foto ou o GTIN é a diferença entre corrigir e
+      // desistir.
+      if (!r.ok) throw new Error(detalharErro(d));
       setInicial(f);
       aoSalvar("Produto atualizado.");
     } catch (e) {
@@ -200,6 +215,34 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoSalvar 
           <select className={inputClasse} value={f.correspondenciaImagem} disabled={!f.imagens.length || f.imagemOrigem !== "propria"} onChange={(e) => setF({ ...f, correspondenciaImagem: e.target.value as Form["correspondenciaImagem"], imagemConfirmada: e.target.value === "confirmada" })}><option value="nao_confirmada">Ainda não conferida</option><option value="confirmada">Confirmada para este SKU</option><option value="rejeitada">Incorreta para este SKU</option></select>
         </Campo>
       </div>
+
+      {/* De que é a foto.
+          Em catálogo técnico a mesma imagem cobre uma série inteira — é o que
+          o plano de foto prevê, uma por família — e reaproveitar é honesto;
+          fingir que a foto é do SKU exato não é. O campo existe desde que a
+          política virou CHECK no banco, mas só a importação e a API sabiam
+          preenchê-lo: quem faz a sessão de foto não tinha por onde dizer.
+          Some sem foto, porque declarar a origem de uma imagem que não existe
+          é o que a escrita recusa. */}
+      {f.imagens.length > 0 && (
+        <div className="grid min-w-0 gap-4 sm:grid-cols-2">
+          <Campo label="De que é a foto" ajuda={ORIGENS_DE_IMAGEM.find((o) => o.valor === f.imagemOrigem)?.ajuda}>
+            <select className={inputClasse} value={f.imagemOrigem} onChange={(e) => set("imagemOrigem", e.target.value)}>
+              {ORIGENS_DE_IMAGEM.map((o) => <option key={o.valor} value={o.valor}>{o.rotulo}</option>)}
+            </select>
+          </Campo>
+          {f.imagemOrigem === "representativa" && (
+            <Campo label="Série de que a foto veio" obrigatorio ajuda="Como a série é chamada no catálogo: 6200, UCP, 32000.">
+              <input className={inputClasse} value={f.imagemFamilia} onChange={(e) => set("imagemFamilia", e.target.value)} placeholder="6200" maxLength={40} />
+            </Campo>
+          )}
+          {SELO_IMAGEM[f.imagemOrigem] && (
+            <p className="text-xs text-muted-foreground sm:col-span-2">
+              O card da vitrine vai mostrar <strong>{SELO_IMAGEM[f.imagemOrigem]}</strong> sobre a foto, e a página do produto e o anúncio no Mercado Livre trazem a frase inteira.
+            </p>
+          )}
+        </div>
+      )}
 
       <Recolhivel titulo="Identificação" resumo="marca, SKU, GTIN, MPN" aviso={semIdentificador ? "sem GTIN nem MPN" : null}>
         <div className="grid min-w-0 gap-4 sm:grid-cols-2">

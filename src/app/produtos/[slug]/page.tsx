@@ -5,7 +5,7 @@ import FichaTecnica from "@/components/FichaTecnica";
 import { lerDefinicoes, lerValores } from "@/lib/campos-personalizados";
 import { exigirTenant, lojaVende, urlDaLoja, temaDo, retiradaPublicaDisponivel } from "@/lib/tenant";
 import GaleriaPremium from "@/components/templates/automotivo-premium/Galeria";
-import { buscarProduto, equivalentesDoProduto, formatarBRL, listarProdutos, resumoAvaliacoes, slugDoEquivalente } from "@/lib/catalogo";
+import { buscarProduto, equivalentesDoProduto, formatarBRL, listarProdutos, mesmaSerie, resumoAvaliacoes, slugDoEquivalente } from "@/lib/catalogo";
 import * as regras from "@/lib/produto-regras";
 import { fichaDoProduto } from "@/lib/ficha";
 import AvisoEstoque from "@/components/AvisoEstoque";
@@ -27,7 +27,10 @@ import { lerCompatibilidade } from "@/lib/motos";
 import { descricaoDoProduto, textoPuro } from "@/lib/seo-texto";
 import { ofertaDaVariante,gtinValido } from "@/lib/catalogo-oferta";
 import { midiasDaOferta } from "@/lib/catalogo-qualidade";
+import { paragrafosDaDescricao } from "@/lib/descricao-produto";
 import { marcaConfirmada } from "@/lib/marca-confirmada";
+
+const MEIOS: Record<string, string> = { pix: "Pix", cartao: "Cartão", boleto: "Boleto" };
 
 type Props = { params: Promise<{ slug: string }>; searchParams:Promise<{variante?:string}> };
 
@@ -82,13 +85,20 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
   // saber que a loja tem. Ver src/lib/farmacia.ts.
   const medicamento = lerMedicamento(p);
   const somenteNaLoja = vendaRemotaProibida(medicamento.tarja);
-  const [avaliacoes, resumo, relacionados, equivalentes] = await Promise.all([
+  const meiosDaLoja = t.meiosPagamento.map((m) => MEIOS[m]).filter(Boolean).join(" · ");
+  // "Consultar preço" e "Pedir pelo WhatsApp" já são a conversa; nos outros
+  // casos (carrinho, aviso de reposição, variantes) o link entra.
+  const duvidaNoWhatsApp = !somenteNaLoja && (p.opcoes.length > 0 || estado.acao === "carrinho" || estado.acao === "aviso-reposicao");
+  const [avaliacoes, resumo, relacionados, equivalentes, serie] = await Promise.all([
     prisma.avaliacao.findMany({ where: { produtoId: p.id, aprovada: true }, orderBy: { criadoEm: "desc" }, take: 20 }),
     resumoAvaliacoes(p.id),
     listarProdutos(t.id, { categoriaSlug: p.categoria?.slug, excetoId: p.id, limite: 4, moto }),
     // Só a loja de farmácia pergunta: nas outras o campo está vazio e a
     // consulta seria uma ida ao banco por visita para nunca devolver nada.
     t.segmento === "farmacia" ? equivalentesDoProduto(t.id, p) : Promise.resolve([]),
+    // Outras medidas da mesma peça. Só existe onde o catálogo declarou a
+    // família da imagem; sem ela, a página cai na lista da categoria.
+    mesmaSerie(t.id, p),
   ]);
   const compat = lerCompatibilidade(p.compatibilidade);
   const ficha = fichaDoProduto((p.atributos as Record<string, unknown>) ?? {});
@@ -176,7 +186,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
         }).replace(/</g,"\\u003c") }} />
       )}
       <EventoVerProduto item={{ id: p.id, nome: p.nome, precoCentavos: p.precoCentavos, categoria: p.categoria?.nome ?? null }} />
-      <nav className="mb-4 text-xs text-muted-foreground">
+      <nav aria-label="Caminho do produto" className="mb-4 text-xs text-muted-foreground">
         <Link href="/">Início</Link> / <Link href="/produtos">Produtos</Link>
         {p.categoria && (
           <>
@@ -191,7 +201,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
         <div className="ap-produto-info">
           {p.marca && <p className="text-xs uppercase tracking-wide text-muted-foreground">{p.marca}</p>}
           <h1 className="mt-1 text-2xl font-bold">{p.nome}</h1>
-          {p.descricaoCurta && <p className="mt-2 text-sm text-muted-foreground">{p.descricaoCurta}</p>}
+          {p.descricaoCurta && <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{textoPuro(p.descricaoCurta)}</p>}
 
           {p.opcoes.length > 0 ? (
             <div className="mt-5 max-w-sm">
@@ -216,7 +226,9 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
             ) : (
               <>
                 <p className="text-3xl font-bold">{formatarBRL(p.precoCentavos)}</p>
-                {vende && t.meiosPagamento.includes("pix") && <p className="text-xs text-muted-foreground">no PIX, cartão ou boleto</p>}
+                {/* Só os meios que a loja habilitou: "PIX, cartão ou boleto" fixo
+                    prometia boleto a quem aceita só Pix e cartão. */}
+                {vende && meiosDaLoja && <p className="mt-1 text-sm text-muted-foreground">{meiosDaLoja}</p>}
               </>
             )}
             <p className={`produto-estoque mt-2 text-sm font-medium${estado.esgotado ? " text-muted-foreground" : " esta-disponivel"}`}>{estado.disponibilidade}</p>
@@ -265,9 +277,13 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
             {t.freteGratisAcima != null && <li>✔ Frete grátis acima de {formatarBRL(t.freteGratisAcima)}</li>}
             {codigoPublico(p.sku) && <li className="text-xs">{rotuloDoCodigo(p.sku, p.gtin)} {codigoPublico(p.sku)}</li>}
           </ul>
-          <nav className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm" aria-label="Informações de entrega e troca">
+          <nav className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm" aria-label="Entrega, trocas e atendimento">
             <Link className="underline underline-offset-4" href="/politicas/envio">Entrega e frete</Link>
             <Link className="underline underline-offset-4" href="/politicas/devolucao">Trocas e devoluções</Link>
+            {/* O WhatsApp flutuante some na ficha (cobria o botão de compra).
+                Onde a ação principal não é o WhatsApp, a dúvida sobre o produto
+                precisa de outro caminho, já com o nome e o link dele. */}
+            {duvidaNoWhatsApp && t.whatsapp && <a className="underline underline-offset-4" href={linkWhatsApp(t.whatsapp, `Olá! Tenho uma dúvida sobre ${p.nome}: ${urlDaLoja(t)}/produtos/${p.slug}`)} target="_blank" rel="noopener">Tirar dúvida sobre o produto</a>}
           </nav>
 
           <FichaTecnica
@@ -278,7 +294,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
           {p.descricao && (
             <section className="prosa mt-8 text-sm leading-relaxed">
               <h2 className="mb-2 text-base font-bold">Descrição</h2>
-              {p.descricao.split(/\n{2,}/).map((par, i) => (
+              {paragrafosDaDescricao(p.descricao).map((par, i) => (
                 <p key={i}>{par}</p>
               ))}
             </section>
@@ -293,14 +309,26 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
         total={resumo.total}
       />
 
-      {relacionados.length > 0 && (
+      {serie.length > 0 ? (
         <section className="mt-12">
-          <h2 className="mb-4 text-base font-bold">Você também pode gostar</h2>
+          <h2 className="mb-1 text-base font-bold">Outras medidas desta série</h2>
+          {/* A ressalva importa: mesma construção não é mesma peça, e quem
+              erra a medida devolve. */}
+          <p className="mb-4 text-xs text-muted-foreground">Mesma construção, dimensões diferentes. Confira a medida antes de pedir.</p>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {serie.map((r) => <ProductCard loja={t} key={r.id} produto={r} vende={vende} whatsapp={t.whatsapp} moto={moto} />)}
+          </div>
+        </section>
+      ) : relacionados.length > 0 ? (
+        <section className="mt-12">
+          {/* "Você também pode gostar" é frase de loja de roupa e não diz o que
+              a lista é. Numa loja de peça, o que ela é: o resto da prateleira. */}
+          <h2 className="mb-4 text-base font-bold">{p.categoria ? `Mais em ${p.categoria.nome}` : "Outros itens da loja"}</h2>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             {relacionados.map((r) => <ProductCard loja={t} key={r.id} produto={r} vende={vende} whatsapp={t.whatsapp} moto={moto} />)}
           </div>
         </section>
-      )}
+      ) : null}
     </div>
   );
 }

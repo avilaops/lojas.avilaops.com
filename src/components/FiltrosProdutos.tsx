@@ -1,6 +1,6 @@
 import { TAMANHOS_PAGINA, porPaginaDaUrl } from "@/components/PaginacaoLoja";
 import type { Categoria } from "@prisma/client";
-import type { ChaveDeMedida, FacetaMarca } from "@/lib/catalogo";
+import { dicaDeMedidas, type ChaveDeMedida, type FacetaMarca } from "@/lib/catalogo";
 import { temFiltroAtivo } from "@/lib/filtros-url";
 
 /** Uma medida que a loja usa, com a faixa real do catálogo. */
@@ -48,6 +48,9 @@ export default function FiltrosProdutos({
   /** Página de categoria: a rota já escolheu a categoria. */
   categoriaFixa?: boolean;
 }) {
+  // A frase sai das medidas que a loja cadastrou: loja que só tem espessura
+  // e seção não mede "interno × externo × altura".
+  const dica = dicaDeMedidas(medidas);
   const usandoMedida = medidas.some((m) => valores[`${PREFIXO[m.campo]}_de`] || valores[`${PREFIXO[m.campo]}_ate`]);
   return (
     <form action={acao} className="filtros-produtos mb-6 grid gap-2 rounded-xl border border-border bg-card p-3">
@@ -98,7 +101,7 @@ export default function FiltrosProdutos({
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-        <p className="filtros-ajuda">{medidas.length > 0 ? (categoriaFixa ? "Medidas em mm: interno × externo × altura. Só entram produtos com a medida cadastrada." : "Medidas em mm: interno × externo × altura. Selecione a categoria para ver os atributos cadastrados.") : "Combine categoria, marca e preço para encontrar o produto."}</p>
+        <p className="filtros-ajuda">{dica ? `${dica} ${categoriaFixa ? "Só entram produtos com a medida cadastrada." : "Selecione a categoria para ver os atributos cadastrados."}` : "Combine categoria, marca e preço para encontrar o produto."}</p>
         {/* A navegação completa também limpa campos ainda não enviados. O Link
             reutilizava selects não controlados e mantinha a seleção anterior. */}
         <a href={acao} className="inline-flex min-h-11 items-center underline">Limpar busca e filtros</a>

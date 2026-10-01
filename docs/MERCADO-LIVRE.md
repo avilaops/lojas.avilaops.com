@@ -21,6 +21,7 @@ junto da auditoria de 19/09/2026 e do que Amazon, Shopee e Magalu vão exigir.
 | **Perguntas do comprador** | `src/lib/mercadolivre-perguntas.ts`, painel → Canais | pronto (17/09/2026) |
 | Mensagens do pós-venda | — | não tratado: o aviso é marcado `IGNORADO` com o motivo |
 | **Saúde da conta (reputação e métricas)** | `src/lib/mercadolivre-reputacao.ts`, painel → Canais | pronto (17/09/2026) |
+| **Adotar anúncio que já existe no ML** (casa por SKU e GTIN, nunca por título; vincular é decisão do lojista) | `src/lib/mercadolivre-adocao.ts`, `painel/AdotarAnunciosMl.tsx` | pronto (19/09/2026) |
 | **Regras comerciais do canal** (acréscimo de preço, estoque reservado, tipo de anúncio, condição, garantia) | `src/lib/canais.ts`, painel → Canais | pronto (19/09/2026) |
 | **O que falta preencher**, agrupado pelo que falta, e preparo sob demanda | `pendenciasDoCatalogo`, `api/painel/canais/mercadolivre/preparo` | pronto (19/09/2026) |
 | **Escolher a categoria do ML à mão** (busca pública, categoria folha, recálculo de atributos; escolha manual não é sobrescrita pelo preditor) | `src/lib/mercadolivre-categorias.ts`, `painel/CategoriaMl.tsx` | pronto (19/09/2026) |
@@ -138,6 +139,111 @@ Três regras de silêncio, testadas:
 Falha na leitura da reputação não derruba publicação nem estoque: ela é a
 última coisa do ciclo, dentro do próprio try.
 
+## Adotar o que o lojista já vende lá
+
+Quase todo mundo que conecta o Mercado Livre **já vende lá**. Até 19/09/2026,
+conectar não ligava nada: `AnuncioMercadoLivre` só ganhava `mlbId` quando
+éramos nós a publicar. Os anúncios dele ficavam fora de tudo — preço e estoque
+não sincronizavam, o aviso de `items` era descartado com "o anúncio não é
+desta loja", e a venda chegava sem produto casado, logo **sem baixar estoque**.
+
+Em Canais → *Anúncios que você já tem no Mercado Livre*, a plataforma lê
+`GET /users/{id}/items/search`, detalha em lotes de 20 (teto do multiget) e
+propõe o casamento.
+
+**Só identificador casa: SKU e GTIN.** Título não entra, por mais tentador que
+seja. "Correia de transmissão 5PK 1230" e "…1235" são dois produtos, e um
+casamento errado aqui não erra uma tela — manda o preço de um produto para o
+anúncio do outro no ciclo seguinte. Pela mesma razão, casa só quando é
+**único** dos dois lados: SKU repetido no catálogo é problema de catálogo, não
+uma escolha a ser feita por sorteio.
+
+**Nada é automático.** Vincular entrega o preço e o estoque da loja ao
+anúncio, e isso é decisão de quem vende. Cada linha mostra o que está no ar
+hoje e o que a loja mandaria, com o preço destacado quando muda — sim cego
+mudaria preço de venda sem ninguém ter pedido. É a mesma regra de "prontos
+para anunciar": a aprovação é humana.
+
+A prévia sai **com as regras do canal já aplicadas** (acréscimo,
+arredondamento, estoque reservado), porque é isso que a sincronia vai mandar.
+Mostrar o preço cru do catálogo prometeria R$ 49,90 e enviaria R$ 58,90 numa
+loja com 16,3% de acréscimo — tela que diverge do sistema é pior que tela
+nenhuma.
+
+**Anúncio com variações não recebe preço nem estoque.** O ML recusa
+`available_quantity` no item quando ele tem variações — a quantidade mora em
+cada uma. Só preço e estoque param: o **conteúdo segue**, porque o caso não é
+só o adotado. O lojista pode acrescentar variações a um anúncio que *nós*
+publicamos, e aí o título e as fotos continuam sendo nossos — congelá-los junto
+seria punir o anúncio por uma mudança que não tem relação com eles. Empurrar assim mesmo faria todo ciclo falhar, para sempre,
+num anúncio que está perfeitamente no ar. A adoção continua valendo: o que ela
+resolve de mais importante é o outro lado — a venda passa a casar com o produto
+e a baixar a apresentação certa. Preço e estoque seguem sendo do lojista, no
+ML, e a tela diz isso antes de ele decidir.
+
+**Adotado sincroniza preço e estoque, não conteúdo.** Título, fotos e
+descrição são do lojista e ficam como estão — reescrever o texto de um anúncio
+que já vende seria a adoção fazendo mais do que foi autorizada.
+
+Quem garante isso é a coluna `AnuncioMercadoLivre.origem` (`propria` |
+`adotada`), e **não** a ausência de preparo. A diferença importa: um produto
+que passou por "Conferir catálogo agora" *antes* de ser adotado guarda o
+`preparo`, o upsert da vinculação o preserva, e `conteudoDoAnuncio` então
+devolveria conteúdo em vez de nulo — o anúncio nasceria adotado com o nosso
+título a caminho.
+
+Pela mesma razão, `prepararCatalogo` pula anúncio adotado: o preparo existe
+para decidir o que publicar, e ele já está publicado pelo lojista. Rodar o
+preditor nele trocaria a categoria **real** do Mercado Livre por um palpite
+tirado do nome.
+
+## Qual apresentação foi vendida
+
+Até 19/09/2026 o pedido do canal nascia **sem variante**, e quem baixa o
+estoque caía na apresentação **padrão** do produto. Numa loja de camiseta,
+vender o G tirava o P: o P some da prateleira enquanto está lá, o G continua à
+venda depois de acabar, e a segunda venda do G vira cancelamento — que no
+Mercado Livre custa reputação. Errava duas apresentações de uma vez, e em
+silêncio.
+
+`resolverVariante` decide por uma escada, nesta ordem:
+
+1. **SKU.** `Variante.sku` é único por loja, então bate é bate. É também o
+   degrau que funciona em anúncio criado à mão no ML, que é como a maioria das
+   variações existe hoje.
+2. **Atributos.** O ML manda o que o comprador escolheu
+   (`variation_attributes`) e `Variante.valores` guarda exatamente isso. A
+   comparação ignora acento e caixa, e só aceita quando **uma** variante casa
+   em todos: "Tamanho G" sozinho serve para G/Azul e G/Vermelho, e duas
+   casando é ambiguidade, não resposta.
+3. **Apresentação única.** Produto simples não tem o que escolher.
+4. **Não identificada.** Devolve nulo, de propósito.
+
+No quarto caso **o estoque não é baixado**, e o aviso diz o que fazer:
+informar o SKU da variação no anúncio do ML, igual ao da variante na loja. Não
+baixar é visível — o lojista estranha o número; baixar errado é invisível até o
+cancelamento.
+
+Esse aviso chega ao lojista em **Configurações → Automações**, no próprio
+evento, em âmbar. Antes ele existia só no resumo que a rotina devolve para o
+n8n, e o evento era gravado com `detalhe: null` — ou seja, o que pedia ação era
+exatamente o que se apagava. Evento processado com ressalva continua
+processado: a venda entrou; o que ficou por fazer é que precisa aparecer.
+
+Eventos `IGNORADO` continuam sem detalhe na tela, de propósito: o deles é
+sempre "tópico X ainda não tem tratamento", chega em volume e não tem ação do
+outro lado. Âmbar em toda linha é âmbar que se aprende a ignorar.
+
+Quem respeita isso do outro lado é `confirmarEstoqueDoPedido`: linha sem
+variante só vira a padrão quando a padrão é a **única** apresentação ativa.
+
+### Linha que não casou com o catálogo
+
+Item de anúncio não ligado a nenhum produto da loja entra no pedido (a venda
+existe) e é **pulado** na baixa. Antes ele derrubava a baixa do pedido inteiro
+— inclusive das linhas que casaram — porque a conferência lançava erro em vez
+de seguir. O comportamento agora é o que a documentação já prometia.
+
 ## O que a integração não inventa
 
 - **Contato do comprador.** O ML não entrega mais e-mail, telefone e documento
@@ -155,10 +261,11 @@ Falha na leitura da reputação não derruba publicação nem estoque: ela é a
 
 ## Limites conhecidos
 
-- **Variação do ML.** O preparo publica o produto, não a variação. Se uma
-  ordem vier com `variation_id`, o pedido registra o aviso e a baixa usa a
-  apresentação padrão do produto. Enquanto não houver mapa de variação, loja
-  com muitas apresentações deve conferir antes de separar.
+- **Publicar variação.** O preparo publica o produto, não a variação: um
+  anúncio por produto, com o preço e o estoque da apresentação principal. Quem
+  quer as variações no ar cria o anúncio com elas no próprio ML — e a venda
+  volta certa, porque o reconhecimento da apresentação (abaixo) não depende de
+  termos sido nós a publicar.
 - **Nota fiscal.** O ML exige NF em boa parte das categorias; a plataforma
   ainda não emite. Hoje isso é trabalho do lojista, fora daqui.
 - **Frete.** `shipping_cost` vem do pagamento. Quando o comprador usa frete

@@ -6,7 +6,8 @@
   "de": "Longas, macias e não abrasivas; nylon e fibras sintéticas, segundo a ficha da apresentação com GTIN correspondente",
   "para": "Longas, macias e não abrasivas; nylon e fibras sintéticas",
   "motivo": "Nota interna publicada na ficha (Cerdas: '…segundo a ficha da apresentação com GTIN correspondente')",
-  "aplicado": false
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
  },
  {
   "id": "cmtv7ccfq0014pd01jxe9hvub",
@@ -15,7 +16,8 @@
   "de": "AROMINHA CARRO NOVO SCENT",
   "para": "Arominha Carro Novo Scent — Aromatizante Spray 100 ml (após confirmar marca e volume)",
   "motivo": "Título em caixa alta ('AROMINHA CARRO NOVO SCENT'), fora do padrão dos demais e da regra de título do Google",
-  "aplicado": false
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
  },
  {
   "id": "cmtv7cd5w005kpd01h0s1i9p8",
@@ -24,7 +26,8 @@
   "de": "Kits Completos",
   "para": "Acessórios (decisão do lojista)",
   "motivo": "Categoria 'Kits Completos' para um conjunto de escovas de furadeira; comprador tende a procurar em 'Acessórios'",
-  "aplicado": false
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
  },
  {
   "id": "cmtv7ccxr0042pd01v8u0s07s",
@@ -33,7 +36,8 @@
   "de": "Este cadastro corresponde à embalagem de 1 L mostrada nas fotos.",
   "para": "(remover a frase)",
   "motivo": "Nota interna publicada na descrição ('Este cadastro corresponde à embalagem de 1 L mostrada nas fotos.'); Sem GTIN",
-  "aplicado": false
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
  },
  {
   "id": "cmtv7cd0m004mpd01wi9psepk",
@@ -42,7 +46,8 @@
   "de": "Equilibrado, conforme o fabricante; FDS: não aplicável",
   "para": "Equilibrado, conforme o fabricante",
   "motivo": "Ficha pH com nota de conferência ('FDS: não aplicável')",
-  "aplicado": false
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
  },
  {
   "id": "cmtv7cd4q005cpd01lzv7ggje",
@@ -51,7 +56,8 @@
   "de": "Característico; a linha é apresentada com odor reduzido no catálogo do fabricante.",
   "para": "Característico",
   "motivo": "Linha 'Gtin' repetida na ficha (corrigido no código: GTIN deixa de sair como característica); Ficha 'Odor' com nota sobre o catálogo do fabricante",
-  "aplicado": false
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
  },
  {
   "id": "cmtv7cd8m005ypd01p3t59vdo",
@@ -60,7 +66,8 @@
   "de": "Químico",
   "para": "Desengraxante alcalino concentrado",
   "motivo": "Sem GTIN; Ficha 'Tipo: Químico' genérica; Ficha de composição com nota de pesquisa ('…não foi publicada nas fontes consultadas'); Quatro imagens adicionais com texto de campanha e marca d'água de outra loja ('V-ONE store'); remover da galeria e do feed",
-  "aplicado": false
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
  },
  {
   "id": "cmtv7cd8m005ypd01p3t59vdo",
@@ -69,7 +76,8 @@
   "de": "…; a composição integral não foi publicada nas fontes consultadas.",
   "para": "(remover o trecho após o ponto e vírgula)",
   "motivo": "Sem GTIN; Ficha 'Tipo: Químico' genérica; Ficha de composição com nota de pesquisa ('…não foi publicada nas fontes consultadas'); Quatro imagens adicionais com texto de campanha e marca d'água de outra loja ('V-ONE store'); remover da galeria e do feed",
-  "aplicado": false
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
  },
  {
   "id": "cmtv7cd8m005ypd01p3t59vdo",
@@ -88,7 +96,8 @@
   "de": "Químico",
   "para": "Restaurador de vidros automotivos",
   "motivo": "Ficha 'Tipo: Químico' genérica",
-  "aplicado": false
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
  },
  {
   "id": "cmtv7cdvw00a4pd019epdqjbv",
@@ -97,7 +106,8 @@
   "de": "Químico",
   "para": "Shampoo automotivo concentrado",
   "motivo": "Ficha 'Tipo: Químico' genérica",
-  "aplicado": false
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
  },
  {
   "id": "cmtv7ccm90022pd01zn4tudtp",
@@ -106,7 +116,8 @@
   "de": "Boina Micro Wolf Wolf Pads 133 mm Ventilada",
   "para": "Boina de Microfibra Micro Wolf 133 mm Ventilada — Wolf Pads",
   "motivo": "Título repete 'Wolf' ('Boina Micro Wolf Wolf Pads')",
-  "aplicado": false
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
  },
  {
   "id": "cmtv7ccmm0024pd01tf2oanf9",
@@ -115,7 +126,8 @@
   "de": "Boina Micro Wolf Wolf Pads 152 mm Ventilada",
   "para": "Boina de Microfibra Micro Wolf 152 mm Ventilada — Wolf Pads",
   "motivo": "Título repete 'Wolf' ('Boina Micro Wolf Wolf Pads')",
-  "aplicado": false
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
  },
  {
   "id": "cmtv7cdhi007ipd01rvuag04h",
@@ -134,7 +146,8 @@
   "de": "Químico",
   "para": "Cera limpadora de carnaúba",
   "motivo": "Ficha 'Tipo: Químico' genérica",
-  "aplicado": false
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
  },
  {
   "id": "cmtv7cdr7009apd018vc5c3tt",
@@ -143,7 +156,8 @@
   "de": "Não disponível na FDS consultada",
   "para": "(remover a linha)",
   "motivo": "Ficha com linha 'Estado fisico: Não disponível na FDS consultada' (nota de pesquisa)",
-  "aplicado": false
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
  },
  {
   "id": "cmtv7cdrj009cpd01phbndar6",
@@ -152,7 +166,8 @@
   "de": "Químico",
   "para": "Restaurador de plásticos automotivos",
   "motivo": "Ficha 'Tipo: Químico' genérica",
-  "aplicado": false
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
  },
  {
   "id": "cmtv7cdtu009qpd01yylmkjyb",
@@ -161,7 +176,8 @@
   "de": "Não disponível na FDS",
   "para": "(remover a linha)",
   "motivo": "Ficha com linha 'pH: Não disponível na FDS' (nota de pesquisa)",
-  "aplicado": false
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
  },
  {
   "id": "cmtv7ccra0030pd01yelz0uz6",
@@ -310,6 +326,26 @@
   "de": "Scent",
   "para": "Aromas City",
   "motivo": "Marca impressa no rótulo das fotos",
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
+ },
+ {
+  "id": "cmtv7ccxr0042pd01v8u0s07s",
+  "slug": "extractus-desengraxante",
+  "campo": "nome · atributos.volumeMl · descricaoCurta · imagemOrigem",
+  "de": "1 L · 1000 · 'Embalagem de 1 L.' · representativa",
+  "para": "1,5 L · 1500 · 'Embalagem de 1,5 L.' · propria",
+  "motivo": "A Vonixx só fabrica o Extractus em 1,5 L, 3 L e 5 L; o '1 L' vinha da foto gerada e da nota interna que a descrevia",
+  "aplicado": true,
+  "aplicadoEm": "2026-09-28"
+ },
+ {
+  "id": "cmtv7ccmv0026pd01cb3byuro",
+  "slug": "carnauba-hybrid-wax-240ml",
+  "campo": "imagens",
+  "de": "principal 400×348 + pote de 120 ml",
+  "para": "principal mtv7bpdn-3544fea8.webp (1170×1250)",
+  "motivo": "Principal abaixo de 500 px e imagem de outra apresentação",
   "aplicado": true,
   "aplicadoEm": "2026-09-28"
  }
