@@ -107,7 +107,7 @@ tar --force-local -tzf "$SAIDA" > "$lista"
 falta=0
 tem() { grep -q "$1" "$lista" || { echo "  !! $2" >&2; falta=1; }; }
 
-css=$(grep -c '\.next/static/chunks/.*\.css$' "$lista" || true)
+css=$(grep -E -c '\.next/static/(css|chunks)/.*\.css$' "$lista" || true)
 [ "$css" -gt 0 ] || { echo "  !! nenhum CSS em .next/static" >&2; falta=1; }
 tem 'lojas\.avilaops\.com/public/'            'public/ ausente'
 tem 'lojas\.avilaops\.com/prisma/schema\.prisma' 'prisma/ ausente'
