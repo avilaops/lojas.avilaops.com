@@ -62,3 +62,26 @@ As duas primeiras nascem com o container (`scripts/init-banco-de-teste.sql`).
 falhar em ambiente sem Docker. Em troca, **ela precisa ser rodada à mão antes de
 entregar mudança no catálogo**: foi por ela nunca ter rodado que a regressão da
 busca de 17/09/2026 passou em branco (ver `docs/BUSCA-REGRESSAO.md`).
+
+## Armadilhas desta máquina
+
+Encontradas ao fazer a suíte rodar aqui pela primeira vez. Nenhuma aparece como
+erro de banco, mas as três impedem verificar qualquer coisa:
+
+- **Link do pacote de checkout morto.** `node_modules/@avilaops/checkout`
+  apontava para `D:\avilaops.com\lojas.avilaops.com\...`, caminho de antes do
+  projeto mudar para `D:\Projetos`. O sintoma era seis arquivos de teste
+  falhando inteiros (em `:1:1`, não em asserção) e o typecheck acusando
+  `Cannot find module '@avilaops/checkout'`. Conserto: `npm install` recria o
+  `file:./packages/checkout` no caminho certo.
+- **Client do Prisma velho.** `prisma generate` só roda dentro de
+  `npm run build`, então o client ficava atrás do schema e o typecheck
+  reclamava de campos que existem (`tenantId_sku`, `canaisFeitos`, `origem`,
+  `anunciosMl`). Conserto: `npx prisma generate` depois de puxar migração nova.
+- **Memória.** São 7,7 GB no total e o Docker reserva 3,65 GB para a VM. Rodar
+  teste, typecheck e lint com vários containers no ar faz o Node e o `git` serem
+  mortos no meio — e a falha não se parece com falta de memória: o `git stash`
+  sai com `deflateInit: out of memory`, o ESLint despeja stack trace do V8, e o
+  `node --test` devolve contagem de testes menor sem dizer que foi interrompido.
+  Contagem de teste que muda entre rodadas idênticas é esse sintoma. Rodar a
+  suíte sem concorrência resolve.
