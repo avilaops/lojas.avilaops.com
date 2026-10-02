@@ -56,5 +56,15 @@
   `AutomacaoEvento.canaisFeitos` para a nova tentativa não repetir. O que ainda
   é do n8n é o que espera (`pix_pendente` aos 30 min, `loja_indicacoes` aos 3
   dias), não um canal.
+- **Prova de banco é em container próprio, nunca no banco de desenvolvimento.**
+  `npm run banco:teste` sobe o `lojas-db-test` (`docker-compose.test.yml`) na
+  imagem **de produção** — Postgres 18, que é o do host nos servidores — e
+  `npm run test:integracao` roda a suíte. `npm test` não inclui a integração, e
+  é obrigatório rodá-la à mão antes de entregar mudança no catálogo: foi por ela
+  nunca rodar que a busca ficou quebrada por semanas. Ver `docs/BANCO-DE-TESTE.md`.
+- **Gatilho que outra migração já estendeu não se reescreve do zero.**
+  `CREATE OR REPLACE FUNCTION` troca o corpo inteiro sem avisar. Migração que
+  mexe em `produto_texto_de_busca()` parte do corpo em vigor, não de uma versão
+  antiga. Ver `docs/BUSCA-REGRESSAO.md`.
 - **Português nos nomes e comentários**, como no resto do monorepo.
 - **TypeScript estrito**; `npm run typecheck` antes de entregar.

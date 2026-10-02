@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import path from "node:path";
 
 // Apenas o container local criado para esta tarefa. Nunca usa DATABASE_URL.
-const CONTAINER="lojas-catalogo-padrao-test";
+const CONTAINER="lojas-db-test";
 const banco=`lojas_migracao_${Date.now()}_test`;
 function psql(sql:string,db=banco) {
   const r=spawnSync("docker",["exec","-i",CONTAINER,"psql","-U","postgres","-d",db,"-v","ON_ERROR_STOP=1","-At"],{input:sql,encoding:"utf8",maxBuffer:10*1024*1024});
