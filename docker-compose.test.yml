@@ -1,0 +1,47 @@
+# Postgres descartável das provas de banco deste projeto.
+#
+# Existe porque o banco de desenvolvimento (`lojas_dev`, no Postgres nativo da
+# máquina) é compartilhado com outras sessões, e a suíte cria e apaga tenant,
+# produto, variante e reserva de estoque. Testar contra ele não é opção.
+#
+# A imagem é `postgres:18-alpine` porque é essa a versão de produção: o
+# container `lojas-avilaops` roda em `network_mode: bridge` e fala com o
+# Postgres nativo do host (`172.17.0.1:5432`), que é 18.6 nos três servidores.
+# O container de teste era `postgres:16` — teste em 16 não prova release em 18.
+#
+# A porta é configurável (`TEST_DB_PORT`) porque esta máquina já roda Postgres
+# de outros projetos; 5548 é a faixa deste, e os guardas dos scripts de QA
+# recusam qualquer outra (`tests/integration/catalogo.test.ts`,
+# `scripts/qa-catalogo.ts`, `scripts/premium-seed-local.ts`).
+#
+#   npm run banco:teste          # sobe, espera saudável e aplica as migrações
+#   npm run banco:teste:parar    # derruba e apaga os dados
+services:
+  db-test:
+    image: postgres:18-alpine
+    container_name: lojas-db-test
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: lojas_test
+    ports:
+      # Só o loopback: a senha é `postgres` e isto não pode ficar alcançável
+      # pela rede local. Todo porto publicado da stack é `127.0.0.1:`.
+      - "127.0.0.1:${TEST_DB_PORT:-5548}:5432"
+    # `tmpfs`: o banco inteiro vive em memória e some com o container. Não há
+    # volume para esquecer de limpar, e a suíte começa sempre do zero.
+    #
+    # O ponto é `/var/lib/postgresql`, e não `.../data`: a imagem 18 recusa um
+    # mount só no subdiretório de dados e sai com erro na primeira subida.
+    tmpfs:
+      - /var/lib/postgresql
+    volumes:
+      # `scripts/premium-seed-local.ts` exige o nome exato
+      # `lojas_template_premium_test`; criar na primeira subida evita um passo
+      # manual que ninguém lembra de fazer.
+      - ./scripts/init-banco-de-teste.sql:/docker-entrypoint-initdb.d/10-bases-de-teste.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d lojas_test"]
+      interval: 3s
+      timeout: 5s
+      retries: 20

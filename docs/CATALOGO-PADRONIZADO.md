@@ -37,7 +37,7 @@ Antes de publicar:
 - `npm run typecheck`: passou.
 - `npm run build`: passou; há aviso de tracing amplo do Turbopack que merece revisão antes do empacotamento.
 - `npx tsx scripts/conferir-migracao-catalogo.ts output/catalogo-padrao/brilhax-catalogo.json`: última versão da migração reconciliada em cópia local dos 224 produtos, com zero divergências de identidade e valores comerciais.
-- As provas de banco usam somente o container de teste local `lojas-catalogo-padrao-test`, porta 5548. Não utilizar os scripts de QA contra produção.
+- As provas de banco usam somente o container de teste local `lojas-db-test`, porta 5548. Não utilizar os scripts de QA contra produção.
 
 O pacote compartilhado de checkout foi realocado externamente durante o trabalho. As referências locais de `package.json`/lock e testes foram ajustadas para `../ferramentas/packages/checkout`; validar que o empacotamento do release inclui esse diretório. Nenhum gateway foi trocado ou credencial de pagamento alterada.
 

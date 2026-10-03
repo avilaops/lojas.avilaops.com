@@ -12,6 +12,7 @@ import { exigeReceita, lerMedicamento, vendaRemotaProibida } from "@/lib/farmaci
 import { marcaConfirmada } from "@/lib/marca-confirmada";
 import { temaDo, urlDaLoja } from "@/lib/tenant";
 import { mensagemDoProduto } from "@/lib/whatsapp-produto";
+import FotoDoCartao from "@/components/FotoDoCartao";
 
 const ROTULOS_COMPACTOS: Record<string, string> = {
   diametroInternoMm: "DI", diametroExternoMm: "DE", alturaMm: "Alt.",
@@ -75,8 +76,7 @@ export default function ProductCard({ produto, loja, vende, whatsapp, moto = nul
         {imagem ? (
           <>
             {/* Imagem Principal */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <FotoDoCartao
               src={miniatura}
               alt={produto.nome}
               loading="lazy"
@@ -86,11 +86,11 @@ export default function ProductCard({ produto, loja, vende, whatsapp, moto = nul
             />
             {/* Segunda Imagem no Hover (Hover Reveal) */}
             {segundaImagem && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <FotoDoCartao
                 src={miniatura2}
                 alt={`${produto.nome} - ângulo secundário`}
                 loading="lazy"
+                secundaria
                 className="absolute inset-0 h-full w-full object-contain opacity-0 transition-all duration-500 group-hover:opacity-100 group-hover:scale-105"
               />
             )}

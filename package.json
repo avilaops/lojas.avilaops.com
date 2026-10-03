@@ -15,7 +15,10 @@
     "loja:criar": "tsx scripts/criar-loja.ts",
     "loja:publicacao": "tsx scripts/conferir-publicacao.ts",
     "loja:marcas": "tsx scripts/conferir-marca-catalogo.ts",
-    "test": "tsx --test src/lib/*.test.ts packages/checkout/src/core/*.test.ts packages/checkout/src/server/*.test.ts"
+    "test": "tsx --test src/lib/*.test.ts packages/checkout/src/core/*.test.ts packages/checkout/src/server/*.test.ts",
+    "banco:teste": "node scripts/banco-de-teste.mjs subir",
+    "banco:teste:parar": "node scripts/banco-de-teste.mjs derrubar",
+    "test:integracao": "tsx --test tests/integration/*.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",
