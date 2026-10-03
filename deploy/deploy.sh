@@ -31,7 +31,29 @@ echo "==> migrações"
 DBURL=$(grep ^DATABASE_URL= .env | cut -d= -f2- | sed "s/host.docker.internal/127.0.0.1/")
 rm -rf lojas.avilaops.com/prisma
 tar xzf standalone.tgz ./lojas.avilaops.com/prisma
-DATABASE_URL="$DBURL" npx -y prisma@6 migrate deploy --schema lojas.avilaops.com/prisma/schema.prisma 2>&1 | grep -E "applied|No pending|rror" || true
+# Migração que falha ABORTA o deploy, e aborta aqui — antes da troca de versão,
+# com o container atual intacto e servindo.
+#
+# Até 01/10/2026 esta linha terminava em `| grep -E "applied|No pending|rror"
+# || true`. O `|| true` estava ali por um motivo legítimo: com `pipefail`, grep
+# que não casa nada devolve 1 e derrubaria o deploy por não ter achado texto.
+# Só que ele engolia junto a falha do `migrate deploy` — e aí o código novo
+# subia contra o schema antigo, o que não dá erro no deploy nenhum: dá 500 na
+# vitrine, depois, quando alguém abre a tela que usa a coluna que não existe.
+#
+# A diferença é entre "o deploy não aconteceu" e "o deploy aconteceu errado". A
+# primeira é visível e reversível; a segunda é a loja do cliente fora do ar com
+# tudo verde no painel do GitHub. Por isso o status agora é do `migrate
+# deploy`, não do `grep`: a saída vai para arquivo e é filtrada depois, com o
+# `|| true` de volta onde ele sempre devia estar — no grep, e só nele.
+if ! DATABASE_URL="$DBURL" npx -y prisma@6 migrate deploy \
+     --schema lojas.avilaops.com/prisma/schema.prisma > migracoes.log 2>&1; then
+  echo "!! migração falhou; a versão NÃO foi trocada e o container atual segue no ar" >&2
+  echo "!! log completo em /opt/lojas/migracoes.log" >&2
+  tail -30 migracoes.log >&2
+  exit 1
+fi
+grep -E "applied|No pending" migracoes.log || true
 
 echo "==> extraindo a nova versão"
 rm -rf app.novo
@@ -137,9 +159,7 @@ for i in $(seq 1 30); do
       echo "!! respondeu, mas a rota de fotos não carrega; tratando como versão quebrada" >&2
       break
     fi
-    # Versão aprovada: a anterior só servia para o rollback acima. Quem guarda
-    # versões é o GitHub; no servidor ela e o pacote ocupavam ~600 MB de uma
-    # raiz de 38 GB, que chegou a 97% em 28/09/2026.
+    # A versão anterior e o pacote só saem após health, CSS e uploads aprovados.
     rm -rf app.anterior standalone.tgz
     docker image prune -f >/dev/null
     docker buildx prune -af >/dev/null 2>&1 || true
