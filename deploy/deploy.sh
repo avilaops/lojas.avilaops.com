@@ -16,8 +16,9 @@ cd /opt/lojas
 
 [ -f standalone.tgz ] || { echo "!! falta /opt/lojas/standalone.tgz" >&2; exit 1; }
 
-# Só mantemos uma versão anterior ao vivo para rollback. Liberar a cópia de
-# rollback mais velha antes da extração, que precisa de espaço para a nova
+# A versão anterior só existe durante o deploy, para o rollback automático, e
+# é apagada quando a nova passa nas verificações. Se sobrou uma (deploy
+# interrompido), liberar antes da extração, que precisa de espaço para a nova
 # versão completa, sem remover a aplicação que está respondendo agora.
 rm -rf app.anterior
 
@@ -158,6 +159,8 @@ for i in $(seq 1 30); do
       echo "!! respondeu, mas a rota de fotos não carrega; tratando como versão quebrada" >&2
       break
     fi
+    # A versão anterior e o pacote só saem após health, CSS e uploads aprovados.
+    rm -rf app.anterior standalone.tgz
     docker image prune -f >/dev/null
     docker buildx prune -af >/dev/null 2>&1 || true
     exit 0
