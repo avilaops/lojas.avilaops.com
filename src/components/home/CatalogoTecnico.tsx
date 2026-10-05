@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, Search } from "lucide-react";
 import { formatarBRL } from "@/lib/catalogo";
-import { sobConsulta } from "@/lib/produto-regras";
+import { estadoDeVenda } from "@/lib/produto-regras";
 import { ROTULOS_COLUNA, colunasVisiveis, linhaTecnica, type Coluna, type LinhaTecnica } from "@/lib/catalogo-tecnico";
 import type { DadosHome } from "./tipos";
 
@@ -15,11 +15,23 @@ function celula(linha: LinhaTecnica, coluna: Coluna) {
 }
 
 /**
+ * O que a coluna de preço diz, pela mesma regra do card e da página do produto
+ * (`estadoDeVenda`): esgotado vence tudo, sem preço é consulta. Preço cheio ao
+ * lado de uma peça sem estoque é o comprador descobrindo no carrinho.
+ */
+function preco(produto: DadosHome["vitrine"][number], vende: boolean) {
+  const estado = estadoDeVenda(produto, { vende });
+  if (estado.esgotado) return <span className="ct-esgotado">Esgotado</span>;
+  if (estado.acao === "consulta-preco") return "Sob consulta";
+  return formatarBRL(produto.precoCentavos);
+}
+
+/**
  * Tabela de peças no lugar da grade de fotos: código, código original,
  * equivalentes, medidas e aplicação, que é o que quem compra peça confere
  * primeiro. As colunas saem do catálogo; a que a loja não usa não aparece.
  */
-export default function CatalogoTecnico({ t, vitrine, temDestaques }: DadosHome) {
+export default function CatalogoTecnico({ t, vitrine, temDestaques, vende }: DadosHome) {
   const linhas = vitrine.map((produto) => ({ produto, linha: linhaTecnica(produto) }));
   const colunas = colunasVisiveis(linhas.map((l) => l.linha));
   const titulo = temDestaques ? "Destaques do catálogo" : "Produtos disponíveis";
@@ -61,7 +73,7 @@ export default function CatalogoTecnico({ t, vitrine, temDestaques }: DadosHome)
                   <tr key={produto.id}>
                     <th scope="row"><Link href={`/produtos/${linha.slug}`}>{linha.nome}</Link></th>
                     {colunas.map((coluna) => <td key={coluna} className={`ct-${coluna}`}>{celula(linha, coluna)}</td>)}
-                    <td className="ct-preco">{sobConsulta(produto) ? "Sob consulta" : formatarBRL(produto.precoCentavos)}</td>
+                    <td className="ct-preco">{preco(produto, vende)}</td>
                   </tr>
                 ))}
               </tbody>

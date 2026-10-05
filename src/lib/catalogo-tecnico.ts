@@ -1,4 +1,5 @@
 import type { Produto } from "@prisma/client";
+import { medidaResumida } from "./catalogo";
 import { descreverAnos, lerCompatibilidade } from "./motos";
 
 /**
@@ -6,16 +7,14 @@ import { descreverAnos, lerCompatibilidade } from "./motos";
  *
  * Quem compra peça chega com o código ou a medida na mão, e a foto vem depois.
  * Tudo aqui sai do que o produto já tem cadastrado (`sku`, `codigoOriginal`,
- * `codigosEquivalentes`, `compatibilidade`, peso e medidas); nada é por loja:
- * a coluna que nenhum produto preenche some (`colunasVisiveis`).
+ * `codigosEquivalentes`, `compatibilidade` e as medidas técnicas em
+ * `atributos`); nada é por loja: a coluna que nenhum produto preenche some
+ * (`colunasVisiveis`).
  *
- * Puro (sem React, sem Prisma em runtime), para ser testado sem banco.
+ * Sem React e sem consulta ao banco, para ser testado sem Postgres.
  */
 
-type Medidas = Pick<Produto, "comprimentoCm" | "larguraCm" | "alturaCm" | "pesoKg">;
-
-export type ProdutoTecnico = Medidas &
-  Pick<Produto, "slug" | "nome" | "marca" | "sku" | "codigoOriginal" | "codigosEquivalentes" | "compatibilidade">;
+export type ProdutoTecnico = Pick<Produto, "slug" | "nome" | "marca" | "sku" | "codigoOriginal" | "codigosEquivalentes" | "compatibilidade" | "atributos">;
 
 export interface Aplicacao {
   texto: string;
@@ -46,18 +45,18 @@ export const ROTULOS_COLUNA: Record<Coluna, string> = {
   aplicacao: "Aplicação",
 };
 
-const numero = (n: number) => n.toLocaleString("pt-BR", { maximumFractionDigits: 2 });
-const medida = (n: number | null | undefined): n is number => typeof n === "number" && Number.isFinite(n) && n > 0;
 const texto = (s: string | null | undefined) => s?.trim() || null;
 
-/** `12 × 8 × 3 cm · 0,45 kg`; omite o que falta e devolve null sem nenhuma medida. */
-export function medidasDe(p: Partial<Medidas>): string | null {
-  const dimensoes = [p.comprimentoCm, p.larguraCm, p.alturaCm].filter(medida).map(numero);
-  const partes = [
-    ...(dimensoes.length ? [`${dimensoes.join(" × ")} cm`] : []),
-    ...(medida(p.pesoKg) ? [`${numero(p.pesoKg)} kg`] : []),
-  ];
-  return partes.length ? partes.join(" · ") : null;
+/**
+ * A medida com que a peça é pedida no balcão (`25 × 52 × 15 mm`), a mesma do
+ * card e da busca (`medidaResumida`).
+ *
+ * Não são `comprimentoCm`/`larguraCm`/`alturaCm`/`pesoKg`: esses são a caixa
+ * do frete. Um rolamento 6205 mostrado como "12 × 8 × 3 cm · 0,45 kg" é a
+ * embalagem, e quem compra pela medida leva a peça errada.
+ */
+export function medidasDe(p: { atributos?: unknown } | null | undefined): string | null {
+  return medidaResumida(p?.atributos);
 }
 
 /**

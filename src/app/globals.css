@@ -1271,3 +1271,10 @@ body:has(.whatsapp-flutuante) .rodape-loja { padding-bottom: calc(5.5rem + env(s
 .ct-tabela .ct-codigo, .ct-tabela .ct-codigoOriginal, .ct-tabela .ct-medidas, .ct-tabela .ct-preco { white-space: nowrap; }
 .ct-tabela .ct-preco { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
 .ct-mais { color: var(--muted-foreground); white-space: nowrap; }
+.ct-esgotado { font-weight: 600; color: var(--muted-foreground); }
+/* O nome fica à vista enquanto a tabela rola de lado: no celular cabem duas
+   colunas, e código e preço sem o nome do lado não dizem de que peça são. */
+.ct-tabela thead th:first-child, .ct-tabela tbody th { position: sticky; left: 0; z-index: 1; }
+.ct-tabela thead th:first-child { background: var(--muted); }
+.ct-tabela tbody th { background: var(--card); box-shadow: 1px 0 0 var(--border); }
+@media (max-width: 640px) { .ct-tabela tbody th { min-width: 9.5rem; max-width: 11rem; } }
