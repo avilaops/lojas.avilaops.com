@@ -2,21 +2,9 @@ import { exigirTenant, identidadeDa, lojaVende, temaDo } from "@/lib/tenant";
 import { listarCategorias, listarProdutos, marcasDaLoja, motosDaLoja, necessidadesDaLoja, provaSocialDa, vitrineDaLoja } from "@/lib/catalogo";
 import { minhaMoto } from "@/lib/minha-moto";
 import * as regrasProduto from "@/lib/produto-regras";
-import Automotivo from "@/components/home/Automotivo";
-import Farmacia from "@/components/home/Farmacia";
-import HomePremium from "@/components/templates/automotivo-premium/Home";
 import Garagem from "@/components/home/Garagem";
-import Classico from "@/components/home/Classico";
-import Vitrine from "@/components/home/Vitrine";
-import Editorial from "@/components/home/Editorial";
-import Minimal from "@/components/home/Minimal";
 import ProvaSocial from "@/components/home/ProvaSocial";
-import Spotlight from "@/components/home/Spotlight";
-import Mercado from "@/components/home/Mercado";
-import CatalogoTecnico from "@/components/home/CatalogoTecnico";
-import Distribuidora from "@/components/home/Distribuidora";
-import Conversao from "@/components/home/Conversao";
-import { contratoDo } from "@/lib/templates";
+import { comporHome } from "@/components/home/composicao";
 
 /**
  * Página inicial: um dos layouts fixos (Tenant.tema.layout), todos
@@ -65,23 +53,9 @@ export default async function Home() {
     : destaques.length ? destaques : await vitrineDaLoja(t.id, { moto });
   const dados = { t, identidade: identidadeDa(t), categorias, vitrine, temDestaques: destaques.length > 0, vende: lojaVende(t), moto, necessidades };
 
-  const layout =
-    contratoDo(temaDo(t)).escopo === "loja" ? <HomePremium {...dados} />
-    : temaDo(t).layout === "spotlight" ? <Spotlight {...dados} />
-    : temaDo(t).layout === "mercado" ? <Mercado {...dados} />
-    : temaDo(t).layout === "catalogo-tecnico" ? <CatalogoTecnico {...dados} />
-    : temaDo(t).layout === "distribuidora" ? <Distribuidora {...dados} />
-    : temaDo(t).layout === "automotivo" ? <Automotivo {...dados} />
-    : temaDo(t).layout === "farmacia" ? <Farmacia {...dados} />
-    : temaDo(t).layout === "conversao" ? <Conversao {...dados} />
-    : temaDo(t).layout === "vitrine" ? <Vitrine {...dados} />
-    : temaDo(t).layout === "editorial" ? <Editorial {...dados} />
-    : temaDo(t).layout === "minimal" ? <Minimal {...dados} />
-    : <Classico {...dados} />;
-
   return (
     <>
-      {layout}
+      {comporHome(tema, dados)}
       {motos && <Garagem moto={moto} motos={motos} marcas={marcas} nomeDaLoja={t.nome} />}
       {!campanhaVisual && <ProvaSocial dados={prova} nomeDaLoja={t.nome} />}
       {!campanhaVisual && prova.media !== null && prova.total >= 3 && (

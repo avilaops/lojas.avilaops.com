@@ -35,9 +35,15 @@ ganho de tempo — o build já falha em cerca de um minuto quando um teste cai.
   medidas e código original, sem lista de lojas no código
   (`src/lib/catalogo-tecnico.ts`, `src/components/home/CatalogoTecnico.tsx`,
   preso em `src/lib/catalogo-tecnico.test.ts`; compõe a home, `escopo: "home"`).
-- [ ] Criar preview seguro no painel, com dados de demonstração e sem alterar a
+- [x] Criar preview seguro no painel, com dados de demonstração e sem alterar a
   loja publicada até salvar. O tema premium preenchido inteiro já está em
   `tests/fixtures/tema-premium-completo.json`, e serve de ponto de partida.
+  (`/painel/previa` em `src/app/plataforma/(previa)/painel/previa/page.tsx`: o
+  rascunho do formulário viaja em `?t=` e a página só lê; `src/lib/previa-tema.ts`
+  codifica, valida e traz o catálogo de demonstração; a home sai de
+  `src/components/home/composicao.tsx`, o mesmo mapa da loja publicada; o link
+  "Ver prévia" está em `src/components/painel/Marca.tsx`; preso em
+  `src/lib/previa-tema.test.ts`. Só a home, sem navegação.)
 - [ ] Validar cada template em viewport móvel, desktop, tema claro/escuro e
   preferência de movimento reduzido.
 

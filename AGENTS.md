@@ -28,6 +28,11 @@
   quando a loja não tem aquilo. Template novo entra por `CONTRATOS` em
   `src/lib/templates.ts`; página pergunta ao contrato (`usaBlocoProprio`,
   `contratoDo`), não compara `layout` com o nome do template.
+- **Prévia do tema só lê.** `/painel/previa` desenha o rascunho que veio em
+  `?t=` sobre o catálogo de demonstração de `src/lib/previa-tema.ts`; não grava,
+  não mede e não emite evento. A home sai de `comporHome`
+  (`src/components/home/composicao.tsx`), a mesma da loja publicada: layout novo
+  entra lá, não em outra cadeia de `? :`.
 - **Política é do lojista, com rede de proteção.** O texto padrão continua
   sendo o que vai ao ar em loja que não mexeu (`src/lib/politicas.ts`); o que o
   lojista escreve substitui. O que a lei fixa não é configuração: o prazo de

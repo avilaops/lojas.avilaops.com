@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { LAYOUTS, type TemaLoja } from "@/lib/tema";
+import { LIMITE_RASCUNHO, codificarRascunho } from "@/lib/previa-tema";
 import { criarDirecaoVisual, PERSONALIDADES, SEGMENTOS, type IdentidadeLoja } from "@/lib/identidade";
 import { Campo, FONTES, Secao, inputClasse } from "./campos";
 import EnviarImagem from "./EnviarImagem";
@@ -183,6 +184,17 @@ export default function Marca({
     </div>
   );
 
+  // A prévia sai do que está no formulário agora, não do que está salvo: é
+  // para ver antes de gravar. O tema vai na URL e nada é guardado no servidor.
+  const rascunho = codificarRascunho(tema);
+  const verPrevia = (
+    <p className="text-sm text-muted-foreground">
+      {rascunho.length > LIMITE_RASCUNHO
+        ? "Salve para ver este tema na loja."
+        : <><a className="font-medium text-foreground underline" href={`/painel/previa?t=${rascunho}`} target="_blank" rel="noopener">Ver prévia</a> abre em outra aba, com produtos de demonstração. Nada é salvo.</>}
+    </p>
+  );
+
   if (bloco === "direcao") {
     return (
       <>
@@ -225,6 +237,7 @@ export default function Marca({
             <Campo label="Fonte"><select className={inputClasse} value={tema.fonte} onChange={(e) => setTema({ ...tema, fonte: e.target.value as TemaLoja["fonte"] })}>{FONTES.map((f) => <option value={f.valor} key={f.valor}>{f.rotulo}</option>)}</select></Campo>
             <Campo label="Cantos"><select className={inputClasse} value={tema.raio} onChange={(e) => setTema({ ...tema, raio: e.target.value as TemaLoja["raio"] })}>{Object.entries(RAIO).map(([v, n]) => <option value={v} key={v}>{n}</option>)}</select></Campo>
           </div>
+          {verPrevia}
           {rodape(() => salvar({ tema }, "Identidade visual salva."))}
         </Secao>
       </>
@@ -335,6 +348,7 @@ export default function Marca({
               </Campo>
             </fieldset>
           )}
+          {verPrevia}
           {rodape(() => salvar({ tema, segmento,
             ...(segmento === "farmacia" ? {
               farmaceuticoResponsavel: farmacia.farmaceuticoResponsavel.trim() || null,
