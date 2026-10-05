@@ -1240,3 +1240,34 @@ body:has(.whatsapp-flutuante) .rodape-loja { padding-bottom: calc(5.5rem + env(s
      empurrava o primeiro produto para a segunda tela. */
   .filtros-produtos .filtros-ajuda { display: none; }
 }
+
+/* Layout "Catálogo Técnico": tabela de peças. Só cores do tema (claro e escuro). */
+.home-catalogo-tecnico { padding-bottom: 4rem; }
+.ct-abertura { border-bottom: 1px solid var(--border); background: var(--muted); padding-block: 2.5rem; }
+.ct-abertura h1 { max-width: 28ch; font-size: clamp(1.6rem, 4vw, 2.5rem); font-weight: 800; line-height: 1.1; letter-spacing: -.03em; }
+.ct-abertura h1 + p { margin-top: .5rem; font-size: .9375rem; color: var(--muted-foreground); }
+.ct-busca { display: flex; align-items: center; gap: .5rem; max-width: 36rem; margin-top: 1.5rem; padding: .375rem .375rem .375rem .875rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); }
+.ct-busca:focus-within { border-color: var(--ring); }
+.ct-busca svg { width: 1.05rem; height: 1.05rem; flex: none; color: var(--muted-foreground); }
+.ct-busca input { flex: 1; min-width: 0; height: 2.5rem; border: 0; background: transparent; font-size: .9375rem; outline: none; color: var(--foreground); }
+.ct-busca .btn-primario { height: 2.5rem; padding-inline: 1.125rem; font-size: .8125rem; }
+.ct-catalogo { padding-top: 2.5rem; }
+.ct-catalogo > header { display: flex; align-items: end; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+.ct-catalogo > header h2 { font-size: 1.25rem; font-weight: 750; letter-spacing: -.02em; }
+.ct-catalogo > header > a { display: inline-flex; align-items: center; gap: .35rem; font-size: .78rem; font-weight: 650; color: var(--muted-foreground); }
+.ct-catalogo > header > a svg { width: .9rem; height: .9rem; }
+/* Em tela estreita quem rola é a tabela, não a página. */
+.ct-rolagem { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); -webkit-overflow-scrolling: touch; }
+.ct-rolagem:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.ct-tabela { width: 100%; min-width: 44rem; border-collapse: collapse; font-size: .8125rem; color: var(--card-foreground); }
+.ct-tabela th, .ct-tabela td { padding: .65rem .875rem; text-align: left; vertical-align: top; border-bottom: 1px solid var(--border); }
+.ct-tabela tbody tr:last-child > * { border-bottom: 0; }
+.ct-tabela thead th { background: var(--muted); font-size: .68rem; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; color: var(--muted-foreground); }
+.ct-tabela tbody th { min-width: 14rem; font-weight: 600; }
+.ct-tabela tbody th a { text-decoration: underline; text-decoration-color: var(--border); text-underline-offset: 3px; }
+.ct-tabela tbody th a:hover { color: var(--primary); text-decoration-color: currentColor; }
+.ct-tabela tbody tr:hover { background: color-mix(in srgb, var(--muted) 60%, transparent); }
+.ct-tabela .ct-codigo, .ct-tabela .ct-codigoOriginal, .ct-tabela .ct-equivalentes { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .78rem; }
+.ct-tabela .ct-codigo, .ct-tabela .ct-codigoOriginal, .ct-tabela .ct-medidas, .ct-tabela .ct-preco { white-space: nowrap; }
+.ct-tabela .ct-preco { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+.ct-mais { color: var(--muted-foreground); white-space: nowrap; }

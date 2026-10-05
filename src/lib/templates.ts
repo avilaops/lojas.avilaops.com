@@ -58,6 +58,7 @@ export const CONTRATOS: Record<TemaLoja["layout"], ContratoTemplate> = {
   },
   spotlight: soHome("spotlight"),
   mercado: soHome("mercado"),
+  "catalogo-tecnico": soHome("catalogo-tecnico"),
   distribuidora: soHome("distribuidora"),
   farmacia: soHome("farmacia"),
   automotivo: soHome("automotivo"),

@@ -14,6 +14,7 @@ import { MCP_TOOLS } from "./mcp-tools";
 /** Layouts que a landing não ilustra, e o motivo. Some da lista, entra na vitrine. */
 const FORA_DA_LANDING: Record<string, string> = {
   "automotivo-premium": "é a loja inteira, não uma home; miniatura de home não o representa",
+  "catalogo-tecnico": "tabela de peças não cabe numa miniatura de home; a ilustração entra junto com o preview no painel (roadmap b37c1d)",
   farmacia: "ainda sem composição própria: a home abre por busca e por atalhos que saem do catálogo da loja, e uma miniatura genérica inventaria uma drogaria",
 };
 

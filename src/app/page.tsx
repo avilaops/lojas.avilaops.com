@@ -13,6 +13,7 @@ import Minimal from "@/components/home/Minimal";
 import ProvaSocial from "@/components/home/ProvaSocial";
 import Spotlight from "@/components/home/Spotlight";
 import Mercado from "@/components/home/Mercado";
+import CatalogoTecnico from "@/components/home/CatalogoTecnico";
 import Distribuidora from "@/components/home/Distribuidora";
 import Conversao from "@/components/home/Conversao";
 import { contratoDo } from "@/lib/templates";
@@ -68,6 +69,7 @@ export default async function Home() {
     contratoDo(temaDo(t)).escopo === "loja" ? <HomePremium {...dados} />
     : temaDo(t).layout === "spotlight" ? <Spotlight {...dados} />
     : temaDo(t).layout === "mercado" ? <Mercado {...dados} />
+    : temaDo(t).layout === "catalogo-tecnico" ? <CatalogoTecnico {...dados} />
     : temaDo(t).layout === "distribuidora" ? <Distribuidora {...dados} />
     : temaDo(t).layout === "automotivo" ? <Automotivo {...dados} />
     : temaDo(t).layout === "farmacia" ? <Farmacia {...dados} />

@@ -31,8 +31,10 @@ ganho de tempo — o build já falha em cerca de um minuto quando um teste cai.
 - [x] Extrair tokens e blocos comuns (cabeçalho, hero, categorias, produto,
   carrinho e rodapé) para contratos de template versionados
   (`src/lib/templates.ts`, contrato preso em `src/lib/templates.test.ts`).
-- [ ] Criar o template `catalogo-tecnico` reutilizando dados de compatibilidade,
-  medidas e código original, sem lista de lojas no código.
+- [x] Criar o template `catalogo-tecnico` reutilizando dados de compatibilidade,
+  medidas e código original, sem lista de lojas no código
+  (`src/lib/catalogo-tecnico.ts`, `src/components/home/CatalogoTecnico.tsx`,
+  preso em `src/lib/catalogo-tecnico.test.ts`; compõe a home, `escopo: "home"`).
 - [ ] Criar preview seguro no painel, com dados de demonstração e sem alterar a
   loja publicada até salvar. O tema premium preenchido inteiro já está em
   `tests/fixtures/tema-premium-completo.json`, e serve de ponto de partida.
