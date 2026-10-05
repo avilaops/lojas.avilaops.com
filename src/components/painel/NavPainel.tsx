@@ -72,7 +72,7 @@ export const SECOES: ItemNav[] = [
       { rotulo: "Blog", href: "/painel/marketing/blog" },
     ],
   },
-  { rotulo: "IA", href: "/painel/ia", icone: "ia" },
+  { rotulo: "IA e API", href: "/painel/ia", icone: "ia" },
 ];
 
 /** Ativo por prefixo, para a rota de detalhe acender a seção que a contém. */

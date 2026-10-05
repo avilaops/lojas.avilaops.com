@@ -241,6 +241,7 @@ model Tenant {
 
   apiKeyEnc      String?
   apiKeyCriadaEm DateTime?
+  chavesApi      ChaveApi[]
 
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
@@ -1329,4 +1330,38 @@ model SessaoVitrine {
   @@index([tenantId, criadoEm])
   @@index([tenantId, canal, criadoEm])
   @@index([tenantId, visitante, criadoEm])
+}
+
+enum TipoChaveApi {
+  SECRETA // servidor do lojista: catálogo e pedidos, por escopo
+  PUBLICAVEL // pode ir no navegador: só a vitrine pública
+}
+
+/// Chave da API para desenvolvedores (`/api/v1`). Ver docs/API.md.
+///
+/// Guarda o sha256 da chave, nunca a chave: diferente do token de gateway, que
+/// a loja precisa decifrar para falar com o Mercado Pago, esta só precisa ser
+/// reconhecida. Dump do banco não devolve chave que funcione. Uma loja tem
+/// quantas quiser (uma por integração), e revogar uma não derruba as outras.
+model ChaveApi {
+  id       String       @id @default(cuid())
+  tenantId String
+  tipo     TipoChaveApi
+  /// Rótulo do lojista: "ERP", "App iOS". Só para ele reconhecer a chave.
+  nome     String
+  /// sha256 hex da chave inteira. É por ele que a requisição acha a chave.
+  hash     String       @unique
+  /// Começo e fim da chave, para o painel mostrar "lojas_sk_3f9a…c21e".
+  prefixo  String
+  final    String
+  /// Escopos de `ESCOPOS` em src/lib/api-chaves.ts. Publicável é sempre ["vitrine:ler"].
+  escopos  String[]
+
+  ultimoUsoEm DateTime?
+  revogadaEm  DateTime?
+  criadaEm    DateTime  @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
 }
