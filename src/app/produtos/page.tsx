@@ -11,6 +11,7 @@ import ProductCard from "@/components/ProductCard";
 import FiltrosProdutos from "@/components/FiltrosProdutos";
 import { minhaMoto } from "@/lib/minha-moto";
 import { nomeDaMoto } from "@/lib/motos";
+import { usaBlocoProprio } from "@/lib/templates";
 
 type SP = Record<string, string | undefined>;
 
@@ -26,7 +27,7 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
 
 export default async function Produtos({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const t = await exigirTenant();
-  const premium = temaDo(t).layout === "automotivo-premium";
+  const premium = usaBlocoProprio(temaDo(t), "categorias");
   const sp = await searchParams;
   const moto = t.segmento === "motopecas" ? await minhaMoto(sp) : null;
   const filtro = filtroDaUrl(sp);

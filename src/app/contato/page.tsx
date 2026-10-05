@@ -3,6 +3,7 @@ import { contatoConfigurado, enderecoCompleto, exigirTenant, temaDo } from "@/li
 import { mascararDocumento } from "@avilaops/checkout";
 import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
 import { ArrowUpRight, Clock3, MapPin, MessageCircle, Phone, Mail } from "lucide-react";
+import { contratoDo } from "@/lib/templates";
 
 export const metadata: Metadata = { title: "Contato" , alternates: { canonical: "/contato" } };
 
@@ -31,7 +32,7 @@ export default async function Contato() {
     </div>
   );
 
-  if (temaDo(t).layout === "automotivo-premium") return (
+  if (contratoDo(temaDo(t)).escopo === "loja") return (
     <section className="container-loja ap-contato">
       <div className="ap-contato-intro">
         <p className="ap-selo">Converse com a gente</p>

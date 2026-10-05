@@ -14,6 +14,7 @@ import { nomeDaMoto } from "@/lib/motos";
 import { buscarCategoriaPublica } from "@/lib/categorias";
 import Trilha from "@/components/Trilha";
 import { metadataDeListagem } from "@/lib/seo-listagem";
+import { usaBlocoProprio } from "@/lib/templates";
 
 async function resolverCategoria(t: Awaited<ReturnType<typeof exigirTenant>>, slug: string) {
   const ativas = await listarCategorias(t.id);
@@ -106,7 +107,7 @@ export default async function Categoria({ params, searchParams }: Props) {
 
   return (
     <div className="container-loja py-8 ap-catalogo">
-      {temaDo(t).layout === "automotivo-premium" && <CategoriasPremium categorias={[...categorias].sort((a,b)=>a.ordem-b.ordem)} atual={categoria.slug}/>}
+      {usaBlocoProprio(temaDo(t), "categorias") && <CategoriasPremium categorias={[...categorias].sort((a,b)=>a.ordem-b.ordem)} atual={categoria.slug}/>}
       <Trilha base={urlDaLoja(t)} itens={[{ nome: "Produtos", href: "/produtos" }, { nome: categoria.nome }]} />
       <CapaCategoria
         nome={categoria.nome}

@@ -11,6 +11,7 @@ import "@avilaops/checkout/checkout.css";
 import { noEnderecoOficial, tenantAtual, tenantPublico, temaDo, urlDaLoja, enderecoDo, formatarCep, identidadeDa } from "@/lib/tenant";
 import { listarCategorias } from "@/lib/catalogo";
 import { cssDoTema, fonteGoogleHref } from "@/lib/tema";
+import { contratoDo, usaBlocoProprio } from "@/lib/templates";
 import { CartProvider } from "@/components/cart/CartProvider";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -137,7 +138,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   }
 
   const tema = temaDo(t);
-  const premium = tema.layout === "automotivo-premium";
+  const contrato = contratoDo(tema);
+  const cabecalhoProprio = usaBlocoProprio(tema, "cabecalho");
+  const carrinhoProprio = usaBlocoProprio(tema, "carrinho");
   const identidade = identidadeDa(t);
   const fonte = fonteGoogleHref(tema);
   const categorias = await listarCategorias(t.id);
@@ -189,11 +192,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   };
 
   return (
-    <html lang="pt-BR" data-ck-theme={tema.modo === "escuro" ? "dark" : "light"} data-template={premium ? "automotivo-premium" : undefined} data-modo={tema.modo} suppressHydrationWarning={premium}>
+    <html lang="pt-BR" data-ck-theme={tema.modo === "escuro" ? "dark" : "light"} data-template={contrato.atributoHtml ? contrato.layout : undefined} data-modo={tema.modo} suppressHydrationWarning={contrato.atributoHtml}>
       <head>
         {fonte && <link rel="stylesheet" href={fonte} />}
         <style dangerouslySetInnerHTML={{ __html: `${cssDoTema(tema)}:root{--brand-support:${identidade.corApoio}}` }} />
-        {premium && <script dangerouslySetInnerHTML={{ __html: `try{var m=localStorage.getItem(${JSON.stringify(`loja:${t.slug}:modo`).replace(/</g,"\\u003c")});if(m==='claro'||m==='escuro'){document.documentElement.dataset.modo=m;document.documentElement.dataset.ckTheme=m==='escuro'?'dark':'light'}}catch(e){}` }}/ >}
+        {contrato.atributoHtml && <script dangerouslySetInnerHTML={{ __html: `try{var m=localStorage.getItem(${JSON.stringify(`loja:${t.slug}:modo`).replace(/</g,"\\u003c")});if(m==='claro'||m==='escuro'){document.documentElement.dataset.modo=m;document.documentElement.dataset.ckTheme=m==='escuro'?'dark':'light'}}catch(e){}` }}/ >}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSite) }} />
         {/* Descoberta do llms.txt pela especificação v2 (llmstxt.org, ago/2026):
@@ -209,16 +212,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <Suspense fallback={null}>
           <MedirSessao />
         </Suspense>
-        <CartProvider slug={t.slug} painelHabilitado={premium}>
+        <CartProvider slug={t.slug} painelHabilitado={carrinhoProprio}>
           {t.status === "SUSPENSA" && t.slug !== "vedashow" && <AvisoSuspensa />}
-          {t.avisoTopo && !premium && (
+          {t.avisoTopo && !cabecalhoProprio && (
             <p className="barra-aviso" role="status">{t.avisoTopo}</p>
           )}
-          {premium ? <CabecalhoPremium loja={publico} logo={t.logoUrl} logoEscuro={tema.premium?.logoEscuroUrl} mostrarNome={tema.premium?.mostrarNome} categorias={[...categorias].sort((a,b)=>a.ordem-b.ordem).map(c=>({slug:c.slug,nome:c.nome}))} modo={tema.modo}/> : <Header loja={publico} logoUrl={t.logoUrl} mostrarNome={tema.mostrarNomeNoCabecalho} categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} exemploBusca={exemploBusca} mostrarPromocoes={(tema.campanhasHome?.length ?? 0) > 0} />}
+          {cabecalhoProprio ? <CabecalhoPremium loja={publico} logo={t.logoUrl} logoEscuro={tema.premium?.logoEscuroUrl} mostrarNome={tema.premium?.mostrarNome} categorias={[...categorias].sort((a,b)=>a.ordem-b.ordem).map(c=>({slug:c.slug,nome:c.nome}))} modo={tema.modo}/> : <Header loja={publico} logoUrl={t.logoUrl} mostrarNome={tema.mostrarNomeNoCabecalho} categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} exemploBusca={exemploBusca} mostrarPromocoes={(tema.campanhasHome?.length ?? 0) > 0} />}
           {t.segmento === "motopecas" && <BarraGaragem tenantId={t.id} />}
           <main id="conteudo-loja" className="flex-1">{children}</main>
           <Footer tenant={t} categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} />
-          {premium && <CarrinhoLateral/>}
+          {carrinhoProprio && <CarrinhoLateral/>}
           {t.whatsapp && <WhatsAppFlutuante numero={t.whatsapp} nome={t.nome} />}
           {/* Navegação do celular. Vale para os onze layouts: é da loja, não
               do template. As abas saem do que a loja faz — ver o componente. */}

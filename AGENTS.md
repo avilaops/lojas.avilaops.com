@@ -25,7 +25,9 @@
   (`tema.premium` no Automotivo Premium), editados no painel. Nenhum slug de
   categoria escrito no componente: o que aponta para o catálogo se resolve pelo
   catálogo (`src/lib/etapas-premium.ts`, `src/lib/trilha-automotiva.ts`) e some
-  quando a loja não tem aquilo.
+  quando a loja não tem aquilo. Template novo entra por `CONTRATOS` em
+  `src/lib/templates.ts`; página pergunta ao contrato (`usaBlocoProprio`,
+  `contratoDo`), não compara `layout` com o nome do template.
 - **Política é do lojista, com rede de proteção.** O texto padrão continua
   sendo o que vai ao ar em loja que não mexeu (`src/lib/politicas.ts`); o que o
   lojista escreve substitui. O que a lei fixa não é configuração: o prazo de

@@ -29,6 +29,7 @@ import { ofertaDaVariante,gtinValido } from "@/lib/catalogo-oferta";
 import { midiasDaOferta } from "@/lib/catalogo-qualidade";
 import { paragrafosDaDescricao } from "@/lib/descricao-produto";
 import { marcaConfirmada } from "@/lib/marca-confirmada";
+import { usaBlocoProprio } from "@/lib/templates";
 
 const MEIOS: Record<string, string> = { pix: "Pix", cartao: "Cartão", boleto: "Boleto" };
 
@@ -196,7 +197,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
       </nav>
 
       <div className="grid items-start gap-8 md:grid-cols-2 ap-produto-grade">
-        {temaDo(t).layout === "automotivo-premium" ? <GaleriaPremium imagens={p.imagens} alt={p.nome} origem={p.imagemOrigem}/> : <GaleriaProduto imagens={p.imagens} alt={p.nome} origem={p.imagemOrigem} />}
+        {usaBlocoProprio(temaDo(t), "produto") ? <GaleriaPremium imagens={p.imagens} alt={p.nome} origem={p.imagemOrigem}/> : <GaleriaProduto imagens={p.imagens} alt={p.nome} origem={p.imagemOrigem} />}
 
         <div className="ap-produto-info">
           {p.marca && <p className="text-xs uppercase tracking-wide text-muted-foreground">{p.marca}</p>}

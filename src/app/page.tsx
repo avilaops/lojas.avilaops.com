@@ -15,6 +15,7 @@ import Spotlight from "@/components/home/Spotlight";
 import Mercado from "@/components/home/Mercado";
 import Distribuidora from "@/components/home/Distribuidora";
 import Conversao from "@/components/home/Conversao";
+import { contratoDo } from "@/lib/templates";
 
 /**
  * Página inicial: um dos layouts fixos (Tenant.tema.layout), todos
@@ -64,7 +65,7 @@ export default async function Home() {
   const dados = { t, identidade: identidadeDa(t), categorias, vitrine, temDestaques: destaques.length > 0, vende: lojaVende(t), moto, necessidades };
 
   const layout =
-    temaDo(t).layout === "automotivo-premium" ? <HomePremium {...dados} />
+    contratoDo(temaDo(t)).escopo === "loja" ? <HomePremium {...dados} />
     : temaDo(t).layout === "spotlight" ? <Spotlight {...dados} />
     : temaDo(t).layout === "mercado" ? <Mercado {...dados} />
     : temaDo(t).layout === "distribuidora" ? <Distribuidora {...dados} />

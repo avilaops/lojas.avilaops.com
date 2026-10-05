@@ -28,8 +28,9 @@ ganho de tempo — o build já falha em cerca de um minuto quando um teste cai.
 
 ## Tranche 2 — fábrica de templates
 
-- [ ] Extrair tokens e blocos comuns (cabeçalho, hero, categorias, produto,
-  carrinho e rodapé) para contratos de template versionados.
+- [x] Extrair tokens e blocos comuns (cabeçalho, hero, categorias, produto,
+  carrinho e rodapé) para contratos de template versionados
+  (`src/lib/templates.ts`, contrato preso em `src/lib/templates.test.ts`).
 - [ ] Criar o template `catalogo-tecnico` reutilizando dados de compatibilidade,
   medidas e código original, sem lista de lojas no código.
 - [ ] Criar preview seguro no painel, com dados de demonstração e sem alterar a
