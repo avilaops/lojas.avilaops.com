@@ -2,7 +2,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { rotaDaApi } from "@/lib/api-rotas";
 import { ErroApi, lerCorpo } from "@/lib/api-resposta";
-import { ajustarOfertaNoCatalogo } from "@/lib/catalogo-escrita";
+import { ajustarOfertaNoCatalogo, SkuMudouDuranteAGravacao } from "@/lib/catalogo-escrita";
 import { ErroCatalogo } from "@/lib/catalogo-oferta";
 import { invalidarCatalogo } from "@/lib/catalogo-cache";
 
@@ -65,11 +65,15 @@ export const PATCH = rotaDaApi({ escopo: "catalogo:escrever" }, async ({ request
       continue;
     }
     try {
-      const r = await ajustarOfertaNoCatalogo(tenant.id, v.id, item, origem);
+      // O SKU vai junto: o id acima foi resolvido fora da trava do produto.
+      const r = await ajustarOfertaNoCatalogo(tenant.id, v.id, item, origem, item.sku);
       resultados.push({ sku: item.sku, situacao: r.mudou ? "atualizado" : "sem_mudanca", produtoId: v.produtoId, varianteId: v.id });
     } catch (e) {
       if (!(e instanceof ErroCatalogo)) throw e;
-      resultados.push({ sku: item.sku, situacao: "erro", produtoId: v.produtoId, varianteId: v.id, erro: { codigo: "recusado", mensagem: e.message } });
+      // No conflito o id resolvido já não é o deste SKU: devolvê-lo apontaria o
+      // ERP para a apresentação errada.
+      if (e instanceof SkuMudouDuranteAGravacao) resultados.push({ sku: item.sku, situacao: "erro", erro: { codigo: "conflito", mensagem: e.message } });
+      else resultados.push({ sku: item.sku, situacao: "erro", produtoId: v.produtoId, varianteId: v.id, erro: { codigo: "recusado", mensagem: e.message } });
     }
   }
 

@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import type { Plano, TipoChaveApi } from "@prisma/client";
 import { prisma } from "../../src/lib/db";
 import { escoposDaChave, gerarChave } from "../../src/lib/api-chaves";
-import { salvarGradeNoCatalogo, salvarProdutoNoCatalogo } from "../../src/lib/catalogo-escrita";
+import { ajustarOfertaNoCatalogo, salvarGradeNoCatalogo, salvarProdutoNoCatalogo, SkuMudouDuranteAGravacao } from "../../src/lib/catalogo-escrita";
 import { GET as getLoja } from "../../src/app/api/v1/loja/route";
 import { GET as getProdutos } from "../../src/app/api/v1/produtos/route";
 import { GET as getProduto } from "../../src/app/api/v1/produtos/[id]/route";
@@ -196,6 +196,78 @@ test("SKU de variação muda só aquela variação; SKU desconhecido não derrub
   const preco = async (id: string) => (await prisma.precoVariante.findUniqueOrThrow({ where: { varianteId: id } })).valorCentavos;
   assert.equal(await preco(v5l.id), 2500);
   assert.equal(await preco(v500.id), 1000);
+});
+
+test("SKU renomeado entre a resolução e a trava: o item volta conflito e nada muda", async () => {
+  const t = await loja();
+  const p = await produto(t.id);
+  const skuAntigo = `V500-${sufixo()}`, skuNovo = `RENOMEADO-${sufixo()}`;
+  await salvarGradeNoCatalogo(t.id, p.id, ["Volume"], [
+    { valores: { Volume: "500ml" }, sku: skuAntigo, precoCentavos: 1000, estoque: 2 },
+    { valores: { Volume: "5L" }, sku: `V5L-${sufixo()}`, precoCentavos: 2000, estoque: 1 },
+  ]);
+  const v500 = await prisma.variante.findFirstOrThrow({ where: { produtoId: p.id, sku: skuAntigo } });
+  const sk = await chave(t.id, "SECRETA", ["catalogo:escrever"]);
+
+  const estado = async () => ({
+    preco: (await prisma.precoVariante.findUniqueOrThrow({ where: { varianteId: v500.id } })).valorCentavos,
+    fisico: (await prisma.saldoEstoque.findFirstOrThrow({ where: { varianteId: v500.id, local: "principal" } })).fisico,
+    versao: (await prisma.produto.findUniqueOrThrow({ where: { id: p.id } })).versaoCatalogo,
+    historico: await prisma.historicoCatalogo.count({ where: { produtoId: p.id } }),
+  });
+  const antes = await estado();
+
+  // A corrida de verdade: outra transação segura a trava do produto (é o que
+  // o painel faz ao salvar a grade), a chamada do ERP resolve o SKU e fica
+  // esperando a trava, e só então o SKU é renomeado e a trava é solta.
+  let pendente!: ReturnType<typeof enviar>;
+  await prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT id FROM "Produto" WHERE id=${p.id} AND "tenantId"=${t.id} FOR UPDATE`;
+    pendente = enviar({ itens: [{ sku: skuAntigo, precoCentavos: 9999, estoque: 77 }] }, sk);
+    let esperando = 0;
+    for (let i = 0; i < 100 && esperando === 0; i++) {
+      await new Promise((r) => setTimeout(r, 50));
+      const [linha] = await prisma.$queryRaw<{ n: bigint }[]>`SELECT count(*) AS n FROM pg_stat_activity WHERE datname = current_database() AND wait_event_type = 'Lock' AND query LIKE '%FROM "Produto"%FOR UPDATE%'`;
+      esperando = Number(linha.n);
+    }
+    assert.equal(esperando, 1, "a chamada do ERP tem de estar parada na trava do produto, com o SKU já resolvido");
+    await tx.variante.update({ where: { id: v500.id }, data: { sku: skuNovo } });
+  }, { timeout: 20000 });
+
+  const r = await pendente;
+  assert.equal(r.status, 200);
+  assert.equal(r.corpo.dados.atualizados, 0);
+  assert.equal(r.corpo.dados.erros, 1);
+  assert.equal(r.corpo.dados.itens[0].situacao, "erro");
+  assert.equal(r.corpo.dados.itens[0].erro.codigo, "conflito");
+  assert.equal(r.corpo.dados.itens[0].varianteId, undefined, "o id resolvido já não é o deste SKU");
+  assert.deepEqual(await estado(), antes, "preço, estoque, versão e histórico da variação renomeada ficam intactos");
+
+  // Depois da corrida o contrato segue o normal: o SKU antigo não existe mais
+  // e o novo grava.
+  const antigo = await enviar({ itens: [{ sku: skuAntigo, precoCentavos: 9999 }] }, sk);
+  assert.equal(antigo.corpo.dados.itens[0].erro.codigo, "nao_encontrado");
+  const novo = await enviar({ itens: [{ sku: skuNovo, precoCentavos: 1500 }] }, sk);
+  assert.equal(novo.corpo.dados.itens[0].situacao, "atualizado");
+  assert.equal((await estado()).preco, 1500);
+});
+
+test("ajuste por id sem SKU esperado continua valendo; com SKU errado é recusado sem gravar", async () => {
+  const t = await loja();
+  const p = await produto(t.id, { sku: `DIRETO-${sufixo()}`, precoCentavos: 4990, estoque: 5 });
+  const v = await prisma.variante.findFirstOrThrow({ where: { produtoId: p.id, padrao: true } });
+  const versao = async () => (await prisma.produto.findUniqueOrThrow({ where: { id: p.id } })).versaoCatalogo;
+  const inicial = await versao();
+
+  await assert.rejects(
+    ajustarOfertaNoCatalogo(t.id, v.id, { precoCentavos: 1 }, "teste", "OUTRO-SKU"),
+    (e: unknown) => e instanceof SkuMudouDuranteAGravacao && e.status === 409,
+  );
+  assert.equal(await versao(), inicial);
+  assert.equal((await prisma.precoVariante.findUniqueOrThrow({ where: { varianteId: v.id } })).valorCentavos, 4990);
+
+  assert.equal((await ajustarOfertaNoCatalogo(t.id, v.id, { precoCentavos: 5990 }, "teste")).mudou, true);
+  assert.equal((await ajustarOfertaNoCatalogo(t.id, v.id, { precoCentavos: 6990 }, "teste", p.sku!)).mudou, true);
 });
 
 test("SKU de outra loja é 'não encontrado', e nada muda nela", async () => {

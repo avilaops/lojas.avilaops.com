@@ -125,6 +125,16 @@ export async function salvarProdutoNoCatalogo(tenantId: string, id: string | nul
 
 export type AjusteDeOferta = { precoCentavos?: number; precoDeCentavos?: number | null; estoque?: number | null };
 
+/**
+ * O SKU foi resolvido para uma variação e, antes de a trava do produto ser
+ * obtida, o cadastro trocou o SKU dela. Nada é gravado.
+ */
+export class SkuMudouDuranteAGravacao extends ErroCatalogo {
+  constructor(readonly sku: string) {
+    super(`O SKU "${sku}" foi alterado no cadastro durante a gravação. Nada foi gravado; reenvie o item.`, 409);
+  }
+}
+
 export type ResultadoDoAjuste =
   | { mudou: false; produtoId: string }
   | { mudou: true; produtoId: string; versao: number };
@@ -145,14 +155,24 @@ export type ResultadoDoAjuste =
  * Sem mudança, não grava nada: sincronização de ERP manda o catálogo inteiro
  * a cada passada, e sem isto cada passada viraria uma versão nova de cada
  * produto no histórico.
+ *
+ * `skuEsperado` é para quem chegou à variação por SKU: depois da trava, a
+ * variação tem de continuar com esse SKU, senão `SkuMudouDuranteAGravacao`.
  */
-export async function ajustarOfertaNoCatalogo(tenantId: string, varianteId: string, ajuste: AjusteDeOferta, origem: string): Promise<ResultadoDoAjuste> {
+export async function ajustarOfertaNoCatalogo(tenantId: string, varianteId: string, ajuste: AjusteDeOferta, origem: string, skuEsperado?: string): Promise<ResultadoDoAjuste> {
   return prisma.$transaction(async tx => {
     await permitirProjecao(tx);
     const alvo = await tx.variante.findFirst({ where: { id: varianteId, tenantId }, select: { produtoId: true } });
     if (!alvo) throw new ErroCatalogo("Variação não encontrada nesta loja.", 404);
     const p = await travarProduto(tx, tenantId, alvo.produtoId);
-    const v = p.variantes.find(x => x.id === varianteId)!;
+    // A grade pode ter sido regravada entre a leitura acima e a trava: a
+    // variação que existia pode não existir mais.
+    const v = p.variantes.find(x => x.id === varianteId);
+    if (!v) throw new ErroCatalogo("Variação não encontrada nesta loja.", 404);
+    // Quem chama por SKU resolveu o SKU para este id *antes* da trava. Se o
+    // painel renomeou o SKU nesse intervalo, o id agora é de outra
+    // apresentação: gravar seria pôr o preço do SKU A no que virou SKU B.
+    if (skuEsperado !== undefined && v.sku !== skuEsperado) throw new SkuMudouDuranteAGravacao(skuEsperado);
     if (!v.ativo) throw new ErroCatalogo("Esta variação está desativada no cadastro.", 409);
 
     const saldo = v.saldos.find(s => s.local === "principal");

@@ -115,6 +115,9 @@ PATCH /api/v1/ofertas
 - `estoque` é o saldo **físico**. O que a leitura devolve é o disponível
   (físico menos reservado por pedidos em andamento). Saldo abaixo do reservado
   é recusado com `recusado`. `null` = a loja não controla estoque daquele SKU.
+- Se o cadastro trocar o SKU de uma variação enquanto o lote é gravado, o
+  item volta `erro` com código `conflito` e nada é alterado: o preço do SKU
+  antigo nunca é aplicado à apresentação que ganhou outro SKU. Basta reenviar.
 - Lote mal formado é recusado inteiro (400) antes de gravar: SKU repetido no
   mesmo lote, centavos com vírgula e **campo desconhecido** — `preco: 49.9` em
   reais, ignorado em silêncio, seria o ERP achando que atualizou o preço.
