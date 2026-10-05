@@ -58,6 +58,7 @@ chegasse, sem ninguém ter decidido isso.
 |---|---|
 | `loja:ler` | `GET /api/v1/loja` |
 | `catalogo:ler` | `GET /api/v1/produtos`, `GET /api/v1/produtos/{id}` |
+| `catalogo:escrever` | `PATCH /api/v1/ofertas` |
 | `pedidos:ler` | `GET /api/v1/pedidos` |
 | `vitrine:ler` | `GET /api/v1/vitrine/loja`, `GET /api/v1/vitrine/produtos` |
 
@@ -94,6 +95,32 @@ chegasse, sem ninguém ter decidido isso.
   para não oferecer o botão. A listagem é a mesma consulta da vitrine
   (`paginaDeProdutos`).
 
+## Preço e estoque pelo ERP (`PATCH /api/v1/ofertas`)
+
+```
+PATCH /api/v1/ofertas
+{ "itens": [ { "sku": "6205-2RS", "precoCentavos": 2990, "precoDeCentavos": 3490, "estoque": 14 } ] }
+```
+
+- Por **SKU**, que é a chave que o ERP conhece. Vale para o produto simples
+  (a apresentação única) e para cada variação da grade.
+- Até 100 itens por chamada. Cada item é aplicado sozinho por
+  `ajustarOfertaNoCatalogo` (`catalogo-escrita.ts`): a mesma trava, histórico
+  e evento do painel. Um item recusado não desfaz os outros; a resposta traz
+  `situacao` por item (`atualizado`, `sem_mudanca`, `erro`) e os totais.
+- Valores **absolutos** ("estoque 14", não "mais 2"): reenviar o mesmo lote
+  depois de uma queda de rede não muda nada, por isso a rota não precisa de
+  `Idempotency-Key`. Item igual ao gravado volta `sem_mudanca` e não cria
+  versão no histórico — o ERP pode mandar o catálogo inteiro a cada passada.
+- `estoque` é o saldo **físico**. O que a leitura devolve é o disponível
+  (físico menos reservado por pedidos em andamento). Saldo abaixo do reservado
+  é recusado com `recusado`. `null` = a loja não controla estoque daquele SKU.
+- Lote mal formado é recusado inteiro (400) antes de gravar: SKU repetido no
+  mesmo lote, centavos com vírgula e **campo desconhecido** — `preco: 49.9` em
+  reais, ignorado em silêncio, seria o ERP achando que atualizou o preço.
+- O histórico do produto grava `origem = api:<id da chave>`: o lojista que vê
+  um preço mudar sozinho sabe qual integração mexeu.
+
 ## Limite em memória
 
 O limitador conta na memória do processo: a plataforma roda num container só.
@@ -110,8 +137,8 @@ contagem muda de lugar (Postgres ou Redis) sem mudar o contrato.
 
 ## Próximos passos (fora desta fundação)
 
-1. Escrita pela chave secreta: `catalogo:escrever` (preço e estoque primeiro,
-   por `salvarProdutoNoCatalogo`), `pedidos:escrever` (status e rastreio).
+1. Mais escrita pela chave secreta: criar e editar produto (campos editoriais,
+   por `salvarProdutoNoCatalogo`) e `pedidos:escrever` (status e rastreio).
 2. Webhooks para o desenvolvedor, saindo do mesmo `emitir` de `eventos.ts`.
 3. Carrinho e checkout pela chave publicável, passando por
    `montarPedidoSeguro` + `resolverItensDoCatalogo` (preço nunca do navegador).

@@ -1,3 +1,5 @@
+import type { ZodType } from "zod";
+
 /**
  * O contrato de resposta da API para desenvolvedores, num lugar só.
  *
@@ -106,6 +108,28 @@ export function lerData(params: URLSearchParams, nome: string): Date | null {
   const data = /^\d{4}-\d{2}-\d{2}/.test(bruto) ? new Date(bruto) : new Date(NaN);
   if (Number.isNaN(data.getTime())) throw new ErroApi("parametro_invalido", `\`${nome}\` precisa ser uma data ISO 8601.`);
   return data;
+}
+
+/**
+ * Corpo JSON validado pelo esquema da rota.
+ *
+ * O primeiro problema vai na mensagem, com o caminho do campo
+ * (`itens.3.estoque`): em lote de cem itens, "corpo inválido" não diz qual.
+ */
+export async function lerCorpo<T>(request: Request, esquema: ZodType<T>): Promise<T> {
+  let bruto: unknown;
+  try {
+    bruto = await request.json();
+  } catch {
+    throw new ErroApi("parametro_invalido", "O corpo precisa ser JSON válido.");
+  }
+  const lido = esquema.safeParse(bruto);
+  if (!lido.success) {
+    const problema = lido.error.issues[0];
+    const caminho = problema?.path.join(".");
+    throw new ErroApi("parametro_invalido", caminho ? `\`${caminho}\`: ${problema.message}` : problema?.message ?? "Corpo inválido.");
+  }
+  return lido.data;
 }
 
 export function lista<T>(dados: T[], p: Paginacao, total: number) {

@@ -32,6 +32,7 @@ export const PREFIXO_CHAVE: Record<TipoChaveApi, string> = {
 export const ESCOPOS = {
   "loja:ler": "Dados da loja (nome, plano, endereço da vitrine)",
   "catalogo:ler": "Produtos e variações, inclusive inativos, com estoque",
+  "catalogo:escrever": "Preço e estoque por SKU (o que o ERP sincroniza)",
   "pedidos:ler": "Pedidos com cliente, itens, valores e rastreio",
   "vitrine:ler": "O que a vitrine pública mostra: produtos ativos e dados da loja",
 } as const;
@@ -42,7 +43,7 @@ export type Escopo = keyof typeof ESCOPOS;
 export const ESCOPOS_PUBLICAVEL: readonly Escopo[] = ["vitrine:ler"];
 
 /** Escopos que uma chave secreta pode receber; a vitrine vem junto sempre. */
-export const ESCOPOS_SECRETA: readonly Escopo[] = ["loja:ler", "catalogo:ler", "pedidos:ler", "vitrine:ler"];
+export const ESCOPOS_SECRETA: readonly Escopo[] = ["loja:ler", "catalogo:ler", "catalogo:escrever", "pedidos:ler", "vitrine:ler"];
 
 export function ehEscopo(v: string): v is Escopo {
   return Object.prototype.hasOwnProperty.call(ESCOPOS, v);

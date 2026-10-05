@@ -123,6 +123,57 @@ export async function salvarProdutoNoCatalogo(tenantId: string, id: string | nul
   }, { timeout: 20000 });
 }
 
+export type AjusteDeOferta = { precoCentavos?: number; precoDeCentavos?: number | null; estoque?: number | null };
+
+export type ResultadoDoAjuste =
+  | { mudou: false; produtoId: string }
+  | { mudou: true; produtoId: string; versao: number };
+
+/**
+ * Preço e estoque de uma variação — a apresentação única do produto simples
+ * inclusive —, sem tocar no resto do cadastro.
+ *
+ * É a escrita que um ERP faz o dia inteiro, por SKU. `salvarProdutoNoCatalogo`
+ * recusa produto com grade, e `salvarGradeNoCatalogo` reescreve a grade toda:
+ * nenhuma das duas serve para "o SKU X agora custa Y e tem Z". Passa pelos
+ * mesmos trilhos — trava do produto, saldo físico com reservas conferidas,
+ * projeção, histórico e evento de catálogo.
+ *
+ * `estoque` é o saldo **físico** do local principal (o que o ERP conta na
+ * prateleira); o disponível que a vitrine lê é físico menos reservado.
+ *
+ * Sem mudança, não grava nada: sincronização de ERP manda o catálogo inteiro
+ * a cada passada, e sem isto cada passada viraria uma versão nova de cada
+ * produto no histórico.
+ */
+export async function ajustarOfertaNoCatalogo(tenantId: string, varianteId: string, ajuste: AjusteDeOferta, origem: string): Promise<ResultadoDoAjuste> {
+  return prisma.$transaction(async tx => {
+    await permitirProjecao(tx);
+    const alvo = await tx.variante.findFirst({ where: { id: varianteId, tenantId }, select: { produtoId: true } });
+    if (!alvo) throw new ErroCatalogo("Variação não encontrada nesta loja.", 404);
+    const p = await travarProduto(tx, tenantId, alvo.produtoId);
+    const v = p.variantes.find(x => x.id === varianteId)!;
+    if (!v.ativo) throw new ErroCatalogo("Esta variação está desativada no cadastro.", 409);
+
+    const saldo = v.saldos.find(s => s.local === "principal");
+    const mudaPreco = ajuste.precoCentavos !== undefined && ajuste.precoCentavos !== v.preco?.valorCentavos;
+    const mudaPrecoDe = ajuste.precoDeCentavos !== undefined && ajuste.precoDeCentavos !== (v.preco?.comparacaoCentavos ?? null);
+    const mudaEstoque = ajuste.estoque !== undefined && (!saldo || ajuste.estoque !== saldo.fisico);
+    if (!mudaPreco && !mudaPrecoDe && !mudaEstoque) return { mudou: false, produtoId: p.id };
+
+    if (mudaPreco || mudaPrecoDe) {
+      const valorCentavos = ajuste.precoCentavos ?? v.preco?.valorCentavos ?? 0;
+      const comparacaoCentavos = ajuste.precoDeCentavos !== undefined ? ajuste.precoDeCentavos : v.preco?.comparacaoCentavos ?? null;
+      await tx.precoVariante.upsert({ where: { varianteId }, create: { tenantId, varianteId, valorCentavos, comparacaoCentavos }, update: { valorCentavos, comparacaoCentavos } });
+    }
+    if (mudaEstoque) await gravarSaldo(tx, tenantId, varianteId, ajuste.estoque!, origem);
+    await atualizarProjecao(tx, tenantId, p.id);
+    const campos = [...(mudaPreco ? ["precoCentavos"] : []), ...(mudaPrecoDe ? ["precoDeCentavos"] : []), ...(mudaEstoque ? ["estoque"] : [])];
+    const registrado = await registrar(tx, tenantId, p.id, p, campos, origem);
+    return { mudou: true, produtoId: p.id, versao: registrado.versaoCatalogo };
+  }, { timeout: 20000 });
+}
+
 export type EntradaVariante = {
   id?: string; valores: Record<string,string>; sku?: string|null; gtin?: string|null; mpn?: string|null; identificadoresEstado?: string;
   precoCentavos?: number|null; precoDeCentavos?: number|null; estoque?: number|null; pesoKg?: number|null; alturaCm?: number|null; larguraCm?: number|null; comprimentoCm?: number|null;

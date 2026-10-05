@@ -4,12 +4,13 @@ import { randomUUID } from "node:crypto";
 import type { Plano, TipoChaveApi } from "@prisma/client";
 import { prisma } from "../../src/lib/db";
 import { escoposDaChave, gerarChave } from "../../src/lib/api-chaves";
-import { salvarProdutoNoCatalogo } from "../../src/lib/catalogo-escrita";
+import { salvarGradeNoCatalogo, salvarProdutoNoCatalogo } from "../../src/lib/catalogo-escrita";
 import { GET as getLoja } from "../../src/app/api/v1/loja/route";
 import { GET as getProdutos } from "../../src/app/api/v1/produtos/route";
 import { GET as getProduto } from "../../src/app/api/v1/produtos/[id]/route";
 import { GET as getPedidos } from "../../src/app/api/v1/pedidos/route";
 import { GET as getVitrineProdutos } from "../../src/app/api/v1/vitrine/produtos/route";
+import { PATCH as patchOfertas } from "../../src/app/api/v1/ofertas/route";
 
 /**
  * A API para desenvolvedores contra o Postgres de verdade: chave por hash,
@@ -42,6 +43,18 @@ async function chamar<P>(rota: (r: Request, s: { params: Promise<P> }) => Promis
     { params: Promise.resolve((params ?? {}) as P) },
   );
   return { status: r.status, corpo: await r.json(), cabecalhos: r.headers };
+}
+
+async function enviar(corpo: unknown, chaveApi: string) {
+  const r = await patchOfertas(
+    new Request("https://lojas.avilaops.com/api/v1/ofertas", {
+      method: "PATCH",
+      headers: { authorization: `Bearer ${chaveApi}`, "content-type": "application/json" },
+      body: JSON.stringify(corpo),
+    }),
+    { params: Promise.resolve({}) },
+  );
+  return { status: r.status, corpo: await r.json() };
 }
 
 async function produto(tenantId: string, extras: Parameters<typeof salvarProdutoNoCatalogo>[2] = {}) {
@@ -138,4 +151,73 @@ test("catálogo do painel inclui inativos, filtra e pagina; a vitrine não mostr
 
   const vitrine = await chamar(getVitrineProdutos, "/api/v1/vitrine/produtos", sk);
   assert.equal(vitrine.corpo.paginacao.total, 2);
+});
+
+test("ERP grava preço e estoque por SKU; reenviar o mesmo lote não cria versão", async () => {
+  const t = await loja();
+  const p = await produto(t.id, { sku: `ERP-${sufixo()}`, precoCentavos: 4990, estoque: 5 });
+  const sk = await chave(t.id, "SECRETA", ["catalogo:ler", "catalogo:escrever"]);
+
+  const r = await enviar({ itens: [{ sku: p.sku, precoCentavos: 5990, precoDeCentavos: 6990, estoque: 12 }] }, sk);
+  assert.equal(r.status, 200);
+  assert.equal(r.corpo.dados.atualizados, 1);
+  assert.equal(r.corpo.dados.itens[0].situacao, "atualizado");
+
+  const lido = await chamar(getProduto, `/api/v1/produtos/${p.id}`, sk, { id: p.id });
+  assert.equal(lido.corpo.dados.precoCentavos, 5990);
+  assert.equal(lido.corpo.dados.precoDeCentavos, 6990);
+  assert.equal(lido.corpo.dados.estoque, 12);
+
+  const versao = (await prisma.produto.findUniqueOrThrow({ where: { id: p.id } })).versaoCatalogo;
+  const historico = await prisma.historicoCatalogo.findFirstOrThrow({ where: { produtoId: p.id, versao } });
+  assert.match(historico.origem, /^api:/, "o histórico diz que foi a API, e por qual chave");
+
+  const de_novo = await enviar({ itens: [{ sku: p.sku, precoCentavos: 5990, estoque: 12 }] }, sk);
+  assert.equal(de_novo.corpo.dados.itens[0].situacao, "sem_mudanca");
+  assert.equal((await prisma.produto.findUniqueOrThrow({ where: { id: p.id } })).versaoCatalogo, versao);
+});
+
+test("SKU de variação muda só aquela variação; SKU desconhecido não derruba o lote", async () => {
+  const t = await loja();
+  const p = await produto(t.id);
+  await salvarGradeNoCatalogo(t.id, p.id, ["Volume"], [
+    { valores: { Volume: "500ml" }, sku: `V500-${sufixo()}`, precoCentavos: 1000, estoque: 2 },
+    { valores: { Volume: "5L" }, sku: `V5L-${sufixo()}`, precoCentavos: 2000, estoque: 1 },
+  ]);
+  const [v500, v5l] = await prisma.variante.findMany({ where: { produtoId: p.id, padrao: false }, orderBy: { ordem: "asc" } });
+  const sk = await chave(t.id, "SECRETA", ["catalogo:escrever"]);
+
+  const r = await enviar({ itens: [{ sku: v5l.sku, precoCentavos: 2500 }, { sku: "NAO-EXISTE", estoque: 3 }] }, sk);
+  assert.equal(r.status, 200);
+  assert.equal(r.corpo.dados.atualizados, 1);
+  assert.equal(r.corpo.dados.erros, 1);
+  assert.equal(r.corpo.dados.itens[1].erro.codigo, "nao_encontrado");
+
+  const preco = async (id: string) => (await prisma.precoVariante.findUniqueOrThrow({ where: { varianteId: id } })).valorCentavos;
+  assert.equal(await preco(v5l.id), 2500);
+  assert.equal(await preco(v500.id), 1000);
+});
+
+test("SKU de outra loja é 'não encontrado', e nada muda nela", async () => {
+  const a = await loja(), b = await loja();
+  const pa = await produto(a.id, { sku: `CRUZ-${sufixo()}`, precoCentavos: 4990 });
+  const skB = await chave(b.id, "SECRETA", ["catalogo:escrever"]);
+  const r = await enviar({ itens: [{ sku: pa.sku, precoCentavos: 1 }] }, skB);
+  assert.equal(r.corpo.dados.itens[0].erro.codigo, "nao_encontrado");
+  assert.equal((await prisma.produto.findUniqueOrThrow({ where: { id: pa.id } })).precoCentavos, 4990);
+});
+
+test("lote mal formado é recusado inteiro, antes de gravar qualquer coisa", async () => {
+  const t = await loja();
+  const p = await produto(t.id, { sku: `LOTE-${sufixo()}` });
+  const sk = await chave(t.id, "SECRETA", ["catalogo:escrever"]);
+  const reais = await enviar({ itens: [{ sku: p.sku, preco: 49.9 }] }, sk);
+  assert.equal(reais.status, 400, "campo desconhecido (preço em reais) não é ignorado em silêncio");
+  assert.equal(reais.corpo.erro.codigo, "parametro_invalido");
+  assert.equal((await enviar({ itens: [{ sku: p.sku, precoCentavos: 49.9 }] }, sk)).status, 400);
+  assert.equal((await enviar({ itens: [{ sku: p.sku, estoque: 1 }, { sku: p.sku, estoque: 2 }] }, sk)).status, 400);
+  assert.equal((await enviar({ itens: [] }, sk)).status, 400);
+
+  const soLeitura = await chave(t.id, "SECRETA", ["catalogo:ler"]);
+  assert.equal((await enviar({ itens: [{ sku: p.sku, estoque: 1 }] }, soLeitura)).corpo.erro.codigo, "escopo_insuficiente");
 });
