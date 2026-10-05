@@ -20,6 +20,8 @@ export interface Aplicacao {
   texto: string;
   /** Linhas de compatibilidade que não couberam em `texto`. */
   restantes: number;
+  /** Linhas de compatibilidade cadastradas; zero é o produto universal. */
+  total: number;
 }
 
 export interface LinhaTecnica {
@@ -66,13 +68,13 @@ export function medidasDe(p: { atributos?: unknown } | null | undefined): string
  */
 export function aplicacaoDe(p: { compatibilidade?: unknown } | null | undefined, limite = 2): Aplicacao {
   const linhas = lerCompatibilidade(p?.compatibilidade);
-  if (!linhas.length) return { texto: "Universal", restantes: 0 };
+  if (!linhas.length) return { texto: "Universal", restantes: 0, total: 0 };
   const quantas = Math.max(1, Math.floor(limite));
   const mostradas = linhas.slice(0, quantas).map((c) => {
     const temAno = c.anoDe != null || c.anoAte != null;
     return `${c.marca} ${c.modelo}${temAno ? ` (${descreverAnos(c)})` : ""}`;
   });
-  return { texto: mostradas.join(", "), restantes: linhas.length - mostradas.length };
+  return { texto: mostradas.join(", "), restantes: linhas.length - mostradas.length, total: linhas.length };
 }
 
 export function linhaTecnica(p: ProdutoTecnico): LinhaTecnica {
@@ -88,10 +90,13 @@ export function linhaTecnica(p: ProdutoTecnico): LinhaTecnica {
   };
 }
 
-/** "Universal" em toda linha não diz nada: a aplicação só conta quando é de verdade. */
+/**
+ * "Universal" em toda linha não diz nada: a aplicação só conta quando é de
+ * verdade. Quem decide é a quantidade de linhas, não o rótulo da célula.
+ */
 function preenchida(linha: LinhaTecnica, coluna: Coluna): boolean {
   if (coluna === "equivalentes") return linha.equivalentes.length > 0;
-  if (coluna === "aplicacao") return linha.aplicacao.texto !== "Universal";
+  if (coluna === "aplicacao") return linha.aplicacao.total > 0;
   return Boolean(linha[coluna]);
 }
 

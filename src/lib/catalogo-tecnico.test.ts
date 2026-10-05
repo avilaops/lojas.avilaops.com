@@ -38,7 +38,7 @@ test("medidas: a caixa do frete não é a medida da peça", () => {
 });
 
 test("aplicação: sem compatibilidade é Universal", () => {
-  assert.deepEqual(aplicacaoDe({ compatibilidade: [] }), { texto: "Universal", restantes: 0 });
+  assert.deepEqual(aplicacaoDe({ compatibilidade: [] }), { texto: "Universal", restantes: 0, total: 0 });
 });
 
 test("aplicação: mostra até o limite e conta o resto", () => {
@@ -49,18 +49,18 @@ test("aplicação: mostra até o limite e conta o resto", () => {
     { marca: "Honda", modelo: "Pop 110i", anoDe: 2019 },
     { marca: "Suzuki", modelo: "Yes 125" },
   ];
-  assert.deepEqual(aplicacaoDe({ compatibilidade }), { texto: "Honda CG 160 (2016–2024), Yamaha Fazer 250", restantes: 3 });
-  assert.deepEqual(aplicacaoDe({ compatibilidade }, 1), { texto: "Honda CG 160 (2016–2024)", restantes: 4 });
+  assert.deepEqual(aplicacaoDe({ compatibilidade }), { texto: "Honda CG 160 (2016–2024), Yamaha Fazer 250", restantes: 3, total: 5 });
+  assert.deepEqual(aplicacaoDe({ compatibilidade }, 1), { texto: "Honda CG 160 (2016–2024)", restantes: 4, total: 5 });
   assert.equal(aplicacaoDe({ compatibilidade }, 10).restantes, 0);
   // Limite sem sentido não esvazia a célula.
-  assert.deepEqual(aplicacaoDe({ compatibilidade }, 0), { texto: "Honda CG 160 (2016–2024)", restantes: 4 });
+  assert.deepEqual(aplicacaoDe({ compatibilidade }, 0), { texto: "Honda CG 160 (2016–2024)", restantes: 4, total: 5 });
 });
 
 test("aplicação: entrada inválida não lança", () => {
   for (const ruim of [null, undefined, "Honda CG", 42, {}, [null, "x", { marca: "Honda" }]]) {
-    assert.deepEqual(aplicacaoDe({ compatibilidade: ruim }), { texto: "Universal", restantes: 0 });
+    assert.deepEqual(aplicacaoDe({ compatibilidade: ruim }), { texto: "Universal", restantes: 0, total: 0 });
   }
-  assert.deepEqual(aplicacaoDe(null), { texto: "Universal", restantes: 0 });
+  assert.deepEqual(aplicacaoDe(null), { texto: "Universal", restantes: 0, total: 0 });
 });
 
 test("linha técnica junta os dados do produto e limpa o que veio em branco", () => {
@@ -70,7 +70,7 @@ test("linha técnica junta os dados do produto e limpa o que veio em branco", ()
   }));
   assert.deepEqual(linha, {
     slug: "rolamento-6203", nome: "Rolamento 6203", marca: "NSK", codigo: "6203-2RS", codigoOriginal: "91003-KGH-901",
-    equivalentes: ["SKF 6203", "FAG 6203"], medidas: "17 × 40 × 12 mm", aplicacao: { texto: "Honda CG 160", restantes: 0 },
+    equivalentes: ["SKF 6203", "FAG 6203"], medidas: "17 × 40 × 12 mm", aplicacao: { texto: "Honda CG 160", restantes: 0, total: 1 },
   });
   assert.equal(linhaTecnica(produto({ sku: "  " })).codigo, null);
 });
@@ -88,6 +88,15 @@ test("colunas: some a que nenhum produto preenche", () => {
     compatibilidade: [{ marca: "Honda", modelo: "CG 160" }],
   })), linhaTecnica(produto())];
   assert.deepEqual(colunasVisiveis(completa), ["codigo", "marca", "codigoOriginal", "equivalentes", "medidas", "aplicacao"]);
+});
+
+test("colunas: a aplicação conta pelas linhas de compatibilidade, não pelo rótulo", () => {
+  const base = linhaTecnica(produto());
+  // O texto da célula pode mudar de rótulo sem a coluna aparecer ou sumir.
+  const rotuloTrocado = { ...base, aplicacao: { texto: "Todas as motos", restantes: 0, total: 0 } };
+  assert.deepEqual(colunasVisiveis([rotuloTrocado]), []);
+  const chamadaUniversal = { ...base, aplicacao: { texto: "Universal", restantes: 0, total: 1 } };
+  assert.deepEqual(colunasVisiveis([chamadaUniversal]), ["aplicacao"]);
 });
 
 test("o layout existe no schema, na lista do painel e no contrato", () => {
