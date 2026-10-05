@@ -15,6 +15,7 @@ import type { ResumoVendas } from "@/lib/relatorio";
 import type { DiagnosticoFeed } from "@/lib/catalogo";
 import Anuncios, { type PixelsView } from "./Anuncios";
 import McpPainel from "./McpPainel";
+import ChavesApiPainel from "./ChavesApiPainel";
 import CatalogoLista from "./CatalogoLista";
 import SoltarPlanilha from "./SoltarPlanilha";
 import { FileCheck2 } from "lucide-react";
@@ -448,7 +449,12 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
 
       {aba === "Anúncios" && <Anuncios pixels={loja.pixels} catalogo={catalogo} feedUrl={`${loja.url}/feed/merchant.xml`} chamar={chamar} ocupado={ocupado} />}
 
-      {aba === "IA" && <McpPainel lojaPlano={loja.plano} lojaSlug={loja.slug} aoIrParaAssinatura={() => irPara("Assinatura")} />}
+      {aba === "IA" && (
+        <>
+          <McpPainel lojaPlano={loja.plano} lojaSlug={loja.slug} aoIrParaAssinatura={() => irPara("Assinatura")} />
+          <ChavesApiPainel />
+        </>
+      )}
 
       {aba === "Pedidos" && (
         <>

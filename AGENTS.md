@@ -56,6 +56,13 @@
   `AutomacaoEvento.canaisFeitos` para a nova tentativa não repetir. O que ainda
   é do n8n é o que espera (`pix_pendente` aos 30 min, `loja_indicacoes` aos 3
   dias), não um canal.
+- **API para desenvolvedores passa por uma porta só.** Rota de `/api/v1` usa
+  `rotaDaApi({ escopo })` (`src/lib/api-rotas.ts`) e não autentica, não monta
+  erro nem põe CORS sozinha. A loja vem da chave, e toda consulta filtra pelo
+  `tenant.id` dela. Escopo novo entra em `ESCOPOS` junto com a rota que o exige;
+  chave publicável é só `vitrine:ler`. O que sai é projeção explícita de
+  `api-recursos.ts`, nunca `...produto`. Chave guardada só como sha256.
+  `/v1` sem `/api` é outro contrato (`gapp.ts`). Ver `docs/API.md`.
 - **Prova de banco é em container próprio, nunca no banco de desenvolvimento.**
   `npm run banco:teste` sobe o `lojas-db-test` (`docker-compose.test.yml`) na
   imagem **de produção** — Postgres 18, que é o do host nos servidores — e
