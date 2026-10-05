@@ -13,7 +13,7 @@ import { useCart } from "@/components/cart/CartProvider";
  * de volta — e o carrinho é onde a compra acontece. É o padrão que todo app de
  * compra usa pelo mesmo motivo: o polegar alcança embaixo, não em cima.
  *
- * Mora no layout, não no template: é navegação da loja, igual nos onze
+ * Mora no layout, não no template: é navegação da loja, igual nos doze
  * layouts, e não mais uma escolha para o lojista errar.
  *
  * As abas saem do que a loja é, não de uma lista fixa. Sem checkout (plano

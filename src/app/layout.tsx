@@ -223,7 +223,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <Footer tenant={t} categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} />
           {carrinhoProprio && <CarrinhoLateral/>}
           {t.whatsapp && <WhatsAppFlutuante numero={t.whatsapp} nome={t.nome} />}
-          {/* Navegação do celular. Vale para os onze layouts: é da loja, não
+          {/* Navegação do celular. Vale para os doze layouts: é da loja, não
               do template. As abas saem do que a loja faz — ver o componente. */}
           <BarraInferior vende={publico.vende} temContato={Boolean(t.whatsapp || t.telefone || t.emailContato)} />
           <Consentimento ativo={temRastreio(pixels)} />
