@@ -28,7 +28,7 @@ export function Campo({ label, ajuda, erro, obrigatorio, acao, children }: { lab
   );
 }
 
-export const inputClasse = "h-11 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-foreground";
+export const inputClasse = "h-11 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none focus:border-foreground";
 
 export function Secao({ titulo, descricao, children }: { titulo: string; descricao?: string; children: ReactNode }) {
   return (

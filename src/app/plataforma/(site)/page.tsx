@@ -15,6 +15,7 @@ import {
   Truck,
 } from "lucide-react";
 import ModelosInterativos from "@/components/plataforma/ModelosInterativos";
+import { PLANOS } from "@/lib/planos";
 
 export const metadata: Metadata = {
   title: "Lojas Avila Ops | a loja virtual com a cara do seu negócio",
@@ -38,36 +39,6 @@ export const metadata: Metadata = {
   },
 };
 
-/** Os mesmos três planos do estúdio (/criar), da ficha comercial e de docs/PLANOS.md. */
-const PLANOS = [
-  {
-    id: "SITE",
-    nome: "Site",
-    rotulo: "Para quem vende pelo WhatsApp",
-    preco: 110,
-    descricao: "Catálogo com preço no ar e pedido pelo WhatsApp, sem responder \"quanto é?\" o dia inteiro.",
-    destaque: false,
-    itens: ["Vitrine e catálogo com preço", "Pedido pelo WhatsApp", "Domínio, SSL e hospedagem", "E-mail profissional", "Painel simples"],
-  },
-  {
-    id: "LOJA",
-    nome: "Loja",
-    rotulo: "O mais escolhido",
-    preco: 269,
-    destaque: true,
-    descricao: "A loja completa: o cliente escolhe, paga na hora e você só vê o pedido chegar.",
-    itens: ["Tudo do Site", "Carrinho e checkout na sua loja", "Pix na hora, cartão e boleto", "Frete por CEP e retirada na loja", "Cupons, variações e estoque", "Google Shopping, carrinho abandonado e avaliações", "Relatório semanal no e-mail"],
-  },
-  {
-    id: "LOJA_PRO",
-    nome: "Loja Pro",
-    rotulo: "Para quem já vende muito",
-    preco: 497,
-    descricao: "Para distribuidor e atacado: domínio próprio, prioridade no atendimento e conversa com o sistema que você já usa.",
-    destaque: false,
-    itens: ["Tudo da Loja", "Domínio próprio da sua marca", "Cotação para revenda pelo WhatsApp", "Integração com o seu sistema", "Prioridade de suporte"],
-  },
-] as const;
 
 const FAQ = [
   ["Tem comissão sobre as vendas?", "Não. A mensalidade é fixa: venda R$ 500 ou R$ 50 mil no mês, o valor é o mesmo. Plataformas grandes cobram plano mais tarifa por venda; aqui não."],

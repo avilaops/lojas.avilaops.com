@@ -6,9 +6,12 @@ export const metadata: Metadata = { title: "Nova senha", robots: { index: false 
 export default async function RedefinirPage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
   const { token } = await searchParams;
   return (
-    <div className="container-loja max-w-sm py-16">
-      <h1 className="text-2xl font-bold">Definir nova senha</h1>
-      <div className="mt-6"><RecuperarForm modo="trocar" token={token ?? ""} /></div>
+    <div className="pl-site-claro pl-auth-pagina">
+      <div className="pl-auth-simples">
+        <span>Acesso</span>
+        <h1>Definir nova senha</h1>
+        <div className="mt-6"><RecuperarForm modo="trocar" token={token ?? ""} /></div>
+      </div>
     </div>
   );
 }

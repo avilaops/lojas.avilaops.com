@@ -354,8 +354,8 @@
   .pl-planos-grid { grid-template-columns: 1fr; overflow: visible; border: 0; gap: 14px; background: transparent; box-shadow: none; }
   .pl-plano { min-height: auto; border: 1px solid #dde2ea !important; border-radius: 20px; }
   .pl-plano-destaque { border-color: #0c1222 !important; transform: none; }
-  .pl-footer-grid { grid-template-columns: 2fr 1fr 1fr; }
-  .pl-footer-grid > div:last-child { display: none; }
+  .pl-footer-grid { grid-template-columns: 1fr 1fr 1fr; gap: 40px; }
+  .pl-footer-grid > div:first-child { grid-column: 1 / -1; }
 }
 
 @media (max-width: 560px) {
@@ -389,7 +389,6 @@
   .pl-planos-nota { align-items: flex-start; }
   .pl-footer-grid { grid-template-columns: 1fr 1fr; gap: 40px 25px; }
   .pl-footer-grid > div:first-child { grid-column: 1 / -1; }
-  .pl-footer-grid > div:last-child { display: none; }
   .pl-footer-base { flex-direction: column; gap: 7px; }
 }
 
@@ -824,4 +823,94 @@
   .painel-metricas span { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
   .painel-next { padding: 16px !important; }
   .painel-next h3 { font-size: 15px; }
+}
+
+/* ==========================================================================
+ * Entrar, criar loja e recuperar senha na mesma luz da página inicial
+ * (06/10/2026).
+ *
+ * A página inicial ficou clara em 30/08, mas o funil que ela abre continuava
+ * no azul-marinho de antes: quem clicava em "Criar minha loja" trocava de
+ * site no meio da decisão. Estas regras só valem dentro de `.pl-site-claro`;
+ * o cabeçalho e o rodapé já acompanham pelo `:has(.pl-site-claro)` acima.
+ * O azul sai também dos botões e do foco: aqui a ação é a tinta da página,
+ * como o "Criar minha loja" da abertura.
+ * ======================================================================== */
+
+.pl-site-claro {
+  --primary: var(--tinta);
+  --primary-foreground: #ffffff;
+  --ring: var(--tinta);
+}
+.pl-site-claro .btn-primario { color: #fff; background: var(--tinta); box-shadow: 0 12px 28px rgba(22,19,15,.18); }
+.pl-site-claro .btn-primario:hover { background: #2c2620; }
+.pl-site-claro .btn-secundario { border-color: var(--linha); color: var(--tinta); background: #fff; }
+.pl-site-claro input:focus, .pl-site-claro select:focus, .pl-site-claro textarea:focus {
+  border-color: var(--tinta); box-shadow: 0 0 0 3px rgba(22,19,15,.08); outline: none;
+}
+
+/* --- entrar ------------------------------------------------------------- */
+.pl-auth-pagina { background: linear-gradient(180deg, #fdfbf8, var(--papel)); }
+.pl-site-claro .pl-auth { min-height: 0; padding-block: 40px 80px; }
+.pl-site-claro .pl-auth-story {
+  border: 0;
+  color: var(--papel);
+  background: radial-gradient(circle at 15% 0%, rgba(201,140,88,.28), transparent 45%), var(--tinta);
+}
+.pl-site-claro .pl-auth-story > span { color: #d9b48f; }
+.pl-site-claro .pl-auth-story h1 { font-weight: 700; letter-spacing: -.045em; line-height: 1; }
+.pl-site-claro .pl-auth-story > p, .pl-site-claro .pl-auth-story > ol { color: #cfc6bb; }
+.pl-site-claro .pl-auth-story > ol strong { color: #d9b48f; }
+.pl-site-claro .pl-auth-form { border: 1px solid var(--linha); border-left: 0; }
+.pl-site-claro .pl-auth-form > span, .pl-auth-simples > span { color: var(--tinta-suave); font-size: 10px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
+.pl-site-claro .pl-auth-form h2 { font-weight: 700; color: var(--tinta); }
+.pl-site-claro .pl-auth-form > p { color: var(--tinta-suave); }
+.pl-auth-links { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; margin-top: 22px; color: var(--tinta-suave); font-size: 13px; }
+.pl-auth-links a { color: var(--tinta); font-weight: 650; text-decoration: underline; text-decoration-color: var(--linha); text-underline-offset: 3px; }
+.pl-auth-links a:hover { text-decoration-color: currentColor; }
+
+/* --- recuperar e redefinir: o mesmo cartão, sem a coluna da história ----- */
+.pl-auth-simples { width: min(440px, calc(100% - 32px)); margin: 40px auto 88px; padding: clamp(26px, 5vw, 42px); border: 1px solid var(--linha); border-radius: 24px; color: var(--tinta); background: #fff; box-shadow: 0 24px 60px rgba(22,19,15,.08); }
+.pl-auth-simples h1 { margin-top: 14px; font-size: 28px; letter-spacing: -.04em; }
+.pl-auth-simples > p { margin-top: 8px; color: var(--tinta-suave); line-height: 1.55; }
+
+/* --- criar loja ---------------------------------------------------------- */
+.pl-workspace-pagina { background: linear-gradient(180deg, #fdfbf8, var(--papel)); }
+.pl-site-claro .pl-workspace-heading { padding-top: 0; }
+.pl-site-claro .pl-workspace-heading { color: var(--tinta); }
+.pl-site-claro .pl-workspace-heading > span { color: var(--tinta-suave); }
+.pl-site-claro .pl-workspace-heading h1 { font-size: clamp(2rem, 4.2vw, 3.1rem); font-weight: 700; letter-spacing: -.045em; line-height: 1.04; }
+.pl-site-claro .pl-workspace-heading p { color: var(--tinta-suave); }
+.pl-site-claro .pl-workspace section { border-color: var(--linha); box-shadow: 0 18px 50px rgba(22,19,15,.07); }
+.pl-site-claro .brand-progress-meta { color: var(--tinta); }
+.pl-site-claro .brand-progress-meta span { color: var(--tinta-suave); }
+.pl-site-claro .brand-progress-meta small { color: var(--tinta-suave); }
+.pl-site-claro .brand-progress { background: var(--linha); }
+.pl-site-claro .brand-progress span { background: var(--tinta); }
+.pl-site-claro .brand-steps { color: var(--tinta-suave); }
+.pl-site-claro .brand-steps li span { border-color: var(--linha); background: #fff; }
+.pl-site-claro .brand-steps li.ativo { color: var(--tinta); }
+.pl-site-claro .brand-steps li.ativo span { border-color: var(--tinta); color: #fff; background: var(--tinta); }
+.pl-site-claro .brand-steps li.feito { color: var(--tinta); }
+.pl-site-claro .brand-steps li.feito button:hover { color: var(--tinta-suave); }
+.pl-site-claro .brand-choice-grid button { border-color: var(--linha); }
+.pl-site-claro .brand-choice-grid button:hover { border-color: #c9bfb0; }
+.pl-site-claro .brand-choice-grid button.selecionado { border-color: var(--tinta); box-shadow: inset 0 0 0 1px var(--tinta), 0 8px 25px rgba(22,19,15,.08); }
+.pl-site-claro .brand-choice-grid strong i { color: var(--tinta); background: var(--papel-2); }
+.brand-preco { display: block; margin-top: 6px; font-size: 15px; font-weight: 750; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.pl-site-claro .brand-checkbox { border-color: var(--linha); }
+.pl-site-claro .brand-checkbox input { accent-color: var(--tinta); }
+.pl-site-claro .brand-required-note { color: var(--tinta-suave); background: var(--papel-2); }
+.pl-site-claro .brand-optional-note { border-color: var(--linha); background: var(--papel); }
+.pl-site-claro .brand-optional-note span, .pl-site-claro .brand-csv-help summary, .pl-site-claro .brand-catalog-actions > a { color: var(--tinta); }
+.pl-site-claro .brand-file { border-color: #cdbfac; background: var(--papel); }
+.pl-site-claro .brand-file::before { background: var(--tinta); }
+.pl-site-claro .brand-file:hover { border-color: var(--tinta); background: #fff; }
+.pl-site-claro .brand-review { background: var(--linha) !important; box-shadow: 0 18px 50px rgba(22,19,15,.07) !important; }
+.pl-site-claro .brand-actions { border-color: var(--linha); background: rgba(251,248,244,.92); box-shadow: 0 16px 40px rgba(22,19,15,.1); }
+.pl-site-claro .brand-actions .btn-secundario:disabled { opacity: .45; }
+
+@media (max-width: 820px) {
+  .pl-site-claro .pl-auth-form { border-left: 1px solid var(--linha); border-top: 0; }
+  .pl-auth-links { justify-content: flex-start; }
 }
