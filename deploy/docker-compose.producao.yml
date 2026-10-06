@@ -22,3 +22,18 @@ services:
       - /opt/lojas/uploads:/app/uploads
     extra_hosts: ["host.docker.internal:host-gateway"]
     ports: ["127.0.0.1:3080:3080"]
+    # Norma de Plataforma (avilaops/infra, NORMA-PLATAFORMA.md §3): o inventário
+    # e o backup leem estas etiquetas. O banco é o Postgres do host, por isso
+    # `backup` é "false" aqui.
+    labels:
+      avilaops.domain: lojas.avilaops.com
+      avilaops.stack: lojas
+      avilaops.tier: web
+      avilaops.backup: "false"
+      avilaops.owner: nicolas
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3080/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
