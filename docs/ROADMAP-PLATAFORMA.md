@@ -61,6 +61,22 @@ ganho de tempo — o build já falha em cerca de um minuto quando um teste cai.
   idempotência e alertas n8n acionáveis.
 - [ ] Backup, migração e rollback documentados como rotina verificável do deploy.
 
+## Pendências menores
+
+Baixa prioridade: entram depois da Tranche 3, ou antes, de carona em tarefa que
+já mexa nos mesmos arquivos.
+
+- [ ] Prévia do tema sem pré-carregamento de páginas da loja. Abrir
+  `/painel/previa` dispara de 5 a 16 requisições `?_rsc=` que respondem 404
+  (`/produtos`, `/categoria/<slug>`: páginas da loja, que não existem no domínio
+  do painel). Não quebra nada; é ruído no console e no servidor. Desligar o
+  `prefetch` dos `next/link` só quando a home é desenhada pela prévia, num ponto
+  único e não link a link; a loja publicada continua pré-carregando como hoje.
+  Feito quando a abertura da prévia não gera nenhum `_rsc` fora de
+  `/painel/previa` e a exceção do `_rsc` (`preCarregamentosIgnorados`) sai de
+  `scripts/validar-templates.mts` e de `docs/VALIDACAO-TEMPLATES.md`, com a
+  rodada ainda em 96/96.
+
 ## Critérios de entrega
 
 Toda tranche precisa de `npm run typecheck`, testes relevantes e verificação
