@@ -21,6 +21,7 @@ export type Canal = "email" | "whatsapp";
 export const CANAIS_POR_TIPO = {
   // Só e-mail.
   "lojista.recuperar-senha": ["email"],
+  "lojista.confirmar-email": ["email"],
   "loja.voltou-ao-estoque": ["email"],
   "pedido.em-separacao": ["email"],
   "pedido.enviado": ["email"],

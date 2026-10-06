@@ -115,6 +115,7 @@ export type EmailDoEvento = EmailParaEnviar;
  */
 export const TIPOS_COM_EMAIL_PROPRIO = [
   "lojista.recuperar-senha",
+  "lojista.confirmar-email",
   "loja.voltou-ao-estoque",
   "pedido.em-separacao",
   "pedido.enviado",
@@ -140,6 +141,8 @@ export function emailDoEvento(envelope: Envelope): EmailDoEvento | null {
   switch (texto(envelope, "tipo")) {
     case "lojista.recuperar-senha":
       return recuperarSenha(envelope);
+    case "lojista.confirmar-email":
+      return confirmarEmail(envelope);
     case "loja.voltou-ao-estoque":
       return voltouAoEstoque(envelope);
     case "pedido.em-separacao":
@@ -324,6 +327,33 @@ function lojaProvisionada(e: Envelope) {
     frase: "O domínio, o DNS e o e-mail da loja {loja} estão configurados. Ela já pode receber pedidos.",
     rodape: "Qualquer coisa, responda este e-mail.",
   });
+}
+
+function confirmarEmail(e: Envelope): EmailDoEvento | null {
+  const para = exigir(e, "email");
+  if (!enderecoValido(para)) return null;
+  const link = linkSeguro(exigir(e, "link"));
+  if (!link) throw new DadosInsuficientes("link de confirmação inválido");
+  const texto = [
+    `Olá!`,
+    ``,
+    `Falta um passo para criar a sua conta no Lojas Avila Ops.`,
+    `Abra este endereço para confirmar o e-mail e escolher a sua senha:`,
+    ``,
+    link,
+    ``,
+    `O link vale por 24 horas. Se não foi você quem pediu, ignore este e-mail: nenhuma conta é criada sem ele.`,
+  ].join("\n");
+  return {
+    para,
+    assunto: "Confirme seu e-mail para criar sua loja",
+    texto,
+    html: pagina(
+      "Confirme seu e-mail",
+      p("Falta um passo para criar a sua conta no Lojas Avila Ops. Confirme o e-mail e escolha a sua senha.") + botao(link, "Confirmar e criar senha"),
+      "O link vale por 24 horas. Se não foi você quem pediu, ignore este e-mail: nenhuma conta é criada sem ele.",
+    ),
+  };
 }
 
 function recuperarSenha(e: Envelope): EmailDoEvento | null {

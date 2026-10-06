@@ -72,6 +72,11 @@ export type EventoPlataforma =
   | ({ tipo: "pedido.pago"; slug: string; referencia: string; numero?: number; totalCentavos: number; clienteNome: string; clienteEmail: string; clienteTelefone: string; itens: ItemEvento[]; itensTexto: string; canal?: string } & Lojista)
   | ({ tipo: "pedido.recusado"; slug: string; referencia: string; clienteNome: string; clienteEmail: string; clienteTelefone: string; motivo?: string } & Lojista)
   | { tipo: "lojista.recuperar-senha"; slug: string; nome: string; email: string; link: string }
+  /**
+   * Cadastro: o link que confirma o e-mail e leva a escolher a senha. Ainda não
+   * existe loja, então `slug` é "plataforma" — quem cria a conta é ela.
+   */
+  | { tipo: "lojista.confirmar-email"; slug: string; email: string; link: string }
   | { tipo: "loja.suspensa"; slug: string; nome: string; motivo: string; link: string; emailContato: string | null; whatsapp: string | null }
   | { tipo: "loja.reativada"; slug: string; nome: string; url: string; emailContato: string | null; whatsapp: string | null }
   | { tipo: "loja.mensalidade-paga"; slug: string; nome: string; centavos: number; emailContato: string | null; whatsapp: string | null }

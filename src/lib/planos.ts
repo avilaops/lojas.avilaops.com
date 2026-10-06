@@ -44,3 +44,18 @@ export function planoPorId(id: string) {
 export function mensalidade(preco: number): string {
   return `R$ ${preco.toLocaleString("pt-BR")}/mês`;
 }
+
+/**
+ * Dias de teste de uma loja nova, contados da criação da conta.
+ *
+ * O prazo fica gravado na loja (`Tenant.testeAte`) e não só aqui: mudar este
+ * número não pode encurtar o teste de quem já começou. As lojas criadas antes
+ * da coluna existir não têm data gravada e mantêm os 14 dias que foram
+ * prometidos a elas.
+ */
+export const DIAS_DE_TESTE = 7;
+const DIAS_DE_TESTE_ANTIGO = 14;
+
+export function fimDoTeste(t: { testeAte: Date | null; criadoEm: Date }): Date {
+  return t.testeAte ?? new Date(t.criadoEm.getTime() + DIAS_DE_TESTE_ANTIGO * 86_400_000);
+}

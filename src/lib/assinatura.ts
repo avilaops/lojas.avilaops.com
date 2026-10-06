@@ -2,6 +2,7 @@ import type { Plano, Tenant } from "@prisma/client";
 import { prisma } from "./db";
 import { emitir } from "./eventos";
 import { esquecerTenantEmCache } from "./tenant";
+import { fimDoTeste } from "./planos";
 import { alterarPreapproval, atualizarValorPreapproval, buscarCobrancasDaAssinatura, buscarPagamentoAutorizado, buscarPreapproval, criarPreapproval, type PagamentoAutorizado } from "./mercadopago-assinatura";
 
 /**
@@ -185,7 +186,7 @@ async function aplicarCobranca(c: PagamentoAutorizado) {
 /**
  * Suspende lojas ATIVAS cuja assinatura não está autorizada há mais de
  * DIAS_TOLERANCIA depois do período de teste, e as que ficaram > 30 +
- * tolerância sem pagamento. Lojas sem assinatura têm 14 dias de teste.
+ * tolerância sem pagamento. O fim do teste é o de `fimDoTeste` (planos.ts).
  */
 export async function verificarInadimplencia(): Promise<{ suspensas: string[]; sincronizadas: number; faturasNovas: number }> {
   const agora = Date.now();
@@ -223,10 +224,10 @@ export async function verificarInadimplencia(): Promise<{ suspensas: string[]; s
   for (const t of atuais) {
     if (t.cobrancaIsenta) continue; // loja da casa: nem entra no cálculo (suspender() confere de novo)
     if (t.plano === "SITE" && t.assinaturaStatus === "SEM_ASSINATURA") continue; // vitrine grátis enquanto não assina? não: mesma regra
-    const diasDesdeCriacao = (agora - t.criadoEm.getTime()) / 86_400_000;
+    const diasDesdeFimDoTeste = (agora - fimDoTeste(t).getTime()) / 86_400_000;
     const diasDesdePagamento = t.ultimoPagamentoEm ? (agora - t.ultimoPagamentoEm.getTime()) / 86_400_000 : null;
     let motivo: string | null = null;
-    if (t.assinaturaStatus !== "AUTORIZADA" && diasDesdeCriacao > 14 + DIAS_TOLERANCIA && !t.setupPagoEm) motivo = "período de teste encerrado sem assinatura";
+    if (t.assinaturaStatus !== "AUTORIZADA" && diasDesdeFimDoTeste > DIAS_TOLERANCIA && !t.setupPagoEm) motivo = "período de teste encerrado sem assinatura";
     else if (t.assinaturaStatus === "AUTORIZADA" && diasDesdePagamento !== null && diasDesdePagamento > 30 + DIAS_TOLERANCIA) motivo = "mais de um mês sem pagamento confirmado";
     if (motivo) {
       await suspender(t, motivo);

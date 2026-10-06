@@ -57,6 +57,21 @@ test("recuperação de senha leva o link e diz o que fazer se não foi você", (
   assert.ok(email.html?.includes("https://lojas.avilaops.com/redefinir?t=abc"));
 });
 
+test("confirmação de cadastro leva o link e não depende de loja", () => {
+  const email = emailDoEvento({
+    tipo: "lojista.confirmar-email",
+    slug: "plataforma",
+    email: "nova@padariaaurora.example",
+    link: "https://lojas.avilaops.com/confirmar?token=abc",
+  });
+  assert.ok(email);
+  assert.equal(email.para, "nova@padariaaurora.example");
+  assert.match(email.assunto, /Confirme seu e-mail/);
+  assert.ok(email.texto.includes("https://lojas.avilaops.com/confirmar?token=abc"));
+  assert.ok(email.html?.includes("https://lojas.avilaops.com/confirmar?token=abc"));
+  assert.deepEqual(CANAIS_POR_TIPO["lojista.confirmar-email"], ["email"]);
+});
+
 test("link que não é http(s) não vira botão nem linha", () => {
   // `javascript:` num e-mail é o clássico; aqui ele derruba o evento em vez de
   // virar um link clicável.

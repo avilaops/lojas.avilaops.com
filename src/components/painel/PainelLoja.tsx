@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { IdentidadeLoja } from "@/lib/identidade";
 import type { TemaLoja } from "@/lib/tema";
 import { Campo, Secao, brl, inputClasse } from "./campos";
+import { PLANOS, mensalidade } from "@/lib/planos";
 import Marca from "./Marca";
 import Cupons, { type CupomView } from "./Cupons";
 import Categorias, { type CategoriaView } from "./Categorias";
@@ -61,7 +62,7 @@ export interface LojaView {
   entregaLocal: Array<{ prefixos: string[]; nome: string; preco: number; prazoDiasUteis: number; gratisAcima?: number | null }>;
   /** Já tem credencial salva: o checkout aparece na loja. */
   mpConfigurado: boolean;
-  assinatura: { status: string; isenta: boolean; precoCentavos: number; planoNome: string; ultimoPagamentoEm: string | null; setupPagoEm: string | null; criadoEm: string; faturas: Array<{ id: string; centavos: number; status: string; pagaEm: string | null; criadoEm: string }> };
+  assinatura: { status: string; plano: string; podeTrocarPlano: boolean; isenta: boolean; precoCentavos: number; planoNome: string; ultimoPagamentoEm: string | null; setupPagoEm: string | null; criadoEm: string; testeAte: string; emTeste: boolean; faturas: Array<{ id: string; centavos: number; status: string; pagaEm: string | null; criadoEm: string }> };
 }
 export interface EnderecoEntregaView { logradouro: string; numero: string; complemento?: string | null; bairro: string; cidade: string; uf: string; cep: string }
 export interface PedidoView { id: string; numero: number; referencia: string; status: string; clienteNome: string; clienteEmail: string; clienteTelefone: string; clienteDocumento: string; totalCentavos: number; subtotalCentavos: number; freteCentavos: number; descontoCentavos: number; cupomCodigo: string | null; meioPagamento: string; freteNome: string; rastreio: string | null; entrega: EnderecoEntregaView | null; etiqueta: { status: string; codigoObjeto: string | null; pdf: string | null; custoCentavos: number } | null; criadoEm: string; itens: Array<{ nome: string; quantidade: number; sku: string | null; precoUnitarioCentavos: number }> }
@@ -592,8 +593,29 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
           </div>
           {!loja.assinatura.isenta && loja.assinatura.status === "SEM_ASSINATURA" && (
             <p className="text-sm text-muted-foreground">
-              Sua loja está no período de teste de 14 dias (desde {new Date(loja.assinatura.criadoEm).toLocaleDateString("pt-BR")}). Ative a cobrança para não interromper as vendas.
+              {loja.assinatura.emTeste
+                ? `Sua loja está no período de teste até ${new Date(loja.assinatura.testeAte).toLocaleDateString("pt-BR")}. Escolha o plano e ative a cobrança para não interromper as vendas.`
+                : `O período de teste terminou em ${new Date(loja.assinatura.testeAte).toLocaleDateString("pt-BR")}. Ative a cobrança para não interromper as vendas.`}
             </p>
+          )}
+          {!loja.assinatura.isenta && loja.assinatura.podeTrocarPlano && (
+            <div className="grid gap-2 md:grid-cols-3" role="radiogroup" aria-label="Plano">
+              {PLANOS.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={loja.assinatura.plano === p.id}
+                  disabled={ocupado || loja.assinatura.plano === p.id}
+                  onClick={() => chamar("/api/painel/assinatura", "PATCH", { plano: p.id }, `Plano ${p.nome} escolhido.`)}
+                  className={`rounded-xl border p-4 text-left text-sm transition ${loja.assinatura.plano === p.id ? "border-foreground bg-card shadow-sm" : "border-border hover:border-foreground/40"}`}
+                >
+                  <b className="block">{p.nome}</b>
+                  <span className="block font-semibold tabular-nums">{mensalidade(p.preco)}</span>
+                  <span className="mt-1 block text-xs text-muted-foreground">{p.rotulo}</span>
+                </button>
+              ))}
+            </div>
           )}
           <div className="flex flex-wrap gap-2">
             {!loja.assinatura.isenta && loja.assinatura.status !== "AUTORIZADA" && (

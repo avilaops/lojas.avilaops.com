@@ -3,6 +3,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { lojistaAtual } from "@/lib/sessao";
 import EntrarForm from "@/components/painel/EntrarForm";
+import BotaoGoogle from "@/components/painel/BotaoGoogle";
+import { googleConfigurado } from "@/lib/google-entrada";
 
 export const metadata: Metadata = {
   title: "Entrar",
@@ -15,7 +17,8 @@ const PILARES = [
   ["03", "Operação organizada"],
 ] as const;
 
-export default async function EntrarPage() {
+export default async function EntrarPage({ searchParams }: { searchParams: Promise<{ google?: string }> }) {
+  const { google } = await searchParams;
   const lojista = await lojistaAtual();
   if (lojista) redirect("/painel");
 
@@ -39,6 +42,15 @@ export default async function EntrarPage() {
           <span>Acesso seguro</span>
           <h2>Entre na sua loja.</h2>
           <p>Acesse o estúdio para cuidar da sua marca, do catálogo, dos pedidos e da operação.</p>
+          {google === "falhou" && (
+            <p className="mt-5 rounded-lg bg-red-50 p-3 text-sm text-red-700">Não foi possível entrar com o Google. Tente de novo ou use e-mail e senha.</p>
+          )}
+          {googleConfigurado() && (
+            <div className="mt-7 grid gap-4">
+              <BotaoGoogle rotulo="Entrar com Google" />
+              <p className="pl-divisor"><span>ou com e-mail e senha</span></p>
+            </div>
+          )}
           <div className="mt-7"><EntrarForm /></div>
           <p className="pl-auth-links">
             <Link href="/recuperar">Esqueci a senha</Link>
