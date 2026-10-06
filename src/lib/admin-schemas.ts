@@ -127,6 +127,8 @@ export const TenantEntradaSchema = z.object({
   googleAdsId: z.string().regex(/^AW-\d{6,15}$/i).nullable().optional(),
   googleAdsRotuloCompra: z.string().trim().max(60).nullable().optional(),
   tiktokPixelId: z.string().regex(/^[A-Z0-9]{10,30}$/i).nullable().optional(),
+  googleMerchantId: z.string().regex(/^\d{5,15}$/).nullable().optional(),
+  googleSeloAvaliacoes: z.boolean().optional(),
   /** Credenciais do Mercado Pago da loja. Só o access token é cifrado; a public key vai no HTML. */
   mercadoPago: z
     .object({ publicKey: z.string().min(10), accessToken: z.string().min(10), webhookSecret: z.string().min(10).optional() })

@@ -7,6 +7,8 @@ import { formatarBRL } from "@/lib/catalogo";
 import Rastreio from "@/components/Rastreio";
 import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
 import EventoCompra from "@/components/EventoCompra";
+import { ConviteAvaliacaoGoogle } from "@/components/AvaliacoesGoogle";
+import { conviteAvaliacao } from "@/lib/avaliacoes-google";
 
 export const metadata: Metadata = { title: "Pedido", robots: { index: false } };
 
@@ -26,6 +28,7 @@ export default async function PedidoPage({ params }: { params: Promise<{ referen
   // A referência é longa e aleatória; funciona como o link "do seu pedido".
   const pedido = await prisma.pedido.findFirst({ where: { tenantId: t.id, referencia }, include: { itens: true } });
   if (!pedido) notFound();
+  const convite = conviteAvaliacao(t, pedido);
 
   return (
     <div className="container-loja max-w-2xl py-10">
@@ -39,6 +42,7 @@ export default async function PedidoPage({ params }: { params: Promise<{ referen
           rotuloCompra={t.googleAdsRotuloCompra}
         />
       )}
+      {convite && <ConviteAvaliacaoGoogle convite={convite} />}
       <p className="text-xs uppercase tracking-widest text-muted-foreground">Pedido #{pedido.numero}</p>
       <h1 className="mt-1 text-2xl font-bold">{ROTULO[pedido.status] ?? pedido.status}</h1>
       <p className="mt-1 text-sm text-muted-foreground">
