@@ -216,7 +216,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <MedirSessao />
         </Suspense>
         <CartProvider slug={t.slug} painelHabilitado={carrinhoProprio}>
-          {t.status === "SUSPENSA" && t.slug !== "vedashow" && <AvisoSuspensa />}
+          {t.status === "SUSPENSA" && <AvisoSuspensa />}
           {t.avisoTopo && !cabecalhoProprio && (
             <p className="barra-aviso" role="status">{t.avisoTopo}</p>
           )}
