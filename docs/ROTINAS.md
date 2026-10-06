@@ -33,6 +33,15 @@ e preso por teste. Quem muda um deles mexe em `ROTINAS`, não na tela.
 | `cobranca.verificar` | Régua de cobrança | todo dia às 6h | suspende quem passou da tolerância | `POST /api/admin/cobranca/verificar` |
 | `relatorios.semanal` | Relatório semanal | segunda às 7h | emite `loja.relatorio-semanal` por loja com movimento | `POST /api/admin/relatorios/semanal` |
 
+**Loja atendida pela Ávila Ops sai da régua por dado.** A régua suspende toda
+loja ATIVA sem assinatura autorizada, sem `setupPagoEm` e sem `cobrancaIsenta`
+21 dias depois de criada (14 de teste + 7 de tolerância). Loja que nós montamos,
+sem login do lojista ou com mensalidade paga por fora, não tem como assinar:
+precisa de `cobrancaIsenta: true` logo depois de criada —
+`PATCH /api/admin/tenants/:slug` (a criação pelo `POST` não aceita o campo).
+Foi a falta disso que suspendeu a Brilhax em 06/10/2026
+(migração `20261006130000_lojas_atendidas_isentas`).
+
 Horário é o de São Paulo (`America/Sao_Paulo`), não o do servidor: "3h" é 3h de
 quem usa a loja. Os endpoints continuam existindo e continuam pedindo
 `Authorization: Bearer $LOJAS_ADMIN_TOKEN` — o que mudou é que eles viraram o
