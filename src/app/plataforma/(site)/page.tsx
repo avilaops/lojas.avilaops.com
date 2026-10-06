@@ -18,7 +18,8 @@ import ModelosInterativos from "@/components/plataforma/ModelosInterativos";
 import { PLANOS } from "@/lib/planos";
 
 export const metadata: Metadata = {
-  title: "Lojas Avila Ops | a loja virtual com a cara do seu negócio",
+  // `absolute`: o template do layout acrescentaria "· Lojas Avila Ops" de novo.
+  title: { absolute: "Lojas Avila Ops | a loja virtual com a cara do seu negócio" },
   description:
     "Sua marca, suas cores, suas fotos: loja virtual pronta em um dia, com Pix na hora, frete por CEP, WhatsApp e e-mail profissional por R$ 269 fixos no mês. O dinheiro cai na conta da sua empresa.",
   alternates: { canonical: "https://lojas.avilaops.com" },

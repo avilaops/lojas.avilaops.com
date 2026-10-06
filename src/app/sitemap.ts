@@ -17,7 +17,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const base = `https://${baseDomain}`;
     return [
       { url: base, changeFrequency: "weekly", priority: 1 },
-      { url: `${base}/criar`, changeFrequency: "monthly", priority: 0.9 },
+      // `/criar` fica fora: a página é `noindex`, e sitemap que aponta para
+      // noindex vira erro no Search Console.
+      { url: `${base}/developers`, changeFrequency: "monthly", priority: 0.5 },
       { url: `${base}/ajuda`, changeFrequency: "monthly", priority: 0.6 },
       { url: `${base}/blog`, changeFrequency: "daily", priority: 0.8 },
       // Só o que já está publicado: post com data futura ainda não existe.
