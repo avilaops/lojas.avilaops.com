@@ -22,7 +22,8 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
   if (host === baseDomain) {
     return {
       rules: { userAgent: "*", allow: "/", disallow: ["/api/", "/painel", "/entrar", "/recuperar", "/redefinir"] },
-      sitemap: `https://${baseDomain}/sitemap.xml`,
+      // O segundo é o índice que leva aos sitemaps das lojas (sitemap-lojas.ts).
+      sitemap: [`https://${baseDomain}/sitemap.xml`, `https://${baseDomain}/sitemap-lojas.xml`],
     };
   }
   const t = await tenantAtual();
