@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { lojistaAtual } from "@/lib/sessao";
+import { CAMINHO_RETORNO, configSSO, RECADOS_SSO } from "@/lib/sso";
 import EntrarForm from "@/components/painel/EntrarForm";
 
 export const metadata: Metadata = {
@@ -15,9 +16,13 @@ const PILARES = [
   ["03", "Operação organizada"],
 ] as const;
 
-export default async function EntrarPage() {
+export default async function EntrarPage({ searchParams }: { searchParams: Promise<{ sso?: string }> }) {
   const lojista = await lojistaAtual();
   if (lojista) redirect("/painel");
+
+  const { sso } = await searchParams;
+  const recado = sso ? RECADOS_SSO[sso] : undefined;
+  const loginUnico = configSSO() !== null;
 
   return (
     <div className="pl-auth pl-container">
@@ -38,7 +43,13 @@ export default async function EntrarPage() {
         <span>Acesso seguro</span>
         <h2>Bem-vindo de volta.</h2>
         <p>Acesse o estúdio para cuidar da sua marca, do catálogo, dos pedidos e da operação.</p>
+        {recado && <p role="alert" className="mt-5 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">{recado}</p>}
         <div className="mt-7"><EntrarForm /></div>
+        {loginUnico && (
+          // `<a>` e não `<Link>`: é uma rota de API que responde com redirecionamento
+          // para outro domínio, e o roteador do cliente não navega para isso.
+          <a href={CAMINHO_RETORNO} className="btn-secundario mt-3 w-full justify-center">Entrar com a conta Avila Ops</a>
+        )}
         <p className="mt-6 text-sm text-muted-foreground">
           <Link href="/recuperar" className="underline">Esqueci a senha</Link>
           {" · "}Ainda não tem loja?{" "}
