@@ -43,7 +43,7 @@ export async function POST(request: Request) {
       model: resultadoIa.modelo,
       data: resultadoIa.dados,
       warnings: [
-        "🤖 Atributos de peso e dimensões são ESTIMATIVAS. Confirme as medidas reais da embalagem antes de publicar para que o cálculo determinístico do CepCerto funcione corretamente.",
+        "🤖 Atributos de peso e dimensões são ESTIMATIVAS. Confirme as medidas reais da embalagem antes de publicar para que o cálculo do frete funcione corretamente.",
       ],
     });
   }
@@ -62,7 +62,7 @@ export async function POST(request: Request) {
         beneficios: [
           "Excelente acabamento e ajuste",
           "Procedência garantida e nota fiscal",
-          "Envio rápido via CepCerto",
+          "Envio rápido",
         ],
         especificacoes: [
           `Produto: ${nome}`,

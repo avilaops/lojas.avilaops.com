@@ -10,8 +10,8 @@ export async function GET(request: Request, { params }: Ctx) {
   const { slug } = await params;
   const t = await prisma.tenant.findUnique({ where: { slug }, include: { _count: { select: { produtos: true, pedidos: true, categorias: true } } } });
   if (!t) return Response.json({ erro: "loja não encontrada" }, { status: 404 });
-  const { mpAccessTokenEnc: _a, mpWebhookSecretEnc: _b, ...publico } = t;
-  void _a; void _b;
+  const { mpAccessTokenEnc: _a, mpWebhookSecretEnc: _b, melhorEnvioAccessTokenEnc: _c, melhorEnvioRefreshTokenEnc: _d, ...publico } = t;
+  void _a; void _b; void _c; void _d;
   return Response.json(publico);
 }
 

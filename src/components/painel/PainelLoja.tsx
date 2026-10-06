@@ -481,7 +481,7 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
       {aba === "Marca" && <Marca loja={loja} categorias={categorias} chamar={chamar} ocupado={ocupado} />}
 
       {aba === "Entrega" && (
-        <Secao titulo="Entrega e frete" descricao="Sem tabela, o cliente vê apenas retirada na loja (ou frete a combinar).">
+        <Secao titulo="Entrega e frete" descricao="Vale quando o Melhor Envio não está conectado ou não atende o destino. Sem ele e sem tabela, o cliente vê apenas retirada na loja (ou frete a combinar).">
           <div className="grid gap-4 sm:grid-cols-3">
             <label className="flex min-h-[44px] items-center gap-2 text-sm"><input type="checkbox" className="h-5 w-5" checked={entrega.retiradaNaLoja} onChange={(e) => setEntrega({ ...entrega, retiradaNaLoja: e.target.checked })} /> Retirada na loja</label>
             <Campo label="Despacho (dias úteis)"><input className={inputClasse} type="number" min={0} max={30} value={entrega.despachoDiasUteis} onChange={(e) => setEntrega({ ...entrega, despachoDiasUteis: Number(e.target.value) })} /></Campo>

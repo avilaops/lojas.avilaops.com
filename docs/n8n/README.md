@@ -146,4 +146,4 @@ primeiro, PUT do fluxo depois**.
 | tela Configurações → Automações | no ar |
 | Todoist OAuth | credencial precisa ser reconectada no navegador (perdida em 08/09) |
 | Mercado Livre | aprovação no painel; publicação e sincronização orquestradas a cada 15 min pelo fluxo próprio do n8n |
-| cotação de frete | síncrona no backend (CepCerto), porque precisa responder no checkout |
+| cotação de frete | síncrona no backend (Melhor Envio), porque precisa responder no checkout |

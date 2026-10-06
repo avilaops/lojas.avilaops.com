@@ -45,7 +45,7 @@ funciona). Sem desconto por logo no rodapé: o "Loja por Avila Ops" é fixo.
 
 - CX32 (~R$ 50/mês) segura 20–30 lojas neste modelo (um Next.js, um Postgres).
 - Domínio .br R$ 40/ano ≈ R$ 3,30/mês. E-mail: infra própria, custo marginal ~R$ 1.
-- CepCerto: uma conta da plataforma, diluída.
+- Melhor Envio: cada lojista conecta a própria conta; a cotação não tem custo para a plataforma.
 - **Total < R$ 10/mês por loja. Margem no plano Loja ≈ R$ 109/mês.**
 
 ## Lock-in (decisão de 24/08/2026)

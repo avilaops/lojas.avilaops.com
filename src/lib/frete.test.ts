@@ -2,15 +2,16 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import type { Tenant } from "@prisma/client";
 import type { ItemCarrinho } from "@avilaops/checkout";
-import { caixaDoCarrinho, entregaLocal, pesoTotalKg } from "./frete";
+import { cifrar } from "./cofre";
+import { caixaDoCarrinho, cotarFrete, entregaLocal, pesoTotalKg } from "./frete";
 
 /**
  * Frete errado sai do bolso do lojista em toda venda, e ninguém percebe até
  * fechar o mês. O que dá para testar sem rede é o que a gente manda para a
  * transportadora: caixa e peso.
  *
- * As duas funções são puras; a cotação em si depende da CepCerto e fica de
- * fora (é integração, não cálculo).
+ * As duas funções são puras; a cotação em si depende do Melhor Envio, e o que
+ * dá para travar dela está em melhor-envio.test.ts.
  */
 
 function loja(parcial: Partial<Tenant> = {}): Tenant {
@@ -124,4 +125,68 @@ test("faixa com preço inválido some em vez de virar R$ NaN no checkout", () =>
     { prefixos: ["14"], nome: "Boa", preco: 1500, prazoDiasUteis: 0 },
   ] });
   assert.deepEqual(entregaLocal(t, "14075240", 5000).map((o) => o.nome), ["Boa"]);
+});
+
+/**
+ * O caminho até a transportadora, com a rede trocada por uma resposta fixa. O
+ * que se trava aqui é o que sai da loja: o CEP de origem do jeito que o painel
+ * gravou e o valor que a transportadora vai indenizar.
+ */
+
+// A conexão é da loja: token cifrado no tenant, válido por mais um mês, para a
+// cotação não tentar renovar (o que iria ao banco).
+process.env.LOJAS_SECRET ??= "0".repeat(64);
+const CONECTADA = {
+  melhorEnvioAccessTokenEnc: cifrar("token-de-teste"),
+  melhorEnvioRefreshTokenEnc: cifrar("refresh-de-teste"),
+  melhorEnvioExpiraEm: new Date(Date.now() + 30 * 86_400_000),
+};
+
+async function comMelhorEnvio<T>(resposta: unknown, corpo: (chamadas: Array<Record<string, unknown>>) => Promise<T>): Promise<T> {
+  const fetchAntes = globalThis.fetch;
+  const chamadas: Array<Record<string, unknown>> = [];
+  globalThis.fetch = (async (_url: unknown, init?: RequestInit) => {
+    chamadas.push(JSON.parse(String(init?.body ?? "{}")));
+    return Response.json(resposta);
+  }) as typeof fetch;
+  try {
+    return await corpo(chamadas);
+  } finally {
+    globalThis.fetch = fetchAntes;
+  }
+}
+
+const PAC = [{ id: 1, name: "PAC", price: "21.40", delivery_time: 6, company: { name: "Correios" } }];
+
+test("CEP de origem com máscara chega limpo à transportadora", async () => {
+  // O painel grava "14010-100". Sem tirar o hífen o CEP tem nove caracteres, a
+  // cotação é pulada e a loja cai na tabela por UF sem um erro em lugar nenhum.
+  await comMelhorEnvio(PAC, async (chamadas) => {
+    const opcoes = await cotarFrete(loja({ cepOrigem: "14010-100", ...CONECTADA }), "15075-170", [item({ quantidade: 2, precoUnitario: 4000 })]);
+    assert.equal(chamadas.length, 1, "a cotação foi pedida");
+    assert.deepEqual(chamadas[0].from, { postal_code: "14010100" });
+    assert.deepEqual(chamadas[0].to, { postal_code: "15075170" });
+    assert.equal((chamadas[0].options as { insurance_value: number }).insurance_value, 80, "centavos viram reais");
+    assert.deepEqual(opcoes.filter((o) => o.id.startsWith("melhorenvio:")), [
+      { id: "melhorenvio:1", nome: "PAC", preco: 2140, prazoDiasUteis: 6 },
+    ]);
+  });
+});
+
+test("loja sem CEP de origem não chama a transportadora", async () => {
+  await comMelhorEnvio(PAC, async (chamadas) => {
+    const opcoes = await cotarFrete(loja({ cepOrigem: null, ...CONECTADA }), "15075170", [item({ quantidade: 1 })]);
+    assert.equal(chamadas.length, 0);
+    assert.equal(opcoes.some((o) => o.id.startsWith("melhorenvio:")), false);
+  });
+});
+
+test("loja que não conectou o Melhor Envio não chama a transportadora", async () => {
+  // Sem conexão a loja segue na tabela própria: nada de cotar no contrato de
+  // outra conta.
+  await comMelhorEnvio(PAC, async (chamadas) => {
+    const opcoes = await cotarFrete(loja({ cepOrigem: "14010100" }), "15075170", [item({ quantidade: 1 })]);
+    assert.equal(chamadas.length, 0);
+    assert.equal(opcoes.some((o) => o.id.startsWith("melhorenvio:")), false);
+  });
 });
