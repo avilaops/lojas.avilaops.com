@@ -3,8 +3,10 @@ import type { OpcaoFrete } from "@avilaops/checkout";
 /**
  * Cotação de frete pelo Melhor Envio.
  *
- * Uma conta da plataforma cota para todas as lojas, como era com a CepCerto: o
- * token (`MELHOR_ENVIO_TOKEN`) fica no servidor e nunca chega ao navegador.
+ * A conta é do lojista: ele conecta por OAuth na seção Entrega do painel
+ * (`melhor-envio-conta.ts`) e é o token dele que cota. Este arquivo só conhece
+ * o contrato da API e não toca no banco, para a leitura da resposta poder ser
+ * testada sem rede nem Postgres.
  *
  * Três detalhes do contrato que custam:
  *   - `User-Agent` com nome da aplicação e e-mail de contato é obrigatório; sem
@@ -12,20 +14,22 @@ import type { OpcaoFrete } from "@avilaops/checkout";
  *   - a resposta é uma **lista** de serviços, e o que não atende o trecho vem na
  *     mesma lista com um campo `error` em vez de sumir;
  *   - o ambiente de testes é outro domínio (`sandbox.melhorenvio.com.br`), com
- *     outro token — `MELHOR_ENVIO_URL` troca um pelo outro.
+ *     outro aplicativo — `MELHOR_ENVIO_URL` troca um pelo outro.
  */
 const PRODUCAO = "https://melhorenvio.com.br";
 
-function base(): string {
+export function baseDoMelhorEnvio(): string {
   return (process.env.MELHOR_ENVIO_URL || PRODUCAO).replace(/\/+$/, "");
 }
 
-function token(): string {
-  return (process.env.MELHOR_ENVIO_TOKEN ?? "").trim();
-}
-
-export function melhorEnvioConfigurado(): boolean {
-  return token().length > 0;
+/** Cabeçalhos que toda chamada autenticada leva. */
+export function cabecalhosDoMelhorEnvio(token: string): Record<string, string> {
+  return {
+    accept: "application/json",
+    "content-type": "application/json",
+    authorization: `Bearer ${token}`,
+    "user-agent": `Lojas Avila Ops (${process.env.MELHOR_ENVIO_CONTATO || "lojas@avilaops.com"})`,
+  };
 }
 
 function numero(v: unknown): number | undefined {
@@ -88,29 +92,25 @@ export interface PedidoDeCotacao {
 }
 
 /**
- * Cota o trecho. Devolve `null` quando não dá para cotar — sem token, API fora
- * do ar ou nenhum serviço atendendo —, e quem chama cai na tabela da loja.
+ * Cota o trecho com o token da loja. Devolve `null` quando não dá para cotar
+ * — API fora do ar ou nenhum serviço atendendo —, e quem chama cai na tabela
+ * da loja.
  *
  * A falha vai para o log com o motivo. A cotação da CepCerto falhava calada: a
  * conta ficou sem plano ativo e o checkout passou a oferecer só retirada, sem
  * um erro em lugar nenhum para alguém ver.
  */
-export async function cotarMelhorEnvio(p: PedidoDeCotacao): Promise<OpcaoFrete[] | null> {
-  if (!melhorEnvioConfigurado()) return null;
+export async function cotarMelhorEnvio(token: string, p: PedidoDeCotacao): Promise<OpcaoFrete[] | null> {
+  if (!token) return null;
 
   // Opcional: restringe aos serviços que a plataforma sabe despachar
   // ("1,2,3,4"). Vazio deixa o Melhor Envio devolver todos os que atendem.
   const servicos = (process.env.MELHOR_ENVIO_SERVICOS ?? "").replace(/[^\d,]/g, "");
 
   try {
-    const r = await fetch(`${base()}/api/v2/me/shipment/calculate`, {
+    const r = await fetch(`${baseDoMelhorEnvio()}/api/v2/me/shipment/calculate`, {
       method: "POST",
-      headers: {
-        accept: "application/json",
-        "content-type": "application/json",
-        authorization: `Bearer ${token()}`,
-        "user-agent": `Lojas Avila Ops (${process.env.MELHOR_ENVIO_CONTATO || "lojas@avilaops.com"})`,
-      },
+      headers: cabecalhosDoMelhorEnvio(token),
       body: JSON.stringify({
         from: { postal_code: p.cepOrigem },
         to: { postal_code: p.cepDestino },

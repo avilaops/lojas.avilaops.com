@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import type { Tenant } from "@prisma/client";
 import type { ItemCarrinho } from "@avilaops/checkout";
+import { cifrar } from "./cofre";
 import { caixaDoCarrinho, cotarFrete, entregaLocal, pesoTotalKg } from "./frete";
 
 /**
@@ -132,11 +133,18 @@ test("faixa com preço inválido some em vez de virar R$ NaN no checkout", () =>
  * gravou e o valor que a transportadora vai indenizar.
  */
 
+// A conexão é da loja: token cifrado no tenant, válido por mais um mês, para a
+// cotação não tentar renovar (o que iria ao banco).
+process.env.LOJAS_SECRET ??= "0".repeat(64);
+const CONECTADA = {
+  melhorEnvioAccessTokenEnc: cifrar("token-de-teste"),
+  melhorEnvioRefreshTokenEnc: cifrar("refresh-de-teste"),
+  melhorEnvioExpiraEm: new Date(Date.now() + 30 * 86_400_000),
+};
+
 async function comMelhorEnvio<T>(resposta: unknown, corpo: (chamadas: Array<Record<string, unknown>>) => Promise<T>): Promise<T> {
-  const tokenAntes = process.env.MELHOR_ENVIO_TOKEN;
   const fetchAntes = globalThis.fetch;
   const chamadas: Array<Record<string, unknown>> = [];
-  process.env.MELHOR_ENVIO_TOKEN = "token-de-teste";
   globalThis.fetch = (async (_url: unknown, init?: RequestInit) => {
     chamadas.push(JSON.parse(String(init?.body ?? "{}")));
     return Response.json(resposta);
@@ -145,8 +153,6 @@ async function comMelhorEnvio<T>(resposta: unknown, corpo: (chamadas: Array<Reco
     return await corpo(chamadas);
   } finally {
     globalThis.fetch = fetchAntes;
-    if (tokenAntes === undefined) delete process.env.MELHOR_ENVIO_TOKEN;
-    else process.env.MELHOR_ENVIO_TOKEN = tokenAntes;
   }
 }
 
@@ -156,7 +162,7 @@ test("CEP de origem com máscara chega limpo à transportadora", async () => {
   // O painel grava "14010-100". Sem tirar o hífen o CEP tem nove caracteres, a
   // cotação é pulada e a loja cai na tabela por UF sem um erro em lugar nenhum.
   await comMelhorEnvio(PAC, async (chamadas) => {
-    const opcoes = await cotarFrete(loja({ cepOrigem: "14010-100" }), "15075-170", [item({ quantidade: 2, precoUnitario: 4000 })]);
+    const opcoes = await cotarFrete(loja({ cepOrigem: "14010-100", ...CONECTADA }), "15075-170", [item({ quantidade: 2, precoUnitario: 4000 })]);
     assert.equal(chamadas.length, 1, "a cotação foi pedida");
     assert.deepEqual(chamadas[0].from, { postal_code: "14010100" });
     assert.deepEqual(chamadas[0].to, { postal_code: "15075170" });
@@ -169,7 +175,17 @@ test("CEP de origem com máscara chega limpo à transportadora", async () => {
 
 test("loja sem CEP de origem não chama a transportadora", async () => {
   await comMelhorEnvio(PAC, async (chamadas) => {
-    const opcoes = await cotarFrete(loja({ cepOrigem: null }), "15075170", [item({ quantidade: 1 })]);
+    const opcoes = await cotarFrete(loja({ cepOrigem: null, ...CONECTADA }), "15075170", [item({ quantidade: 1 })]);
+    assert.equal(chamadas.length, 0);
+    assert.equal(opcoes.some((o) => o.id.startsWith("melhorenvio:")), false);
+  });
+});
+
+test("loja que não conectou o Melhor Envio não chama a transportadora", async () => {
+  // Sem conexão a loja segue na tabela própria: nada de cotar no contrato de
+  // outra conta.
+  await comMelhorEnvio(PAC, async (chamadas) => {
+    const opcoes = await cotarFrete(loja({ cepOrigem: "14010100" }), "15075170", [item({ quantidade: 1 })]);
     assert.equal(chamadas.length, 0);
     assert.equal(opcoes.some((o) => o.id.startsWith("melhorenvio:")), false);
   });

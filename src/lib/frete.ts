@@ -1,17 +1,19 @@
 import type { Tenant } from "@prisma/client";
 import { FRETE_RETIRADA_ID, type ItemCarrinho, type OpcaoFrete } from "@avilaops/checkout";
 import { cotarMelhorEnvio } from "@/lib/melhor-envio";
+import { tokenDaLoja } from "@/lib/melhor-envio-conta";
 import { retiradaPublicaDisponivel } from "@/lib/tenant";
 
 /**
  * Cotação de frete da plataforma.
  *
- * Roda no SERVIDOR, com o token do Melhor Envio (`MELHOR_ENVIO_TOKEN`): uma
- * conta cota para todas as lojas, e o token nunca chega ao navegador. Origem,
- * caixa e peso padrão são colunas do tenant, não constantes.
+ * Roda no SERVIDOR, com a conta do Melhor Envio que o lojista conectou na
+ * seção Entrega do painel: o token é dele, fica cifrado no tenant e nunca
+ * chega ao navegador. Origem, caixa e peso padrão também são colunas do
+ * tenant, não constantes.
  *
  * Ordem de decisão:
- *   - Melhor Envio configurado e respondeu → cotação real (mais retirada, se houver)
+ *   - Melhor Envio conectado e respondeu → cotação real (mais retirada, se houver)
  *   - senão → tabela por UF do tenant (mais retirada)
  *   - senão → só retirada, ou nada (o checkout mostra "frete a combinar")
  *
@@ -63,7 +65,10 @@ async function cotarTransportadora(t: Tenant, cep: string, itens: ItemCarrinho[]
   const origem = (t.cepOrigem ?? "").replace(/\D/g, "");
   if (origem.length !== 8) return null;
 
-  return cotarMelhorEnvio({
+  const token = await tokenDaLoja(t);
+  if (!token) return null;
+
+  return cotarMelhorEnvio(token, {
     cepOrigem: origem,
     cepDestino: cep,
     pesoKg: pesoTotalKg(t, itens),

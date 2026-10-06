@@ -142,6 +142,17 @@ model Tenant {
   /// Quando o lojista conectou. Nulo = nunca conectou.
   mlConectadoEm     DateTime?
 
+  // ── Melhor Envio (frete) ──────────────────────────────────────────────
+  /// A conta é do lojista, conectada por OAuth na seção Entrega do painel: é
+  /// ela que cota no checkout. Tokens cifrados com LOJAS_SECRET.
+  melhorEnvioAccessTokenEnc  String?
+  /// O acesso vale 30 dias; sem o refresh a cotação some sem ninguém mexer.
+  melhorEnvioRefreshTokenEnc String?
+  melhorEnvioExpiraEm        DateTime?
+  melhorEnvioConectadoEm     DateTime?
+  /// Nome e e-mail da conta conectada, para o lojista reconhecer na tela.
+  melhorEnvioConta           String?
+
   /**
    * Regras comerciais por canal de venda: acréscimo de preço, estoque
    * reservado, tipo de anúncio, garantia. Ver RegrasDoCanal em src/lib/canais.ts.

@@ -3,7 +3,7 @@ import type { ItemCarrinho } from "@avilaops/checkout";
 import { caixaDoCarrinho, pesoTotalKg } from "./frete";
 import { prisma } from "./db";
 import { emitir } from "./eventos";
-import { melhorEnvioConfigurado } from "./melhor-envio";
+import { conectado as melhorEnvioConectado } from "./melhor-envio-conta";
 import { urlDaLoja } from "./tenant";
 
 /**
@@ -121,9 +121,9 @@ export async function emitirEtiqueta(
   // CepCerto. O pedido guarda só o nome do serviço ("PAC", "Jadlog .Package"),
   // que é igual nos dois: sem esta trava a etiqueta sairia por outro contrato,
   // a outro preço, e a diferença sairia da carteira sem ninguém ver.
-  if (melhorEnvioConfigurado()) {
+  if (melhorEnvioConectado(t)) {
     throw new PostagemIndisponivel(
-      "A etiqueta pelo Melhor Envio ainda não é gerada pelo painel. Despache pela sua conta e cole o código de rastreio no pedido.",
+      "A etiqueta pelo Melhor Envio ainda não é gerada pelo painel. Compre a etiqueta na sua conta do Melhor Envio e cole o código de rastreio no pedido.",
     );
   }
 

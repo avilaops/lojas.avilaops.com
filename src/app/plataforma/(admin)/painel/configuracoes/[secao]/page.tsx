@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import PainelLoja, { type SecaoPainel } from "@/components/painel/PainelLoja";
 import Dominio from "@/components/painel/Dominio";
 import Canais from "@/components/painel/Canais";
+import MelhorEnvio from "@/components/painel/MelhorEnvio";
+import { aplicativoConfigurado as melhorEnvioDisponivel, conectado as melhorEnvioConectado } from "@/lib/melhor-envio-conta";
 import PerguntasMl from "@/components/painel/PerguntasMl";
 import ReputacaoMl from "@/components/painel/ReputacaoMl";
 import { perguntasPendentes } from "@/lib/mercadolivre-perguntas";
@@ -39,7 +41,7 @@ export const dynamic = "force-dynamic";
 
 export default async function Pagina({ params, searchParams }: {
   params: Promise<{ secao: string }>;
-  searchParams: Promise<{ ml?: string }>;
+  searchParams: Promise<{ ml?: string; me?: string }>;
 }) {
   const { secao } = await params;
 
@@ -248,6 +250,32 @@ export default async function Pagina({ params, searchParams }: {
 
   const alvo = SECAO[secao];
   if (!alvo) notFound();
+
+  // Entrega leva o plugin do Melhor Envio em cima da tabela da loja: é para
+  // esta tela que o /melhor-envio/callback volta, e a conexão é lida do
+  // tenant, não do que o PainelLoja carrega.
+  if (secao === "entrega") {
+    const [loja, sp] = await Promise.all([lojistaAtual(), searchParams]);
+    if (!loja) notFound();
+    return (
+      <div className="grid gap-6">
+        <MelhorEnvio
+          conexao={{
+            conectado: melhorEnvioConectado(loja),
+            conta: loja.melhorEnvioConta,
+            conectadoEm: loja.melhorEnvioConectadoEm?.toISOString() ?? null,
+          }}
+          integracaoDisponivel={melhorEnvioDisponivel()}
+          temCepOrigem={(loja.cepOrigem ?? "").replace(/\D/g, "").length === 8}
+          retorno={sp.me}
+        />
+        <Suspense fallback={null}>
+          <PainelLoja secao={alvo} {...(await dadosDoPainel(alvo))} />
+        </Suspense>
+      </div>
+    );
+  }
+
   // Marca lê `?bloco=` no cliente (useSearchParams): precisa de Suspense para
   // a rota não cair inteira em renderização no navegador.
   return (

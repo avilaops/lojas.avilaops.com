@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { cotarMelhorEnvio, extrairCotacoes, melhorEnvioConfigurado } from "./melhor-envio";
+import { cotarMelhorEnvio, extrairCotacoes } from "./melhor-envio";
 
 /**
  * A chamada ao Melhor Envio é integração e fica de fora; o que dá para travar
@@ -57,15 +57,16 @@ test("resposta que não é lista não derruba a cotação", () => {
 });
 
 test("sem token não cota e não chama a rede", async () => {
-  const antes = process.env.MELHOR_ENVIO_TOKEN;
-  delete process.env.MELHOR_ENVIO_TOKEN;
+  const fetchAntes = globalThis.fetch;
+  let chamou = false;
+  globalThis.fetch = (async () => { chamou = true; return Response.json([]); }) as typeof fetch;
   try {
-    assert.equal(melhorEnvioConfigurado(), false);
     assert.equal(
-      await cotarMelhorEnvio({ cepOrigem: "14010100", cepDestino: "15075170", pesoKg: 0.5, caixa: { altura: 15, largura: 20, comprimento: 25 }, valorDeclarado: 80 }),
+      await cotarMelhorEnvio("", { cepOrigem: "14010100", cepDestino: "15075170", pesoKg: 0.5, caixa: { altura: 15, largura: 20, comprimento: 25 }, valorDeclarado: 80 }),
       null,
     );
+    assert.equal(chamou, false);
   } finally {
-    if (antes !== undefined) process.env.MELHOR_ENVIO_TOKEN = antes;
+    globalThis.fetch = fetchAntes;
   }
 });
