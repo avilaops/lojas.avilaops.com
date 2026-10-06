@@ -11,6 +11,8 @@ export interface PixelsView {
   googleAdsId: string | null;
   googleAdsRotuloCompra: string | null;
   tiktokPixelId: string | null;
+  googleMerchantId: string | null;
+  googleSeloAvaliacoes: boolean;
 }
 
 /**
@@ -30,6 +32,8 @@ export default function Anuncios({ pixels, catalogo, feedUrl, chamar, ocupado }:
   });
   const set = (k: keyof typeof f, v: string) => setF({ ...f, [k]: v.trim() });
   const algum = Object.values(f).some(Boolean);
+  const [merchantId, setMerchantId] = useState(pixels.googleMerchantId ?? "");
+  const [selo, setSelo] = useState(pixels.googleSeloAvaliacoes);
 
   return (
     <>
@@ -118,6 +122,26 @@ export default function Anuncios({ pixels, catalogo, feedUrl, chamar, ocupado }:
         <p className="text-xs text-muted-foreground">
           Vermelho barra o produto no catálogo. Amarelo não barra, mas anúncio sem marca e sem código de barras aparece menos e disputa preço com quem tem.
         </p>
+      </Secao>
+
+      <Secao titulo="Google Merchant Center" descricao="Com o número da conta, a loja convida quem comprou a avaliar depois da entrega (Google Avaliações do Consumidor). É o que forma a nota de vendedor que aparece nos anúncios e na busca.">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Campo label="ID do Merchant Center" ajuda="O número que aparece embaixo do nome da loja, no canto superior do Merchant Center. Só os dígitos.">
+            <input className={inputClasse} value={merchantId} onChange={(e) => setMerchantId(e.target.value.replace(/\D/g, ""))} placeholder="1234567890" inputMode="numeric" />
+          </Campo>
+          <label className="flex items-start gap-2 text-sm sm:pt-6">
+            <input type="checkbox" className="mt-1" checked={selo} disabled={!merchantId} onChange={(e) => setSelo(e.target.checked)} />
+            <span>Mostrar o selo com a nota na loja. Enquanto não houver avaliações, o selo diz que não há classificação.</span>
+          </label>
+        </div>
+        <div>
+          <button className="btn-primario" disabled={ocupado} onClick={() => chamar("/api/painel/loja", "PATCH", { googleMerchantId: merchantId || null, googleSeloAvaliacoes: Boolean(merchantId) && selo }, "Merchant Center salvo.")}>Salvar</button>
+        </div>
+        <ol className="grid list-decimal gap-1 pl-5 text-sm text-muted-foreground">
+          <li>No Merchant Center, cadastre o endereço do catálogo acima como fonte de dados de produtos.</li>
+          <li>Em Entregas e devoluções, crie a política de devolução com o prazo e o custo que a loja publica em Políticas.</li>
+          <li>Em Qualidade da loja, ative o Google Avaliações do Consumidor. O convite só aparece para quem aceitou os cookies e em pedido pago.</li>
+        </ol>
       </Secao>
     </>
   );

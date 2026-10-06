@@ -4,6 +4,7 @@ import MedirSessao from "@/components/MedirSessao";
 import Pixels from "@/components/Pixels";
 import Consentimento from "@/components/Consentimento";
 import { pixelsDo, temRastreio } from "@/lib/pixels";
+import { SeloAvaliacaoGoogle } from "@/components/AvaliacoesGoogle";
 import { headers } from "next/headers";
 import "./globals.css";
 import "@avilaops/checkout/tokens.css";
@@ -238,6 +239,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           {/* Navegação do celular. Vale para os doze layouts: é da loja, não
               do template. As abas saem do que a loja faz — ver o componente. */}
           <BarraInferior vende={publico.vende} temContato={Boolean(t.whatsapp || t.telefone || t.emailContato)} />
+          {t.googleMerchantId && t.googleSeloAvaliacoes && <SeloAvaliacaoGoogle merchantId={t.googleMerchantId} />}
           <Consentimento ativo={temRastreio(pixels)} />
         </CartProvider>
       </body>
