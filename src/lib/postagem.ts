@@ -3,6 +3,7 @@ import type { ItemCarrinho } from "@avilaops/checkout";
 import { caixaDoCarrinho, pesoTotalKg } from "./frete";
 import { prisma } from "./db";
 import { emitir } from "./eventos";
+import { melhorEnvioConfigurado } from "./melhor-envio";
 import { urlDaLoja } from "./tenant";
 
 /**
@@ -116,6 +117,16 @@ export async function emitirEtiqueta(
   t: Tenant,
   pedido: Pedido & { itens: Array<{ produtoId: string | null; nome: string; quantidade: number; precoUnitarioCentavos: number }> },
 ): Promise<ResultadoEtiqueta> {
+  // O frete do pedido foi cotado pelo Melhor Envio, e esta emissão ainda é da
+  // CepCerto. O pedido guarda só o nome do serviço ("PAC", "Jadlog .Package"),
+  // que é igual nos dois: sem esta trava a etiqueta sairia por outro contrato,
+  // a outro preço, e a diferença sairia da carteira sem ninguém ver.
+  if (melhorEnvioConfigurado()) {
+    throw new PostagemIndisponivel(
+      "A etiqueta pelo Melhor Envio ainda não é gerada pelo painel. Despache pela sua conta e cole o código de rastreio no pedido.",
+    );
+  }
+
   // Teto de adiantamento. A Avila Ops paga a etiqueta e recebe depois; sem um
   // limite, uma loja sozinha esvazia a carteira e as outras param de despachar.
   const emAberto = await postagemAAcertar(t.id);

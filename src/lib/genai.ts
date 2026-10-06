@@ -111,7 +111,7 @@ export interface EntradaSeoCategoria {
 /**
  * Gera rascunho de catálogo de produto.
  * IMPORTANTE: Os dados de logística são puramente ESTIMATIVAS e requerem confirmação do lojista
- * para que o cálculo determinístico do CepCerto funcione corretamente.
+ * para que o cálculo do frete funcione corretamente.
  */
 export async function gerarCopyProduto(
   entrada: EntradaCopyProduto
