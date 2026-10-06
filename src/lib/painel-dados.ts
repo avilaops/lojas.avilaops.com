@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { lojistaAtual } from "@/lib/sessao";
 import { urlDaLoja, temaDo, identidadeDa } from "@/lib/tenant";
 import { NOME_PLANO, PRECO_PLANO } from "@/lib/assinatura";
+import { fimDoTeste } from "@/lib/planos";
 import { resumoDeVendas, type ResumoVendas } from "@/lib/relatorio";
 import { diagnosticoDoFeed, type DiagnosticoFeed } from "@/lib/catalogo";
 import { filaDeEspera } from "@/lib/estoque-avisos";
@@ -119,12 +120,16 @@ export async function dadosDoPainel(secao: SecaoPainel) {
       entregaLocal: (loja.entregaLocal as Array<{ prefixos: string[]; nome: string; preco: number; prazoDiasUteis: number; gratisAcima?: number | null }>) ?? [],
       assinatura: {
         status: loja.assinaturaStatus,
+        plano: loja.plano,
+        podeTrocarPlano: !loja.assinaturaId,
         isenta: loja.cobrancaIsenta,
         precoCentavos: PRECO_PLANO[loja.plano],
         planoNome: NOME_PLANO[loja.plano],
         ultimoPagamentoEm: loja.ultimoPagamentoEm?.toISOString() ?? null,
         setupPagoEm: loja.setupPagoEm?.toISOString() ?? null,
         criadoEm: loja.criadoEm.toISOString(),
+        testeAte: fimDoTeste(loja).toISOString(),
+        emTeste: fimDoTeste(loja).getTime() > Date.now(),
         faturas: faturas.map((f) => ({ id: f.id, centavos: f.centavos, status: f.status, pagaEm: f.pagaEm?.toISOString() ?? null, criadoEm: f.criadoEm.toISOString() })),
       },
     },

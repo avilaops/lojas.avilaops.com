@@ -3,6 +3,28 @@
 Meta: **zero toque humano até a aprovação**. O que a C2TI faz com um júnior em
 2–4 h, aqui é um POST.
 
+## 0. Autoatendimento: conta primeiro (lojas.avilaops.com/criar)
+
+O lojista que chega sozinho não passa pelo portal. A ordem é a pessoa, depois a
+loja (`src/lib/cadastro.ts`):
+
+| Passo | Onde | O que acontece |
+|---|---|---|
+| E-mail | `/criar` → `POST /api/painel/cadastro` | Evento `lojista.confirmar-email` com link assinado de 24 h. Quem já tem conta recebe o link de senha nova; a resposta é a mesma nos dois casos. |
+| Senha | `/confirmar?token=` → `POST /api/painel/cadastro/confirmar` | Nasce o `Tenant` em `PROVISIONANDO`, com nome "Minha loja", endereço `nova-…`, `testeAte` = hoje + 7 dias, e a sessão já aberta. |
+| Google | `/api/painel/google` → `/retorno` | Alternativa ao par e-mail + senha; só aparece com `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET`. Conta nasce sem senha. |
+| Loja | painel → `POST /api/painel/primeiros-passos` | Nome, WhatsApp e plano. O endereço definitivo nasce do nome, a loja vira `ATIVA` e saem `loja.criada` e `loja.ativada`. |
+| Plano | painel → Configurações → Assinatura | Troca livre até existir assinatura no Mercado Pago; depois, pelo suporte. |
+
+O e-mail sai pelo SMTP da plataforma (`EMAIL_REMETENTE`, ex.: noreply@avilaops.com).
+Sem SMTP configurado o tipo volta para o n8n, que precisa conhecê-lo — ver
+`docs/MENSAGENS.md`.
+
+**Teste.** Loja nova tem 7 dias gravados em `Tenant.testeAte`; as anteriores à
+coluna seguem com 14 dias contados da criação (`fimDoTeste` em
+`src/lib/planos.ts`). A suspensão por falta de assinatura vem
+`DIAS_TOLERANCIA` depois do fim do teste.
+
 ## 1. Formulário (cliente.avilaops.com → `/dashboard/loja`)
 
 Campos, na ordem em que o cliente consegue responder sem pensar:

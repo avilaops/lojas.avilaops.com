@@ -219,6 +219,9 @@ model Tenant {
   // ── Acesso do lojista ao painel (lojas.avilaops.com/painel) ───────────
   loginEmail String? @unique
   senhaHash  String? // scrypt, ver src/lib/sessao.ts
+  /// Fim do período de teste. Nulo nas lojas anteriores ao cadastro por conta,
+  /// que seguem com os 14 dias contados de `criadoEm` (ver src/lib/planos.ts).
+  testeAte   DateTime?
 
   // ── Mensalidade (assinatura no Mercado Pago da Avila Ops) ─────────────
   assinaturaId        String?   @unique // preapproval_id

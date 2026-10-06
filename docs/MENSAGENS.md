@@ -35,6 +35,7 @@ A tabela viva é `CANAIS_POR_TIPO`, em `src/lib/acoes-do-evento.ts`.
 | Tipo | E-mail | WhatsApp |
 |---|---|---|
 | `lojista.recuperar-senha` | lojista: link para escolher senha nova | — |
+| `lojista.confirmar-email` | quem está se cadastrando: link para confirmar o e-mail e criar a senha | — |
 | `loja.voltou-ao-estoque` | quem pediu o aviso | — |
 | `pedido.em-separacao` | comprador | — |
 | `pedido.enviado` | comprador, com transportadora e rastreio se houver | — |

@@ -286,7 +286,7 @@ export default function LandingPlataforma() {
           <header className="pl-cabecalho pl-planos-cabecalho">
             <span className="pl-kicker">Três planos, preço fixo</span>
             <h2>Sem comissão. Sem dólar. Sem surpresa.</h2>
-            <p>Setup único de <strong>R$ 497</strong> · 14 dias de teste · a mensalidade começa no dia em que a loja entra no ar.</p>
+            <p>Setup único de <strong>R$ 497</strong> · 7 dias de teste, sem cartão · a mensalidade começa quando você ativa a cobrança.</p>
           </header>
           <div className="pl-planos-grid">
             {PLANOS.map((plano) => (

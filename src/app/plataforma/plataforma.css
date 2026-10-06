@@ -887,6 +887,11 @@
   .pl-auth-links { justify-content: flex-start; }
 }
 
-/* Divisor entre a conta Avila Ops e a senha da loja, no login. */
+/* ── Cadastro por conta: Google, divisor e "confira o e-mail" ─────────── */
+.pl-botao-google { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 46px; padding: 0 18px; border: 1px solid var(--linha, #ddd6cc); border-radius: 999px; color: var(--tinta, #16130f); background: #fff; font-size: 14px; font-weight: 650; }
+.pl-botao-google:hover { border-color: var(--tinta, #16130f); }
 .pl-divisor { display: flex; align-items: center; gap: 12px; color: var(--tinta-suave, #6f665b); font-size: 12px; }
 .pl-divisor::before, .pl-divisor::after { content: ""; flex: 1; height: 1px; background: var(--linha, #ddd6cc); }
+.pl-cadastro-enviado { display: grid; gap: 10px; padding: 18px; border: 1px solid var(--linha, #ddd6cc); border-radius: 16px; color: var(--tinta, #16130f); background: var(--papel, #faf7f2); line-height: 1.55; font-size: 14px; }
+.pl-cadastro-enviado strong { font-size: 16px; }
+.pl-cadastro-enviado button { color: var(--tinta, #16130f); font-weight: 650; text-decoration: underline; text-underline-offset: 3px; }
