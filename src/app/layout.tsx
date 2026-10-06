@@ -66,6 +66,15 @@ function iconesDa(pasta: string | null, nome: string): Pick<Metadata, "icons" | 
   };
 }
 
+/**
+ * Página indexável libera a prévia inteira no resultado do Google. Sem
+ * `max-image-preview:large` a foto do produto sai em miniatura e fica fora do
+ * Discover; os outros dois só dizem "sem limite" para texto e vídeo. Página que
+ * define o próprio `robots` (carrinho, filtro, produto fora da régua) substitui
+ * isto inteiro, então o `noindex` delas continua valendo.
+ */
+const PREVIA_CHEIA = { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 } as const;
+
 export async function generateMetadata(): Promise<Metadata> {
   const h = await headers();
   if (h.get("x-plataforma") === "1") {
@@ -76,7 +85,7 @@ export async function generateMetadata(): Promise<Metadata> {
       applicationName: "Lojas Avila Ops",
       manifest: "/site.webmanifest",
       icons: { icon: "/lojas-mark.svg", apple: "/lojas-mark.svg" },
-      robots: { index: true, follow: true },
+      robots: PREVIA_CHEIA,
     };
   }
   const t = await tenantAtual();
@@ -103,7 +112,7 @@ export async function generateMetadata(): Promise<Metadata> {
       t.status !== "ATIVA"
         ? { index: false, follow: false }
         : noEnderecoOficial(t, h.get("x-forwarded-host") ?? h.get("host"))
-          ? undefined
+          ? PREVIA_CHEIA
           : { index: false, follow: true },
     openGraph: { siteName: t.nome, locale: "pt_BR", type: "website" },
     // Verificação do Search Console / Bing Webmaster, quando o lojista colar o código.

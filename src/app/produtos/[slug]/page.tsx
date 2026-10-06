@@ -29,6 +29,7 @@ import { ofertaDaVariante,gtinValido } from "@/lib/catalogo-oferta";
 import { midiasDaOferta } from "@/lib/catalogo-qualidade";
 import { paragrafosDaDescricao } from "@/lib/descricao-produto";
 import { marcaConfirmada } from "@/lib/marca-confirmada";
+import { envioSchema } from "@/lib/envio-declarado";
 import { usaBlocoProprio } from "@/lib/templates";
 
 const MEIOS: Record<string, string> = { pix: "Pix", cartao: "Cartão", boleto: "Boleto" };
@@ -141,6 +142,8 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
       itemCondition: "https://schema.org/NewCondition",
       availability: somenteNaLoja ? "https://schema.org/InStoreOnly" : `https://schema.org/${regras.disponibilidadeSchema(p)}`,
       seller: { "@id": `${urlDaLoja(t)}/#organization` },
+      // Só quando o frete não depende do CEP. Ver lib/envio-declarado.
+      ...(!somenteNaLoja && envioSchema(t, p.precoCentavos) ? { shippingDetails: envioSchema(t, p.precoCentavos) } : {}),
     } : ofertas.some(v=>v.precoCentavos>0) ? {
       "@type": "AggregateOffer",
       priceCurrency: "BRL",

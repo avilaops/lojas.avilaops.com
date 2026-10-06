@@ -31,3 +31,11 @@ test("feed mantém foto própria pendente de conferência e exclui imagem rejeit
   assert.match(gerar("confirmada"), /<g:image_link>/);
   assert.doesNotMatch(gerar("rejeitada"), /<item>/);
 });
+
+test("feed só declara frete quando a loja garante frete grátis para a oferta", () => {
+  const loja = { nome: "Vedashow", slogan: null };
+  const semFrete = gerarFeedMerchant(loja, "https://vedashow.com.br", [produto("confirmada")]);
+  assert.doesNotMatch(semFrete, /<g:shipping>/);
+  const comFrete = gerarFeedMerchant(loja, "https://vedashow.com.br", [produto("confirmada")], (preco) => preco >= 100);
+  assert.match(comFrete, /<g:shipping><g:country>BR<\/g:country><g:price>0\.00 BRL<\/g:price><\/g:shipping>/);
+});
