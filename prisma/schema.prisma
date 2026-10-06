@@ -252,6 +252,7 @@ model Tenant {
   anunciosMl       AnuncioMercadoLivre[]
   perguntasMl      PerguntaMercadoLivre[]
   reputacaoMl      ReputacaoMercadoLivre?
+  contasCanal      ContaCanal[]
   checkoutsAbertos CheckoutAberto[]
   avaliacoes       Avaliacao[]
   avisosEstoque    AvisoEstoque[]
@@ -1108,6 +1109,42 @@ model ReputacaoMercadoLivre {
   atualizadoEm DateTime @updatedAt
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+}
+
+/// Conta do lojista num marketplace, conectada por OAuth: Amazon, Shopee e
+/// Magalu.
+///
+/// É tabela, e não coluna em `Tenant`, pelo mesmo motivo de `Tenant.canais`
+/// ser JSON: canal novo não pode ser migração de seis colunas. O Mercado Livre
+/// continua nas colunas `ml*` do tenant, que a publicação e a sincronia já leem.
+///
+/// Nenhuma rota devolve esta linha inteira: os tokens só saem decifrados dentro
+/// de `src/lib/contas-canal.ts`.
+model ContaCanal {
+  id       String @id @default(cuid())
+  tenantId String
+  /// amazon | shopee | magalu — os `CanalId` de `src/lib/canais.ts`.
+  canal    String
+
+  /// Como o canal chama a conta: `shop_id` na Shopee, `selling_partner_id` na
+  /// Amazon. A Shopee exige este número em toda chamada, inclusive na renovação.
+  contaId   String?
+  /// O que o lojista vê na tela para saber que conectou a conta certa.
+  contaNome String?
+
+  /// Cifrados com LOJAS_SECRET (`src/lib/cofre.ts`).
+  accessTokenEnc  String
+  refreshTokenEnc String
+  expiraEm        DateTime
+  /// Quando o refresh deixa de valer. Nulo = o canal não informa prazo.
+  refreshExpiraEm DateTime?
+
+  conectadoEm  DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, canal])
 }
 
 /// Pergunta de comprador no Mercado Livre.

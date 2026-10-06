@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { lojistaAtual } from "@/lib/sessao";
-import { exigir } from "@/lib/operadores";
+import { sessaoDoPainel } from "@/lib/sessao";
+import { exigir, permite } from "@/lib/operadores";
 import { urlDeAutorizacao } from "@/lib/mercadolivre";
 
 /**
@@ -9,18 +9,20 @@ import { urlDeAutorizacao } from "@/lib/mercadolivre";
  *
  * GET manda para a autorização; DELETE apaga a credencial daqui.
  *
- * O `state` leva o slug da sessão, não o que vier na URL: o callback é uma
- * rota só para todas as lojas, e sem isso alguém poderia forjar um endereço
- * que grava o token da própria conta na loja de outro lojista.
+ * O `state` leva o slug da sessão, não o que vier na URL, e segue assinado: o
+ * callback é uma rota só para todas as lojas, e sem isso alguém poderia forjar
+ * um endereço que grava o token da própria conta na loja de outro lojista.
  */
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const loja = await lojistaAtual();
-  if (!loja) redirect("/entrar");
+  const s = await sessaoDoPainel();
+  if (!s) redirect("/entrar");
+  // Balcão não troca a conta em que a loja inteira vende.
+  if (!permite(s.papel, "configuracoes")) redirect("/painel/configuracoes/canais?ml=sem-permissao");
 
   const base = `https://${process.env.LOJAS_BASE_DOMAIN ?? "lojas.avilaops.com"}`;
-  redirect(urlDeAutorizacao(loja.slug, base));
+  redirect(urlDeAutorizacao(s.tenant.slug, base));
 }
 
 /**

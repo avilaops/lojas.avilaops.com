@@ -7,14 +7,16 @@
  *
  *   - `/api/` e `/v1/`: contratos de API;
  *   - `/ml/` e `/melhor-envio/`: retorno da autorização do Mercado Livre e do
- *     Melhor Envio. A URL está cadastrada no aplicativo de cada um.
+ *     Melhor Envio. A URL está cadastrada no aplicativo de cada um;
+ *   - `/canais/`: o mesmo retorno para Amazon, Shopee e Magalu
+ *     (`/canais/<canal>/callback`).
  *
  * **Retorno de OAuth novo entra aqui no mesmo commit da rota.** Fora desta
  * lista o caminho vira `/plataforma/<rota>`, que não existe: o lojista autoriza
  * no serviço, volta num 404 e a conexão não é gravada. Nenhum teste de unidade
  * da rota pega isso, porque a rota em si está certa — quem a esconde é o proxy.
  */
-export const PREFIXOS_DA_RAIZ = ["/api/", "/v1/", "/ml/", "/melhor-envio/"] as const;
+export const PREFIXOS_DA_RAIZ = ["/api/", "/v1/", "/ml/", "/melhor-envio/", "/canais/"] as const;
 
 /** `true` quando o caminho, no domínio-base, não deve ser reescrito para a plataforma. */
 export function ficaNaRaiz(pathname: string): boolean {
@@ -26,5 +28,5 @@ export function ficaNaRaiz(pathname: string): boolean {
  * guardada por ninguém, nem pela borda.
  */
 export function ehRetornoDeAutorizacao(pathname: string): boolean {
-  return /^\/(ml|melhor-envio)\/callback\/?$/.test(pathname);
+  return /^\/(ml|melhor-envio|canais\/[^/]+)\/callback\/?$/.test(pathname);
 }

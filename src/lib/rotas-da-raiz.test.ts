@@ -10,13 +10,13 @@ import { ehRetornoDeAutorizacao, ficaNaRaiz } from "./rotas-da-raiz";
  */
 
 test("retorno de autorização e contratos de API ficam na raiz", () => {
-  for (const caminho of ["/api/health", "/v1/eventos", "/ml/callback", "/ml/notifications", "/melhor-envio/callback", "/plataforma/painel"]) {
+  for (const caminho of ["/api/health", "/v1/eventos", "/ml/callback", "/ml/notifications", "/melhor-envio/callback", "/canais/shopee/callback", "/plataforma/painel"]) {
     assert.equal(ficaNaRaiz(caminho), true, caminho);
   }
 });
 
 test("painel e página de venda continuam indo para a plataforma", () => {
-  for (const caminho of ["/", "/painel", "/painel/configuracoes/entrega", "/entrar", "/criar", "/melhor-envio", "/mlx/callback"]) {
+  for (const caminho of ["/", "/painel", "/painel/configuracoes/entrega", "/entrar", "/criar", "/melhor-envio", "/mlx/callback", "/canais"]) {
     assert.equal(ficaNaRaiz(caminho), false, caminho);
   }
 });
