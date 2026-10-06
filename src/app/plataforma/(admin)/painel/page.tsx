@@ -30,7 +30,7 @@ export default async function Pagina({ searchParams }: { searchParams: Promise<{
       <CabecalhoSecao titulo={dados.loja.nome} descricao={`${dados.contagens.ativos.toLocaleString("pt-BR")} produtos · ${dados.contagens.pedidos.toLocaleString("pt-BR")} pedidos`} />
       {nova && (
         <p className="mb-5 rounded-lg bg-blue-50 p-3 text-sm text-blue-900">
-          Sua loja está no ar. Agora envie logo, imagem principal e as fotos reais do catálogo para concluir a presença visual.
+          Sua loja foi criada. Siga os passos abaixo para ela começar a vender.
         </p>
       )}
       <PainelLoja secao="Visão geral" {...dados} />

@@ -23,6 +23,8 @@ import { FileCheck2 } from "lucide-react";
 import Inventario from "./Inventario";
 import Pedidos from "./Pedidos";
 import NovoProduto from "./NovoProduto";
+import ChecklistOnboarding from "./ChecklistOnboarding";
+import { checklistDeOnboarding, resumoDoChecklist } from "@/lib/checklist-onboarding";
 
 export interface LojaView {
   slug: string;
@@ -267,30 +269,54 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
               primeiro do que o cliente percebe...") maior que o resumo de
               vendas inteiro: quem ja entrou no painel nao precisa que lhe
               vendam o painel. */}
-          <section className="painel-next">
-            <div>
-              <small>Próximo passo</small>
-              <h3>
-                {!loja.logoUrl
-                  ? "Envie o símbolo da sua marca"
-                  : !loja.bannerUrl
-                    ? "Crie a imagem principal da vitrine"
-                    : contagens.semFoto > 0
-                      ? `${contagens.semFoto.toLocaleString("pt-BR")} produtos sem foto`
-                      : contagens.semEmbalagem > 0
-                        ? `${contagens.semEmbalagem.toLocaleString("pt-BR")} produtos sem medida para o frete`
-                        : "Está tudo em ordem por aqui"}
-              </h3>
-            </div>
-            {(!loja.logoUrl || !loja.bannerUrl || contagens.semFoto > 0 || contagens.semEmbalagem > 0) && (
-              <button
-                className="btn-secundario"
-                onClick={() => irPara(!loja.logoUrl || !loja.bannerUrl ? "Marca" : "Produtos")}
-              >
-                Resolver
-              </button>
-            )}
-          </section>
+          {/* Enquanto falta passo obrigatorio para a loja vender, o checklist
+              ocupa o lugar do "Proximo passo". O estado e derivado do que ja
+              esta gravado (src/lib/checklist-onboarding.ts): nao ha coluna. */}
+          {(() => {
+            const passos = checklistDeOnboarding({
+              status: loja.status,
+              url: loja.url,
+              logoUrl: loja.logoUrl,
+              whatsapp: loja.whatsapp,
+              dominioPrincipal: loja.dominioPrincipal,
+              produtosAtivos: contagens.ativos,
+              mpConfigurado: loja.mpConfigurado,
+              cepOrigem: loja.cepOrigem,
+              tabelaFrete: loja.tabelaFrete,
+              entregaLocal: loja.entregaLocal,
+              retiradaNaLoja: loja.retiradaNaLoja,
+              enderecoPublico: loja.enderecoPublico,
+              endereco: loja.endereco,
+            });
+            const resumo = resumoDoChecklist(passos);
+            if (!resumo.completo) return <ChecklistOnboarding passos={passos} resumo={resumo} />;
+            return (
+              <section className="painel-next">
+                <div>
+                  <small>Próximo passo</small>
+                  <h3>
+                    {!loja.logoUrl
+                      ? "Envie o símbolo da sua marca"
+                      : !loja.bannerUrl
+                        ? "Crie a imagem principal da vitrine"
+                        : contagens.semFoto > 0
+                          ? `${contagens.semFoto.toLocaleString("pt-BR")} produtos sem foto`
+                          : contagens.semEmbalagem > 0
+                            ? `${contagens.semEmbalagem.toLocaleString("pt-BR")} produtos sem medida para o frete`
+                            : "Está tudo em ordem por aqui"}
+                  </h3>
+                </div>
+                {(!loja.logoUrl || !loja.bannerUrl || contagens.semFoto > 0 || contagens.semEmbalagem > 0) && (
+                  <button
+                    className="btn-secundario"
+                    onClick={() => irPara(!loja.logoUrl || !loja.bannerUrl ? "Marca" : "Produtos")}
+                  >
+                    Resolver
+                  </button>
+                )}
+              </section>
+            );
+          })()}
 
           <div className="painel-metricas">
             <button onClick={() => irPara("Produtos")}>

@@ -133,6 +133,26 @@
 .painel-next { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 26px 30px !important; }
 .painel-next small { color: #315fcc; }
 .painel-next h3 { margin-top: 8px; font-size: 18px; letter-spacing: -.025em; }
+.painel-checklist { padding: 26px 30px; border: 1px solid #dfe3eb; border-radius: 18px; color: #171b27; background: white; }
+.painel-checklist-topo { display: flex; align-items: end; justify-content: space-between; gap: 16px; }
+.painel-checklist-topo small { color: #315fcc; font-size: 10px; font-weight: 750; letter-spacing: .15em; text-transform: uppercase; }
+.painel-checklist-topo h3 { margin-top: 8px; font-size: 18px; letter-spacing: -.025em; }
+.painel-checklist-conta { flex: none; color: #747d8e; font-size: 12px; font-weight: 700; }
+.painel-checklist-conta b { color: #171b27; font-size: 18px; }
+.painel-checklist-lista { display: grid; margin-top: 18px; border-top: 1px solid #dfe3eb; }
+.painel-checklist-passo { display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid #dfe3eb; }
+.painel-checklist-passo:last-child { padding-bottom: 0; border-bottom: 0; }
+.painel-checklist-passo[aria-current="step"] { margin: 0 -14px; padding: 14px; border-bottom-color: transparent; border-radius: 12px; background: #f1f5ff; }
+.painel-checklist-marca { display: flex; color: #9aa3b4; }
+.painel-checklist-feito .painel-checklist-marca { color: #12805c; }
+.painel-checklist-texto { min-width: 0; }
+.painel-checklist-texto strong { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 14px; }
+.painel-checklist-texto p { margin-top: 3px; color: #5d6676; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+.painel-checklist-feito .painel-checklist-texto strong { color: #5d6676; }
+.painel-checklist-opcional { padding: 2px 7px; border: 1px solid #dfe3eb; border-radius: 999px; color: #747d8e; font-size: 10px; font-style: normal; font-weight: 700; }
+.painel-checklist-acao { padding: 9px 13px; border: 1px solid #c9d6f7; border-radius: 9px; color: #254fb3; background: white; font-size: 12px; font-weight: 700; white-space: nowrap; }
+.painel-checklist-acao:hover { border-color: #315fcc; }
+.painel-checklist-passo[aria-current="step"] .painel-checklist-acao { border-color: #2f6bff; color: white; background: #2f6bff; }
 .painel-brand-brief { display: grid; grid-template-columns: 1fr 1.5fr .5fr; gap: 1px; overflow: hidden; border: 1px solid #dfe3eb; border-radius: 13px; background: #dfe3eb; }
 .painel-brand-brief > div { min-height: 115px; padding: 18px; background: #f8f9fc; }
 .painel-brand-brief small { display: block; margin-bottom: 10px; color: #747d8e; font-size: 9px; font-weight: 750; letter-spacing: .13em; text-transform: uppercase; }
@@ -809,6 +829,11 @@
   .painel-metricas span { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
   .painel-next { padding: 16px !important; }
   .painel-next h3 { font-size: 15px; }
+  .painel-checklist { padding: 16px; }
+  .painel-checklist-topo h3 { font-size: 15px; }
+  .painel-checklist-passo { grid-template-columns: auto minmax(0,1fr); gap: 10px 12px; }
+  .painel-checklist-passo[aria-current="step"] { margin: 0 -8px; padding: 12px 8px; }
+  .painel-checklist-acao { grid-column: 2; justify-self: start; white-space: normal; }
 }
 
 /* ==========================================================================

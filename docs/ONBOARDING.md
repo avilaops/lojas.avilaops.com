@@ -95,3 +95,31 @@ O portal fala com esta API pelo token de serviço, nunca o navegador do lojista.
 Cadastrar no painel MP da loja:
 `https://<dominio-da-loja>/api/webhooks/mercadopago?loja=<slug>`
 com o "segredo de assinatura" copiado para `mercadoPago.webhookSecret`.
+
+## 6. Checklist no painel
+
+Na "Visão geral" do painel (`/painel`), enquanto falta algo para a loja vender,
+aparece o bloco "Para a loja vender" com seis passos, nesta ordem. Cada passo
+diz se está feito, o que falta e leva à tela onde se resolve.
+
+| Passo | Está feito quando | Onde se resolve |
+|---|---|---|
+| Identidade | a loja tem símbolo da marca (`logoUrl`) e WhatsApp | `/painel/configuracoes/marca` |
+| Domínio (opcional) | há domínio próprio (`dominioPrincipal`); não consulta DNS | `/painel/configuracoes/dominio` |
+| Catálogo | há pelo menos um produto ativo | `/painel/produtos` |
+| Recebimento | há credencial do Mercado Pago salva (`mpConfigurado`) | `/painel/configuracoes/recebimento` |
+| Entrega | há CEP de origem com 8 dígitos, ou tabela de frete, ou entrega local, ou retirada com endereço público completo | `/painel/configuracoes/entrega` |
+| Publicação | a loja está `ATIVA` e os quatro passos obrigatórios estão feitos | abre a loja |
+
+- **O domínio é opcional.** Sem ele a loja já atende no endereço da plataforma
+  (`<slug>.lojas.avilaops.com`), então ele não segura a publicação nem o fim do
+  checklist.
+- **Retirada sozinha não conta como entrega.** `retiradaNaLoja` nasce `true`;
+  vale a mesma regra da vitrine (`retiradaPublicaDisponivel`).
+- **O estado é derivado, não gravado.** Não há coluna, migração nem evento de
+  "onboarding concluído": o checklist é calculado a cada visita a partir do que
+  a loja tem (`checklistDeOnboarding` em `src/lib/checklist-onboarding.ts`, regra
+  presa em `src/lib/checklist-onboarding.test.ts`). Por isso vale também para
+  lojas antigas e não tem botão de dispensar.
+- Quando nenhum passo obrigatório está pendente, o checklist some e volta o
+  "Próximo passo" de sempre (imagem principal, fotos e medidas dos produtos).

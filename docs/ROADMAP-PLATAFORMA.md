@@ -53,8 +53,13 @@ ganho de tempo — o build já falha em cerca de um minuto quando um teste cai.
 
 ## Tranche 3 — infraestrutura para o cliente
 
-- [ ] Onboarding orientado por checklist: identidade, domínio, catálogo,
-  recebimento, entrega e publicação.
+- [x] Onboarding orientado por checklist: identidade, domínio, catálogo,
+  recebimento, entrega e publicação. (Checklist de seis passos na visão geral do
+  painel, derivado do que a loja já tem gravado, sem coluna nem migração: a
+  regra é `src/lib/checklist-onboarding.ts`, presa em
+  `src/lib/checklist-onboarding.test.ts`; quem desenha é
+  `src/components/painel/ChecklistOnboarding.tsx`. Ver `docs/ONBOARDING.md`,
+  "Checklist no painel".)
 - [ ] Instrumentar métricas por tenant (latência, erros, conversão e pedidos),
   sem registrar tokens ou dados sensíveis.
 - [ ] Melhorar isolamento operacional: limites de upload, timeout de integrações,
