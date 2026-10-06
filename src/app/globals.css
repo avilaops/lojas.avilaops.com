@@ -393,6 +393,10 @@ body:has(.home-automotivo) .rodape-loja { margin-top: 1rem; }
 
 @media (prefers-reduced-motion: reduce) {
   .cartao-produto, .cartao-produto img, .categoria-classica, .categoria-classica span { transition: none !important; }
+  /* Regra geral da loja: `data-layout` só existe no <body> da loja publicada e
+     no contêiner da prévia, então o chrome do painel fica de fora (ele tem a
+     sua em plataforma.css). Presa pela rotina de docs/VALIDACAO-TEMPLATES.md. */
+  [data-layout] *, [data-layout] *::before, [data-layout] *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
 }
 
 .container-loja {
