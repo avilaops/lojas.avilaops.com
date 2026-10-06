@@ -3,13 +3,13 @@
 import { useMemo, useRef, useState } from "react";
 import { Campo, Secao, inputClasse } from "./campos";
 import { lerCsvProdutos } from "@/lib/planilha-produtos";
+import { PLANOS, mensalidade, planoPorId } from "@/lib/planos";
 import { criarDirecaoVisual, PERSONALIDADES, SEGMENTOS, type DiagnosticoMarca, type IdentidadeLoja } from "@/lib/identidade";
 
 const PASSOS = ["Negócio", "Essência", "Direção de marca", "Operação", "Catálogo e acesso"] as const;
 const TEMPO_PASSO = ["2 min", "3 min", "1 min", "2 min", "2 min"] as const;
 const VOZES = [["direto", "Direto", "Claro, breve e orientado à ação."], ["proximo", "Próximo", "Humano, simples e acolhedor."], ["especialista", "Especialista", "Seguro, didático e preciso."], ["inspirador", "Inspirador", "Aspiracional, sensorial e positivo."]] as const;
 const FOTOS = [["produto", "Produto"], ["editorial", "Editorial"], ["lifestyle", "Em uso"], ["natural", "Natural"], ["tecnico", "Técnico"]] as const;
-const PLANOS = [["SITE", "Site", "Presença digital essencial"], ["LOJA", "Loja", "Operação completa e escalável"], ["LOJA_PRO", "Loja Pro", "Automação e crescimento"]] as const;
 
 type Personalidade = IdentidadeLoja["personalidade"][number];
 type CampoId = "nome" | "slogan" | "emailContato" | "whatsapp" | "instagram" | "publico" | "diferencial" | "cep" | "uf" | "despachoDiasUteis" | "dominioPrincipal" | "senha" | "senha2" | "produtos";
@@ -59,7 +59,7 @@ export default function CriarLoja({ planoInicial }: { planoInicial: "SITE" | "LO
   };
   const diagnostico = useMemo<DiagnosticoMarca>(() => ({ segmento: f.segmento, publico: f.publico, diferencial: f.diferencial, personalidade: f.personalidade, tomDeVoz: f.tomDeVoz, objetivo: f.objetivo, estiloFotografico: f.estiloFotografico }), [f.segmento, f.publico, f.diferencial, f.personalidade, f.tomDeVoz, f.objetivo, f.estiloFotografico]);
   const direcao = useMemo(() => criarDirecaoVisual(diagnostico, f.nome || "Sua marca"), [diagnostico, f.nome]);
-  const planoRotulo = PLANOS.find(([valor]) => valor === f.plano)?.[1] ?? "Loja";
+  const planoRotulo = planoPorId(f.plano)?.nome ?? "Loja";
 
   function limparAviso() { setErro(null); setDetalhesErro([]); }
   function propriedadesCampo(campo: CampoId) { return { "aria-invalid": Boolean(errosCampos[campo]) } as const; }
@@ -256,7 +256,7 @@ export default function CriarLoja({ planoInicial }: { planoInicial: "SITE" | "LO
       </div>
       <Campo label="Slogan atual" erro={errosCampos.slogan} ajuda="Opcional. Se ficar vazio, criaremos uma assinatura a partir do seu diferencial."><input {...propriedadesCampo("slogan")} className={inputClasse} value={f.slogan} maxLength={140} onChange={(e) => set("slogan", e.target.value)} placeholder="Se sua marca já usa uma frase, escreva aqui" /></Campo>
       <Campo label="Instagram" erro={errosCampos.instagram} ajuda="Opcional. Use o link completo do perfil."><input {...propriedadesCampo("instagram")} className={inputClasse} type="url" value={f.instagram} onChange={(e) => set("instagram", e.target.value)} placeholder="https://instagram.com/sualoja" /></Campo>
-      <Campo label="Plano"><div className="brand-choice-grid three">{PLANOS.map(([v,t,d]) => <button key={v} type="button" onClick={() => set("plano",v)} className={f.plano === v ? "selecionado" : ""} aria-pressed={f.plano === v}><strong>{t}{v === "LOJA" && <i>Recomendado</i>}</strong><small>{d}</small></button>)}</div></Campo>
+      <Campo label="Plano"><div className="brand-choice-grid three">{PLANOS.map((p) => <button key={p.id} type="button" onClick={() => set("plano",p.id)} className={f.plano === p.id ? "selecionado" : ""} aria-pressed={f.plano === p.id}><strong>{p.nome}{p.destaque && <i>Recomendado</i>}</strong><b className="brand-preco">{mensalidade(p.preco)}</b><small>{p.rotulo}</small></button>)}</div></Campo>
     </Secao>}
 
     {passo === 1 && <Secao titulo="Defina a essência" descricao="Não precisa escrever como publicitário. Responda com suas palavras e nós transformamos isso em direção de marca.">
