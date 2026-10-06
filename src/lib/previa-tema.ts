@@ -28,23 +28,91 @@ export function codificarRascunho(tema: TemaLoja): string {
 }
 
 /**
- * Texto de `?t=` → tema, ou `null`.
+ * Nome que o formulário de Marca dá a cada campo do tema, para a prévia apontar
+ * o que não validou com a palavra que o lojista leu na tela. A chave é o
+ * caminho no tema sem os índices de lista.
+ */
+const ROTULOS: Record<string, string> = {
+  heroTitulo: "Título do banner",
+  heroTexto: "Texto do banner",
+  mostrarNomeNoCabecalho: "Mostrar o nome no cabeçalho",
+  corPrimaria: "Cor principal",
+  corPrimariaTexto: "Cor do texto sobre a cor principal",
+  corFundo: "Cor de fundo",
+  corTexto: "Cor do texto",
+  modo: "Modo",
+  fonte: "Fonte",
+  raio: "Cantos",
+  layout: "Template da loja",
+  categoriaSemImagem: "Categoria sem foto",
+  campanhasHome: "Carrossel de campanhas em imagem",
+  "campanhasHome.imagemUrl": "Imagem",
+  "campanhasHome.imagemMobileUrl": "Imagem móvel",
+  "campanhasHome.link": "Destino do banner",
+  "campanhasHome.alt": "Descrição acessível da imagem",
+  premium: "Conteúdo do Automotivo Premium",
+  "premium.heroSelo": "Assinatura acima do título",
+  "premium.heroTitulo": "Título do banner",
+  "premium.heroTexto": "Texto do banner",
+  "premium.buscaTitulo": "Pergunta da busca",
+  "premium.buscaExemplo": "Exemplo no campo de busca",
+  "premium.editorialTitulo": "Título da seção editorial",
+  "premium.editorialTexto": "Texto da seção editorial",
+  "premium.editorialImagem": "Imagem editorial",
+  "premium.editorialImagemSecundaria": "Imagem editorial complementar",
+  "premium.logoEscuroUrl": "Logo para o modo escuro",
+  "premium.mostrarNome": "Mostrar o nome ao lado do símbolo",
+  "premium.etapas": "Etapas",
+  "premium.etapas.categoria": "Categoria",
+  "premium.etapas.titulo": "Título",
+  "premium.etapas.texto": "Descrição",
+  "premium.etapas.icone": "Ícone",
+};
+
+/** Quantos campos a prévia lista; o resto o lojista vê ao corrigir os primeiros. */
+const MAX_CAMPOS = 5;
+
+/** Caminho do erro → "Arte 2: Descrição acessível da imagem". */
+function nomeDoCampo(caminho: (string | number)[]): string {
+  const chaves = caminho.filter((c): c is string => typeof c === "string");
+  // Chave que o schema não conhece não tem rótulo: sai o caminho, que só tem
+  // nomes do próprio schema e números (o schema não aceita chave livre).
+  const rotulo = ROTULOS[chaves.join(".")] ?? caminho.join(".");
+  const indice = caminho.find((c): c is number => typeof c === "number");
+  if (indice === undefined) return rotulo;
+  // O formulário numera as campanhas como "Arte 1", "Arte 2".
+  const item = chaves[0] === "campanhasHome" ? "Arte" : "Etapa";
+  return `${item} ${indice + 1}: ${rotulo}`;
+}
+
+/**
+ * Texto de `?t=` → tema, ou os campos que não validaram.
+ *
+ * `campos` vem vazio quando o endereço nem chega a ser um tema (ausente, grande
+ * demais, base64 ou JSON quebrado): aí não há campo para apontar.
  *
  * Não usa `lerTema` de propósito: lá o que não valida vira o tema padrão, e uma
  * prévia que mostra o tema padrão no lugar do rascunho é uma prévia que mente.
  * Aqui o que não valida não desenha nada.
  */
-export function lerRascunho(texto: string | undefined): TemaLoja | null {
-  if (!texto || texto.length > LIMITE_RASCUNHO || !BASE64URL.test(texto)) return null;
+export function examinarRascunho(texto: string | undefined): { tema: TemaLoja } | { tema: null; campos: string[] } {
+  if (!texto || texto.length > LIMITE_RASCUNHO || !BASE64URL.test(texto)) return { tema: null, campos: [] };
   try {
     const binario = atob(texto.replace(/-/g, "+").replace(/_/g, "/"));
     const bytes = Uint8Array.from(binario, (c) => c.charCodeAt(0));
     const bruto: unknown = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
     const r = TemaSchema.safeParse(bruto);
-    return r.success ? r.data : null;
+    if (r.success) return { tema: r.data };
+    const campos = [...new Set(r.error.issues.filter((i) => i.path.length > 0).map((i) => nomeDoCampo(i.path)))];
+    return { tema: null, campos: campos.slice(0, MAX_CAMPOS) };
   } catch {
-    return null;
+    return { tema: null, campos: [] };
   }
+}
+
+/** Texto de `?t=` → tema, ou `null`. */
+export function lerRascunho(texto: string | undefined): TemaLoja | null {
+  return examinarRascunho(texto).tema;
 }
 
 /** A loja como ficaria com o rascunho. Devolve cópia; a recebida não muda. */

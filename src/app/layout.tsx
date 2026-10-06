@@ -118,8 +118,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // marca a requisição e reescreve para src/app/plataforma, que tem o próprio chrome.
   const h = await headers();
   if (h.get("x-plataforma") === "1") {
+    // `suppressHydrationWarning`: a prévia do tema (/painel/previa) grava
+    // data-template, data-modo e data-ck-theme no <html> por script em linha,
+    // antes da hidratação. Vale só para os atributos deste elemento.
     return (
-      <html lang="pt-BR">
+      <html lang="pt-BR" suppressHydrationWarning>
         <body>{children}</body>
       </html>
     );

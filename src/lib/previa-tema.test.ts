@@ -5,7 +5,7 @@ import type { Tenant } from "@prisma/client";
 import { TemaSchema, VALORES_LAYOUT } from "./tema";
 import { COLUNAS, colunasVisiveis, linhaTecnica } from "./catalogo-tecnico";
 import { etapasDoPremium } from "./etapas-premium";
-import { LIMITE_RASCUNHO, catalogoDeDemonstracao, codificarRascunho, lerRascunho, lojaDaPrevia } from "./previa-tema";
+import { LIMITE_RASCUNHO, catalogoDeDemonstracao, codificarRascunho, examinarRascunho, lerRascunho, lojaDaPrevia } from "./previa-tema";
 
 /**
  * A prévia do painel promete duas coisas: mostrar o rascunho que o lojista
@@ -35,6 +35,28 @@ test("rascunho que não valida não desenha nada, nem o tema padrão", () => {
   assert.equal(lerRascunho(base64url(JSON.stringify({ ...fixture, layout: "premium-de-luxo" }))), null, "layout inexistente");
   assert.equal(lerRascunho(base64url(JSON.stringify({ ...fixture, corPrimaria: "red;}body{display:none" }))), null, "cor que injetaria CSS");
   assert.equal(lerRascunho(base64url("null")), null, "JSON que não é objeto");
+});
+
+test("rascunho inválido diz qual campo falhou, com o nome do formulário", () => {
+  const campos = (tema: unknown) => {
+    const r = examinarRascunho(base64url(JSON.stringify(tema)));
+    assert.equal(r.tema, null);
+    return r.tema === null ? r.campos : [];
+  };
+  const campanha = { imagemUrl: "/uploads/a.jpg", link: "/c/lavagem", alt: "Promoção de lavagem" };
+  assert.deepEqual(campos({ campanhasHome: [campanha, { ...campanha, alt: "x" }] }), ["Arte 2: Descrição acessível da imagem"]);
+  assert.deepEqual(campos({ corPrimaria: "vermelho", layout: "premium-de-luxo" }), ["Cor principal", "Template da loja"]);
+  assert.deepEqual(campos({ premium: { heroTitulo: "x".repeat(121), etapas: [{ categoria: "Lavagem!", titulo: "t", texto: "t", icone: "lavagem" }] } }), ["Título do banner", "Etapa 1: Categoria"]);
+  // Dois erros no mesmo campo aparecem uma vez; a lista tem teto.
+  assert.deepEqual(campos({ campanhasHome: [{ ...campanha, link: "x".repeat(301) }] }), ["Arte 1: Destino do banner"]);
+  assert.equal(campos({ campanhasHome: Array.from({ length: 5 }, () => ({ imagemUrl: "x", link: "x", alt: "" })) }).length, 5);
+  // Endereço que nem é tema não tem campo para apontar.
+  for (const texto of [undefined, "", "não é base64!", base64url("{isto não é json"), base64url("null")]) {
+    assert.deepEqual(examinarRascunho(texto), { tema: null, campos: [] });
+  }
+  // O que valida devolve o mesmo tema que lerRascunho.
+  const bom = codificarRascunho(TemaSchema.parse(fixture));
+  assert.deepEqual(examinarRascunho(bom), { tema: lerRascunho(bom) });
 });
 
 test("a loja da prévia é cópia: a loja logada não muda", () => {
@@ -110,6 +132,10 @@ test("a prévia fica fora do chrome do painel e exige sessão", () => {
   assert.match(pagina, /<div inert /);
   assert.match(pagina, /slug=\{`previa-\$\{loja\.slug\}`\}/, "carrinho próprio, para não tocar no do lojista");
   assert.doesNotMatch(pagina, /lerTema|temaDo/, "a prévia desenha o rascunho, nunca o tema salvo ou o padrão");
+  assert.doesNotMatch(pagina, /from "next\/link"|<Link\b/, "sair da prévia recarrega a página, para o <html> não levar o tema ao painel");
+  // O script da prévia mexe no <html> antes da hidratação; o ramo da plataforma no layout raiz precisa aceitar.
+  const raiz = readFileSync("src/app/layout.tsx", "utf8");
+  assert.match(raiz, /x-plataforma[\s\S]{0,400}<html lang="pt-BR" suppressHydrationWarning>/);
 });
 
 test("a loja publicada e a prévia montam a home pelo mesmo mapa", () => {
