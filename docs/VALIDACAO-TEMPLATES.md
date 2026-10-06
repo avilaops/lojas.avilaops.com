@@ -28,7 +28,10 @@ Um caso passa quando nenhuma destas regras dispara:
 3. **Não vaza de lado.** A página não passa da largura da tela; a falha traz o
    primeiro elemento culpado. A faixa fixa da prévia não conta.
 4. **Sem erro de página.** Nenhuma exceção e nenhum `console.error` (recurso
-   que não carrega, como imagem quebrada, entra aqui).
+   que não carrega, como imagem quebrada, entra aqui). Fica de fora o 404 dos
+   pré-carregamentos de link (`?_rsc=`): a home aponta para páginas da loja, que
+   não existem no domínio do painel, e isso é da prévia, não do template. O
+   resultado guarda quantos foram ignorados em `preCarregamentosIgnorados`.
 5. **Contraste AA do texto base.** Cor do `body` sobre o fundo do `body`, no
    mínimo 4,5:1 (`contraste` de `src/lib/tema.ts`).
 6. **Movimento reduzido de verdade** (só nos casos `reduzido`): nenhuma animação
@@ -38,6 +41,19 @@ Um caso passa quando nenhuma destas regras dispara:
 A regra 6 é o que a regra geral de `src/app/globals.css`
 (`[data-layout] *` dentro de `@media (prefers-reduced-motion: reduce)`) atende
 para os onze layouts comuns; o Automotivo Premium tem a sua em `premium.css`.
+
+## Como o script espera e o que ele substitui
+
+- **Espera `load`, fontes e imagens do palco, mais 1,5 s.** Não espera
+  `networkidle`: o Next não lê o corpo do 404 dos pré-carregamentos, a
+  requisição fica aberta e a rede nunca sossega (a primeira rodada estourou os
+  60 s em todos os casos por isso).
+- **Imagens do tema de teste.** As duas de
+  `tests/fixtures/tema-premium-completo.json` não existem (`exemplo.test` e
+  `/media/automotivo-premium/…`); o script responde as duas com uma imagem
+  cinza, para o Automotivo Premium não falhar por endereço de teste.
+- **Só `localhost` ou `127.0.0.1`.** Qualquer outra base é recusada, com ou sem
+  `SESSAO`.
 
 ## Limites
 
@@ -93,7 +109,7 @@ A prévia exige sessão de lojista. Há dois caminhos:
   erro. É a única escrita da rotina.
 
 Rodar só contra `localhost` e o banco de teste, nunca contra produção ou loja
-real.
+real: o script recusa base que não seja `localhost` ou `127.0.0.1`.
 
 ### Opções
 
@@ -121,3 +137,14 @@ Falha que se resolve em CSS (`src/app/globals.css` ou
 `src/components/templates/automotivo-premium/premium.css`) se corrige junto.
 Falha que pede mudar componente vira item próprio, com layout, viewport e
 culpado.
+
+## Rodadas
+
+- **2026-10-06, 96/96.** A primeira rodada deu 92/96: o Automotivo Premium
+  vazava 45 px no celular em loja sem logo e com nome comprido, porque
+  `.ap-marca` não encolhia e empurrava os botões do cabeçalho para fora da tela.
+  Corrigido em `premium.css` (o nome encolhe e corta com reticências até
+  767 px). `/carrinho` e `/checkout`, que a prévia não cobre, foram abertos à
+  parte numa loja de teste com um item no carrinho, nos layouts Clássico e
+  Automotivo Premium, com `prefers-reduced-motion: reduce`: conteúdo inteiro,
+  nenhuma transição e nenhuma animação.

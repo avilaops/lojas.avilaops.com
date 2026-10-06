@@ -47,6 +47,17 @@ const BASE = args[0];
 if (!BASE || args.length !== 1) {
   sair("uso: [SESSAO=<cookie>] npx tsx scripts/validar-templates.mts <base> [--so <layout>] [--retratos <dir>]");
 }
+// Só servidor local: com SESSAO, uma base de produção receberia o cookie de
+// um lojista de verdade.
+let HOST_BASE = "";
+try {
+  HOST_BASE = new URL(BASE).hostname;
+} catch {
+  sair(`${BASE}: não é um endereço.`);
+}
+if (!["127.0.0.1", "localhost"].includes(HOST_BASE)) {
+  sair(`${BASE}: este script só roda contra localhost ou 127.0.0.1.`);
+}
 if (SO && !(VALORES_LAYOUT as string[]).includes(SO)) {
   sair(`--so ${SO}: layout desconhecido. Existem: ${VALORES_LAYOUT.join(", ")}.`);
 }
@@ -153,15 +164,41 @@ const MEDICAO = `(() => {
 
 type Medido = Omit<MedidaDoCaso, "errosDePagina"> & { exemplosDeTransicao: string[] };
 
+// Fontes carregadas e imagens do palco resolvidas (carregou ou quebrou): é o
+// que muda largura e altura depois do `load`.
+const ASSENTOU = `document.fonts.status === "loaded" && [...document.querySelectorAll("div[data-layout] img")].every((i) => i.complete || i.loading === "lazy")`;
+
+/**
+ * As imagens do tema de teste (`tests/fixtures/tema-premium-completo.json`)
+ * não existem: uma está num host fictício, a outra em `/media/` de uma loja.
+ * O script responde as duas com esta, senão o Automotivo Premium falharia por
+ * endereço de teste e não por defeito do template.
+ */
+const IMAGENS_DO_FIXTURE = ["https://exemplo.test/**", "**/media/automotivo-premium/**"];
+const IMAGEM_NEUTRA = '<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1200"><rect width="1600" height="1200" fill="#9ca3af"/></svg>';
+
+/**
+ * Os links da home apontam para páginas da loja, que não existem no domínio do
+ * painel (por isso o palco é `inert`). O Next pré-carrega cada um, recebe 404 e
+ * o navegador registra o erro: é da prévia, não do template.
+ */
+function ePreCarregamentoDeLink(endereco: string): boolean {
+  try {
+    const url = new URL(endereco);
+    return url.searchParams.has("_rsc") && url.pathname !== "/painel/previa";
+  } catch {
+    return false;
+  }
+}
+
 async function main() {
   const temaPremium = JSON.parse(readFileSync(new URL("../tests/fixtures/tema-premium-completo.json", import.meta.url), "utf8")) as Record<string, unknown>;
   const casos = casosDeValidacao(temaPremium).filter((c) => !SO || c.layout === SO);
   const cookie = await sessao();
-  const { hostname } = new URL(BASE);
   if (RETRATOS) mkdirSync(RETRATOS, { recursive: true });
 
   const navegador = await chromium.launch(process.env.CHROMIUM ? { executablePath: process.env.CHROMIUM } : {});
-  const resultados: Array<{ id: string; passou: boolean; falhas: string[]; medida: MedidaDoCaso | null; exemplosDeTransicao: string[] }> = [];
+  const resultados: Array<{ id: string; passou: boolean; falhas: string[]; medida: MedidaDoCaso | null; exemplosDeTransicao: string[]; preCarregamentosIgnorados: number }> = [];
 
   try {
     // Um contexto por vez, em sequência: o servidor tem 4 GB.
@@ -177,15 +214,27 @@ async function main() {
       let falhas: string[];
       let medida: MedidaDoCaso | null = null;
       let exemplosDeTransicao: string[] = [];
+      let preCarregamentosIgnorados = 0;
       try {
-        await contexto.addCookies([{ name: "lojas_sessao", value: cookie, domain: hostname, path: "/" }]);
+        await contexto.addCookies([{ name: "lojas_sessao", value: cookie, domain: HOST_BASE, path: "/" }]);
+        for (const padrao of IMAGENS_DO_FIXTURE) {
+          await contexto.route(padrao, (rota) => rota.fulfill({ contentType: "image/svg+xml", body: IMAGEM_NEUTRA }));
+        }
         const pagina = await contexto.newPage();
         const errosDePagina: string[] = [];
         pagina.on("pageerror", (e) => errosDePagina.push(e.message));
-        pagina.on("console", (m) => { if (m.type() === "error") errosDePagina.push(m.text()); });
-        await pagina.goto(new URL(caso.caminho, BASE).href, { waitUntil: "networkidle", timeout: 60_000 });
-        // Dá tempo de a hidratação terminar e de transição de entrada acabar.
-        await pagina.waitForTimeout(600);
+        pagina.on("console", (m) => {
+          if (m.type() !== "error") return;
+          if (ePreCarregamentoDeLink(m.location().url)) preCarregamentosIgnorados++;
+          else errosDePagina.push(`${m.text()} (${m.location().url})`);
+        });
+        // `load` e não `networkidle`: o Next não lê o corpo do 404 dos
+        // pré-carregamentos, a requisição fica aberta e a rede nunca sossega.
+        await pagina.goto(new URL(caso.caminho, BASE).href, { waitUntil: "load", timeout: 60_000 });
+        await pagina.waitForFunction(ASSENTOU, undefined, { timeout: 30_000 });
+        // Dá tempo de a hidratação terminar, de os pré-carregamentos voltarem
+        // e de transição de entrada acabar.
+        await pagina.waitForTimeout(1500);
         const { exemplosDeTransicao: exemplos, ...medido } = (await pagina.evaluate(MEDICAO)) as Medido;
         medida = { ...medido, errosDePagina };
         exemplosDeTransicao = exemplos;
@@ -197,7 +246,7 @@ async function main() {
         await contexto.close();
       }
       const passou = falhas.length === 0;
-      resultados.push({ id: caso.id, passou, falhas, medida, exemplosDeTransicao });
+      resultados.push({ id: caso.id, passou, falhas, medida, exemplosDeTransicao, preCarregamentosIgnorados });
       console.log(passou ? `ok      ${caso.id}` : `FALHOU  ${caso.id}\n${falhas.map((f) => `          · ${f}`).join("\n")}`);
     }
   } finally {

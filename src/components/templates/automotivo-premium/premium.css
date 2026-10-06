@@ -215,7 +215,8 @@ html[data-template="automotivo-premium"][data-modo="claro"] {
   [data-template="automotivo-premium"] .container-loja { padding-inline:18px; }
   .ap-cabecalho-linha { height:66px; gap:11px; }
   .ap-aviso { font-size:8px; padding:7px 10px; }
-  .ap-marca { font-size:21px; gap:8px; }
+  .ap-marca { font-size:21px; gap:8px; flex-shrink:1; min-width:0; }
+  .ap-marca>span:not(.ap-marca-simbolo) { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding-right:3px; }
   .ap-marca-simbolo img { width:34px; height:34px; }
   .ap-cabecalho-acoes { gap:7px; }
   .ap-cabecalho-acoes .ap-icone { width:36px; height:36px; }

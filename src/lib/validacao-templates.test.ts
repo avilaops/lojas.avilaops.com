@@ -117,6 +117,14 @@ test("regra e: contraste abaixo de 4.5 falha, e cor ilegível também", () => {
   assert.match(ilegivel[0], /contraste/);
 });
 
+test("regra e: a fronteira do contraste é 4.5 (4,54 passa, 4,48 falha)", () => {
+  const caso = casoDe("minimal.movel.claro.normal");
+  assert.deepEqual(avaliarMedida(caso, limpa(caso, { corTexto: "#767676", corFundo: "#ffffff" })), []);
+  const abaixo = avaliarMedida(caso, limpa(caso, { corTexto: "#777777", corFundo: "#ffffff" }));
+  assert.equal(abaixo.length, 1);
+  assert.match(abaixo[0], /4\.48/);
+});
+
 test("regra f: animação ou transição falha só com movimento reduzido", () => {
   const reduzido = casoDe("spotlight.desktop.claro.reduzido");
   const animacao = avaliarMedida(reduzido, limpa(reduzido, { animacoesAtivas: 2 }));

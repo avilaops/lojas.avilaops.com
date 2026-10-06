@@ -44,13 +44,12 @@ ganho de tempo — o build já falha em cerca de um minuto quando um teste cai.
   `src/components/home/composicao.tsx`, o mesmo mapa da loja publicada; o link
   "Ver prévia" está em `src/components/painel/Marca.tsx`; preso em
   `src/lib/previa-tema.test.ts`. Só a home, sem navegação.)
-- [ ] Validar cada template em viewport móvel, desktop, tema claro/escuro e
+- [x] Validar cada template em viewport móvel, desktop, tema claro/escuro e
   preferência de movimento reduzido.
-  (Rotina pronta, rodada pendente: a matriz de 96 casos e o julgamento estão em
+  (Rodada de 2026-10-06: 96/96. A matriz e o julgamento estão em
   `src/lib/validacao-templates.ts`, presos em `src/lib/validacao-templates.test.ts`;
-  o script é `scripts/validar-templates.mts` e o roteiro, `docs/VALIDACAO-TEMPLATES.md`.
-  Falta rodar os 96 casos numa máquina com Chromium e o banco de teste, corrigir
-  o que a rodada apontar e só então marcar.)
+  o script é `scripts/validar-templates.mts` e o roteiro, com o que a rodada
+  achou e corrigiu, `docs/VALIDACAO-TEMPLATES.md`.)
 
 ## Tranche 3 — infraestrutura para o cliente
 
