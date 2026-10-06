@@ -19,6 +19,7 @@ import { ErroApi, corpoDeErro } from "@/lib/api-resposta";
  */
 
 export interface ContextoApi {
+  request: Request;
   tenant: Tenant;
   chave: Pick<ChaveApi, "id" | "tipo" | "escopos">;
   url: URL;
@@ -110,7 +111,7 @@ export function rotaDaApi<P = Record<string, never>>(opcoes: OpcoesDaRota, fazer
         });
       }
 
-      const corpo = await fazer({ tenant, chave, url: new URL(request.url), params: await segmento.params });
+      const corpo = await fazer({ request, tenant, chave, url: new URL(request.url), params: await segmento.params });
       return Response.json(corpo, { headers: cabecalhos });
     } catch (e) {
       if (e instanceof ErroApi) {

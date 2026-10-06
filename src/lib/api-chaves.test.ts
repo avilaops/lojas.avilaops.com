@@ -35,11 +35,12 @@ test("o banco guarda o hash, e a máscara não contém o miolo da chave", () => 
 });
 
 test("publicável fica só com a vitrine, peça o que pedir", () => {
-  assert.deepEqual(escoposDaChave("PUBLICAVEL", ["pedidos:ler", "catalogo:ler"]), ["vitrine:ler"]);
+  assert.deepEqual(escoposDaChave("PUBLICAVEL", ["pedidos:ler", "catalogo:ler", "catalogo:escrever"]), ["vitrine:ler"]);
 });
 
 test("secreta fica com o que pediu, dentro do catálogo, e sempre com a vitrine", () => {
-  assert.deepEqual(escoposDaChave("SECRETA", ["pedidos:ler", "admin:tudo", "catalogo:escrever"]), ["pedidos:ler", "vitrine:ler"]);
+  assert.deepEqual(escoposDaChave("SECRETA", ["pedidos:ler", "admin:tudo", "pedidos:escrever"]), ["pedidos:ler", "vitrine:ler"]);
+  assert.deepEqual(escoposDaChave("SECRETA", ["catalogo:escrever"]), ["catalogo:escrever", "vitrine:ler"]);
   assert.deepEqual(escoposDaChave("SECRETA", []), ["vitrine:ler"]);
 });
 
