@@ -12,8 +12,11 @@ const preco=(n:number)=>`${(n/100).toFixed(2)} BRL`;
  * @param prateleira resolvedor de `google_product_category`. O padrão decide só
  *   pelo nome da categoria; o feed passa o de `prateleirasDaLoja`, que conhece
  *   o ramo e por isso também resolve os nomes genéricos ("Acessórios").
+ * @param freteGratis diz se a oferta sai com frete zero para o país inteiro
+ *   (`freteGratisGarantido`). Só então o item leva `shipping`: o resto é cotado
+ *   por CEP e fica para a configuração de frete da conta no Merchant Center.
  */
-export function itensMerchant(p:ProdutoCatalogo,base:string,prateleira:(nome:string|null|undefined)=>number|undefined=categoriaGoogle):string[] {
+export function itensMerchant(p:ProdutoCatalogo,base:string,prateleira:(nome:string|null|undefined)=>number|undefined=categoriaGoogle,freteGratis:(precoCentavos:number)=>boolean=()=>false):string[] {
   if(!p.ativo) return [];
   const ocorrencias=diagnosticarProduto(p,prateleira);
   const marca=marcaConfirmada(p.marca);
@@ -37,13 +40,14 @@ export function itensMerchant(p:ProdutoCatalogo,base:string,prateleira:(nome:str
       p.categoria?tag("product_type",p.categoria.nome):"",googleCategoria?tag("google_product_category",String(googleCategoria)):"",
       dimensoesDeEnvioValidas?tag("shipping_length",`${v.comprimentoCm} cm`)+tag("shipping_width",`${v.larguraCm} cm`)+tag("shipping_height",`${v.alturaCm} cm`):"",
       v.pesoKg!=null&&Number.isFinite(v.pesoKg)&&v.pesoKg>0&&v.pesoKg<=1000?tag("shipping_weight",`${v.pesoKg} kg`):"",
+      freteGratis(v.precoCentavos)?`<g:shipping>${tag("country","BR")}${tag("price",preco(0))}</g:shipping>`:"",
       !v.padrao ? tag("item_group_id",p.id)+p.opcoes.map(o=>{const k=/tamanho|size/i.test(o)?"size":/cor|color/i.test(o)?"color":/material/i.test(o)?"material":null;return k&&valores[o]?tag(k,valores[o]):"";}).join("") : "",
     ].join("")}</item>`];
   });
 }
 
-export function gerarFeedMerchant(loja:{nome:string;slogan:string|null},base:string,produtos:ProdutoCatalogo[]) {
+export function gerarFeedMerchant(loja:{nome:string;slogan:string|null},base:string,produtos:ProdutoCatalogo[],freteGratis:(precoCentavos:number)=>boolean=()=>false) {
   // O ramo é da loja: resolve-se uma vez, com todas as categorias à vista.
   const prateleira=prateleirasDaLoja(produtos.map(p=>p.categoria?.nome));
-  return `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:g="http://base.google.com/ns/1.0"><channel><title>${esc(loja.nome)}</title><link>${esc(base)}</link><description>${esc(loja.slogan??`Produtos da ${loja.nome}`)}</description>${produtos.flatMap(p=>itensMerchant(p,base,prateleira)).join("")}</channel></rss>`;
+  return `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:g="http://base.google.com/ns/1.0"><channel><title>${esc(loja.nome)}</title><link>${esc(base)}</link><description>${esc(loja.slogan??`Produtos da ${loja.nome}`)}</description>${produtos.flatMap(p=>itensMerchant(p,base,prateleira,freteGratis)).join("")}</channel></rss>`;
 }

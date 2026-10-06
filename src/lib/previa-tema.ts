@@ -220,29 +220,36 @@ export function catalogoDeDemonstracao(): { categorias: Categoria[]; vitrine: Pr
     produtoDemo({ categoria: "vitrificacao", slug: "cera-sintetica-200g", nome: "Cera sintética em pasta 200 g", precoCentavos: 5490, descricaoCurta: "Brilho e repelência à água." }),
     produtoDemo({ categoria: "interior", slug: "limpador-multiuso-interior", nome: "Limpador multiuso para interior 500 ml", precoCentavos: 2990, descricaoCurta: "Painel, portas e bancos." }),
     produtoDemo({ categoria: "acessorios", slug: "kit-panos-microfibra", nome: "Kit com 3 panos de microfibra", precoCentavos: 3490, descricaoCurta: "Secagem e acabamento sem fiapos." }),
+    // As peças têm as duas medidas, como no cadastro real: a da peça em
+    // `atributos` (o que o Catálogo Técnico mostra) e a da caixa em
+    // `comprimentoCm`/`pesoKg` (o que o frete cota).
     produtoDemo({
       categoria: "pecas", slug: "filtro-de-oleo-fo-1020", nome: "Filtro de óleo FO-1020", precoCentavos: 3290,
       sku: "FO-1020", codigoOriginal: "OE-15400-A01", codigosEquivalentes: ["EQ-7143", "EQ-W610"],
       compatibilidade: [{ marca: "Montadora", modelo: "Hatch 1.0", anoDe: 2018, anoAte: 2023 }, { marca: "Montadora", modelo: "Sedã 1.6", anoDe: 2019 }],
       comprimentoCm: 7, larguraCm: 7, alturaCm: 9, pesoKg: 0.25,
+      atributos: { diametroInternoMm: 62, diametroExternoMm: 76, alturaMm: 90 },
     }),
     produtoDemo({
       categoria: "pecas", slug: "pastilha-de-freio-pf-2210", nome: "Pastilha de freio dianteira PF-2210", precoCentavos: 12990,
       sku: "PF-2210", codigoOriginal: "OE-45022-B12", codigosEquivalentes: ["EQ-N1432"],
       compatibilidade: [{ marca: "Montadora", modelo: "Sedã 1.6", anoDe: 2016, anoAte: 2022 }],
       comprimentoCm: 13, larguraCm: 6, alturaCm: 1.7, pesoKg: 0.9,
+      atributos: { espessuraMm: 17 },
     }),
     produtoDemo({
       categoria: "pecas", slug: "correia-dentada-cd-3305", nome: "Correia dentada CD-3305", precoCentavos: 8990,
       sku: "CD-3305", codigoOriginal: "OE-14400-C07", codigosEquivalentes: ["EQ-5508XS", "EQ-CT1028"],
       compatibilidade: [{ marca: "Montadora", modelo: "Hatch 1.0", anoDe: 2015, anoAte: 2021 }, { marca: "Montadora", modelo: "Picape 1.4" }, { marca: "Montadora", modelo: "Utilitário 1.8", anoDe: 2017 }],
       comprimentoCm: 18, larguraCm: 12, alturaCm: 2.5, pesoKg: 0.18,
+      atributos: { alturaMm: 25, espessuraMm: 4 },
     }),
     produtoDemo({
       categoria: "pecas", slug: "vela-de-ignicao-vi-4400", nome: "Vela de ignição VI-4400", precoCentavos: 2790,
       sku: "VI-4400", codigoOriginal: "OE-98079-D55", codigosEquivalentes: ["EQ-BKR6E"],
       compatibilidade: [{ marca: "Montadora", modelo: "Hatch 1.0", anoDe: 2014, anoAte: 2020 }],
       comprimentoCm: 8, larguraCm: 2, alturaCm: 2, pesoKg: 0.05,
+      atributos: { diametroExternoMm: 14, alturaMm: 19 },
     }),
   ];
 

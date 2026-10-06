@@ -201,6 +201,35 @@ export async function autenticar(loja: Tenant, email: string, senha: string): Pr
 }
 
 /**
+ * Quem é este e-mail no painel, sem conferir senha.
+ *
+ * Só para a entrada pelo login único (`/api/painel/entrar/sso`), depois de o
+ * Auth ter confirmado quem é a pessoa e que ela pode entrar no Lojas. A ordem
+ * é a mesma do login por senha: o dono primeiro, depois a equipe. Loja
+ * cancelada e operador desligado não entram por nenhuma das duas portas.
+ */
+export async function identificarPorEmail(email: string): Promise<QuemEntrou | null> {
+  const alvo = normalizarEmail(email);
+
+  const propria = await prisma.tenant.findUnique({ where: { loginEmail: alvo } });
+  if (propria && propria.status !== "CANCELADA") return { tenant: propria, papel: "DONO", operador: null };
+
+  const op = await prisma.operadorLoja.findFirst({
+    where: { email: alvo, ativo: true, tenant: { status: { not: "CANCELADA" } } },
+    include: { tenant: true },
+    orderBy: { criadoEm: "asc" },
+  });
+  if (!op) return null;
+
+  await prisma.operadorLoja.update({ where: { id: op.id }, data: { ultimoAcessoEm: new Date() } });
+  return {
+    tenant: op.tenant,
+    papel: op.papel === "GERENTE" ? "GERENTE" : "OPERADOR",
+    operador: { id: op.id, nome: op.nome, email: op.email },
+  };
+}
+
+/**
  * Porteiro das rotas do painel.
  *
  * Devolve a sessão quando a pessoa pode, e a resposta pronta de recusa quando
