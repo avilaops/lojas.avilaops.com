@@ -10,7 +10,7 @@ import { reabrirConsentimento, salvarConsentimento, useConsentimento } from "@/l
  * O texto é da plataforma, igual em toda loja: é assim que a conformidade
  * escala sem ninguém revisar loja por loja.
  */
-export default function Consentimento({ ativo }: { ativo: boolean }) {
+export default function Consentimento({ ativo, plataforma = false }: { ativo: boolean; plataforma?: boolean }) {
   // `undefined` é o estado do servidor: até hidratar não desenhamos nada, senão
   // o banner pisca na tela de quem já respondeu.
   const escolha = useConsentimento();
@@ -18,11 +18,21 @@ export default function Consentimento({ ativo }: { ativo: boolean }) {
 
   return (
     <div role="dialog" aria-label="Aviso de cookies" className="aviso-cookies">
-      <p>
-        Usamos cookies para lembrar seu carrinho e, com sua permissão, medir a audiência e a
-        eficiência dos nossos anúncios. Você escolhe.{" "}
-        <Link href="/politicas/privacidade">Como tratamos seus dados</Link>.
-      </p>
+      {plataforma ? (
+        // O site da plataforma não tem carrinho nem `/politicas`: a política é a
+        // da Avila Ops, que é quem trata o dado de quem visita esta página.
+        <p>
+          Usamos cookies para manter sua sessão e, com sua permissão, medir a audiência deste site.
+          Você escolhe.{" "}
+          <a href="https://avilaops.com/politica-de-privacidade/">Como tratamos seus dados</a>.
+        </p>
+      ) : (
+        <p>
+          Usamos cookies para lembrar seu carrinho e, com sua permissão, medir a audiência e a
+          eficiência dos nossos anúncios. Você escolhe.{" "}
+          <Link href="/politicas/privacidade">Como tratamos seus dados</Link>.
+        </p>
+      )}
       <div className="aviso-cookies-acoes">
         <button type="button" className="btn-secundario" onClick={() => salvarConsentimento("essencial")}>
           Só o necessário

@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { ArrowRight, Menu } from "lucide-react";
+import Consentimento from "@/components/Consentimento";
+import Pixels from "@/components/Pixels";
+import { pixelsDaPlataforma, temRastreio } from "@/lib/pixels";
 import { lojistaAtual } from "@/lib/sessao";
 import "../plataforma.css";
 
@@ -14,8 +17,12 @@ function MarcaLojas() {
 
 export default async function PlataformaLayout({ children }: { children: React.ReactNode }) {
   const lojista = await lojistaAtual();
+  // Só no site público. O painel do lojista tem layout próprio e fica sem tag:
+  // ali circulam pedido, cliente e faturamento da loja de outra pessoa.
+  const pixels = pixelsDaPlataforma();
   return (
     <div className="plataforma-shell">
+      <Pixels p={pixels} />
       <header className="pl-header">
         <div className="pl-container pl-header-inner">
           <Link href="/" aria-label="Lojas por Avila Ops"><MarcaLojas /></Link>
@@ -49,6 +56,7 @@ export default async function PlataformaLayout({ children }: { children: React.R
         </div>
       </header>
       <main>{children}</main>
+      <Consentimento ativo={temRastreio(pixels)} plataforma />
       <footer className="pl-footer">
         <div className="pl-container pl-footer-grid">
           <div><MarcaLojas /><p>Loja virtual pronta em um dia. Pix na hora, sem comissão.</p></div>
