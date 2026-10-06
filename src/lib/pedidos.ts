@@ -34,6 +34,7 @@ export async function registrarPedido(
       entrega: pedido.entrega ? ({ ...pedido.entrega } as Prisma.InputJsonValue) : undefined,
       freteNome: pedido.frete.nome,
       freteCentavos: totais.frete,
+      fretePrazoDiasUteis: pedido.frete.prazoDiasUteis,
       subtotalCentavos: totais.subtotal,
       descontoCentavos: totais.desconto,
       totalCentavos: totais.total,

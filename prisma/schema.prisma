@@ -202,6 +202,11 @@ model Tenant {
   googleAdsId           String? // Google Ads — AW-XXXXXXXXX
   googleAdsRotuloCompra String? // rótulo da conversão de compra
   tiktokPixelId         String?
+  /// Conta do Google Merchant Center (só os dígitos). Liga o convite do Google
+  /// Avaliações do Consumidor no pedido pago. Ver src/lib/avaliacoes-google.ts.
+  googleMerchantId      String?
+  /// Selo do Google Avaliações do Consumidor na vitrine. Escolha da loja.
+  googleSeloAvaliacoes  Boolean @default(false)
   /// Conteúdo da meta de verificação (só o valor, não a tag inteira).
   verificacaoGoogle     String?
   verificacaoBing       String?
@@ -436,6 +441,9 @@ model Pedido {
   entrega          Json? // EnderecoEntrega ou null (retirada)
   freteNome        String
   freteCentavos    Int
+  /// Prazo do frete escolhido, em dias úteis. Nulo em pedido anterior a
+  /// 06/10/2026 e em pedido de marketplace.
+  fretePrazoDiasUteis Int?
   subtotalCentavos Int
   descontoCentavos Int     @default(0)
   cupomCodigo      String?
