@@ -1,0 +1,83 @@
+{
+  "commit": "923034b104fccb985356e5594e88a42e59d29389",
+  "aplicado": {
+    "cards": 1,
+    "primeiro": "Ilustração técnicaÚltimas 1 un.Retentor 35 mm x 52 mm x 8,5 mm SAV 35x52x8,50 6655DI35 mmDE52 mmAlt.8,5 mmSavCódigo: 2328Em estoqueVer detalhesR$ 7,00Pedir pelo WhatsApp",
+    "q": "35x52x8,5",
+    "selecoes": [
+      {
+        "nome": "fabricante",
+        "valor": "Sav"
+      },
+      {
+        "nome": "categoria",
+        "valor": "retentor"
+      },
+      {
+        "nome": "ordem",
+        "valor": "relevancia"
+      }
+    ],
+    "url": "https://vedashow.com.br/produtos?q=35x52x8%2C5&fabricante=Sav&categoria=retentor&min=&max=&ordem=relevancia&di_de=&di_ate=&de_de=&de_ate=&alt_de=&alt_ate=&esp_de=&esp_ate="
+  },
+  "limpoAplicado": {
+    "cards": 48,
+    "primeiro": "DestaqueCorreia 3L300 GBRGbrCódigo: 5657Em estoqueVer detalhesR$ 5,33Pedir pelo WhatsApp",
+    "q": "",
+    "selecoes": [
+      {
+        "nome": "fabricante",
+        "valor": ""
+      },
+      {
+        "nome": "categoria",
+        "valor": ""
+      },
+      {
+        "nome": "ordem",
+        "valor": "relevancia"
+      }
+    ],
+    "url": "https://vedashow.com.br/produtos"
+  },
+  "naoEnviado": {
+    "cards": 48,
+    "primeiro": "DestaqueCorreia 3L300 GBRGbrCódigo: 5657Em estoqueVer detalhesR$ 5,33Pedir pelo WhatsApp",
+    "q": "5465",
+    "selecoes": [
+      {
+        "nome": "fabricante",
+        "valor": "Sav"
+      },
+      {
+        "nome": "categoria",
+        "valor": "retentor"
+      },
+      {
+        "nome": "ordem",
+        "valor": "relevancia"
+      }
+    ],
+    "url": "https://vedashow.com.br/produtos"
+  },
+  "limpoNaoEnviado": {
+    "cards": 48,
+    "primeiro": "DestaqueCorreia 3L300 GBRGbrCódigo: 5657Em estoqueVer detalhesR$ 5,33Pedir pelo WhatsApp",
+    "q": "",
+    "selecoes": [
+      {
+        "nome": "fabricante",
+        "valor": ""
+      },
+      {
+        "nome": "categoria",
+        "valor": ""
+      },
+      {
+        "nome": "ordem",
+        "valor": "relevancia"
+      }
+    ],
+    "url": "https://vedashow.com.br/produtos"
+  }
+}

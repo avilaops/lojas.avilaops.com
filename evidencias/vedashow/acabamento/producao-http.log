@@ -1,0 +1,17 @@
+{"path":"/","status":200,"cards":8,"ms":1303}
+{"path":"/categoria/retentor","status":200,"cards":48,"ms":773}
+{"path":"/produtos?q=5465","status":200,"cards":1,"ms":629}
+{"path":"/produtos?q=Correia%203L300","status":200,"cards":1,"ms":582}
+{"path":"/produtos?q=35x52x8%2C5","status":200,"cards":1,"ms":2339}
+{"path":"/produtos?q=35%20mm%20%C3%97%2052%20mm%20%C3%97%208.5%20mm","status":200,"cards":1,"ms":2936}
+{"path":"/produtos?q=52x35x8%2C5","status":200,"cards":0,"ms":3312}
+{"path":"/produtos?q=53%2C64x2%2C62","status":200,"cards":1,"ms":2335}
+{"path":"/produtos?q=2%2C62x53%2C64","status":200,"cards":0,"ms":2176}
+{"path":"/produtos?categoria=retentor&fabricante=Sav&di_de=35&di_ate=35&de_de=52&de_ate=52&alt_de=8.5&alt_ate=8.5","status":200,"cards":1,"ms":837}
+{"path":"/produtos?q=zzzzpecainexistente999","status":200,"cards":0,"ms":806}
+{"path":"/produtos?categoria=correia","status":200,"cards":48,"ms":637}
+{"path":"/produtos?categoria=rolamento&pagina=2","status":200,"cards":48,"ms":1432}
+{"path":"/produtos?pagina=999999","status":404,"cards":0,"ms":633}
+{"path":"/produtos/gbr-correia-3l300-unitario","status":200,"cards":4,"ms":364}
+PASSOU: sugestões, paginação sem repetição e 15 cenários HTTP.
+PASSOU: cards sem referência secundária, fotos originais, ficha preservada e oito mensagens WhatsApp com SKU e URL oficial.

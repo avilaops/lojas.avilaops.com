@@ -1,0 +1,8 @@
+==> smoke em https://brilhax.com
+  ok  /api/health 200, banco ok em 1.77 ms
+  --  /v1/health não responde aqui (domínio de loja), como esperado
+  ok  /_next/static/chunks/081gu_2z29s4u.css servida com 113 kB de CSS
+  ok  /_next/static/chunks/2jd3u_9u1-x8f.css servida com 28 kB de CSS
+  ok  /uploads/brilhax/logo-limpa-20260927.png servida com 454 kB de png
+
+==> 4 verificação(ões) verdes em https://brilhax.com
