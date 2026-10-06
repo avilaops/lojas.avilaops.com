@@ -19,21 +19,22 @@ const produto = (extra: Partial<ProdutoTecnico> = {}): ProdutoTecnico => ({
   codigoOriginal: null,
   codigosEquivalentes: [],
   compatibilidade: [],
-  comprimentoCm: null,
-  larguraCm: null,
-  alturaCm: null,
-  pesoKg: null,
+  atributos: {},
   ...extra,
 });
 
-test("medidas: dimensões e peso em pt-BR, omitindo o que falta", () => {
-  assert.equal(medidasDe({ comprimentoCm: 12, larguraCm: 8, alturaCm: 3, pesoKg: 0.45 }), "12 × 8 × 3 cm · 0,45 kg");
-  assert.equal(medidasDe({ comprimentoCm: null, larguraCm: null, alturaCm: null, pesoKg: 1.5 }), "1,5 kg");
-  assert.equal(medidasDe({ comprimentoCm: 12.5, larguraCm: null, alturaCm: 3, pesoKg: null }), "12,5 × 3 cm");
-  assert.equal(medidasDe({ comprimentoCm: null, larguraCm: null, alturaCm: null, pesoKg: null }), null);
+test("medidas: a da peça (atributos), na forma do balcão", () => {
+  assert.equal(medidasDe({ atributos: { diametroInternoMm: 25, diametroExternoMm: 52, alturaMm: 15 } }), "25 × 52 × 15 mm");
+  assert.equal(medidasDe({ atributos: {} }), null);
   assert.equal(medidasDe({}), null);
-  // Zero é "não cadastrado", não uma peça sem peso.
-  assert.equal(medidasDe({ comprimentoCm: 0, larguraCm: 0, alturaCm: 0, pesoKg: 0 }), null);
+  assert.equal(medidasDe(null), null);
+});
+
+test("medidas: a caixa do frete não é a medida da peça", () => {
+  // Peso e dimensões de embalagem existem para cotar frete. Mostrados na
+  // coluna "Medidas", um 6205 (25 × 52 × 15 mm) aparecia como a caixa dele.
+  const linha = linhaTecnica({ ...produto(), comprimentoCm: 12, larguraCm: 8, alturaCm: 3, pesoKg: 0.45 } as ProdutoTecnico);
+  assert.equal(linha.medidas, null);
 });
 
 test("aplicação: sem compatibilidade é Universal", () => {
@@ -65,11 +66,11 @@ test("aplicação: entrada inválida não lança", () => {
 test("linha técnica junta os dados do produto e limpa o que veio em branco", () => {
   const linha = linhaTecnica(produto({
     marca: " NSK ", sku: "6203-2RS", codigoOriginal: "91003-KGH-901", codigosEquivalentes: ["SKF 6203", " ", "FAG 6203"],
-    compatibilidade: [{ marca: "Honda", modelo: "CG 160" }], comprimentoCm: 4, larguraCm: 4, alturaCm: 1.2, pesoKg: 0.07,
+    compatibilidade: [{ marca: "Honda", modelo: "CG 160" }], atributos: { diametroInternoMm: 17, diametroExternoMm: 40, alturaMm: 12 },
   }));
   assert.deepEqual(linha, {
     slug: "rolamento-6203", nome: "Rolamento 6203", marca: "NSK", codigo: "6203-2RS", codigoOriginal: "91003-KGH-901",
-    equivalentes: ["SKF 6203", "FAG 6203"], medidas: "4 × 4 × 1,2 cm · 0,07 kg", aplicacao: { texto: "Honda CG 160", restantes: 0, total: 1 },
+    equivalentes: ["SKF 6203", "FAG 6203"], medidas: "17 × 40 × 12 mm", aplicacao: { texto: "Honda CG 160", restantes: 0, total: 1 },
   });
   assert.equal(linhaTecnica(produto({ sku: "  " })).codigo, null);
 });
@@ -79,11 +80,11 @@ test("colunas: some a que nenhum produto preenche", () => {
   assert.deepEqual(colunasVisiveis(semNada), []);
   assert.deepEqual(colunasVisiveis([]), []);
 
-  const soCodigoEMedida = [linhaTecnica(produto({ sku: "A1" })), linhaTecnica(produto({ pesoKg: 2 }))];
+  const soCodigoEMedida = [linhaTecnica(produto({ sku: "A1" })), linhaTecnica(produto({ atributos: { diametroInternoMm: 20 } }))];
   assert.deepEqual(colunasVisiveis(soCodigoEMedida), ["codigo", "medidas"]);
 
   const completa = [linhaTecnica(produto({
-    marca: "NSK", sku: "A1", codigoOriginal: "OEM-1", codigosEquivalentes: ["X"], pesoKg: 1,
+    marca: "NSK", sku: "A1", codigoOriginal: "OEM-1", codigosEquivalentes: ["X"], atributos: { alturaMm: 7 },
     compatibilidade: [{ marca: "Honda", modelo: "CG 160" }],
   })), linhaTecnica(produto())];
   assert.deepEqual(colunasVisiveis(completa), ["codigo", "marca", "codigoOriginal", "equivalentes", "medidas", "aplicacao"]);
