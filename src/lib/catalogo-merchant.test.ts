@@ -58,3 +58,14 @@ test("a ficha técnica visível vira product_detail; chave interna não sai", ()
   assert.match(feed, /<g:attribute_name>Volume \(ml\)<\/g:attribute_name><g:attribute_value>500<\/g:attribute_value>/);
   assert.doesNotMatch(feed, /catalogoFonte|grupoLegado/);
 });
+
+test("volume cadastrado vira preço por litro; sem volume não sai nada", () => {
+  const loja = { nome: "Brilhax", slogan: null };
+  const p = produto("confirmada");
+  Object.assign(p, { atributos: { volumeMl: 500 } });
+  assert.match(gerarFeedMerchant(loja, "https://brilhax.com", [p]), /<g:unit_pricing_measure>500ml<\/g:unit_pricing_measure><g:unit_pricing_base_measure>1l<\/g:unit_pricing_base_measure>/);
+  Object.assign(p, { atributos: { volumeMl: "1500" } });
+  assert.match(gerarFeedMerchant(loja, "https://brilhax.com", [p]), /<g:unit_pricing_measure>1\.5l<\/g:unit_pricing_measure>/);
+  Object.assign(p, { atributos: { volumeMl: "abc" } });
+  assert.doesNotMatch(gerarFeedMerchant(loja, "https://brilhax.com", [p]), /unit_pricing/);
+});

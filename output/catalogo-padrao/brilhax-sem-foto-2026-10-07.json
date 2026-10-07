@@ -28,7 +28,8 @@
    "tipo": "desincrustante ácido concentrado",
    "publico": "lava-rápidos, estética automotiva, oficinas e centros de detalhamento",
    "volume": "1,5 L (menor apresentação de varejo encontrada; escolha nossa)",
-   "fabricante": "Harten Química (linha Nitro Automotive)"
+   "fabricante": "Harten Química (linha Nitro Automotive)",
+   "volumeMl": 1500
   },
   "fontes": [
    {
@@ -103,7 +104,8 @@
    "tipo": "desincrustante ácido concentrado",
    "publico": "lava-rápidos, estética automotiva, oficinas e centros de detalhamento",
    "volume": "5 L",
-   "fabricante": "Harten Química (linha Nitro Automotive)"
+   "fabricante": "Harten Química (linha Nitro Automotive)",
+   "volumeMl": 5000
   },
   "fontes": [
    {
@@ -178,7 +180,8 @@
    "superficies": "chassis, carrocerias",
    "tipo": "desengraxante alcalino concentrado",
    "volume": "1,5 L",
-   "fabricante": "Harten Química (linha Nitro Automotive)"
+   "fabricante": "Harten Química (linha Nitro Automotive)",
+   "volumeMl": 1500
   },
   "fontes": [
    {
@@ -247,7 +250,8 @@
    "superficies": "chassis, carrocerias",
    "tipo": "desengraxante alcalino concentrado",
    "volume": "5 L",
-   "fabricante": "Harten Química (linha Nitro Automotive)"
+   "fabricante": "Harten Química (linha Nitro Automotive)",
+   "volumeMl": 5000
   },
   "fontes": [
    {
@@ -312,7 +316,8 @@
    "volume": "220 ml",
    "codigoFabricante": "0893230220",
    "aplicacao": "Correias de transmissão de força; não recomendado para correia dentada",
-   "modoDeUso": "Agitar a lata; aplicar na correia interna e externamente antes da montagem; com a correia em movimento, aplicar fina camada na superfície interna e deixar girar alguns minutos"
+   "modoDeUso": "Agitar a lata; aplicar na correia interna e externamente antes da montagem; com a correia em movimento, aplicar fina camada na superfície interna e deixar girar alguns minutos",
+   "volumeMl": 220
   },
   "fontes": [
    {
@@ -594,7 +599,8 @@
    "aplicacao": "interior do veículo e ambientes fechados",
    "modoDeUso": "agitar, borrifar a cerca de 20 cm das superfícies, 2 a 3 borrifadas para aroma suave",
    "observacaoLoja": "aromas podem ser cadastrados como variações do mesmo produto",
-   "fabricante": "Vonixx"
+   "fabricante": "Vonixx",
+   "volumeMl": 60
   },
   "fontes": [
    {
@@ -770,7 +776,8 @@
   "gtinFonte": null,
   "atributos": {
    "volume": "200 ml (do cadastro)",
-   "fabricante": "Harten Química (linha Nitro Automotive)"
+   "fabricante": "Harten Química (linha Nitro Automotive)",
+   "volumeMl": 200
   },
   "fontes": [
    {
@@ -846,7 +853,8 @@
    "rendimento": "até 50 L de solução na diluição máxima",
    "aplicacao": "carpetes, tapetes e estofados; manchas de oleosidade, graxa, café, refrigerante e resíduos orgânicos",
    "cor": "laranja, líquido transparente",
-   "fabricante": "Harten Química (linha Nitro Automotive)"
+   "fabricante": "Harten Química (linha Nitro Automotive)",
+   "volumeMl": 500
   },
   "fontes": [
    {
@@ -906,7 +914,8 @@
    "aplicacao": "Pintura automotiva",
    "duracao": "até 4 meses",
    "composicao": "Carnaúba e sílica (SiO2)",
-   "formato": "Líquida, spray"
+   "formato": "Líquida, spray",
+   "volumeMl": 500
   },
   "fontes": [
    {
@@ -967,7 +976,8 @@
    "volume": "100 ml",
    "aplicacao": "Pinturas pretas e escuras",
    "composicao": "Carnaúba e sílica (SiO2)",
-   "formato": "Pasta"
+   "formato": "Pasta",
+   "volumeMl": 100
   },
   "fontes": [
    {
@@ -1029,7 +1039,8 @@
    "modoDeUso": "aplicar diretamente na superfície e enxaguar imediatamente",
    "aplicacao": "remoção de cimento e incrustações pós-obra; pisos industriais e residenciais; sujidade de sanitários",
    "composicaoResumida": "blend de ácidos, solvente, agente acidificante e veículo",
-   "fabricante": "Harten Química (linha Nitro Automotive)"
+   "fabricante": "Harten Química (linha Nitro Automotive)",
+   "volumeMl": 5000
   },
   "fontes": [
    {
@@ -1086,7 +1097,8 @@
    "aplicacao": "Chassis, motores, rodas, máquinas e pisos com óleo e graxa",
    "modoDeUso": "Diluir em recipiente de polietileno, aplicar com pulverizador, aguardar alguns segundos e enxaguar com jato de água",
    "inflamavel": "False",
-   "fabricante": "Bugatti Química"
+   "fabricante": "Bugatti Química",
+   "volumeMl": 5000
   },
   "fontes": [
    {
@@ -1153,7 +1165,8 @@
    "aplicacao": "Chassis, motores, rodas, máquinas e pisos com óleo e graxa",
    "modoDeUso": "Diluir em recipiente de polietileno, aplicar com pulverizador, aguardar alguns segundos e enxaguar com jato de água",
    "inflamavel": "False",
-   "fabricante": "Bugatti Química"
+   "fabricante": "Bugatti Química",
+   "volumeMl": 20000
   },
   "fontes": [
    {
@@ -1207,7 +1220,8 @@
    "aplicacao": "Chassis, motores, rodas, máquinas e pisos com óleo e graxa",
    "modoDeUso": "Diluir em recipiente de polietileno, aplicar com pulverizador, aguardar alguns segundos e enxaguar com jato de água",
    "inflamavel": "False",
-   "fabricante": "Bugatti Química"
+   "fabricante": "Bugatti Química",
+   "volumeMl": 50000
   },
   "fontes": [
    {
@@ -1260,7 +1274,8 @@
    "diluicao": "1/40 (1 L de produto em até 39 L de água); fabricante também oferece versão 1/100",
    "aplicacao": "Chassis, baús, rodas e equipamentos com incrustações",
    "modoDeUso": "Diluir, aplicar por pulverização e enxaguar com jato de água",
-   "fabricante": "Bugatti Química"
+   "fabricante": "Bugatti Química",
+   "volumeMl": 5000
   },
   "fontes": [
    {
@@ -1327,7 +1342,8 @@
    "diluicao": "1/40 (1 L de produto em até 39 L de água)",
    "aplicacao": "Chassis, baús, rodas e equipamentos com incrustações",
    "modoDeUso": "Diluir, aplicar por pulverização e enxaguar com jato de água",
-   "fabricante": "Bugatti Química"
+   "fabricante": "Bugatti Química",
+   "volumeMl": 20000
   },
   "fontes": [
    {
@@ -1381,7 +1397,8 @@
    "diluicao": "1/40 (1 L de produto em até 39 L de água)",
    "aplicacao": "Chassis, baús, rodas e equipamentos com incrustações",
    "modoDeUso": "Diluir, aplicar por pulverização e enxaguar com jato de água",
-   "fabricante": "Bugatti Química"
+   "fabricante": "Bugatti Química",
+   "volumeMl": 50000
   },
   "fontes": [
    {
@@ -1433,7 +1450,8 @@
   "atributos": {
    "volume": "5 L",
    "superficies": "Lataria, pneus e vidros",
-   "fabricante": "Bugatti Química"
+   "fabricante": "Bugatti Química",
+   "volumeMl": 5000
   },
   "fontes": [
    {
@@ -1493,7 +1511,8 @@
    "volume": "1 L",
    "codigoFabricante": "389070",
    "aplicacao": "Lavagem de veículos, manual ou com lavadora de alta pressão; superfícies pintadas",
-   "caracteristicas": "Concentrado; contém cera; sem solvente"
+   "caracteristicas": "Concentrado; contém cera; sem solvente",
+   "volumeMl": 1000
   },
   "fontes": [
    {
@@ -2030,7 +2049,8 @@
    "aplicacao": "remoção de partículas ferrosas e ferrugem em pintura, rodas e peças metálicas; preparo de metal para pintura",
    "composicaoResumida": "base de ácido fosfórico",
    "superficies": "pintura, rodas, metais, pisos e pedras",
-   "fabricante": "Harten Química (linha Nitro Automotive)"
+   "fabricante": "Harten Química (linha Nitro Automotive)",
+   "volumeMl": 500
   },
   "fontes": [
    {
@@ -2105,7 +2125,8 @@
    "modoDeUso": "aplicar com borrifador ou pano úmido, passar pano seco ou papel toalha e deixar secar; não precisa enxaguar",
    "superficies": "vidros, retrovisores, espelhos e cristais",
    "cor": "azul, líquido límpido",
-   "fabricante": "Harten Química (linha Nitro Automotive)"
+   "fabricante": "Harten Química (linha Nitro Automotive)",
+   "volumeMl": 500
   },
   "fontes": [
    {
@@ -2183,7 +2204,8 @@
    "volume": "500 ml",
    "aplicacao": "hidratação e conservação de couro automotivo",
    "superficies": "couro",
-   "fabricante": "Harten Química (linha Nitro Automotive)"
+   "fabricante": "Harten Química (linha Nitro Automotive)",
+   "volumeMl": 500
   },
   "fontes": [
    {
@@ -2248,7 +2270,8 @@
    "cor": "rosa neon, transparente",
    "composicaoResumida": "base água com tensoativos biodegradáveis, sem ácidos nem solventes",
    "volume": "1,5 L (do cadastro; não confirmado nas fontes)",
-   "fabricante": "Harten Química (linha Nitro Automotive)"
+   "fabricante": "Harten Química (linha Nitro Automotive)",
+   "volumeMl": 1500
   },
   "fontes": [
    {
@@ -2318,7 +2341,8 @@
    "cor": "rosa neon, transparente",
    "composicaoResumida": "base água com tensoativos biodegradáveis, sem ácidos nem solventes",
    "volume": "500 ml",
-   "fabricante": "Harten Química (linha Nitro Automotive)"
+   "fabricante": "Harten Química (linha Nitro Automotive)",
+   "volumeMl": 500
   },
   "fontes": [
    {
@@ -2383,7 +2407,8 @@
    "composicaoResumida": "carnaúba tipo 1 + SiO2 funcionalizado",
    "aplicacao": "pintura automotiva (manutenção ou proteção), inclusive pinturas foscas, vitrificadas ou envelopadas",
    "beneficios": "brilho profundo, proteção contra contaminantes e UV, hidrorrepelência, resistência à oxidação; não mancha plásticos e borrachas",
-   "fabricante": "Harten Química (linha Nitro Automotive)"
+   "fabricante": "Harten Química (linha Nitro Automotive)",
+   "volumeMl": 500
   },
   "fontes": [
    {
@@ -2508,7 +2533,8 @@
    "itens": "Higicouro 500 ml, Hidracouro 500 ml",
    "volume": "2 x 500 ml",
    "superficies": "Couro (bancos automotivos, sofás, jaquetas, botas)",
-   "modoDeUso": "Limpar com Higicouro, depois aplicar Hidracouro com aplicador de espuma e deixar absorver"
+   "modoDeUso": "Limpar com Higicouro, depois aplicar Hidracouro com aplicador de espuma e deixar absorver",
+   "volumeMl": 500
   },
   "fontes": [
    {
@@ -2652,7 +2678,8 @@
    "diluicao": "V-Floc: 1:400 no balde, 1:20 em snow foam; V-Mol: não confirmada",
    "pH": "V-Floc: neutro; V-Mol: não confirmado",
    "rendimento": "V-Floc 1,5 L rende até 600 L de solução",
-   "biodegradavel": "V-Mol: sim"
+   "biodegradavel": "V-Mol: sim",
+   "volumeMl": 1500
   },
   "fontes": [
    {
@@ -2721,7 +2748,8 @@
    "superficies": "motores, chassis, tanques de combustível, máquinas agrícolas, carrocerias",
    "tipo": "lava-autos desincrustante / desengraxante hidrossolúvel concentrado",
    "volume": "500 ml (menor apresentação de varejo; também existe 5 L)",
-   "fabricante": "Harten Química (linha Nitro Automotive)"
+   "fabricante": "Harten Química (linha Nitro Automotive)",
+   "volumeMl": 500
   },
   "fontes": [
    {
@@ -2790,7 +2818,8 @@
    "superficies": "motores, chassis, tanques de combustível, máquinas agrícolas, carrocerias",
    "tipo": "lava-autos desincrustante / desengraxante hidrossolúvel concentrado",
    "volume": "1,5 L (do cadastro; não confirmado nas fontes)",
-   "fabricante": "Harten Química (linha Nitro Automotive)"
+   "fabricante": "Harten Química (linha Nitro Automotive)",
+   "volumeMl": 1500
   },
   "fontes": [
    {
@@ -2913,7 +2942,8 @@
    "pH": "neutro",
    "aplicacao": "lavagem de carroceria, manual ou em equipamentos automáticos",
    "diluicao": "100 ml para 5 L de água (informação da linha NitroX Lava Autos; confirmar para o Speel Car)",
-   "fabricante": "Harten Química (linha Nitro Automotive)"
+   "fabricante": "Harten Química (linha Nitro Automotive)",
+   "volumeMl": 500
   },
   "fontes": [
    {
@@ -2983,7 +3013,8 @@
    "aplicacao": "lavagem de lataria com luva de microfibra, de cima para baixo",
    "superficies": "lataria e pintura automotiva",
    "modoDeUso": "diluir, aplicar com luva de microfibra das partes altas para as baixas, enxaguar, secar com toalha",
-   "fabricante": "Vonixx"
+   "fabricante": "Vonixx",
+   "volumeMl": 1500
   },
   "fontes": [
    {
@@ -3058,7 +3089,8 @@
    "aplicacao": "lavagem de lataria com luva de microfibra, de cima para baixo",
    "superficies": "lataria e pintura automotiva",
    "modoDeUso": "diluir, aplicar com luva de microfibra das partes altas para as baixas, enxaguar, secar com toalha",
-   "fabricante": "Vonixx"
+   "fabricante": "Vonixx",
+   "volumeMl": 5000
   },
   "fontes": [
    {
@@ -3132,7 +3164,8 @@
    "aplicacao": "lavagem de lataria com luva de microfibra, de cima para baixo",
    "superficies": "lataria e pintura automotiva",
    "modoDeUso": "diluir, aplicar com luva de microfibra das partes altas para as baixas, enxaguar, secar com toalha",
-   "fabricante": "Vonixx"
+   "fabricante": "Vonixx",
+   "volumeMl": 500
   },
   "fontes": [
    {
@@ -3202,7 +3235,8 @@
   "atributos": {
    "volume": "300 ml (200 g)",
    "codigoFabricante": "089365200",
-   "aplicacao": "Limpeza de contatos elétricos e eletrônicos"
+   "aplicacao": "Limpeza de contatos elétricos e eletrônicos",
+   "volumeMl": 300
   },
   "fontes": [
    {
@@ -3270,7 +3304,8 @@
    "aplicacao": "lavagem a seco de estofados",
    "superficies": "bancos automotivos, estofados e sofás",
    "modoDeUso": "lavar por partes só com a espuma, esfregar com aplicador de espuma ou escova macia, aspirar com aspirador água e pó, deixar secar",
-   "fabricante": "Vonixx"
+   "fabricante": "Vonixx",
+   "volumeMl": 5000
   },
   "fontes": [
    {
@@ -3346,7 +3381,8 @@
   "atributos": {
    "volume": "5 L",
    "aplicacao": "Pneus e borrachas",
-   "fabricante": "Bugatti Química"
+   "fabricante": "Bugatti Química",
+   "volumeMl": 5000
   },
   "fontes": [
    {
@@ -3401,7 +3437,8 @@
    "diluicao": "pronto para uso",
    "superficies": "vidros automotivos internos e externos, vitrines, espelhos",
    "modoDeUso": "pulverizar no vidro, espalhar com microfibra para vidros e finalizar com outra microfibra seca antes de secar",
-   "fabricante": "Vonixx"
+   "fabricante": "Vonixx",
+   "volumeMl": 1500
   },
   "fontes": [
    {
@@ -3492,7 +3529,8 @@
    "diluicao": "pronto para uso",
    "superficies": "vidros automotivos internos e externos, vitrines, espelhos",
    "modoDeUso": "pulverizar no vidro, espalhar com microfibra para vidros e finalizar com outra microfibra seca antes de secar",
-   "fabricante": "Vonixx"
+   "fabricante": "Vonixx",
+   "volumeMl": 5000
   },
   "fontes": [
    {
@@ -3583,7 +3621,8 @@
    "rendimento": "até 7,5 L de produto diluído",
    "superficies": "vidros automotivos internos e externos, vitrines, espelhos",
    "modoDeUso": "diluir, pulverizar, espalhar com microfibra para vidros e finalizar com outra microfibra seca",
-   "fabricante": "Vonixx"
+   "fabricante": "Vonixx",
+   "volumeMl": 1500
   },
   "fontes": [
    {
@@ -3660,7 +3699,8 @@
    "diluicao": "puro (sujeira pesada) ou até 1:5 (sujeira leve)",
    "superficies": "bancos, tetos, painéis, laterais de portas e interiores em geral",
    "modoDeUso": "aplicar, esfregar com aplicador de espuma, remover com microfibra úmida, repetir se necessário",
-   "fabricante": "Vonixx"
+   "fabricante": "Vonixx",
+   "volumeMl": 5000
   },
   "fontes": [
    {
@@ -4353,7 +4393,8 @@
    "superficies": "Pintura (carroceria) e plásticos",
    "composicao": "Cera de carnaúba tipo 1",
    "tipo": "Cera limpadora 2 em 1 (limpa e protege)",
-   "fabricante": "Harten Química (linha Nitro Automotive)"
+   "fabricante": "Harten Química (linha Nitro Automotive)",
+   "volumeMl": 500
   },
   "fontes": [
    {
@@ -4423,7 +4464,8 @@
    "pH": "balanceado (valor numérico não informado)",
    "tipo": "Limpador bactericida 7 em 1, ultraconcentrado, baixa espumação",
    "volume": "1,5 L",
-   "fabricante": "Harten Química (linha Nitro Automotive)"
+   "fabricante": "Harten Química (linha Nitro Automotive)",
+   "volumeMl": 1500
   },
   "fontes": [
    {
@@ -4494,7 +4536,8 @@
    "pH": "balanceado (valor numérico não informado)",
    "tipo": "Limpador bactericida 7 em 1, ultraconcentrado, baixa espumação",
    "volume": "5 L",
-   "fabricante": "Harten Química (linha Nitro Automotive)"
+   "fabricante": "Harten Química (linha Nitro Automotive)",
+   "volumeMl": 5000
   },
   "fontes": [
    {
@@ -4681,7 +4724,8 @@
    "superficies": "pneus",
    "acabamento": "brilho molhado",
    "modoDeUso": "lavar e secar o pneu, aplicar puro com aplicador de espuma na lateral, evitar banda de rodagem, aguardar secar",
-   "fabricante": "Vonixx"
+   "fabricante": "Vonixx",
+   "volumeMl": 1500
   },
   "fontes": [
    {
@@ -4759,7 +4803,8 @@
    "aplicacao": "Pronto para uso, com aplicador de espuma",
    "superficies": "Pneus, borrachas e plásticos",
    "regulatorio": "Produto Saneante Notificado na ANVISA",
-   "fabricante": "Harten Química (linha Nitro Automotive)"
+   "fabricante": "Harten Química (linha Nitro Automotive)",
+   "volumeMl": 1500
   },
   "fontes": [
    {
@@ -4830,7 +4875,8 @@
    "superficies": "pneus",
    "acabamento": "brilho molhado",
    "modoDeUso": "lavar e secar o pneu, aplicar puro com aplicador de espuma na lateral, evitar banda de rodagem, aguardar secar",
-   "fabricante": "Vonixx"
+   "fabricante": "Vonixx",
+   "volumeMl": 5000
   },
   "fontes": [
    {
@@ -4906,7 +4952,8 @@
    "volume": "500 ml (menor apresentação encontrada)",
    "superficies": "Plásticos externos: para-choques, painéis, laterais de portas",
    "tipo": "Renovador/restaurador de plásticos",
-   "fabricante": "Harten Química (linha Nitro Automotive)"
+   "fabricante": "Harten Química (linha Nitro Automotive)",
+   "volumeMl": 500
   },
   "fontes": [
    {
@@ -4969,7 +5016,8 @@
    "volume": "500 ml (menor apresentação encontrada)",
    "superficies": "Plásticos externos e internos: para-choques, retrovisores, frisos, painéis",
    "tipo": "Restaurador e protetor de plásticos com proteção UV",
-   "fabricante": "Harten Química (linha Nitro Automotive)"
+   "fabricante": "Harten Química (linha Nitro Automotive)",
+   "volumeMl": 500
   },
   "fontes": [
    {
@@ -5036,7 +5084,8 @@
    "superficies": "Pneus, borrachas externas e detalhes plásticos externos",
    "tipo": "Limpador de pneus e borrachas",
    "volume": "500 ml",
-   "fabricante": "Harten Química (linha Nitro Automotive)"
+   "fabricante": "Harten Química (linha Nitro Automotive)",
+   "volumeMl": 500
   },
   "fontes": [
    {
@@ -5103,7 +5152,8 @@
    "superficies": "Pneus, borrachas externas e detalhes plásticos externos",
    "tipo": "Limpador de pneus e borrachas",
    "volume": "5 L (apresentação não confirmada em fonte)",
-   "fabricante": "Harten Química (linha Nitro Automotive)"
+   "fabricante": "Harten Química (linha Nitro Automotive)",
+   "volumeMl": 5000
   },
   "fontes": [
    {
@@ -5170,7 +5220,8 @@
    "volume": "500 ml (presumido; ver dúvidas)",
    "superficies": "Pneus, borrachas e plásticos automotivos",
    "tipo": "Revitalizador com brilho resistente à água",
-   "fabricante": "Harten Química (linha Nitro Automotive)"
+   "fabricante": "Harten Química (linha Nitro Automotive)",
+   "volumeMl": 500
   },
   "fontes": [
    {
@@ -5230,7 +5281,8 @@
   "atributos": {
    "volume": "200 ml (presumido pelo padrão dos sanitizantes Nitro; não confirmado)",
    "aplicacao": "Interior do veículo: bancos, carpetes, painéis (padrão da linha)",
-   "fabricante": "Harten Química (linha Nitro Automotive)"
+   "fabricante": "Harten Química (linha Nitro Automotive)",
+   "volumeMl": 200
   },
   "fontes": [
    {
@@ -5300,7 +5352,8 @@
    "veiculos": "Carros, vans, picapes e veículos em geral",
    "fragrancia": "Carro novo",
    "tipo": "Sanitizante (elimina fungos e bactérias) com fragrância",
-   "fabricante": "Harten Química (linha Nitro Automotive)"
+   "fabricante": "Harten Química (linha Nitro Automotive)",
+   "volumeMl": 200
   },
   "fontes": [
    {
@@ -5359,7 +5412,8 @@
    "aplicacao": "interior do veículo e ambientes fechados",
    "modoDeUso": "pulverizar no interior e manter portas e vidros fechados por no mínimo 10 minutos",
    "durabilidadeInformada": "7 a 15 dias (revendedores)",
-   "fabricante": "Vonixx"
+   "fabricante": "Vonixx",
+   "volumeMl": 1500
   },
   "fontes": [
    {
@@ -5441,7 +5495,8 @@
    "aplicacao": "interior do veículo e ambientes fechados",
    "modoDeUso": "pulverizar no interior e manter portas e vidros fechados por no mínimo 10 minutos",
    "durabilidadeInformada": "7 a 15 dias (revendedores)",
-   "fabricante": "Vonixx"
+   "fabricante": "Vonixx",
+   "volumeMl": 5000
   },
   "fontes": [
    {
@@ -5518,7 +5573,8 @@
   "atributos": {
    "volume": "1 L",
    "superficies": "Plásticos e borrachas",
-   "fabricante": "Bugatti Química"
+   "fabricante": "Bugatti Química",
+   "volumeMl": 1000
   },
   "fontes": [
    {
@@ -5570,7 +5626,8 @@
   "atributos": {
    "volume": "1 L",
    "superficies": "Plásticos e borrachas",
-   "fabricante": "Bugatti Química"
+   "fabricante": "Bugatti Química",
+   "volumeMl": 1000
   },
   "fontes": [
    {
@@ -5622,7 +5679,8 @@
   "atributos": {
    "volume": "300 ml (200 g)",
    "codigoFabricante": "0893221301",
-   "aplicacao": "Lubrificação e proteção de plásticos, borrachas, metais, couro, madeira, vinil e cerâmica; canaletas, dobradiças, fechaduras e trilhos"
+   "aplicacao": "Lubrificação e proteção de plásticos, borrachas, metais, couro, madeira, vinil e cerâmica; canaletas, dobradiças, fechaduras e trilhos",
+   "volumeMl": 300
   },
   "fontes": [
    {
@@ -5697,7 +5755,8 @@
    "pressaoIndicada": "1750 a 2200 PSI",
    "vazaoIndicada": "5,5 a 10 L/min (bico 1,3 mm para 7 a 8 L/min)",
    "ajusteDoBico": "0 a 45 graus, horizontal ou vertical",
-   "aplicacao": "pré-lavagem com espuma em lavadora de alta pressão"
+   "aplicacao": "pré-lavagem com espuma em lavadora de alta pressão",
+   "volumeMl": 1000
   },
   "fontes": [
    {
@@ -5780,7 +5839,8 @@
    "pressaoIndicada": "1750 a 2200 PSI (linha Snow Foam Detailer)",
    "vazaoIndicada": "5,5 a 10 L/min (linha)",
    "ajusteDoBico": "0 a 45 graus, horizontal ou vertical",
-   "aplicacao": "pré-lavagem com espuma em lavadora de alta pressão"
+   "aplicacao": "pré-lavagem com espuma em lavadora de alta pressão",
+   "volumeMl": 1000
   },
   "fontes": [
    {
@@ -5846,7 +5906,8 @@
    "superficies": "Carroceria/pintura",
    "tipo": "Shampoo automotivo concentrado, pH neutro, antimancha",
    "volume": "1,5 L",
-   "fabricante": "Harten Química (linha Nitro Automotive)"
+   "fabricante": "Harten Química (linha Nitro Automotive)",
+   "volumeMl": 1500
   },
   "fontes": [
    {
@@ -5924,7 +5985,8 @@
    "superficies": "Carroceria/pintura",
    "tipo": "Shampoo automotivo concentrado, pH neutro, antimancha",
    "volume": "5 L (apresentação não confirmada em fonte)",
-   "fabricante": "Harten Química (linha Nitro Automotive)"
+   "fabricante": "Harten Química (linha Nitro Automotive)",
+   "volumeMl": 5000
   },
   "fontes": [
    {
@@ -5996,7 +6058,8 @@
   "atributos": {
    "volume": "500 ml (presumido; não confirmado)",
    "tipo": "Removedor de piche e cola",
-   "fabricante": "Harten Química (linha Nitro Automotive)"
+   "fabricante": "Harten Química (linha Nitro Automotive)",
+   "volumeMl": 500
   },
   "fontes": [
    {
@@ -6052,7 +6115,8 @@
    "volume": "5 L",
    "pH": "alcalino",
    "aplicacao": "Lavagem sem toque; chassi e motor com graxa acumulada",
-   "fabricante": "Bugatti Química"
+   "fabricante": "Bugatti Química",
+   "volumeMl": 5000
   },
   "fontes": [
    {
@@ -6259,7 +6323,8 @@
    "volume": "500 ml",
    "aplicacao": "Pintura automotiva",
    "duracao": "até 5 meses",
-   "manutencao": "Blend Spray Wax"
+   "manutencao": "Blend Spray Wax",
+   "volumeMl": 500
   },
   "fontes": [
    {
@@ -6321,7 +6386,8 @@
    "rendimento": "50 ml: 3 a 4 carros",
    "cura": "parcial 12 h (sem água); total 6 dias",
    "acompanha": "Aplicador",
-   "base": "Silício (SiO2)"
+   "base": "Silício (SiO2)",
+   "volumeMl": 20
   },
   "fontes": [
    {
@@ -6387,7 +6453,8 @@
    "volume": "500 ml",
    "superficies": "Motor, caixas de roda, mangueiras, plásticos e metais expostos",
    "tipo": "Verniz de motor e caixa de roda, secagem rápida",
-   "fabricante": "Harten Química (linha Nitro Automotive)"
+   "fabricante": "Harten Química (linha Nitro Automotive)",
+   "volumeMl": 500
   },
   "fontes": [
    {

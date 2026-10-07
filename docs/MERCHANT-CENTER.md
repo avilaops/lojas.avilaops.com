@@ -10,6 +10,7 @@ conta do Google de cada loja. Nada aqui é por loja em código: sai de colunas d
 |---|---|
 | Catálogo | `/feed/merchant.xml` (`src/lib/catalogo-merchant.ts`), até 10 fotos por oferta |
 | Descrição do anúncio | A da página: descrição curta e longa, em texto puro e com parágrafos (`descricaoMerchant`). Antes só a curta saía quando existia |
+| Preço por litro (`unit_pricing_measure` + `unit_pricing_base_measure`) | Só quando o cadastro tem `atributos.volumeMl` numérico; base sempre 1 l (`unidadeDePrecoMerchant`) |
 | Especificações (`product_detail`) | A ficha técnica visível (`fichaDoProduto`), em pares nome/valor; chave interna (`_*`, `grupoLegado`) não sai |
 | Eventos para o GTM | `view_item`, `add_to_cart`, `begin_checkout` e `purchase` entram no `dataLayer` como `{ event, ecommerce }` (formato GA4) quando a loja tem GTM; sem GTM vão por `gtag` (`src/lib/eventos-loja.ts`) |
 | Imagem grande na busca | `max-image-preview:large` em toda página indexável (`src/app/layout.tsx`) |

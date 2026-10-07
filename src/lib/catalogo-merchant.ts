@@ -32,6 +32,19 @@ export function descricaoMerchant(p:{nome:string;descricaoCurta:string|null;desc
  * anúncio com a busca ("shampoo 1,5 L", "boina 6 polegadas"). Só o que a
  * ficha já publica; nada é inventado nem vem de chave interna.
  */
+/**
+ * Preço por unidade de medida (`unit_pricing_measure` + base), que o Google
+ * recomenda para consumível vendido por volume: é o que deixa comparar 500 ml
+ * a R$ 30 com 1,5 L a R$ 70 na mesma prateleira. Só sai quando o cadastro
+ * tem `atributos.volumeMl` numérico; a base é 1 l, sempre.
+ */
+export function unidadeDePrecoMerchant(atributos:unknown):string {
+  const v=Number((atributos as Record<string,unknown>|null)?.volumeMl);
+  if(!Number.isFinite(v)||v<=0||v>100000) return "";
+  const medida=v>=1000?`${Number((v/1000).toFixed(3))}l`:`${Number(v.toFixed(1))}ml`;
+  return tag("unit_pricing_measure",medida)+tag("unit_pricing_base_measure","1l");
+}
+
 export function detalhesMerchant(atributos:unknown):string {
   return fichaDoProduto((atributos??{}) as Record<string,unknown>).slice(0,100)
     .map(l=>`<g:product_detail>${tag("section_name","Especificações")}${tag("attribute_name",l.rotulo.slice(0,140))}${tag("attribute_value",l.valor.slice(0,1000))}</g:product_detail>`).join("");
@@ -67,7 +80,7 @@ export function itensMerchant(p:ProdutoCatalogo,base:string,prateleira:(nome:str
       marca?tag("brand",marca):"",gtinValido(v.gtin)?tag("gtin",v.gtin!):"",v.mpn?tag("mpn",v.mpn):"",
       v.identificadoresEstado==="sem_identificador"&&!v.gtin&&!v.mpn?tag("identifier_exists","no"):"",
       p.categoria?tag("product_type",p.categoria.nome):"",googleCategoria?tag("google_product_category",String(googleCategoria)):"",
-      detalhesMerchant(p.atributos),
+      detalhesMerchant(p.atributos),unidadeDePrecoMerchant(p.atributos),
       dimensoesDeEnvioValidas?tag("shipping_length",`${v.comprimentoCm} cm`)+tag("shipping_width",`${v.larguraCm} cm`)+tag("shipping_height",`${v.alturaCm} cm`):"",
       v.pesoKg!=null&&Number.isFinite(v.pesoKg)&&v.pesoKg>0&&v.pesoKg<=1000?tag("shipping_weight",`${v.pesoKg} kg`):"",
       freteGratis(v.precoCentavos)?`<g:shipping>${tag("country","BR")}${tag("price",preco(0))}</g:shipping>`:"",
