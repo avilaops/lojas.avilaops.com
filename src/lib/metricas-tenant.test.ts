@@ -128,6 +128,10 @@ test("host maior que um nome DNS (253 caracteres) cai em _outros; com 253 exatos
   assert.equal(chaveDoHost(`WWW.${noLimite}.:443`), noLimite);
   assert.equal(chaveDoHost(`a${noLimite}`), HOST_OUTROS);
   assert.equal(chaveDoHost("a".repeat(8000)), HOST_OUTROS);
+  // A porta sai antes da medição do nome: o cabeçalho cru tem teto próprio (264 = "www." + 253 + "." + ":65535").
+  assert.equal(chaveDoHost(`www.${noLimite}.:65535`), noLimite);
+  assert.equal(chaveDoHost(`www.${noLimite}.:655350`), HOST_OUTROS);
+  assert.equal(chaveDoHost(`${noLimite}:${"1".repeat(8000)}`), HOST_OUTROS);
   const { registro } = comRelogio();
   for (let i = 0; i < 3; i++) registro.registrar({ host: `${i}${"a".repeat(8000)}`, grupo: "busca", status: 200, duracaoMs: 10 });
   const { hosts } = registro.resumo();

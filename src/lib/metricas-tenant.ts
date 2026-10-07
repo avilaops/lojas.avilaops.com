@@ -70,7 +70,10 @@ export interface ResumoDeMetricas {
 
 /** A mesma leitura de `normalizarHost` (`src/lib/tenant.ts`), mais o `www.`. */
 export function chaveDoHost(host: string | null | undefined): string {
-  const limpo = (host ?? "").trim().toLowerCase().replace(/:\d+$/, "").replace(/\.$/, "").replace(/^www\./, "");
+  const bruto = (host ?? "").trim();
+  // Teto do cabeçalho cru: 253 do nome, mais "www.", o ponto final e ":65535". Sem ele, uma porta longa passaria pelo corte abaixo.
+  if (bruto.length > 264) return HOST_OUTROS;
+  const limpo = bruto.toLowerCase().replace(/:\d+$/, "").replace(/\.$/, "").replace(/^www\./, "");
   // Nome DNS tem no máximo 253 caracteres: acima disso é cabeçalho forjado e não ganha chave própria.
   if (limpo.length > 253) return HOST_OUTROS;
   return limpo || HOST_SEM_HOST;
