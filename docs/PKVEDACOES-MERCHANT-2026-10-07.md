@@ -69,21 +69,41 @@ família, feitas por ela, resolvem a vitrine inteira.
 exportação do painel (`COLUNAS_PRODUTO`), localizando cada produto pelo
 `slug`. Validada com `lerCsvProdutos`: 767 linhas, 0 erros. Colunas:
 
-- `descricao_curta` (159 a 198 caracteres): família, medida, aplicação,
-  código PK. É o que vira meta description e `g:description`.
-- `descricao` (três parágrafos): ficha com as medidas, o que o perfil faz e
-  como conferir a medida no alojamento. O texto de cada família foi escrito a
-  partir da definição pública do perfil (tipo B: lábios simétricos a 45° com
-  chanfro, haste; STD: perfil padrão para êmbolo, altura igual à seção,
-  substitui V e U; BS: duplo contato com a haste, todo em PU; raspador D: sem
-  carcaça, canal aberto; anel guia: evita contato metal com metal e absorve
-  carga lateral). Fontes: a própria PK (trecho indexado do site antigo), o
-  catálogo CIAGN 1021 da AGN Vedações e páginas da Soorings e Vedsystem.
-  **Nenhum número que a PK não publicou** (dureza Shore, temperatura,
-  pressão, material do anel guia) entrou no texto.
+- `descricao_curta` (188 a 232 caracteres): família, medida, aplicação,
+  limites de pressão e velocidade, referência de catálogo e código PK. É o
+  que vira meta description e `g:description`.
+- `descricao` (quatro parágrafos): ficha com as medidas e a referência; o
+  que o perfil faz, onde se aplica, pressão e velocidade máximas; o material
+  (dureza, faixa de temperatura, compatibilidade química); como conferir a
+  medida no alojamento. **Todos os números são do catálogo da própria PK**,
+  que está no Drive (pasta `07 - PK Vedações`: "Catálogo modelo.pdf",
+  "Proposta catálogo v1.pdf" e "Catálogo PK Vedações.xlsx"):
+
+  | Família | Aplicação | Pressão máx. | Velocidade máx. | Material |
+  |---|---|---:|---:|---|
+  | Gaxeta STD | êmbolo (e haste) | 304 bar | 0,5 m/s | PU Shore A 85–93, -25 °C a +90 °C |
+  | Gaxeta B | êmbolo e haste | 304 bar | 0,5 m/s | idem |
+  | Gaxeta BS | haste | 400 bar | 0,5 m/s | idem |
+  | Raspador D | haste | — | 1 m/s | PU, -30 °C a +90 °C |
+  | Anel guia | êmbolo e haste | 40 N/mm² a 20 °C, 30 N/mm² a 100 °C | 1,0 m/s | nylon com fibra de vidro |
+
+- **Referência de catálogo** (ex.: `6-27503937-473`, `W2-4250.500`,
+  `66D-3818`) em 625 dos 767 produtos: só entrou quando o código PK é único
+  na planilha do Drive **e** as três medidas batem com o nome do produto. Nos
+  outros 142 a referência continua visível em "Substitui / equivale a", que
+  já é dado do cadastro.
 - `google_product_category`: 111 (Comercial e industrial), a prateleira que a
   plataforma já usa para as famílias industriais da Vedashow. A taxonomia
   não tem folha para vedação hidráulica.
+
+### A planilha da PK e a loja não são o mesmo conjunto
+
+Cruzamento do `cod_pk` da planilha do Drive (805 códigos, 38 repetidos) com
+os 767 SKUs publicados: 644 em ambos, 121 só na loja (ex.: `PKG.0032`,
+`PKG.0139`), 161 só na planilha (ex.: `GNY.5001`, `GNY.5013`). A loja foi
+carregada de uma base maior que a planilha ("843 produtos catalogados" na
+proposta). Não é erro da loja, mas é bom a PK saber que o catálogo impresso
+e a loja divergem.
 
 Como aplicar: Painel → Produtos → Planilha → enviar o CSV → conferir a
 prévia (767 atualizados, 0 criados) → confirmar. Só então conferir
