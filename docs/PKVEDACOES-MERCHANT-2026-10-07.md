@@ -108,7 +108,7 @@ itens "SR") e 92 só na planilha: 76 anéis guia, 17 raspadores D e 2 gaxetas
 STD. Boa parte desses 92 tem o **mesmo código PK em duas linhas** com
 referências e medidas diferentes (ex.: `GNY.5001` com `6W10-3000.250` e
 `6W10-3000.251`), o que impede criar o produto sem a PK dizer qual é o
-código certo. A lista está em
+código certo. A lista (95 linhas, porque três slugs se repetem na planilha) está em
 `docs/importacao/pkvedacoes-so-na-planilha-2026-10-07.csv`, só para
 conferência; **não** é planilha de importação.
 
