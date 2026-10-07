@@ -88,22 +88,29 @@ exportação do painel (`COLUNAS_PRODUTO`), localizando cada produto pelo
   | Anel guia | êmbolo e haste | 40 N/mm² a 20 °C, 30 N/mm² a 100 °C | 1,0 m/s | nylon com fibra de vidro |
 
 - **Referência de catálogo** (ex.: `6-27503937-473`, `W2-4250.500`,
-  `66D-3818`) em 625 dos 767 produtos: só entrou quando o código PK é único
-  na planilha do Drive **e** as três medidas batem com o nome do produto. Nos
-  outros 142 a referência continua visível em "Substitui / equivale a", que
-  já é dado do cadastro.
+  `12500625-250`) em 748 dos 767 produtos: só entrou quando o slug da loja
+  (código + referência) existe na planilha do Drive **e** as três medidas
+  batem com o nome do produto. Os 19 restantes são itens "SR" (sob
+  referência especial: 17 raspadores e 2 anéis guia) que a planilha não tem.
+- **Código PK correto por família**: a BS leva o sufixo no código
+  (`PKG.0376 BS`), e dois STD são segundo cadastro (`PKG.1934/A`,
+  `PKG.0265 A`). A primeira versão desta planilha escrevia `PKG.0376` para a
+  BS; corrigido cruzando pelo slug.
 - `google_product_category`: 111 (Comercial e industrial), a prateleira que a
   plataforma já usa para as famílias industriais da Vedashow. A taxonomia
   não tem folha para vedação hidráulica.
 
 ### A planilha da PK e a loja não são o mesmo conjunto
 
-Cruzamento do `cod_pk` da planilha do Drive (805 códigos, 38 repetidos) com
-os 767 SKUs publicados: 644 em ambos, 121 só na loja (ex.: `PKG.0032`,
-`PKG.0139`), 161 só na planilha (ex.: `GNY.5001`, `GNY.5013`). A loja foi
-carregada de uma base maior que a planilha ("843 produtos catalogados" na
-proposta). Não é erro da loja, mas é bom a PK saber que o catálogo impresso
-e a loja divergem.
+Cruzamento pelo slug (código + referência) da planilha do Drive (843 linhas,
+840 slugs) com os 767 produtos publicados: 748 em ambos, 19 só na loja (os
+itens "SR") e 92 só na planilha: 76 anéis guia, 17 raspadores D e 2 gaxetas
+STD. Boa parte desses 92 tem o **mesmo código PK em duas linhas** com
+referências e medidas diferentes (ex.: `GNY.5001` com `6W10-3000.250` e
+`6W10-3000.251`), o que impede criar o produto sem a PK dizer qual é o
+código certo. A lista está em
+`docs/importacao/pkvedacoes-so-na-planilha-2026-10-07.csv`, só para
+conferência; **não** é planilha de importação.
 
 Como aplicar: Painel → Produtos → Planilha → enviar o CSV → conferir a
 prévia (767 atualizados, 0 criados) → confirmar. Só então conferir
