@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { VALORES_LAYOUT } from "./tema";
 import { LIMITE_RASCUNHO, lerRascunho } from "./previa-tema";
-import { VIEWPORTS, avaliarMedida, casosDeValidacao, type CasoDeValidacao, type MedidaDoCaso } from "./validacao-templates";
+import { VIEWPORTS, avaliarMedida, casosDeValidacao, ePreCarregamentoDeLink, type CasoDeValidacao, type MedidaDoCaso } from "./validacao-templates";
 
 const temaPremium = JSON.parse(readFileSync(new URL("../../tests/fixtures/tema-premium-completo.json", import.meta.url), "utf8")) as Record<string, unknown>;
 const casos = casosDeValidacao(temaPremium);
@@ -136,4 +136,41 @@ test("regra f: animação ou transição falha só com movimento reduzido", () =
 
   const normal = casoDe("spotlight.desktop.claro.normal");
   assert.deepEqual(avaliarMedida(normal, limpa(normal, { animacoesAtivas: 2, transicoesComDuracao: 31 })), []);
+});
+
+// Texto do Chromium para recurso que não carregou.
+const erroDeStatus = (status: number, motivo: string) => `Failed to load resource: the server responded with a status of ${status} (${motivo})`;
+const NAO_ACHOU = erroDeStatus(404, "Not Found");
+const BASE = "http://localhost:3099";
+
+test("pré-carregamento de link: só o _rsc com 404 fora da prévia é ignorado", () => {
+  assert.equal(ePreCarregamentoDeLink(`${BASE}/produtos/capacete?_rsc=1a2b3`, NAO_ACHOU), true);
+});
+
+test("pré-carregamento de link: _rsc com outro status ou outro erro reprova", () => {
+  const endereco = `${BASE}/produtos/capacete?_rsc=1a2b3`;
+  const textos = [
+    erroDeStatus(500, "Internal Server Error"),
+    erroDeStatus(403, "Forbidden"),
+    // A fronteira de palavra: 4040 não é 404.
+    erroDeStatus(4040, "Not Found"),
+    "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "",
+  ];
+  for (const texto of textos) assert.equal(ePreCarregamentoDeLink(endereco, texto), false, texto || "(texto vazio)");
+  // O "404" do caminho não vale pelo status.
+  assert.equal(ePreCarregamentoDeLink(`${BASE}/produtos/404?_rsc=1a2b3`, erroDeStatus(500, "Internal Server Error")), false);
+});
+
+test("pré-carregamento de link: 404 que não é pré-carregamento de link reprova", () => {
+  const enderecos = [
+    // A própria prévia: é a página do caso, não um link dela.
+    `${BASE}/painel/previa?_rsc=1a2b3`,
+    `${BASE}/painel/previa?t=abc&_rsc=1a2b3`,
+    `${BASE}/_next/static/chunks/main-app.js`,
+    // Vizinha de uma das imagens que o script substitui.
+    `${BASE}/media/automotivo-premium/editorial-outra-v1.webp`,
+    "",
+  ];
+  for (const endereco of enderecos) assert.equal(ePreCarregamentoDeLink(endereco, NAO_ACHOU), false, endereco || "(endereço vazio)");
 });

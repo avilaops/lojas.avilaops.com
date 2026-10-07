@@ -20,7 +20,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { chromium } from "playwright";
 import { VALORES_LAYOUT } from "../src/lib/tema";
-import { VIEWPORTS, avaliarMedida, casosDeValidacao, type MedidaDoCaso } from "../src/lib/validacao-templates";
+import { VIEWPORTS, avaliarMedida, casosDeValidacao, ePreCarregamentoDeLink, type MedidaDoCaso } from "../src/lib/validacao-templates";
 
 const SAIDA = ".work/engineer/validacao-templates.json";
 const SLUG_QA = "qa-validacao-templates";
@@ -180,22 +180,6 @@ const IMAGENS_DO_FIXTURE = new Set([
   new URL("/media/automotivo-premium/editorial-cuidado-v1.webp", BASE).href,
 ]);
 const IMAGEM_NEUTRA = '<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1200"><rect width="1600" height="1200" fill="#9ca3af"/></svg>';
-
-/**
- * Os links da home apontam para páginas da loja, que não existem no domínio do
- * painel (por isso o palco é `inert`). O Next pré-carrega cada um, recebe 404 e
- * o navegador registra o erro: é da prévia, não do template. Só o 404: um 500
- * (ou qualquer outro status) no pré-carregamento é defeito e reprova.
- */
-function ePreCarregamentoDeLink(endereco: string, texto: string): boolean {
-  if (!/\bstatus of 404\b/.test(texto)) return false;
-  try {
-    const url = new URL(endereco);
-    return url.searchParams.has("_rsc") && url.pathname !== "/painel/previa";
-  } catch {
-    return false;
-  }
-}
 
 async function main() {
   const temaPremium = JSON.parse(readFileSync(new URL("../tests/fixtures/tema-premium-completo.json", import.meta.url), "utf8")) as Record<string, unknown>;
