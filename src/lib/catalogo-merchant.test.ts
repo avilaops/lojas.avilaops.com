@@ -39,3 +39,22 @@ test("feed só declara frete quando a loja garante frete grátis para a oferta",
   const comFrete = gerarFeedMerchant(loja, "https://vedashow.com.br", [produto("confirmada")], (preco) => preco >= 100);
   assert.match(comFrete, /<g:shipping><g:country>BR<\/g:country><g:price>0\.00 BRL<\/g:price><\/g:shipping>/);
 });
+
+test("a descrição do feed é a da página: curta e longa, em texto puro, nessa ordem", () => {
+  const p = produto("confirmada");
+  Object.assign(p, { descricaoCurta: "Rolamento rígido de esferas, vedação 2RS.", descricao: "<p>Serve em <b>motores</b> e redutores.</p><p>Medidas: 35 x 72 x 17 mm.</p>" });
+  const feed = gerarFeedMerchant({ nome: "Vedashow", slogan: null }, "https://vedashow.com.br", [p]);
+  assert.match(feed, /<g:description>Rolamento rígido de esferas, vedação 2RS\.\n\nServe em motores e redutores\.\n\nMedidas: 35 x 72 x 17 mm\.<\/g:description>/);
+  // Curta igual ao começo da longa não sai duas vezes.
+  Object.assign(p, { descricaoCurta: "Serve em motores", descricao: "Serve em motores e redutores." });
+  assert.match(gerarFeedMerchant({ nome: "Vedashow", slogan: null }, "https://vedashow.com.br", [p]), /<g:description>Serve em motores e redutores\.<\/g:description>/);
+});
+
+test("a ficha técnica visível vira product_detail; chave interna não sai", () => {
+  const p = produto("confirmada");
+  Object.assign(p, { atributos: { diametroInternoMm: 35, volumeMl: 500, _catalogoFonte: "erp", grupoLegado: "X" } });
+  const feed = gerarFeedMerchant({ nome: "Vedashow", slogan: null }, "https://vedashow.com.br", [p]);
+  assert.match(feed, /<g:product_detail><g:section_name>Especificações<\/g:section_name><g:attribute_name>Diâmetro interno<\/g:attribute_name><g:attribute_value>35 mm<\/g:attribute_value><\/g:product_detail>/);
+  assert.match(feed, /<g:attribute_name>Volume \(ml\)<\/g:attribute_name><g:attribute_value>500<\/g:attribute_value>/);
+  assert.doesNotMatch(feed, /catalogoFonte|grupoLegado/);
+});

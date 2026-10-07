@@ -117,5 +117,12 @@ Este repositório pertence à Ávila Ops Tecnologia, que ajuda pequenas empresas
   chegou a 97% em 28/09/2026 com essas cópias. Voltar versão é republicar o
   commit. Antes de mexer em dado, faça dump do banco; é o único backup que o
   GitHub não substitui.
+- **Um caminho só para o Google.** Loja com GTM recebe os eventos de
+  e-commerce como objeto no `dataLayer` (`{ event, ecommerce }`, formato GA4) e
+  não por `gtag('event')`; sem GTM é o contrário. Os dois juntos fazem o mesmo
+  gatilho disparar duas vezes. O marcador `window.__lojaPixels` sai no HTML
+  (`Pixels.tsx`), antes de qualquer evento. O que vai ao Merchant é o que a
+  página mostra: descrição curta + longa e a ficha visível como
+  `product_detail` (`catalogo-merchant.ts`); nada inventado nem de chave interna.
 - **Português nos nomes e comentários**, como no resto do monorepo.
 - **TypeScript estrito**; `npm run typecheck` antes de entregar.

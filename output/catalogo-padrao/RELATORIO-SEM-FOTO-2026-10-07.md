@@ -1,0 +1,103 @@
+# Brilhax: os 95 produtos sem foto, pesquisados para o Merchant Center (07/10/2026)
+
+## O que é isto
+
+Dossiê de complemento dos **95 cadastros da Brilhax sem nenhuma foto**, um por
+um, feito em sessão de nuvem em 07/10/2026 a partir do último snapshot local do
+catálogo (`brilhax-catalogo-final.json`, 12/09/2026) e da matriz de 28/09.
+Arquivos:
+
+| Arquivo | O que tem |
+|---|---|
+| `brilhax-sem-foto-2026-10-07.json` | uma entrada por produto: nome proposto, marca, descrição curta e longa, categoria da loja, categoria Google (id + caminho, conferidos na taxonomia oficial), GTIN só quando lido em fonte, atributos para a ficha, fontes, página de onde copiar as fotos, confiança e dúvidas |
+| `brilhax-sem-foto-2026-10-07.csv` | a mesma lista, para revisão em planilha |
+| `scripts/completar-catalogo-sem-foto.mjs` | aplica o dossiê na loja pela API administrativa, copiando as fotos das páginas-fonte |
+
+## Estado de partida (último dado verificado)
+
+- 224 cadastros; **79 ativos, todos com foto** (conferidos em 28/09).
+- **95 sem foto, todos inativos (sem preço)**: Nitro 31, Würth 21, Vintex 16,
+  Bugatti 11, Vonixx 10, Detailer 6. Destes, 92 sem descrição, 95 sem GTIN.
+- O que a produção tem **hoje** não foi lido: esta sessão não alcança
+  `brilhax.com` nem `lojas.avilaops.com`. O script começa baixando o catálogo
+  atual e só mexe em quem continua sem foto.
+
+## Resultado da pesquisa
+
+| Confiança | Produtos | Significado |
+|---|---:|---|
+| alta | 45 | produto e apresentação confirmados em página do fabricante ou em dois varejistas |
+| média | 34 | produto confirmado; apresentação (volume, numeração, concentração) ou fonte oficial pendente |
+| baixa | 16 | nome ambíguo, produto não localizado com esse nome ou marca em dúvida |
+
+- **93 de 95** têm a página de onde as fotos oficiais podem ser copiadas
+  (fabricante quando existe, senão o melhor varejista).
+- **0 fotos copiadas nesta sessão**: a rede bloqueia o acesso aos sites dos
+  fabricantes e varejistas. É o script, rodando na máquina do Nicolas, que lê a
+  página-fonte, extrai as imagens (JSON-LD `Product.image`, `og:image`) e manda
+  a plataforma copiá-las para `/uploads`.
+- **GTIN: 1 confirmado** (Würth Limpa Contato, base Cosmos) e **7 candidatos**
+  (Vintex, lidos só em resumo de busca). Candidato não vai ao feed: fica em
+  `gtinCandidato` para conferir na embalagem. Nenhum GTIN foi deduzido.
+- **Categoria Google** atribuída aos 95, com id conferido em
+  `src/lib/google-product-taxonomy.pt-BR.json`: 2590 (33), 2643 (17), 2895 (9),
+  543608 marcadores (7), 2789 odorizadores (6), 2894 (5), 2846 (5) e folhas
+  específicas para os itens Würth que não são de limpeza automotiva (luvas
+  5591, lanterna 543689, espátulas 1202, epóxi 503742, limpa contato 503741,
+  silicone 1753, saca-grampos 8236, anti-deslizante 2788).
+- **10 produtos mudam de categoria da loja**: arominhas vão para
+  Aromatizantes (estavam em Proteção) e sanitizantes para Lavagem.
+- **2 kits montados pela loja** (00089 Higicouro + Hidracouro, 00090 V-Floc +
+  V-Mol): sem GTIN, marcados `kit: true`.
+
+## Decisões que são do Nicolas ou do lojista
+
+1. **Marca "Nitro".** Todas as fontes atribuem HT7, Lamax, Acitrox, Altrox,
+   Ox-Pro, Revoke, Speel Car, Venon e companhia à **linha Nitro Automotive /
+   NitroX da Harten Química** (hartenquimica.com.br), não à Nitro Química. O
+   dossiê mantém `marca: "Nitro"` (o que está no rótulo) e põe o fabricante em
+   `atributos.fabricante`. Confirmar no rótulo antes de publicar.
+2. **Volumes assumidos.** 23 cadastros não dizem a apresentação (Acitrox,
+   Carpet, Ferrux, Glass Pro, Split, Rubber Pro, Renovex, Solupan, V-Paint,
+   pincéis Vonixx…). Foi escolhida a menor apresentação de varejo e a dúvida
+   está anotada item a item.
+3. **Nomes que não existem como estão**: Sanitizante Bom Ar (não é Nitro; é
+   Vintex), Arominha Spray 200 ml Nitro, Lamax MOL 1,5 L, HT7 1,5 L (fabricante
+   vende 500 ml e 1 L), Revoke 5 L e Speel Car 5 L (não encontrados), Limpa Pneus
+   Bugatti (o produto localizado é o Pneu Pretinho), Kit limpeza para-brisa Würth
+   (não é SKU Würth; é bundle de revendedor), espátula saca-grampos unitária
+   (Würth só vende o jogo de 4). Todos com confiança baixa: o script não os
+   aplica sem `--incluir-baixa`.
+4. **Toalhas Detailer 40x80 e 37x57**: nenhuma Detailer nessas medidas; a única
+   40x80 de fabricante é a Vintex 350 GSM. Pedir foto da embalagem.
+5. **Marcadores industriais Würth (7 cores)** e **arominhas (aromas)**: podem
+   virar variações de um produto só (`item_group_id`) em vez de sete cadastros.
+
+## Como aplicar
+
+```bash
+# ensaio: baixa o catálogo atual, resolve as fotos e grava o plano, sem gravar na loja
+LOJAS_ADMIN_TOKEN=... node scripts/completar-catalogo-sem-foto.mjs \
+  --loja brilhax --dossie output/catalogo-padrao/brilhax-sem-foto-2026-10-07.json
+
+# aplica os de confiança alta e média (os de baixa só com --incluir-baixa)
+LOJAS_ADMIN_TOKEN=... node scripts/completar-catalogo-sem-foto.mjs \
+  --loja brilhax --dossie output/catalogo-padrao/brilhax-sem-foto-2026-10-07.json --aplicar
+```
+
+O script não ativa produto nem mexe em preço, estoque ou destaque. Produto que
+ficar sem foto reconhecida na página-fonte recebe só texto e categoria, e sai
+listado no `.plano.json` para a foto ser subida à mão pelo painel. Antes de
+mexer em dado, dump do banco, como manda o `AGENTS.md`.
+
+Depois de aplicar: conferir no painel (Catálogo › Qualidade) que os itens saíram
+de "sem foto", e só então ativar (dar preço) os que a loja de fato vende. Item
+inativo não entra no feed nem no sitemap.
+
+## O que ficou de fora e por quê
+
+- Buscas de GTIN em bases públicas (Cosmos, Systax) para Würth e Vonixx: a cota
+  de busca da sessão acabou antes. Os candidatos estão gravados.
+- Leitura direta das páginas dos fabricantes: bloqueada pela rede da sessão.
+  As descrições saíram dos trechos que a busca devolveu; o modo de uso que não
+  foi lido no fabricante está declarado em `duvidas`.

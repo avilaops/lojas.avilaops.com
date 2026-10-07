@@ -34,12 +34,23 @@ export default function Pixels({ p }: { p: PixelsDaLoja }) {
   }, [aceito]);
 
   const gtag = p.ga4Id || p.googleAdsId;
+  // `ads_data_redaction`: enquanto o anúncio está negado, o Google também
+  // tira os identificadores de clique das URLs que recebe. É o par do Consent
+  // Mode v2 que a documentação pede junto do `default` negado.
   const padraoConsentimento =
     "window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}" +
-    "gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'denied',wait_for_update:500});";
+    "gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'denied',wait_for_update:500});" +
+    "gtag('set','ads_data_redaction',true);";
 
   return (
     <>
+      {/* Marcador lido por eventos-loja.ts para escolher o caminho do Google
+          (dataLayer com GTM, gtag sem). Script em linha no HTML, e não
+          next/script, porque o view_item da página do produto dispara na
+          hidratação e o afterInteractive pode chegar depois dele. */}
+      {(p.gtmId || gtag) && (
+        <script dangerouslySetInnerHTML={{ __html: `window.__lojaPixels={gtm:${p.gtmId ? "true" : "false"}};window.dataLayer=window.dataLayer||[];` }} />
+      )}
       {p.gtmId && (
         <Script id="gtm" strategy="afterInteractive">
           {`${padraoConsentimento}(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','${p.gtmId}');`}

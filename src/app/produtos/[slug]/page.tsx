@@ -114,7 +114,10 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
     ...(gtinValido(p.gtin) ? { gtin: p.gtin } : {}),
     ...(escolhida?.mpn ? { mpn: escolhida.mpn } : {}),
     ...(compat.length ? { isAccessoryOrSparePartFor: compat.map((c) => ({ "@type": "Vehicle", name: `${c.marca} ${c.modelo}`, brand: { "@type": "Brand", name: c.marca }, model: c.modelo })) } : {}),
-    image: p.imagens,
+    url: `${urlDaLoja(t)}/produtos/${p.slug}`,
+    // `image: []` é erro no teste de resultados avançados; sem foto, o campo
+    // não sai (a página já é noindex pela régua de `publicavel`).
+    ...(p.imagens.length ? { image: p.imagens } : {}),
     // Texto puro: a descrição importada vem com HTML, e tag dentro do JSON-LD
     // aparece literal no rich result.
     description: textoPuro(p.descricaoCurta ?? p.descricao) || undefined,

@@ -23,6 +23,8 @@ type Janela = Window & {
   fbq?: (...args: unknown[]) => void;
   ttq?: { track: (evento: string, dados?: unknown) => void };
   dataLayer?: unknown[];
+  /** Gravado por Pixels.tsx no HTML, antes de qualquer evento: a loja usa GTM? */
+  __lojaPixels?: { gtm?: boolean };
 };
 
 const reais = (centavos: number) => Number((centavos / 100).toFixed(2));
@@ -31,8 +33,36 @@ function janela(): Janela | null {
   return typeof window === "undefined" ? null : (window as Janela);
 }
 
-function paraGa4(itens: ItemEvento[]) {
+export function paraGa4(itens: ItemEvento[]) {
   return itens.map((i) => ({ item_id: i.id, item_name: i.nome, price: reais(i.precoCentavos), quantity: i.quantidade ?? 1, item_category: i.categoria ?? undefined }));
+}
+
+/**
+ * O que vai para o Tag Manager.
+ *
+ * `gtag('event', …)` empurra um objeto `arguments` no dataLayer, que só o
+ * gtag.js entende. Um gatilho do GTM ("Evento personalizado: add_to_cart") lê
+ * o dataLayer procurando `{ event: "add_to_cart", ecommerce: {...} }`, que é
+ * o formato de e-commerce do GA4. Sem isto, a loja com GTM e sem GA4 direto
+ * tinha os eventos na tabela do painel e nenhum deles chegava ao contêiner.
+ *
+ * `ecommerce: null` antes de cada evento é a recomendação do Google: sem ele,
+ * o GTM mescla os itens do evento anterior nos do próximo.
+ */
+export function entradasDoDataLayer(evento: string, itens: ItemEvento[], valorCentavos: number, extra: { transacao?: string; frete?: number } = {}): unknown[] {
+  return [
+    { ecommerce: null },
+    {
+      event: evento,
+      ecommerce: {
+        currency: "BRL",
+        value: reais(valorCentavos),
+        ...(extra.transacao ? { transaction_id: extra.transacao } : {}),
+        ...(extra.frete != null ? { shipping: reais(extra.frete) } : {}),
+        items: paraGa4(itens),
+      },
+    },
+  ];
 }
 
 function disparar(nomes: { ga4: string; meta: string; tiktok: string }, itens: ItemEvento[], extra: { valor?: number; transacao?: string; frete?: number } = {}) {
@@ -41,13 +71,23 @@ function disparar(nomes: { ga4: string; meta: string; tiktok: string }, itens: I
   const valor = extra.valor ?? itens.reduce((s, i) => s + i.precoCentavos * (i.quantidade ?? 1), 0);
 
   try {
-    w.gtag?.("event", nomes.ga4, {
-      currency: "BRL",
-      value: reais(valor),
-      items: paraGa4(itens),
-      ...(extra.transacao ? { transaction_id: extra.transacao } : {}),
-      ...(extra.frete != null ? { shipping: reais(extra.frete) } : {}),
-    });
+    // Um caminho só para o Google. Com GTM, o evento vai como objeto no
+    // dataLayer e o contêiner decide o que fazer com ele; chamar `gtag('event')`
+    // junto faria o mesmo gatilho disparar duas vezes. Sem GTM, o gtag.js do
+    // GA4/Ads é quem lê, e ele só entende a chamada `gtag`.
+    if (w.__lojaPixels?.gtm) {
+      // O dataLayer existe desde o HTML (Pixels.tsx); isto é só rede de proteção.
+      (w.dataLayer ??= []);
+      for (const entrada of entradasDoDataLayer(nomes.ga4, itens, valor, { transacao: extra.transacao, frete: extra.frete })) w.dataLayer.push(entrada);
+    } else {
+      w.gtag?.("event", nomes.ga4, {
+        currency: "BRL",
+        value: reais(valor),
+        items: paraGa4(itens),
+        ...(extra.transacao ? { transaction_id: extra.transacao } : {}),
+        ...(extra.frete != null ? { shipping: reais(extra.frete) } : {}),
+      });
+    }
     w.fbq?.("track", nomes.meta, {
       currency: "BRL",
       value: reais(valor),
