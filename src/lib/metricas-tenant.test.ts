@@ -121,6 +121,20 @@ test("chaveDoHost dá o mesmo que normalizarHost nos casos sem www, e tira o www
   assert.equal(chaveDoHost(undefined), HOST_SEM_HOST);
 });
 
+test("host maior que um nome DNS (253 caracteres) cai em _outros; com 253 exatos segue com a chave dele", () => {
+  const noLimite = `${"a".repeat(249)}.com`;
+  assert.equal(noLimite.length, 253);
+  assert.equal(chaveDoHost(noLimite), noLimite);
+  assert.equal(chaveDoHost(`WWW.${noLimite}.:443`), noLimite);
+  assert.equal(chaveDoHost(`a${noLimite}`), HOST_OUTROS);
+  assert.equal(chaveDoHost("a".repeat(8000)), HOST_OUTROS);
+  const { registro } = comRelogio();
+  for (let i = 0; i < 3; i++) registro.registrar({ host: `${i}${"a".repeat(8000)}`, grupo: "busca", status: 200, duracaoMs: 10 });
+  const { hosts } = registro.resumo();
+  assert.deepEqual(Object.keys(hosts), [HOST_OUTROS]);
+  assert.equal(hosts[HOST_OUTROS].busca!.requisicoes, 3);
+});
+
 test("host com caixa, porta e www diferentes cai na mesma chave", () => {
   const { registro } = comRelogio();
   for (const host of ["Loja.com.br", "loja.com.br:443", "www.loja.com.br"]) registro.registrar({ host, grupo: "busca", status: 200, duracaoMs: 10 });
