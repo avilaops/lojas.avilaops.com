@@ -172,17 +172,23 @@ const ASSENTOU = `document.fonts.status === "loaded" && [...document.querySelect
  * As imagens do tema de teste (`tests/fixtures/tema-premium-completo.json`)
  * não existem: uma está num host fictício, a outra em `/media/` de uma loja.
  * O script responde as duas com esta, senão o Automotivo Premium falharia por
- * endereço de teste e não por defeito do template.
+ * endereço de teste e não por defeito do template. Endereço exato, sem
+ * curinga: qualquer outra imagem quebrada, mesmo vizinha destas, reprova.
  */
-const IMAGENS_DO_FIXTURE = ["https://exemplo.test/**", "**/media/automotivo-premium/**"];
+const IMAGENS_DO_FIXTURE = new Set([
+  "https://exemplo.test/editorial/acessorios.webp",
+  new URL("/media/automotivo-premium/editorial-cuidado-v1.webp", BASE).href,
+]);
 const IMAGEM_NEUTRA = '<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1200"><rect width="1600" height="1200" fill="#9ca3af"/></svg>';
 
 /**
  * Os links da home apontam para páginas da loja, que não existem no domínio do
  * painel (por isso o palco é `inert`). O Next pré-carrega cada um, recebe 404 e
- * o navegador registra o erro: é da prévia, não do template.
+ * o navegador registra o erro: é da prévia, não do template. Só o 404: um 500
+ * (ou qualquer outro status) no pré-carregamento é defeito e reprova.
  */
-function ePreCarregamentoDeLink(endereco: string): boolean {
+function ePreCarregamentoDeLink(endereco: string, texto: string): boolean {
+  if (!/\bstatus of 404\b/.test(texto)) return false;
   try {
     const url = new URL(endereco);
     return url.searchParams.has("_rsc") && url.pathname !== "/painel/previa";
@@ -217,15 +223,16 @@ async function main() {
       let preCarregamentosIgnorados = 0;
       try {
         await contexto.addCookies([{ name: "lojas_sessao", value: cookie, domain: HOST_BASE, path: "/" }]);
-        for (const padrao of IMAGENS_DO_FIXTURE) {
-          await contexto.route(padrao, (rota) => rota.fulfill({ contentType: "image/svg+xml", body: IMAGEM_NEUTRA }));
-        }
+        await contexto.route(
+          (url) => IMAGENS_DO_FIXTURE.has(url.href),
+          (rota) => rota.fulfill({ contentType: "image/svg+xml", body: IMAGEM_NEUTRA }),
+        );
         const pagina = await contexto.newPage();
         const errosDePagina: string[] = [];
         pagina.on("pageerror", (e) => errosDePagina.push(e.message));
         pagina.on("console", (m) => {
           if (m.type() !== "error") return;
-          if (ePreCarregamentoDeLink(m.location().url)) preCarregamentosIgnorados++;
+          if (ePreCarregamentoDeLink(m.location().url, m.text())) preCarregamentosIgnorados++;
           else errosDePagina.push(`${m.text()} (${m.location().url})`);
         });
         // `load` e não `networkidle`: o Next não lê o corpo do 404 dos
