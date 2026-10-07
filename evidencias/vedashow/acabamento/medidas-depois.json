@@ -1,0 +1,41 @@
+{
+  "banner": 400,
+  "cards": [
+    {
+      "altura": 351.109375,
+      "nome": "Correia 3L300 GBR"
+    },
+    {
+      "altura": 351.109375,
+      "nome": "Correia 3L350 GBR"
+    },
+    {
+      "altura": 417.640625,
+      "nome": "Mancal GBR FL206"
+    },
+    {
+      "altura": 417.640625,
+      "nome": "Mancal GBR P207"
+    },
+    {
+      "altura": 435.8125,
+      "nome": "Rolamento Radial Esfera Fixo GBR 6002 2RS"
+    },
+    {
+      "altura": 435.8125,
+      "nome": "Rolamento Radial Esfera Fixo GBR 6204 2RSC3"
+    },
+    {
+      "altura": 369.28125,
+      "nome": "Abraçadeira 5/8"
+    },
+    {
+      "altura": 369.28125,
+      "nome": "Abraçadeira Borboleta 13-19 mm em Aço Carbono"
+    }
+  ],
+  "conteudo": 375,
+  "espacoRodape": 32,
+  "largura": 390,
+  "whatsapp": "none"
+}

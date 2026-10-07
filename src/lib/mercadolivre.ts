@@ -1,6 +1,7 @@
 import type { Tenant } from "@prisma/client";
 import { prisma } from "./db";
 import { cifrar, decifrar } from "./cofre";
+import { emitirState } from "./oauth-state";
 
 /**
  * Mercado Livre: conexão da conta e chamada autenticada.
@@ -19,14 +20,23 @@ const SITE = "MLB";
 
 export class MercadoLivreNaoConectado extends Error {}
 
-/** URL para o lojista autorizar. `state` carrega o slug para o callback saber
- *  de quem é a autorização: a rota é uma só para todas as lojas. */
+/** O propósito do `state` assinado desta conexão: ver `oauth-state.ts`. */
+export const PROPOSITO_DO_STATE = "canal:mercadolivre";
+
+/**
+ * URL para o lojista autorizar. O `state` diz ao callback de quem é a
+ * autorização, porque a rota é uma só para todas as lojas.
+ *
+ * Até outubro de 2026 o `state` era o slug em claro: quem montasse o endereço
+ * de retorno à mão gravava a própria conta do Mercado Livre na loja de outro
+ * lojista, e a venda dessa loja passava a cair na conta errada.
+ */
 export function urlDeAutorizacao(slug: string, base: string): string {
   const p = new URLSearchParams({
     response_type: "code",
     client_id: process.env.ML_APP_ID ?? "",
     redirect_uri: `${base}/ml/callback`,
-    state: slug,
+    state: emitirState(PROPOSITO_DO_STATE, slug),
   });
   return `https://auth.mercadolivre.com.br/authorization?${p}`;
 }

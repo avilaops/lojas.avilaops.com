@@ -1,8 +1,8 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
 import type { Tenant } from "@prisma/client";
 import { cifrar, decifrar } from "./cofre";
 import { prisma } from "./db";
 import { baseDoMelhorEnvio, cabecalhosDoMelhorEnvio } from "./melhor-envio";
+import { emitirState as emitirStateAssinado, lerState as lerStateAssinado } from "./oauth-state";
 
 /**
  * Conexão da loja com o Melhor Envio, por OAuth.
@@ -35,42 +35,15 @@ export function conectado(t: Pick<Tenant, "melhorEnvioAccessTokenEnc" | "melhorE
 
 // ── state ──────────────────────────────────────────────────────────────
 
-function segredo(): Buffer {
-  const hex = process.env.LOJAS_SECRET ?? "";
-  if (!/^[0-9a-f]{64}$/i.test(hex)) throw new Error("LOJAS_SECRET ausente.");
-  return Buffer.from(hex, "hex");
-}
+/** O `state` assinado é o mesmo de todas as conexões: ver `oauth-state.ts`. */
+const PROPOSITO = "melhor-envio-oauth";
 
-/**
- * O prefixo separa esta assinatura da do cookie de sessão, que usa a mesma
- * chave: sem ele, um `state` vazado num log serviria de sessão do painel.
- */
-function assinar(corpo: string): string {
-  return createHmac("sha256", segredo()).update(`melhor-envio-oauth:${corpo}`).digest("base64url");
-}
-
-/**
- * O `state` diz de qual loja é a autorização, e por isso é assinado e vence em
- * quinze minutos. O retorno é uma rota só para todas as lojas: com o slug em
- * claro, bastaria montar o endereço à mão para gravar a própria conta do
- * Melhor Envio na loja de outro lojista.
- */
 export function emitirState(slug: string): string {
-  const corpo = Buffer.from(JSON.stringify({ slug, exp: Date.now() + 15 * 60_000 })).toString("base64url");
-  return `${corpo}.${assinar(corpo)}`;
+  return emitirStateAssinado(PROPOSITO, slug);
 }
 
 export function lerState(state: string | null | undefined): string | null {
-  const [corpo, assinatura] = (state ?? "").split(".");
-  if (!corpo || !assinatura) return null;
-  const esperada = assinar(corpo);
-  if (esperada.length !== assinatura.length || !timingSafeEqual(Buffer.from(esperada), Buffer.from(assinatura))) return null;
-  try {
-    const dados = JSON.parse(Buffer.from(corpo, "base64url").toString("utf8")) as { slug?: unknown; exp?: unknown };
-    return typeof dados.slug === "string" && typeof dados.exp === "number" && dados.exp > Date.now() ? dados.slug : null;
-  } catch {
-    return null;
-  }
+  return lerStateAssinado(PROPOSITO, state);
 }
 
 // ── OAuth ──────────────────────────────────────────────────────────────

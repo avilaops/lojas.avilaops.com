@@ -27,6 +27,16 @@ export type CanalMl = {
   anuncios: { aprovado: number; publicado: number; rascunho: number; recusado: number; pausado: number };
 };
 
+export type ContaDeCanal = {
+  canal: string;
+  /** `false` quando a plataforma não tem o aplicativo do canal cadastrado. */
+  disponivel: boolean;
+  conectado: boolean;
+  contaNome: string | null;
+  contaId: string | null;
+  conectadoEm: string | null;
+};
+
 export type CandidatoMl = {
   produtoId: string;
   nome: string;
@@ -47,6 +57,7 @@ const RETORNO: Record<string, { tom: "ok" | "erro"; texto: string }> = {
   recusado: { tom: "erro", texto: "Você não autorizou a conexão. Nada foi salvo." },
   incompleto: { tom: "erro", texto: "O Mercado Livre não devolveu os dados da autorização. Tente de novo." },
   falhou: { tom: "erro", texto: "Não consegui completar a conexão. Tente de novo; se insistir, me chame." },
+  "sem-permissao": { tom: "erro", texto: "Seu acesso não permite conectar canais de venda. Fale com o dono da loja." },
 };
 
 /**
@@ -66,9 +77,13 @@ const RETORNO: Record<string, { tom: "ok" | "erro"; texto: string }> = {
  * tinha 180 de 200 produtos travados lia "nenhum produto anunciado ainda" e
  * não tinha como descobrir por quê nem o que digitar.
  */
-export default function Canais({ loja, ml, regras, pendencias, candidatos, integracaoDisponivel, retorno }: {
+export default function Canais({ loja, ml, regras, pendencias, candidatos, integracaoDisponivel, retorno, contas, retornoDoCanal }: {
   loja: { slug: string; nome: string };
   ml: CanalMl;
+  /** Amazon, Shopee e Magalu: o estado da conexão de cada um. */
+  contas: ContaDeCanal[];
+  /** O que voltou da autorização de um desses três (`?canal=&r=`). */
+  retornoDoCanal?: { canal: string; resultado: string };
   regras: RegrasDoCanal;
   pendencias: PendenciasDoCatalogo;
   candidatos: CandidatoMl[];
@@ -276,7 +291,7 @@ export default function Canais({ loja, ml, regras, pendencias, candidatos, integ
         </Secao>
       )}
 
-      <OutrosCanais />
+      <OutrosCanais contas={contas} retorno={retornoDoCanal} />
     </>
   );
 }
@@ -588,38 +603,128 @@ function Pendencias({ dados, ocupado, aoConferir, aoMudarCategoria }: {
   );
 }
 
+/** O que o retorno de Amazon, Shopee e Magalu diz, na língua do lojista. */
+const RETORNO_DO_CANAL: Record<string, { tom: "ok" | "erro"; texto: (nome: string) => string }> = {
+  conectado: { tom: "ok", texto: (n) => `Conta ${n} conectada.` },
+  recusado: { tom: "erro", texto: () => "Você não autorizou a conexão. Nada foi salvo." },
+  incompleto: { tom: "erro", texto: (n) => `A autorização ${n} voltou incompleta ou vencida. Clique em conectar de novo.` },
+  falhou: { tom: "erro", texto: () => "O canal não concluiu a conexão. Tente de novo em alguns minutos." },
+  indisponivel: { tom: "erro", texto: () => "A conexão com este canal ainda não está liberada nesta instalação da plataforma." },
+  "sem-permissao": { tom: "erro", texto: () => "Seu acesso não permite conectar canais de venda. Fale com o dono da loja." },
+};
+
 /**
  * Os outros marketplaces.
  *
- * Fica escrito o que cada um vai exigir do lojista, porque boa parte disso é
+ * Fica escrito o que cada um exige do lojista, porque boa parte disso é
  * trabalho de catálogo que ele já pode adiantar hoje — GTIN, peso e dimensão
- * servem aos quatro. Nenhum botão de conectar: botão que não conecta é promessa
- * quebrada na primeira tentativa.
+ * servem aos quatro.
+ *
+ * O botão de conectar só aparece quando a plataforma tem o aplicativo daquele
+ * canal cadastrado: botão que não conecta é promessa quebrada na primeira
+ * tentativa. E conectar ainda não publica — a tela diz isso com todas as
+ * letras, para o lojista não ficar esperando anúncio que não vai subir.
  */
-function OutrosCanais() {
-  const [aberto, setAberto] = useState<string | null>(null);
+function OutrosCanais({ contas, retorno }: { contas: ContaDeCanal[]; retorno?: { canal: string; resultado: string } }) {
+  const router = useRouter();
+  const [aberto, setAberto] = useState<string | null>(retorno?.canal ?? null);
+  const [ocupado, setOcupado] = useState<string | null>(null);
+  const [erro, setErro] = useState<string | null>(null);
+
+  async function desconectar(id: string, nome: string) {
+    if (!confirm(`Desconectar ${nome}? O que você já anunciou lá continua no ar.`)) return;
+    setErro(null);
+    setOcupado(id);
+    try {
+      const r = await fetch(`/api/painel/canais/${id}`, { method: "DELETE" });
+      const dados = (await r.json().catch(() => ({}))) as { erro?: string };
+      if (!r.ok) throw new Error(dados.erro ?? "Falha.");
+      router.refresh();
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Falha inesperada.");
+    } finally {
+      setOcupado(null);
+    }
+  }
+
   return (
-    <Secao titulo="Outros canais" descricao="Na ordem em que aparecerem clientes pedindo. O que cada um vai exigir já está escrito: quase tudo é cadastro que dá para adiantar.">
+    <Secao titulo="Outros canais" descricao="Conecte a conta que você já tem em cada canal. O que cada um exige já está escrito: quase tudo é cadastro que dá para adiantar.">
+      {erro && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{erro}</p>}
       <ul className="grid gap-2">
-        {CANAIS.filter((c) => c.estado === "roadmap").map((c) => (
-          <li key={c.id} className="rounded-lg border border-border">
-            <button type="button" className="flex w-full items-center gap-3 p-3 text-left" onClick={() => setAberto(aberto === c.id ? null : c.id)} aria-expanded={aberto === c.id}>
-              <span className="min-w-0 flex-1 text-sm">
-                <b className="block">{c.nome}</b>
-                <span className="text-xs text-muted-foreground">{c.porQue}</span>
-              </span>
-              <span className="flex-none text-right text-xs text-muted-foreground">
-                comissão {c.comissaoTipica.de}–{c.comissaoTipica.ate}%
-                <span className="block">ainda não</span>
-              </span>
-            </button>
-            {aberto === c.id && (
-              <ul className="grid list-disc gap-1 border-t border-border p-3 pl-8 text-sm text-muted-foreground">
-                {c.exigencias.map((e) => <li key={e}>{e}</li>)}
-              </ul>
-            )}
-          </li>
-        ))}
+        {CANAIS.filter((c) => c.estado === "roadmap").map((c) => {
+          const conta = contas.find((x) => x.canal === c.id);
+          const aviso = retorno?.canal === c.id ? RETORNO_DO_CANAL[retorno.resultado] : undefined;
+          return (
+            <li key={c.id} className="rounded-lg border border-border">
+              <button type="button" className="flex w-full items-center gap-3 p-3 text-left" onClick={() => setAberto(aberto === c.id ? null : c.id)} aria-expanded={aberto === c.id}>
+                <span className="min-w-0 flex-1 text-sm">
+                  <b className="block">{c.nome}</b>
+                  <span className="text-xs text-muted-foreground">{c.porQue}</span>
+                </span>
+                <span className="flex-none text-right text-xs text-muted-foreground">
+                  comissão {c.comissaoTipica.de}–{c.comissaoTipica.ate}%
+                  <span className={`block ${conta?.conectado ? "font-medium text-emerald-700" : ""}`}>{conta?.conectado ? "conectada" : "não conectada"}</span>
+                </span>
+              </button>
+              {aberto === c.id && (
+                <div className="grid gap-3 border-t border-border p-3">
+                  {aviso && (
+                    <p className={`rounded-lg p-3 text-sm ${aviso.tom === "ok" ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-amber-900"}`}>
+                      {aviso.texto(`d${c.artigo} ${c.nome}`)}
+                    </p>
+                  )}
+
+                  {conta?.conectado ? (
+                    <>
+                      <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border p-3">
+                        <Check size={18} className="flex-none text-emerald-600" />
+                        <span className="flex-1 text-sm">
+                          <b className="block">{conta.contaNome ?? "Conta conectada"}</b>
+                          <span className="text-xs text-muted-foreground">
+                            {conta.contaId && `código ${conta.contaId}`}
+                            {conta.conectadoEm && `${conta.contaId ? " · " : ""}conectada em ${dataHora(conta.conectadoEm)}`}
+                          </span>
+                        </span>
+                        <button className="btn-secundario inline-flex h-9 items-center gap-1.5 px-3 text-xs" disabled={Boolean(ocupado)} onClick={() => void desconectar(c.id, `${c.artigo} ${c.nome}`)}>
+                          <Unlink size={14} /> Desconectar
+                        </button>
+                      </div>
+                      <p className="flex items-start gap-2 rounded-lg bg-muted/60 p-3 text-sm">
+                        <Info size={15} className="mt-0.5 flex-none text-muted-foreground" />
+                        <span>
+                          A conta está conectada, mas a loja <b>ainda não publica anúncio nem recebe pedido</b> d{c.artigo} {c.nome}. Nada
+                          muda lá por enquanto: quando a publicação abrir, você autoriza produto a produto, como no Mercado Livre.
+                        </span>
+                      </p>
+                    </>
+                  ) : conta?.disponivel ? (
+                    <>
+                      <p className="text-sm text-muted-foreground">
+                        Você autoriza na tela d{c.artigo} {c.nome}. A loja guarda só a autorização, nunca a sua senha, e o
+                        dinheiro das vendas continua caindo na sua conta.
+                      </p>
+                      <div>
+                        <a className="btn-primario inline-flex items-center gap-2" href={`/api/painel/canais/${c.id}`}>
+                          <Link2 size={15} /> Conectar {c.nome}
+                        </a>
+                      </div>
+                    </>
+                  ) : (
+                    // Sem o aplicativo cadastrado na plataforma, o botão levaria a
+                    // uma tela de erro do próprio canal, que parece defeito da loja.
+                    <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
+                      A conexão com {c.artigo} {c.nome} ainda não está liberada nesta instalação da plataforma. Fale com a Avila Ops.
+                    </p>
+                  )}
+
+                  <ul className="grid list-disc gap-1 pl-5 text-sm text-muted-foreground">
+                    {c.exigencias.map((e) => <li key={e}>{e}</li>)}
+                  </ul>
+                </div>
+              )}
+            </li>
+          );
+        })}
       </ul>
       <p className="text-xs text-muted-foreground">
         O Google Shopping já funciona sem conectar nada: o feed da sua loja está em{" "}

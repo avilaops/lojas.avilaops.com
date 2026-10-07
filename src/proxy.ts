@@ -1,4 +1,5 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";import { ehRetornoDeAutorizacao, ficaNaRaiz } from "@/lib/rotas-da-raiz";
+
 
 /**
  * Um servidor, dois "sites":
@@ -17,13 +18,11 @@ export function proxy(request: NextRequest) {
   const host = (request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? "").toLowerCase().replace(/:\d+$/, "");
   const { pathname } = request.nextUrl;
 
-  // /ml é o retorno do Mercado Livre: a URL foi cadastrada no devcenter deles
-  // e não pode virar /plataforma/ml, senão o lojista volta da autorização num
-  // 404 e o token se perde.
-  // /v1 é o contrato do Padrão Oficial e mora na raiz de src/app, como /api:
-  // sem esta exceção o caminho viraria /plataforma/v1 e o coletor receberia 404
-  // de uma app que está de pé.
-  if (host === BASE && !pathname.startsWith("/api/") && !pathname.startsWith("/v1/") && !pathname.startsWith("/ml/") && !pathname.startsWith("/plataforma")) {
+  // O que foi combinado com alguém de fora fica na raiz de src/app: retorno de
+  // autorização (/ml, /melhor-envio, /canais) e contratos de API (/api, /v1). Sem a
+  // exceção o caminho viraria /plataforma/<rota>, o lojista voltaria da
+  // autorização num 404 e o token se perderia. A lista mora em rotas-da-raiz.ts.
+  if (host === BASE && !ficaNaRaiz(pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = `/plataforma${pathname === "/" ? "" : pathname}`;
     // Cabeçalho de REQUISIÇÃO: é o que o layout raiz lê com headers().
@@ -64,7 +63,7 @@ export function proxy(request: NextRequest) {
   // `no-store` da origem, a defesa fica aqui, que é o que está sob nosso
   // controle e não depende de configuração de painel externo.
   const resposta = NextResponse.next();
-  if (pathname.startsWith("/api/") || pathname.startsWith("/painel") || pathname.startsWith("/conta")) {
+  if (pathname.startsWith("/api/") || pathname.startsWith("/painel") || pathname.startsWith("/conta") || ehRetornoDeAutorizacao(pathname)) {
     resposta.headers.set("cache-control", "private, no-store, max-age=0, must-revalidate");
     return resposta;
   }
