@@ -19,7 +19,13 @@
  *   - não inventa GTIN: só vai o que o dossiê traz com fonte;
  *   - não aplica item de confiança baixa sem `--incluir-baixa`;
  *   - não grava foto que não conseguiu extrair: o produto recebe texto e
- *     categoria, e o relatório lista o que ficou sem imagem.
+ *     categoria, e o relatório lista o que ficou sem imagem;
+ *   - não troca a categoria da loja sem `--mudar-categoria`: a importação
+ *     casa categoria pelo slug do nome, e "Rolamento" no dossiê renomearia a
+ *     prateleira "Rolamentos" inteira;
+ *   - respeita a honestidade da imagem: item com `fotoExata: false` só recebe
+ *     foto como `representativa`, e só quando o dossiê diz a `imagemFamilia`;
+ *     sem família, fica sem foto (é a regra da plataforma, ver AGENTS.md).
  *
  * Dossiê: array com os campos que os pesquisadores produzem (ver
  * output/catalogo-padrao/brilhax-sem-foto-2026-10-07.json): sku, nomeAtual,
@@ -40,9 +46,10 @@ const token = process.env.LOJAS_ADMIN_TOKEN;
 const aplicar = args.aplicar === true;
 const incluirBaixa = args["incluir-baixa"] === true;
 const somenteSku = typeof args.sku === "string" ? new Set(args.sku.split(",")) : null;
+const mudarCategoria = args["mudar-categoria"] === true;
 
 if (!loja || !dossiePath || typeof dossiePath !== "string") {
-  console.error("uso: LOJAS_ADMIN_TOKEN=... node scripts/completar-catalogo-sem-foto.mjs --loja <slug> --dossie <arquivo.json> [--aplicar] [--incluir-baixa] [--sku 00120,00121] [--base https://lojas.avilaops.com]");
+  console.error("uso: LOJAS_ADMIN_TOKEN=... node scripts/completar-catalogo-sem-foto.mjs --loja <slug> --dossie <arquivo.json> [--aplicar] [--incluir-baixa] [--mudar-categoria] [--sku 00120,00121] [--base https://lojas.avilaops.com]");
   process.exit(2);
 }
 if (!token) {
@@ -121,13 +128,22 @@ const pulados = [];
 for (const item of dossie) {
   if (item.aplicar === false) { pulados.push({ sku: item.sku, motivo: "aplicar=false no dossiê" }); continue; }
   if (somenteSku && !somenteSku.has(item.sku)) continue;
+  if (item.confianca === "nao_pesquisado") { pulados.push({ sku: item.sku, motivo: "não pesquisado" }); continue; }
   if (item.confianca === "baixa" && !incluirBaixa) { pulados.push({ sku: item.sku, motivo: "confiança baixa (use --incluir-baixa)" }); continue; }
   const atual = (item.sku && porSku.get(item.sku)) || (item.slug && porSlug.get(item.slug));
   if (!atual) { pulados.push({ sku: item.sku, motivo: "não encontrado na loja (sku/slug)" }); continue; }
   if (atual.imagens?.length) { pulados.push({ sku: item.sku, motivo: "já tem foto na loja; nada a fazer aqui" }); continue; }
 
-  const { fotos, origem, pagina } = await fotosDaFonte(item);
+  // Origem da imagem: exata (`propria`) por padrão; o dossiê pode rebaixar
+  // para representativa (precisa da família) ou negar a foto.
+  const exata = item.fotoExata !== false && item.imagemOrigem !== "representativa";
+  const familia = typeof item.imagemFamilia === "string" && item.imagemFamilia.trim() ? item.imagemFamilia.trim() : null;
+  const podeFoto = exata || Boolean(familia);
+  const { fotos, origem, pagina } = podeFoto ? await fotosDaFonte(item) : { fotos: [], origem: "foto não exata e sem família: não entra", pagina: undefined };
   const gtin = typeof item.gtin === "string" && gtinValido(item.gtin) ? item.gtin : undefined;
+  const mpn = typeof item.mpn === "string" && item.mpn.trim() ? item.mpn.trim().slice(0, 60) : undefined;
+  const categoriaAtual = atual.categoria?.nome ?? null;
+  const trocaCategoria = mudarCategoria && item.categoriaLoja && item.categoriaLoja !== categoriaAtual;
   const entrada = {
     sku: atual.sku ?? undefined,
     slug: atual.slug,
@@ -135,15 +151,16 @@ for (const item of dossie) {
     // Preço atual de volta: o PUT exige o campo e não é esta rodada que o muda.
     precoCentavos: atual.precoCentavos,
     ...(item.marca ? { marca: item.marca } : {}),
-    ...(item.categoriaLoja ? { categoria: item.categoriaLoja } : {}),
+    ...(trocaCategoria ? { categoria: item.categoriaLoja } : {}),
     ...(item.googleProductCategory?.id ? { googleProductCategory: String(item.googleProductCategory.id) } : {}),
     ...(gtin ? { gtin } : {}),
+    ...(mpn ? { mpn, identificadoresEstado: "informado" } : {}),
     ...(item.descricaoCurta ? { descricaoCurta: String(item.descricaoCurta).slice(0, 300) } : {}),
     ...(item.descricao ? { descricao: String(item.descricao).slice(0, 8000) } : {}),
     atributos: { ...(atual.atributos ?? {}), ...(item.atributos ?? {}), _catalogoFonte: pagina ?? item.fontes?.[0]?.url ?? "pesquisa 2026-10-07" },
-    ...(fotos.length ? { imagens: fotos, imagemOrigem: "propria" } : {}),
+    ...(fotos.length ? (exata ? { imagens: fotos, imagemOrigem: "propria" } : { imagens: fotos, imagemOrigem: "representativa", imagemFamilia: familia }) : {}),
   };
-  plano.push({ sku: item.sku, nomeAtual: atual.nome, confianca: item.confianca, fotos: fotos.length, origemDasFotos: origem, duvidas: item.duvidas ?? [], entrada });
+  plano.push({ sku: item.sku, nomeAtual: atual.nome, confianca: item.confianca, fotos: fotos.length, imagemOrigem: fotos.length ? (exata ? "propria" : "representativa") : null, origemDasFotos: origem, categoriaAtual, categoriaProposta: item.categoriaLoja ?? null, categoriaEnviada: Boolean(trocaCategoria), duvidas: item.duvidas ?? [], entrada });
 }
 
 const planoPath = dossiePath.replace(/\.json$/, "") + ".plano.json";
