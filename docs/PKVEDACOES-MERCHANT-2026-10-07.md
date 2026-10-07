@@ -103,19 +103,44 @@ exportação do painel (`COLUNAS_PRODUTO`), localizando cada produto pelo
 ### A planilha da PK e a loja não são o mesmo conjunto
 
 Cruzamento pelo slug (código + referência) da planilha do Drive (843 linhas,
-840 slugs) com os 767 produtos publicados: 748 em ambos, 19 só na loja (os
-itens "SR") e 92 só na planilha: 76 anéis guia, 17 raspadores D e 2 gaxetas
-STD. Boa parte desses 92 tem o **mesmo código PK em duas linhas** com
-referências e medidas diferentes (ex.: `GNY.5001` com `6W10-3000.250` e
-`6W10-3000.251`), o que impede criar o produto sem a PK dizer qual é o
-código certo. A lista (95 linhas, porque três slugs se repetem na planilha) está em
-`docs/importacao/pkvedacoes-so-na-planilha-2026-10-07.csv`, só para
-conferência; **não** é planilha de importação.
+840 slugs) com os 767 produtos publicados: 748 em ambos, 19 só na loja e 95
+linhas só na planilha. Depois de olhar linha a linha:
 
-Como aplicar: Painel → Produtos → Planilha → enviar o CSV → conferir a
-prévia (767 atualizados, 0 criados) → confirmar. Só então conferir
-`/produtos/gny-5010-w2-4250-500` e o `llms-full.txt`. A planilha não mexe em
-nome, preço, foto, categoria nem estoque.
+- **Os 19 "só na loja" são os itens "SR"** (17 raspadores D e 2 anéis guia,
+  slug `<código>-sr`): na planilha da PK eles existem com a coluna de
+  referência vazia, e as três medidas batem com o nome publicado nos 19.
+  Nada a criar; a planilha de atualização já os cobre.
+- **36 anéis guia faltam na loja de verdade.** A aba "Anel Guia" tem 37
+  códigos em duas linhas cada: uma com referência coerente com as medidas
+  (a referência termina em Ø externo e altura em milésimos de polegada:
+  `6W10-3000.250` = 76,2 mm × 6,35 mm) e outra com a referência "+1"
+  (`…251`) e medidas que não correspondem a nada (75,16 × 78,38 × 16,71,
+  crescendo linha a linha como fórmula arrastada). Em 36 códigos só uma linha
+  passa no teste; é ela que entra em
+  `docs/importacao/pkvedacoes-criar-aneis-guia-2026-10-07.csv`, planilha de
+  **criação** (36 linhas, 0 erros no leitor, nenhum slug ou SKU já existente
+  na loja): nome no mesmo padrão da loja, preço 0 (sob consulta, como os
+  demais), categoria "Anel guia", marca PK Vedações, SKU = código PK,
+  descrição da família, foto `representativa` da família (`anel-guia.webp`,
+  a mesma dos 96 publicados) e `atributos_json` com as medidas e a
+  referência. Fica separada da planilha de atualização para o lojista
+  decidir se esses 36 entram.
+- **2 códigos ficam de fora, para a PK responder:** `PKG.1878` (Gaxeta STD;
+  as duas linhas têm a mesma referência `18701187` e externos diferentes,
+  39,66 e 42,86 mm) e `GNY.5137` (Anel guia; nas duas linhas a referência
+  não bate com as medidas, e uma tem interno maior que o externo). A lista
+  completa das 95 linhas continua em
+  `docs/importacao/pkvedacoes-so-na-planilha-2026-10-07.csv`, só para
+  conferência; **não** é planilha de importação.
+
+Como aplicar: Painel → Produtos → Planilha → enviar
+`pkvedacoes-catalogo-2026-10-07.csv` → conferir a prévia (767 atualizados,
+0 criados) → confirmar. Depois, se os 36 anéis guia entram, enviar
+`pkvedacoes-criar-aneis-guia-2026-10-07.csv` → prévia (0 atualizados, 36
+criados) → confirmar. Só então conferir `/produtos/gny-5010-w2-4250-500`,
+um dos novos (`/produtos/gny-5131-6w10-1182-984`) e o `llms-full.txt`. A
+planilha de atualização não mexe em nome, preço, foto, categoria nem
+estoque.
 
 ### Código (vale para toda loja, nada por slug)
 
@@ -169,7 +194,9 @@ Docker. A mudança não toca catálogo nem busca.
 2. **Cinco fotos próprias**, uma por família, no fundo branco, e a decisão
    entre manter 767 produtos (foto `representativa`, fora do Merchant) ou
    reorganizar em 5 produtos com a opção "Medida".
-3. Subir a planilha no painel e conferir.
+3. Subir a planilha de atualização no painel e conferir; decidir se os 36
+   anéis guia da planilha de criação entram; perguntar à PK o código certo
+   de `PKG.1878` e `GNY.5137`.
 4. Aba Marca: slogan (vira title e H1), logo, diferencial e público.
 5. Tag Manager: confirmar a tag GA4 e os gatilhos; ou colar o `G-` em
    Anúncios, que resolve sem container.
