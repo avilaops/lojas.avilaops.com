@@ -180,10 +180,44 @@ que de fato difere: o OAuth, o formato do anúncio e o jeito de a venda voltar.
 | Shopee | 14–22% | roadmap | Conta aprovada na Open Platform; **peso e dimensão reais** por produto; margem que aguente cupom do canal, que sai do bolso do vendedor |
 | Magalu | 10–20% | roadmap | Cadastro no Parceiro Magalu; ficha técnica completa; nota fiscal própria |
 
-Nenhum deles ganha botão de conectar antes de existir: botão que não conecta é
-promessa quebrada na primeira tentativa. O que a tela faz é escrever a
-exigência, porque **boa parte dela é trabalho de catálogo que o lojista já pode
-adiantar hoje** — GTIN, peso e dimensão servem aos quatro.
+A tela escreve a exigência de cada um, porque **boa parte dela é trabalho de
+catálogo que o lojista já pode adiantar hoje** — GTIN, peso e dimensão servem
+aos quatro.
+
+### Conectar a conta (06/10/2026)
+
+Amazon, Shopee e Magalu já **conectam** a conta do lojista. Continuam em
+`roadmap` porque **conectar não é publicar**: nenhum anúncio sobe e nenhum
+pedido volta desses três, e a tela diz isso ao lojista que conectou.
+
+O botão de conectar só aparece para o canal cujo aplicativo a plataforma tem
+cadastrado (variáveis no `.env.example`). Botão que não conecta é promessa
+quebrada na primeira tentativa.
+
+```
+painel → GET /api/painel/canais/<canal>     → state assinado, com o slug da sessão
+      ↓
+tela do canal (lojista autoriza)
+      ↓
+GET /canais/<canal>/callback                → confere state e sessão
+      ↓
+ContaCanal (tokens cifrados)                → tokenDoCanal() renova sozinho
+```
+
+| Canal | O que difere | Acesso | Refresh |
+|---|---|---|---|
+| Shopee | Autoriza em `open.shopee.com.br/auth`; toda chamada de API é assinada com HMAC; o `shop_id` é exigido até na renovação | 4 h | 30 dias, uso único; a autorização inteira dura no máximo 365 dias |
+| Amazon | Autorização pelo *application id* no Seller Central, sem `redirect_uri`; o código volta em `spapi_oauth_code`; aplicativo em rascunho pede `version=beta` | 1 h | não é trocado; reautorização a cada 365 dias |
+| Magalu | OAuth2 pelo ID Magalu, com escolha da conta (`choose_tenants`); troca do código em JSON e renovação em formulário; escopo não cresce depois de emitido | 2 h | guarda-se o que vier na renovação |
+
+**O `state` é assinado e conferido com a sessão**, nos quatro canais e no
+Melhor Envio (`src/lib/oauth-state.ts`). Até esta data o do Mercado Livre era o
+slug em claro: quem montasse `/ml/callback?code=…&state=<slug de outra loja>`
+gravava a própria conta do ML na loja de outro lojista.
+
+O que falta para cada um sair de `roadmap` é o que o Mercado Livre já tem em
+`mercadolivre-*.ts`: preparo do catálogo contra as exigências do canal,
+publicação, sincronia de preço e estoque, e a venda voltando como `Pedido`.
 
 A ordem sugerida é Shopee antes de Amazon: a exigência de GTIN por item da
 Amazon trava justamente o catálogo de peça e acessório, que é o perfil das
@@ -215,6 +249,10 @@ primeiras lojas.
 |---|---|
 | Registro de canais, regras e conta de preço | `src/lib/canais.ts` |
 | Conexão OAuth e chamada autenticada | `src/lib/mercadolivre.ts` |
+| `state` assinado de todas as conexões | `src/lib/oauth-state.ts` |
+| Conta de Amazon, Shopee e Magalu (gravar, renovar, apagar) | `src/lib/contas-canal.ts`, modelo `ContaCanal` |
+| Contrato de autorização de cada um | `src/lib/canal-{amazon,shopee,magalu}.ts` |
+| Conectar e desconectar; retorno da autorização | `src/app/api/painel/canais/[canal]`, `src/app/canais/[canal]/callback` |
 | Preparo do catálogo e pendências agrupadas | `src/lib/mercadolivre-preparo.ts` |
 | Escolha manual de categoria (busca pública, folha, recálculo) | `src/lib/mercadolivre-categorias.ts`, `painel/CategoriaMl.tsx` |
 | Adotar anúncio que já existe no ML (casa por SKU e GTIN, nunca por título) | `src/lib/mercadolivre-adocao.ts`, `painel/AdotarAnunciosMl.tsx` |

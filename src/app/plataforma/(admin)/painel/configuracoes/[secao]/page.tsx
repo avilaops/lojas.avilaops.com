@@ -5,6 +5,7 @@ import PainelLoja, { type SecaoPainel } from "@/components/painel/PainelLoja";
 import Dominio from "@/components/painel/Dominio";
 import Canais from "@/components/painel/Canais";
 import MelhorEnvio from "@/components/painel/MelhorEnvio";
+import { CANAIS_CONECTAVEIS, contasDaLoja, provedorDo } from "@/lib/contas-canal";
 import { aplicativoConfigurado as melhorEnvioDisponivel, conectado as melhorEnvioConectado } from "@/lib/melhor-envio-conta";
 import PerguntasMl from "@/components/painel/PerguntasMl";
 import ReputacaoMl from "@/components/painel/ReputacaoMl";
@@ -41,7 +42,7 @@ export const dynamic = "force-dynamic";
 
 export default async function Pagina({ params, searchParams }: {
   params: Promise<{ secao: string }>;
-  searchParams: Promise<{ ml?: string; me?: string }>;
+  searchParams: Promise<{ ml?: string; me?: string; canal?: string; r?: string }>;
 }) {
   const { secao } = await params;
 
@@ -80,7 +81,7 @@ export default async function Pagina({ params, searchParams }: {
   if (secao === "canais") {
     const [loja, sp] = await Promise.all([lojistaAtual(), searchParams]);
     if (!loja) notFound();
-    const [porEstado, candidatos, perguntas, reputacao, pendencias] = await Promise.all([
+    const [porEstado, candidatos, perguntas, reputacao, pendencias, contas] = await Promise.all([
       prisma.anuncioMercadoLivre.groupBy({
         by: ["estado"],
         where: { tenantId: loja.id },
@@ -103,6 +104,7 @@ export default async function Pagina({ params, searchParams }: {
       perguntasPendentes(loja.id),
       prisma.reputacaoMercadoLivre.findUnique({ where: { tenantId: loja.id } }),
       pendenciasDoCatalogo(loja.id),
+      contasDaLoja(loja.id),
     ]);
     const conta = (e: string) => porEstado.find((p) => p.estado === e)?._count._all ?? 0;
     return (
@@ -123,6 +125,20 @@ export default async function Pagina({ params, searchParams }: {
           // conectar levaria a uma tela de erro do próprio Mercado Livre.
           integracaoDisponivel={Boolean(process.env.ML_APP_ID && process.env.ML_APP_SECRET)}
           retorno={sp.ml}
+          // Amazon, Shopee e Magalu: o aplicativo de cada um também é da
+          // plataforma, e o botão de conectar só aparece para o que está cadastrado.
+          contas={CANAIS_CONECTAVEIS.map((canal) => {
+            const conta = contas.find((c) => c.canal === canal);
+            return {
+              canal,
+              disponivel: provedorDo(canal)?.configurado() ?? false,
+              conectado: Boolean(conta),
+              contaNome: conta?.contaNome ?? null,
+              contaId: conta?.contaId ?? null,
+              conectadoEm: conta?.conectadoEm.toISOString() ?? null,
+            };
+          })}
+          retornoDoCanal={sp.canal && sp.r ? { canal: sp.canal, resultado: sp.r } : undefined}
           ml={{
             conectado: Boolean(loja.mlAccessTokenEnc && loja.mlRefreshTokenEnc),
             nickname: loja.mlNickname,

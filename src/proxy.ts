@@ -19,7 +19,7 @@ export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // O que foi combinado com alguém de fora fica na raiz de src/app: retorno de
-  // autorização (/ml, /melhor-envio) e contratos de API (/api, /v1). Sem a
+  // autorização (/ml, /melhor-envio, /canais) e contratos de API (/api, /v1). Sem a
   // exceção o caminho viraria /plataforma/<rota>, o lojista voltaria da
   // autorização num 404 e o token se perderia. A lista mora em rotas-da-raiz.ts.
   if (host === BASE && !ficaNaRaiz(pathname)) {

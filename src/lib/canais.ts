@@ -21,11 +21,14 @@ export type CanalId = "mercadolivre" | "amazon" | "shopee" | "magalu";
 export interface FichaCanal {
   id: CanalId;
   nome: string;
+  /** "o Magalu", "a Shopee": o artigo que o nome pede nas frases da tela. */
+  artigo: "o" | "a";
   /**
    * `ativo`: publica e recebe venda hoje.
-   * `roadmap`: a ficha existe para o lojista saber o que vai precisar; nada
-   * publica. Nunca desenhamos botão de conectar para canal em roadmap — botão
-   * que não conecta é promessa quebrada na primeira tentativa.
+   * `roadmap`: nada publica ainda. O lojista já pode conectar a conta
+   * (`contas-canal.ts`), e o botão só aparece quando a plataforma tem o
+   * aplicativo do canal cadastrado — botão que não conecta é promessa quebrada
+   * na primeira tentativa. A tela diz que conectar ainda não publica.
    */
   estado: "ativo" | "roadmap";
   /**
@@ -44,6 +47,7 @@ export const CANAIS: FichaCanal[] = [
   {
     id: "mercadolivre",
     nome: "Mercado Livre",
+    artigo: "o",
     estado: "ativo",
     comissaoTipica: { de: 11, ate: 19 },
     porQue: "É onde o brasileiro procura produto primeiro. Conta de vendedor e conta do Mercado Pago são a mesma.",
@@ -56,6 +60,7 @@ export const CANAIS: FichaCanal[] = [
   {
     id: "amazon",
     nome: "Amazon",
+    artigo: "a",
     estado: "roadmap",
     comissaoTipica: { de: 8, ate: 15 },
     porQue: "Ticket médio maior e comprador Prime, que decide pelo prazo antes de decidir pelo preço.",
@@ -68,6 +73,7 @@ export const CANAIS: FichaCanal[] = [
   {
     id: "shopee",
     nome: "Shopee",
+    artigo: "a",
     estado: "roadmap",
     comissaoTipica: { de: 14, ate: 22 },
     porQue: "Giro alto em item barato, com o comprador vindo de campanha e cupom do próprio canal.",
@@ -80,6 +86,7 @@ export const CANAIS: FichaCanal[] = [
   {
     id: "magalu",
     nome: "Magalu",
+    artigo: "o",
     estado: "roadmap",
     comissaoTipica: { de: 10, ate: 20 },
     porQue: "Marketplace com loja física por trás e forte em linha branca, móvel e construção.",
