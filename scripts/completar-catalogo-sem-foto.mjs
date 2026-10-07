@@ -16,7 +16,12 @@
  * O que o script NÃO faz, de propósito:
  *   - não ativa produto nem mexe em preço, estoque ou destaque: o PUT recebe
  *     o preço atual de volta, e campo não enviado fica como está;
- *   - não inventa GTIN: só vai o que o dossiê traz com fonte;
+ *   - não inventa GTIN: só vai o que o dossiê traz com fonte, e nenhum
+ *     GTIN/MPN entra enquanto o dossiê duvidar da unidade de venda (caixa x
+ *     unidade) sem `unidadeVendaConfirmada: true`;
+ *   - foto `propria` só com fonte do fabricante ou distribuidor: anúncio de
+ *     marketplace como única fonte não vira foto própria (`imagemLicenciada`
+ *     declarado é a exceção);
  *   - não aplica item de confiança baixa sem `--incluir-baixa`;
  *   - não grava foto que não conseguiu extrair: o produto recebe texto e
  *     categoria, e o relatório lista o que ficou sem imagem;
@@ -35,6 +40,7 @@
  */
 
 import { readFile, writeFile } from "node:fs/promises";
+import { fonteSoDeMarketplace, fotoPodeSerPropria, identificadoresPermitidos } from "./lib/dossie-regras.mjs";
 
 const args = Object.fromEntries(
   process.argv.slice(2).map((a, i, all) => (a.startsWith("--") ? [a.slice(2), all[i + 1]?.startsWith("--") || all[i + 1] === undefined ? true : all[i + 1]] : [])).filter((e) => e.length),
@@ -134,12 +140,21 @@ for (const item of dossie) {
   if (!atual) { pulados.push({ sku: item.sku, motivo: "não encontrado na loja (sku/slug)" }); continue; }
   if (atual.imagens?.length) { pulados.push({ sku: item.sku, motivo: "já tem foto na loja; nada a fazer aqui" }); continue; }
 
-  // Origem da imagem: exata (`propria`) por padrão; o dossiê pode rebaixar
-  // para representativa (precisa da família) ou negar a foto.
-  const exata = item.fotoExata !== false && item.imagemOrigem !== "representativa";
+  // Dúvida de unidade de venda (caixa x unidade x metro) com GTIN/MPN no
+  // dossiê: o identificador é da unidade, e aplicá-lo à caixa é identidade
+  // comercial errada no Merchant. Sem `unidadeVendaConfirmada: true`, o item
+  // inteiro espera: trocar só o nome e manter o preço da caixa confundiria
+  // tanto quanto. Ver scripts/lib/dossie-regras.mjs.
+  if ((item.gtin || item.mpn) && !identificadoresPermitidos(item)) { pulados.push({ sku: item.sku, motivo: "GTIN/MPN com dúvida de unidade de venda; confirme a quantidade e marque unidadeVendaConfirmada" }); continue; }
+
+  // Origem da imagem: exata (`propria`) só com foto exata E fonte que não
+  // seja apenas anúncio de terceiro (marketplace), salvo licença declarada;
+  // o dossiê pode rebaixar para representativa (precisa da família) ou negar.
+  const exata = fotoPodeSerPropria(item);
   const familia = typeof item.imagemFamilia === "string" && item.imagemFamilia.trim() ? item.imagemFamilia.trim() : null;
   const podeFoto = exata || Boolean(familia);
-  const { fotos, origem, pagina } = podeFoto ? await fotosDaFonte(item) : { fotos: [], origem: "foto não exata e sem família: não entra", pagina: undefined };
+  const motivoSemFoto = !exata && fonteSoDeMarketplace(item) && item.fotoExata !== false ? "única fonte é marketplace: foto não entra como própria" : "foto não exata e sem família: não entra";
+  const { fotos, origem, pagina } = podeFoto ? await fotosDaFonte(item) : { fotos: [], origem: motivoSemFoto, pagina: undefined };
   const gtin = typeof item.gtin === "string" && gtinValido(item.gtin) ? item.gtin : undefined;
   const mpn = typeof item.mpn === "string" && item.mpn.trim() ? item.mpn.trim().slice(0, 60) : undefined;
   const categoriaAtual = atual.categoria?.nome ?? null;
