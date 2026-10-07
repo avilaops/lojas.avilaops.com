@@ -70,7 +70,8 @@
    "Cadastro sem volume: fabricante vende em 1,5 L, 5 L e 20 L; propusemos 1,5 L (menor de varejo). Confirmar a apresentação em estoque.",
    "Não foi encontrada página do produto no site do fabricante (hartenquimica.com.br); as informações vêm de 3 varejistas.",
    "pH e composição não confirmados; não incluir até ter ficha técnica.",
-   "A marca 'Nitro' destes produtos é a linha Nitro Automotive Line / NitroX da Harten Química (hartenquimica.com.br, Shopify), não a Nitro Química (nitroquimica.com.br, que fabrica nitrocelulose e especialidades químicas). Confirmar com o lojista antes de publicar 'Harten' no cadastro."
+   "A marca 'Nitro' destes produtos é a linha Nitro Automotive Line / NitroX da Harten Química (hartenquimica.com.br, Shopify), não a Nitro Química (nitroquimica.com.br, que fabrica nitrocelulose e especialidades químicas). Confirmar com o lojista antes de publicar 'Harten' no cadastro.",
+   "Rodada GTIN: Buscas por nome da linha Nitro/Harten (e pesquisa restrita a Cosmos/Systax) não trouxeram GTIN; Harten não publica EAN nas páginas indexadas. Busca 'Acitrox Altrox NitroX EAN' só trouxe diluentes nitro de outras marcas."
   ],
   "lote": "nitro-1.json",
   "aplicar": true
@@ -145,7 +146,8 @@
   "duvidas": [
    "Página do fabricante não localizada; descrição vem de varejistas (V-One Store 5 L explícito; Navelimpa cita 1,5/5/20 L).",
    "pH e composição não confirmados.",
-   "A marca 'Nitro' destes produtos é a linha Nitro Automotive Line / NitroX da Harten Química (hartenquimica.com.br, Shopify), não a Nitro Química (nitroquimica.com.br, que fabrica nitrocelulose e especialidades químicas). Confirmar com o lojista antes de publicar 'Harten' no cadastro."
+   "A marca 'Nitro' destes produtos é a linha Nitro Automotive Line / NitroX da Harten Química (hartenquimica.com.br, Shopify), não a Nitro Química (nitroquimica.com.br, que fabrica nitrocelulose e especialidades químicas). Confirmar com o lojista antes de publicar 'Harten' no cadastro.",
+   "Rodada GTIN: Buscas por nome da linha Nitro/Harten (e pesquisa restrita a Cosmos/Systax) não trouxeram GTIN; Harten não publica EAN nas páginas indexadas. Busca 'Acitrox Altrox NitroX EAN' só trouxe diluentes nitro de outras marcas."
   ],
   "lote": "nitro-1.json",
   "aplicar": true
@@ -215,7 +217,8 @@
   "duvidas": [
    "Apresentação 1,5 L confirmada em apenas um varejista (V-One Store); produto confirmado em 3 varejistas.",
    "Página do produto no site do fabricante não localizada; pH não confirmado.",
-   "A marca 'Nitro' destes produtos é a linha Nitro Automotive Line / NitroX da Harten Química (hartenquimica.com.br, Shopify), não a Nitro Química (nitroquimica.com.br, que fabrica nitrocelulose e especialidades químicas). Confirmar com o lojista antes de publicar 'Harten' no cadastro."
+   "A marca 'Nitro' destes produtos é a linha Nitro Automotive Line / NitroX da Harten Química (hartenquimica.com.br, Shopify), não a Nitro Química (nitroquimica.com.br, que fabrica nitrocelulose e especialidades químicas). Confirmar com o lojista antes de publicar 'Harten' no cadastro.",
+   "Rodada GTIN: Buscas por nome da linha Nitro/Harten (e pesquisa restrita a Cosmos/Systax) não trouxeram GTIN; Harten não publica EAN nas páginas indexadas. Busca 'Acitrox Altrox NitroX EAN' só trouxe diluentes nitro de outras marcas."
   ],
   "lote": "nitro-1.json",
   "aplicar": true
@@ -284,7 +287,8 @@
   "confianca": "alta",
   "duvidas": [
    "Página do produto no site do fabricante não localizada; pH não confirmado.",
-   "A marca 'Nitro' destes produtos é a linha Nitro Automotive Line / NitroX da Harten Química (hartenquimica.com.br, Shopify), não a Nitro Química (nitroquimica.com.br, que fabrica nitrocelulose e especialidades químicas). Confirmar com o lojista antes de publicar 'Harten' no cadastro."
+   "A marca 'Nitro' destes produtos é a linha Nitro Automotive Line / NitroX da Harten Química (hartenquimica.com.br, Shopify), não a Nitro Química (nitroquimica.com.br, que fabrica nitrocelulose e especialidades químicas). Confirmar com o lojista antes de publicar 'Harten' no cadastro.",
+   "Rodada GTIN: Buscas por nome da linha Nitro/Harten (e pesquisa restrita a Cosmos/Systax) não trouxeram GTIN; Harten não publica EAN nas páginas indexadas. Busca 'Acitrox Altrox NitroX EAN' só trouxe diluentes nitro de outras marcas."
   ],
   "lote": "nitro-1.json",
   "aplicar": true
@@ -350,7 +354,8 @@
   "confianca": "alta",
   "duvidas": [
    "A loja Würth lista o mesmo produto sob dois códigos (0893230220 e 389022 220); confirmar na embalagem qual consta e qual é o EAN.",
-   "Categoria Google: não há folha específica para lubrificante de correias; usada a categoria-mãe Fluidos de veículo (2788). Alternativa: Ferragens > Consumíveis para construção > Lubrificantes (1753)."
+   "Categoria Google: não há folha específica para lubrificante de correias; usada a categoria-mãe Fluidos de veículo (2788). Alternativa: Ferragens > Consumíveis para construção > Lubrificantes (1753).",
+   "Rodada GTIN: Só a versão 400 ml (art. 0893230001, EAN 4099618002793) aparece, na Würth Finlândia; não serve para 220 ml. Código Würth Brasil não localizado."
   ],
   "lote": "wurth.json",
   "aplicar": true
@@ -415,10 +420,13 @@
   "confianca": "alta",
   "duvidas": [
    "A Vonixx tem três aplicadores de espuma (com encaixe de mão, ergonômico 10,6 cm e 9,5x5,5 cm); o pacote de 2 unidades do varejo é o 'anatômico com encaixe de mão'. Confirmar na embalagem.",
-   "A frase de modo de uso é orientação geral de aplicador, não texto do fabricante."
+   "A frase de modo de uso é orientação geral de aplicador, não texto do fabricante.",
+   "Rodada GTIN: Código interno Vonixx 2005001 lido em varejista (Casas Bahia/Extra/Ponto Frio), ficha 'Aplicador de Espuma Anatômico com 2 Unidades'; EAN não exibido."
   ],
   "lote": "bugatti-vonixx.json",
-  "aplicar": true
+  "aplicar": true,
+  "mpn": "2005001",
+  "mpnFonte": "https://www.casasbahia.com.br/aplicador-de-espuma-anatomico-com-2-unidades-vonixx-2005001/p/1582392560"
  },
  {
   "id": "cmtv7ccf5000ypd01do3gb24i",
@@ -491,7 +499,8 @@
   "duvidas": [
    "Página oficial em store.vonixx.com.br ou vintex.com.br não apareceu na busca; fotos teriam de vir de revendedor ou do fabricante por contato.",
    "Medidas e referência 2019013 vêm de revendedores, não do fabricante.",
-   "EAN não encontrado."
+   "EAN não encontrado.",
+   "Rodada GTIN: Nenhuma ficha com EAN; só o aplicador Vonixx 2005001 aparece, que é outro produto."
   ],
   "lote": "vintex-detailer.json",
   "aplicar": true
@@ -564,10 +573,13 @@
   "duvidas": [
    "O cadastro diz 'diversos': definir se a loja vende uma fragrância fixa ou cria variações (Citrus, Carro Novo, Morango, Marine); cada fragrância tem código e EAN próprios.",
    "No site Würth o produto é vendido em caixa com 24 peças; a loja vende a unidade.",
-   "Nenhum resultado exibiu o EAN da unidade; os EANs 'free way gel 60g' encontrados são de outra marca e foram descartados."
+   "Nenhum resultado exibiu o EAN da unidade; os EANs 'free way gel 60g' encontrados são de outra marca e foram descartados.",
+   "Rodada GTIN: Código Würth 0893600022 (página de kit com 24 un.); EAN da unidade não apareceu em nenhuma busca."
   ],
   "lote": "wurth.json",
-  "aplicar": true
+  "aplicar": true,
+  "mpn": "0893600022",
+  "mpnFonte": "https://www.wurth.com.br/p/7492564/odorizador-auto-fresh-gel-carro-novo-60g-embalagem-com-24-pecas-wurth-0893600022-kit"
  },
  {
   "id": "cmtv7cchv0018pd015ektly6o",
@@ -652,7 +664,8 @@
   "duvidas": [
    "Página oficial do Arominha Spray em store.vonixx.com.br não apareceu na busca; confirmar lista completa de aromas com o fornecedor (pode haver Uva, Lavanda, Frutal ou outros além dos 4 confirmados).",
    "Categoria da loja hoje é Proteção; proposta Aromatizantes.",
-   "EAN varia por aroma; nenhum encontrado."
+   "EAN varia por aroma; nenhum encontrado.",
+   "Rodada GTIN: Busca por nome + EAN não trouxe GTIN; varejistas (Magalu, Mercado Livre) não mostram o código no resumo indexado."
   ],
   "lote": "vintex-detailer.json",
   "aplicar": true
@@ -668,7 +681,7 @@
   "marcaPesquisada": "Vintex (Vonixx)",
   "fabricante": "Vonixx",
   "kit": false,
-  "gtinCandidato": "7898511020074 (aroma não identificado)",
+  "gtinCandidato": "7898511020074",
   "produtoIdentificado": "Vintex Arominha Gel 60 g - aromatizante automotivo em gel, vendido em vários aromas (Frutal, Fresh, Uva, Carro Novo confirmados)",
   "nomeProposto": "Vintex Arominha Gel Aromatizante Automotivo 60 g",
   "descricaoCurta": "Aromatizante automotivo em gel Vintex de 60 g, com fragrâncias especiais e liberação gradual do perfume para longa duração no interior do veículo. Vários aromas.",
@@ -746,7 +759,9 @@
    "O nome cadastrado não traz marca; a identificação como Vintex é por semelhança com o Arominha Spray do mesmo fornecedor. Confirmar com a loja.",
    "EAN candidato 7898511020074 e ref. 2010003 vieram do resumo da busca e provavelmente são de um aroma específico (Frutal?). O EAN apareceu só no resumo agregado da busca, não foi lido em uma página específica; confirmar na embalagem ou na nota do fornecedor antes de enviar ao Merchant Center.",
    "Modo de uso descrito é o padrão de gel automotivo; não lido em página do fabricante.",
-   "Categoria da loja hoje é Proteção; proposta Aromatizantes."
+   "Categoria da loja hoje é Proteção; proposta Aromatizantes.",
+   "GTIN candidato: Candidato de rodada anterior (aroma não identificado); nesta rodada nenhuma fonte confirmou o código nem a apresentação.",
+   "Rodada GTIN: Sem confirmação."
   ],
   "lote": "vintex-detailer.json",
   "aplicar": true
@@ -881,7 +896,8 @@
   "confianca": "alta",
   "duvidas": [
    "Cadastro sem volume: só encontramos a apresentação de 500 ml. Confirmar.",
-   "A marca 'Nitro' destes produtos é a linha Nitro Automotive Line / NitroX da Harten Química (hartenquimica.com.br, Shopify), não a Nitro Química (nitroquimica.com.br, que fabrica nitrocelulose e especialidades químicas). Confirmar com o lojista antes de publicar 'Harten' no cadastro."
+   "A marca 'Nitro' destes produtos é a linha Nitro Automotive Line / NitroX da Harten Química (hartenquimica.com.br, Shopify), não a Nitro Química (nitroquimica.com.br, que fabrica nitrocelulose e especialidades químicas). Confirmar com o lojista antes de publicar 'Harten' no cadastro.",
+   "Rodada GTIN: Buscas por nome da linha Nitro/Harten (e pesquisa restrita a Cosmos/Systax) não trouxeram GTIN; Harten não publica EAN nas páginas indexadas."
   ],
   "lote": "nitro-1.json",
   "aplicar": true
@@ -944,7 +960,8 @@
    "O nome cadastrado mistura 'Cleaner' com 'Pasta Wax'. A Blend Cleaner Wax de 500 ml é líquida (spray); a Blend em pasta é vendida em 100 ml. Confirmar no rótulo qual é o produto.",
    "Existem variantes Blend Cleaner Wax padrão, Black Edition e Sílica em 500 ml; assumida a padrão.",
    "A página oficial do produto em vonixx.com.br não pôde ser confirmada (rede bloqueada); buscar em vonixx.com.br/produto/ e trocar paginaDasFotos pela oficial.",
-   "Modo de uso é orientação geral de cera spray, não texto do fabricante."
+   "Modo de uso é orientação geral de cera spray, não texto do fabricante.",
+   "Rodada GTIN: Magalu lista 'Blend Cleaner Wax 500ml Vonixx' sem EAN; Cosmos só traz outros itens Vonixx (ex.: Strike 500ml 7898511030158)."
   ],
   "lote": "bugatti-vonixx.json",
   "aplicar": true
@@ -1005,7 +1022,8 @@
   "duvidas": [
    "Volume de 100 ml confirmado em dois varejistas, mas não na página do fabricante (bloqueada). Confirmar no rótulo.",
    "Tempo de cura e rendimento não encontrados; o modo de uso é orientação geral de cera em pasta.",
-   "Buscar a página oficial em vonixx.com.br/produto/ para as fotos."
+   "Buscar a página oficial em vonixx.com.br/produto/ para as fotos.",
+   "Rodada GTIN: Listagens Magalu/Falabella do Blend Black Edition Paste Wax 100ml sem EAN."
   ],
   "lote": "bugatti-vonixx.json",
   "aplicar": true
@@ -1063,7 +1081,8 @@
    "Cadastro sem volume: só encontramos 5 L. Confirmar se a loja vende essa embalagem.",
    "Produto é de limpeza pós-obra, não exclusivamente automotivo; a categoria Google 2590 foi mantida pelo contexto da loja (remoção de cimento de veículos). Avaliar categoria de limpeza doméstica se preferir.",
    "O fabricante o chama de 'Tec Ciment Clean'; confirmar o rótulo da linha Nitro.",
-   "A marca 'Nitro' destes produtos é a linha Nitro Automotive Line / NitroX da Harten Química (hartenquimica.com.br, Shopify), não a Nitro Química (nitroquimica.com.br, que fabrica nitrocelulose e especialidades químicas). Confirmar com o lojista antes de publicar 'Harten' no cadastro."
+   "A marca 'Nitro' destes produtos é a linha Nitro Automotive Line / NitroX da Harten Química (hartenquimica.com.br, Shopify), não a Nitro Química (nitroquimica.com.br, que fabrica nitrocelulose e especialidades químicas). Confirmar com o lojista antes de publicar 'Harten' no cadastro.",
+   "Rodada GTIN: Buscas por nome da linha Nitro/Harten (e pesquisa restrita a Cosmos/Systax) não trouxeram GTIN; Harten não publica EAN nas páginas indexadas."
   ],
   "lote": "nitro-1.json",
   "aplicar": true
@@ -1079,7 +1098,7 @@
   "marcaPesquisada": "Bugatti Química",
   "fabricante": "Bugatti Química",
   "kit": false,
-  "gtinCandidato": null,
+  "gtinCandidato": "7898592802088",
   "produtoIdentificado": "Solupan Desengraxante Concentrado 1/40 (Bugatti Química, Santa Bárbara d'Oeste/SP, site bugattiquimica.com) - embalagem de 5 L",
   "nomeProposto": "Bugatti Química Solupan Desengraxante Concentrado 1/40 5 L",
   "descricaoCurta": "Desengraxante concentrado Solupan da Bugatti Química, diluição 1/40, indicado para lavagem de chassis, motores, rodas, máquinas e pisos com óleo e graxa. Embalagem de 5 litros.",
@@ -1131,7 +1150,9 @@
   "confianca": "alta",
   "duvidas": [
    "O nome cadastrado não traz volume; assumido 5 L por ser a embalagem padrão (os SKUs 00150 e 00151 cobrem 20 L e 50 L).",
-   "O conteúdo da página do fabricante não pôde ser lido diretamente (rede bloqueada); descrição baseada no resumo da busca e no anúncio do Mercado Livre."
+   "O conteúdo da página do fabricante não pôde ser lido diretamente (rede bloqueada); descrição baseada no resumo da busca e no anúncio do Mercado Livre.",
+   "GTIN candidato: Cosmos: 'DETERGENTE DESENGRAXANTE SOLUPAN(5LT)', 5 L bate, mas a ficha não identifica o fabricante e 'Solupan' é nome usado por vários (Xike, DX-40...). Confirmar que é Bugatti antes de usar.",
+   "Rodada GTIN: Fonte: https://cosmos.bluesoft.com.br/produtos/7898592802088-detergente-desengraxante-solupan-5lt"
   ],
   "lote": "bugatti-vonixx.json",
   "aplicar": true
@@ -1186,7 +1207,8 @@
   "fotos": [],
   "confianca": "media",
   "duvidas": [
-   "A apresentação de 20 L consta na página do fabricante (5 a 50 L), mas não foi encontrado anúncio específico de 20 L com foto; usar foto da bombona correta."
+   "A apresentação de 20 L consta na página do fabricante (5 a 50 L), mas não foi encontrado anúncio específico de 20 L com foto; usar foto da bombona correta.",
+   "Rodada GTIN: Nenhuma fonte com EAN; só Cosmos lista um 'Solupan 5LT' sem fabricante identificado."
   ],
   "lote": "bugatti-vonixx.json",
   "aplicar": true
@@ -1241,7 +1263,8 @@
   "fotos": [],
   "confianca": "media",
   "duvidas": [
-   "A apresentação de 50 L consta na página do fabricante (5 a 50 L), mas não foi encontrado anúncio específico de 50 L com foto."
+   "A apresentação de 50 L consta na página do fabricante (5 a 50 L), mas não foi encontrado anúncio específico de 50 L com foto.",
+   "Rodada GTIN: Nenhuma fonte com EAN; só Cosmos lista um 'Solupan 5LT' sem fabricante identificado."
   ],
   "lote": "bugatti-vonixx.json",
   "aplicar": true
@@ -1309,7 +1332,8 @@
   "duvidas": [
    "Confirmar se a loja vende a concentração 1/40 ou 1/100 (o fabricante tem as duas).",
    "O termo 'ativado' não aparece na página do fabricante; aparece em anúncios de varejo ('Limpa Baú LM'). Confirmar no rótulo.",
-   "Volume assumido 5 L (os SKUs 00152 e 00153 cobrem 20 L e 50 L)."
+   "Volume assumido 5 L (os SKUs 00152 e 00153 cobrem 20 L e 50 L).",
+   "Rodada GTIN: Nenhum resultado para o desincrustante ácido Bugatti; só produtos de outras marcas."
   ],
   "lote": "bugatti-vonixx.json",
   "aplicar": true
@@ -1364,7 +1388,8 @@
   "confianca": "media",
   "duvidas": [
    "Confirmar concentração (1/40 ou 1/100).",
-   "Não foi encontrado anúncio específico de 20 L com foto."
+   "Não foi encontrado anúncio específico de 20 L com foto.",
+   "Rodada GTIN: Nenhum resultado para o desincrustante ácido Bugatti."
   ],
   "lote": "bugatti-vonixx.json",
   "aplicar": true
@@ -1419,7 +1444,8 @@
   "confianca": "media",
   "duvidas": [
    "Confirmar concentração (1/40 ou 1/100).",
-   "Não foi encontrado anúncio específico de 50 L com foto."
+   "Não foi encontrado anúncio específico de 50 L com foto.",
+   "Rodada GTIN: Nenhum resultado para o desincrustante ácido Bugatti."
   ],
   "lote": "bugatti-vonixx.json",
   "aplicar": true
@@ -1546,10 +1572,13 @@
   "duvidas": [
    "O rendimento informado diverge entre fontes (até 101 L em varejista, até 201 L no site Würth); não foi incluído número na descrição. Confirmar a diluição na embalagem.",
    "Na data da pesquisa o site Würth marcava o 1 L como indisponível em estoque.",
-   "Nenhuma fonte exibiu o EAN."
+   "Nenhuma fonte exibiu o EAN.",
+   "Rodada GTIN: Código Würth Brasil 389070 (também em lojadomecanico.com.br). Cosmos tem 'detergente com cera SHW 2 1L Würth' na NCM 3402.90.31, mas o GTIN não apareceu no resumo."
   ],
   "lote": "wurth.json",
-  "aplicar": true
+  "aplicar": true,
+  "mpn": "389070",
+  "mpnFonte": "https://www.wurth.com.br/p/7492568/shampoo-automotivo-com-cera-shw2-1l-wurth-389070-unitario"
  },
  {
   "id": "cmtv7ccu6003ipd01541o6a84",
@@ -1619,10 +1648,13 @@
   "duvidas": [
    "Há duas versões de 25 g: Adesivo Epóxi Titânio (0893480131) e Adesivo Epóxi Titânio Express (0893480025, cura inicial em 5 min, densidade 1,05, viscosidade 17 Pa.s, resistência de -30 °C a +85 °C, aplicação de +5 °C a +45 °C). O cadastro não diz 'Express'; confirmar na embalagem qual é vendida.",
    "A proporção 1:1 e a cor cinza após cura foram lidas na página da versão Express; confirmar se valem para a versão comum antes de publicar.",
-   "Nenhuma fonte exibiu o EAN."
+   "Nenhuma fonte exibiu o EAN.",
+   "Rodada GTIN: Loja do Mecânico mostra 0893480025 para a versão 'Express' 25 g, que é outro artigo. EAN não localizado."
   ],
   "lote": "wurth.json",
-  "aplicar": true
+  "aplicar": true,
+  "mpn": "0893480131",
+  "mpnFonte": "https://varejo.wurth.com.br/p/7492810/adesivo-epoxi-titanio-25g-wurth-0893480131-unitario"
  },
  {
   "id": "cmtv7ccuz003mpd01zq80kv1w",
@@ -1678,7 +1710,8 @@
   "confianca": "media",
   "duvidas": [
    "A Vonixx tem várias escovas para rodas (face e caixa de rodas grande, furo de rodas longa, pelúcia furo de rodas em 31/37,5/54 cm e, no varejo, 'escova microfibra limpeza de rodas pequena', sugerindo uma versão grande). A escolhida é a de slug 'escova-de-caixa-de-roda-grande'; confirmar com a foto do produto físico.",
-   "Modo de uso é orientação geral."
+   "Modo de uso é orientação geral.",
+   "Rodada GTIN: Nenhuma ficha da escova de 52 cm com EAN."
   ],
   "lote": "bugatti-vonixx.json",
   "aplicar": true
@@ -1750,7 +1783,8 @@
    "A Detailer vende pelo menos quatro escovas de caixa de roda (padrão, agressiva cerdas baixas, macia pequena, amarela para carros baixos). Confirmar com a loja qual delas é este SKU, de preferência pela foto da embalagem.",
    "Medidas e comprimento do cabo não encontrados em nenhuma fonte lida.",
    "Modo de uso é prática padrão, não lido na página do fabricante.",
-   "EAN não encontrado."
+   "EAN não encontrado.",
+   "Rodada GTIN: Nenhuma página detailer.com.br indexada com EAN; Amazon lista escova Detailer sem código."
   ],
   "lote": "vintex-detailer.json",
   "aplicar": true
@@ -1834,7 +1868,8 @@
   "confianca": "alta",
   "duvidas": [
    "Confirmar se o SKU é a Escova para Pneus padrão (anatômica) ou a Deep Clean; a descrição acima é da padrão.",
-   "Medidas não encontradas. Modo de uso é prática padrão. EAN não encontrado."
+   "Medidas não encontradas. Modo de uso é prática padrão. EAN não encontrado.",
+   "Rodada GTIN: Nenhuma página detailer.com.br indexada com EAN."
   ],
   "lote": "vintex-detailer.json",
   "aplicar": true
@@ -1895,7 +1930,8 @@
   "duvidas": [
    "O código 0695940116 do modelo 4\" apareceu no resumo da busca, mas a URL da página individual não foi obtida; confirmar na loja Würth (categoria Funilaria) antes de usar como MPN.",
    "A Würth vende em embalagem com 5 unidades; o cadastro da loja parece ser por unidade. Confirmar.",
-   "Sem EAN em nenhuma fonte."
+   "Sem EAN em nenhuma fonte.",
+   "Rodada GTIN: Nenhum artigo Würth de 100 mm/4 pol. localizado; cadastro aponta só para categoria. Código Würth não lido."
   ],
   "lote": "wurth.json",
   "aplicar": true
@@ -1955,10 +1991,13 @@
   "confianca": "alta",
   "duvidas": [
    "A Würth vende em embalagem com 5 unidades (cód. 0695940111); o cadastro da loja parece ser por unidade. Confirmar.",
-   "Sem EAN em nenhuma fonte."
+   "Sem EAN em nenhuma fonte.",
+   "Rodada GTIN: Código Würth 0695940111 (página de kit com 5 un.); EAN não apareceu."
   ],
   "lote": "wurth.json",
-  "aplicar": true
+  "aplicar": true,
+  "mpn": "0695940111",
+  "mpnFonte": "https://www.wurth.com.br/p/10186211/espatula-plastica-5-125mm-embalagem-com-5-unidades-wurth-0695940111-kit"
  },
  {
   "id": "cmtv7ccxf0040pd01zv9prwun",
@@ -2090,7 +2129,8 @@
   "duvidas": [
    "Cadastro sem volume: propusemos 500 ml (menor de varejo); existe também 1,5 L. Confirmar.",
    "pH não confirmado.",
-   "A marca 'Nitro' destes produtos é a linha Nitro Automotive Line / NitroX da Harten Química (hartenquimica.com.br, Shopify), não a Nitro Química (nitroquimica.com.br, que fabrica nitrocelulose e especialidades químicas). Confirmar com o lojista antes de publicar 'Harten' no cadastro."
+   "A marca 'Nitro' destes produtos é a linha Nitro Automotive Line / NitroX da Harten Química (hartenquimica.com.br, Shopify), não a Nitro Química (nitroquimica.com.br, que fabrica nitrocelulose e especialidades químicas). Confirmar com o lojista antes de publicar 'Harten' no cadastro.",
+   "Rodada GTIN: Buscas por nome da linha Nitro/Harten (e pesquisa restrita a Cosmos/Systax) não trouxeram GTIN; Harten não publica EAN nas páginas indexadas."
   ],
   "lote": "nitro-1.json",
   "aplicar": true
@@ -2172,7 +2212,8 @@
   "duvidas": [
    "Existe a variante 'Glass Pro Antiembaçante' (ação antiembaçante, hidrorrepelente e cristalizadora). Confirmar se a loja vende o Glass Pro comum ou o Antiembaçante.",
    "Página individual do produto no site do fabricante não localizada (só listagem da coleção Automotiva).",
-   "A marca 'Nitro' destes produtos é a linha Nitro Automotive Line / NitroX da Harten Química (hartenquimica.com.br, Shopify), não a Nitro Química (nitroquimica.com.br, que fabrica nitrocelulose e especialidades químicas). Confirmar com o lojista antes de publicar 'Harten' no cadastro."
+   "A marca 'Nitro' destes produtos é a linha Nitro Automotive Line / NitroX da Harten Química (hartenquimica.com.br, Shopify), não a Nitro Química (nitroquimica.com.br, que fabrica nitrocelulose e especialidades químicas). Confirmar com o lojista antes de publicar 'Harten' no cadastro.",
+   "Rodada GTIN: Buscas por nome da linha Nitro/Harten (e pesquisa restrita a Cosmos/Systax) não trouxeram GTIN; Harten não publica EAN nas páginas indexadas."
   ],
   "lote": "nitro-1.json",
   "aplicar": true
@@ -2233,7 +2274,8 @@
   "duvidas": [
    "Modo de uso detalhado e composição não confirmados; o parágrafo de aplicação é genérico e deve ser revisado com a embalagem.",
    "Página individual do produto no site do fabricante não localizada (só a listagem da coleção Automotiva).",
-   "A marca 'Nitro' destes produtos é a linha Nitro Automotive Line / NitroX da Harten Química (hartenquimica.com.br, Shopify), não a Nitro Química (nitroquimica.com.br, que fabrica nitrocelulose e especialidades químicas). Confirmar com o lojista antes de publicar 'Harten' no cadastro."
+   "A marca 'Nitro' destes produtos é a linha Nitro Automotive Line / NitroX da Harten Química (hartenquimica.com.br, Shopify), não a Nitro Química (nitroquimica.com.br, que fabrica nitrocelulose e especialidades químicas). Confirmar com o lojista antes de publicar 'Harten' no cadastro.",
+   "Rodada GTIN: Buscas por nome da linha Nitro/Harten (e pesquisa restrita a Cosmos/Systax) não trouxeram GTIN; Harten não publica EAN nas páginas indexadas."
   ],
   "lote": "nitro-1.json",
   "aplicar": true
@@ -2304,7 +2346,8 @@
   "confianca": "media",
   "duvidas": [
    "As fontes mostram HT7 em 500 ml e 1 L; a apresentação de 1,5 L não apareceu em nenhuma busca. Confirmar se a embalagem é 1,5 L ou 1 L.",
-   "A marca 'Nitro' destes produtos é a linha Nitro Automotive Line / NitroX da Harten Química (hartenquimica.com.br, Shopify), não a Nitro Química (nitroquimica.com.br, que fabrica nitrocelulose e especialidades químicas). Confirmar com o lojista antes de publicar 'Harten' no cadastro."
+   "A marca 'Nitro' destes produtos é a linha Nitro Automotive Line / NitroX da Harten Química (hartenquimica.com.br, Shopify), não a Nitro Química (nitroquimica.com.br, que fabrica nitrocelulose e especialidades químicas). Confirmar com o lojista antes de publicar 'Harten' no cadastro.",
+   "Rodada GTIN: Buscas por nome da linha Nitro/Harten (e pesquisa restrita a Cosmos/Systax) não trouxeram GTIN; Harten não publica EAN nas páginas indexadas. Ponto Frio/Extra listam 'HT7 Limpador Desengraxante Nitro' sem EAN e sem volume."
   ],
   "lote": "nitro-1.json",
   "aplicar": true
@@ -2320,7 +2363,7 @@
   "marcaPesquisada": "Nitro (Nitro Automotive Line / NitroX, Harten Química)",
   "fabricante": "Harten Química (linha Nitro Automotive)",
   "kit": false,
-  "gtinCandidato": null,
+  "gtinCandidato": "7899811608504",
   "produtoIdentificado": "HT7 - Desengraxante Multiuso Concentrado (Nitro Automotive / Harten Química), 500 ml",
   "nomeProposto": "Nitro HT7 Desengraxante Multiuso Concentrado 500 ml",
   "descricaoCurta": "Desengraxante e limpador multiuso concentrado da linha Nitro Automotive (Harten Química), à base de água e tensoativos biodegradáveis, sem ácidos nem solventes. Remove graxa, óleo e fuligem. Diluição de até 1:100. 500 ml.",
@@ -2374,7 +2417,9 @@
   "fotos": [],
   "confianca": "alta",
   "duvidas": [
-   "A marca 'Nitro' destes produtos é a linha Nitro Automotive Line / NitroX da Harten Química (hartenquimica.com.br, Shopify), não a Nitro Química (nitroquimica.com.br, que fabrica nitrocelulose e especialidades químicas). Confirmar com o lojista antes de publicar 'Harten' no cadastro."
+   "A marca 'Nitro' destes produtos é a linha Nitro Automotive Line / NitroX da Harten Química (hartenquimica.com.br, Shopify), não a Nitro Química (nitroquimica.com.br, que fabrica nitrocelulose e especialidades químicas). Confirmar com o lojista antes de publicar 'Harten' no cadastro.",
+   "GTIN candidato: Systax: 'Desengraxante h7 500ml', sem marca na ficha; provavelmente o H-7 de outro fabricante (Telhanorte), não o HT7 Nitro. Candidato fraco.",
+   "Rodada GTIN: Fonte: https://www.systax.com.br/ean/07899811608504"
   ],
   "lote": "nitro-1.json",
   "aplicar": true
@@ -2441,7 +2486,8 @@
   "confianca": "alta",
   "duvidas": [
    "Modo de uso exato (tempo de cura, método de aplicação) não confirmado; o último parágrafo é genérico e deve ser conferido com a embalagem.",
-   "A marca 'Nitro' destes produtos é a linha Nitro Automotive Line / NitroX da Harten Química (hartenquimica.com.br, Shopify), não a Nitro Química (nitroquimica.com.br, que fabrica nitrocelulose e especialidades químicas). Confirmar com o lojista antes de publicar 'Harten' no cadastro."
+   "A marca 'Nitro' destes produtos é a linha Nitro Automotive Line / NitroX da Harten Química (hartenquimica.com.br, Shopify), não a Nitro Química (nitroquimica.com.br, que fabrica nitrocelulose e especialidades químicas). Confirmar com o lojista antes de publicar 'Harten' no cadastro.",
+   "Rodada GTIN: Buscas por nome da linha Nitro/Harten (e pesquisa restrita a Cosmos/Systax) não trouxeram GTIN; Harten não publica EAN nas páginas indexadas."
   ],
   "lote": "nitro-1.json",
   "aplicar": true
@@ -2501,10 +2547,13 @@
   "fotos": [],
   "confianca": "alta",
   "duvidas": [
-   "Sem EAN em nenhuma fonte."
+   "Sem EAN em nenhuma fonte.",
+   "Rodada GTIN: Código Würth Brasil '071458 322' lido na URL do fabricante. Só artigos internacionais diferentes apareceram (2 peças 1952004685, EAN 4099618448683)."
   ],
   "lote": "wurth.json",
-  "aplicar": true
+  "aplicar": true,
+  "mpn": "071458 322",
+  "mpnFonte": "https://www.wurth.com.br/p/7527370/kit-com-jogo-04-espatulas-removedora-gramposmolduras-preta-wurth-071458-322-unitario"
  },
  {
   "id": "cmtv7cd67005mpd01rvomyno2",
@@ -2573,7 +2622,8 @@
   "confianca": "media",
   "duvidas": [
    "Volumes de 500 ml para os dois frascos vêm de um único varejista (Magalu); confirmar com as embalagens da loja (a Vonixx também vende outros tamanhos).",
-   "Por ser kit montado pela loja, sem GTIN próprio; informar os GTINs individuais se a loja os tiver."
+   "Por ser kit montado pela loja, sem GTIN próprio; informar os GTINs individuais se a loja os tiver.",
+   "Rodada GTIN: Kit montado pela loja, sem GTIN próprio. Componentes: Higicouro 500ml código Vonixx 2009012 (Ponto Frio), Hidracouro 500ml código Vonixx 2009010 (Loja do Mecânico); EAN dos componentes não apareceu."
   ],
   "lote": "bugatti-vonixx.json",
   "aplicar": true
@@ -2714,7 +2764,8 @@
    "Diluição e pH do V-Mol não foram confirmados; buscar em vonixx.com.br/produto/v-mol/ antes de publicar.",
    "Páginas oficiais do V-Floc e V-Mol em vonixx.com.br não puderam ser lidas (rede bloqueada); usar as fotos oficiais de lá.",
    "A loja categorizou o kit em Proteção; por ser shampoo, sugerida a categoria Lavagem.",
-   "Kit montado pela loja: sem GTIN próprio."
+   "Kit montado pela loja: sem GTIN próprio.",
+   "Rodada GTIN: Kit montado pela loja, sem GTIN próprio. V-Floc 1,5L código Vonixx 2011004 (Casas Bahia). eBay mostra 7898511030653 como MPN de V-Floc, mas sem indicar o volume (500 ml a 5 L); não usar. V-Mol 1,5L sem EAN."
   ],
   "lote": "bugatti-vonixx.json",
   "aplicar": true
@@ -2784,7 +2835,8 @@
    "Cadastro está com marca 'Limpador Multiuso Concentrado' (errada) e sem SKU; a marca correta é Nitro (Harten Química) e o tipo é lava-autos desincrustante/desengraxante.",
    "Cadastro sem volume: propusemos 500 ml (menor de varejo); existe também 5 L. Confirmar.",
    "pH não confirmado.",
-   "A marca 'Nitro' destes produtos é a linha Nitro Automotive Line / NitroX da Harten Química (hartenquimica.com.br, Shopify), não a Nitro Química (nitroquimica.com.br, que fabrica nitrocelulose e especialidades químicas). Confirmar com o lojista antes de publicar 'Harten' no cadastro."
+   "A marca 'Nitro' destes produtos é a linha Nitro Automotive Line / NitroX da Harten Química (hartenquimica.com.br, Shopify), não a Nitro Química (nitroquimica.com.br, que fabrica nitrocelulose e especialidades químicas). Confirmar com o lojista antes de publicar 'Harten' no cadastro.",
+   "Rodada GTIN: Buscas por nome da linha Nitro/Harten (e pesquisa restrita a Cosmos/Systax) não trouxeram GTIN; Harten não publica EAN nas páginas indexadas. SKU ausente no cadastro."
   ],
   "lote": "nitro-1.json",
   "aplicar": true
@@ -2909,10 +2961,13 @@
   "confianca": "alta",
   "duvidas": [
    "O peso de 220 g informado no site parece ser o peso com embalagem; não foi usado na descrição.",
-   "Sem EAN em nenhuma fonte."
+   "Sem EAN em nenhuma fonte.",
+   "Rodada GTIN: Código Würth 0827500171 lido na URL do fabricante. Só a lanterna UV internacional 0827807201 (EAN 4050641966421) apareceu, outro artigo."
   ],
   "lote": "wurth.json",
-  "aplicar": true
+  "aplicar": true,
+  "mpn": "0827500171",
+  "mpnFonte": "https://varejo.wurth.com.br/p/10276373/lanterna-led-smd-uva-ultravioleta-wurth-0827500171-unitario"
  },
  {
   "id": "cmtv7cd9e0064pd018rgwhcqr",
@@ -2978,7 +3033,8 @@
    "Nome genérico: a linha Nitro tem dois lava-autos (Speel Car concentrado 500 ml, linha Nitro Automotive; e Lava Autos NitroX em 500 ml/1,5 L/5 L/20 L). Confirmar qual está em estoque e o volume.",
    "A diluição de 100 ml/5 L foi vista para o Lava Autos NitroX, não explicitamente para o Speel Car.",
    "Grafia: varejistas escrevem 'Spell Car'; o fabricante escreve 'Speel Car'.",
-   "A marca 'Nitro' destes produtos é a linha Nitro Automotive Line / NitroX da Harten Química (hartenquimica.com.br, Shopify), não a Nitro Química (nitroquimica.com.br, que fabrica nitrocelulose e especialidades químicas). Confirmar com o lojista antes de publicar 'Harten' no cadastro."
+   "A marca 'Nitro' destes produtos é a linha Nitro Automotive Line / NitroX da Harten Química (hartenquimica.com.br, Shopify), não a Nitro Química (nitroquimica.com.br, que fabrica nitrocelulose e especialidades químicas). Confirmar com o lojista antes de publicar 'Harten' no cadastro.",
+   "Rodada GTIN: Buscas por nome da linha Nitro/Harten (e pesquisa restrita a Cosmos/Systax) não trouxeram GTIN; Harten não publica EAN nas páginas indexadas."
   ],
   "lote": "nitro-1.json",
   "aplicar": true
@@ -3054,7 +3110,9 @@
   "duvidas": [
    "Nome cadastrado '1,5' sem unidade: confirmado como 1,5 L.",
    "Diluição diverge entre fontes: 125 ml/5 L na loja oficial, 100 ml/5 L (1:40) e 1:50 em revendedores. Usar a da loja oficial ou confirmar com o fabricante.",
-   "EAN candidato 7898511032602 (listado em revendedor; fonte exata não isolada). O EAN apareceu só no resumo agregado da busca, não foi lido em uma página específica; confirmar na embalagem ou na nota do fornecedor antes de enviar ao Merchant Center."
+   "EAN candidato 7898511032602 (listado em revendedor; fonte exata não isolada). O EAN apareceu só no resumo agregado da busca, não foi lido em uma página específica; confirmar na embalagem ou na nota do fornecedor antes de enviar ao Merchant Center.",
+   "GTIN só candidato: fonte marketplace: https://www.ebay.de/itm/187294656918",
+   "Rodada GTIN: Apresentação bate (1,5 L). Fonte única e marketplace estrangeiro; confirmar na embalagem quando possível."
   ],
   "lote": "vintex-detailer.json",
   "aplicar": true
@@ -3129,7 +3187,9 @@
   "confianca": "alta",
   "duvidas": [
    "Diluição diverge entre fontes: 125 ml/5 L na loja oficial, 100 ml/5 L (1:40) e 1:50 em revendedores. Usar a da loja oficial ou confirmar com o fabricante.",
-   "EAN candidato 7898511020456 (listado em revendedor; fonte exata não isolada). O EAN apareceu só no resumo agregado da busca, não foi lido em uma página específica; confirmar na embalagem ou na nota do fornecedor antes de enviar ao Merchant Center."
+   "EAN candidato 7898511020456 (listado em revendedor; fonte exata não isolada). O EAN apareceu só no resumo agregado da busca, não foi lido em uma página específica; confirmar na embalagem ou na nota do fornecedor antes de enviar ao Merchant Center.",
+   "GTIN candidato: Candidato de rodada anterior; nesta rodada nenhuma fonte exibiu o código.",
+   "Rodada GTIN: Sem confirmação."
   ],
   "lote": "vintex-detailer.json",
   "aplicar": true
@@ -3204,7 +3264,9 @@
   "confianca": "alta",
   "duvidas": [
    "Diluição diverge entre fontes: 125 ml/5 L na loja oficial, 100 ml/5 L (1:40) e 1:50 em revendedores. Usar a da loja oficial ou confirmar com o fabricante.",
-   "EAN candidato 7898511020289 (listado em revendedor; fonte exata não isolada). O EAN apareceu só no resumo agregado da busca, não foi lido em uma página específica; confirmar na embalagem ou na nota do fornecedor antes de enviar ao Merchant Center."
+   "EAN candidato 7898511020289 (listado em revendedor; fonte exata não isolada). O EAN apareceu só no resumo agregado da busca, não foi lido em uma página específica; confirmar na embalagem ou na nota do fornecedor antes de enviar ao Merchant Center.",
+   "GTIN candidato: Candidato de rodada anterior; nesta rodada nenhuma fonte exibiu o código.",
+   "Rodada GTIN: Sem confirmação."
   ],
   "lote": "vintex-detailer.json",
   "aplicar": true
@@ -3350,7 +3412,8 @@
   "confianca": "alta",
   "duvidas": [
    "Nome cadastrado não traz marca; identificado como Vintex porque a loja trabalha a linha e o fabricante tem exatamente essa apresentação de 5 L. Confirmar com a loja.",
-   "EAN não encontrado."
+   "EAN não encontrado.",
+   "Rodada GTIN: Busca por nome + EAN não trouxe GTIN; varejistas (Magalu, Mercado Livre) não mostram o código no resumo indexado."
   ],
   "lote": "vintex-detailer.json",
   "aplicar": true
@@ -3496,7 +3559,8 @@
   "duvidas": [
    "A loja oficial lista só 500 ml e 5 L; a apresentação de 1,5 L está confirmada em 4 revendedores (GVL, Polibox, Vonixx Mossoró, Universo das Cores). Confirmar se segue em linha.",
    "'EM GERAL' no nome cadastrado distingue do Limpa Vidros Pro; identificado como o Limpa Vidros comum (pronto para uso).",
-   "Nome cadastrado não traz marca; identificado como Vintex. EAN não encontrado."
+   "Nome cadastrado não traz marca; identificado como Vintex. EAN não encontrado.",
+   "Rodada GTIN: Busca por nome + EAN não trouxe GTIN; varejistas (Magalu, Mercado Livre) não mostram o código no resumo indexado."
   ],
   "lote": "vintex-detailer.json",
   "aplicar": true
@@ -3587,7 +3651,8 @@
   "confianca": "alta",
   "duvidas": [
    "'EM GERAL' no nome cadastrado distingue do Limpa Vidros Pro; identificado como o Limpa Vidros comum (pronto para uso).",
-   "Nome cadastrado não traz marca; identificado como Vintex. EAN não encontrado."
+   "Nome cadastrado não traz marca; identificado como Vintex. EAN não encontrado.",
+   "Rodada GTIN: Busca por nome + EAN não trouxe GTIN; varejistas (Magalu, Mercado Livre) não mostram o código no resumo indexado."
   ],
   "lote": "vintex-detailer.json",
   "aplicar": true
@@ -3666,7 +3731,8 @@
   "fotos": [],
   "confianca": "alta",
   "duvidas": [
-   "Nome cadastrado não traz marca; identificado como Vintex. EAN não encontrado."
+   "Nome cadastrado não traz marca; identificado como Vintex. EAN não encontrado.",
+   "Rodada GTIN: Busca por nome + EAN não trouxe GTIN; varejistas (Magalu, Mercado Livre) não mostram o código no resumo indexado."
   ],
   "lote": "vintex-detailer.json",
   "aplicar": true
@@ -3745,7 +3811,8 @@
   "confianca": "alta",
   "duvidas": [
    "Nome cadastrado não traz marca; identificado como Vintex.",
-   "EAN encontrado só para 1,5 L (7898511020258, no resumo da busca); para 5 L nenhum."
+   "EAN encontrado só para 1,5 L (7898511020258, no resumo da busca); para 5 L nenhum.",
+   "Rodada GTIN: Busca por nome + EAN não trouxe GTIN; varejistas (Magalu, Mercado Livre) não mostram o código no resumo indexado. Magalu/Mercado Livre listam 'Limpador Multiação APC 5L Vintex' sem EAN."
   ],
   "lote": "vintex-detailer.json",
   "aplicar": true
@@ -3813,7 +3880,9 @@
   "duvidas": [
    "EAN candidato 7898511027790. O EAN apareceu só no resumo agregado da busca, não foi lido em uma página específica; confirmar na embalagem ou na nota do fornecedor antes de enviar ao Merchant Center.",
    "Modo de uso é prática padrão de luva de lavagem; não lido literalmente na página do fabricante.",
-   "Não confundir com a Luva 2 em 1 Vonixx 28 x 18,5 cm 380 GSM, produto diferente e mais caro."
+   "Não confundir com a Luva 2 em 1 Vonixx 28 x 18,5 cm 380 GSM, produto diferente e mais caro.",
+   "GTIN candidato: Candidato de rodada anterior; nesta rodada nenhuma fonte exibiu o código.",
+   "Rodada GTIN: Sem confirmação."
   ],
   "lote": "vintex-detailer.json",
   "aplicar": true
@@ -3829,7 +3898,7 @@
   "marcaPesquisada": "Würth",
   "fabricante": null,
   "kit": false,
-  "gtinCandidato": null,
+  "gtinCandidato": "4065746309189",
   "produtoIdentificado": "Luva Nitrílica Descartável preta, embalagem com 100 unidades (Würth do Brasil). Códigos por tamanho: nº 7 = 0899 470 250; nº 8 = 0899 470 251; nº 10 também listado em varejo",
   "nomeProposto": "Würth Luva Nitrílica Descartável Preta sem Pó caixa com 100 unidades",
   "descricaoCurta": "Luva descartável Würth 100% nitrílica, preta, sem látex e sem pó, ambidestra e texturizada nas pontas dos dedos. Proteção contra óleos, graxas e produtos químicos. Caixa com 100 unidades.",
@@ -3881,10 +3950,14 @@
   "confianca": "media",
   "duvidas": [
    "O cadastro não traz o tamanho. Cada tamanho tem código próprio (nº 7 = 0899470250, nº 8 = 0899470251); definir tamanho fixo ou criar variações.",
-   "Sem EAN em nenhuma fonte."
+   "Sem EAN em nenhuma fonte.",
+   "GTIN candidato: Würth UAE lista o mesmo art. 0899470250 (nitrílica LIGHT preta, tam. S, 100 un.) com EAN 4065746309189; EAN Würth varia por país e o cadastro não fixa tamanho. Confirmar na caixa.",
+   "Rodada GTIN: Fonte do candidato: https://eshop.wurth.ae/Disposable-gloves-nitrile-LIGHT-PROTGLOV-DISPOSABLE-NTR-LIGHT-BLACK-S/0899470250.sku/en/US/AED"
   ],
   "lote": "wurth.json",
-  "aplicar": true
+  "aplicar": true,
+  "mpn": "0899470250",
+  "mpnFonte": "https://www.wurth.com.br/p/10097056/luva-nitrilica-descartavel-n-7-embalagem-com-100-unidades-wurth-0899470250-kit"
  },
  {
   "id": "cmtv7cdd8006upd01czszqos8",
@@ -3962,8 +4035,8 @@
    "id": 543608,
    "caminho": "Materiais de escritório > Instrumentos de escritório > Instrumentos de escrita > Marcadores > Marcador"
   },
-  "gtin": null,
-  "gtinFonte": null,
+  "gtin": "4099618041990",
+  "gtinFonte": "https://www.wurth.com.br/p/10184392/marcador-industrial-amarelo-60g-wurth-0967911301-unitario",
   "atributos": {
    "cor": "Amarelo",
    "peso": "60 g",
@@ -3989,6 +4062,12 @@
     "tipo": "marketplace",
     "oQueTem": "listagem",
     "titulo": "Marcador Industrial - Mercado Livre"
+   },
+   {
+    "url": "https://www.wurth.com.br/p/10184392/marcador-industrial-amarelo-60g-wurth-0967911301-unitario",
+    "tipo": "fabricante",
+    "oQueTem": "GTIN/EAN da apresentação Marcador industrial amarelo 60 g, unitário",
+    "titulo": "Marcador Industrial Amarelo 60g - Wurth - 0967911301 - Unitário"
    }
   ],
   "paginaDasFotos": "https://www.wurth.com.br/p/10184392/marcador-industrial-amarelo-60g-wurth-0967911301-unitario",
@@ -3996,10 +4075,13 @@
   "confianca": "alta",
   "duvidas": [
    "Sem EAN em nenhuma fonte.",
-   "As 7 cores são o mesmo produto: no Merchant Center, usar item_group_id comum e o atributo color por variação."
+   "As 7 cores são o mesmo produto: no Merchant Center, usar item_group_id comum e o atributo color por variação.",
+   "Rodada GTIN: Bate com o cadastro."
   ],
   "lote": "wurth.json",
-  "aplicar": true
+  "aplicar": true,
+  "mpn": "0967911301",
+  "mpnFonte": "https://www.wurth.com.br/p/10184392/marcador-industrial-amarelo-60g-wurth-0967911301-unitario"
  },
  {
   "id": "cmtv7cden0072pd01fb2x8rl6",
@@ -4022,8 +4104,8 @@
    "id": 543608,
    "caminho": "Materiais de escritório > Instrumentos de escritório > Instrumentos de escrita > Marcadores > Marcador"
   },
-  "gtin": null,
-  "gtinFonte": null,
+  "gtin": "4099618041945",
+  "gtinFonte": "https://www.wurth.com.br/p/10184391/marcador-industrial-azul-60g-wurth-0967911302-unitario",
   "atributos": {
    "cor": "Azul",
    "peso": "60 g",
@@ -4049,6 +4131,12 @@
     "tipo": "marketplace",
     "oQueTem": "listagem",
     "titulo": "Marcador Industrial - Mercado Livre"
+   },
+   {
+    "url": "https://www.wurth.com.br/p/10184391/marcador-industrial-azul-60g-wurth-0967911302-unitario",
+    "tipo": "fabricante",
+    "oQueTem": "GTIN/EAN da apresentação Marcador industrial azul 60 g, unitário",
+    "titulo": "Marcador Industrial Azul 60g - Wurth - 0967911302 - Unitário"
    }
   ],
   "paginaDasFotos": "https://www.wurth.com.br/p/10184391/marcador-industrial-azul-60g-wurth-0967911302-unitario",
@@ -4056,10 +4144,13 @@
   "confianca": "alta",
   "duvidas": [
    "Sem EAN em nenhuma fonte.",
-   "As 7 cores são o mesmo produto: no Merchant Center, usar item_group_id comum e o atributo color por variação."
+   "As 7 cores são o mesmo produto: no Merchant Center, usar item_group_id comum e o atributo color por variação.",
+   "Rodada GTIN: Bate com o cadastro."
   ],
   "lote": "wurth.json",
-  "aplicar": true
+  "aplicar": true,
+  "mpn": "0967911302",
+  "mpnFonte": "https://www.wurth.com.br/p/10184391/marcador-industrial-azul-60g-wurth-0967911302-unitario"
  },
  {
   "id": "cmtv7cdew0074pd01pbz17ki9",
@@ -4082,8 +4173,8 @@
    "id": 543608,
    "caminho": "Materiais de escritório > Instrumentos de escritório > Instrumentos de escrita > Marcadores > Marcador"
   },
-  "gtin": null,
-  "gtinFonte": null,
+  "gtin": "4099618041983",
+  "gtinFonte": "https://www.wurth.com.br/p/10184390/marcador-industrial-branco-60g-wurth-0967911303-unitario",
   "atributos": {
    "cor": "Branco",
    "peso": "60 g",
@@ -4109,6 +4200,12 @@
     "tipo": "marketplace",
     "oQueTem": "listagem",
     "titulo": "Marcador Industrial - Mercado Livre"
+   },
+   {
+    "url": "https://www.wurth.com.br/p/10184390/marcador-industrial-branco-60g-wurth-0967911303-unitario",
+    "tipo": "fabricante",
+    "oQueTem": "GTIN/EAN da apresentação Marcador industrial branco 60 g, unitário",
+    "titulo": "Marcador Industrial Branco 60g - Wurth - 0967911303 - Unitário"
    }
   ],
   "paginaDasFotos": "https://www.wurth.com.br/p/10184390/marcador-industrial-branco-60g-wurth-0967911303-unitario",
@@ -4116,10 +4213,13 @@
   "confianca": "alta",
   "duvidas": [
    "Sem EAN em nenhuma fonte.",
-   "As 7 cores são o mesmo produto: no Merchant Center, usar item_group_id comum e o atributo color por variação."
+   "As 7 cores são o mesmo produto: no Merchant Center, usar item_group_id comum e o atributo color por variação.",
+   "Rodada GTIN: Bate com o cadastro."
   ],
   "lote": "wurth.json",
-  "aplicar": true
+  "aplicar": true,
+  "mpn": "0967911303",
+  "mpnFonte": "https://www.wurth.com.br/p/10184390/marcador-industrial-branco-60g-wurth-0967911303-unitario"
  },
  {
   "id": "cmtv7cdf90076pd011n6pxb0c",
@@ -4142,8 +4242,8 @@
    "id": 543608,
    "caminho": "Materiais de escritório > Instrumentos de escritório > Instrumentos de escrita > Marcadores > Marcador"
   },
-  "gtin": null,
-  "gtinFonte": null,
+  "gtin": "4099618041952",
+  "gtinFonte": "https://varejo.wurth.com.br/p/10184395/marcador-industrial-laranja-60g-wurth-0967911304-unitario",
   "atributos": {
    "cor": "Laranja",
    "peso": "60 g",
@@ -4169,6 +4269,12 @@
     "tipo": "marketplace",
     "oQueTem": "listagem",
     "titulo": "Marcador Industrial - Mercado Livre"
+   },
+   {
+    "url": "https://varejo.wurth.com.br/p/10184395/marcador-industrial-laranja-60g-wurth-0967911304-unitario",
+    "tipo": "fabricante",
+    "oQueTem": "GTIN/EAN da apresentação Marcador industrial laranja 60 g, unitário",
+    "titulo": "Marcador Industrial Laranja 60g - Wurth - 0967911304 - Unitário"
    }
   ],
   "paginaDasFotos": "https://www.wurth.com.br/p/7492625/marcador-industrial-laranja-60g-wurth-389055-2-unitario",
@@ -4177,10 +4283,13 @@
   "duvidas": [
    "O laranja aparece na loja Würth com o código antigo 389055 2; o código na série nova provavelmente é 0967911304, mas isso não foi confirmado.",
    "Sem EAN em nenhuma fonte.",
-   "As 7 cores são o mesmo produto: no Merchant Center, usar item_group_id comum e o atributo color por variação."
+   "As 7 cores são o mesmo produto: no Merchant Center, usar item_group_id comum e o atributo color por variação.",
+   "Rodada GTIN: Bate com o cadastro. A página do cadastro trazia o código antigo '389055 2'; o atual no site Würth é 0967911304."
   ],
   "lote": "wurth.json",
-  "aplicar": true
+  "aplicar": true,
+  "mpn": "0967911304",
+  "mpnFonte": "https://varejo.wurth.com.br/p/10184395/marcador-industrial-laranja-60g-wurth-0967911304-unitario"
  },
  {
   "id": "cmtv7cdfv0078pd0150gyx7jm",
@@ -4238,10 +4347,13 @@
   "duvidas": [
    "O código 0967911305 do preto veio do resumo da busca, não de URL própria; confirmar na categoria Marcadores & Lacres do site Würth.",
    "Sem EAN em nenhuma fonte.",
-   "As 7 cores são o mesmo produto: no Merchant Center, usar item_group_id comum e o atributo color por variação."
+   "As 7 cores são o mesmo produto: no Merchant Center, usar item_group_id comum e o atributo color por variação.",
+   "Rodada GTIN: Preto aparece na listagem da categoria como 0967911305, mas o EAN não veio no resumo da busca (as outras seis cores vieram). Abrir a página do produto para ler o código."
   ],
   "lote": "wurth.json",
-  "aplicar": true
+  "aplicar": true,
+  "mpn": "0967911305",
+  "mpnFonte": "https://www.wurth.com.br/categoria/produtos-quimicos/aerossois-limpeza-impermeabilizacao-e-lubrificacao/marcadores-lacres"
  },
  {
   "id": "cmtv7cdg7007apd01vlsjumpc",
@@ -4264,8 +4376,8 @@
    "id": 543608,
    "caminho": "Materiais de escritório > Instrumentos de escritório > Instrumentos de escrita > Marcadores > Marcador"
   },
-  "gtin": null,
-  "gtinFonte": null,
+  "gtin": "4099618041976",
+  "gtinFonte": "https://www.wurth.com.br/p/10184394/marcador-industrial-verde-60g-wurth-0967911306-unitario",
   "atributos": {
    "cor": "Verde",
    "peso": "60 g",
@@ -4291,6 +4403,12 @@
     "tipo": "marketplace",
     "oQueTem": "listagem",
     "titulo": "Marcador Industrial - Mercado Livre"
+   },
+   {
+    "url": "https://www.wurth.com.br/p/10184394/marcador-industrial-verde-60g-wurth-0967911306-unitario",
+    "tipo": "fabricante",
+    "oQueTem": "GTIN/EAN da apresentação Marcador industrial verde 60 g, unitário",
+    "titulo": "Marcador Industrial Verde 60g - Wurth - 0967911306 - Unitário"
    }
   ],
   "paginaDasFotos": "https://www.wurth.com.br/categoria/produtos-quimicos/aerossois-limpeza-impermeabilizacao-e-lubrificacao/marcadores-lacres",
@@ -4299,10 +4417,13 @@
   "duvidas": [
    "O código 0967911306 do verde veio do resumo da busca, não de URL própria; confirmar na categoria Marcadores & Lacres do site Würth.",
    "Sem EAN em nenhuma fonte.",
-   "As 7 cores são o mesmo produto: no Merchant Center, usar item_group_id comum e o atributo color por variação."
+   "As 7 cores são o mesmo produto: no Merchant Center, usar item_group_id comum e o atributo color por variação.",
+   "Rodada GTIN: Bate com o cadastro."
   ],
   "lote": "wurth.json",
-  "aplicar": true
+  "aplicar": true,
+  "mpn": "0967911306",
+  "mpnFonte": "https://www.wurth.com.br/p/10184394/marcador-industrial-verde-60g-wurth-0967911306-unitario"
  },
  {
   "id": "cmtv7cdgj007cpd01k7b7bpfh",
@@ -4325,8 +4446,8 @@
    "id": 543608,
    "caminho": "Materiais de escritório > Instrumentos de escritório > Instrumentos de escrita > Marcadores > Marcador"
   },
-  "gtin": null,
-  "gtinFonte": null,
+  "gtin": "4099618041938",
+  "gtinFonte": "https://www.wurth.com.br/p/10184393/marcador-industrial-vermelho-60g-wurth-0967911307-unitario",
   "atributos": {
    "cor": "Vermelho",
    "peso": "60 g",
@@ -4352,6 +4473,12 @@
     "tipo": "marketplace",
     "oQueTem": "listagem",
     "titulo": "Marcador Industrial - Mercado Livre"
+   },
+   {
+    "url": "https://www.wurth.com.br/p/10184393/marcador-industrial-vermelho-60g-wurth-0967911307-unitario",
+    "tipo": "fabricante",
+    "oQueTem": "GTIN/EAN da apresentação Marcador industrial vermelho 60 g, unitário",
+    "titulo": "Marcador Industrial Vermelho 60g - Wurth - 0967911307 - Unitário"
    }
   ],
   "paginaDasFotos": "https://www.wurth.com.br/p/10184393/marcador-industrial-vermelho-60g-wurth-0967911307-unitario",
@@ -4359,10 +4486,13 @@
   "confianca": "alta",
   "duvidas": [
    "Sem EAN em nenhuma fonte.",
-   "As 7 cores são o mesmo produto: no Merchant Center, usar item_group_id comum e o atributo color por variação."
+   "As 7 cores são o mesmo produto: no Merchant Center, usar item_group_id comum e o atributo color por variação.",
+   "Rodada GTIN: Bate com o cadastro."
   ],
   "lote": "wurth.json",
-  "aplicar": true
+  "aplicar": true,
+  "mpn": "0967911307",
+  "mpnFonte": "https://www.wurth.com.br/p/10184393/marcador-industrial-vermelho-60g-wurth-0967911307-unitario"
  },
  {
   "id": "cmtv7cdhz007mpd01652eo55z",
@@ -4430,7 +4560,8 @@
    "Confirmar se o Max Blend pertence à linha Nitro Automotive (Harten) ou à sublinha NitroX; só o 'Hydro Blend' aparece explicitamente como Nitro Automotive.",
    "Não confundir com 'Blend Cleaner Wax' da Vonixx, que domina os resultados de busca.",
    "A marca 'Nitro' destes produtos é a linha Nitro Automotive da Harten Química (hartenquimica.com.br, Brasil, fundada em 2002), e NÃO a Nitro Química (nitroquimica.com.br, fabricante de nitrocelulose). Toda fonte de varejo encontrada atribui a linha à Harten Química. Confirmar com a loja/nota fiscal.",
-   "GTIN não exposto em nenhum resultado de busca; não deduzido."
+   "GTIN não exposto em nenhum resultado de busca; não deduzido.",
+   "Rodada GTIN: Buscas por nome da linha Nitro/Harten (e pesquisa restrita a Cosmos/Systax) não trouxeram GTIN; Harten não publica EAN nas páginas indexadas. Casas Bahia/Ponto Frio/Extra listam 'Max Blend Cera Limpadora Nitro 500ml' sem EAN."
   ],
   "lote": "nitro-2.json",
   "aplicar": true
@@ -4502,7 +4633,8 @@
    "Página própria do produto no site do fabricante não encontrada (só na coleção Automotiva); fotos oficiais podem ter de vir de revendedor.",
    "Categoria Google alternativa: 2704 (Limpadores de carpetes e estofados), já que o uso principal é interior/extratora.",
    "A marca 'Nitro' destes produtos é a linha Nitro Automotive da Harten Química (hartenquimica.com.br, Brasil, fundada em 2002), e NÃO a Nitro Química (nitroquimica.com.br, fabricante de nitrocelulose). Toda fonte de varejo encontrada atribui a linha à Harten Química. Confirmar com a loja/nota fiscal.",
-   "GTIN não exposto em nenhum resultado de busca; não deduzido."
+   "GTIN não exposto em nenhum resultado de busca; não deduzido.",
+   "Rodada GTIN: Buscas por nome da linha Nitro/Harten (e pesquisa restrita a Cosmos/Systax) não trouxeram GTIN; Harten não publica EAN nas páginas indexadas."
   ],
   "lote": "nitro-2.json",
   "aplicar": true
@@ -4572,7 +4704,8 @@
    "Página própria do produto no site do fabricante não encontrada (só na coleção Automotiva).",
    "Categoria Google alternativa: 2704 (Limpadores de carpetes e estofados).",
    "A marca 'Nitro' destes produtos é a linha Nitro Automotive da Harten Química (hartenquimica.com.br, Brasil, fundada em 2002), e NÃO a Nitro Química (nitroquimica.com.br, fabricante de nitrocelulose). Toda fonte de varejo encontrada atribui a linha à Harten Química. Confirmar com a loja/nota fiscal.",
-   "GTIN não exposto em nenhum resultado de busca; não deduzido."
+   "GTIN não exposto em nenhum resultado de busca; não deduzido.",
+   "Rodada GTIN: Buscas por nome da linha Nitro/Harten (e pesquisa restrita a Cosmos/Systax) não trouxeram GTIN; Harten não publica EAN nas páginas indexadas."
   ],
   "lote": "nitro-2.json",
   "aplicar": true
@@ -4770,7 +4903,9 @@
   "confianca": "alta",
   "duvidas": [
    "Nome cadastrado não traz marca; identificado como Vintex Pneu Pretinho por analogia com o SKU 00095 (5 L Vintex). A Vonixx tem também o 'Darker Vintex', outro pretinho; confirmar com a loja qual é.",
-   "EAN candidato 7898511032619. O EAN apareceu só no resumo agregado da busca, não foi lido em uma página específica; confirmar na embalagem ou na nota do fornecedor antes de enviar ao Merchant Center."
+   "EAN candidato 7898511032619. O EAN apareceu só no resumo agregado da busca, não foi lido em uma página específica; confirmar na embalagem ou na nota do fornecedor antes de enviar ao Merchant Center.",
+   "GTIN candidato: Candidato de rodada anterior; nesta rodada nenhuma fonte exibiu o código.",
+   "Rodada GTIN: Sem confirmação."
   ],
   "lote": "vintex-detailer.json",
   "aplicar": true
@@ -4920,7 +5055,9 @@
   "fotos": [],
   "confianca": "alta",
   "duvidas": [
-   "EAN candidato 7898511020227. O EAN apareceu só no resumo agregado da busca, não foi lido em uma página específica; confirmar na embalagem ou na nota do fornecedor antes de enviar ao Merchant Center."
+   "EAN candidato 7898511020227. O EAN apareceu só no resumo agregado da busca, não foi lido em uma página específica; confirmar na embalagem ou na nota do fornecedor antes de enviar ao Merchant Center.",
+   "GTIN candidato: Candidato de rodada anterior; nesta rodada nenhuma fonte exibiu o código.",
+   "Rodada GTIN: Sem confirmação. Pneu Pretinho 500 ml tem código Vonixx 2010026 (Extra), outro volume."
   ],
   "lote": "vintex-detailer.json",
   "aplicar": true
@@ -5051,7 +5188,8 @@
   "duvidas": [
    "Volume não consta no cadastro; escolhido 500 ml (menor apresentação de varejo; existe 1,5 L).",
    "A marca 'Nitro' destes produtos é a linha Nitro Automotive da Harten Química (hartenquimica.com.br, Brasil, fundada em 2002), e NÃO a Nitro Química (nitroquimica.com.br, fabricante de nitrocelulose). Toda fonte de varejo encontrada atribui a linha à Harten Química. Confirmar com a loja/nota fiscal.",
-   "GTIN não exposto em nenhum resultado de busca; não deduzido."
+   "GTIN não exposto em nenhum resultado de busca; não deduzido.",
+   "Rodada GTIN: Buscas por nome da linha Nitro/Harten (e pesquisa restrita a Cosmos/Systax) não trouxeram GTIN; Harten não publica EAN nas páginas indexadas."
   ],
   "lote": "nitro-2.json",
   "aplicar": true
@@ -5119,7 +5257,8 @@
   "duvidas": [
    "Página própria do produto no site do fabricante não localizada (consta na coleção Automotiva).",
    "A marca 'Nitro' destes produtos é a linha Nitro Automotive da Harten Química (hartenquimica.com.br, Brasil, fundada em 2002), e NÃO a Nitro Química (nitroquimica.com.br, fabricante de nitrocelulose). Toda fonte de varejo encontrada atribui a linha à Harten Química. Confirmar com a loja/nota fiscal.",
-   "GTIN não exposto em nenhum resultado de busca; não deduzido."
+   "GTIN não exposto em nenhum resultado de busca; não deduzido.",
+   "Rodada GTIN: Buscas por nome da linha Nitro/Harten (e pesquisa restrita a Cosmos/Systax) não trouxeram GTIN; Harten não publica EAN nas páginas indexadas."
   ],
   "lote": "nitro-2.json",
   "aplicar": true
@@ -5188,7 +5327,8 @@
    "Produto confirmado, mas NENHUMA listagem de Revoke em 5 L foi encontrada (só 500 ml). Confirmar se a apresentação existe ou se o cadastro está errado.",
    "Fotos disponíveis são do frasco de 500 ml; o galão 5 L pode ter rótulo diferente.",
    "A marca 'Nitro' destes produtos é a linha Nitro Automotive da Harten Química (hartenquimica.com.br, Brasil, fundada em 2002), e NÃO a Nitro Química (nitroquimica.com.br, fabricante de nitrocelulose). Toda fonte de varejo encontrada atribui a linha à Harten Química. Confirmar com a loja/nota fiscal.",
-   "GTIN não exposto em nenhum resultado de busca; não deduzido."
+   "GTIN não exposto em nenhum resultado de busca; não deduzido.",
+   "Rodada GTIN: Buscas por nome da linha Nitro/Harten (e pesquisa restrita a Cosmos/Systax) não trouxeram GTIN; Harten não publica EAN nas páginas indexadas."
   ],
   "lote": "nitro-2.json",
   "aplicar": true
@@ -5250,7 +5390,8 @@
    "Volume não consta no cadastro nem foi lido na página do fabricante (bloqueada para leitura direta). O revendedor lista 'Rubber' Revitalizador de Pneus 500 ml, provavelmente o mesmo produto; confirmar nome exato do rótulo ('Rubber' x 'Rubber Pro' x 'Tec Rubber') e volume.",
    "Possível sobreposição com SKU 00142 (Pretinho Pneu Nitro).",
    "A marca 'Nitro' destes produtos é a linha Nitro Automotive da Harten Química (hartenquimica.com.br, Brasil, fundada em 2002), e NÃO a Nitro Química (nitroquimica.com.br, fabricante de nitrocelulose). Toda fonte de varejo encontrada atribui a linha à Harten Química. Confirmar com a loja/nota fiscal.",
-   "GTIN não exposto em nenhum resultado de busca; não deduzido."
+   "GTIN não exposto em nenhum resultado de busca; não deduzido.",
+   "Rodada GTIN: Buscas por nome da linha Nitro/Harten (e pesquisa restrita a Cosmos/Systax) não trouxeram GTIN; Harten não publica EAN nas páginas indexadas."
   ],
   "lote": "nitro-2.json",
   "aplicar": true
@@ -5376,7 +5517,8 @@
    "Existe também 'Sanitizante Carro Novo' da Vintex (1,5 L e 5 L; ex.: GVL Distribuidora). Confirmar que o item da loja é o Nitro 200 ml.",
    "Modo de uso detalhado (tempo de ação, portas fechadas etc.) não foi lido; só a aplicação genérica.",
    "A marca 'Nitro' destes produtos é a linha Nitro Automotive da Harten Química (hartenquimica.com.br, Brasil, fundada em 2002), e NÃO a Nitro Química (nitroquimica.com.br, fabricante de nitrocelulose). Toda fonte de varejo encontrada atribui a linha à Harten Química. Confirmar com a loja/nota fiscal.",
-   "GTIN não exposto em nenhum resultado de busca; não deduzido."
+   "GTIN não exposto em nenhum resultado de busca; não deduzido.",
+   "Rodada GTIN: Buscas por nome da linha Nitro/Harten (e pesquisa restrita a Cosmos/Systax) não trouxeram GTIN; Harten não publica EAN nas páginas indexadas."
   ],
   "lote": "nitro-2.json",
   "aplicar": true
@@ -5459,7 +5601,8 @@
   "duvidas": [
    "Categoria da loja: hoje está em Proteção. Proposta: Lavagem (higienização). Alternativa aceitável: Aromatizantes, já que a loja o vende também pelo cheiro.",
    "Alegação de 99,99% de eliminação de bactérias aparece em revendedores; não incluída na descrição por não ter sido lida na página do fabricante.",
-   "EAN não encontrado em nenhuma fonte."
+   "EAN não encontrado em nenhuma fonte.",
+   "Rodada GTIN: Busca por nome + EAN não trouxe GTIN; varejistas (Magalu, Mercado Livre) não mostram o código no resumo indexado. Só 'Sanitizante Fresh 5L Vintex' apareceu, outro aroma, sem EAN."
   ],
   "lote": "vintex-detailer.json",
   "aplicar": true
@@ -5542,7 +5685,8 @@
   "duvidas": [
    "Categoria da loja: hoje está em Proteção. Proposta: Lavagem (higienização). Alternativa aceitável: Aromatizantes, já que a loja o vende também pelo cheiro.",
    "Alegação de 99,99% de eliminação de bactérias aparece em revendedores; não incluída na descrição por não ter sido lida na página do fabricante.",
-   "EAN não encontrado em nenhuma fonte."
+   "EAN não encontrado em nenhuma fonte.",
+   "Rodada GTIN: Busca por nome + EAN não trouxe GTIN; varejistas (Magalu, Mercado Livre) não mostram o código no resumo indexado. Só 'Sanitizante Fresh 5L Vintex' apareceu, outro aroma, sem EAN."
   ],
   "lote": "vintex-detailer.json",
   "aplicar": true
@@ -5664,7 +5808,7 @@
   "marcaPesquisada": "Würth",
   "fabricante": null,
   "kit": false,
-  "gtinCandidato": null,
+  "gtinCandidato": "7896771242151",
   "produtoIdentificado": "Silicone Spray Neutro 300 ml / 200 g (Würth do Brasil, cód. 0893 221 301; listagem varejo 08932213). Variante W-Max: cód. 0893 221 311 / 5986111300",
   "nomeProposto": "Würth Silicone Spray Neutro Lubrificante e Protetor 300 ml",
   "descricaoCurta": "Silicone spray Würth que lubrifica, reduz atrito e ruídos e protege plásticos, borrachas, metais, couro, madeira, vinil e cerâmica. Repele umidade, evita ressecamento e deixa acabamento seco e brilhante. Lata de 300 ml.",
@@ -5720,10 +5864,14 @@
   "duvidas": [
    "O EAN 4053479817095 encontrado é da variante W-Max (0893221311), não da linha Würth neutra; por isso gtin ficou null. Conferir o código de barras na lata.",
    "A Würth lista o 300 ml sob dois códigos (0893221301 e 08932213); confirmar qual consta na embalagem.",
-   "Categoria Google alternativa, se a loja preferir enquadrar como protetor automotivo: 2643 Ceras, graxas e protetores de veículos."
+   "Categoria Google alternativa, se a loja preferir enquadrar como protetor automotivo: 2643 Ceras, graxas e protetores de veículos.",
+   "GTIN candidato: Cosmos: '*SILICONE SPRAY 300ML' (NCM 3910.00.12, não auditado), apareceu em busca restrita ao Cosmos junto da página da marca Würth, mas a ficha não confirma a marca. Verificar na lata.",
+   "Rodada GTIN: Fonte do candidato: https://cosmos.bluesoft.com.br/produtos/7896771242151-silicone-spray-300ml . Lojas Würth internacionais só trazem 500 ml (0893221) e 20 L."
   ],
   "lote": "wurth.json",
-  "aplicar": true
+  "aplicar": true,
+  "mpn": "0893221301",
+  "mpnFonte": "https://www.wurth.com.br/p/7492695/silicone-spray-neutro-300ml-wurth-0893221301-unitario"
  },
  {
   "id": "cmtv7ce0l00aupd014ice4mlg",
@@ -5803,7 +5951,8 @@
    "O nome cadastrado pode se referir ao canhão completo (bico amarelo, 1,3 mm) ou só ao giclê/bico de reposição de 1,3 mm. O preço e a foto da embalagem decidem; o dossiê assume o canhão completo.",
    "Tipo de engate (rosca 14 mm, engate rápido Karcher, etc.) não confirmado para esta versão.",
    "Modo de uso é prática padrão de snow foam, não lido na página do fabricante.",
-   "EAN não encontrado."
+   "EAN não encontrado.",
+   "Rodada GTIN: Magalu lista 'Snow Foam Canhão de Espuma Detailer' (1 L) sem EAN; cor do bico não indicada."
   ],
   "lote": "vintex-detailer.json",
   "aplicar": true
@@ -5869,7 +6018,8 @@
    "Giclê de 1,1 mm e rosca de 14 mm vêm de um só revendedor; confirmar com a embalagem.",
    "Como no SKU 00068, confirmar se é o canhão completo ou só o bico de reposição.",
    "A pesquisa específica sobre o bico vermelho não pôde ser concluída (cota de buscas da sessão esgotada).",
-   "EAN não encontrado."
+   "EAN não encontrado.",
+   "Rodada GTIN: Magalu lista 'Snow Foam Canhão de Espuma Detailer' (1 L) sem EAN; cor do bico não indicada."
   ],
   "lote": "vintex-detailer.json",
   "aplicar": true
@@ -5948,7 +6098,8 @@
    "A apresentação 1,5 L apareceu em trecho de resultado ('Shampoo Automotivo Super Concentrado 1,5L') sem URL própria capturada; 500 ml está confirmado em 3 revendedores. Confirmar o rótulo do 1,5 L.",
    "Um revendedor grafa 'Spell Car'; a grafia do fabricante é 'Speel Car'.",
    "A marca 'Nitro' destes produtos é a linha Nitro Automotive da Harten Química (hartenquimica.com.br, Brasil, fundada em 2002), e NÃO a Nitro Química (nitroquimica.com.br, fabricante de nitrocelulose). Toda fonte de varejo encontrada atribui a linha à Harten Química. Confirmar com a loja/nota fiscal.",
-   "GTIN não exposto em nenhum resultado de busca; não deduzido."
+   "GTIN não exposto em nenhum resultado de busca; não deduzido.",
+   "Rodada GTIN: Buscas por nome da linha Nitro/Harten (e pesquisa restrita a Cosmos/Systax) não trouxeram GTIN; Harten não publica EAN nas páginas indexadas."
   ],
   "lote": "nitro-2.json",
   "aplicar": true
@@ -6027,7 +6178,8 @@
    "Produto confirmado no fabricante, mas as apresentações encontradas foram 500 ml, 1,5 L e 20 L; o galão de 5 L não apareceu em nenhuma listagem. Confirmar se existe.",
    "Fotos oficiais podem ser do frasco de 500 ml.",
    "A marca 'Nitro' destes produtos é a linha Nitro Automotive da Harten Química (hartenquimica.com.br, Brasil, fundada em 2002), e NÃO a Nitro Química (nitroquimica.com.br, fabricante de nitrocelulose). Toda fonte de varejo encontrada atribui a linha à Harten Química. Confirmar com a loja/nota fiscal.",
-   "GTIN não exposto em nenhum resultado de busca; não deduzido."
+   "GTIN não exposto em nenhum resultado de busca; não deduzido.",
+   "Rodada GTIN: Buscas por nome da linha Nitro/Harten (e pesquisa restrita a Cosmos/Systax) não trouxeram GTIN; Harten não publica EAN nas páginas indexadas."
   ],
   "lote": "nitro-2.json",
   "aplicar": true
@@ -6083,7 +6235,8 @@
    "Modo de uso e superfícies não confirmados; descrição é mínima de propósito. Pedir ficha técnica ao fabricante.",
    "Fotos: a coleção do fabricante exibe miniatura; página do produto a confirmar.",
    "A marca 'Nitro' destes produtos é a linha Nitro Automotive da Harten Química (hartenquimica.com.br, Brasil, fundada em 2002), e NÃO a Nitro Química (nitroquimica.com.br, fabricante de nitrocelulose). Toda fonte de varejo encontrada atribui a linha à Harten Química. Confirmar com a loja/nota fiscal.",
-   "GTIN não exposto em nenhum resultado de busca; não deduzido."
+   "GTIN não exposto em nenhum resultado de busca; não deduzido.",
+   "Rodada GTIN: Buscas por nome da linha Nitro/Harten (e pesquisa restrita a Cosmos/Systax) não trouxeram GTIN; Harten não publica EAN nas páginas indexadas."
   ],
   "lote": "nitro-2.json",
   "aplicar": true
@@ -6150,7 +6303,8 @@
   "duvidas": [
    "Os anúncios divergem entre '3x1' e '4x1'; confirmar no rótulo da loja.",
    "Diluição exata não encontrada nas fontes; o modo de uso descrito é o padrão de shampoo sem toque e precisa de confirmação no rótulo.",
-   "Não foi localizada página do produto no site do fabricante (a página 'Limpeza Pesada' em bugattiquimica.com/categoria/limpeza-pesada/ é a candidata)."
+   "Não foi localizada página do produto no site do fabricante (a página 'Limpeza Pesada' em bugattiquimica.com/categoria/limpeza-pesada/ é a candidata).",
+   "Rodada GTIN: Mercado Livre lista 'Shampoo Automotivo Bugatti 5l' sem EAN; nenhuma base GTIN traz Super Toque."
   ],
   "lote": "bugatti-vonixx.json",
   "aplicar": true
@@ -6351,7 +6505,8 @@
   "confianca": "alta",
   "duvidas": [
    "Tempo de cura e rendimento não constam nas fontes lidas; o modo de uso é orientação geral de selante e deve ser conferido no rótulo.",
-   "O nome correto do fabricante é 'V80' (sem hífen); ajustar o cadastro."
+   "O nome correto do fabricante é 'V80' (sem hífen); ajustar o cadastro.",
+   "Rodada GTIN: Listagens Mercado Livre/Magalu do V80 500ml sem EAN. SiO2-PRO 500ml tem 7898511027110 (eBay), outro produto."
   ],
   "lote": "bugatti-vonixx.json",
   "aplicar": true
@@ -6367,7 +6522,7 @@
   "marcaPesquisada": "Vonixx",
   "fabricante": null,
   "kit": false,
-  "gtinCandidato": null,
+  "gtinCandidato": "7898511027103",
   "produtoIdentificado": "Vonixx V-Paint Revestimento Cerâmico para Pintura (vitrificador à base de silício) - frasco de 20 ml (também vendido em 50 ml)",
   "nomeProposto": "Vonixx V-Paint Revestimento Cerâmico para Pintura 20 ml",
   "descricaoCurta": "Vitrificador cerâmico Vonixx V-Paint à base de silício, 20 ml, com aplicador: durabilidade de até 3 anos, repelência a água e sujeira, proteção UV e brilho profundo. Pode ser usado em rodas.",
@@ -6421,7 +6576,9 @@
   "duvidas": [
    "Apresentação não informada no cadastro: o fabricante vende 20 ml e 50 ml (e a versão PRO em 50 ml). Assumido 20 ml; confirmar com o estoque.",
    "Página oficial em vonixx.com.br não pôde ser lida (rede bloqueada); trocar paginaDasFotos pela oficial.",
-   "A frase sobre o rendimento do frasco de 20 ml ('atende a um veículo') é inferência a partir do rendimento do 50 ml; confirmar no rótulo."
+   "A frase sobre o rendimento do frasco de 20 ml ('atende a um veículo') é inferência a partir do rendimento do 50 ml; confirmar no rótulo.",
+   "GTIN candidato: clean-garage.com lista o V-Paint PRO 50 ml kit com MPN 7898511027103; volume (50 ml) e versão (PRO) diferem do cadastro (20 ml). Não usar como GTIN.",
+   "Rodada GTIN: Fonte do candidato: https://clean-garage.com/vonixx-v-paint-pro-paint-ceramic-coating-50ml-kit"
   ],
   "lote": "bugatti-vonixx.json",
   "aplicar": true
@@ -6483,7 +6640,8 @@
    "Só um revendedor (V-One Store) descreve o produto; página do fabricante não localizada (bloqueada para leitura direta; busca site: não retornou).",
    "Modo de uso (distância de aplicação, tempo de secagem) não confirmado.",
    "A marca 'Nitro' destes produtos é a linha Nitro Automotive da Harten Química (hartenquimica.com.br, Brasil, fundada em 2002), e NÃO a Nitro Química (nitroquimica.com.br, fabricante de nitrocelulose). Toda fonte de varejo encontrada atribui a linha à Harten Química. Confirmar com a loja/nota fiscal.",
-   "GTIN não exposto em nenhum resultado de busca; não deduzido."
+   "GTIN não exposto em nenhum resultado de busca; não deduzido.",
+   "Rodada GTIN: Buscas por nome da linha Nitro/Harten (e pesquisa restrita a Cosmos/Systax) não trouxeram GTIN; Harten não publica EAN nas páginas indexadas."
   ],
   "lote": "nitro-2.json",
   "aplicar": true

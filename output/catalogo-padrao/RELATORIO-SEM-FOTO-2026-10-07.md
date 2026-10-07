@@ -36,9 +36,15 @@ Arquivos:
   fabricantes e varejistas. É o script, rodando na máquina do Nicolas, que lê a
   página-fonte, extrai as imagens (JSON-LD `Product.image`, `og:image`) e manda
   a plataforma copiá-las para `/uploads`.
-- **GTIN: 1 confirmado** (Würth Limpa Contato, base Cosmos) e **7 candidatos**
-  (Vintex, lidos só em resumo de busca). Candidato não vai ao feed: fica em
-  `gtinCandidato` para conferir na embalagem. Nenhum GTIN foi deduzido.
+- **GTIN: 7 confirmados** (Würth Limpa Contato pela base Cosmos e os seis
+  marcadores industriais Würth, EAN lido na ficha de wurth.com.br) e **12
+  candidatos** (Vintex, Vonixx V-Paint em volume diferente, Solupan e HT7 sem
+  marca na base, luva Würth com EAN de outro país, Lava Autos 1,5 L visto só em
+  marketplace). Candidato não vai ao feed: fica em `gtinCandidato` para
+  conferir na embalagem. Nenhum GTIN foi deduzido. **MPN: 16** lidos em página
+  do fabricante (15 códigos Würth de 10 dígitos e o aplicador Vonixx 2005001).
+  Harten (Nitro), Bugatti e Detailer não publicam EAN em página indexada: só a
+  embalagem resolve.
 - **Categoria Google** atribuída aos 95, com id conferido em
   `src/lib/google-product-taxonomy.pt-BR.json`: 2590 (33), 2643 (17), 2895 (9),
   543608 marcadores (7), 2789 odorizadores (6), 2894 (5), 2846 (5) e folhas
@@ -96,8 +102,10 @@ inativo não entra no feed nem no sitemap.
 
 ## O que ficou de fora e por quê
 
-- Buscas de GTIN em bases públicas (Cosmos, Systax) para Würth e Vonixx: a cota
-  de busca da sessão acabou antes. Os candidatos estão gravados.
+- Segunda rodada de GTIN (07/10, 50 buscas) cobriu as 78 fichas de confiança
+  alta e média: só a Würth expõe EAN em página própria; Vintex, Vonixx, Nitro,
+  Bugatti e Detailer não aparecem no Cosmos nem no Systax com a apresentação
+  certa. O que falta é leitura da embalagem.
 - Leitura direta das páginas dos fabricantes: bloqueada pela rede da sessão.
   As descrições saíram dos trechos que a busca devolveu; o modo de uso que não
   foi lido no fabricante está declarado em `duvidas`.
