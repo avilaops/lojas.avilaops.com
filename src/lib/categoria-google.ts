@@ -157,11 +157,22 @@ const SINAL_DO_RAMO = /vitrifica|coating|polimento|boina|automotiv|limpa[\s-]?ro
  * deixar o Merchant inferir a área pelo título. Só usar o pai depois que as
  * próprias categorias provarem que esta é uma loja industrial.
  */
-const SINAL_INDUSTRIAL = /retentores?|rolamentos?|o[\s-]?rings?|gaxetas?|raspadores?|mancais?|correias?|buchas?|rodas\s+dentadas?|an[ée]is\s+(?:backup|el[áa]sticos?)|vedações?|hidráulica/i;
+const SINAL_INDUSTRIAL = /retentor(?:es)?|rolamentos?|o[\s-]?rings?|gaxetas?|raspador(?:es)?|mancais?|correias?|buchas?|rodas\s+dentadas?|an[ée]is\s+(?:backup|el[áa]sticos?)|vedações?|hidráulica/i;
 // O fallback 111 só é apropriado para estas famílias da Vedashow, cujo
 // catálogo observado é de componentes industriais. Categorias genéricas ou
 // com mistura de itens domésticos, elétricos e industriais ficam sem chute.
-const CATEGORIAS_INDUSTRIAIS = /^(?:rolamentos?|correias?|mancais?|buchas?|mangueiras?|retentores?|gaxetas?|raspadores?|o[\s-]?rings?|rodas\s+dentadas?|an[ée]is\s+(?:backup|el[áa]sticos?)|guias|acoplamentos?|polias|cord[õo]es|veda[çc][õo]es)$/i;
+// `raspadores?` só casava "raspadores": o singular, que é como a PK nomeia a
+// categoria, ficava de fora (o mesmo valia para "Retentor").
+// A família pode vir com o material e o tipo no nome ("Gaxeta PU - Tipo B",
+// "Raspador PU - Tipo D", "Anel guia"): é assim que um fabricante de vedação
+// organiza o catálogo, e sem isto a PK Vedações ficava sem prateleira em todas
+// as cinco categorias. Só qualificador do ramo: "Gaxeta de geladeira" continua
+// fora, porque não é vedação hidráulica.
+const QUALIFICADOR_INDUSTRIAL = String.raw`(?:\s+(?:pu|nbr|ptfe|viton|poliuretano|nylon|teflon|bronze|a[çc]o|inox|hidr[áa]ulic[oa]s?|pneum[áa]tic[oa]s?|industria(?:l|is)|de\s+veda[çc][ãa]o))*(?:\s*[-–:]\s*tipo\s+\S+)?`;
+const CATEGORIAS_INDUSTRIAIS = new RegExp(
+  String.raw`^(?:rolamentos?|correias?|mancais?|buchas?|mangueiras?|retentor(?:es)?|gaxetas?|raspador(?:es)?|o[\s-]?rings?|rodas\s+dentadas?|an[ée]is\s+(?:backup|el[áa]sticos?|guias?)|anel\s+guia|guias|acoplamentos?|polias|cord[õo]es|veda[çc][õo]es)${QUALIFICADOR_INDUSTRIAL}$`,
+  "i",
+);
 
 /**
  * Regras que só valem com o ramo já provado pelo SINAL_DO_RAMO. Sozinhos,

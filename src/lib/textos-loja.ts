@@ -1,4 +1,5 @@
 import type { Tenant } from "@prisma/client";
+import { resumoParaMeta } from "./seo-texto";
 
 /**
  * "no mesmo dia útil" / "em até 1 dia útil" / "em até 3 dias úteis".
@@ -32,4 +33,29 @@ export function porOndeFalarCom(t: Pick<Tenant, "emailContato" | "whatsapp">): s
   if (t.emailContato) return `pelo ${t.emailContato}`;
   if (t.whatsapp) return "pelo WhatsApp da loja";
   return "pelos nossos canais de atendimento";
+}
+
+/**
+ * O que a loja diz de si numa frase: a meta description, o Open Graph e o
+ * resumo do llms.txt.
+ *
+ * Antes era `slogan ?? "Loja virtual <nome>"`, e a PK Vedações, sem slogan,
+ * saía no Google como "Loja virtual PK Vedações" enquanto o "Sobre" dela
+ * dizia "Gaxetas e raspadores para cilindros hidráulicos e pneumáticos".
+ * "Loja virtual X" descreve a plataforma, não a loja: fica por último, só
+ * quando o lojista não escreveu nada em lugar nenhum.
+ *
+ * A ordem é a da intenção: slogan (escrito para isso), diferencial da marca
+ * (o diagnóstico), primeiro parágrafo do "Sobre" (resumido ao tamanho que o
+ * resultado de busca mostra). Campo em branco conta como ausente: `""` não
+ * é slogan.
+ */
+export function descricaoDaLoja(t: Pick<Tenant, "nome" | "slogan" | "sobre">, diferencial?: string | null): string {
+  const slogan = t.slogan?.trim();
+  if (slogan) return slogan;
+  const marca = resumoParaMeta(diferencial);
+  if (marca) return marca;
+  const sobre = resumoParaMeta((t.sobre ?? "").split(/\n{2,}/)[0]);
+  if (sobre) return sobre;
+  return `Loja virtual ${t.nome}`;
 }

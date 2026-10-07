@@ -1,0 +1,151 @@
+# PK Vedações: catálogo, Google Merchant e SEO (07/10/2026)
+
+Loja `pkvedacoes`, domínio próprio `pkvedacoes.com.br`, layout Catálogo
+Técnico. Levantamento feito numa sessão de nuvem, só pelo que a vitrine
+publica (`llms-full.txt`, `sitemap.xml`, `feed/merchant.xml`, `robots.txt` e
+páginas): sem acesso ao banco, ao painel nem ao Tag Manager. O que não deu
+para verificar está dito como tal.
+
+## O que a loja tem hoje
+
+| Medida | Valor |
+|---|---:|
+| Produtos publicados | 767 |
+| Gaxeta PU (Tipo B / STD / BS) | 294 / 149 / 122 |
+| Raspador PU - Tipo D | 110 |
+| Anel guia | 96 |
+| Com preço | 0 (todos "preço sob consulta") |
+| Com foto própria do SKU | 0 |
+| Com foto representativa da família | 767 (5 fotos, uma por família) |
+| Itens no feed do Merchant | **0** |
+| Descrição | só "Referência X" (a descrição curta) |
+| Categoria Google | nenhuma: os nomes "Gaxeta PU - Tipo B" não casavam com a regra |
+
+Cada produto já tem o que importa como dado: medidas (DI × DE × altura e seção
+do cordão, em mm), grupo/subgrupo, número de catálogo, código PK (`PKG.0070`,
+`RPU.1321`, `GNY.5010`) e a referência de catálogo em `codigosEquivalentes`
+("Substitui / equivale a").
+
+## Por que o feed do Merchant sai vazio
+
+`src/lib/catalogo-merchant.ts` só emite oferta com preço maior que zero e sem
+ocorrência de severidade `erro` para o canal Google. Na PK, **todas** as 767
+ofertas caem em duas delas:
+
+1. `preco_ausente`: preço zero. O Merchant exige `price`; não existe anúncio
+   "sob consulta" no Shopping.
+2. `foto_representativa`: a imagem principal é da série, não do SKU. A regra
+   da plataforma (e a política do Google) é que a foto mostre o item vendido.
+
+Nenhuma mudança de código faz esse feed ficar válido. É decisão do lojista:
+
+- **Preço.** Sem preço no cadastro a loja não entra no Shopping, ponto. Se a
+  PK vende por tabela, a tabela precisa virar `preco` na planilha.
+- **Foto.** Ou foto própria por SKU (inviável para 767 medidas), ou
+  reorganizar cada família como **um produto com a opção "Medida"** (a
+  plataforma já suporta grade com SKU, preço e estoque por variação, e o feed
+  sai com `item_group_id`): aí uma foto real da família é a foto do produto,
+  e as medidas são variações dele, que é como o Google espera receber isso.
+  A reorganização é trabalho de catálogo, não de código, e muda as URLs
+  (`/produtos/<slug>?variante=`), então precisa de redirecionamento dos 767
+  endereços atuais.
+
+### Fotos de terceiros, não
+
+O pedido era copiar as fotos "do produto que mais se destaca" na busca pelo
+nome. Não foi feito, e não deve ser: o que aparece na busca por "Gaxeta PU
+Tipo B 100 × 114 × 12" são produtos de concorrentes (Vedabras, Sippel, AGN,
+Tecnoring). Foto de outro fabricante no anúncio da PK é violação de direito
+autoral, viola a política de imagem do Merchant (a imagem tem que ser do item
+vendido) e contraria a regra do projeto: imagem plausível de produto errado é
+pior que ausência de imagem. A PK fabrica as peças; cinco fotos boas, uma por
+família, feitas por ela, resolvem a vitrine inteira.
+
+## O que foi feito nesta sessão
+
+### Planilha de atualização dos 767 produtos
+
+`docs/importacao/pkvedacoes-catalogo-2026-10-07.csv`, no formato da
+exportação do painel (`COLUNAS_PRODUTO`), localizando cada produto pelo
+`slug`. Validada com `lerCsvProdutos`: 767 linhas, 0 erros. Colunas:
+
+- `descricao_curta` (159 a 198 caracteres): família, medida, aplicação,
+  código PK. É o que vira meta description e `g:description`.
+- `descricao` (três parágrafos): ficha com as medidas, o que o perfil faz e
+  como conferir a medida no alojamento. O texto de cada família foi escrito a
+  partir da definição pública do perfil (tipo B: lábios simétricos a 45° com
+  chanfro, haste; STD: perfil padrão para êmbolo, altura igual à seção,
+  substitui V e U; BS: duplo contato com a haste, todo em PU; raspador D: sem
+  carcaça, canal aberto; anel guia: evita contato metal com metal e absorve
+  carga lateral). Fontes: a própria PK (trecho indexado do site antigo), o
+  catálogo CIAGN 1021 da AGN Vedações e páginas da Soorings e Vedsystem.
+  **Nenhum número que a PK não publicou** (dureza Shore, temperatura,
+  pressão, material do anel guia) entrou no texto.
+- `google_product_category`: 111 (Comercial e industrial), a prateleira que a
+  plataforma já usa para as famílias industriais da Vedashow. A taxonomia
+  não tem folha para vedação hidráulica.
+
+Como aplicar: Painel → Produtos → Planilha → enviar o CSV → conferir a
+prévia (767 atualizados, 0 criados) → confirmar. Só então conferir
+`/produtos/gny-5010-w2-4250-500` e o `llms-full.txt`. A planilha não mexe em
+nome, preço, foto, categoria nem estoque.
+
+### Código (vale para toda loja, nada por slug)
+
+- `descricaoDaLoja` (`src/lib/textos-loja.ts`): meta description, Open
+  Graph e o resumo do `llms.txt`/`llms-full.txt` passam a ser slogan →
+  diferencial da marca → primeiro parágrafo do "Sobre" → só então "Loja
+  virtual X". A PK saía no Google como "Loja virtual PK Vedações" e o
+  `llms.txt` publicava um resumo vazio.
+- `categoria-google.ts`: família industrial reconhecida com material e tipo
+  no nome ("Gaxeta PU - Tipo B", "Raspador PU - Tipo D", "Anel guia") e no
+  singular (`raspadores?` só casava o plural). As cinco categorias da PK
+  passam a sair com `google_product_category` no feed e sem o aviso
+  "categoria Google ausente" no diagnóstico.
+- `llms-full.txt`: linhas "Público: Não informado" e "Direção fotográfica:
+  Não informada" deixam de ser publicadas.
+- `eventos-loja.ts` + `Pixels.tsx`: loja que só tem o GTM (caso da PK) passa
+  a receber `view_item`, `add_to_cart`, `begin_checkout` e `purchase` no
+  `dataLayer` como `{ event, ecommerce }`, que é o que a tag do GA4 dentro do
+  container lê. Antes os eventos saíam só por `gtag('event')`, que o Tag
+  Manager não transforma em gatilho: a PK media visita e nada mais. Com GA4
+  ou Google Ads colados direto, continua indo pelo gtag, sem duplicar.
+
+Testes: 741 passam (`npm test`), `npm run typecheck` e `eslint` limpos.
+A integração (`npm run test:integracao`) não roda nesta sessão: não há
+Docker. A mudança não toca catálogo nem busca.
+
+## Revisão página a página
+
+| Página | Estado em 07/10 | O que muda |
+|---|---|---|
+| `/` | title "PK Vedações"; description "Loja virtual PK Vedações"; canonical, `max-image-preview:large`, JSON-LD `Store` + `WebSite` com `SearchAction`; H1 = nome (sem slogan); sem logo | description vira a frase do "Sobre". Slogan e logo são campos da aba Marca |
+| `/produtos` | title ok; description herdada ("Loja virtual…"); canonical por página (`?pagina=N`); filtros `noindex, follow`; 767 itens, 16 páginas | description herdada melhora junto |
+| `/categoria/*` (5) | title ok; description genérica "Confira os produtos da categoria…"; `BreadcrumbList`; canonical | `Categoria.seo*` está vazio: gerar no painel (Categorias → SEO) ou pela rotina das 3h, que só escreve com `GEMINI_API_KEY` |
+| `/produtos/[slug]` (767) | title, canonical, `og:image`, `BreadcrumbList`, `Product` com `brand`, `sku`, `additionalProperty` (medidas em mm). Description = "Referência X". Sem `offers` (preço zero), sem `mpn`/`gtin` | planilha preenche descrição e categoria Google. `Product` sem `offers` fica como "item inválido" em Snippets de produto no Search Console até existir preço |
+| `/sobre`, `/contato` | title e canonical ok; contato tem telefone, e-mail e razão social | — |
+| `/politicas/{envio,devolucao,privacidade,termos}` | 4 páginas, canonical, modelo da plataforma (7 dias, devolução grátis, coerente com `MerchantReturnPolicy`) | — |
+| `/promocoes`, `/blog` | fora do sitemap porque não há campanha nem publicação | correto |
+| `/carrinho`, `/checkout`, `/conta` | `noindex` e bloqueados no robots | correto |
+| `robots.txt` | busca liberada (inclusive `OAI-SearchBot`), treinamento bloqueado, sitemap do domínio próprio | — |
+| `sitemap.xml` | 780 URLs: home, produtos, 5 categorias, 767 produtos, sobre, contato, 4 políticas | — |
+| `llms.txt` | resumo vazio ("> "); categorias, contato e políticas ok | resumo preenchido |
+| `llms-full.txt` | "Loja virtual…", "Não informado" ×2, 767 produtos com "preço sob consulta" | corrigido |
+| GTM | `GTM-KZH37W3D` carregado com Consent Mode v2 em `denied` e `update` no aceite; aviso de cookies ativo | eventos de e-commerce passam a chegar no `dataLayer` |
+| GA4 | sem `G-` no HTML: ou está dentro do container, ou não existe | **não verificável daqui**: abrir o container e conferir se há tag GA4 com gatilhos `view_item`, `add_to_cart`, `begin_checkout`, `purchase` lendo `ecommerce` |
+| Search Console | sem `google-site-verification` no HTML | se a verificação for por DNS, ok; senão colar o código em Anúncios |
+
+## O que fica com o Nicolas / a PK
+
+1. **Preço** nos 767 itens (ou nos que vão ao Shopping). Sem isso, Merchant
+   não existe.
+2. **Cinco fotos próprias**, uma por família, no fundo branco, e a decisão
+   entre manter 767 produtos (foto `representativa`, fora do Merchant) ou
+   reorganizar em 5 produtos com a opção "Medida".
+3. Subir a planilha no painel e conferir.
+4. Aba Marca: slogan (vira title e H1), logo, diferencial e público.
+5. Tag Manager: confirmar a tag GA4 e os gatilhos; ou colar o `G-` em
+   Anúncios, que resolve sem container.
+6. Search Console: cadastrar `https://pkvedacoes.com.br/sitemap.xml` e, no
+   Merchant, a fonte `https://pkvedacoes.com.br/feed/merchant.xml` (vazia até
+   o item 1).
