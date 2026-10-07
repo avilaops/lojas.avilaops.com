@@ -52,20 +52,27 @@ export default function Header({ loja, logoUrl, categorias, exemploBusca, mostra
           rolagem cinza à mostra, repetindo o que os atalhos com foto já dizem.
           As duas listas passaram a sair da mesma ordem (maiores primeiro), e
           quem procura o resto tem "Ver todas". */}
+      {/* A tira rola só de lado. `overflow-x: auto` sozinho também libera a
+          rolagem vertical da caixa, e o sublinhado dos links ficava 10px abaixo
+          dela: no iPhone a tira "escorregava" para cima com o gesto e aparecia
+          num lugar diferente a cada carga. A altura agora é dos próprios links
+          (44px de toque), o sublinhado fica dentro da caixa e a rolagem
+          vertical está travada; `overscroll-x-contain` impede o gesto de
+          arrastar a página junto quando a tira chega ao fim. */}
       {categorias.length > 0 && (
         <nav className="nav-loja border-t border-border">
-          <div className="container-loja nav-loja-tira flex gap-6 overflow-x-auto py-2.5 text-[13px]">
-            <Link href="/produtos" className="whitespace-nowrap font-semibold text-foreground">
+          <div className="container-loja nav-loja-tira flex gap-6 overflow-x-auto overflow-y-hidden overscroll-x-contain text-[13px]">
+            <Link href="/produtos" className="nav-loja-item font-semibold text-foreground">
               Todos
             </Link>
-            {mostrarPromocoes && <Link href="/promocoes" className="whitespace-nowrap font-semibold text-primary">Promoções</Link>}
+            {mostrarPromocoes && <Link href="/promocoes" className="nav-loja-item font-semibold text-primary">Promoções</Link>}
             {categorias.slice(0, PRINCIPAIS).map((c) => (
-              <Link key={c.slug} href={`/categoria/${c.slug}`} className="whitespace-nowrap text-muted-foreground hover:text-foreground">
+              <Link key={c.slug} href={`/categoria/${c.slug}`} className="nav-loja-item text-muted-foreground hover:text-foreground">
                 {c.nome}
               </Link>
             ))}
             {categorias.length > PRINCIPAIS && (
-              <Link href="/produtos" className="whitespace-nowrap font-medium text-primary">
+              <Link href="/produtos" className="nav-loja-item font-medium text-primary">
                 Ver todas
               </Link>
             )}
