@@ -92,6 +92,14 @@ Este repositório pertence à Ávila Ops Tecnologia, que ajuda pequenas empresas
   `AutomacaoEvento.canaisFeitos` para a nova tentativa não repetir. O que ainda
   é do n8n é o que espera (`pix_pendente` aos 30 min, `loja_indicacoes` aos 3
   dias), não um canal.
+- **O conector MCP entra por login, e não conhece assistente pelo nome.** O
+  lojista cola `https://lojas.avilaops.com/api/mcp` no Claude, no ChatGPT ou no
+  Codex e autoriza em `/autorizar`; o servidor de autorização somos nós
+  (`/oauth/*`, `/.well-known/*`, regras em `src/lib/mcp-oauth.ts`). Nenhuma
+  lista de clientes aceitos: quem fala o protocolo se registra sozinho. Erro só
+  é redirecionado depois de conferir o `redirect_uri`, PKCE S256 é obrigatório,
+  e código e tokens ficam só como sha256. A chave `lojas_live_…` continua, para
+  n8n e scripts. Ver `docs/MCP.md`.
 - **API para desenvolvedores passa por uma porta só.** Rota de `/api/v1` usa
   `rotaDaApi({ escopo })` (`src/lib/api-rotas.ts`) e não autentica, não monta
   erro nem põe CORS sozinha. A loja vem da chave, e toda consulta filtra pelo

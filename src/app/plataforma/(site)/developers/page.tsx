@@ -13,7 +13,7 @@ export default function DevelopersPage() {
         <p className="text-xs font-semibold uppercase tracking-widest text-primary">Documentação Técnica</p>
         <h1 className="mt-2 text-3xl sm:text-4xl font-bold tracking-tight">Conector MCP & Automações</h1>
         <p className="mt-3 text-muted-foreground">
-          Conecte o Claude, Cursor, Antigravity e agentes autônomos ao seu e-commerce via Model Context Protocol (MCP).
+          Conecte o Claude, o ChatGPT, o Codex e agentes autônomos à sua loja via Model Context Protocol (MCP).
         </p>
       </div>
 
@@ -24,7 +24,12 @@ export default function DevelopersPage() {
             https://lojas.avilaops.com/api/mcp
           </code>
           <p className="mt-3 text-sm text-muted-foreground">
-            Autenticação via Header: <code className="font-mono text-xs">Authorization: Bearer lojas_live_&lt;slug&gt;_&lt;token&gt;</code> (exclusivo do plano Loja Pro).
+            Adicione este endereço como conector no seu assistente e autorize a loja pelo login do painel: o assistente descobre o
+            fluxo sozinho (OAuth 2.1 com PKCE e registro dinâmico de cliente). Exclusivo do plano Loja Pro.
+          </p>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Para automações sem tela, como n8n e scripts, gere uma chave no painel e envie no cabeçalho{" "}
+            <code className="font-mono text-xs">Authorization: Bearer lojas_live_&lt;slug&gt;_&lt;token&gt;</code>.
           </p>
         </div>
 

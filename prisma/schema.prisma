@@ -272,6 +272,7 @@ model Tenant {
   apiKeyEnc      String?
   apiKeyCriadaEm DateTime?
   chavesApi      ChaveApi[]
+  conexoesMcp    ConexaoMcp[]
 
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
@@ -1412,6 +1413,56 @@ enum TipoChaveApi {
 /// a loja precisa decifrar para falar com o Mercado Pago, esta só precisa ser
 /// reconhecida. Dump do banco não devolve chave que funcione. Uma loja tem
 /// quantas quiser (uma por integração), e revogar uma não derruba as outras.
+/// Assistente de IA que se registrou para pedir acesso ao conector MCP
+/// (registro dinâmico, RFC 7591). Não é de loja nenhuma: o mesmo registro do
+/// Claude ou do ChatGPT serve a todo lojista que conectar por ele.
+model ClienteMcp {
+  id       String   @id @default(cuid())
+  /// O que o lojista lê na tela de autorização. Quem escolhe é o cliente.
+  nome     String
+  /// Endereços de retorno aceitos. Ver `retornoRegistrado` em src/lib/mcp-oauth.ts.
+  retornos String[]
+  criadoEm DateTime @default(now())
+
+  conexoes ConexaoMcp[]
+}
+
+/// Uma loja ligada a um assistente pelo login do conector MCP.
+///
+/// A linha nasce com o código de autorização, ganha os tokens na troca e é a
+/// mesma até ser revogada. Código e tokens só como sha256: banco vazado não
+/// entrega conexão. Ver src/lib/mcp-conexoes.ts e docs/MCP.md.
+model ConexaoMcp {
+  id         String  @id @default(cuid())
+  tenantId   String
+  clienteId  String
+  /// Quem autorizou, quando não foi o dono. Operador desligado derruba a conexão.
+  operadorId String?
+
+  codigoHash     String?   @unique
+  codigoExpiraEm DateTime?
+  /// Código gasto fica marcado: reapresentar é sinal de vazamento e revoga a conexão.
+  codigoUsadoEm  DateTime?
+  /// `code_challenge` (PKCE S256) e o retorno do pedido, conferidos na troca.
+  desafio        String?
+  retorno        String?
+
+  acessoHash        String?   @unique
+  acessoExpiraEm    DateTime?
+  renovacaoHash     String?   @unique
+  renovacaoExpiraEm DateTime?
+
+  ultimoUsoEm DateTime?
+  revogadaEm  DateTime?
+  criadaEm    DateTime  @default(now())
+
+  tenant  Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  cliente ClienteMcp @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([clienteId])
+}
+
 model ChaveApi {
   id       String       @id @default(cuid())
   tenantId String

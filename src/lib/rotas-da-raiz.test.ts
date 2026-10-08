@@ -10,13 +10,13 @@ import { ehRetornoDeAutorizacao, ficaNaRaiz } from "./rotas-da-raiz";
  */
 
 test("retorno de autorização e contratos de API ficam na raiz", () => {
-  for (const caminho of ["/api/health", "/v1/eventos", "/ml/callback", "/ml/notifications", "/melhor-envio/callback", "/mercado-pago/callback", "/canais/shopee/callback", "/plataforma/painel"]) {
+  for (const caminho of ["/api/health", "/v1/eventos", "/ml/callback", "/ml/notifications", "/melhor-envio/callback", "/mercado-pago/callback", "/canais/shopee/callback", "/oauth/authorize", "/oauth/token", "/.well-known/oauth-protected-resource/api/mcp", "/.well-known/oauth-authorization-server", "/plataforma/painel"]) {
     assert.equal(ficaNaRaiz(caminho), true, caminho);
   }
 });
 
 test("painel e página de venda continuam indo para a plataforma", () => {
-  for (const caminho of ["/", "/painel", "/painel/configuracoes/entrega", "/entrar", "/criar", "/melhor-envio", "/mercado-pago", "/mlx/callback", "/canais"]) {
+  for (const caminho of ["/", "/painel", "/painel/configuracoes/entrega", "/entrar", "/criar", "/melhor-envio", "/mercado-pago", "/mlx/callback", "/canais", "/autorizar", "/oauth"]) {
     assert.equal(ficaNaRaiz(caminho), false, caminho);
   }
 });
