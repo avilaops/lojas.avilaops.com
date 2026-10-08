@@ -1,9 +1,10 @@
 import { createHash, randomBytes } from "node:crypto";
 import type { ChaveApi, Tenant } from "@prisma/client";
 import { z } from "zod";
+import { cupomRecusado, exigirTentativaDeCupom, registrarCupomRecusado } from "./api-cupom";
 import { cobrancaDaVitrine } from "./api-recursos";
 import { ErroApi } from "./api-resposta";
-import { CorpoDoCheckout, criarCobranca } from "./checkout-cobranca";
+import { CorpoDoCheckout, CUPOM_INVALIDO, criarCobranca } from "./checkout-cobranca";
 import { prisma } from "./db";
 import { GatewayNaoConfigurado, providerDaLoja } from "./gateway";
 import { lojaVende, urlDaLoja } from "./tenant";
@@ -19,8 +20,9 @@ import { lojaVende, urlDaLoja } from "./tenant";
  * - **A referência nasce aqui**, com 128 bits. Ela é o segredo da página do
  *   pedido e a chave de idempotência no gateway; um front de terceiro não
  *   garante que a que ele inventasse tivesse entropia.
- * - **Sem cupom.** A resposta de cupom distingue cinco motivos de recusa e não
- *   tem limite de tentativas; por chave pública é enumeração de cupom.
+ * - **Cupom que não vale recusa a compra**, com uma resposta só e contando no
+ *   limite de erros de `api-cupom.ts`: o checkout seria o mesmo oráculo da
+ *   rota de cupom, só mais caro.
  * - **Sem preço.** Como em toda rota que cobra, o corpo diz o que comprar, não
  *   quanto custa.
  *
@@ -28,7 +30,7 @@ import { lojaVende, urlDaLoja } from "./tenant";
  */
 
 /** O corpo da compra. Campo desconhecido é erro: `preco` ignorado em silêncio é o front achando que mandou o preço. */
-export const CorpoDaCompra = CorpoDoCheckout.pick({ entrega: true, freteId: true, meioPagamento: true, cartao: true })
+export const CorpoDaCompra = CorpoDoCheckout.pick({ entrega: true, freteId: true, meioPagamento: true, cartao: true, cupom: true })
   .extend({
     // Estritos também por dentro: `precoUnitario` dentro de um item é o mesmo
     // engano de `preco` na raiz.
@@ -97,13 +99,19 @@ export async function comprarPelaApi(tenant: Tenant, chave: Pick<ChaveApi, "id">
     }
   }
 
-  const r = await criarCobranca(tenant, { ...corpo, referencia, ...(totalCentavos != null ? { totalExibido: totalCentavos } : {}) }, { provider });
+  if (corpo.cupom) exigirTentativaDeCupom(chave.id, request);
+
+  const r = await criarCobranca(tenant, { ...corpo, referencia, ...(totalCentavos != null ? { totalExibido: totalCentavos } : {}) }, { provider, cupomEstrito: true });
   switch (r.tipo) {
     case "ok":
       // De onde veio: o painel e o suporte precisam saber qual integração criou.
       await prisma.pedido.updateMany({ where: { tenantId: tenant.id, referencia }, data: { origem: `api:${chave.id}` } }).catch(() => {});
       return { ...cobrancaDaVitrine(referencia, r.pagamento, url), repetida: false };
     case "invalido":
+      if (r.codigo === CUPOM_INVALIDO) {
+        registrarCupomRecusado(chave.id, request);
+        throw cupomRecusado();
+      }
       throw new ErroApi(r.status === 409 ? "conflito" : "pedido_invalido", r.mensagem, {}, r.codigo);
     case "recusado":
       throw new ErroApi("gateway_recusou", "Não foi possível processar o pagamento. Nada foi cobrado.");

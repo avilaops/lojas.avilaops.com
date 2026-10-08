@@ -67,7 +67,7 @@ chegasse, sem ninguém ter decidido isso.
 | `pedidos:ler` | `GET /api/v1/pedidos`, `GET /api/v1/pedidos/{id}` |
 | `pedidos:escrever` | `PATCH /api/v1/pedidos/{id}` |
 | `vitrine:ler` | `GET /api/v1/vitrine/loja`, `GET /api/v1/vitrine/produtos`, `GET /api/v1/vitrine/produtos/{id}`, `POST /api/v1/vitrine/frete` |
-| `vitrine:comprar` | `POST /api/v1/vitrine/checkout`, `GET /api/v1/vitrine/pedidos/{referencia}` |
+| `vitrine:comprar` | `POST /api/v1/vitrine/cupom`, `POST /api/v1/vitrine/checkout`, `GET /api/v1/vitrine/pedidos/{referencia}` |
 
 `GET /api/v1` (sem chave) devolve esta lista como dado.
 
@@ -178,6 +178,7 @@ O fluxo de um front próprio:
 2. `GET /vitrine/produtos` e `/vitrine/produtos/{id}`: catálogo e variações. O
    `id` da variação é o que vai no carrinho.
 3. `POST /vitrine/frete`: opções para o CEP e o carrinho.
+   `POST /vitrine/cupom`, se a loja usa cupom: o desconto para mostrar.
 4. `POST /vitrine/checkout`: cria o pedido e a cobrança. Devolve `referencia`
    e o Pix, o boleto ou o resultado do cartão.
 5. `GET /vitrine/pedidos/{referencia}`: o andamento, para a tela do Pix.
@@ -205,8 +206,16 @@ Regras:
 - **Preço e frete saem do servidor.** O corpo é estrito: `preco`, `referencia`
   ou qualquer campo desconhecido é erro. `totalCentavos` é opcional e só serve
   para recusar a compra se o front mostrou outro valor.
-- **Sem cupom** nesta versão: a resposta de cupom distingue cinco motivos de
-  recusa, e por chave pública isso é enumeração de cupom.
+- **Cupom tem uma recusa só.** `POST /api/v1/vitrine/cupom` (`codigo`, `itens`
+  e, para frete grátis, `cep`) devolve `codigo`, `tipo` e `descontoCentavos`;
+  a compra aceita `cupom`. Não existir, ter vencido, esgotado ou faltar mínimo
+  dão a mesma resposta: `pedido_invalido` com `detalhe: cupom_invalido`. Na
+  compra, cupom que não vale **recusa o pedido**, não cobra sem desconto.
+- **Erro de cupom conta.** 5 por endereço e 100 por chave a cada 10 minutos,
+  somando a rota de cupom e a compra; depois disso é `limite_excedido` (429)
+  até a janela virar, mesmo para cupom certo. Cupom certo não gasta tentativa.
+  O teto por chave existe porque endereço se troca; o preço é que alguém pode
+  deixar o site do lojista sem cupom por dez minutos (`src/lib/api-cupom.ts`).
 - **Sem carrinho abandonado**: por chave pública seria um jeito de mandar
   e-mail e WhatsApp a terceiros.
 - **O status não traz dado pessoal.** Quem tem a referência é quem digitou os
@@ -274,7 +283,8 @@ contagem muda de lugar (Postgres ou Redis) sem mudar o contrato.
 2. ~~Webhooks para o desenvolvedor~~ feito em 08/10/2026 (seção "Webhooks").
    Falta reenviar uma entrega à mão pelo painel e eventos de catálogo.
 3. ~~Carrinho e checkout pela chave publicável~~ feito em 08/10/2026 (seção
-   "Compra pela chave publicável"). Falta cupom, com resposta única e limite.
+   "Compra pela chave publicável"), e o cupom em seguida, com resposta única e
+   limite de erros.
 4. ~~MCP aceitar a chave secreta nova~~ feito em 08/10/2026 (`mcp:usar`). Falta
    apagar `Tenant.apiKeyEnc` quando as lojas com chave antiga migrarem.
 5. ~~Página pública de documentação~~ feito em 08/10/2026: `/developers` e
