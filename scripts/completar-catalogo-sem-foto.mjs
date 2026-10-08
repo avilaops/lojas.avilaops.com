@@ -39,7 +39,8 @@
  * output/catalogo-padrao/brilhax-sem-foto-2026-10-07.json): sku, nomeAtual,
  * marca, nomeProposto, descricaoCurta, descricao, categoriaLoja,
  * googleProductCategory {id, caminho}, gtin, atributos, fontes,
- * paginaDasFotos, fotos, confianca, duvidas, aplicar (opcional, false pula).
+ * paginaDasFotos, fotos, confianca, duvidas, aplicar (opcional, false pula),
+ * pesoKg, alturaCm, larguraCm, comprimentoCm (opcionais, da embalagem de envio).
  */
 
 import { readFile, writeFile } from "node:fs/promises";
@@ -162,6 +163,15 @@ function gtinValido(valor) {
   return (10 - (soma % 10)) % 10 === v;
 }
 
+function medidasDeEnvio(item) {
+  const saida = {};
+  for (const campo of ["pesoKg", "alturaCm", "larguraCm", "comprimentoCm"]) {
+    const v = item[campo];
+    if (typeof v === "number" && Number.isFinite(v) && v > 0) saida[campo] = v;
+  }
+  return saida;
+}
+
 const dossie = JSON.parse(await readFile(dossiePath, "utf8"));
 const atuais = await catalogoAtual();
 const porSku = new Map(atuais.filter((p) => p.sku).map((p) => [p.sku, p]));
@@ -220,6 +230,9 @@ for (const item of dossie) {
     ...(mpn ? { mpn, identificadoresEstado: "informado" } : {}),
     ...(item.descricaoCurta ? { descricaoCurta: String(item.descricaoCurta).slice(0, 300) } : {}),
     ...(item.descricao ? { descricao: String(item.descricao).slice(0, 8000) } : {}),
+    // Peso e medidas da embalagem de envio: só o que o dossiê traz como número
+    // positivo. Sem eles o frete segue na caixa padrão da loja.
+    ...medidasDeEnvio(item),
     // A fonte deste dossiê tem chave própria. `_catalogoFonte` é de quem
     // importou o produto (objeto com url, método e data, na Brilhax) e não se
     // sobrescreve; só se preenche quando ainda não existe.

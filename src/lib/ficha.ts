@@ -52,6 +52,15 @@ const MEDIDAS: Record<string, string> = {
  */
 const INTERNAS = new Set(["grupoLegado", "gtin", "ean"]);
 
+/**
+ * Dado comercial do lojista que a importação às vezes traz em `atributos`:
+ * custo de compra, margem, fornecedor. Em 08/10/2026 a ficha de 43 produtos
+ * mostrava "Custo compra 59.99" na vitrine e no feed do Merchant. A chave
+ * certa para isso é a `_privada`; este filtro é a rede para a importação que
+ * esquecer.
+ */
+const COMERCIAL = /^(custo|preco_?custo|margem|markup|fornecedor)/i;
+
 const ROTULOS: Record<string, string> = {
   ncm: "NCM",
   unidade: "Unidade de venda",
@@ -160,7 +169,7 @@ export function formatarMm(n: number): string {
 
 export function fichaDoProduto(atributos: Record<string, unknown> | null | undefined): LinhaDaFicha[] {
   const entradas = Object.entries(atributos ?? {}).filter(
-    ([k, v]) => !INTERNAS.has(k) && !k.startsWith("_") && v !== null && v !== undefined && String(v).trim() !== "",
+    ([k, v]) => !INTERNAS.has(k) && !COMERCIAL.test(k) && !k.startsWith("_") && v !== null && v !== undefined && String(v).trim() !== "",
   );
 
   const medidas: LinhaDaFicha[] = [];

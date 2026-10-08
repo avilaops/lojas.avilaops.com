@@ -19,6 +19,11 @@ test("chave interna do ERP não aparece", () => {
   assert.deepEqual(f.map((l) => l.rotulo), ["Unidade de venda"]);
 });
 
+test("custo, margem e fornecedor não vão para a vitrine", () => {
+  const f = fichaDoProduto({ custoCompra: 59.99, margem: "40%", fornecedor: "Distribuidora X", precoCusto: 10, unidade: "MT" });
+  assert.deepEqual(f.map((l) => l.rotulo), ["Unidade de venda"]);
+});
+
 test("medida inválida some em vez de sair errada", () => {
   // O código lido como medida: melhor ausente que "5.176.168 mm".
   assert.deepEqual(fichaDoProduto({ diametroInternoMm: "5176168" }), []);
