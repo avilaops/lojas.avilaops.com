@@ -1,6 +1,6 @@
 import type { Tenant } from "@prisma/client";
 import { prisma } from "./db";
-import { resumoDoAcesso } from "./mcp-permissoes";
+import { escolhaDosEscopos, resumoDoAcesso, type EscolhaDeAcesso } from "./mcp-permissoes";
 import {
   gerarSegredo,
   hashDoSegredo,
@@ -181,6 +181,8 @@ export interface ConexaoDoPainel {
   assistente: string;
   /** "Só consulta", "Consulta e altera tudo" ou as áreas, por extenso. */
   acesso: string;
+  /** O mesmo acesso, no formato da tela de escolha, para abrir a edição. */
+  escolha: EscolhaDeAcesso;
   conectadaEm: string;
   ultimoUsoEm: string | null;
 }
@@ -196,6 +198,7 @@ export async function conexoesDaLoja(tenantId: string): Promise<ConexaoDoPainel[
     id: l.id,
     assistente: l.cliente.nome,
     acesso: resumoDoAcesso(l.escopos),
+    escolha: escolhaDosEscopos(l.escopos),
     conectadaEm: l.criadaEm.toISOString(),
     ultimoUsoEm: l.ultimoUsoEm?.toISOString() ?? null,
   }));
@@ -203,5 +206,20 @@ export async function conexoesDaLoja(tenantId: string): Promise<ConexaoDoPainel[
 
 export async function revogarConexao(tenantId: string, id: string): Promise<boolean> {
   const r = await prisma.conexaoMcp.updateMany({ where: { id, tenantId, revogadaEm: null }, data: { revogadaEm: new Date() } });
+  return r.count === 1;
+}
+
+/**
+ * O lojista muda o que uma conexão viva pode, sem desconectar.
+ *
+ * Vale na chamada seguinte: `tools/call` confere os escopos gravados a cada
+ * vez. A lista de ferramentas que o assistente já carregou pode ficar velha
+ * até ele pedir de novo; o que ele não puder mais, a chamada recusa.
+ */
+export async function alterarAcesso(tenantId: string, id: string, escopos: readonly string[]): Promise<boolean> {
+  const r = await prisma.conexaoMcp.updateMany({
+    where: { id, tenantId, revogadaEm: null, acessoHash: { not: null } },
+    data: { escopos: [...escopos] },
+  });
   return r.count === 1;
 }

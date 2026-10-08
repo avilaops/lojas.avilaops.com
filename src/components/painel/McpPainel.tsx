@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { Bot, Check, Copy, Key, Plug, Sparkles, Terminal, Trash2, Zap } from "lucide-react";
+import type { EscolhaDeAcesso as Escolha } from "@/lib/mcp-permissoes";
 import { Secao } from "./campos";
+import EscolhaDeAcesso, { escolhaVazia } from "./EscolhaDeAcesso";
 
 interface StatusMcp {
   plano: string;
@@ -16,6 +18,7 @@ interface Conexao {
   id: string;
   assistente: string;
   acesso: string;
+  escolha: Escolha;
   conectadaEm: string;
   ultimoUsoEm: string | null;
 }
@@ -69,6 +72,8 @@ export default function McpPainel({
   const [conexoes, setConexoes] = useState<Conexao[] | null>(null);
   const [atividade, setAtividade] = useState<{ chamadas: Chamada[]; retencaoDias: number } | null>(null);
   const [soAlteracoes, setSoAlteracoes] = useState(false);
+  const [editando, setEditando] = useState<{ id: string; escolha: Escolha } | null>(null);
+  const [salvando, setSalvando] = useState(false);
   const [gerando, setGerando] = useState(false);
   const [copiadoUrl, setCopiadoUrl] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -133,6 +138,29 @@ export default function McpPainel({
       setSucesso(`${c.assistente} foi desconectado.`);
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Erro ao desconectar.");
+    }
+  }
+
+  async function salvarAcesso() {
+    if (!editando) return;
+    setSalvando(true);
+    setErro(null);
+    setSucesso(null);
+    try {
+      const r = await fetch("/api/painel/mcp/conexoes", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ id: editando.id, ...editando.escolha }),
+      });
+      const d = await r.json().catch(() => null);
+      if (!r.ok || !d?.conexao) throw new Error(d?.erro ?? "Falha ao mudar o acesso.");
+      setConexoes((lista) => (lista ?? []).map((x) => (x.id === d.conexao.id ? d.conexao : x)));
+      setSucesso(`Acesso de ${d.conexao.assistente} atualizado. Vale a partir da próxima coisa que ele fizer.`);
+      setEditando(null);
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Erro ao mudar o acesso.");
+    } finally {
+      setSalvando(false);
     }
   }
 
@@ -268,16 +296,35 @@ export default function McpPainel({
           ) : (
             <ul className="mt-3 grid gap-2">
               {conexoes.map((c) => (
-                <li key={c.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-background p-3">
+                <li key={c.id} className="rounded-lg border border-border bg-background p-3">
+                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-foreground">{c.assistente}</p>
                     <p className="text-xs text-muted-foreground">
                       {c.acesso} · conectado em {dia(c.conectadaEm)} · {c.ultimoUsoEm ? `último uso em ${dia(c.ultimoUsoEm)}` : "ainda não usado"}
                     </p>
                   </div>
-                  <button type="button" onClick={() => desconectar(c)} className="btn-secundario h-9 px-3 text-xs text-red-600 hover:text-red-700">
-                    Desconectar
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setEditando(editando?.id === c.id ? null : { id: c.id, escolha: c.escolha })}
+                      className="btn-secundario h-9 px-3 text-xs"
+                    >
+                      {editando?.id === c.id ? "Fechar" : "Mudar acesso"}
+                    </button>
+                    <button type="button" onClick={() => desconectar(c)} className="btn-secundario h-9 px-3 text-xs text-red-600 hover:text-red-700">
+                      Desconectar
+                    </button>
+                  </div>
+                 </div>
+                  {editando?.id === c.id && (
+                    <div className="mt-3 grid gap-3 border-t border-border pt-3">
+                      <EscolhaDeAcesso nome={`acesso-${c.id}`} valor={editando.escolha} aoMudar={(escolha) => setEditando({ id: c.id, escolha })} />
+                      <button type="button" onClick={salvarAcesso} disabled={salvando || escolhaVazia(editando.escolha)} className="btn-primario h-9 justify-center px-4 text-xs">
+                        {salvando ? "Salvando…" : escolhaVazia(editando.escolha) ? "Marque ao menos uma área" : "Salvar acesso"}
+                      </button>
+                    </div>
+                  )}
                 </li>
               ))}
             </ul>
