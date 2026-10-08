@@ -47,10 +47,11 @@ Arquivos:
   candidato: a base Cosmos não separa a linha padrão da W-Max; (Vintex, Vonixx V-Paint em volume diferente, Solupan e HT7 sem
   marca na base, luva Würth com EAN de outro país, Lava Autos 1,5 L visto só em
   marketplace). Candidato não vai ao feed: fica em `gtinCandidato` para
-  conferir na embalagem. Nenhum GTIN foi deduzido. **MPN: 14** lidos em página
+  conferir na embalagem. Nenhum GTIN foi deduzido. **MPN: 13** lidos em página
   do fabricante (códigos Würth de 10 dígitos; o da espátula 5" ficou como
-  candidato porque a página é do kit de 5 e o cadastro é por unidade; o do
-  aplicador Vonixx veio de varejista e também é só candidato).
+  candidato porque a página é do kit de 5 e o cadastro é por unidade; o da
+  luva nitrílica porque o código é do tamanho nº 7 e o cadastro não define
+  tamanho; o do aplicador Vonixx veio de varejista e também é só candidato).
   Harten (Nitro), Bugatti e Detailer não publicam EAN em página indexada: só a
   embalagem resolve.
 - **Categoria Google** atribuída aos 95, com id conferido em

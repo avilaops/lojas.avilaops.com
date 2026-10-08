@@ -4114,6 +4114,7 @@
   "fotos": [],
   "confianca": "media",
   "duvidas": [
+   "MPN só candidato: 0899470250 é o código do tamanho nº 7 (S) e o cadastro não define tamanho; cada tamanho tem código próprio. Definir o tamanho ou criar variações antes de publicar MPN e GTIN.",
    "O cadastro não traz o tamanho. Cada tamanho tem código próprio (nº 7 = 0899470250, nº 8 = 0899470251); definir tamanho fixo ou criar variações.",
    "Sem EAN em nenhuma fonte.",
    "GTIN candidato: Würth UAE lista o mesmo art. 0899470250 (nitrílica LIGHT preta, tam. S, 100 un.) com EAN 4065746309189; EAN Würth varia por país e o cadastro não fixa tamanho. Confirmar na caixa.",
@@ -4122,11 +4123,12 @@
   ],
   "lote": "wurth.json",
   "aplicar": true,
-  "mpn": "0899470250",
+  "mpn": null,
   "mpnFonte": "https://www.wurth.com.br/p/10097056/luva-nitrilica-descartavel-n-7-embalagem-com-100-unidades-wurth-0899470250-kit",
   "fotoExata": false,
   "imagemOrigem": "representativa",
-  "imagemFamilia": "Würth Luva Nitrílica Descartável Preta s"
+  "imagemFamilia": "Würth Luva Nitrílica Descartável Preta s",
+  "mpnCandidato": "0899470250"
  },
  {
   "id": "cmtv7cdd8006upd01czszqos8",

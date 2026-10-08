@@ -159,6 +159,7 @@ for (const item of dossie) {
   const mpn = typeof item.mpn === "string" && item.mpn.trim() ? item.mpn.trim().slice(0, 60) : undefined;
   const categoriaAtual = atual.categoria?.nome ?? null;
   const trocaCategoria = mudarCategoria && item.categoriaLoja && item.categoriaLoja !== categoriaAtual;
+  const fonteDossie = pagina ?? item.fontes?.[0]?.url ?? "pesquisa 2026-10-07";
   const entrada = {
     sku: atual.sku ?? undefined,
     slug: atual.slug,
@@ -172,7 +173,10 @@ for (const item of dossie) {
     ...(mpn ? { mpn, identificadoresEstado: "informado" } : {}),
     ...(item.descricaoCurta ? { descricaoCurta: String(item.descricaoCurta).slice(0, 300) } : {}),
     ...(item.descricao ? { descricao: String(item.descricao).slice(0, 8000) } : {}),
-    atributos: { ...(atual.atributos ?? {}), ...(item.atributos ?? {}), _catalogoFonte: pagina ?? item.fontes?.[0]?.url ?? "pesquisa 2026-10-07" },
+    // A fonte deste dossiê tem chave própria. `_catalogoFonte` é de quem
+    // importou o produto (objeto com url, método e data, na Brilhax) e não se
+    // sobrescreve; só se preenche quando ainda não existe.
+    atributos: { ...(atual.atributos ?? {}), ...(item.atributos ?? {}), _dossieFonte: fonteDossie, ...(atual.atributos?._catalogoFonte ? {} : { _catalogoFonte: fonteDossie }) },
     ...(fotos.length ? (exata ? { imagens: fotos, imagemOrigem: "propria" } : { imagens: fotos, imagemOrigem: "representativa", imagemFamilia: familia }) : {}),
   };
   plano.push({ sku: item.sku, nomeAtual: atual.nome, confianca: item.confianca, fotos: fotos.length, imagemOrigem: fotos.length ? (exata ? "propria" : "representativa") : null, origemDasFotos: origem, categoriaAtual, categoriaProposta: item.categoriaLoja ?? null, categoriaEnviada: Boolean(trocaCategoria), duvidas: item.duvidas ?? [], entrada });
