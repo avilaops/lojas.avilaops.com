@@ -1358,3 +1358,5 @@ body:has(.whatsapp-flutuante) .rodape-loja { padding-bottom: calc(5.5rem + env(s
   .industrial-linhas img { width: 5rem; height: 5rem; }
   .industrial-empresa { grid-template-columns: 1fr; }
 }
+.cartao-produto-foto-cheia .cartao-produto-imagem { aspect-ratio: 1 / 1; background: var(--muted); }
+.cartao-produto-foto-cheia .cartao-produto-imagem img { padding: 0; object-fit: cover; }

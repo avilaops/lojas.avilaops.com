@@ -22,6 +22,9 @@ const ROTULOS_COMPACTOS: Record<string, string> = {
 
 export default function ProductCard({ produto, loja, vende, whatsapp, moto = null, ocultarSeloDestaque = false, compacto = false, alternarImagem = true }: { produto: Produto; loja: Tenant; vende: boolean; whatsapp: string | null; moto?: Moto | null; ocultarSeloDestaque?: boolean; compacto?: boolean; alternarImagem?: boolean }) {
   const tecnico = ["distribuidora", "industrial"].includes(temaDo(loja).layout);
+  // Na home Indústria a imagem é a foto da linha, com fundo próprio: ocupa o
+  // cartão inteiro em vez de ficar encaixada numa moldura branca.
+  const fotoCheia = temaDo(loja).layout === "industrial";
   const serve = moto != null && encaixe(produto.compatibilidade, moto) === "serve";
   const modelos = lerCompatibilidade(produto.compatibilidade);
   const imagem = produto.imagens[0];
@@ -71,7 +74,7 @@ export default function ProductCard({ produto, loja, vende, whatsapp, moto = nul
       : null;
 
   return (
-    <article className={`cartao-produto${tecnico ? " cartao-produto-tecnico" : ""} group flex flex-col overflow-hidden rounded-xl border border-border bg-card`}>
+    <article className={`cartao-produto${tecnico ? " cartao-produto-tecnico" : ""}${fotoCheia ? " cartao-produto-foto-cheia" : ""} group flex flex-col overflow-hidden rounded-xl border border-border bg-card`}>
       <Link href={`/produtos/${produto.slug}`} className={`cartao-produto-imagem relative block overflow-hidden bg-muted${imagem ? " aspect-square" : " cartao-produto-sem-imagem"}`}>
         {imagem ? (
           <>
