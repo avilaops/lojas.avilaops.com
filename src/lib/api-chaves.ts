@@ -35,10 +35,13 @@ export const ESCOPOS = {
   "catalogo:escrever": "Preço e estoque por SKU (o que o ERP sincroniza)",
   "pedidos:ler": "Pedidos com cliente, itens, valores e rastreio",
   "vitrine:ler": "O que a vitrine pública mostra: produtos ativos e dados da loja",
+  // Escopo próprio, e não `catalogo:escrever`: chave que o lojista criou para o
+  // ERP acertar preço e estoque não pode amanhecer podendo criar produto.
+  "produtos:escrever": "Criar produto e editar o cadastro (nome, descrição, categoria, ativo)",
+  "pedidos:escrever": "Avançar o pedido: separar, enviar com rastreio, entregar, cancelar",
   // Daqui para baixo, quem exige são as ferramentas do conector MCP
   // (`FERRAMENTAS` em mcp-permissoes.ts); a API `/api/v1` não tem rota para eles.
   "loja:escrever": "Marca, cores e layout da loja (conector MCP)",
-  "pedidos:escrever": "Status do pedido e etiqueta de envio (conector MCP)",
   "clientes:ler": "Clientes da loja, com contato e histórico de compras (conector MCP)",
   "promocoes:ler": "Cupons de desconto (conector MCP)",
   "promocoes:escrever": "Criar e alterar cupons (conector MCP)",
@@ -54,7 +57,7 @@ export const ESCOPOS_PUBLICAVEL: readonly Escopo[] = ["vitrine:ler"];
 /** Escopos que uma chave secreta pode receber; a vitrine vem junto sempre. */
 export const ESCOPOS_SECRETA: readonly Escopo[] = [
   "loja:ler", "catalogo:ler", "catalogo:escrever", "pedidos:ler", "vitrine:ler",
-  "loja:escrever", "pedidos:escrever", "clientes:ler", "promocoes:ler", "promocoes:escrever", "analises:ler", "mcp:usar",
+  "produtos:escrever", "loja:escrever", "pedidos:escrever", "clientes:ler", "promocoes:ler", "promocoes:escrever", "analises:ler", "mcp:usar",
 ];
 
 export function ehEscopo(v: string): v is Escopo {

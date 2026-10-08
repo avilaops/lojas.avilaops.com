@@ -24,6 +24,8 @@ export const CODIGOS_DE_ERRO = {
   loja_fora_do_ar: 403,
   parametro_invalido: 400,
   nao_encontrado: 404,
+  /** O pedido é válido, mas o estado atual não permite: slug ou SKU já em uso, pedido que ainda não foi pago. */
+  conflito: 409,
   limite_excedido: 429,
   erro_interno: 500,
 } as const;
