@@ -27,3 +27,22 @@ Nome, preço, estoque, status e fotos não mudaram, salvo onde dito.
 Para refazer: `match.py` e `gera_patch.py` leem `veda.json` (export do catálogo) e
 `rtl-sitemap.json`; `aplica.mjs <patch>` grava. Estado anterior do catálogo:
 `~/.agents/claude/out/2026-10-08-vedashow-catalogo-antes.json` (servidor `creators`).
+
+## Imagens (mesma data)
+
+| | Antes | Depois |
+|---|---:|---:|
+| Produtos sem imagem | 3.583 | 2.424 |
+| Vendáveis (preço e estoque) sem imagem | 1.159 | 941 |
+
+- **Ilustração técnica (979 produtos, 873 desenhos):** O-rings, anéis backup, gaxetas, guias e
+  raspadores, pelo gerador de `vedashow.com.br/etl` (`preparar_ilustraveis.py` →
+  `gerar_ilustracoes.py`), `imagemOrigem = ilustracao`. `lote.psv` é a seleção. Além das peneiras
+  do gerador, só entrou quem tem no nome a mesma medida do cadastro: 105 itens ficaram de fora
+  por decimal perdido no nome ("101 6x127x12 7"), em que o desenho sairia com a cota errada.
+  Os arquivos `anel_backup-*.png` foram renomeados para `anel-backup-*.png` no servidor: a rota
+  de `/uploads` não serve nome com sublinhado.
+- **Imagem representativa (180 rolamentos):** rolamento sem foto que tem a mesma designação de
+  outro da loja com foto (outra marca) recebeu essa foto como `representativa`, com
+  `imagemFamilia` igual à do doador (`repr.json`). É o mesmo critério dos 94 que já existiam.
+- Nenhuma imagem veio de site de terceiro.
