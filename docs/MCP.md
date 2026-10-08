@@ -32,8 +32,9 @@ entra em `MCP_TOOLS`; o teste recusa ferramenta sem escopo.
 
 - Na tela `/autorizar` o lojista escolhe: consultar e alterar, só consultar, ou
   por área (loja, catálogo, pedidos, clientes, promoções, análises). O que ele
-  marca fica gravado em `ConexaoMcp.escopos`. Para mudar, desconecta e conecta
-  de novo: o assistente não amplia o próprio acesso.
+  marca fica gravado em `ConexaoMcp.escopos`. Depois ele muda em Painel, IA e
+  API ("Mudar acesso"), e vale na chamada seguinte. Só o painel muda isso: o
+  assistente não amplia o próprio acesso.
 - `tools/list` devolve só o que a credencial pode usar, com `annotations`
   (`readOnlyHint`) para o assistente saber quando pedir confirmação.
   `tools/call` recusa o resto dizendo qual permissão falta.
@@ -106,7 +107,6 @@ Rotas de máquina ficam na raiz de `src/app` e estão em `PREFIXOS_DA_RAIZ`
 
 ## O que ainda não tem
 
-- Mudar o acesso de uma conexão sem desconectar.
 - Publicação nos diretórios de conectores do Claude e do ChatGPT.
 - Apagar as colunas `Tenant.apiKeyEnc` e `apiKeyCriadaEm`: só depois que as
   lojas com chave antiga migrarem (duas em 08/10/2026).

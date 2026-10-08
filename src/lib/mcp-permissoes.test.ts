@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import { ESCOPOS, ESCOPOS_SECRETA, ehEscopo } from "./api-chaves";
 import { alvoDaChamada } from "./mcp-historico";
-import { AREAS, ESCOPO_DO_CONECTOR, ESCOPOS_DO_MCP, FERRAMENTAS, anotacoes, escoposDaAutorizacao, ferramentaAltera, podeUsar, resumoDoAcesso } from "./mcp-permissoes";
+import { AREAS, ESCOLHA_PADRAO, ESCOPO_DO_CONECTOR, ESCOPOS_DO_MCP, FERRAMENTAS, anotacoes, escolhaDosEscopos, escoposDaAutorizacao, ferramentaAltera, podeUsar, resumoDoAcesso } from "./mcp-permissoes";
 
 /**
  * O que cada conexão do conector pode. Cada teste é um jeito de um assistente
@@ -97,4 +97,21 @@ test("o histórico guarda identificador, nunca texto livre", () => {
   assert.equal(alvoDaChamada({ sku: "x".repeat(81) }), null);
   assert.equal(alvoDaChamada({ nome: "Maria", email: "maria@exemplo.com", descricao: "texto" }), null);
   assert.equal(alvoDaChamada({ id: { $ne: null } }), null);
+});
+
+test("a edição no painel abre no que a conexão tem: escopos viram a mesma escolha que os gerou", () => {
+  const escolhas = [
+    { nivel: "completo" as const, areas: ESCOLHA_PADRAO.areas },
+    { nivel: "leitura" as const, areas: ESCOLHA_PADRAO.areas },
+    { nivel: "areas" as const, areas: { ...ESCOLHA_PADRAO.areas, catalogo: "alterar" as const, pedidos: "ler" as const } },
+  ];
+  for (const e of escolhas) {
+    const escopos = escoposDaAutorizacao(e)!;
+    const devolta = escolhaDosEscopos(escopos);
+    assert.equal(devolta.nivel, e.nivel);
+    // Salvar sem mexer em nada não muda o que a conexão pode.
+    assert.deepEqual(escoposDaAutorizacao(devolta), escopos);
+  }
+  assert.deepEqual(escolhaDosEscopos([]).areas, ESCOLHA_PADRAO.areas);
+  assert.equal(escoposDaAutorizacao(escolhaDosEscopos([])), null);
 });

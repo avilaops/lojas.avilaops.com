@@ -106,6 +106,18 @@ export const AREAS = [
 
 export type IdDaArea = (typeof AREAS)[number]["id"];
 export type AcessoDaArea = "nenhum" | "ler" | "alterar";
+export type NivelDeAcesso = "completo" | "leitura" | "areas";
+
+/** O que a tela manda e o que o painel mostra de volta ao editar. */
+export interface EscolhaDeAcesso {
+  nivel: NivelDeAcesso;
+  areas: Record<IdDaArea, AcessoDaArea>;
+}
+
+const SEM_AREA = Object.fromEntries(AREAS.map((a) => [a.id, "nenhum"])) as Record<IdDaArea, AcessoDaArea>;
+
+/** Como a tela de autorização abre: o que a maioria quer, com as outras opções à vista. */
+export const ESCOLHA_PADRAO: EscolhaDeAcesso = { nivel: "completo", areas: SEM_AREA };
 
 /** Tudo o que o conector sabe fazer. */
 export const ESCOPOS_DO_MCP: readonly Escopo[] = AREAS.flatMap((a) => (a.escrever ? [a.ler, a.escrever] : [a.ler]));
@@ -143,4 +155,21 @@ export function resumoDoAcesso(escopos: readonly string[]): string {
   if (SO_LEITURA.every(tem) && !escopos.some((e) => e.endsWith(":escrever"))) return "Só consulta";
   const partes = AREAS.filter((a) => tem(a.ler)).map((a) => (a.escrever && tem(a.escrever) ? `${a.nome} (altera)` : `${a.nome} (consulta)`));
   return partes.length ? partes.join(", ") : "Sem acesso";
+}
+
+/**
+ * A escolha que produz estes escopos: o caminho de volta de
+ * `escoposDaAutorizacao`, para o painel abrir a edição já no que a conexão tem.
+ */
+export function escolhaDosEscopos(escopos: readonly string[]): EscolhaDeAcesso {
+  const tem = (e: string) => escopos.includes(e);
+  const areas = Object.fromEntries(
+    AREAS.map((a) => [a.id, a.escrever && tem(a.escrever) ? "alterar" : tem(a.ler) ? "ler" : "nenhum"]),
+  ) as Record<IdDaArea, AcessoDaArea>;
+  const nivel: NivelDeAcesso = ESCOPOS_DO_MCP.every(tem)
+    ? "completo"
+    : SO_LEITURA.every(tem) && !escopos.some((e) => e.endsWith(":escrever"))
+      ? "leitura"
+      : "areas";
+  return { nivel, areas };
 }

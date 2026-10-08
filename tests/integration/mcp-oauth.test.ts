@@ -5,6 +5,7 @@ import { prisma } from "../../src/lib/db";
 import { criarConta } from "../../src/lib/cadastro";
 import { autenticarMcp, McpAuthError } from "../../src/lib/mcp-auth";
 import {
+  alterarAcesso,
   conexoesDaLoja,
   criarCodigo,
   lojaDoAcesso,
@@ -297,4 +298,33 @@ test("o histórico some depois da retenção, quando o lojista abre a lista", as
 
   assert.deepEqual((await chamadasDaLoja(loja.id)).map((c) => c.ferramenta), ["listar_pedidos"]);
   assert.equal(await prisma.chamadaMcp.count({ where: { tenantId: loja.id } }), 1);
+});
+
+test("mudar o acesso no painel vale na chamada seguinte, com o mesmo token, e só na loja dona", async () => {
+  const loja = await lojaPro();
+  const outra = await lojaPro();
+  const { cliente, verificador, codigo } = await conectar(loja.id);
+  const tokens = await trocarCodigo({ codigo, clienteId: cliente.id, retorno: RETORNO, verificador });
+  assert.ok("acesso" in tokens);
+  const [conexao] = await conexoesDaLoja(loja.id);
+  assert.equal(conexao.escolha.nivel, "completo");
+
+  const pode = async (ferramenta: string) => {
+    const auth = await autenticarMcp(comBearer(tokens.acesso));
+    return auth.tipo === "loja" && podeUsar(auth.escopos, ferramenta);
+  };
+  assert.equal(await pode("atualizar_produto"), true);
+
+  const leitura = escoposDaAutorizacao({ nivel: "leitura" })!;
+  assert.equal(await alterarAcesso(outra.id, conexao.id, leitura), false);
+  assert.equal(await pode("atualizar_produto"), true);
+
+  assert.equal(await alterarAcesso(loja.id, conexao.id, leitura), true);
+  assert.equal(await pode("atualizar_produto"), false);
+  assert.equal(await pode("listar_produtos"), true);
+  assert.equal((await conexoesDaLoja(loja.id))[0].acesso, "Só consulta");
+
+  // Conexão desconectada não volta a poder nada por edição.
+  await revogarConexao(loja.id, conexao.id);
+  assert.equal(await alterarAcesso(loja.id, conexao.id, [...ESCOPOS_DO_MCP]), false);
 });
