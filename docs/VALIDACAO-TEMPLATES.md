@@ -11,8 +11,8 @@ modos × 2 preferências de movimento.
 | Modo | `claro` e `escuro` (o `modo` do tema, gravado em `data-modo`) |
 | Movimento | `normal` e `reduzido` (`prefers-reduced-motion: reduce`) |
 
-- `src/lib/validacao-templates.ts`: a matriz (`casosDeValidacao`) e o julgamento
-  (`avaliarMedida`). Puro, preso em `src/lib/validacao-templates.test.ts`, que
+- `src/lib/validacao-templates.ts`: a matriz (`casosDeValidacao`), o julgamento
+  (`avaliarMedida`) e o filtro de erro de console (`ePreCarregamentoDeLink`). Puro, preso em `src/lib/validacao-templates.test.ts`, que
   entra em `npm test`.
 - `scripts/validar-templates.mts`: abre cada caso no Chromium, mede e sai com
   `1` se algum falhar.
@@ -28,10 +28,14 @@ Um caso passa quando nenhuma destas regras dispara:
 3. **Não vaza de lado.** A página não passa da largura da tela; a falha traz o
    primeiro elemento culpado. A faixa fixa da prévia não conta.
 4. **Sem erro de página.** Nenhuma exceção e nenhum `console.error` (recurso
-   que não carrega, como imagem quebrada, entra aqui). Fica de fora o 404 dos
-   pré-carregamentos de link (`?_rsc=`): a home aponta para páginas da loja, que
-   não existem no domínio do painel, e isso é da prévia, não do template. O
-   resultado guarda quantos foram ignorados em `preCarregamentosIgnorados`.
+   que não carrega, como imagem quebrada, entra aqui). Fica de fora uma coisa
+   só: requisição de pré-carregamento de link (`?_rsc=`) que voltou **404**. A
+   home aponta para páginas da loja, que não existem no domínio do painel, e
+   isso é da prévia, não do template. Qualquer outro status no `_rsc` (500, 403)
+   ou falha de rede reprova, assim como 404 em recurso sem `_rsc` e em
+   `/painel/previa`. Quem decide é `ePreCarregamentoDeLink`
+   (`src/lib/validacao-templates.ts`), presa em `npm test`. O resultado guarda
+   quantos foram ignorados em `preCarregamentosIgnorados`.
 5. **Contraste AA do texto base.** Cor do `body` sobre o fundo do `body`, no
    mínimo 4,5:1 (`contraste` de `src/lib/tema.ts`).
 6. **Movimento reduzido de verdade** (só nos casos `reduzido`): nenhuma animação
@@ -51,7 +55,9 @@ para os onze layouts comuns; o Automotivo Premium tem a sua em `premium.css`.
 - **Imagens do tema de teste.** As duas de
   `tests/fixtures/tema-premium-completo.json` não existem (`exemplo.test` e
   `/media/automotivo-premium/…`); o script responde as duas com uma imagem
-  cinza, para o Automotivo Premium não falhar por endereço de teste.
+  cinza, para o Automotivo Premium não falhar por endereço de teste. A troca é
+  por **endereço exato**, sem curinga (`IMAGENS_DO_FIXTURE` no script): outra
+  imagem quebrada, mesmo no mesmo host ou na mesma pasta, vai à rede e reprova.
 - **Só `localhost` ou `127.0.0.1`.** Qualquer outra base é recusada, com ou sem
   `SESSAO`.
 

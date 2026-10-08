@@ -3,6 +3,7 @@ import { tenantAtual } from "@/lib/tenant";
 import { resolverItensDoCatalogo } from "@/lib/catalogo";
 import { cotarFrete } from "@/lib/frete";
 import { buscarCupomValido } from "@/lib/cupons";
+import { medirRota } from "@/lib/metricas-rota";
 
 const Entrada = z.object({
   cep: z.string(),
@@ -11,7 +12,7 @@ const Entrada = z.object({
 });
 
 /** POST { cep, itens:[{id,quantidade}] } → OpcaoFrete[] (cotado no servidor, pelo catálogo). */
-export async function POST(request: Request) {
+export const POST = medirRota("frete", async function (request: Request) {
   const t = await tenantAtual();
   if (!t) return Response.json({ erro: "loja não encontrada" }, { status: 404 });
 
@@ -26,4 +27,4 @@ export async function POST(request: Request) {
     freteGratisCupom = "cupom" in c && c.cupom.tipo === "FRETE_GRATIS";
   }
   return Response.json(await cotarFrete(t, r.data.cep, itens, { freteGratisCupom }));
-}
+});

@@ -99,6 +99,12 @@ Este repositório pertence à Ávila Ops Tecnologia, que ajuda pequenas empresas
   chave publicável é só `vitrine:ler`. O que sai é projeção explícita de
   `api-recursos.ts`, nunca `...produto`. Chave guardada só como sha256.
   `/v1` sem `/api` é outro contrato (`gapp.ts`). Ver `docs/API.md`.
+- **Métrica por loja guarda host, grupo, status e duração — e mais nada.**
+  `registrar` (`src/lib/metricas-tenant.ts`) não aceita outro campo: caminho,
+  query, cabeçalho, IP e mensagem de erro não entram. Rota nova se mede com
+  `medirRota(grupo, ...)`, e grupo novo entra em `GRUPOS`. O registro é do
+  processo e fica no `globalThis`, não em escopo de módulo (bundles separados
+  no standalone); zera no deploy. Ver `docs/METRICAS.md`.
 - **Prova de banco é em container próprio, nunca no banco de desenvolvimento.**
   `npm run banco:teste` sobe o `lojas-db-test` (`docker-compose.test.yml`) na
   imagem **de produção** — Postgres 18, que é o do host nos servidores — e

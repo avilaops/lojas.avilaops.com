@@ -25,7 +25,7 @@ export default async function CriarPage({ searchParams }: { searchParams: Promis
         <p>Informe o seu e-mail. Enviamos um link para confirmar e criar a senha; o nome da loja e o plano você escolhe lá dentro. São {DIAS_DE_TESTE} dias grátis, sem cartão.</p>
         <div className="mt-6"><CadastroForm google={googleConfigurado()} plano={plano} /></div>
         <p className="pl-auth-links">
-          <span>Já tem conta? <Link href="/entrar">Entrar</Link></span>
+          <span>Já tem conta? <Link href="/entrar?senha=1">Entrar</Link></span>
         </p>
       </div>
     </div>

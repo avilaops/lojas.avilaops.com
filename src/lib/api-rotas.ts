@@ -4,6 +4,8 @@ import { prisma } from "@/lib/db";
 import { chaveDaRequisicao, hashDaChave, lojaNoAr, planoPermite, tipoPeloFormato, type Escopo } from "@/lib/api-chaves";
 import { LimitadorPorJanela, cabecalhosDoLimite } from "@/lib/api-limite";
 import { ErroApi, corpoDeErro } from "@/lib/api-resposta";
+import { hostDoSlug, registrarSemDerrubar } from "@/lib/metricas-rota";
+import { HOST_SEM_LOJA } from "@/lib/metricas-tenant";
 
 /**
  * A porta da API para desenvolvedores: toda rota de `/api/v1` passa por
@@ -91,9 +93,17 @@ export function rotaDaApi<P = Record<string, never>>(opcoes: OpcoesDaRota, fazer
       "X-Requisicao-Id": requisicao,
       ...(opcoes.navegador ? CORS : {}),
     };
+    // A loja vem da chave, não do host: até autenticar, a métrica não tem de quem ser.
+    const inicio = performance.now();
+    let hostDaLoja: string = HOST_SEM_LOJA;
+    const medida = (resposta: Response): Response => {
+      registrarSemDerrubar({ host: hostDaLoja, grupo: "api-v1", status: resposta.status, duracaoMs: performance.now() - inicio });
+      return resposta;
+    };
 
     try {
       const { tenant, chave } = await autenticar(request);
+      hostDaLoja = hostDoSlug(tenant.slug) ?? HOST_SEM_LOJA;
       if (!chave.escopos.includes(opcoes.escopo)) {
         throw new ErroApi(
           "escopo_insuficiente",
@@ -112,21 +122,21 @@ export function rotaDaApi<P = Record<string, never>>(opcoes: OpcoesDaRota, fazer
       }
 
       const corpo = await fazer({ request, tenant, chave, url: new URL(request.url), params: await segmento.params });
-      return Response.json(corpo, { headers: cabecalhos });
+      return medida(Response.json(corpo, { headers: cabecalhos }));
     } catch (e) {
       if (e instanceof ErroApi) {
-        return Response.json(corpoDeErro(e.codigo, e.message, requisicao), {
+        return medida(Response.json(corpoDeErro(e.codigo, e.message, requisicao), {
           status: e.status,
           headers: { ...cabecalhos, ...e.cabecalhos },
-        });
+        }));
       }
       // O detalhe vai para o log com o id; para fora vai só o id, que é o que
       // o desenvolvedor manda ao suporte para a gente achar a linha.
       console.error(`[api/v1] requisicao=${requisicao}`, e);
-      return Response.json(corpoDeErro("erro_interno", "Erro interno. Informe o id da requisição ao suporte.", requisicao), {
+      return medida(Response.json(corpoDeErro("erro_interno", "Erro interno. Informe o id da requisição ao suporte.", requisicao), {
         status: 500,
         headers: cabecalhos,
-      });
+      }));
     }
   };
 }

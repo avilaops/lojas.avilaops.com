@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { tenantAtual } from "@/lib/tenant";
 import { termosDeBusca, listarProdutos } from "@/lib/catalogo";
 import { esgotado } from "@/lib/produto-regras";
+import { medirRota } from "@/lib/metricas-rota";
 
 /**
  * Sugestões enquanto a pessoa digita. Usa a mesma coluna normalizada da busca
@@ -9,7 +10,7 @@ import { esgotado } from "@/lib/produto-regras";
  * "Válvula" aqui também — não adianta a busca da listagem ignorar acento se o
  * caminho mais usado, o campo do topo, não ignorar.
  */
-export async function GET(request: Request) {
+export const GET = medirRota("busca", async function (request: Request) {
   const t = await tenantAtual();
   if (!t || !["ATIVA", "SUSPENSA"].includes(t.status)) return Response.json({ produtos: [], categorias: [] });
 
@@ -31,4 +32,4 @@ export async function GET(request: Request) {
     produtos: produtos.map((p) => ({ slug: p.slug, nome: p.nome, precoCentavos: p.precoCentavos, imagem: p.imagens[0] ?? null, esgotado: esgotado(p) })),
     categorias,
   });
-}
+});
