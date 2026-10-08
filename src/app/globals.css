@@ -1353,6 +1353,14 @@ body:has(.whatsapp-flutuante) .rodape-loja { padding-bottom: calc(5.5rem + env(s
 .industrial-empresa aside li a { font-weight: 600; }
 
 @media (max-width: 760px) {
+  /* No celular a busca vem logo abaixo do título e o texto de apoio desce:
+     quando a fonte da loja chega, o parágrafo muda de altura e empurrava o
+     formulário inteiro (deslocamento de layout de 0,18 no PageSpeed). */
+  .industrial-topo-conteudo { display: flex; flex-direction: column; }
+  .industrial-topo h1 { min-height: 2.16em; }
+  .industrial-medida { order: 1; margin-top: 1.25rem; }
+  .industrial-topo-texto { order: 2; margin-top: 1.25rem; }
+  .industrial-topo-atalho { order: 3; }
   .industrial-medida-campos { gap: .5rem; }
   .industrial-medida label { font-size: .72rem; }
   .industrial-medida-entrada input { height: 2.85rem; padding-left: .55rem; font-size: 1.05rem; }
