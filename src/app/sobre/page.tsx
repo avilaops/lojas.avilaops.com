@@ -3,8 +3,13 @@ import { exigirTenant, temaDo } from "@/lib/tenant";
 import Image from "next/image";
 import Link from "next/link";
 import { contratoDo } from "@/lib/templates";
+import { descricaoDaPagina } from "@/lib/textos-loja";
 
-export const metadata: Metadata = { title: "Sobre" , alternates: { canonical: "/sobre" } };
+// Descrição própria: sem ela a página herdava a da loja, igual à da home.
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await exigirTenant();
+  return { title: "Sobre", description: descricaoDaPagina(t, "sobre"), alternates: { canonical: "/sobre" } };
+}
 
 export default async function Sobre() {
   const t = await exigirTenant();

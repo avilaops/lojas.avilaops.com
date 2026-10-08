@@ -62,7 +62,7 @@ export default function Mercado({ t, identidade, categorias, vitrine, temDestaqu
       )}
 
       <section className="container-loja mercado-produtos">
-        <header><div><p className="home-selo text-primary">Seleção da distribuidora</p><h2>{temDestaques ? "Destaques do catálogo" : "Produtos disponíveis"}</h2></div><Link href="/produtos">Ver tudo <ArrowRight /></Link></header>
+        <header><div><p className="home-selo text-primary">Seleção da loja</p><h2>{temDestaques ? "Destaques do catálogo" : "Produtos disponíveis"}</h2></div><Link href="/produtos">Ver tudo <ArrowRight /></Link></header>
         {vitrine.length === 0 ? (
           <p className="home-vazio">Os primeiros produtos estão sendo organizados para esta vitrine.</p>
         ) : (

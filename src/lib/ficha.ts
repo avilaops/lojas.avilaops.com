@@ -66,6 +66,12 @@ const ROTULOS: Record<string, string> = {
   unidade: "Unidade de venda",
   unidadeVenda: "Unidade de venda",
   referencia: "Referência",
+  // "catalogo" e "numero" existem sem acento (são formas de verbo), então não
+  // entram em ACENTOS; a chave inteira ganha o rótulo, na ordem em que se fala.
+  catalogoNumero: "Número de catálogo",
+  numeroCatalogo: "Número de catálogo",
+  // A irmã em polegadas de `secaoMm`: mesmo nome, com a unidade.
+  secaoPol: "Seção do cordão (pol)",
   subtipo: "Subtipo",
   vedacao: "Vedação",
   folga: "Folga",
@@ -141,7 +147,7 @@ const ACENTOS: Record<string, string> = {
   peliculas: "películas", po: "pó", precaucao: "precaução", precaucoes: "precauções", preparacao: "preparação",
   principio: "princípio", protecao: "proteção", quimica: "química", referencia: "referência", repeticao: "repetição",
   resistencia: "resistência", restricao: "restrição", restricoes: "restrições", rotacao: "rotação", rotulo: "rótulo",
-  seguranca: "segurança", superficie: "superfície", ventilacao: "ventilação",
+  secao: "seção", seguranca: "segurança", superficie: "superfície", ventilacao: "ventilação",
 };
 
 /** Unidade no fim da chave (`diametroMm`, `rotativaRpm`) sai entre parênteses. */

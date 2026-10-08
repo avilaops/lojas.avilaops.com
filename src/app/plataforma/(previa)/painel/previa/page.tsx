@@ -5,6 +5,7 @@ import { identidadeDa, lojaVende, tenantPublico } from "@/lib/tenant";
 import { LAYOUTS, cssDoTema, fonteGoogleHref } from "@/lib/tema";
 import { contratoDo, usaBlocoProprio } from "@/lib/templates";
 import { catalogoDeDemonstracao, examinarRascunho, lojaDaPrevia } from "@/lib/previa-tema";
+import { campanhasDaLoja } from "@/lib/campanhas";
 import { comporHome } from "@/components/home/composicao";
 import { CartProvider } from "@/components/cart/CartProvider";
 import Header from "@/components/Header";
@@ -95,7 +96,7 @@ export default async function PreviaDoTema({ searchParams }: { searchParams: Pro
         <CartProvider slug={`previa-${loja.slug}`}>
           {usaBlocoProprio(tema, "cabecalho")
             ? <CabecalhoPremium loja={publico} logo={previa.logoUrl} logoEscuro={tema.premium?.logoEscuroUrl} mostrarNome={tema.premium?.mostrarNome} categorias={menu} modo={tema.modo} />
-            : <Header loja={publico} logoUrl={previa.logoUrl} mostrarNome={tema.mostrarNomeNoCabecalho} categorias={menu} mostrarPromocoes={(tema.campanhasHome?.length ?? 0) > 0} />}
+            : <Header loja={publico} logoUrl={previa.logoUrl} mostrarNome={tema.mostrarNomeNoCabecalho} categorias={menu} mostrarPromocoes={campanhasDaLoja(tema).length > 0} />}
           <main className="flex-1">
             {comporHome(tema, { t: previa, identidade, categorias, vitrine, temDestaques: vitrine.some((p) => p.destaque), vende: lojaVende(previa) })}
           </main>

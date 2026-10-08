@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { compravel, disponibilidadeMerchant, elegivelMerchant, esgotado, estadoDeVenda, estoqueBaixo, publicavel, sobConsulta } from "./produto-regras";
+import { compravel, emPromocao, disponibilidadeMerchant, elegivelMerchant, esgotado, estadoDeVenda, estoqueBaixo, publicavel, sobConsulta } from "./produto-regras";
 
 /**
  * As cinco perguntas que a vitrine faz a um produto, com o caso que cada
@@ -96,4 +96,17 @@ test("casos da VedaShow: saldo, selo, disponibilidade e compra concordam", () =>
     assert.equal(disponibilidadeMerchant(p), c.tem ? "in_stock" : "out_of_stock", c.sku);
     if (!c.tem) assert.equal(estoqueBaixo(p), false, c.sku);
   }
+});
+
+test("promoção é preço 'de' maior, com foto própria e à venda", () => {
+  const oferta = { ativo: true, precoCentavos: 8000, precoDeCentavos: 10000, imagens: ["a.webp"], imagemOrigem: "propria", disponibilidade: "in_stock", estoque: null };
+  assert.equal(emPromocao(oferta), true);
+  assert.equal(emPromocao({ ...oferta, precoDeCentavos: null }), false);
+  assert.equal(emPromocao({ ...oferta, precoDeCentavos: 8000 }), false);
+  assert.equal(emPromocao({ ...oferta, precoCentavos: 0 }), false);
+  assert.equal(emPromocao({ ...oferta, imagens: [] }), false);
+  assert.equal(emPromocao({ ...oferta, imagemOrigem: "representativa" }), false);
+  assert.equal(emPromocao({ ...oferta, estoque: 0 }), false);
+  assert.equal(emPromocao({ ...oferta, disponibilidade: "out_of_stock" }), false);
+  assert.equal(emPromocao({ ...oferta, ativo: false }), false);
 });

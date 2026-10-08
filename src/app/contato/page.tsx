@@ -4,8 +4,13 @@ import { mascararDocumento } from "@avilaops/checkout";
 import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
 import { ArrowUpRight, Clock3, MapPin, MessageCircle, Phone, Mail } from "lucide-react";
 import { contratoDo } from "@/lib/templates";
+import { descricaoDaPagina } from "@/lib/textos-loja";
 
-export const metadata: Metadata = { title: "Contato" , alternates: { canonical: "/contato" } };
+// Descrição própria: sem ela a página herdava a da loja, igual à da home.
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await exigirTenant();
+  return { title: "Contato", description: descricaoDaPagina(t, "contato"), alternates: { canonical: "/contato" } };
+}
 
 export default async function Contato() {
   const t = await exigirTenant();

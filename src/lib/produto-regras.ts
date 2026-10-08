@@ -78,6 +78,26 @@ export function publicavel(p: Pick<ProdutoRegras, "ativo" | "imagens" | "precoCe
   return p.ativo && (p.imagens.length > 0 || p.precoCentavos > 0);
 }
 
+/**
+ * Oferta de verdade: preço "de" maior que o preço, com foto própria e à venda.
+ *
+ * É o que a página `/promocoes` lista. A mesma pergunta decide três coisas que
+ * já discordaram entre si: se a página entra no sitemap, se o menu mostra
+ * "Promoções" e o que a própria página exibe. Foto representativa ou
+ * ilustração não entra: o desconto é anunciado sobre o item que a foto mostra.
+ */
+export function emPromocao(
+  p: Pick<ProdutoRegras, "ativo" | "precoCentavos" | "imagens" | "disponibilidade" | "estoque"> & { precoDeCentavos: number | null; imagemOrigem: string | null },
+): boolean {
+  return publicavel(p)
+    && p.precoCentavos > 0
+    && p.precoDeCentavos != null
+    && p.precoDeCentavos > p.precoCentavos
+    && p.imagens.length > 0
+    && p.imagemOrigem === "propria"
+    && emEstoque(p);
+}
+
 /** O Google Merchant exige imagem e preço; sem eles o item é reprovado. */
 export function elegivelMerchant(p: Pick<ProdutoRegras, "ativo" | "imagens" | "precoCentavos">, imagemDeVariante = false): boolean {
   return p.ativo && (p.imagens.length > 0 || imagemDeVariante) && p.precoCentavos > 0;

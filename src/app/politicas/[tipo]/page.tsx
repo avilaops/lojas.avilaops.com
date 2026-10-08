@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { exigirTenant, enderecoCompleto } from "@/lib/tenant";
 import { mascararDocumento } from "@avilaops/checkout";
+import { descricaoDaPagina } from "@/lib/textos-loja";
 import { ROTULO_POLITICA, TIPOS_POLITICA, politicaPublicada, type TipoPolitica } from "@/lib/politicas";
 
 /**
@@ -19,8 +20,12 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ tipo: string }> }) {
   const { tipo } = await params;
+  // Tipo que não existe vira 404 na página; aqui só não ganha descrição.
+  const conhecido = TIPOS_POLITICA.includes(tipo as TipoPolitica);
   return {
     title: ROTULO_POLITICA[tipo as TipoPolitica] ?? "Políticas",
+    // Cada política com a sua: sem isto as quatro herdavam a descrição da loja.
+    ...(conhecido ? { description: descricaoDaPagina(await exigirTenant(), tipo as TipoPolitica) } : {}),
     // Sem canonical, o Google trata a mesma política em domínio próprio e em
     // <loja>.lojas.avilaops.com como duas páginas, e divide o sinal entre elas.
     alternates: { canonical: `/politicas/${tipo}` },

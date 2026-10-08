@@ -56,6 +56,11 @@ export default function CarrinhoClient({ loja, vende }: { loja: TenantPublico; v
   // Pedido mínimo da loja: mesma conta do servidor (subtotal de produtos, sem
   // frete e antes do cupom). Aqui é aviso e botão travado; quem recusa de
   // verdade é o /api/checkout.
+  //
+  // Vale também para a loja que não vende pelo site e manda o carrinho pelo
+  // WhatsApp: o mínimo é da loja, não do meio de pagamento, e pedido abaixo
+  // dele chegando ao atendente é a regra sendo descumprida pelo outro canal.
+  // O botão de um produto só, na ficha, continua livre: lá é consulta.
   const minimo = avaliarPedidoMinimo(subtotal, loja.pedidoMinimoCentavos);
 
   return (
@@ -128,9 +133,9 @@ export default function CarrinhoClient({ loja, vende }: { loja: TenantPublico; v
           </p>
         )}
         <p className="mt-2 text-xs text-muted-foreground">Frete calculado no próximo passo.</p>
-        {vende && !minimo.atingido ? (
+        {!minimo.atingido && (vende || loja.whatsapp) ? (
           <button type="button" disabled aria-disabled="true" className="btn-primario mt-4 w-full cursor-not-allowed opacity-50">
-            Finalizar compra
+            {vende ? "Finalizar compra" : "Pedir pelo WhatsApp"}
           </button>
         ) : vende ? (
           <Link href="/checkout" className="btn-primario mt-4 w-full">

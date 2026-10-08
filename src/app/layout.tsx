@@ -27,6 +27,8 @@ import AvisoSuspensa from "@/components/AvisoSuspensa";
 import BarraGaragem from "@/components/BarraGaragem";
 import { prisma } from "@/lib/db";
 import { lerRegrasDevolucao, politicaDevolucaoSchema } from "@/lib/politicas";
+import { lojaTemPromocoes } from "@/lib/promocoes";
+import { contarPublicadas } from "@/lib/publicacoes-consulta";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -160,7 +162,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const carrinhoProprio = usaBlocoProprio(tema, "carrinho");
   const identidade = identidadeDa(t);
   const fonte = fonteGoogleHref(tema);
-  const categorias = await listarCategorias(t.id);
+  // Link para página vazia não entra no menu nem no rodapé: "Promoções" e
+  // "Blog" seguem o mesmo critério que já tira as duas do sitemap.
+  const [categorias, temPromocoes, publicacoes] = await Promise.all([
+    listarCategorias(t.id),
+    cabecalhoProprio ? false : lojaTemPromocoes(t.id, tema),
+    contarPublicadas(t.id),
+  ]);
 
   // Exemplo de busca: um produto de verdade da loja, não frase genérica.
   //
@@ -234,11 +242,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           {t.avisoTopo && !cabecalhoProprio && (
             <p className="barra-aviso" role="status">{t.avisoTopo}</p>
           )}
-          {cabecalhoProprio ? <CabecalhoPremium loja={publico} logo={t.logoUrl} logoEscuro={tema.premium?.logoEscuroUrl} mostrarNome={tema.premium?.mostrarNome} categorias={[...categorias].sort((a,b)=>a.ordem-b.ordem).map(c=>({slug:c.slug,nome:c.nome}))} modo={tema.modo}/> : <Header loja={publico} logoUrl={t.logoUrl} mostrarNome={tema.mostrarNomeNoCabecalho} categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} exemploBusca={exemploBusca} mostrarPromocoes={(tema.campanhasHome?.length ?? 0) > 0} />}
+          {cabecalhoProprio ? <CabecalhoPremium loja={publico} logo={t.logoUrl} logoEscuro={tema.premium?.logoEscuroUrl} mostrarNome={tema.premium?.mostrarNome} categorias={[...categorias].sort((a,b)=>a.ordem-b.ordem).map(c=>({slug:c.slug,nome:c.nome}))} modo={tema.modo}/> : <Header loja={publico} logoUrl={t.logoUrl} mostrarNome={tema.mostrarNomeNoCabecalho} categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} exemploBusca={exemploBusca} mostrarPromocoes={temPromocoes} />}
           {t.segmento === "motopecas" && <BarraGaragem tenantId={t.id} />}
           <main id="conteudo-loja" className="flex-1">{children}</main>
-          <Footer tenant={t} categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} />
-          {carrinhoProprio && <CarrinhoLateral/>}
+          <Footer tenant={t} categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} temBlog={publicacoes > 0} />
+          {carrinhoProprio && <CarrinhoLateral pedidoMinimoCentavos={publico.pedidoMinimoCentavos}/>}
           {t.whatsapp && <WhatsAppFlutuante numero={t.whatsapp} nome={t.nome} />}
           {/* Navegação do celular. Vale para os doze layouts: é da loja, não
               do template. As abas saem do que a loja faz — ver o componente. */}

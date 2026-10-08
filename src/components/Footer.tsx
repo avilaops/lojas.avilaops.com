@@ -13,7 +13,7 @@ import BandeirasPagamento from "@/components/BandeirasPagamento";
  * (a C2TI dá R$ 20 de desconto para manter o logo; aqui é parte do produto):
  * cada loja no ar é um anúncio da plataforma.
  */
-export default function Footer({ tenant, categorias }: { tenant: Tenant; categorias: Array<{ slug: string; nome: string }> }) {
+export default function Footer({ tenant, categorias, temBlog = false }: { tenant: Tenant; categorias: Array<{ slug: string; nome: string }>; temBlog?: boolean }) {
   const avila = process.env.AVILAOPS_URL ?? "https://avilaops.com";
   // Loja só online não expõe onde fica o estoque no bloco de visita: endereço
   // é opt-in ali. Na linha de identificação abaixo ele aparece sempre, porque
@@ -65,7 +65,9 @@ export default function Footer({ tenant, categorias }: { tenant: Tenant; categor
           <ul className="space-y-1 text-muted-foreground">
             <li><Link href="/sobre">Sobre</Link></li>
             <li><Link href="/contato">Contato</Link></li>
-            <li><Link href="/blog">Blog</Link></li>
+            {/* Só com publicação no ar: sem nenhuma, `/blog` é uma página
+                vazia, e por isso também fica fora do sitemap. */}
+            {temBlog && <li><Link href="/blog">Blog</Link></li>}
             {/* A lista de políticas é a que a loja realmente publica: link fixo
                 aqui viraria 404 no aviso legal, que só existe quando escrito. */}
             {politicas.map((p) => (

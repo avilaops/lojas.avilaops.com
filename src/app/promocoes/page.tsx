@@ -5,7 +5,7 @@ import BannerCarousel from "@/components/home/BannerCarousel";
 import { prisma } from "@/lib/db";
 import { exigirTenant, lojaVende, temaDo } from "@/lib/tenant";
 import { campanhasDaLoja } from "@/lib/campanhas";
-import { WHERE_COMPRAVEL } from "@/lib/produto-regras";
+import { whereEmPromocao } from "@/lib/promocoes";
 
 export const dynamic = "force-dynamic";
 
@@ -20,15 +20,7 @@ export default async function Promocoes() {
   const campanhas = campanhasDaLoja(temaDo(t))
     .map((campanha) => ({ imagemUrl: campanha.imagemUrl, imagemMobileUrl: campanha.imagemMobileUrl, link: campanha.link, alt: campanha.alt }));
   const produtos = await prisma.produto.findMany({
-    where: {
-      tenantId: t.id,
-      ativo: true,
-      precoCentavos: { gt: 0 },
-      precoDeCentavos: { gt: prisma.produto.fields.precoCentavos },
-      ...WHERE_COMPRAVEL,
-      imagens: { isEmpty: false },
-      imagemOrigem: "propria",
-    },
+    where: whereEmPromocao(t.id),
     include: { categoria: true },
     orderBy: [{ destaque: "desc" }, { atualizadoEm: "desc" }],
     take: 48,

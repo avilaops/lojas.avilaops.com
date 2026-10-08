@@ -50,3 +50,24 @@ test("rótulo gerado da chave sai acentuado, com sigla e unidade", () => {
 test("GTIN não se repete como característica", () => {
   assert.deepEqual(fichaDoProduto({ gtin: "7898511028094", tipo: "Descontaminante" }).map((l) => l.rotulo), ["Tipo"]);
 });
+
+/**
+ * Medido na PK Vedações em 08/10/2026: a ficha, o JSON-LD e o `product_detail`
+ * do feed saíam com "Catalogo numero" e "Secao (pol)".
+ */
+test("número de catálogo e seção saem acentuados", () => {
+  const f = fichaDoProduto({
+    catalogoNumero: "B-0070", secaoMm: "5.33", secaoPol: "0.210", secaoTransversal: "Quadrada",
+    referencia: "PKG.0070", grupo: "Gaxeta", subgrupo: "PU - Tipo B", alturaPol: "0.25",
+  });
+  assert.deepEqual(f.map((l) => [l.rotulo, l.valor]), [
+    ["Seção do cordão", "5,33 mm"],
+    ["Número de catálogo", "B-0070"],
+    ["Seção do cordão (pol)", "0.210"],
+    ["Seção transversal", "Quadrada"],
+    ["Referência", "PKG.0070"],
+    ["Grupo", "Gaxeta"],
+    ["Subgrupo", "PU - Tipo B"],
+    ["Altura (pol)", "0.25"],
+  ]);
+});
