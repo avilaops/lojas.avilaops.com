@@ -121,6 +121,14 @@ na API), para que ninguém os religue achando que estão prontos.
 
 ## Deploy (Hetzner, Docker): em produção desde 24/08/2026
 
+**O deploy normal é o pipeline**: `.github/workflows/deploy-production.yml`
+constrói a imagem e o `avila-deploy` do repositório `avilaops/infra` migra o
+banco, troca o container e volta sozinho se a saúde falhar. O fluxo de pacote
+descrito abaixo (`standalone.tgz` + `deploy/deploy.sh`) é o manual, legado e
+parado no servidor desde 28/09/2026. Como o banco é copiado, migrado e
+revertido, e o ensaio que prova isso (`npm run banco:ensaio`), está em
+`docs/BACKUP-E-ROLLBACK.md`.
+
 O servidor (CX23, 4 GB, disco Docker sempre perto de 95%) **não builda**: o
 build Next `standalone` é feito aqui no Windows e sobe pronto. Fluxo:
 
@@ -135,7 +143,7 @@ ssh -i ~/.ssh/hetzner_avilaops root@178.105.82.48 '/opt/lojas/deploy.sh'
 ssh ... 'cd /opt/lojas && tar xzf standalone.tgz ./lojas.avilaops.com/prisma && DATABASE_URL=$(grep ^DATABASE_URL= .env | cut -d= -f2- | sed s/host.docker.internal/127.0.0.1/) npx -y prisma@6 migrate deploy --schema lojas.avilaops.com/prisma/schema.prisma'
 ```
 
-No servidor (`/opt/lojas`): imagem base `lojas-base` (`deploy/Dockerfile.base`: node + openssl + sharp linux-x64, construída **uma vez**) e `Dockerfile` de runtime (`deploy/Dockerfile.runtime`: `FROM lojas-base` + `ADD standalone.tgz`), o deploy não baixa nem instala nada, e o disco não infla a cada build. O runtime cria o
+No servidor (`/opt/lojas`): imagem base `lojas-base` (`deploy/Dockerfile.base`: node + openssl + sharp linux-x64, construída **uma vez**) (o `Dockerfile` de runtime que assava o `standalone.tgz` numa imagem saiu: hoje o container é a própria `lojas-base` com `/opt/lojas/app` montado, ver o cabeçalho de `deploy/deploy.sh`), o deploy não baixa nem instala nada, e o disco não infla a cada build. O runtime cria o
 symlink `@prisma/client-<hash>` que o Turbopack referencia e que o Windows não
 gera), `docker-compose.yml` com `network_mode: bridge` (o Postgres do host escuta
 em 172.17.0.1), `.env` (segredos gerados no servidor, chmod 600). Container

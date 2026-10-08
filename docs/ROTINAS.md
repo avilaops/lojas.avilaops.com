@@ -378,3 +378,7 @@ gunzip -c /opt/backups/db/host-lojas-AAAAMMDD.sql.gz | psql "postgresql://lojas:
 # comparar contagens com o banco vivo, depois:
 sudo -u postgres psql -c "drop database restore_teste"
 ```
+
+O mesmo procedimento (dump, migração, volta ao dump, migração de novo) tem um
+ensaio que roda sem servidor, no Postgres descartável: `npm run banco:ensaio`.
+O que ele prova e o que fica de fora está em `docs/BACKUP-E-ROLLBACK.md`.

@@ -1,8 +1,18 @@
 # Backup, migração e rollback do Lojas
 
 Como a plataforma sai de uma versão para outra, o que protege o banco no
-caminho e como voltar. Tudo aqui foi conferido em produção em 08/10/2026; o
-que ainda não vale está marcado.
+caminho e como voltar. O que fala do servidor foi conferido em produção em
+08/10/2026; o que ainda não vale está marcado. O procedimento em si (dump,
+migração, volta ao dump) tem um ensaio que qualquer um roda sem servidor:
+`npm run banco:ensaio`, descrito em "Ensaio".
+
+| Caminho de deploy | Quem migra | Quem reverte | Onde está o script |
+|---|---|---|---|
+| Pipeline (o normal) | `avila-deploy`, antes de trocar o container | `avila-deploy`, para a imagem anterior, se a saúde falhar | `.github/workflows/deploy-production.yml` aqui; `deploy-container.sh` no repositório `infra` |
+| Pacote `standalone.tgz` (legado, parado) | o próprio script, antes de extrair a versão nova | o próprio script, para `app.anterior`, se saúde, CSS ou `/uploads` falharem | `deploy/deploy.sh` |
+
+Nos dois, a migração que falha aborta antes da troca, e o rollback devolve o
+código, nunca o schema.
 
 ## Quem faz o deploy
 
@@ -15,8 +25,8 @@ O deploy é do repositório `avilaops/infra`:
    imagem. Tipos, testes e build rodam dentro do `Dockerfile`.
 2. O job `deploy` entra por SSH no servidor `applications` com uma chave presa
    a um comando: `avila-deploy lojas.avilaops.com <imagem>`.
-3. `/usr/local/sbin/avila-deploy` (fonte: `scripts/deploy-container.sh` no
-   `infra`) lê `/etc/avilaops/deploy/lojas.avilaops.com.conf` e faz o resto.
+3. `/usr/local/sbin/avila-deploy` (fonte: `deploy-container.sh`, na pasta
+   `scripts` do `infra`) lê `/etc/avilaops/deploy/lojas.avilaops.com.conf` e faz o resto.
 
 Só o run mais novo publica: o job confere se outro run do mesmo workflow
 passou na frente antes de enviar a imagem. Sem isso, dois pushes seguidos
@@ -34,7 +44,26 @@ podiam terminar com a versão mais antiga em produção (aconteceu em 08/10/2026
 O rollback troca a imagem. **Ele não desfaz migração**: a tabela alterada
 continua alterada. Por isso migração do Lojas só acrescenta (tabela, coluna
 nula, índice), e o que remove coluna vai em deploy separado, depois de o
-código que a usava ter saído.
+código que a usava ter saído. Dito de outro jeito: **toda migração precisa
+funcionar com a versão anterior do código**. Apertar restrição (`NOT NULL`,
+`UNIQUE`) e renomear coluna entram na mesma regra de remover.
+
+### Migração que falhou no meio
+
+O `migrate deploy` para e o deploy não troca a versão, mas a migração fica
+marcada como falha em `_prisma_migrations` e a próxima tentativa recusa
+continuar. Olhe o banco antes de escolher:
+
+- **Nada da migração ficou aplicado** (o Postgres desfez a transação, que é o
+  caso comum): `prisma migrate resolve --rolled-back <nome>`, corrija a causa e
+  publique de novo. O deploy aplica a migração inteira.
+- **Ficou aplicada pela metade e você terminou o resto à mão** (acontece com
+  comando que não roda em transação, como `CREATE INDEX CONCURRENTLY`):
+  `prisma migrate resolve --applied <nome>`. O deploy seguinte não tenta de
+  novo.
+
+Marcar `--applied` sem o schema estar de fato completo é o erro que não
+aparece no deploy: aparece como 500 na tela que usa a coluna que não existe.
 
 ## Backup do banco
 
@@ -53,6 +82,20 @@ código que a usava ter saído.
 Enquanto o dump pré-migração não está instalado, quem sobe migração que mexe em
 dado existente faz o dump à mão antes (regra do `AGENTS.md`). Migração que só
 cria tabela ou coluna nula não precisa: o dump do dia cobre.
+
+O dump à mão, no servidor, com o endereço lido do `.env` como o
+`deploy/deploy.sh` faz (o container fala com `host.docker.internal`; do host é
+`127.0.0.1`):
+
+```bash
+cd /opt/lojas
+DBURL=$(grep ^DATABASE_URL= .env | cut -d= -f2- | sed "s/host.docker.internal/127.0.0.1/")
+pg_dump "$DBURL" | gzip > /opt/backups/db/manual-lojas-$(date +%Y%m%d-%H%M).sql.gz
+gzip -t /opt/backups/db/manual-lojas-*.sql.gz && ls -la /opt/backups/db | grep manual-lojas
+```
+
+Código não é backup e não se copia no servidor: a versão antiga mora no GitHub
+(`AGENTS.md`).
 
 ## Como conferir
 
@@ -93,3 +136,60 @@ Se a versão a que se quer voltar é anterior a uma migração, o código antigo
 roda contra o schema novo. Com migração que só acrescenta, isso funciona: o
 código antigo não conhece a coluna nova e não a usa. É mais um motivo para a
 regra acima.
+
+## Ensaio
+
+`npm run banco:ensaio` (`scripts/ensaio-banco.mts`) repete o ciclo inteiro no
+Postgres descartável (`lojas-db-test`, o mesmo Postgres 18 de produção), sem
+tocar em servidor nenhum:
+
+1. cria uma base com todas as migrações **menos a última**: o banco antes do
+   deploy;
+2. grava duas lojas e tira o retrato (linhas por tabela, migrações aplicadas,
+   funções, gatilhos e índices);
+3. faz o `pg_dump` em SQL puro, o formato do dump de produção;
+4. aplica a última migração: o deploy;
+5. restaura o dump **numa base nova** e compara com o retrato do passo 2. Tem
+   de bater em tudo e ter exatamente a última migração pendente;
+6. aplica a migração na base restaurada e confere `prisma migrate status`;
+7. apaga as duas bases, também quando um passo falha.
+
+```bash
+npm run banco:teste          # sobe o lojas-db-test
+npm run banco:ensaio         # sai com 0; a última linha é um JSON com "divergencias":0
+npm run banco:teste:parar
+```
+
+Qualquer diferença sai listada (o que divergiu, antes e depois) e o comando
+sai com 1. O script recusa destino que não seja `127.0.0.1`, a porta do
+container de teste e base terminada em `_test`: a regra é `destinoDeEnsaio`,
+em `src/lib/ensaio-banco.ts`, e está presa em `npm test`
+(`src/lib/ensaio-banco.test.ts`) junto com duas afirmações deste documento: o
+`deploy/deploy.sh` migra antes de trocar e não engole falha de migração, e
+todo arquivo deste repositório citado aqui existe.
+
+O ensaio prova o **procedimento**. Não prova que o dump desta madrugada
+restaura: isso é a conferência de "Como conferir" e o teste de "Como
+restaurar", no servidor.
+
+## Falta
+
+- **Dump automático antes de migração pendente**: escrito em
+  `avilaops/infra#8`, não instalado (ver "Backup do banco").
+- **Fotos das lojas** (`/opt/lojas/uploads`): `deploy/docker-compose.producao.yml`
+  marca o container com `avilaops.backup: "false"` porque o banco é do host, e
+  nada neste repositório diz se o volume de fotos é copiado. Pergunta aberta
+  para quem cuida do servidor.
+- **Migração de reversão** (`down`): o Prisma não gera, e não escrevemos. A
+  regra é a de compatibilidade com a versão anterior do código.
+- **Ensaio dentro do pipeline**: a imagem é construída sem Docker disponível
+  no build, então o ensaio roda à mão, antes de entregar migração que mexe em
+  dado existente.
+
+## Não conferido em produção
+
+O que foi acrescentado junto com o ensaio (a tabela do topo, "Migração que
+falhou no meio", o comando do dump à mão, "Ensaio" e "Falta") vem da leitura
+dos scripts e do ensaio no Postgres descartável, não de acesso ao servidor.
+Em particular: o comando do dump à mão não foi executado em produção, e o
+`prisma migrate resolve` nunca precisou ser usado lá.

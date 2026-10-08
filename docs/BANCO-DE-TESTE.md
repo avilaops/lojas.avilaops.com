@@ -7,6 +7,7 @@ variante e reserva de estoque, e `lojas_dev` é compartilhado com outras sessõe
 ```
 npm run banco:teste          # sobe, espera saudável e aplica as migrações
 npm run test:integracao      # roda tests/integration/
+npm run banco:ensaio         # dump, migração, volta ao dump e migração de novo
 npm run banco:teste:parar    # derruba e apaga os dados
 ```
 
@@ -52,6 +53,7 @@ Vale para todo projeto do guarda-chuva, e é a mesma dos servidores
 | `lojas_test` | `tests/integration/`, `scripts/qa-catalogo.ts` |
 | `lojas_template_premium_test` | `scripts/premium-seed-local.ts` (exige o nome exato) |
 | `lojas_migracao_<ts>_test` | `scripts/conferir-migracao-catalogo.ts`, criada por ele em tempo de execução |
+| `lojas_ensaio_<ts>_test` e `lojas_ensaio_<ts>_volta_test` | `scripts/ensaio-banco.mts` (`npm run banco:ensaio`), criadas e apagadas por ele; ver `docs/BACKUP-E-ROLLBACK.md` |
 
 As duas primeiras nascem com o container (`scripts/init-banco-de-teste.sql`).
 

@@ -83,9 +83,14 @@ resolve e tira o arquivo da lista.
   (Documentado e conferido em produção em 08/10/2026: `docs/BACKUP-E-ROLLBACK.md`
   diz quem faz o deploy de verdade, o que ele garante, onde está o dump e como
   voltar. O job de deploy passou a recusar publicar quando um run mais novo já
-  passou na frente. Falta instalar no servidor o dump antes de migração
-  pendente, que está em `avilaops/infra#8`: o `avila-deploy` de produção está
-  atrás do repositório, e instalar é decisão do Nicolas.)
+  passou na frente. O procedimento virou comando: `npm run banco:ensaio`
+  (`scripts/ensaio-banco.mts`, regras em `src/lib/ensaio-banco.ts`) faz dump,
+  migração, volta ao dump e migração de novo no Postgres descartável; em
+  08/10/2026, 62 migrações, 44 tabelas, zero divergências. O `npm test` prende
+  a ordem do `deploy/deploy.sh` e os caminhos citados no documento. Falta
+  instalar no servidor o dump antes de migração pendente, que está em
+  `avilaops/infra#8`: o `avila-deploy` de produção está atrás do repositório,
+  e instalar é decisão do Nicolas.)
 
 ## Pendências menores
 
