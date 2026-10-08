@@ -77,6 +77,14 @@ const ROTULOS: Record<string, string> = {
   folga: "Folga",
   linha: "Linha",
   material: "Material",
+  // Dados de aplicação de peça técnica (vedação, guia, rolamento): saem do
+  // catálogo do fabricante e são o que o comprador confere antes da medida.
+  perfil: "Perfil",
+  dureza: "Dureza",
+  temperaturaTrabalho: "Temperatura de trabalho",
+  pressaoMaxima: "Pressão máxima",
+  velocidadeMaxima: "Velocidade máxima",
+  cargaMaxima: "Carga máxima",
   tipo: "Tipo",
   volume: "Volume",
   volumeMl: "Volume (ml)",

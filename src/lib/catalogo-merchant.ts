@@ -45,6 +45,16 @@ export function unidadeDePrecoMerchant(atributos:unknown):string {
   return tag("unit_pricing_measure",medida)+tag("unit_pricing_base_measure","1l");
 }
 
+/**
+ * `material` do produto sem grade. Na grade o material é opção da variação e
+ * já sai junto de `item_group_id`; no produto de apresentação única ele mora
+ * na ficha (`atributos.material`) e ficava só em `product_detail`.
+ */
+export function materialMerchant(atributos:unknown,apresentacaoUnica:boolean):string {
+  const m=(atributos as Record<string,unknown>|null)?.material;
+  return apresentacaoUnica&&typeof m==="string"&&m.trim()?tag("material",m.trim().slice(0,200)):"";
+}
+
 export function detalhesMerchant(atributos:unknown):string {
   return fichaDoProduto((atributos??{}) as Record<string,unknown>).slice(0,100)
     .map(l=>`<g:product_detail>${tag("section_name","Especificações")}${tag("attribute_name",l.rotulo.slice(0,140))}${tag("attribute_value",l.valor.slice(0,1000))}</g:product_detail>`).join("");
@@ -80,7 +90,7 @@ export function itensMerchant(p:ProdutoCatalogo,base:string,prateleira:(nome:str
       marca?tag("brand",marca):"",gtinValido(v.gtin)?tag("gtin",v.gtin!):"",v.mpn?tag("mpn",v.mpn):"",
       v.identificadoresEstado==="sem_identificador"&&!v.gtin&&!v.mpn?tag("identifier_exists","no"):"",
       p.categoria?tag("product_type",p.categoria.nome):"",googleCategoria?tag("google_product_category",String(googleCategoria)):"",
-      detalhesMerchant(p.atributos),unidadeDePrecoMerchant(p.atributos),
+      materialMerchant(p.atributos,v.padrao),detalhesMerchant(p.atributos),unidadeDePrecoMerchant(p.atributos),
       dimensoesDeEnvioValidas?tag("shipping_length",`${v.comprimentoCm} cm`)+tag("shipping_width",`${v.larguraCm} cm`)+tag("shipping_height",`${v.alturaCm} cm`):"",
       v.pesoKg!=null&&Number.isFinite(v.pesoKg)&&v.pesoKg>0&&v.pesoKg<=1000?tag("shipping_weight",`${v.pesoKg} kg`):"",
       freteGratis(v.precoCentavos)?`<g:shipping>${tag("country","BR")}${tag("price",preco(0))}</g:shipping>`:"",

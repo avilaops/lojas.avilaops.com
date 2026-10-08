@@ -83,3 +83,11 @@ test("ilustração de família só entra no feed nos ramos em que o Google a ace
   // 111 (Comercial e industrial) fica fora da exceção e continua exigindo foto.
   assert.doesNotMatch(gerar("111"), /<item>/);
 });
+
+test("produto sem grade leva o material da ficha para o atributo material", () => {
+  const p = produto("confirmada");
+  Object.assign(p, { atributos: { material: "Poliuretano (PU)", pressaoMaxima: "304 bar" } });
+  const feed = gerarFeedMerchant({ nome: "PK Vedações", slogan: null }, "https://pkvedacoes.com.br", [p]);
+  assert.match(feed, /<g:material>Poliuretano \(PU\)<\/g:material>/);
+  assert.match(feed, /<g:attribute_name>Pressão máxima<\/g:attribute_name><g:attribute_value>304 bar</);
+});
