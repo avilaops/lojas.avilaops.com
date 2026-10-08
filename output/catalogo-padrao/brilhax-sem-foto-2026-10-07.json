@@ -936,7 +936,7 @@
   "aplicar": true,
   "fotoExata": false,
   "imagemOrigem": "representativa",
-  "imagemFamilia": "Nitro Carpet Limpador Concentrado de Carpetes e Estofados"
+  "imagemFamilia": "Nitro Carpet Limpador de Carpetes"
  },
  {
   "id": "cmtv7cco4002gpd01jzxzoseq",
@@ -1207,7 +1207,7 @@
   "aplicar": true,
   "fotoExata": false,
   "imagemOrigem": "representativa",
-  "imagemFamilia": "Bugatti Química Solupan Desengraxante Concentrado 1/40"
+  "imagemFamilia": "Bugatti Solupan Desengraxante 1/40"
  },
  {
   "id": "cmtv7ccru0034pd013x2vd6yd",
@@ -2240,7 +2240,7 @@
   "aplicar": true,
   "fotoExata": false,
   "imagemOrigem": "representativa",
-  "imagemFamilia": "Nitro Ferrux Descontaminante Ferroso Concentrado"
+  "imagemFamilia": "Nitro Ferrux Descontaminante Ferroso"
  },
  {
   "id": "cmtv7cd0z004opd01r31xxraj",
@@ -2327,7 +2327,7 @@
   "aplicar": true,
   "fotoExata": false,
   "imagemOrigem": "representativa",
-  "imagemFamilia": "Nitro Glass Pro Limpador de Vidros Pronto para Uso"
+  "imagemFamilia": "Nitro Glass Pro Limpador de Vidros"
  },
  {
   "id": "cmtv7cd2b004wpd01md980g00",
@@ -2613,7 +2613,7 @@
   "aplicar": true,
   "fotoExata": false,
   "imagemOrigem": "representativa",
-  "imagemFamilia": "Nitro Hydro Blend Cera Líquida Híbrida Carnaúba e SiO2"
+  "imagemFamilia": "Nitro Hydro Blend Cera Líquida Híbrida"
  },
  {
   "id": "cmtv7cd52005epd01kmfdc46a",
@@ -2980,7 +2980,7 @@
   "aplicar": true,
   "fotoExata": false,
   "imagemOrigem": "representativa",
-  "imagemFamilia": "Nitro Lamax Lava Autos Desincrustante Concentrado"
+  "imagemFamilia": "Nitro Lamax Lava Autos Desincrustante"
  },
  {
   "id": "cmtv7cd8c005wpd010jqsswui",
@@ -3718,14 +3718,15 @@
     "titulo": "Limpa Vidros Vonixx/Vintex 1,5L - Universo das Cores"
    }
   ],
-  "paginaDasFotos": "https://store.vonixx.com.br/vintex/limpeza-vintex/vidro-vintex/limpa-vidros",
+  "paginaDasFotos": "https://gvldistribuidora.com.br/produtos/limpa-vidros-vintex-15l/",
   "fotos": [],
   "confianca": "alta",
   "duvidas": [
    "A loja oficial lista só 500 ml e 5 L; a apresentação de 1,5 L está confirmada em 4 revendedores (GVL, Polibox, Vonixx Mossoró, Universo das Cores). Confirmar se segue em linha.",
    "'EM GERAL' no nome cadastrado distingue do Limpa Vidros Pro; identificado como o Limpa Vidros comum (pronto para uso).",
    "Nome cadastrado não traz marca; identificado como Vintex. EAN não encontrado.",
-   "Rodada GTIN: Busca por nome + EAN não trouxe GTIN; varejistas (Magalu, Mercado Livre) não mostram o código no resumo indexado."
+   "Rodada GTIN: Busca por nome + EAN não trouxe GTIN; varejistas (Magalu, Mercado Livre) não mostram o código no resumo indexado.",
+   "Revisão 08/10: a página da loja oficial (https://store.vonixx.com.br/vintex/limpeza-vintex/vidro-vintex/limpa-vidros) é listagem da linha (500 ml e 5 L) e redireciona para busca vazia, então não serve de fonte de foto; a foto passa a vir da página de produto de GVL Distribuidora (1,5 L), que é da apresentação exata. Trocar pela página oficial do produto se ela existir."
   ],
   "lote": "vintex-detailer.json",
   "aplicar": true,
@@ -3813,13 +3814,14 @@
     "titulo": "Limpa Vidros Vonixx/Vintex 1,5L - Universo das Cores"
    }
   ],
-  "paginaDasFotos": "https://store.vonixx.com.br/vintex/limpeza-vintex/vidro-vintex/limpa-vidros",
+  "paginaDasFotos": "https://www.miromi.com.br/vonixx-pro-detailer-limpa-vidros-bombona-5-litros",
   "fotos": [],
   "confianca": "alta",
   "duvidas": [
    "'EM GERAL' no nome cadastrado distingue do Limpa Vidros Pro; identificado como o Limpa Vidros comum (pronto para uso).",
    "Nome cadastrado não traz marca; identificado como Vintex. EAN não encontrado.",
-   "Rodada GTIN: Busca por nome + EAN não trouxe GTIN; varejistas (Magalu, Mercado Livre) não mostram o código no resumo indexado."
+   "Rodada GTIN: Busca por nome + EAN não trouxe GTIN; varejistas (Magalu, Mercado Livre) não mostram o código no resumo indexado.",
+   "Revisão 08/10: a página da loja oficial (https://store.vonixx.com.br/vintex/limpeza-vintex/vidro-vintex/limpa-vidros) é listagem da linha (500 ml e 5 L) e redireciona para busca vazia, então não serve de fonte de foto; a foto passa a vir da página de produto de Miromi (bombona 5 L), que é da apresentação exata. Trocar pela página oficial do produto se ela existir."
   ],
   "lote": "vintex-detailer.json",
   "aplicar": true,
@@ -5429,7 +5431,7 @@
   "aplicar": true,
   "fotoExata": false,
   "imagemOrigem": "representativa",
-  "imagemFamilia": "Nitro Renovex Restaurador e Protetor de Plásticos"
+  "imagemFamilia": "Nitro Renovex Protetor de Plásticos"
  },
  {
   "id": "cmtv7cdso009ipd01oqpikz2d",
@@ -6810,7 +6812,7 @@
   "aplicar": true,
   "fotoExata": false,
   "imagemOrigem": "representativa",
-  "imagemFamilia": "Vonixx V80 Selante Sintético para Pintura"
+  "imagemFamilia": "Vonixx V80 Selante Sintético"
  },
  {
   "id": "cmtv7cebn00ckpd01otxroaq1",
