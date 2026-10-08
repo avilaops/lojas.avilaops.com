@@ -32,6 +32,7 @@ function provedor(mudancas: Partial<PaymentProvider> = {}): PaymentProvider {
     nome: "dublê",
     cobrar: async () => PAGO,
     consultar: async () => PAGO,
+    buscarPorReferencia: async () => PAGO,
     estornar: async () => PAGO,
     validarWebhook: async () => ({ pagamentoId: "123" }),
     ...mudancas,

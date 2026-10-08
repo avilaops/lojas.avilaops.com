@@ -95,6 +95,13 @@ export const ROTINAS = {
     // o que conta aqui é a rotina em si quebrar.
     falhasAteAlerta: 3,
   },
+  "reservas.reconciliar": {
+    titulo: "Reservas sem resposta",
+    descricao: "Confere no gateway as cobranças que estouraram o tempo e solta o estoque das que não nasceram",
+    cadencia: { tipo: "intervalo", minutos: 10 },
+    travaMinutos: 15,
+    falhasAteAlerta: 3,
+  },
   "pix.lembrete": {
     titulo: "Lembrete de Pix",
     descricao: "Avisa quem gerou Pix há mais de 30 minutos e ainda não pagou",

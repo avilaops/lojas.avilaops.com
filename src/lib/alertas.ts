@@ -21,6 +21,10 @@ export const ALERTAS = {
     oQueQuebrou: "O pagamento foi aprovado, mas a baixa de estoque falhou (reserva já liberada, saldo insuficiente ou quantidade divergente). O dinheiro entrou e o pedido não pode ser separado como está.",
     oQueFazer: "Conferir o saldo do produto. Havendo estoque, ajustar e confirmar o pedido; não havendo, estornar o pagamento e avisar o comprador.",
   },
+  "pagamento.sem-pedido": {
+    oQueQuebrou: "Um pagamento foi aprovado no gateway e não existe pedido para ele: a cobrança foi criada, mas o registro do pedido falhou. O estoque segue reservado.",
+    oQueFazer: "Conferir o pagamento no gateway pela referência. Se a venda vale, registrar o pedido à mão e separar; se não, estornar o pagamento. Depois, soltar a reserva.",
+  },
   "mensalidade.webhook-falhou": {
     oQueQuebrou: "Uma notificação de mensalidade do Mercado Pago chegou e não pôde ser processada. O Mercado Pago não reenvia.",
     oQueFazer: "Rodar a verificação diária de cobrança (POST /api/admin/cobranca/verificar), que relê as cobranças no Mercado Pago, e conferir a aba Assinatura da loja.",

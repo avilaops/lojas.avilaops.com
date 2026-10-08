@@ -76,6 +76,25 @@ reserva de estoque e responde 503 `pagamento_a_confirmar`; a chave
 `x-idempotency-key` (a referência do pedido) protege a nova tentativa. Não
 baixar os 20 s para "responder mais rápido".
 
+**O incerto é resolvido, não esquecido (08/10/2026).** Até essa data nada lia a
+tentativa `INCERTA`, e a reserva ficava para sempre. Pior: *qualquer* erro do
+gateway caía ali, inclusive uma recusa com resposta (cartão inválido,
+credencial errada), que é conclusiva. Agora:
+
+- recusa com resposta do gateway (`CobrancaRecusada`, 4xx menos 408) solta a
+  reserva na hora e responde 502 `falha_gateway`;
+- tempo-limite, 5xx e conexão caída continuam `INCERTA`, e a rotina
+  `reservas.reconciliar` (`src/lib/reservas-reconciliar.ts`, a cada 10 min)
+  pergunta ao gateway pela referência depois de 15 min: sem cobrança, ou
+  recusada/cancelada, solta o estoque; pendente, espera; **aprovada sem
+  pedido**, não solta e abre o alerta `pagamento.sem-pedido`.
+
+A cobrança inteira mora em `criarCobranca` (`src/lib/checkout-cobranca.ts`),
+com o gateway por parâmetro, e é provada em `tests/integration/checkout.test.ts`.
+O corpo passa por schema antes de tudo: meio de pagamento que a loja não
+aceita, parcelas acima de 12 e carrinho acima de 50 itens são recusados sem
+reservar estoque.
+
 Mercado Pago, consulta: a reconciliação (`src/lib/pedidos-reconciliar.ts`)
 consulta em laço. Com tempo-limite, um pedido preso conta como falha e o laço
 segue para o próximo.
@@ -155,6 +174,7 @@ como evento `operacao.alerta` (`src/lib/alertas.ts`), que já chega dizendo:
 | `pagamento.divergencia` | o valor pago difere do total do pedido |
 | `pagamento.sem-estoque` | pagamento aprovado e a baixa de estoque falhou |
 | `mensalidade.webhook-falhou` | notificação de mensalidade que não pôde ser processada |
+| `pagamento.sem-pedido` | pagamento aprovado no gateway sem pedido registrado |
 | `rotina.falhando` | a terceira falha seguida de uma rotina |
 | `canal.aviso-falhou` | reservado; ainda sem emissor |
 

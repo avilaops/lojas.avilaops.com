@@ -149,3 +149,62 @@ describe("MercadoPagoProvider: tempo-limite e idempotência", () => {
     await assert.rejects(provedor().estornar("123"), { name: "TimeoutError" });
   });
 });
+
+describe("recusa conclusiva e busca por referência", () => {
+  beforeEach(() => {
+    chamadas = [];
+  });
+  afterEach(() => {
+    globalThis.fetch = fetchOriginal;
+  });
+
+  it("4xx do gateway é recusa conclusiva; 5xx e 408 não são", async () => {
+    const { CobrancaRecusada } = await import("./erros.ts");
+    for (const status of [400, 401, 422]) {
+      dublar(() => json({ message: "invalid", cause: [{ description: "token inválido" }] }, status));
+      await assert.rejects(provedor().cobrar(PEDIDO, 3140), (e) => e instanceof CobrancaRecusada && e.status === status, String(status));
+    }
+    for (const status of [408, 500, 503]) {
+      dublar(() => json({ message: "erro" }, status));
+      await assert.rejects(provedor().cobrar(PEDIDO, 3140), (e) => e instanceof Error && !(e instanceof CobrancaRecusada), String(status));
+    }
+  });
+
+  it("busca pela referência exata, com tempo-limite, e prefere a cobrança aprovada", async (t) => {
+    const tempos = espiarTempoLimite(t);
+    dublar(() =>
+      json({
+        results: [
+          { id: 3, status: "cancelled", payment_method_id: "pix", transaction_amount: 31.4, external_reference: "PED-1" },
+          { id: 2, status: "approved", payment_method_id: "pix", transaction_amount: 31.4, external_reference: "PED-1" },
+          { id: 1, status: "approved", payment_method_id: "pix", transaction_amount: 99, external_reference: "PED-10" },
+        ],
+      }),
+    );
+
+    const achado = await provedor().buscarPorReferencia("PED-1");
+    assert.equal(achado?.id, "2");
+    assert.equal(achado?.status, "aprovado");
+    assert.equal(achado?.valor, 3140);
+
+    const url = new URL(chamadas[0].url);
+    assert.equal(url.pathname, "/v1/payments/search");
+    assert.equal(url.searchParams.get("external_reference"), "PED-1");
+    assert.equal(cabecalho(chamadas[0], "authorization"), "Bearer token-de-teste");
+    assert.equal(tempos.length, 1);
+    assert.ok(tempos[0] > 0 && tempos[0] <= 20_000);
+  });
+
+  it("sem cobrança para a referência devolve nulo; referência parecida não conta", async () => {
+    dublar(() => json({ results: [] }));
+    assert.equal(await provedor().buscarPorReferencia("PED-1"), null);
+    dublar(() => json({ results: [{ id: 9, status: "approved", payment_method_id: "pix", transaction_amount: 1, external_reference: "PED-10" }] }));
+    assert.equal(await provedor().buscarPorReferencia("PED-1"), null);
+  });
+
+  it("busca que falha é erro, e não 'não existe cobrança'", async () => {
+    // Devolver nulo aqui faria a rotina soltar o estoque de uma venda que pode ter acontecido.
+    dublar(() => json({ message: "erro" }, 500));
+    await assert.rejects(provedor().buscarPorReferencia("PED-1"));
+  });
+});

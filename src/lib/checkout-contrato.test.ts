@@ -33,6 +33,7 @@ test("o webhook repassa o valor consultado no gateway para a conciliacao", async
     nome: "teste",
     cobrar: async () => resultado,
     consultar: async () => resultado,
+    buscarPorReferencia: async () => null,
     estornar: async () => resultado,
     validarWebhook: async () => ({ pagamentoId: resultado.id }),
   };

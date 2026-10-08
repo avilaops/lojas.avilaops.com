@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import type { PedidoCheckout, ResultadoPagamento, StatusPagamento } from "../core/types.ts";
 import { apenasDigitos, tipoDocumento } from "../core/brasil.ts";
 import type { MapeamentoStatus, PaymentProvider, WebhookEntrada } from "./types.ts";
+import { CobrancaRecusada, recusaConclusiva } from "./erros.ts";
 
 const API = "https://api.mercadopago.com";
 
@@ -112,10 +113,36 @@ export class MercadoPagoProvider implements PaymentProvider {
       // Erro de validação do MP vem com 400 e uma lista em `cause`. Sem isso no
       // log, "pagamento falhou" é impossível de diagnosticar depois.
       const detalhe = dados?.cause?.[0]?.description ?? dados?.message ?? "erro desconhecido";
-      throw new Error(`Mercado Pago recusou a cobrança (${resposta.status}): ${detalhe}`);
+      const mensagem = `Mercado Pago recusou a cobrança (${resposta.status}): ${detalhe}`;
+      // 4xx é conclusivo: nada foi criado, e quem chamou pode soltar o estoque.
+      // 5xx e 408 seguem como erro comum, que quem chamou trata como incerto.
+      if (recusaConclusiva(resposta.status)) throw new CobrancaRecusada(mensagem, resposta.status);
+      throw new Error(mensagem);
     }
 
     return this.traduzir(dados);
+  }
+
+  async buscarPorReferencia(referencia: string): Promise<ResultadoPagamento | null> {
+    const consulta = new URLSearchParams({ external_reference: referencia, sort: "date_created", criteria: "desc", limit: "10" });
+    const resposta = await fetch(`${API}/v1/payments/search?${consulta}`, {
+      headers: { authorization: `Bearer ${this.config.accessToken}` },
+      signal: AbortSignal.timeout(TEMPO_LIMITE_CONSULTA_MS),
+    });
+
+    if (!resposta.ok) {
+      throw new Error(`Não foi possível buscar o pagamento da referência ${referencia}.`);
+    }
+
+    const dados = await resposta.json();
+    // A busca do MP casa por prefixo em alguns campos; só vale o que tem
+    // exatamente esta referência.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const exatos = (Array.isArray(dados?.results) ? dados.results : []).filter((r: any) => r?.external_reference === referencia);
+    if (exatos.length === 0) return null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const aprovado = exatos.find((r: any) => r.status === "approved");
+    return this.traduzir(aprovado ?? exatos[0]);
   }
 
   async consultar(pagamentoId: string): Promise<ResultadoPagamento> {

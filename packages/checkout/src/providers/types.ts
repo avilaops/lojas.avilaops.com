@@ -27,6 +27,16 @@ export interface PaymentProvider {
   consultar(pagamentoId: string): Promise<ResultadoPagamento>;
 
   /**
+   * A cobrança que existe para esta referência de pedido, ou `null`.
+   *
+   * É o que responde à pergunta que o tempo-limite deixa em aberto: "a cobrança
+   * chegou a nascer?". Sem isto, a tentativa que estourou o tempo ficava com o
+   * estoque reservado para sempre, porque ninguém tinha o id do pagamento para
+   * consultar. Havendo mais de uma, devolve a aprovada; senão, a mais recente.
+   */
+  buscarPorReferencia(referencia: string): Promise<ResultadoPagamento | null>;
+
+  /**
    * Estorna, total ou parcialmente.
    *
    * Não é enfeite: a política de devolução publicada promete reembolso pelo

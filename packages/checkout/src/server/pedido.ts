@@ -80,7 +80,9 @@ export type CodigoPedidoInvalido =
   | "cliente_invalido"
   | "endereco_obrigatorio"
   | "total_divergente"
-  | "cartao_sem_token";
+  | "cartao_sem_token"
+  /** O meio pedido não existe ou a loja não o aceita. Quem confere é quem conhece a loja. */
+  | "meio_indisponivel";
 
 /**
  * O campo é atribuído no corpo do construtor, não declarado como parameter
