@@ -35,6 +35,15 @@ export const ESCOPOS = {
   "catalogo:escrever": "Preço e estoque por SKU (o que o ERP sincroniza)",
   "pedidos:ler": "Pedidos com cliente, itens, valores e rastreio",
   "vitrine:ler": "O que a vitrine pública mostra: produtos ativos e dados da loja",
+  // Daqui para baixo, quem exige são as ferramentas do conector MCP
+  // (`FERRAMENTAS` em mcp-permissoes.ts); a API `/api/v1` não tem rota para eles.
+  "loja:escrever": "Marca, cores e layout da loja (conector MCP)",
+  "pedidos:escrever": "Status do pedido e etiqueta de envio (conector MCP)",
+  "clientes:ler": "Clientes da loja, com contato e histórico de compras (conector MCP)",
+  "promocoes:ler": "Cupons de desconto (conector MCP)",
+  "promocoes:escrever": "Criar e alterar cupons (conector MCP)",
+  "analises:ler": "Resumo de vendas, origem das vendas e marketing (conector MCP)",
+  "mcp:usar": "Usar esta chave no conector MCP (/api/mcp), dentro dos outros escopos marcados",
 } as const;
 
 export type Escopo = keyof typeof ESCOPOS;
@@ -43,7 +52,10 @@ export type Escopo = keyof typeof ESCOPOS;
 export const ESCOPOS_PUBLICAVEL: readonly Escopo[] = ["vitrine:ler"];
 
 /** Escopos que uma chave secreta pode receber; a vitrine vem junto sempre. */
-export const ESCOPOS_SECRETA: readonly Escopo[] = ["loja:ler", "catalogo:ler", "catalogo:escrever", "pedidos:ler", "vitrine:ler"];
+export const ESCOPOS_SECRETA: readonly Escopo[] = [
+  "loja:ler", "catalogo:ler", "catalogo:escrever", "pedidos:ler", "vitrine:ler",
+  "loja:escrever", "pedidos:escrever", "clientes:ler", "promocoes:ler", "promocoes:escrever", "analises:ler", "mcp:usar",
+];
 
 export function ehEscopo(v: string): v is Escopo {
   return Object.prototype.hasOwnProperty.call(ESCOPOS, v);

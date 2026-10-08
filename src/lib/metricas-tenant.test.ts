@@ -152,5 +152,5 @@ test("registroGlobal devolve sempre a mesma instância, presa no globalThis", ()
 });
 
 test("a lista de grupos é a fechada da especificação", () => {
-  assert.deepEqual([...GRUPOS], ["checkout", "frete", "busca", "webhook", "api-v1", "render", "acao", "outra"]);
+  assert.deepEqual([...GRUPOS], ["checkout", "frete", "busca", "webhook", "api-v1", "mcp", "render", "acao", "outra"]);
 });

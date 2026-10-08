@@ -39,7 +39,7 @@ test("publicável fica só com a vitrine, peça o que pedir", () => {
 });
 
 test("secreta fica com o que pediu, dentro do catálogo, e sempre com a vitrine", () => {
-  assert.deepEqual(escoposDaChave("SECRETA", ["pedidos:ler", "admin:tudo", "pedidos:escrever"]), ["pedidos:ler", "vitrine:ler"]);
+  assert.deepEqual(escoposDaChave("SECRETA", ["pedidos:ler", "admin:tudo", "pedidos:apagar"]), ["pedidos:ler", "vitrine:ler"]);
   assert.deepEqual(escoposDaChave("SECRETA", ["catalogo:escrever"]), ["catalogo:escrever", "vitrine:ler"]);
   assert.deepEqual(escoposDaChave("SECRETA", []), ["vitrine:ler"]);
 });

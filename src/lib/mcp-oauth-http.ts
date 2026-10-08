@@ -1,3 +1,4 @@
+import { LimitadorPorJanela, cabecalhosDoLimite } from "./api-limite";
 import { normalizarHost } from "./tenant";
 
 /**
@@ -40,4 +41,52 @@ export function jsonSemCache(corpo: unknown, status = 200): Response {
 
 export function erroOAuth(erro: string, descricao: string, status = 400): Response {
   return jsonSemCache({ error: erro, error_description: descricao }, status);
+}
+
+// ── Limite ─────────────────────────────────────────────────────────────
+
+const limitador = new LimitadorPorJanela();
+
+/**
+ * De onde veio a requisição, só para contar. O endereço fica na memória do
+ * limitador por um minuto e em mais lugar nenhum: não vai para log, métrica
+ * nem banco. Atrás do Cloudflare o endereço real é o `cf-connecting-ip`.
+ */
+function origemDaRequisicao(request: Request): string {
+  const h = request.headers;
+  return (h.get("cf-connecting-ip") ?? h.get("x-forwarded-for")?.split(",")[0] ?? "").trim() || "sem-origem";
+}
+
+/**
+ * Tetos por minuto das rotas abertas do login.
+ *
+ * O registro é aberto por definição do protocolo, e cada um grava uma linha:
+ * sem teto, um laço enche a tabela. Por origem, para o laço de um não fechar a
+ * porta de todos; e no total, para o caso de o laço vir de muitas origens.
+ */
+export const LIMITES_DO_LOGIN = {
+  registroPorOrigem: 10,
+  registroNoTotal: 120,
+  tokenPorCliente: 30,
+} as const;
+
+/** `null` quando pode seguir; a resposta 429 quando o teto foi atingido. */
+function recusaPorLimite(chave: string, limite: number): Response | null {
+  const r = limitador.consumir(chave, limite);
+  if (r.permitido) return null;
+  return Response.json(
+    { error: "slow_down", error_description: `Muitas requisições. Tente de novo em ${r.reiniciaEm} s.` },
+    { status: 429, headers: { ...CORS, ...cabecalhosDoLimite(r), "retry-after": String(r.reiniciaEm), "cache-control": "no-store" } },
+  );
+}
+
+export function limiteDoRegistro(request: Request): Response | null {
+  return (
+    recusaPorLimite(`registro:${origemDaRequisicao(request)}`, LIMITES_DO_LOGIN.registroPorOrigem) ??
+    recusaPorLimite("registro:total", LIMITES_DO_LOGIN.registroNoTotal)
+  );
+}
+
+export function limiteDoToken(clienteId: string): Response | null {
+  return recusaPorLimite(`token:${clienteId.slice(0, 64)}`, LIMITES_DO_LOGIN.tokenPorCliente);
 }

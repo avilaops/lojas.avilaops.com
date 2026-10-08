@@ -102,6 +102,7 @@ Os grupos são uma lista fechada (`GRUPOS`):
 | `busca` | `GET /api/busca` | host |
 | `webhook` | `POST /api/webhooks/mercadopago` | `?loja=<slug>` (o webhook pode chegar pelo host da plataforma) |
 | `api-v1` | tudo que passa por `rotaDaApi` (`/api/v1/*`) | a chave; sem chave válida vai para `semLoja` |
+| `mcp` | o conector (`/api/mcp`) e o login dele (`/oauth/*`) | a credencial; sem credencial válida, e todo o login, vão para `semLoja` |
 | `render`, `acao`, `outra` | erro que o Next capturou em página, server action e no resto (`onRequestError`) | host |
 
 `render`, `acao` e `outra` só contam **erro**: o Next avisa quando quebra, não

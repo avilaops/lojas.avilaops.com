@@ -1,6 +1,7 @@
 import { renovar, trocarCodigo } from "@/lib/mcp-conexoes";
 import { mesmoRecurso, recurso, respostaDeToken } from "@/lib/mcp-oauth";
-import { erroOAuth, jsonSemCache, naoExiste, noDominioBase, preflight } from "@/lib/mcp-oauth-http";
+import { erroOAuth, jsonSemCache, limiteDoToken, naoExiste, noDominioBase, preflight } from "@/lib/mcp-oauth-http";
+import { medirRota } from "@/lib/metricas-rota";
 
 /**
  * Troca o código de autorização pelos tokens, e renova o par depois.
@@ -9,12 +10,17 @@ import { erroOAuth, jsonSemCache, naoExiste, noDominioBase, preflight } from "@/
  * (PKCE), e quem prova que tem a conexão é o token de renovação, que muda a
  * cada uso.
  */
-export async function POST(request: Request) {
+export const POST = medirRota("mcp", trocar, { host: () => null });
+
+async function trocar(request: Request) {
   if (!noDominioBase(request)) return naoExiste();
   const f = new URLSearchParams(await request.text().catch(() => ""));
 
   const clienteId = f.get("client_id") ?? "";
   if (!clienteId) return erroOAuth("invalid_client", "client_id ausente.", 401);
+  // Por cliente: quem tenta adivinhar código ou token de renovação bate aqui.
+  const recusa = limiteDoToken(clienteId);
+  if (recusa) return recusa;
   const alvo = f.get("resource");
   if (alvo && !mesmoRecurso(alvo)) return erroOAuth("invalid_target", `Este servidor só autoriza ${recurso()}.`);
 

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { clientePorId } from "@/lib/mcp-conexoes";
 import { COOKIE_DO_PEDIDO, emissor, lerPedido, selarPedido, urlDeRetorno, VALIDADE } from "@/lib/mcp-oauth";
 import { naoExiste, noDominioBase } from "@/lib/mcp-oauth-http";
+import { medirRota } from "@/lib/metricas-rota";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +19,9 @@ function ir(destino: string) {
  * pode haver o login único em outro domínio: quem volta de lá cai no painel, e
  * o painel só sabe que havia uma autorização esperando pelo cookie.
  */
-export async function GET(request: Request) {
+export const GET = medirRota("mcp", autorizar, { host: () => null });
+
+async function autorizar(request: Request) {
   if (!noDominioBase(request)) return naoExiste();
   const params = new URL(request.url).searchParams;
   const cliente = await clientePorId(params.get("client_id"));

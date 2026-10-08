@@ -8,19 +8,57 @@ pedido, criar cupom. Recurso do plano Loja Pro.
 - Transporte: Streamable HTTP, só requisição e resposta (sem fluxo de eventos).
 - Ferramentas: `MCP_TOOLS` em `src/lib/mcp-tools.ts`.
 
-## Duas formas de entrar
+## Três credenciais, uma regra
 
-| | Login (OAuth) | Chave |
-|---|---|---|
-| Para quem | Lojista, no assistente | n8n, scripts, o que roda sem tela |
-| Credencial | `lojas_at_…`, vale 1 hora e se renova | `lojas_live_<slug>_…`, até ser revogada |
-| Onde nasce | Tela `/autorizar`, depois do login no painel | Painel, IA e API |
-| Guardada como | sha256 (`ConexaoMcp`) | cifrada (`Tenant.apiKeyEnc`) |
-| Desligar | Painel, IA e API, "Desconectar" | Painel, "Revogar" |
+| | Login (OAuth) | Chave secreta | Chave antiga |
+|---|---|---|---|
+| Para quem | Lojista, no assistente | n8n, scripts, o que roda sem tela | Quem já tinha |
+| Credencial | `lojas_at_…`, vale 1 hora e se renova | `lojas_sk_…` com o escopo `mcp:usar` | `lojas_live_<slug>_…` |
+| Onde nasce | Tela `/autorizar`, depois do login no painel | Painel, Chaves da API | Não é mais emitida |
+| Guardada como | sha256 (`ConexaoMcp`) | sha256 (`ChaveApi`) | cifrada (`Tenant.apiKeyEnc`) |
+| O que pode | O que o lojista marcou na tela | O que os escopos dela dizem | Tudo |
+| Desligar | Painel, "Desconectar" | Painel, "Revogar" | Painel, "Revogar" (sem volta) |
 
-As duas passam por `autenticarMcp` (`src/lib/mcp-auth.ts`) e pela mesma regra:
-loja `ATIVA` e plano `LOJA_PRO`. Rebaixar o plano ou suspender a loja derruba as
-duas na chamada seguinte.
+As três passam por `autenticarMcp` (`src/lib/mcp-auth.ts`) e pela mesma regra:
+loja `ATIVA` e plano `LOJA_PRO`. Rebaixar o plano ou suspender a loja derruba
+todas na chamada seguinte.
+
+## O que cada conexão pode
+
+Cada ferramenta exige um escopo (`FERRAMENTAS` em `src/lib/mcp-permissoes.ts`),
+e os escopos são os mesmos da API para desenvolvedores (`ESCOPOS` em
+`api-chaves.ts`). Ferramenta nova entra em `FERRAMENTAS` no mesmo commit em que
+entra em `MCP_TOOLS`; o teste recusa ferramenta sem escopo.
+
+- Na tela `/autorizar` o lojista escolhe: consultar e alterar, só consultar, ou
+  por área (loja, catálogo, pedidos, clientes, promoções, análises). O que ele
+  marca fica gravado em `ConexaoMcp.escopos`. Para mudar, desconecta e conecta
+  de novo: o assistente não amplia o próprio acesso.
+- `tools/list` devolve só o que a credencial pode usar, com `annotations`
+  (`readOnlyHint`) para o assistente saber quando pedir confirmação.
+  `tools/call` recusa o resto dizendo qual permissão falta.
+- Chave secreta só entra no conector com `mcp:usar`. Chave criada para o ERP
+  com `catalogo:escrever` não vira chave do conector sozinha.
+
+## Histórico
+
+Cada `tools/call` executado vira uma linha em `ChamadaMcp`: quem (assistente
+ou chave), qual ferramenta, se alterou, se deu certo e o identificador do que
+foi tocado. **Sem argumentos e sem resultado**: `alvoDaChamada`
+(`src/lib/mcp-historico.ts`) só aceita o que parece código (SKU, id, número).
+O lojista lê em Painel, IA e API. Retenção de 90 dias, com a faxina feita
+quando a lista é aberta.
+
+## Limites e medição
+
+- `/api/mcp`: 120 chamadas por minuto por credencial.
+- `/oauth/register`: 10 por minuto por origem e 120 no total.
+- `/oauth/token`: 30 por minuto por cliente.
+- Tudo entra no grupo `mcp` das métricas (`docs/METRICAS.md`); o login e as
+  chamadas sem credencial válida vão para `semLoja`.
+
+O endereço de origem usado no limite do registro vive um minuto na memória do
+limitador e não vai para log, métrica nem banco.
 
 ## O login, passo a passo
 
@@ -39,8 +77,9 @@ assistente pelo nome: quem fala MCP com OAuth conecta.
 5. `/autorizar` (plataforma) mostra loja, assistente e **para onde o acesso
    vai**. Sem sessão, o lojista passa por `/entrar`; toda porta de login termina
    em `/painel`, e o painel devolve à autorização quando o cookie existe.
-6. O lojista decide em `POST /api/painel/mcp/autorizar`. Autorizar exige a
-   permissão `configuracoes` (dono ou gerente). Sai um código de 5 minutos.
+6. O lojista escolhe o que o assistente pode e decide em
+   `POST /api/painel/mcp/autorizar`. Autorizar exige a permissão
+   `configuracoes` (dono ou gerente). Sai um código de 5 minutos.
 7. `POST /oauth/token` troca código e `code_verifier` por token de acesso (1 h)
    e de renovação (60 dias, renovados a cada uso).
 
@@ -67,11 +106,10 @@ Rotas de máquina ficam na raiz de `src/app` e estão em `PREFIXOS_DA_RAIZ`
 
 ## O que ainda não tem
 
-- Escopos por ferramenta. A conexão age como a loja inteira, igual à chave.
-- A chave secreta nova (`lojas_sk_…`, `docs/API.md`) ainda não entra no MCP;
-  `Tenant.apiKeyEnc` continua sendo a chave do conector.
-- Anotações de ferramenta (`readOnlyHint`), que os diretórios de conectores
-  pedem para publicar.
+- Mudar o acesso de uma conexão sem desconectar.
+- Publicação nos diretórios de conectores do Claude e do ChatGPT.
+- Apagar as colunas `Tenant.apiKeyEnc` e `apiKeyCriadaEm`: só depois que as
+  lojas com chave antiga migrarem (duas em 08/10/2026).
 
 ## Como conferir em produção
 

@@ -273,6 +273,7 @@ model Tenant {
   apiKeyCriadaEm DateTime?
   chavesApi      ChaveApi[]
   conexoesMcp    ConexaoMcp[]
+  chamadasMcp    ChamadaMcp[]
 
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
@@ -1452,6 +1453,10 @@ model ConexaoMcp {
   renovacaoHash     String?   @unique
   renovacaoExpiraEm DateTime?
 
+  /// O que o lojista autorizou na tela: escopos de `ESCOPOS` (api-chaves.ts),
+  /// conforme `escoposDaAutorizacao` em src/lib/mcp-permissoes.ts.
+  escopos String[] @default([])
+
   ultimoUsoEm DateTime?
   revogadaEm  DateTime?
   criadaEm    DateTime  @default(now())
@@ -1461,6 +1466,35 @@ model ConexaoMcp {
 
   @@index([tenantId])
   @@index([clienteId])
+}
+
+/// O que cada assistente fez na loja pelo conector MCP: uma linha por chamada
+/// de ferramenta. É o que o lojista lê em Painel, IA e API.
+///
+/// **Sem argumentos nem resultado.** Os argumentos de uma ferramenta carregam
+/// nome de cliente, endereço e preço; o histórico guarda só qual ferramenta, se
+/// deu certo e o identificador do que foi tocado. Ver `alvoDaChamada`.
+model ChamadaMcp {
+  id         String  @id @default(cuid())
+  tenantId   String
+  /// Uma das duas, conforme a credencial; nenhuma, na chave antiga do conector.
+  conexaoId  String?
+  chaveId    String?
+  /// Nome de quem chamou, copiado na hora: o histórico sobrevive à revogação.
+  origem     String
+  ferramenta String
+  /// A ferramenta altera a loja? Copiado de `FERRAMENTAS` na hora da chamada.
+  alterou    Boolean
+  ok         Boolean
+  /// Identificador do que foi tocado (id, SKU, número do pedido). Nunca texto livre.
+  alvo       String?
+  duracaoMs  Int
+
+  criadaEm DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, criadaEm])
 }
 
 model ChaveApi {
