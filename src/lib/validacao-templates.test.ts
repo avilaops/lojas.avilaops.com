@@ -76,7 +76,7 @@ test("medida limpa passa nos 104 casos", () => {
   for (const caso of casos) assert.deepEqual(avaliarMedida(caso, limpa(caso)), [], caso.id);
 });
 
-test("regra a: prévia que não desenhou o layout falha", () => {
+test("regra 1: prévia que não desenhou o layout falha", () => {
   const caso = casoDe("classico.movel.claro.normal");
   const ausente = avaliarMedida(caso, limpa(caso, { layoutDesenhado: null }));
   assert.equal(ausente.length, 1);
@@ -86,14 +86,14 @@ test("regra a: prévia que não desenhou o layout falha", () => {
   assert.match(outro[0], /minimal/);
 });
 
-test("regra b: modo diferente no <html> falha", () => {
+test("regra 2: modo diferente no <html> falha", () => {
   const caso = casoDe("vitrine.desktop.escuro.normal");
   const falhas = avaliarMedida(caso, limpa(caso, { modoNoHtml: "claro" }));
   assert.equal(falhas.length, 1);
   assert.match(falhas[0], /modo/);
 });
 
-test("regra c: vazamento lateral falha e nomeia o culpado", () => {
+test("regra 3: vazamento lateral falha e nomeia o culpado", () => {
   const caso = casoDe("mercado.movel.claro.normal");
   const falhas = avaliarMedida(caso, limpa(caso, { vazaLateralPx: 24, culpado: "DIV mercado-grade-categorias" }));
   assert.equal(falhas.length, 1);
@@ -101,14 +101,14 @@ test("regra c: vazamento lateral falha e nomeia o culpado", () => {
   assert.match(falhas[0], /mercado-grade-categorias/);
 });
 
-test("regra d: erro de página falha", () => {
+test("regra 4: erro de página falha", () => {
   const caso = casoDe("editorial.desktop.claro.normal");
   const falhas = avaliarMedida(caso, limpa(caso, { errosDePagina: ["TypeError: x is undefined"] }));
   assert.equal(falhas.length, 1);
   assert.match(falhas[0], /TypeError/);
 });
 
-test("regra e: contraste abaixo de 4.5 falha, e cor ilegível também", () => {
+test("regra 5: contraste abaixo de 4.5 falha, e cor ilegível também", () => {
   const caso = casoDe("minimal.movel.claro.normal");
   const baixo = avaliarMedida(caso, limpa(caso, { corTexto: "#9ca3af", corFundo: "#ffffff" }));
   assert.equal(baixo.length, 1);
@@ -118,7 +118,7 @@ test("regra e: contraste abaixo de 4.5 falha, e cor ilegível também", () => {
   assert.match(ilegivel[0], /contraste/);
 });
 
-test("regra e: a fronteira do contraste é 4.5 (4,54 passa, 4,48 falha)", () => {
+test("regra 5: a fronteira do contraste é 4.5 (4,54 passa, 4,48 falha)", () => {
   const caso = casoDe("minimal.movel.claro.normal");
   assert.deepEqual(avaliarMedida(caso, limpa(caso, { corTexto: "#767676", corFundo: "#ffffff" })), []);
   const abaixo = avaliarMedida(caso, limpa(caso, { corTexto: "#777777", corFundo: "#ffffff" }));
@@ -126,7 +126,7 @@ test("regra e: a fronteira do contraste é 4.5 (4,54 passa, 4,48 falha)", () => 
   assert.match(abaixo[0], /4\.48/);
 });
 
-test("regra f: animação ou transição falha só com movimento reduzido", () => {
+test("regra 6: animação ou transição falha só com movimento reduzido", () => {
   const reduzido = casoDe("spotlight.desktop.claro.reduzido");
   const animacao = avaliarMedida(reduzido, limpa(reduzido, { animacoesAtivas: 2 }));
   assert.equal(animacao.length, 1);
@@ -139,12 +139,12 @@ test("regra f: animação ou transição falha só com movimento reduzido", () =
   assert.deepEqual(avaliarMedida(normal, limpa(normal, { animacoesAtivas: 2, transicoesComDuracao: 31 })), []);
 });
 
-test("regra g: nenhum _rsc fora da prévia passa", () => {
+test("regra 7: nenhum _rsc fora da prévia passa", () => {
   const caso = casoDe("classico.desktop.claro.normal");
   assert.deepEqual(avaliarMedida(caso, limpa(caso, { preCarregamentosForaDaPrevia: 0 })), []);
 });
 
-test("regra g: um _rsc fora da prévia já reprova", () => {
+test("regra 7: um _rsc fora da prévia já reprova", () => {
   const caso = casoDe("classico.desktop.claro.normal");
   const falhas = avaliarMedida(caso, limpa(caso, { preCarregamentosForaDaPrevia: 1 }));
   assert.equal(falhas.length, 1);

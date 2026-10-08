@@ -1,7 +1,7 @@
 /**
  * Valida cada template na prévia do painel, em vez de olhar e achar.
  *
- * Abre `/painel/previa?t=…` para os 12 layouts × 2 viewports × 2 modos × 2
+ * Abre `/painel/previa?t=…` para os 13 layouts × 2 viewports × 2 modos × 2
  * preferências de movimento (104 casos), mede cada um e sai com 1 se algum
  * falhar. A matriz e o julgamento estão em `src/lib/validacao-templates.ts`,
  * presos em `npm test`; aqui fica só o que precisa de navegador.
