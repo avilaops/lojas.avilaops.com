@@ -440,6 +440,9 @@ body:has(.home-automotivo) .rodape-loja { margin-top: 1rem; }
   color: var(--muted-foreground);
 }
 html[data-cookies-respondido] .aviso-cookies { display: none; }
+/* Fonte do sistema no aviso: ele sai no HTML e, com a fonte da loja, era
+   redesenhado quando ela chegava; nas páginas com pouco texto virava o LCP. */
+.aviso-cookies { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
 .aviso-cookies a { text-decoration: underline; }
 .aviso-cookies-acoes { display: flex; gap: 0.5rem; }
 .aviso-cookies-acoes button { flex: 1; height: 2.5rem; font-size: 0.8125rem; }

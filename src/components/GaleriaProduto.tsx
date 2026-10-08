@@ -22,7 +22,8 @@ export default function GaleriaProduto({ imagens, alt, origem = "propria" }: { i
     if (imagens.length) setAtual((i) => (i + passo + imagens.length) % imagens.length);
   };
   const principal = imagens[atual];
-  const grande = principal && /\/uploads\//.test(principal) && !/\.svg$/i.test(principal) ? `${principal}?w=1200` : principal;
+  const redimensionavel = Boolean(principal && /\/uploads\//.test(principal) && !/\.svg$/i.test(principal));
+  const grande = redimensionavel ? `${principal}?w=1200` : principal;
   const colunas = [6, 5, 4, 3, 2].find((n) => imagens.length <= n || imagens.length % n !== 1) ?? Math.min(imagens.length, 6);
 
   return (
@@ -47,6 +48,11 @@ export default function GaleriaProduto({ imagens, alt, origem = "propria" }: { i
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={grande}
+            // No celular a foto ocupa a largura da tela: a de 1200 px pesava o
+            // dobro do necessário e era o LCP da ficha (6,7 s no PageSpeed).
+            srcSet={redimensionavel ? `${principal}?w=480 480w, ${principal}?w=800 800w, ${principal}?w=1200 1200w` : undefined}
+            sizes={redimensionavel ? "(max-width: 1024px) 100vw, 560px" : undefined}
+            fetchPriority="high"
             alt={alt}
             className="h-full w-full object-contain transition-transform duration-200"
             style={zoom ? { transform: "scale(2)", transformOrigin: `${zoom.x}% ${zoom.y}%` } : undefined}

@@ -45,7 +45,8 @@ export default function PaginacaoLoja({
 }) {
   const paginas = total != null ? Math.max(1, Math.ceil(total / porPagina)) : null;
   if (pagina <= 1 && !temProxima) return null;
-  const apagado = "inline-flex h-11 items-center px-4 text-muted-foreground/50";
+  // Cinza cheio: a meia opacidade o texto ficava em 1,97:1 de contraste.
+  const apagado = "inline-flex h-11 items-center px-4 text-muted-foreground";
   return (
     <nav aria-label="Páginas" className="mt-8 flex items-center justify-center gap-3 text-sm">
       {pagina > 1 ? (
