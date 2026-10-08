@@ -294,3 +294,13 @@ mínimo de pedido repetido no serviço de frete da conta.
   Melhor Envio conectado por loja, e o servidor está sem
   `MELHOR_ENVIO_CLIENT_ID` e `MELHOR_ENVIO_CLIENT_SECRET`. Vale para todas as
   lojas. Alternativa sem aplicativo: `Tenant.tabelaFrete` por UF.
+- **Home "Indústria" (08/10, à tarde).** A loja passou para o layout novo
+  `industrial` (`src/components/home/Industrial.tsx`): topo com a foto do site
+  da PK e busca pelas três medidas (meio milímetro de folga sobre os filtros
+  `di_*`, `de_*`, `alt_*`), linhas de produto com a descrição da categoria,
+  destaques, diferenciais (`tema.industrial.diferenciais`, texto do site da
+  PK) e contato comercial. A imagem principal dos 803 produtos é a foto real
+  da linha (`foto-gaxetas-pk`, `foto-raspadores-pk`, `foto-guias-pk`), com a
+  ilustração do perfil em segundo. A foto de guias veio do novo site da PK
+  (512 px, ampliada): falta a PK confirmar que representa o anel guia de
+  nylon vendido aqui. O banner em imagem saiu de uso.
