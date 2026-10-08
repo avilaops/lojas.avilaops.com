@@ -16,6 +16,8 @@ import GaleriaProduto from "@/components/GaleriaProduto";
 import Avaliacoes from "@/components/Avaliacoes";
 import EventoVerProduto from "@/components/EventoVerProduto";
 import ProductCard from "@/components/ProductCard";
+import TabelaTecnica from "@/components/TabelaTecnica";
+import { listaEmTabela } from "@/lib/templates";
 import { prisma } from "@/lib/db";
 import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
 import { mensagemDoProduto } from "@/lib/whatsapp-produto";
@@ -322,9 +324,13 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
           {/* A ressalva importa: mesma construção não é mesma peça, e quem
               erra a medida devolve. */}
           <p className="mb-4 text-xs text-muted-foreground">Mesma construção, dimensões diferentes. Confira a medida antes de pedir.</p>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {serie.map((r) => <ProductCard loja={t} key={r.id} produto={r} vende={vende} whatsapp={t.whatsapp} moto={moto} />)}
-          </div>
+          {listaEmTabela(temaDo(t)) ? (
+            <TabelaTecnica produtos={serie} vende={vende} titulo="Outras medidas desta série" nomeDaLoja={t.nome} loja={t} />
+          ) : (
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+              {serie.map((r) => <ProductCard loja={t} key={r.id} produto={r} vende={vende} whatsapp={t.whatsapp} moto={moto} />)}
+            </div>
+          )}
         </section>
       ) : relacionados.length > 0 ? (
         <section className="mt-12">

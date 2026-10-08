@@ -62,12 +62,20 @@ test("número de catálogo e seção saem acentuados", () => {
   });
   assert.deepEqual(f.map((l) => [l.rotulo, l.valor]), [
     ["Seção do cordão", "5,33 mm"],
-    ["Número de catálogo", "B-0070"],
-    ["Seção do cordão (pol)", "0.210"],
-    ["Seção transversal", "Quadrada"],
     ["Referência", "PKG.0070"],
+    ["Número de catálogo", "B-0070"],
     ["Grupo", "Gaxeta"],
     ["Subgrupo", "PU - Tipo B"],
+    ["Seção transversal", "Quadrada"],
+    ["Seção do cordão (pol)", "0.210"],
     ["Altura (pol)", "0.25"],
   ]);
+});
+
+test("a ficha técnica sai na ordem de catálogo: medida, aplicação, códigos e polegadas por último", () => {
+  const linhas = fichaDoProduto({
+    grupo: "Vedações hidráulicas", alturaPol: "3/8", dureza: "85 a 93 Shore A", alturaMm: 9.52, referencia: "25002000-375",
+    material: "Poliuretano (PU)", pressaoMaxima: "400 bar", diametroInternoMm: 50.8, cor: "Azul",
+  });
+  assert.deepEqual(linhas.map((l) => l.chave), ["diametroInternoMm", "alturaMm", "material", "dureza", "pressaoMaxima", "referencia", "grupo", "cor", "alturaPol"]);
 });

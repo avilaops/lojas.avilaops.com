@@ -144,6 +144,13 @@ const SIGLAS = new Set(["aws", "din", "hb", "hrc", "mpa", "cc", "ca", "tig", "mi
  * "Estado fisico". O acento volta por palavra, e só para palavras cuja grafia
  * sem acento não existe em português — nada aqui muda o sentido do rótulo.
  */
+/** Ordem das linhas que não são medida: material e aplicação antes de códigos e agrupamentos. */
+const ORDEM_TECNICA = [
+  "material", "dureza", "perfil", "tipo", "subtipo", "vedacao", "funcao", "aplicacao", "linha",
+  "pressaoMaxima", "velocidadeMaxima", "temperaturaTrabalho", "cargaMaxima", "folga",
+  "referencia", "catalogoNumero", "numeroCatalogo", "grupo", "subgrupo",
+];
+
 const ACENTOS: Record<string, string> = {
   acao: "ação", advertencia: "advertência", agua: "água", aagua: "à água", aparencia: "aparência",
   aplicacao: "aplicação", apresentacao: "apresentação", area: "área", ativacao: "ativação",
@@ -201,5 +208,15 @@ export function fichaDoProduto(atributos: Record<string, unknown> | null | undef
   // é a linha que decide se serve.
   const ordem = Object.keys(MEDIDAS);
   medidas.sort((a, b) => ordem.indexOf(a.chave) - ordem.indexOf(b.chave));
-  return [...medidas, ...outras];
+  // O resto saía na ordem em que o JSON foi gravado, com "Grupo" no meio dos
+  // dados de aplicação. O que se confere antes de comprar vem na frente, na
+  // ordem em que um catálogo técnico apresenta; o que não está na lista mantém
+  // a posição relativa, e a medida em polegadas (repetição da de cima) fecha.
+  const peso = (chave: string) => {
+    const i = ORDEM_TECNICA.indexOf(chave);
+    if (i >= 0) return i;
+    return /Pol$/.test(chave) ? ORDEM_TECNICA.length + 1 : ORDEM_TECNICA.length;
+  };
+  const ordenadas = outras.map((linha, i) => ({ linha, i })).sort((a, b) => peso(a.linha.chave) - peso(b.linha.chave) || a.i - b.i).map((x) => x.linha);
+  return [...medidas, ...ordenadas];
 }
