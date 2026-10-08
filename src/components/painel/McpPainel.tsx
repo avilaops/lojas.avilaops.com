@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Bot, Check, Copy, Key, Sparkles, Terminal, Trash2, Zap } from "lucide-react";
+import { Bot, Check, Copy, Key, Plug, Sparkles, Terminal, Trash2, Zap } from "lucide-react";
 import { Secao } from "./campos";
 
 interface StatusMcp {
@@ -11,6 +11,39 @@ interface StatusMcp {
   apiKeyCriadaEm: string | null;
   endpointUrl: string;
 }
+
+interface Conexao {
+  id: string;
+  assistente: string;
+  conectadaEm: string;
+  ultimoUsoEm: string | null;
+}
+
+/**
+ * Como adicionar o conector em cada assistente. O servidor não distingue um do
+ * outro (docs/MCP.md): isto é só o caminho dos menus, e é o que envelhece
+ * quando um deles muda a tela.
+ */
+const COMO_CONECTAR: { nome: string; passos: string; comandos?: (url: string) => string }[] = [
+  {
+    nome: "Claude (web, computador e celular)",
+    passos: "Configurações, Conectores, Adicionar conector personalizado. Cole o endereço, clique em Conectar e autorize a loja.",
+  },
+  {
+    nome: "ChatGPT",
+    passos: "Configurações, Conectores, Criar (pede o modo de desenvolvedor ligado). Cole o endereço, escolha autenticação OAuth e autorize a loja.",
+  },
+  {
+    nome: "Codex",
+    passos: "No terminal, adicione o conector e faça o login. O navegador abre para você autorizar a loja.",
+    comandos: (url) => `codex mcp add lojas --url ${url}\ncodex mcp login lojas`,
+  },
+  {
+    nome: "Claude Code",
+    passos: "No terminal, adicione o conector. Depois rode /mcp dentro do Claude Code e escolha autenticar.",
+    comandos: (url) => `claude mcp add --transport http lojas ${url}`,
+  },
+];
 
 export default function McpPainel({
   lojaPlano,
@@ -22,6 +55,7 @@ export default function McpPainel({
   aoIrParaAssinatura: () => void;
 }) {
   const [status, setStatus] = useState<StatusMcp | null>(null);
+  const [conexoes, setConexoes] = useState<Conexao[] | null>(null);
   const [gerando, setGerando] = useState(false);
   const [novaChave, setNovaChave] = useState<string | null>(null);
   const [copiadoChave, setCopiadoChave] = useState(false);
@@ -39,6 +73,8 @@ export default function McpPainel({
           const d = await r.json();
           setStatus(d);
         }
+        const c = await fetch("/api/painel/mcp/conexoes");
+        setConexoes(c.ok ? (await c.json()).conexoes : []);
       } catch {
         /* O estado vazio é a apresentação segura durante a carga. */
       }
@@ -65,7 +101,7 @@ export default function McpPainel({
   }
 
   async function revogarChave() {
-    if (!confirm("Tem certeza que deseja revogar a chave de API? Todas as conexões do Claude e agentes externos pararão de funcionar imediatamente.")) {
+    if (!confirm("Tem certeza que deseja revogar a chave de API? As automações que usam a chave param de funcionar imediatamente. Os assistentes conectados por login continuam.")) {
       return;
     }
     setGerando(true);
@@ -81,6 +117,21 @@ export default function McpPainel({
       setErro(e instanceof Error ? e.message : "Erro ao revogar chave.");
     } finally {
       setGerando(false);
+    }
+  }
+
+  async function desconectar(c: Conexao) {
+    if (!confirm(`Desconectar ${c.assistente}? Ele perde o acesso à loja na hora. Para voltar, é só conectar de novo.`)) return;
+    setErro(null);
+    setSucesso(null);
+    try {
+      const r = await fetch(`/api/painel/mcp/conexoes?id=${encodeURIComponent(c.id)}`, { method: "DELETE" });
+      const d = await r.json().catch(() => null);
+      if (!r.ok) throw new Error(d?.erro ?? "Falha ao desconectar.");
+      setConexoes((lista) => (lista ?? []).filter((x) => x.id !== c.id));
+      setSucesso(`${c.assistente} foi desconectado.`);
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Erro ao desconectar.");
     }
   }
 
@@ -100,7 +151,7 @@ export default function McpPainel({
     return (
       <Secao
         titulo="Conector de IA (MCP)"
-        descricao="Gerencie seu e-commerce conversando em linguagem natural com o Claude, ChatGPT ou bots de WhatsApp."
+        descricao="Gerencie sua loja conversando com o Claude, o ChatGPT ou o Codex."
       >
         <div className="relative overflow-hidden rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-card to-background p-6 sm:p-8">
           <div className="flex flex-wrap items-center justify-between gap-4">
@@ -115,7 +166,7 @@ export default function McpPainel({
           </h3>
 
           <p className="mt-2 text-sm text-muted-foreground sm:text-base max-w-2xl leading-relaxed">
-            Conecte sua loja ao <b>Claude (Desktop & Mobile)</b>, <b>Cursor</b> ou robôs no WhatsApp. Adicione produtos, lance cupons, monitore faturamento e emita etiquetas de frete apenas conversando.
+            Conecte sua loja ao <b>Claude</b>, ao <b>ChatGPT</b> ou ao <b>Codex</b> com um login, sem copiar chave. Adicione produtos, lance cupons, monitore faturamento e emita etiquetas de frete apenas conversando.
           </p>
 
           {/* Recursos em Destaque */}
@@ -134,14 +185,14 @@ export default function McpPainel({
 
             <div className="rounded-xl border border-border/80 bg-background/80 p-4">
               <Key className="h-5 w-5 text-emerald-600 mb-2" />
-              <h4 className="text-xs font-bold text-foreground">Chave de API Individual</h4>
-              <p className="mt-1 text-[11px] text-muted-foreground">Acesso criptografado e isolado exclusivamente para sua loja.</p>
+              <h4 className="text-xs font-bold text-foreground">Conexão por Login</h4>
+              <p className="mt-1 text-[11px] text-muted-foreground">Você autoriza no painel e desconecta quando quiser. Acesso só à sua loja.</p>
             </div>
 
             <div className="rounded-xl border border-border/80 bg-background/80 p-4">
               <Terminal className="h-5 w-5 text-blue-500 mb-2" />
               <h4 className="text-xs font-bold text-foreground">Protocolo MCP Oficial</h4>
-              <p className="mt-1 text-[11px] text-muted-foreground">Compatível com conectores padrão do Claude e ecossistema de IA.</p>
+              <p className="mt-1 text-[11px] text-muted-foreground">O mesmo conector serve a qualquer assistente que fale MCP.</p>
             </div>
           </div>
 
@@ -164,26 +215,21 @@ export default function McpPainel({
     );
   }
 
-  // Tela de Gestão de Chave para Plano Pro
   const endpointUrl = status?.endpointUrl ?? "https://lojas.avilaops.com/api/mcp";
+  const dia = (iso: string) => new Date(iso).toLocaleDateString("pt-BR");
 
   return (
     <Secao
       titulo="Conector de IA (MCP)"
-      descricao="Sua loja possui acesso total ao protocolo MCP. Conecte o Claude ou seus agentes através da sua Chave de API exclusiva."
+      descricao="Ligue a loja ao seu assistente com um login. Você cola o endereço do conector, entra no painel e autoriza: não há chave para copiar."
     >
       {erro && <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-4 text-xs text-red-600 dark:text-red-400">{erro}</div>}
       {sucesso && <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-4 text-xs text-emerald-600 dark:text-emerald-400">{sucesso}</div>}
 
       <div className="grid gap-6">
-        {/* Endpoint do Conector */}
+        {/* Endereço do conector e o caminho em cada assistente */}
         <div className="rounded-xl border border-border bg-card p-5">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Endpoint MCP Oficial</span>
-            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 text-[10px] font-bold text-emerald-800 dark:text-emerald-300">
-              ● Online
-            </span>
-          </div>
+          <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Endereço do conector</span>
           <div className="mt-2 flex items-center gap-2">
             <input
               type="text"
@@ -200,20 +246,56 @@ export default function McpPainel({
               {copiadoUrl ? "Copiado" : "Copiar"}
             </button>
           </div>
-          <p className="mt-2 text-xs text-muted-foreground">
-            Cole esta URL no Claude Desktop, Claude Mobile ou Cursor para registrar o conector da sua loja.
-          </p>
+          <dl className="mt-4 grid gap-3">
+            {COMO_CONECTAR.map((c) => (
+              <div key={c.nome}>
+                <dt className="text-xs font-bold text-foreground">{c.nome}</dt>
+                <dd className="mt-0.5 text-xs text-muted-foreground leading-relaxed">
+                  {c.passos}
+                  {c.comandos && (
+                    <pre className="mt-2 overflow-x-auto rounded-lg bg-background p-3 text-[11px] font-mono text-foreground border border-border">{c.comandos(endpointUrl)}</pre>
+                  )}
+                </dd>
+              </div>
+            ))}
+          </dl>
         </div>
 
-        {/* Chave de API */}
+        {/* Quem está conectado */}
         <div className="rounded-xl border border-border bg-card p-5">
-          <div className="flex items-center justify-between">
+          <h4 className="flex items-center gap-1.5 text-sm font-bold text-foreground"><Plug className="h-4 w-4" /> Assistentes conectados</h4>
+          {conexoes === null ? (
+            <p className="mt-2 text-xs text-muted-foreground">Carregando…</p>
+          ) : conexoes.length === 0 ? (
+            <p className="mt-2 text-xs text-muted-foreground">Nenhum assistente conectado ainda. Siga os passos acima no assistente que você usa.</p>
+          ) : (
+            <ul className="mt-3 grid gap-2">
+              {conexoes.map((c) => (
+                <li key={c.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-background p-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-foreground">{c.assistente}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Conectado em {dia(c.conectadaEm)} · {c.ultimoUsoEm ? `último uso em ${dia(c.ultimoUsoEm)}` : "ainda não usado"}
+                    </p>
+                  </div>
+                  <button type="button" onClick={() => desconectar(c)} className="btn-secundario h-9 px-3 text-xs text-red-600 hover:text-red-700">
+                    Desconectar
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {/* Chave de API: para o que não tem tela de login */}
+        <div className="rounded-xl border border-border bg-card p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h4 className="text-sm font-bold text-foreground">Chave de Acesso da Loja (API Key)</h4>
+              <h4 className="text-sm font-bold text-foreground">Chave para automações (n8n e scripts)</h4>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {status?.temChave
-                  ? `Chave ativa gerada em ${new Date(status.apiKeyCriadaEm!).toLocaleDateString("pt-BR")}`
-                  : "Nenhuma chave ativa gerada."}
+                {status?.temChave && status.apiKeyCriadaEm
+                  ? `Chave ativa gerada em ${dia(status.apiKeyCriadaEm)}`
+                  : "Só para o que roda sem ninguém na frente da tela. Nos assistentes, use o login acima."}
               </p>
             </div>
             <div className="flex gap-2">
@@ -245,7 +327,7 @@ export default function McpPainel({
             <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 animate-in fade-in-50">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-amber-800 dark:text-amber-300">
-                  ⚠️ Copie sua chave agora. Ela não será exibida novamente por segurança.
+                  Copie sua chave agora. Ela não será exibida novamente por segurança.
                 </span>
                 <button
                   type="button"
@@ -261,26 +343,12 @@ export default function McpPainel({
               </div>
             </div>
           )}
-        </div>
 
-        {/* Guia de Configuração Rápida */}
-        <div className="rounded-xl border border-border bg-card p-5">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Como Conectar no Claude Desktop</h4>
-          <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-            No seu <code>claude_desktop_config.json</code>, adicione o bloco abaixo:
+          <p className="mt-4 text-xs text-muted-foreground leading-relaxed">
+            Envie a chave no cabeçalho de cada chamada ao endereço do conector:
           </p>
-          <pre className="mt-3 overflow-x-auto rounded-lg bg-background p-3 text-[11px] font-mono text-foreground border border-border">
-{`{
-  "mcpServers": {
-    "${lojaSlug}": {
-      "command": "npx",
-      "args": ["-y", "@avilaops/lojas-mcp"],
-      "env": {
-        "LOJAS_API_KEY": "${novaChave || "lojas_live_" + lojaSlug + "_SUA_CHAVE_AQUI"}"
-      }
-    }
-  }
-}`}
+          <pre className="mt-2 overflow-x-auto rounded-lg bg-background p-3 text-[11px] font-mono text-foreground border border-border">
+{`Authorization: Bearer ${novaChave || "lojas_live_" + lojaSlug + "_SUA_CHAVE_AQUI"}`}
           </pre>
         </div>
       </div>

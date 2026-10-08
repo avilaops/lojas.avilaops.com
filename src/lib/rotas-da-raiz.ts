@@ -10,14 +10,17 @@
  *     Mercado Livre, do Melhor Envio e do Mercado Pago. A URL está cadastrada
  *     no aplicativo de cada um;
  *   - `/canais/`: o mesmo retorno para Amazon, Shopee e Magalu
- *     (`/canais/<canal>/callback`).
+ *     (`/canais/<canal>/callback`);
+ *   - `/oauth/` e `/.well-known/`: o login do conector MCP. Aqui somos nós o
+ *     servidor de autorização, e os caminhos são os que a especificação manda
+ *     o assistente procurar (docs/MCP.md).
  *
  * **Retorno de OAuth novo entra aqui no mesmo commit da rota.** Fora desta
  * lista o caminho vira `/plataforma/<rota>`, que não existe: o lojista autoriza
  * no serviço, volta num 404 e a conexão não é gravada. Nenhum teste de unidade
  * da rota pega isso, porque a rota em si está certa — quem a esconde é o proxy.
  */
-export const PREFIXOS_DA_RAIZ = ["/api/", "/v1/", "/ml/", "/melhor-envio/", "/mercado-pago/", "/canais/"] as const;
+export const PREFIXOS_DA_RAIZ = ["/api/", "/v1/", "/ml/", "/melhor-envio/", "/mercado-pago/", "/canais/", "/oauth/", "/.well-known/"] as const;
 
 /** `true` quando o caminho, no domínio-base, não deve ser reescrito para a plataforma. */
 export function ficaNaRaiz(pathname: string): boolean {
