@@ -188,4 +188,6 @@ contagem muda de lugar (Postgres ou Redis) sem mudar o contrato.
    `montarPedidoSeguro` + `resolverItensDoCatalogo` (preço nunca do navegador).
 4. ~~MCP aceitar a chave secreta nova~~ feito em 08/10/2026 (`mcp:usar`). Falta
    apagar `Tenant.apiKeyEnc` quando as lojas com chave antiga migrarem.
-5. Página pública de documentação gerada a partir de `GET /api/v1`.
+5. ~~Página pública de documentação~~ feito em 08/10/2026: `/developers` e
+   `GET /api/v1` saem do mesmo dado (`src/lib/api-indice.ts`), e o teste
+   `api-indice.test.ts` recusa rota fora do índice ou com escopo diferente.

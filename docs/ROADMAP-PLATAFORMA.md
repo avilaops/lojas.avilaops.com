@@ -23,8 +23,12 @@ Antes de publicar não faltava nada: `npx prisma generate && npm run typecheck
 em pull request também (a imagem é construída e não publicada). Um job
 separado para os mesmos comandos seria a mesma verificação duas vezes, sem
 ganho de tempo — o build já falha em cerca de um minuto quando um teste cai.
-`npm run lint` continua fora do bloqueio enquanto os erros herdados (scripts
-`.cjs` na raiz, `packages/checkout/src/ui`) não forem limpos.
+`npm run lint` entrou no bloqueio em 08/10/2026 (`Dockerfile`, entre o
+typecheck e os testes). Os erros herdados não foram escondidos: `require` em
+script `.cjs` é legítimo e foi liberado só neles; os nove pontos das regras do
+compilador do React (busca e listas do painel, formulário de cartão) viraram
+aviso, arquivo por arquivo, em `eslint.config.mjs`. Quem mexer num deles
+resolve e tira o arquivo da lista.
 
 ## Tranche 2 — fábrica de templates
 
