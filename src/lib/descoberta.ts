@@ -31,7 +31,13 @@ export const CRAWLERS_DE_BUSCA = ["Googlebot", "Googlebot-Image", "Bingbot", "OA
 export const CRAWLERS_DE_TREINAMENTO = ["GPTBot", "Google-Extended", "ClaudeBot", "CCBot"] as const;
 
 /** O que nenhuma máquina tem por que indexar numa loja: é de quem está comprando. */
-export const CAMINHOS_PRIVADOS_DA_LOJA = ["/carrinho", "/checkout", "/pedido/", "/conta", "/api/"];
+/**
+ * `/conta` sozinho também casava com `/contato`: regra de robots.txt é prefixo,
+ * e a página de contato de toda loja estava bloqueada para o Google (o
+ * PageSpeed dava SEO 69 nela). `$` fecha o endereço exato e `/conta/` cobre o
+ * que vem embaixo.
+ */
+export const CAMINHOS_PRIVADOS_DA_LOJA = ["/carrinho", "/checkout", "/pedido/", "/conta$", "/conta/", "/api/"];
 
 /**
  * A loja continua existindo para os buscadores?
