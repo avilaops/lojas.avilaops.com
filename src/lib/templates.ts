@@ -12,7 +12,7 @@ import type { TemaLoja } from "./tema";
  * A versão é do contrato, não de cada template: sobe quando o formato muda
  * (bloco novo, campo novo), e todo template acompanha no mesmo commit.
  */
-export const VERSAO_CONTRATO = 1;
+export const VERSAO_CONTRATO = 2;
 
 export const BLOCOS = ["cabecalho", "hero", "categorias", "produto", "carrinho", "rodape"] as const;
 export type Bloco = (typeof BLOCOS)[number];
@@ -23,6 +23,12 @@ export type ContratoTemplate = {
   /** `home`: só compõe a página inicial. `loja`: veste a loja inteira. */
   escopo: "home" | "loja";
   blocos: Record<Bloco, "compartilhado" | "proprio">;
+  /**
+   * Como o catálogo e as categorias listam os produtos. `tabela` é para série
+   * técnica em que os itens só diferem na medida: a mesma foto repetida em
+   * cada cartão não ajuda a escolher, a linha com as medidas ajuda.
+   */
+  listagem: "grade" | "tabela";
   /** Custom properties que o CSS do template define sob `html[data-template]`. */
   tokens: string[];
   /** O `<html>` recebe `data-template="<layout>"`, que é onde os tokens se penduram. */
@@ -36,6 +42,7 @@ function soHome(layout: TemaLoja["layout"]): ContratoTemplate {
     versao: VERSAO_CONTRATO,
     escopo: "home",
     blocos: { cabecalho: "compartilhado", hero: "proprio", categorias: "compartilhado", produto: "compartilhado", carrinho: "compartilhado", rodape: "compartilhado" },
+    listagem: "grade",
     tokens: [],
     atributoHtml: false,
   };
@@ -48,6 +55,7 @@ export const CONTRATOS: Record<TemaLoja["layout"], ContratoTemplate> = {
     escopo: "loja",
     // O rodapé é o `Footer` de todas as lojas; o premium só o reveste por CSS.
     blocos: { cabecalho: "proprio", hero: "proprio", categorias: "proprio", produto: "proprio", carrinho: "proprio", rodape: "compartilhado" },
+    listagem: "grade",
     tokens: [
       "--ap-max", "--radius",
       "--background", "--foreground", "--card", "--card-foreground",
@@ -60,7 +68,7 @@ export const CONTRATOS: Record<TemaLoja["layout"], ContratoTemplate> = {
   mercado: soHome("mercado"),
   "catalogo-tecnico": soHome("catalogo-tecnico"),
   distribuidora: soHome("distribuidora"),
-  industrial: soHome("industrial"),
+  industrial: { ...soHome("industrial"), listagem: "tabela" },
   farmacia: soHome("farmacia"),
   automotivo: soHome("automotivo"),
   conversao: soHome("conversao"),
@@ -76,4 +84,9 @@ export function contratoDo(tema: Pick<TemaLoja, "layout">): ContratoTemplate {
 
 export function usaBlocoProprio(tema: Pick<TemaLoja, "layout">, bloco: Bloco): boolean {
   return contratoDo(tema).blocos[bloco] === "proprio";
+}
+
+/** Diz se o catálogo e as categorias desta loja listam em tabela. */
+export function listaEmTabela(tema: Pick<TemaLoja, "layout">): boolean {
+  return contratoDo(tema).listagem === "tabela";
 }

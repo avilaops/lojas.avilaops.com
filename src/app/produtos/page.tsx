@@ -8,6 +8,8 @@ import CategoriasPremium from "@/components/templates/automotivo-premium/Categor
 import { listarCategorias, paginaDeProdutos, facetasTecnicas, grafiasDaMarca, medidasDaLoja } from "@/lib/catalogo";
 import { filtroDaUrl } from "@/lib/filtros-url";
 import ProductCard from "@/components/ProductCard";
+import TabelaTecnica from "@/components/TabelaTecnica";
+import { listaEmTabela } from "@/lib/templates";
 import FiltrosProdutos from "@/components/FiltrosProdutos";
 import { minhaMoto } from "@/lib/minha-moto";
 import { nomeDaMoto } from "@/lib/motos";
@@ -73,6 +75,8 @@ export default async function Produtos({ searchParams }: { searchParams: Promise
           {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
           <a href="/produtos" className="underline">Limpar filtros</a>
         </p>
+      ) : listaEmTabela(temaDo(t)) ? (
+        <TabelaTecnica produtos={produtos} vende={vende} titulo={"Produtos"} nomeDaLoja={t.nome} loja={t} />
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {produtos.map((p) => (

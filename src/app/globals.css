@@ -1360,3 +1360,6 @@ body:has(.whatsapp-flutuante) .rodape-loja { padding-bottom: calc(5.5rem + env(s
 }
 .cartao-produto-foto-cheia .cartao-produto-imagem { aspect-ratio: 1 / 1; background: var(--muted); }
 .cartao-produto-foto-cheia .cartao-produto-imagem img { padding: 0; object-fit: cover; }
+.ct-tabela .ct-acao { width: 1%; white-space: nowrap; text-align: right; }
+.ct-tabela .ct-acao a { display: inline-flex; align-items: center; min-height: 2.25rem; padding-inline: .9rem; border-radius: .5rem; background: var(--primary); color: var(--primary-foreground, #fff); font-size: .8125rem; font-weight: 700; }
+.ct-tabela .ct-acao a:hover { filter: brightness(1.1); }

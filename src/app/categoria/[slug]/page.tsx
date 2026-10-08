@@ -9,6 +9,8 @@ import { filtroDaUrl, temFiltroAtivo } from "@/lib/filtros-url";
 import CategoriasPremium from "@/components/templates/automotivo-premium/Categorias";
 import PaginacaoLoja, { paginaDaUrl, porPaginaDaUrl } from "@/components/PaginacaoLoja";
 import ProductCard from "@/components/ProductCard";
+import TabelaTecnica from "@/components/TabelaTecnica";
+import { listaEmTabela } from "@/lib/templates";
 import { minhaMoto } from "@/lib/minha-moto";
 import { nomeDaMoto } from "@/lib/motos";
 import { buscarCategoriaPublica } from "@/lib/categorias";
@@ -144,6 +146,8 @@ export default async function Categoria({ params, searchParams }: Props) {
             </Link>
           )}
         </section>
+      ) : listaEmTabela(temaDo(t)) ? (
+        <TabelaTecnica produtos={produtos} vende={vende} titulo={categoria.nome} nomeDaLoja={t.nome} loja={t} />
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {produtos.map((produto) => (
