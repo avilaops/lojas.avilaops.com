@@ -88,9 +88,10 @@ resolve e tira o arquivo da lista.
   migração, volta ao dump e migração de novo no Postgres descartável; em
   08/10/2026, 62 migrações, 44 tabelas, zero divergências. O `npm test` prende
   a ordem do `deploy/deploy.sh` e os caminhos citados no documento. Falta
-  instalar no servidor o dump antes de migração pendente, que está em
-  `avilaops/infra#8`: o `avila-deploy` de produção está atrás do repositório,
-  e instalar é decisão do Nicolas.)
+  o dump antes de migração no deploy pelo Actions: o `avila-deploy` instalado
+  é o de 18/09/2026, sem dump, e hoje só o caminho manual `avila-deploy-local`
+  faz. Instalar o `avila-deploy` novo é a tarefa 262 do quadro da equipe; o
+  item só fecha depois dela.)
 
 ## Pendências menores
 
