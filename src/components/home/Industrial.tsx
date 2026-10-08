@@ -6,7 +6,7 @@ import BuscaPorMedida from "./BuscaPorMedida";
 import type { DadosHome } from "./tipos";
 
 /** Imagem enviada à plataforma sai na largura pedida (`?w=`); as de fora ficam como estão. */
-function reduzida(url: string, largura: 480 | 1200): string {
+function reduzida(url: string, largura: 320 | 1200): string {
   return /\/uploads\//.test(url) && !/\.svg$/i.test(url) && !url.includes("?") ? `${url}?w=${largura}` : url;
 }
 
@@ -53,7 +53,7 @@ export default function Industrial({ t, categorias, vitrine, temDestaques, vende
               <li key={c.id}>
                 <Link href={`/categoria/${c.slug}`}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  {c.imagemUrl && <img src={reduzida(c.imagemUrl, 480)} alt="" loading="lazy" decoding="async" width={320} height={320} />}
+                  {c.imagemUrl && <img src={reduzida(c.imagemUrl, 320)} alt="" loading="lazy" decoding="async" width={320} height={320} />}
                   <span className="industrial-linha-texto">
                     <strong>{c.nome}</strong>
                     {c.descricao && <span>{paragrafosDaDescricao(c.descricao)[0]}</span>}

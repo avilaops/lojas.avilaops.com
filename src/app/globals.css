@@ -439,6 +439,7 @@ body:has(.home-automotivo) .rodape-loja { margin-top: 1rem; }
   line-height: 1.5;
   color: var(--muted-foreground);
 }
+html[data-cookies-respondido] .aviso-cookies { display: none; }
 .aviso-cookies a { text-decoration: underline; }
 .aviso-cookies-acoes { display: flex; gap: 0.5rem; }
 .aviso-cookies-acoes button { flex: 1; height: 2.5rem; font-size: 0.8125rem; }
@@ -1335,7 +1336,7 @@ body:has(.whatsapp-flutuante) .rodape-loja { padding-bottom: calc(5.5rem + env(s
 .industrial-diferenciais dl { margin-top: 1.75rem; display: grid; gap: 1.75rem 2.5rem; grid-template-columns: repeat(auto-fit, minmax(13.5rem, 1fr)); }
 .industrial-diferenciais dl > div { padding-top: .9rem; border-top: 3px solid var(--ind-apoio); }
 .industrial-diferenciais dt { font-size: 1.05rem; font-weight: 700; }
-.industrial-diferenciais dd { margin-top: .4rem; color: var(--muted-foreground); font-size: .925rem; line-height: 1.55; }
+.industrial-diferenciais dd { margin-top: .4rem; color: color-mix(in srgb, var(--foreground) 82%, var(--muted)); font-size: .925rem; line-height: 1.55; }
 
 .industrial-empresa { display: grid; gap: 2.5rem; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); align-items: start; }
 .industrial-empresa > div p { margin-top: 1rem; max-width: 40rem; color: var(--muted-foreground); line-height: 1.65; }

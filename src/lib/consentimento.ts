@@ -17,7 +17,9 @@ export type Escolha = "aceito" | "essencial";
 
 /** Muda quando o texto ou o alcance do consentimento mudar: quem já respondeu é perguntado de novo. */
 export const VERSAO = 1;
-const CHAVE = "loja_consentimento";
+export const CHAVE = "loja_consentimento";
+/** Marca no `<html>` de quem já respondeu; o CSS esconde o aviso por ela antes da hidratação. */
+export const ATRIBUTO_RESPONDIDO = "data-cookies-respondido";
 const EVENTO = "loja:consentimento";
 
 function lerDoNavegador(): Escolha | null {
@@ -65,6 +67,7 @@ export function salvarConsentimento(escolha: Escolha) {
 /** Reabre a decisão (link "Cookies" no rodapé). */
 export function reabrirConsentimento() {
   cache = null;
+  document.documentElement.removeAttribute(ATRIBUTO_RESPONDIDO);
   try {
     window.localStorage.removeItem(CHAVE);
   } catch {
