@@ -78,3 +78,34 @@ lojas.avilaops.com, *.lojas.avilaops.com {
 #	handle /integracoes/erp/* {
 #		reverse_proxy 127.0.0.1:5191
 #	}
+
+# ---------------------------------------------------------------------------
+# 08/10/2026 — teto de corpo nas rotas do painel.
+#
+# A aplicação recusa envio grande pelo content-length antes de ler o corpo
+# (src/lib/limites-upload.ts: o maior teto é o da planilha, 12 MiB + 64 KiB de
+# envelope multipart). Envio em pedaços (Transfer-Encoding: chunked) chega sem
+# o cabeçalho, e o formData() leria tudo para a memória. O Caddy corta em
+# 13 MiB com 413, com ou sem content-length, e só em /api/painel/*: o resto do
+# site não muda. Se o teto da aplicação subir, este sobe junto
+# (docs/ISOLAMENTO-OPERACIONAL.md).
+#
+# Estado vivo no servidor (/etc/caddy/Caddyfile), fora de qualquer bloco de site:
+
+(lojas_teto_corpo) {
+	@lojas_painel_api path /api/painel/*
+	request_body @lojas_painel_api {
+		max_size 13MiB
+	}
+}
+
+# O snippet é importado nos três blocos que levam à plataforma, logo depois de
+# `import lojas_log`; num só, o teto seria contornável pelo domínio próprio:
+#
+#   1. `lojas.avilaops.com, *.lojas.avilaops.com`, no /etc/caddy/Caddyfile;
+#   2. /etc/caddy/lojas.d/brilhax.caddy, mantido à mão;
+#   3. /etc/caddy/lojas.d/dominios.caddy, gerado por deploy/caddy-sync.sh.
+#
+#	import lojas_vitrine_cache
+#	import lojas_log
+#	import lojas_teto_corpo

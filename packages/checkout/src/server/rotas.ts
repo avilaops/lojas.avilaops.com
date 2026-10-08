@@ -39,6 +39,12 @@ function json(corpo: unknown, status = 200): Response {
   });
 }
 
+/** `AbortSignal.timeout` rejeita com `TimeoutError`; cancelamento, com `AbortError`. */
+function estourouOTempo(erro: unknown): boolean {
+  const nome = (erro as { name?: unknown } | null)?.name;
+  return nome === "TimeoutError" || nome === "AbortError";
+}
+
 /** POST , cria a cobrança. */
 export function criarRotaPagamento({
   provider,
@@ -53,9 +59,14 @@ export function criarRotaPagamento({
       return json({ erro: "Requisição inválida." }, 400);
     }
 
+    // A partir da cobrança, o que falha deixa de ser "nada foi cobrado".
+    let referencia = "";
+    let cobrou = false;
     try {
       const { pedido, total } = await montarPedidoSeguro(payload, catalogo);
+      referencia = pedido.referencia;
       const resultado = await provider.cobrar(pedido, total);
+      cobrou = true;
 
       await aoCriarPagamento?.({
         referencia: pedido.referencia,
@@ -70,6 +81,22 @@ export function criarRotaPagamento({
       // "revise o carrinho" sem dizer o quê não dá para consertar.
       if (erro instanceof PedidoInvalidoError) {
         return json({ erro: erro.message, codigo: erro.codigo }, 422);
+      }
+
+      // Tempo-limite do gateway não diz se a cobrança foi criada, e falha em
+      // `aoCriarPagamento` acontece com ela já criada. Nos dois casos prometer
+      // "nada foi cobrado" faz o cliente pagar duas vezes: quem chama consulta
+      // o pedido pela referência antes de deixar tentar de novo.
+      if (cobrou || estourouOTempo(erro)) {
+        console.error("[checkout] cobrança a confirmar:", referencia, erro);
+        return json(
+          {
+            erro: "Estamos confirmando o pagamento. Consulte o pedido antes de tentar novamente.",
+            codigo: "pagamento_a_confirmar",
+            referencia,
+          },
+          503,
+        );
       }
 
       // Falha do gateway ou nossa: a mensagem crua pode conter detalhe de
@@ -101,6 +128,8 @@ export function criarRotaStatus({ provider }: Pick<OpcoesRotas, "provider">) {
     try {
       return json(await provider.consultar(id));
     } catch (erro) {
+      // Inclui o tempo-limite da consulta: a tela do PIX recebe 502 e pergunta
+      // de novo no próximo ciclo.
       console.error("[checkout] falha ao consultar:", erro);
       return json({ erro: "Não foi possível consultar o pagamento." }, 502);
     }
@@ -152,6 +181,9 @@ export function criarRotaWebhook({ provider, aoAtualizarStatus }: OpcoesRotas) {
         valorEmCentavos: resultado.valor,
       });
     } catch (erro) {
+      // Inclui o tempo-limite da consulta. O 200 abaixo faz o gateway não
+      // reenviar, então esta notificação se perde: quem usa esta rota precisa
+      // de uma reconciliação que consulte os pagamentos pendentes.
       console.error("[checkout] falha ao processar webhook:", erro);
     }
 

@@ -18,7 +18,9 @@ ALVO=/etc/caddy/lojas.d/dominios.caddy
 TOKEN=$(grep -E '^LOJAS_ADMIN_TOKEN=' "$ENV" | cut -d= -f2-)
 [ -n "$TOKEN" ] || { echo "LOJAS_ADMIN_TOKEN ausente em $ENV" >&2; exit 1; }
 
-HOSTS=$(curl -fsS -m 10 -H "authorization: Bearer $TOKEN" http://127.0.0.1:3080/api/admin/dominios | tr -d '\r' | grep -E '^[a-z0-9.-]+$' || true)
+# brilhax.com e www.brilhax.com ganham bloco proprio em lojas.d/brilhax.caddy
+# (redirects de SEO da virada do Medusa); excluidos aqui para nao colidir.
+HOSTS=$(curl -fsS -m 10 -H "authorization: Bearer $TOKEN" http://127.0.0.1:3080/api/admin/dominios | tr -d '\r' | grep -E '^[a-z0-9.-]+$' | grep -vE '^(brilhax\.com|www\.brilhax\.com)$' || true)
 
 NOVO=$(mktemp)
 {
@@ -31,6 +33,7 @@ NOVO=$(mktemp)
     echo "	encode zstd gzip"
     echo "	import lojas_vitrine_cache"
     echo "	import lojas_log"
+    echo "	import lojas_teto_corpo"
     echo "	reverse_proxy 127.0.0.1:3080"
     echo "}"
   fi

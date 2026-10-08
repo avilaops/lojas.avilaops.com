@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, it } from "node:test";
+import { afterEach, beforeEach, describe, it, type TestContext } from "node:test";
 import assert from "node:assert/strict";
 import { MercadoPagoProvider } from "./mercadopago.ts";
 import type { PedidoCheckout } from "../core/types.ts";
@@ -47,6 +47,21 @@ const PEDIDO: PedidoCheckout = {
   meioPagamento: "pix",
 };
 
+/**
+ * Anota com quantos milissegundos cada `AbortSignal.timeout` foi criado, sem
+ * mudar o sinal que o provedor recebe. Sem isto o teste só prova que existe um
+ * sinal: trocar 20 s por 200 s no provedor não derrubaria nada.
+ */
+function espiarTempoLimite(t: TestContext): number[] {
+  const original = AbortSignal.timeout.bind(AbortSignal);
+  const pedidos: number[] = [];
+  t.mock.method(AbortSignal, "timeout", (ms: number) => {
+    pedidos.push(ms);
+    return original(ms);
+  });
+  return pedidos;
+}
+
 function provedor() {
   return new MercadoPagoProvider({ accessToken: "token-de-teste" });
 }
@@ -64,11 +79,13 @@ describe("MercadoPagoProvider: tempo-limite e idempotência", () => {
     globalThis.fetch = fetchOriginal;
   });
 
-  it("cobrar entrega um AbortSignal ao fetch e mantém a chave de idempotência", async () => {
+  it("cobrar entrega ao fetch um AbortSignal de 20 s e mantém a chave de idempotência", async (t) => {
+    const tempos = espiarTempoLimite(t);
     dublar(() => json(PAGAMENTO));
 
     const resultado = await provedor().cobrar(PEDIDO, 3140);
 
+    assert.deepEqual(tempos, [20_000]);
     assert.equal(chamadas.length, 1);
     assert.equal(chamadas[0].url, "https://api.mercadopago.com/v1/payments");
     assert.ok(chamadas[0].init.signal instanceof AbortSignal);
@@ -78,22 +95,26 @@ describe("MercadoPagoProvider: tempo-limite e idempotência", () => {
     assert.equal(resultado.valor, 3140);
   });
 
-  it("consultar entrega um AbortSignal ao fetch", async () => {
+  it("consultar entrega ao fetch um AbortSignal de 10 s", async (t) => {
+    const tempos = espiarTempoLimite(t);
     dublar(() => json(PAGAMENTO));
 
     await provedor().consultar("123");
 
+    assert.deepEqual(tempos, [10_000]);
     assert.equal(chamadas.length, 1);
     assert.equal(chamadas[0].url, "https://api.mercadopago.com/v1/payments/123");
     assert.ok(chamadas[0].init.signal instanceof AbortSignal);
   });
 
-  it("estornar entrega um AbortSignal ao fetch e mantém a chave de idempotência (parcial)", async () => {
+  it("estornar entrega ao fetch um AbortSignal de 20 s e mantém a chave de idempotência (parcial)", async (t) => {
+    const tempos = espiarTempoLimite(t);
     dublar((chamada) => json(chamada.url.endsWith("/refunds") ? { id: 9 } : { ...PAGAMENTO, status: "refunded" }));
 
     const resultado = await provedor().estornar("123", { valorEmCentavos: 1000 });
 
-    // O estorno e, em seguida, a consulta do estado final do pagamento.
+    // O estorno (20 s) e, em seguida, a consulta do estado final do pagamento (10 s).
+    assert.deepEqual(tempos, [20_000, 10_000]);
     assert.equal(chamadas.length, 2);
     assert.equal(chamadas[0].url, "https://api.mercadopago.com/v1/payments/123/refunds");
     assert.ok(chamadas[0].init.signal instanceof AbortSignal);

@@ -19,6 +19,7 @@ As constantes moram em `src/lib/limites-upload.ts`.
 | `POST /api/painel/imagens?tratar=1` (arquivo) | 5 MB | 422 "Imagem acima de 5 MB." |
 | `POST /api/painel/produtos/planilha` (corpo, pelo `content-length`) | 12 MB + 64 KB de folga do multipart | 413 "Arquivo muito grande (máximo 12 MB). Divida a planilha em partes." |
 | `POST /api/painel/produtos/planilha` (arquivo) | 12 MB | 413, mesma mensagem |
+| Qualquer `/api/painel/*` (corpo, no Caddy, com ou sem `content-length`) | 13 MiB | 413 do Caddy, sem chegar à aplicação |
 | `importarImagemDeUrl` (`src/lib/uploads.ts`, imagem baixada de URL) | 10 MB | `UploadInvalido` "Imagem acima de 10 MB." |
 | `removerFundo` (`src/lib/fundo.ts`, entrada do removedor) | 30 MB | `FundoIndisponivel` |
 
@@ -26,6 +27,9 @@ Como o teto vale:
 
 - **Antes de ler o corpo.** As duas rotas multipart chamam `corpoAcimaDoTeto`
   antes de `request.formData()`, que carrega o corpo inteiro na memória. A
+  ordem está em `src/lib/envios-do-painel.ts` e presa em teste
+  (`src/lib/envios-do-painel.test.ts`): 413 sem ler o corpo, e 422 do
+  `?tratar=1` sem chamar o removedor. A
   conferência vem depois do `exigir("catalogo")`: quem não está logado continua
   recebendo o erro de acesso. A folga de 64 KB cobre o envelope multipart; a
   regra exata continua sendo o `arquivo.size`, conferido em seguida.
@@ -75,6 +79,16 @@ baixar os 20 s para "responder mais rápido".
 Mercado Pago, consulta: a reconciliação (`src/lib/pedidos-reconciliar.ts`)
 consulta em laço. Com tempo-limite, um pedido preso conta como falha e o laço
 segue para o próximo.
+
+Rotas genéricas do pacote (`packages/checkout/src/server/rotas.ts`), presas em
+`packages/checkout/src/server/rotas.test.ts`: nenhuma devolve 500 cru no
+estouro.
+
+| Rota | No estouro do tempo-limite |
+|---|---|
+| `criarRotaPagamento` (cobrar) | 503 `pagamento_a_confirmar`, com a referência. Antes respondia 502 "Nada foi cobrado", que no estouro não se sabe. Vale também quando a cobrança passou e a gravação (`aoCriarPagamento`) falhou |
+| `criarRotaStatus` (consultar) | 502 "Não foi possível consultar o pagamento."; a tela do PIX pergunta de novo |
+| `criarRotaWebhook` (consultar) | 200 `{ recebido: true }` sem atualizar o status. O gateway não reenvia, então a notificação se perde e quem recupera o pedido é a reconciliação |
 
 ## Idempotência (08/10/2026)
 
@@ -158,8 +172,18 @@ Fora do código da aplicação:
 
 - **Corpo sem `content-length`** (envio em pedaços) não é recusado pela rota:
   navegador sempre manda o cabeçalho em `FormData`, e responder 411 pode
-  quebrar cliente legítimo atrás do proxy. O teto de corpo nesse caso é
-  configuração do Caddy no servidor de produção.
+  quebrar cliente legítimo atrás do proxy. Quem corta nesse caso é o Caddy do
+  servidor de produção, desde 08/10/2026: o snippet `lojas_teto_corpo` recusa
+  com 413 qualquer corpo acima de 13 MiB em `/api/painel/*`, com ou sem o
+  cabeçalho. Ele é importado nos três blocos que levam à plataforma (o de
+  `lojas.avilaops.com`, o da Brilhax e o dos domínios próprios, este gerado
+  por `deploy/caddy-sync.sh`); a cópia de referência está em
+  `deploy/Caddyfile.snippet`. **13 MiB é o maior teto da aplicação (planilha,
+  12 MB + 64 KB) arredondado para cima: se `TETO_PLANILHA_BYTES` subir, o
+  `max_size` do Caddy sobe no mesmo dia**, senão o Caddy passa a recusar o que
+  a aplicação aceitaria. Uma foto de 6 MB enviada em pedaços passa pelo Caddy
+  e é lida para a memória antes do 422: o teto do proxy limita o estrago a
+  13 MiB por requisição, não a 5.
 - **Consulta ao Postgres** não tem tempo-limite por chamada; ver a nota em
   `src/lib/passada-unica.ts`.
 - **Download do modelo do removedor**
