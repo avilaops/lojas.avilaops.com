@@ -117,6 +117,17 @@ test("foto própria e identificadores da variação alimentam feed, carrinho e b
   assert.equal((await resolverItensPadronizados(t.id,[{id:`${p.id}:${grade.variantes[0].id}`,quantidade:1}]))[0].imagem,foto);
 });
 
+// `produto_texto_de_busca()` já foi sobrescrita por uma migração que partiu de
+// um corpo antigo (docs/BUSCA-REGRESSAO.md). Um termo de cada origem: quem
+// reescrever a função sem um deles quebra aqui, não em produção.
+test("a busca acha por cada origem do texto: produto, motopeças, medidas, atributo e farmácia",async()=>{
+  const t=await loja();
+  const p=await produto(t.id,{nome:"Retentor Açaí",marca:"Sabó",gtin:"7891234567895",descricaoCurta:"Vedação dianteira",codigoOriginal:"91201-KRM",codigosEquivalentes:["BRG1234"],compatibilidade:[{marca:"Honda",modelo:"Titan"}],atributos:{diametroInternoMm:25,diametroExternoMm:52,alturaMm:15,vedacao:"Nitrílica"},principioAtivo:"Dipirona",apresentacao:"Gotas 20ml"});
+  const {busca}=await prisma.produto.findUniqueOrThrow({where:{id:p.id}});
+  const origens={nome:"retentor acai",marca:"sabo",gtin:"7891234567895",descricaoCurta:"vedacao dianteira",codigoOriginal:"91201-krm",equivalente:"brg1234",moto:"honda titan",medida:"25x52x15",atributo:"nitrilica",principioAtivo:"dipirona",apresentacao:"gotas 20ml"};
+  for(const [origem,termo] of Object.entries(origens)) assert.ok(busca.includes(termo),`busca sem ${origem}: "${termo}" em "${busca}"`);
+});
+
 test("referência de cobrança não pode ser reutilizada por outra loja",async()=>{
   const a=await loja(),b=await loja(),pa=await produto(a.id),pb=await produto(b.id),ref=chave();
   await reservarEstoque(a.id,ref,await resolverItensPadronizados(a.id,[{id:pa.id,quantidade:1}]));

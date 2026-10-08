@@ -1,7 +1,8 @@
 # Regressão da busca em 17/09/2026
 
-**Estado: diagnosticada, não corrigida.** Este documento é o laudo; o conserto é
-mudança própria porque altera o que o cliente consegue achar na loja.
+**Estado: corrigida em 08/10/2026** pela migração
+`20261008160000_busca_reune_o_que_a_farmacia_apagou`, que redefine a função com
+a união dos corpos e reindexa os produtos. Este documento fica como laudo.
 
 ## O que acontece
 
@@ -59,12 +60,14 @@ o corpo de `20260912150000_catalogo_padronizado:320` mais `principioAtivo` e
 `apresentacao`. Depois `UPDATE "Produto" SET "nome" = "nome"` para reindexar o
 que já existe — a coluna está errada em todas as linhas gravadas desde 17/09.
 
-Não é conserto de uma linha: é mudança no que a loja acha, em produção, e
-precisa da suíte de integração verde antes de subir.
+Foi o que a migração de 08/10/2026 fez. A suíte de integração passou inteira
+antes de subir, e ganhou um teste que confere um termo de cada origem do texto
+("a busca acha por cada origem do texto"): com o corpo de 17/09 ele falha.
 
 ## Para não repetir
 
 Toda migração que mexe em `produto_texto_de_busca()` tem que partir do corpo em
 vigor, não de uma versão anterior. `CREATE OR REPLACE` de função que outras
-migrações já estenderam é sobrescrita silenciosa. Rodar
+migrações já estenderam é sobrescrita silenciosa. O corpo em vigor é o da
+migração de 08/10/2026. Rodar
 `npm run test:integracao` antes de entregar mudança no catálogo é o que pega.
