@@ -1,5 +1,7 @@
 import type { Categoria, Pedido, PedidoItem, Produto, Tenant, Variante } from "@prisma/client";
 import { dispensavelADistancia, estadoDeVenda, estoqueBaixo, sobConsulta, type AcaoDeVenda } from "./produto-regras";
+import type { OpcaoFrete, ResultadoPagamento } from "@avilaops/checkout";
+import { retiradaPublicaDisponivel } from "./retirada-publica";
 
 /**
  * O que cada recurso da API mostra: as projeções, num lugar só.
@@ -136,6 +138,70 @@ export function lojaDaVitrine(t: Tenant, url: string, vende: boolean) {
     moeda: "BRL" as const,
     freteGratisAcimaCentavos: t.freteGratisAcima,
     avisoTopo: t.avisoTopo,
+    // O que um front próprio precisa para fechar a compra. A chave pública do
+    // Mercado Pago é pública de verdade (é ela que tokeniza o cartão no
+    // navegador); o access token nunca sai daqui.
+    pedidoMinimoCentavos: t.pedidoMinimoCentavos,
+    retiradaNaLoja: retiradaPublicaDisponivel(t),
+    pagamento: { meios: vende ? t.meiosPagamento : [], mercadoPagoPublicKey: vende ? t.mpPublicKey : null },
+  };
+}
+
+/** Uma apresentação do produto, como a vitrine a vende. O `id` é o que vai em `itens[].id` na compra. */
+export function varianteDaVitrine(produtoId: string, v: { id: string; nome: string; valores: unknown; precoCentavos: number; precoDeCentavos: number | null; compravel: boolean }) {
+  return {
+    id: `${produtoId}:${v.id}`,
+    nome: v.nome,
+    valores: v.valores,
+    precoCentavos: v.precoCentavos,
+    precoDeCentavos: v.precoDeCentavos,
+    // Sim ou não, sem contagem: o estoque exato é dado do lojista.
+    disponivel: v.compravel,
+  };
+}
+
+export function freteDaVitrine(o: OpcaoFrete) {
+  return { id: o.id, nome: o.nome, precoCentavos: o.preco, prazoDiasUteis: o.prazoDiasUteis };
+}
+
+/**
+ * A cobrança criada, para o front mostrar o Pix, o boleto ou o resultado do
+ * cartão. `referencia` é o segredo do pedido: é com ela que se consulta o
+ * status e que se abre `pedidoUrl`.
+ */
+export function cobrancaDaVitrine(referencia: string, p: ResultadoPagamento, urlLoja: string) {
+  return {
+    referencia,
+    status: p.status,
+    meioPagamento: p.meioPagamento,
+    valorCentavos: p.valor,
+    ...(p.motivo ? { motivo: p.motivo } : {}),
+    ...(p.pix ? { pix: p.pix } : {}),
+    ...(p.boleto ? { boleto: p.boleto } : {}),
+    pedidoUrl: `${urlLoja}/pedido/${referencia}`,
+  };
+}
+
+/**
+ * O andamento do pedido para quem comprou. Sem nome, e-mail, documento nem
+ * endereço: a rota é de chave pública, e quem tem a referência já tem esses
+ * dados, porque foi quem os digitou.
+ */
+export function pedidoDaVitrine(p: Pedido & { itens: PedidoItem[] }, urlLoja: string) {
+  return {
+    referencia: p.referencia,
+    numero: p.numero,
+    status: p.status,
+    pago: !["AGUARDANDO_PAGAMENTO", "CANCELADO", "ESTORNADO"].includes(p.status),
+    meioPagamento: p.meioPagamento,
+    totalCentavos: p.totalCentavos,
+    freteCentavos: p.freteCentavos,
+    freteNome: p.freteNome,
+    rastreio: p.rastreio,
+    itens: p.itens.map((i) => ({ nome: i.nome, quantidade: i.quantidade, precoUnitarioCentavos: i.precoUnitarioCentavos })),
+    pedidoUrl: `${urlLoja}/pedido/${p.referencia}`,
+    criadoEm: p.criadoEm.toISOString(),
+    atualizadoEm: p.atualizadoEm.toISOString(),
   };
 }
 

@@ -35,6 +35,9 @@ export const ESCOPOS = {
   "catalogo:escrever": "Preço e estoque por SKU (o que o ERP sincroniza)",
   "pedidos:ler": "Pedidos com cliente, itens, valores e rastreio",
   "vitrine:ler": "O que a vitrine pública mostra: produtos ativos e dados da loja",
+  // O único escopo de escrita que uma chave publicável pode ter, e só quando o
+  // lojista marca: chave publicável criada antes disto não passa a vender.
+  "vitrine:comprar": "Fechar compra pelo site ou app próprio: criar o pedido e a cobrança e consultar o status",
   // Escopo próprio, e não `catalogo:escrever`: chave que o lojista criou para o
   // ERP acertar preço e estoque não pode amanhecer podendo criar produto.
   "produtos:escrever": "Criar produto e editar o cadastro (nome, descrição, categoria, ativo)",
@@ -51,8 +54,11 @@ export const ESCOPOS = {
 
 export type Escopo = keyof typeof ESCOPOS;
 
-/** O que a chave publicável pode, e nunca mais que isso: ela é pública por definição. */
-export const ESCOPOS_PUBLICAVEL: readonly Escopo[] = ["vitrine:ler"];
+/**
+ * O que a chave publicável pode ter, e nunca mais que isso: ela é pública por
+ * definição. `vitrine:ler` vem sempre; `vitrine:comprar` só quando pedido.
+ */
+export const ESCOPOS_PUBLICAVEL: readonly Escopo[] = ["vitrine:ler", "vitrine:comprar"];
 
 /** Escopos que uma chave secreta pode receber; a vitrine vem junto sempre. */
 export const ESCOPOS_SECRETA: readonly Escopo[] = [
@@ -67,12 +73,13 @@ export function ehEscopo(v: string): v is Escopo {
 /**
  * Os escopos que a chave vai ter de fato.
  *
- * Publicável ignora o pedido e fica com a vitrine: aceitar "pedidos:ler" numa
- * chave que vai para o navegador seria entregar os pedidos a quem abrir o
- * DevTools. Secreta fica com o que pediu, dentro do permitido, mais a vitrine.
+ * Publicável fica com a vitrine e, se pedido, com a compra; o resto é ignorado:
+ * aceitar "pedidos:ler" numa chave que vai para o navegador seria entregar os
+ * pedidos a quem abrir o DevTools. Secreta fica com o que pediu, dentro do
+ * permitido, mais a vitrine.
  */
 export function escoposDaChave(tipo: TipoChaveApi, pedidos: readonly string[]): Escopo[] {
-  if (tipo === "PUBLICAVEL") return [...ESCOPOS_PUBLICAVEL];
+  if (tipo === "PUBLICAVEL") return pedidos.includes("vitrine:comprar") ? ["vitrine:ler", "vitrine:comprar"] : ["vitrine:ler"];
   const validos = new Set<Escopo>(pedidos.filter(ehEscopo).filter((e) => ESCOPOS_SECRETA.includes(e)));
   validos.add("vitrine:ler");
   return ESCOPOS_SECRETA.filter((e) => validos.has(e));
@@ -144,4 +151,33 @@ export function chaveDaRequisicao(request: Request): string {
 /** Como o painel mostra a chave depois de criada. */
 export function chaveMascarada(c: { prefixo: string; final: string }): string {
   return `${c.prefixo}…${c.final}`;
+}
+
+/** Uma chave tem poucas origens: o site, o www dele e talvez a homologação. */
+export const ORIGENS_MAXIMAS = 5;
+
+/**
+ * As origens de onde a chave pode comprar, normalizadas, ou o motivo da recusa.
+ *
+ * Origem é esquema + host + porta, sem caminho (`https://loja.com.br`), que é
+ * como o navegador a manda no cabeçalho `Origin`. Só `https`; `http` vale para
+ * `localhost`, que é o desenvolvimento do lojista.
+ */
+export function lerOrigens(lista: readonly unknown[]): { origens: string[] } | { erro: string } {
+  const origens: string[] = [];
+  for (const bruta of lista) {
+    if (typeof bruta !== "string" || !bruta.trim()) continue;
+    let u: URL;
+    try {
+      u = new URL(bruta.trim());
+    } catch {
+      return { erro: `"${String(bruta).slice(0, 60)}" não é um endereço. Use o formato https://loja.com.br.` };
+    }
+    const local = u.hostname === "localhost" || u.hostname === "127.0.0.1";
+    if (u.protocol !== "https:" && !(u.protocol === "http:" && local)) return { erro: `"${u.origin}": o site precisa ser https.` };
+    if (u.username || u.password) return { erro: "Não ponha usuário e senha no endereço do site." };
+    if (!origens.includes(u.origin)) origens.push(u.origin);
+  }
+  if (origens.length > ORIGENS_MAXIMAS) return { erro: `No máximo ${ORIGENS_MAXIMAS} sites por chave.` };
+  return { origens };
 }

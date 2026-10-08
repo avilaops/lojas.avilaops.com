@@ -1,4 +1,5 @@
 import { LimitadorPorJanela, cabecalhosDoLimite } from "./api-limite";
+import { enderecoDaRequisicao } from "./requisicao-origem";
 import { normalizarHost } from "./tenant";
 
 /**
@@ -48,16 +49,6 @@ export function erroOAuth(erro: string, descricao: string, status = 400): Respon
 const limitador = new LimitadorPorJanela();
 
 /**
- * De onde veio a requisição, só para contar. O endereço fica na memória do
- * limitador por um minuto e em mais lugar nenhum: não vai para log, métrica
- * nem banco. Atrás do Cloudflare o endereço real é o `cf-connecting-ip`.
- */
-function origemDaRequisicao(request: Request): string {
-  const h = request.headers;
-  return (h.get("cf-connecting-ip") ?? h.get("x-forwarded-for")?.split(",")[0] ?? "").trim() || "sem-origem";
-}
-
-/**
  * Tetos por minuto das rotas abertas do login.
  *
  * O registro é aberto por definição do protocolo, e cada um grava uma linha:
@@ -82,7 +73,7 @@ function recusaPorLimite(chave: string, limite: number): Response | null {
 
 export function limiteDoRegistro(request: Request): Response | null {
   return (
-    recusaPorLimite(`registro:${origemDaRequisicao(request)}`, LIMITES_DO_LOGIN.registroPorOrigem) ??
+    recusaPorLimite(`registro:${enderecoDaRequisicao(request)}`, LIMITES_DO_LOGIN.registroPorOrigem) ??
     recusaPorLimite("registro:total", LIMITES_DO_LOGIN.registroNoTotal)
   );
 }

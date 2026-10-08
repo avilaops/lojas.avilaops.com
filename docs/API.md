@@ -29,7 +29,7 @@ publicável só lê a vitrine" vale em toda rota, inclusive na que ainda não ex
 | | Secreta `lojas_sk_…` | Publicável `lojas_pk_…` |
 |---|---|---|
 | Onde mora | Servidor do lojista | Pode ir no JavaScript de site/app |
-| Escopos | Os que o lojista marcar + `vitrine:ler` | Sempre e só `vitrine:ler` |
+| Escopos | Os que o lojista marcar + `vitrine:ler` | `vitrine:ler`, e `vitrine:comprar` se o lojista marcar |
 | Plano | Loja Pro (mesma regra do MCP) | Qualquer plano |
 | CORS | Não (navegador não chama) | `*` nas rotas de vitrine |
 | Limite | 120 req/min | 600 req/min (compartilhada por todos os visitantes) |
@@ -66,7 +66,8 @@ chegasse, sem ninguém ter decidido isso.
 | `produtos:escrever` | `POST /api/v1/produtos`, `PATCH /api/v1/produtos/{id}` |
 | `pedidos:ler` | `GET /api/v1/pedidos`, `GET /api/v1/pedidos/{id}` |
 | `pedidos:escrever` | `PATCH /api/v1/pedidos/{id}` |
-| `vitrine:ler` | `GET /api/v1/vitrine/loja`, `GET /api/v1/vitrine/produtos` |
+| `vitrine:ler` | `GET /api/v1/vitrine/loja`, `GET /api/v1/vitrine/produtos`, `GET /api/v1/vitrine/produtos/{id}`, `POST /api/v1/vitrine/frete` |
+| `vitrine:comprar` | `POST /api/v1/vitrine/checkout`, `GET /api/v1/vitrine/pedidos/{referencia}` |
 
 `GET /api/v1` (sem chave) devolve esta lista como dado.
 
@@ -164,6 +165,60 @@ tradução dos erros ficam em `src/lib/api-produtos.ts`.
 - Pedido que não foi pago só pode ser cancelado (`conflito`, 409, nos outros).
 - **Pagamento não muda por aqui.** `PAGO` e `ESTORNADO` vêm do gateway.
 
+## Compra pela chave publicável
+
+O site ou o app do lojista fecha a compra com a chave `lojas_pk_`. Glue em
+`src/lib/api-checkout.ts`; quem cobra é `criarCobranca`
+(`src/lib/checkout-cobranca.ts`), a mesma função do checkout da loja.
+
+O fluxo de um front próprio:
+
+1. `GET /vitrine/loja`: meios de pagamento, a chave pública do Mercado Pago
+   (para tokenizar cartão no navegador), pedido mínimo, retirada.
+2. `GET /vitrine/produtos` e `/vitrine/produtos/{id}`: catálogo e variações. O
+   `id` da variação é o que vai no carrinho.
+3. `POST /vitrine/frete`: opções para o CEP e o carrinho.
+4. `POST /vitrine/checkout`: cria o pedido e a cobrança. Devolve `referencia`
+   e o Pix, o boleto ou o resultado do cartão.
+5. `GET /vitrine/pedidos/{referencia}`: o andamento, para a tela do Pix.
+
+Regras:
+
+- **Vender é opt-in por chave.** O escopo `vitrine:comprar` só existe na chave
+  em que o lojista marcou "permitir compra". Chave publicável criada antes
+  continua só lendo a vitrine: é a regra de escopo que não ganha poder em
+  silêncio.
+- **Origens.** A chave guarda os sites de onde pode comprar
+  (`ChaveApi.origens`). Requisição com `Origin` fora da lista responde
+  `origem_nao_permitida`; a resposta só é legível pela origem conferida.
+  Requisição **sem** `Origin` (app nativo, servidor) passa: a lista impede
+  outro site de usar a chave pelo navegador de um visitante, não impede
+  script, e não finge que impede.
+- **Limite por endereço**, por minuto, além do da chave: 6 compras e 30
+  cotações. A chave é compartilhada por todos os visitantes, e cada compra
+  cria reserva de estoque e cobrança de verdade. O endereço fica um minuto na
+  memória do limitador e em mais lugar nenhum.
+- **A referência nasce no servidor** (128 bits). É o segredo da página do
+  pedido e a chave de idempotência no gateway.
+- **`Idempotency-Key`** (16 a 120 caracteres): repetir a requisição devolve a
+  mesma cobrança, com `repetida: true`, sem cobrar de novo.
+- **Preço e frete saem do servidor.** O corpo é estrito: `preco`, `referencia`
+  ou qualquer campo desconhecido é erro. `totalCentavos` é opcional e só serve
+  para recusar a compra se o front mostrou outro valor.
+- **Sem cupom** nesta versão: a resposta de cupom distingue cinco motivos de
+  recusa, e por chave pública isso é enumeração de cupom.
+- **Sem carrinho abandonado**: por chave pública seria um jeito de mandar
+  e-mail e WhatsApp a terceiros.
+- **O status não traz dado pessoal.** Quem tem a referência é quem digitou os
+  dados.
+- Loja suspensa ou sem recebimento responde `loja_nao_vende`: a chave ainda
+  autentica, porque a vitrine continua no ar.
+
+Erros próprios: `pedido_invalido` (422, com `detalhe`: `item_indisponivel`,
+`frete_invalido`, `total_divergente`, `meio_indisponivel`…), `gateway_recusou`
+(502, nada foi cobrado), `pagamento_a_confirmar` (503, com a referência em
+`detalhe`: consulte o pedido antes de tentar de novo).
+
 ## Webhooks
 
 O lojista cadastra no painel (IA e API) o endereço do sistema dele e escolhe os
@@ -218,8 +273,8 @@ contagem muda de lugar (Postgres ou Redis) sem mudar o contrato.
    variação e imagem pela API.
 2. ~~Webhooks para o desenvolvedor~~ feito em 08/10/2026 (seção "Webhooks").
    Falta reenviar uma entrega à mão pelo painel e eventos de catálogo.
-3. Carrinho e checkout pela chave publicável, passando por
-   `montarPedidoSeguro` + `resolverItensDoCatalogo` (preço nunca do navegador).
+3. ~~Carrinho e checkout pela chave publicável~~ feito em 08/10/2026 (seção
+   "Compra pela chave publicável"). Falta cupom, com resposta única e limite.
 4. ~~MCP aceitar a chave secreta nova~~ feito em 08/10/2026 (`mcp:usar`). Falta
    apagar `Tenant.apiKeyEnc` quando as lojas com chave antiga migrarem.
 5. ~~Página pública de documentação~~ feito em 08/10/2026: `/developers` e

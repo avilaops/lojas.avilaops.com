@@ -4,6 +4,7 @@ import {
   chaveDaRequisicao,
   chaveMascarada,
   escoposDaChave,
+  lerOrigens,
   gerarChave,
   hashDaChave,
   lojaNoAr,
@@ -124,4 +125,22 @@ test("vitrine: controle especial aparece, mas a ação é 'somente-na-loja' (RDC
   const v = produtoDaVitrine(produto({ tarja: "preta" }), { url: "https://loja", vende: true });
   assert.equal(v.venda.acao, "somente-na-loja");
   assert.equal(v.precoCentavos, 1290);
+});
+
+test("publicável só vende quando pedido, e nunca ganha outro escopo junto", () => {
+  assert.deepEqual(escoposDaChave("PUBLICAVEL", []), ["vitrine:ler"]);
+  assert.deepEqual(escoposDaChave("PUBLICAVEL", ["vitrine:comprar"]), ["vitrine:ler", "vitrine:comprar"]);
+  assert.deepEqual(escoposDaChave("PUBLICAVEL", ["vitrine:comprar", "pedidos:ler", "mcp:usar"]), ["vitrine:ler", "vitrine:comprar"]);
+  // Secreta não recebe o escopo de compra do navegador.
+  assert.equal(escoposDaChave("SECRETA", ["vitrine:comprar"]).includes("vitrine:comprar" as never), false);
+});
+
+test("origens da chave: só site https (ou localhost), sem caminho, sem repetir, no máximo cinco", () => {
+  assert.deepEqual(lerOrigens(["https://www.loja.com.br/qualquer/caminho?x=1", " https://loja.com.br ", "https://www.loja.com.br", "", "http://localhost:3000"]),
+    { origens: ["https://www.loja.com.br", "https://loja.com.br", "http://localhost:3000"] });
+  for (const ruim of [["http://loja.com.br"], ["loja.com.br"], ["https://u:s@loja.com.br"], ["javascript:alert(1)"]]) {
+    assert.ok("erro" in lerOrigens(ruim), ruim[0]);
+  }
+  assert.ok("erro" in lerOrigens(Array.from({ length: 6 }, (_, i) => `https://l${i}.example`)));
+  assert.deepEqual(lerOrigens([]), { origens: [] });
 });
