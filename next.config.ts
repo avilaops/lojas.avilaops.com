@@ -28,6 +28,12 @@ const nextConfig: NextConfig = {
     remotePatterns: [{ protocol: "https", hostname: "**.avilaops.com" }],
   },
   poweredByHeader: false,
+  // Endereço do catálogo em sites anteriores das lojas. O Google ainda manda
+  // gente para `/loja` (277 impressões em 28 dias na Vedashow, em 10/2026) e
+  // a página respondia 404; o catálogo daqui é `/produtos`.
+  async redirects() {
+    return [{ source: "/loja", destination: "/produtos", permanent: true }];
+  },
 };
 
 export default nextConfig;
