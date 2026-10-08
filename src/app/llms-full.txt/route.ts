@@ -2,6 +2,8 @@ import { headers } from "next/headers";
 import { identidadeDa, tenantAtual, urlDaLoja } from "@/lib/tenant";
 import { listarCategorias, listarProdutos } from "@/lib/catalogo";
 import { emEstoque, publicavel } from "@/lib/produto-regras";
+import { LAYOUTS } from "@/lib/tema";
+import { PLANOS, mensalidade } from "@/lib/planos";
 
 export const dynamic = "force-dynamic";
 
@@ -32,10 +34,8 @@ Pequenas empresas e operações comerciais que precisam vender online sem montar
 
 ## Planos
 
-- Site, R$ 110/mês: vitrine, catálogo, contato, pedidos pelo WhatsApp, domínio, SSL, hospedagem e e-mail profissional.
-- Loja, R$ 269/mês (o mais escolhido): tudo do Site + carrinho, Pix na hora, cartão e boleto no próprio checkout, frete por CEP e retirada, cupons, variações, estoque, feed do Google Shopping, carrinho abandonado, avaliações e relatório semanal. Sem comissão sobre venda.
-- Loja Pro, R$ 497/mês: tudo da Loja + domínio próprio, chave de API e assistente de IA, cotação B2B pelo WhatsApp e prioridade de suporte.
-- Setup único: R$ 497. 7 dias de teste, sem cartão. Mensalidade começa quando o lojista ativa a cobrança.
+${PLANOS.map((p) => `- ${p.nome}, ${mensalidade(p.preco)}${p.destaque ? " (o mais escolhido)" : ""}: ${p.itens.join(", ").toLowerCase()}.`).join("\n")}
+- Setup único: R$ 497. 7 dias de teste, sem cartão. Mensalidade começa quando o lojista ativa a cobrança. Sem comissão sobre venda.
 
 ## Pagamentos
 
@@ -48,7 +48,8 @@ Pagamento pelo Mercado Pago (Pix, cartão e boleto) na conta da própria empresa
 - Eventos operacionais conectados a fluxos n8n.
 - WhatsApp integrado às jornadas de venda e relacionamento.
 - Diagnóstico de marca com direção visual, voz e fotografia persistentes.
-- Temas profissionais responsivos: Clássico, Vitrine, Editorial e Minimal.
+- ${LAYOUTS.length} layouts de loja, escolhidos no painel: ${LAYOUTS.map((l) => l.rotulo).join(", ")}.
+- Feed do Google Merchant Center, dados estruturados (Product, Offer, BreadcrumbList, MerchantReturnPolicy), sitemap, robots.txt e llms.txt por loja.
 
 ## Rotas públicas
 

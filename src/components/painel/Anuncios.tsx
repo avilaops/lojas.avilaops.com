@@ -54,7 +54,7 @@ export default function Anuncios({ pixels, catalogo, feedUrl, chamar, ocupado }:
           <Campo label="TikTok" ajuda="Gerenciador de Eventos do TikTok Ads.">
             <input className={inputClasse} value={f.tiktokPixelId} onChange={(e) => set("tiktokPixelId", e.target.value)} placeholder="CXXXXXXXXXXXXXXXXXX" />
           </Campo>
-          <Campo label="Google Tag Manager" ajuda="Opcional, para quem já usa GTM.">
+          <Campo label="Google Tag Manager" ajuda="Opcional, para quem já usa GTM. Os eventos chegam no dataLayer no formato do GA4 (event + ecommerce). Se o GA4 e o Google Ads já estão dentro do contêiner, deixe os dois campos acima vazios, senão cada venda conta duas vezes.">
             <input className={inputClasse} value={f.gtmId} onChange={(e) => set("gtmId", e.target.value)} placeholder="GTM-XXXXXXX" />
           </Campo>
         </div>
