@@ -127,6 +127,12 @@ Este repositório pertence à Ávila Ops Tecnologia, que ajuda pequenas empresas
   `/v1` sem `/api` é outro contrato (`gapp.ts`). Rota nova entra em `ROTAS`
   (`src/lib/api-indice.ts`) no mesmo commit: é de lá que saem `GET /api/v1` e a
   página pública `/developers`. Ver `docs/API.md`.
+- **Webhook da API: o endereço é do lojista, a requisição é nossa.** Evento novo
+  entra em `EVENTOS_DE_WEBHOOK` (`src/lib/webhooks-api.ts`), lista fechada e só
+  do que é contrato; o corpo é a projeção da API, nunca o envelope interno.
+  Todo envio passa por `enviarPorHttp` (`webhooks-entrega.ts`): só `https`,
+  nome resolvido e recusado se for rede interna, redirecionamento não seguido.
+  Não crie outro caminho de requisição para endereço digitado por lojista.
 - **Métrica por loja guarda host, grupo, status e duração — e mais nada.**
   `registrar` (`src/lib/metricas-tenant.ts`) não aceita outro campo: caminho,
   query, cabeçalho, IP e mensagem de erro não entram. Rota nova se mede com

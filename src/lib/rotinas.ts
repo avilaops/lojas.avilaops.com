@@ -86,6 +86,15 @@ export const ROTINAS = {
     // disparo imediato não saiu (processo reiniciado, SMTP fora do ar).
     falhasAteAlerta: 2,
   },
+  "webhooks.entregar": {
+    titulo: "Webhooks da API",
+    descricao: "Entrega aos sistemas dos lojistas os avisos de pedido, com novas tentativas",
+    cadencia: { tipo: "intervalo", minutos: 1 },
+    travaMinutos: 5,
+    // Destino fora do ar não é falha da rotina (vira nova tentativa da entrega);
+    // o que conta aqui é a rotina em si quebrar.
+    falhasAteAlerta: 3,
+  },
   "pix.lembrete": {
     titulo: "Lembrete de Pix",
     descricao: "Avisa quem gerou Pix há mais de 30 minutos e ainda não pagou",

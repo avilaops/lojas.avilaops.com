@@ -3,6 +3,7 @@ import type { Prisma, Tenant } from "@prisma/client";
 import { prisma } from "./db";
 import { urlDaLoja } from "./tenant";
 import { executamos } from "./acoes-do-evento";
+import { ehEventoDeWebhook } from "./webhooks-api";
 
 /**
  * Eventos da plataforma → n8n.
@@ -198,6 +199,14 @@ export async function emitir(evento: EventoPlataforma, opcoes: OpcoesDeEmissao =
     // Com chave, a linha que já existe É a resposta: o fato já saiu.
     if (opcoes.chave && jaExiste(erro)) return false;
     console.error("[eventos] não registrou", eventId, erro);
+  }
+
+  // O sistema do lojista também quer saber. Depois do registro, para o `id`
+  // que ele recebe existir do nosso lado; e antes do envio das mensagens, que
+  // pode retornar cedo. Só os tipos de pedido que são contrato (`EVENTOS_DE_WEBHOOK`).
+  if (ehEventoDeWebhook(evento.tipo) && "referencia" in evento) {
+    const { enfileirarWebhooks } = await import("./webhooks-entrega");
+    await enfileirarWebhooks(evento.slug, evento.tipo, eventId, evento.referencia);
   }
 
   // Quem executa este tipo: a própria plataforma ou o n8n?

@@ -164,6 +164,39 @@ tradução dos erros ficam em `src/lib/api-produtos.ts`.
 - Pedido que não foi pago só pode ser cancelado (`conflito`, 409, nos outros).
 - **Pagamento não muda por aqui.** `PAGO` e `ESTORNADO` vêm do gateway.
 
+## Webhooks
+
+O lojista cadastra no painel (IA e API) o endereço do sistema dele e escolhe os
+eventos de pedido. Regras em `src/lib/webhooks-api.ts`, fila e envio em
+`src/lib/webhooks-entrega.ts`.
+
+- **Lista fechada de eventos**, só de pedido (`EVENTOS_DE_WEBHOOK`). Evento
+  interno (mensalidade, SEO, alerta) não é contrato com ninguém.
+- **O corpo é a projeção da API**: `{ id, tipo, criadoEm, dados: { pedido } }`,
+  com o mesmo `pedido` de `GET /api/v1/pedidos/{id}`. Nada do envelope interno
+  do evento, que carrega contato do lojista.
+- **Enfileira junto do evento, envia depois.** `emitir` grava a entrega; a
+  rotina `webhooks.entregar` (de minuto em minuto) envia. O checkout não espera
+  o servidor de ninguém.
+- **Pelo menos uma vez.** A chave (`webhookId`, `eventId`) impede o mesmo fato
+  de entrar duas vezes na fila, e cada entrega é reivindicada antes do envio;
+  ainda assim o receptor pode ver o mesmo `id` de novo e tem de reconhecer.
+- **Assinatura**: `x-lojas-assinatura: t=<segundos>,v1=<hmac>`, HMAC-SHA256 de
+  `<t>.<corpo>` com o segredo do webhook. O segredo fica **cifrado** (não em
+  hash: é preciso o valor para assinar) e aparece uma vez, na criação.
+- **O endereço é do lojista e quem requisita somos nós.** Só `https`, em domínio
+  público, sem usuário e senha, sem IP escrito. Na hora do envio o nome é
+  resolvido de novo e recusado se apontar para rede interna, e redirecionamento
+  não é seguido. Sem isso o campo serviria para alcançar o que está atrás do
+  nosso firewall.
+- **Novas tentativas**: 7 ao todo, com esperas de 1, 5, 30, 120, 480 e 960
+  minutos. Vinte entregas esgotadas em sequência desligam o webhook; o painel
+  mostra o motivo e o lojista religa.
+- Entrega encerrada some em 30 dias. Recurso do Loja Pro, até 5 por loja.
+
+Limite conhecido: entre resolver o nome e conectar há uma janela em que o DNS
+pode mudar. Fechar isso exige conectar pelo IP conferido, e não foi feito.
+
 ## Limite em memória
 
 O limitador conta na memória do processo: a plataforma roda num container só.
@@ -183,7 +216,8 @@ contagem muda de lugar (Postgres ou Redis) sem mudar o contrato.
 1. ~~Mais escrita pela chave secreta~~ feito em 08/10/2026: criar e editar
    produto (`produtos:escrever`) e avançar pedido (`pedidos:escrever`). Falta
    variação e imagem pela API.
-2. Webhooks para o desenvolvedor, saindo do mesmo `emitir` de `eventos.ts`.
+2. ~~Webhooks para o desenvolvedor~~ feito em 08/10/2026 (seção "Webhooks").
+   Falta reenviar uma entrega à mão pelo painel e eventos de catálogo.
 3. Carrinho e checkout pela chave publicável, passando por
    `montarPedidoSeguro` + `resolverItensDoCatalogo` (preço nunca do navegador).
 4. ~~MCP aceitar a chave secreta nova~~ feito em 08/10/2026 (`mcp:usar`). Falta

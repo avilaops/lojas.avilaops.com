@@ -18,6 +18,7 @@ import { processarEventosProprios } from "./automacoes-consumo";
 import { lembrarPixPendente, pedirIndicacoes } from "./avisos-que-esperam";
 import { renovarAcessos as renovarAcessosDoMercadoPago } from "./mercado-pago-conta";
 import { alertar } from "./alertas";
+import { entregarWebhooks } from "./webhooks-entrega";
 
 /** Quantas falhas seguidas de uma rotina viram alerta para gente. */
 export const FALHAS_ATE_ALERTAR = 3;
@@ -42,6 +43,7 @@ const TRABALHOS: Record<NomeDeRotina, () => Promise<unknown>> = {
   "automacoes.eventos": () => processarEventosProprios({ limite: 50 }),
   // As duas dormem enquanto o n8n ainda receber o evento que as dispara; o
   // resumo diz isso em vez de parecer que rodou e não achou ninguém.
+  "webhooks.entregar": () => entregarWebhooks({ limite: 50 }),
   "pix.lembrete": () => lembrarPixPendente(),
   "loja.indicacoes": () => pedirIndicacoes(),
   "carrinhos.verificar": () => verificarCarrinhosAbandonados(),
