@@ -46,7 +46,11 @@ publicável só lê a vitrine" vale em toda rota, inclusive na que ainda não ex
 - Loja fora do ar (`PROVISIONANDO`, `CANCELADA`) responde `loja_fora_do_ar`.
   `SUSPENSA` continua respondendo, como a vitrine.
 - A chave antiga do MCP (`Tenant.apiKeyEnc`, `lojas_live_…`) continua valendo
-  só no `/api/mcp`. Não é chave desta API.
+  só no `/api/mcp`, e não é mais emitida (08/10/2026). Não é chave desta API.
+- A chave secreta com o escopo `mcp:usar` entra também no conector MCP, dentro
+  dos outros escopos dela. Os escopos `loja:escrever`, `pedidos:escrever`,
+  `clientes:ler`, `promocoes:*` e `analises:ler` só têm efeito lá: não há rota
+  de `/api/v1` que os exija. Ver `docs/MCP.md`.
 
 ## Escopos
 
@@ -145,5 +149,6 @@ contagem muda de lugar (Postgres ou Redis) sem mudar o contrato.
 2. Webhooks para o desenvolvedor, saindo do mesmo `emitir` de `eventos.ts`.
 3. Carrinho e checkout pela chave publicável, passando por
    `montarPedidoSeguro` + `resolverItensDoCatalogo` (preço nunca do navegador).
-4. MCP aceitar a chave secreta nova e aposentar `Tenant.apiKeyEnc`.
+4. ~~MCP aceitar a chave secreta nova~~ feito em 08/10/2026 (`mcp:usar`). Falta
+   apagar `Tenant.apiKeyEnc` quando as lojas com chave antiga migrarem.
 5. Página pública de documentação gerada a partir de `GET /api/v1`.

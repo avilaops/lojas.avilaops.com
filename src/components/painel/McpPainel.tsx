@@ -15,8 +15,19 @@ interface StatusMcp {
 interface Conexao {
   id: string;
   assistente: string;
+  acesso: string;
   conectadaEm: string;
   ultimoUsoEm: string | null;
+}
+
+interface Chamada {
+  id: string;
+  quando: string;
+  origem: string;
+  titulo: string;
+  alterou: boolean;
+  ok: boolean;
+  alvo: string | null;
 }
 
 /**
@@ -31,7 +42,7 @@ const COMO_CONECTAR: { nome: string; passos: string; comandos?: (url: string) =>
   },
   {
     nome: "ChatGPT",
-    passos: "Configurações, Conectores, Criar (pede o modo de desenvolvedor ligado). Cole o endereço, escolha autenticação OAuth e autorize a loja.",
+    passos: "Configurações, Apps e conectores. Ligue o modo de desenvolvedor nas configurações avançadas e clique em Criar. Cole o endereço, escolha autenticação OAuth e autorize a loja.",
   },
   {
     nome: "Codex",
@@ -56,9 +67,9 @@ export default function McpPainel({
 }) {
   const [status, setStatus] = useState<StatusMcp | null>(null);
   const [conexoes, setConexoes] = useState<Conexao[] | null>(null);
+  const [atividade, setAtividade] = useState<{ chamadas: Chamada[]; retencaoDias: number } | null>(null);
+  const [soAlteracoes, setSoAlteracoes] = useState(false);
   const [gerando, setGerando] = useState(false);
-  const [novaChave, setNovaChave] = useState<string | null>(null);
-  const [copiadoChave, setCopiadoChave] = useState(false);
   const [copiadoUrl, setCopiadoUrl] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [sucesso, setSucesso] = useState<string | null>(null);
@@ -82,26 +93,17 @@ export default function McpPainel({
     carregar();
   }, []);
 
-  async function gerarChave() {
-    setGerando(true);
-    setErro(null);
-    setSucesso(null);
-    try {
-      const r = await fetch("/api/painel/mcp", { method: "POST" });
-      const d = await r.json();
-      if (!r.ok) throw new Error(d?.erro ?? "Falha ao gerar chave.");
-      setNovaChave(d.chave);
-      setStatus((s) => (s ? { ...s, temChave: true, apiKeyCriadaEm: d.criadaEm } : null));
-      setSucesso("Nova chave de API gerada com sucesso!");
-    } catch (e) {
-      setErro(e instanceof Error ? e.message : "Erro ao gerar chave.");
-    } finally {
-      setGerando(false);
-    }
-  }
+  useEffect(() => {
+    let vivo = true;
+    fetch(`/api/painel/mcp/atividade${soAlteracoes ? "?alteracoes=1" : ""}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (vivo && d) setAtividade(d); })
+      .catch(() => { /* A lista vazia é a apresentação segura. */ });
+    return () => { vivo = false; };
+  }, [soAlteracoes]);
 
   async function revogarChave() {
-    if (!confirm("Tem certeza que deseja revogar a chave de API? As automações que usam a chave param de funcionar imediatamente. Os assistentes conectados por login continuam.")) {
+    if (!confirm("Revogar a chave antiga do conector? As automações que a usam param na hora, e ela não pode ser gerada de novo: para ter outra, crie uma chave secreta com o escopo mcp:usar em Chaves da API.")) {
       return;
     }
     setGerando(true);
@@ -110,7 +112,6 @@ export default function McpPainel({
       const r = await fetch("/api/painel/mcp", { method: "DELETE" });
       const d = await r.json();
       if (!r.ok) throw new Error(d?.erro ?? "Falha ao revogar chave.");
-      setNovaChave(null);
       setStatus((s) => (s ? { ...s, temChave: false, apiKeyCriadaEm: null } : null));
       setSucesso("Chave revogada com sucesso.");
     } catch (e) {
@@ -135,15 +136,10 @@ export default function McpPainel({
     }
   }
 
-  function copiar(texto: string, tipo: "chave" | "url") {
+  function copiarEndereco(texto: string) {
     navigator.clipboard.writeText(texto);
-    if (tipo === "chave") {
-      setCopiadoChave(true);
-      setTimeout(() => setCopiadoChave(false), 2500);
-    } else {
-      setCopiadoUrl(true);
-      setTimeout(() => setCopiadoUrl(false), 2500);
-    }
+    setCopiadoUrl(true);
+    setTimeout(() => setCopiadoUrl(false), 2500);
   }
 
   // Banner de Upsell se não for Plano Pro
@@ -217,6 +213,7 @@ export default function McpPainel({
 
   const endpointUrl = status?.endpointUrl ?? "https://lojas.avilaops.com/api/mcp";
   const dia = (iso: string) => new Date(iso).toLocaleDateString("pt-BR");
+  const diaEHora = (iso: string) => new Date(iso).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 
   return (
     <Secao
@@ -239,7 +236,7 @@ export default function McpPainel({
             />
             <button
               type="button"
-              onClick={() => copiar(endpointUrl, "url")}
+              onClick={() => copiarEndereco(endpointUrl)}
               className="btn-secundario h-10 px-3 text-xs shrink-0"
             >
               {copiadoUrl ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
@@ -275,7 +272,7 @@ export default function McpPainel({
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-foreground">{c.assistente}</p>
                     <p className="text-xs text-muted-foreground">
-                      Conectado em {dia(c.conectadaEm)} · {c.ultimoUsoEm ? `último uso em ${dia(c.ultimoUsoEm)}` : "ainda não usado"}
+                      {c.acesso} · conectado em {dia(c.conectadaEm)} · {c.ultimoUsoEm ? `último uso em ${dia(c.ultimoUsoEm)}` : "ainda não usado"}
                     </p>
                   </div>
                   <button type="button" onClick={() => desconectar(c)} className="btn-secundario h-9 px-3 text-xs text-red-600 hover:text-red-700">
@@ -287,69 +284,64 @@ export default function McpPainel({
           )}
         </div>
 
-        {/* Chave de API: para o que não tem tela de login */}
+        {/* O que os assistentes fizeram */}
         <div className="rounded-xl border border-border bg-card p-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h4 className="text-sm font-bold text-foreground">Chave para automações (n8n e scripts)</h4>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {status?.temChave && status.apiKeyCriadaEm
-                  ? `Chave ativa gerada em ${dia(status.apiKeyCriadaEm)}`
-                  : "Só para o que roda sem ninguém na frente da tela. Nos assistentes, use o login acima."}
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={gerarChave}
-                disabled={gerando}
-                className="btn-primario text-xs h-9 px-4"
-              >
-                <Key className="h-3.5 w-3.5 mr-1" />
-                {status?.temChave ? "Rotacionar Chave" : "Gerar Chave de API"}
-              </button>
-              {status?.temChave && (
-                <button
-                  type="button"
-                  onClick={revogarChave}
-                  disabled={gerando}
-                  className="btn-secundario text-xs h-9 px-3 text-red-600 hover:text-red-700"
-                  title="Revogar chave"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              )}
-            </div>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h4 className="text-sm font-bold text-foreground">Atividade dos assistentes</h4>
+            <label className="flex items-center gap-2 text-xs text-muted-foreground">
+              <input type="checkbox" checked={soAlteracoes} onChange={(e) => setSoAlteracoes(e.target.checked)} />
+              Só o que alterou a loja
+            </label>
           </div>
+          {atividade === null ? (
+            <p className="mt-2 text-xs text-muted-foreground">Carregando…</p>
+          ) : atividade.chamadas.length === 0 ? (
+            <p className="mt-2 text-xs text-muted-foreground">
+              {soAlteracoes ? "Nenhuma alteração feita por assistente." : "Nada por aqui ainda. Cada coisa que um assistente consultar ou alterar na loja aparece nesta lista."}
+            </p>
+          ) : (
+            <ul className="mt-3 divide-y divide-border">
+              {atividade.chamadas.map((c) => (
+                <li key={c.id} className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 py-2 text-xs">
+                  <span className="min-w-0">
+                    <span className={`font-semibold ${c.ok ? "text-foreground" : "text-red-600"}`}>{c.titulo}</span>
+                    {c.alvo && <code className="ml-1.5 text-muted-foreground">{c.alvo}</code>}
+                    {c.alterou && c.ok && <span className="ml-1.5 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-900">alterou</span>}
+                    {!c.ok && <span className="ml-1.5 text-red-600">não concluiu</span>}
+                  </span>
+                  <span className="text-muted-foreground">{c.origem} · {diaEHora(c.quando)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          {atividade && (
+            <p className="mt-3 text-[11px] text-muted-foreground">
+              Guardamos a ferramenta usada e o código do que foi tocado, por {atividade.retencaoDias} dias. O conteúdo da conversa e os dados consultados não ficam aqui.
+            </p>
+          )}
+        </div>
 
-          {/* Exibição da Chave Nova */}
-          {novaChave && (
-            <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 animate-in fade-in-50">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-amber-800 dark:text-amber-300">
-                  Copie sua chave agora. Ela não será exibida novamente por segurança.
-                </span>
-                <button
-                  type="button"
-                  onClick={() => copiar(novaChave, "chave")}
-                  className="inline-flex items-center gap-1 text-xs font-bold text-primary underline ml-2"
-                >
-                  {copiadoChave ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                  {copiadoChave ? "Copiada!" : "Copiar Chave"}
-                </button>
-              </div>
-              <div className="mt-2 break-all rounded-lg bg-background p-2.5 font-mono text-xs font-bold text-foreground border border-border select-all">
-                {novaChave}
-              </div>
+        {/* Automações: chave secreta com o escopo do conector */}
+        <div className="rounded-xl border border-border bg-card p-5">
+          <h4 className="flex items-center gap-1.5 text-sm font-bold text-foreground"><Key className="h-4 w-4" /> Automações (n8n e scripts)</h4>
+          <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+            Para o que roda sem ninguém na frente da tela, crie uma chave secreta em <b>Chaves da API</b>, logo abaixo, marcando{" "}
+            <code>mcp:usar</code> e as áreas que a automação precisa. Envie a chave em cada chamada ao endereço do conector:
+          </p>
+          <pre className="mt-2 overflow-x-auto rounded-lg bg-background p-3 text-[11px] font-mono text-foreground border border-border">Authorization: Bearer lojas_sk_SUA_CHAVE_AQUI</pre>
+
+          {status?.temChave && (
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
+              <p className="min-w-0 text-xs text-amber-900 dark:text-amber-200">
+                Esta loja ainda tem a chave antiga do conector (<code>lojas_live_{lojaSlug}_…</code>)
+                {status.apiKeyCriadaEm ? `, gerada em ${dia(status.apiKeyCriadaEm)}` : ""}. Ela continua valendo, com acesso inteiro.
+                Quando a automação passar para uma chave secreta, revogue esta.
+              </p>
+              <button type="button" onClick={revogarChave} disabled={gerando} className="btn-secundario h-9 px-3 text-xs text-red-600 hover:text-red-700">
+                <Trash2 className="h-3.5 w-3.5 mr-1" /> Revogar
+              </button>
             </div>
           )}
-
-          <p className="mt-4 text-xs text-muted-foreground leading-relaxed">
-            Envie a chave no cabeçalho de cada chamada ao endereço do conector:
-          </p>
-          <pre className="mt-2 overflow-x-auto rounded-lg bg-background p-3 text-[11px] font-mono text-foreground border border-border">
-{`Authorization: Bearer ${novaChave || "lojas_live_" + lojaSlug + "_SUA_CHAVE_AQUI"}`}
-          </pre>
         </div>
       </div>
     </Secao>

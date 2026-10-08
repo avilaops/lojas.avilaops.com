@@ -156,7 +156,7 @@ export default function ChavesApiPainel() {
             <label className={`flex items-start gap-2 font-normal ${estado && !estado.podeSecreta ? "opacity-50" : ""}`}>
               <input type="radio" name="tipo" checked={tipo === "SECRETA"} disabled={Boolean(estado && !estado.podeSecreta)} onChange={() => setTipo("SECRETA")} />
               <span>
-                <b>Secreta</b> (<code>lojas_sk_</code>): só no seu servidor. Lê catálogo e pedidos.
+                <b>Secreta</b> (<code>lojas_sk_</code>): só no seu servidor. Pode o que você marcar nos escopos; com <code>mcp:usar</code>, serve também ao conector de IA.
                 {estado && !estado.podeSecreta && " Recurso do plano Loja Pro."}
               </span>
             </label>

@@ -17,7 +17,7 @@
  */
 
 /** Lista fechada: grupo novo entra aqui, e o que não está aqui não compila. */
-export const GRUPOS = ["checkout", "frete", "busca", "webhook", "api-v1", "render", "acao", "outra"] as const;
+export const GRUPOS = ["checkout", "frete", "busca", "webhook", "api-v1", "mcp", "render", "acao", "outra"] as const;
 export type Grupo = (typeof GRUPOS)[number];
 
 /** Limite superior de cada balde do histograma, em ms. O último balde é "acima de 5000". */

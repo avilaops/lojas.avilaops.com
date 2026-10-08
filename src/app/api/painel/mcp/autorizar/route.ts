@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { clientePorId, criarCodigo } from "@/lib/mcp-conexoes";
 import { abrirPedido, COOKIE_DO_PEDIDO, emissor, retornoRegistrado, urlDeRetorno } from "@/lib/mcp-oauth";
+import { escoposDaAutorizacao } from "@/lib/mcp-permissoes";
 import { permite } from "@/lib/operadores";
 import { sessaoDoPainel } from "@/lib/sessao";
 
@@ -28,7 +29,7 @@ export async function POST(request: Request) {
     return Response.json({ erro: "Este assistente não está mais registrado. Remova o conector e adicione de novo." }, { status: 410 });
   }
 
-  const corpo = (await request.json().catch(() => null)) as { decisao?: unknown } | null;
+  const corpo = (await request.json().catch(() => null)) as { decisao?: unknown; nivel?: unknown; areas?: unknown } | null;
   if (corpo?.decisao === "negar") {
     store.delete(COOKIE_DO_PEDIDO);
     return Response.json({ ir: urlDeRetorno(pedido.retorno, { error: "access_denied", state: pedido.state, iss: emissor() }) });
@@ -51,7 +52,12 @@ export async function POST(request: Request) {
     return Response.json({ erro: "A loja precisa estar ativa para conectar um assistente." }, { status: 403 });
   }
 
-  const codigo = await criarCodigo(loja.id, s.operador?.id ?? null, pedido);
+  // O que a conexão vai poder é o que foi marcado nesta tela, e fica gravado
+  // nela: o assistente não escolhe nem amplia depois.
+  const escopos = escoposDaAutorizacao({ nivel: corpo.nivel, areas: corpo.areas });
+  if (!escopos) return Response.json({ erro: "Escolha ao menos uma área para o assistente acessar." }, { status: 400 });
+
+  const codigo = await criarCodigo(loja.id, s.operador?.id ?? null, pedido, escopos);
   store.delete(COOKIE_DO_PEDIDO);
   return Response.json({ ir: urlDeRetorno(pedido.retorno, { code: codigo, state: pedido.state, iss: emissor() }) });
 }

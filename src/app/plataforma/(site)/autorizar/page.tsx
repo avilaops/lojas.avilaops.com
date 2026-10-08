@@ -84,8 +84,8 @@ export default async function AutorizarPage({ searchParams }: { searchParams: Pr
         <span>Conector de IA</span>
         <h1>Conectar {cliente.nome} à loja {s.tenant.nome}?</h1>
         <p>
-          O assistente vai poder ler e alterar a loja em seu nome: produtos, preços, estoque, pedidos, cupons e clientes.
-          Você pode desconectar quando quiser em Painel, IA e API.
+          O assistente vai agir na loja em seu nome, dentro do que você marcar abaixo. Tudo o que ele fizer fica
+          registrado em Painel, IA e API, e você pode desconectar quando quiser.
         </p>
         <p className="mt-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
           O acesso será entregue a{" "}

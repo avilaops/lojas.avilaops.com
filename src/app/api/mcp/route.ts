@@ -1,21 +1,34 @@
+import { LimitadorPorJanela, cabecalhosDoLimite } from "@/lib/api-limite";
 import { autenticarMcp, McpAuthError, type McpAuthResult } from "@/lib/mcp-auth";
+import { registrarChamada } from "@/lib/mcp-historico";
 import { desafioDeAutenticacao, recurso } from "@/lib/mcp-oauth";
 import { CORS } from "@/lib/mcp-oauth-http";
+import { anotacoes, FERRAMENTAS, podeUsar } from "@/lib/mcp-permissoes";
 import { ehNotificacao, erroRpc, negociarVersao } from "@/lib/mcp-protocolo";
 import { MCP_TOOLS } from "@/lib/mcp-tools";
+import { hostDoSlug, registrarSemDerrubar } from "@/lib/metricas-rota";
+import { HOST_SEM_LOJA } from "@/lib/metricas-tenant";
 
 const SERVER_INFO = {
   name: "avilaops-lojas-mcp",
   title: "Lojas por Avila Ops",
-  version: "1.1.0",
+  version: "1.2.0",
 };
 
 const INSTRUCOES =
   "Conector da loja do lojista na plataforma Lojas por Avila Ops. As ferramentas leem e alteram a loja de verdade: " +
-  "catálogo, preços, estoque, pedidos, cupons e clientes. Valores em reais; confirme com o lojista antes de alterar preço, estoque ou status de pedido.";
+  "catálogo, preços, estoque, pedidos, cupons e clientes. Valores em reais; confirme com o lojista antes de alterar preço, estoque ou status de pedido. " +
+  "Você só vê as ferramentas que o lojista autorizou para esta conexão.";
 
 /** O navegador precisa enxergar o cabeçalho que diz onde fazer login. */
-const CABECALHOS = { ...CORS, "access-control-expose-headers": "www-authenticate" };
+const CABECALHOS = { ...CORS, "access-control-expose-headers": "www-authenticate, ratelimit-limit, ratelimit-remaining, ratelimit-reset" };
+
+/**
+ * Por minuto, por credencial: o mesmo teto da chave secreta na API. Um
+ * assistente em conversa fica longe disso; quem bate aqui é laço.
+ */
+const LIMITE_POR_MINUTO = 120;
+const limitador = new LimitadorPorJanela();
 
 function json(corpo: unknown, status = 200, extras: Record<string, string> = {}): Response {
   return Response.json(corpo, { status, headers: { ...CABECALHOS, ...extras } });
@@ -30,15 +43,23 @@ function json(corpo: unknown, status = 200, extras: Record<string, string> = {})
  * docs/MCP.md.
  */
 export async function POST(request: Request) {
+  // A loja vem da credencial, não do host: até autenticar, a métrica não tem de quem ser.
+  const inicio = performance.now();
+  let hostDaLoja: string = HOST_SEM_LOJA;
+  const medida = (resposta: Response): Response => {
+    registrarSemDerrubar({ host: hostDaLoja, grupo: "mcp", status: resposta.status, duracaoMs: performance.now() - inicio });
+    return resposta;
+  };
+
   let body: unknown;
   try {
     body = await request.json();
   } catch {
-    return json(erroRpc(null, -32700, "Parse error"), 400);
+    return medida(json(erroRpc(null, -32700, "Parse error"), 400));
   }
 
   if (!body || typeof body !== "object" || Array.isArray(body)) {
-    return json(erroRpc(null, -32600, "Invalid Request"), 400);
+    return medida(json(erroRpc(null, -32600, "Invalid Request"), 400));
   }
   const requisicao = body as { id?: unknown; method?: unknown; params?: unknown };
   const id = requisicao.id ?? null;
@@ -48,7 +69,7 @@ export async function POST(request: Request) {
     : {};
   if (typeof method !== "string") {
     // Resposta ou mensagem sem método: nada a fazer com ela.
-    return requisicao.id === undefined ? new Response(null, { status: 202, headers: CABECALHOS }) : json(erroRpc(id, -32600, "Invalid Request"), 400);
+    return medida(requisicao.id === undefined ? new Response(null, { status: 202, headers: CABECALHOS }) : json(erroRpc(id, -32600, "Invalid Request"), 400));
   }
 
   let auth: McpAuthResult;
@@ -64,17 +85,33 @@ export async function POST(request: Request) {
     // não um erro. `invalid_token` avisa o assistente de que o token que ele
     // tem não serve mais e é hora de renovar ou autorizar de novo.
     const semCredencial = !request.headers.get("authorization") && !request.headers.get("x-api-key");
-    return err.statusCode === 401
-      ? json(corpo, 401, { "www-authenticate": desafioDeAutenticacao(semCredencial ? undefined : "invalid_token") })
-      : json(corpo, err.statusCode);
+    return medida(
+      err.statusCode === 401
+        ? json(corpo, 401, { "www-authenticate": desafioDeAutenticacao(semCredencial ? undefined : "invalid_token") })
+        : json(corpo, err.statusCode),
+    );
   }
 
+  let doLimite: Record<string, string> = {};
+  if (auth.tipo === "loja") {
+    hostDaLoja = hostDoSlug(auth.tenant.slug) ?? HOST_SEM_LOJA;
+    const limite = limitador.consumir(`${auth.origem.tipo}:${auth.origem.id}`, LIMITE_POR_MINUTO);
+    doLimite = cabecalhosDoLimite(limite);
+    if (!limite.permitido) {
+      return medida(json(erroRpc(id, -32003, `Limite de ${limite.limite} chamadas por minuto atingido. Tente de novo em ${limite.reiniciaEm} s.`), 429, {
+        ...doLimite,
+        "retry-after": String(limite.reiniciaEm),
+      }));
+    }
+  }
+  const responder = (corpo: unknown) => medida(json(corpo, 200, doLimite));
+
   // Notificação não se responde (`notifications/initialized`, `notifications/cancelled`).
-  if (ehNotificacao(requisicao)) return new Response(null, { status: 202, headers: CABECALHOS });
+  if (ehNotificacao(requisicao)) return medida(new Response(null, { status: 202, headers: CABECALHOS }));
 
   // 1. Inicialização
   if (method === "initialize") {
-    return json({
+    return responder({
       jsonrpc: "2.0",
       id,
       result: {
@@ -88,19 +125,23 @@ export async function POST(request: Request) {
 
   // 2. Ping
   if (method === "ping") {
-    return json({ jsonrpc: "2.0", id, result: {} });
+    return responder({ jsonrpc: "2.0", id, result: {} });
   }
 
-  // 3. Listar Ferramentas
+  // 3. Listar Ferramentas: só as que esta credencial pode usar. O assistente
+  // não oferece ao lojista o que a conexão recusaria.
   if (method === "tools/list") {
-    return json({
+    const visiveis = auth.tipo === "loja" ? MCP_TOOLS.filter((t) => podeUsar(auth.escopos, t.name)) : MCP_TOOLS;
+    return responder({
       jsonrpc: "2.0",
       id,
       result: {
-        tools: MCP_TOOLS.map((t) => ({
+        tools: visiveis.map((t) => ({
           name: t.name,
+          title: anotacoes(t.name).title,
           description: t.description,
           inputSchema: t.inputSchema,
+          annotations: anotacoes(t.name),
         })),
       },
     });
@@ -114,10 +155,10 @@ export async function POST(request: Request) {
       : {};
 
     const tool = MCP_TOOLS.find((t) => t.name === toolName);
-    if (!tool) return json(erroRpc(id, -32602, `Ferramenta não encontrada: ${toolName}`));
+    if (!tool) return responder(erroRpc(id, -32602, `Ferramenta não encontrada: ${toolName}`));
 
     const comoTexto = (resultado: unknown, isError = false) =>
-      json({
+      responder({
         jsonrpc: "2.0",
         id,
         result: {
@@ -128,16 +169,34 @@ export async function POST(request: Request) {
 
     if (auth.tipo !== "loja") return comoTexto({ erro: "Chave de admin não vinculada a uma loja específica." }, true);
 
+    if (!podeUsar(auth.escopos, tool.name)) {
+      const escopo = FERRAMENTAS[tool.name]?.escopo;
+      return comoTexto({
+        erro: `Esta conexão não tem permissão para "${anotacoes(tool.name).title}".`,
+        permissaoNecessaria: escopo,
+        comoResolver: auth.origem.tipo === "conexao"
+          ? "O lojista pode desconectar em Painel, IA e API, e conectar de novo marcando esta área."
+          : "Crie no painel uma chave secreta com este escopo.",
+      }, true);
+    }
+
+    const comeco = performance.now();
+    const anotar = (ok: boolean) =>
+      registrarChamada({ tenantId: auth.tenant.id, origem: auth.origem, ferramenta: tool.name, args: toolArgs, ok, duracaoMs: performance.now() - comeco });
+
     try {
-      return comoTexto(await tool.handler(toolArgs, { tenant: auth.tenant, isAdmin: false }));
+      const resultado = await tool.handler(toolArgs, { tenant: auth.tenant, isAdmin: false });
+      await anotar(true);
+      return comoTexto(resultado);
     } catch (err: unknown) {
       // Erro da ferramenta volta como resultado, para o assistente ler e corrigir
       // os argumentos; erro de protocolo é só o que o cliente fez errado.
+      await anotar(false);
       return comoTexto({ erro: err instanceof Error ? err.message : String(err) }, true);
     }
   }
 
-  return json(erroRpc(id, -32601, `Método não suportado: ${method}`));
+  return responder(erroRpc(id, -32601, `Método não suportado: ${method}`));
 }
 
 /**

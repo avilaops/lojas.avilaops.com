@@ -1,8 +1,10 @@
 import { timingSafeEqual } from "node:crypto";
 import { prisma } from "@/lib/db";
 import { decifrar } from "@/lib/cofre";
-import { lojaDoAcesso } from "@/lib/mcp-conexoes";
+import { hashDaChave, PREFIXO_CHAVE, tipoPeloFormato } from "@/lib/api-chaves";
+import { conexaoDoAcesso } from "@/lib/mcp-conexoes";
 import { PREFIXO } from "@/lib/mcp-oauth";
+import { ESCOPO_DO_CONECTOR, ESCOPOS_DO_MCP } from "@/lib/mcp-permissoes";
 import type { Tenant } from "@prisma/client";
 
 export class McpAuthError extends Error {
@@ -16,9 +18,18 @@ export class McpAuthError extends Error {
   }
 }
 
+/** Quem está chamando, para o limite por credencial e para o histórico. */
+export interface OrigemMcp {
+  tipo: "conexao" | "chave" | "chave-antiga";
+  /** Id da conexão ou da chave; o slug da loja, na chave antiga. */
+  id: string;
+  /** O que o lojista lê no histórico: nome do assistente ou rótulo da chave. */
+  nome: string;
+}
+
 export type McpAuthResult =
   | { tipo: "admin"; tenant?: undefined }
-  | { tipo: "loja"; tenant: Tenant };
+  | { tipo: "loja"; tenant: Tenant; escopos: readonly string[]; origem: OrigemMcp };
 
 function comparaSegura(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
@@ -27,7 +38,7 @@ function comparaSegura(a: string, b: string): boolean {
 
 /**
  * Loja ativa e no plano que inclui o conector. Vale igual para a conexão por
- * login e para a chave: rebaixar o plano ou suspender a loja derruba as duas na
+ * login e para as chaves: rebaixar o plano ou suspender a loja derruba todas na
  * chamada seguinte, sem esperar token vencer.
  */
 function exigirLojaComConector(tenant: Tenant): void {
@@ -49,11 +60,14 @@ function exigirLojaComConector(tenant: Tenant): void {
  *
  * Aceita:
  * 1. `lojas_at_<hex>` — token da conexão por login (OAuth), o caminho do
- *    lojista no Claude, no ChatGPT e no Codex. Ver docs/MCP.md.
- * 2. `lojas_live_<slug>_<hex>` — chave do lojista, para n8n e scripts.
- * 3. `LOJAS_ADMIN_TOKEN` (Superadmin da Ávila Ops)
+ *    lojista no Claude, no ChatGPT e no Codex. Pode o que ele marcou na tela.
+ * 2. `lojas_sk_<hex>` — chave secreta da API com o escopo `mcp:usar`, para n8n
+ *    e scripts. Pode o que os outros escopos dela dizem.
+ * 3. `lojas_live_<slug>_<hex>` — a chave antiga do conector. Não se emite mais;
+ *    as que existem seguem valendo, com acesso inteiro, até serem revogadas.
+ * 4. `LOJAS_ADMIN_TOKEN` (Superadmin da Ávila Ops)
  *
- * Os dois primeiros são exclusivos do plano LOJA_PRO.
+ * Os três primeiros são exclusivos do plano LOJA_PRO. Ver docs/MCP.md.
  */
 export async function autenticarMcp(request: Request): Promise<McpAuthResult> {
   const authHeader = request.headers.get("authorization") ?? "";
@@ -72,21 +86,49 @@ export async function autenticarMcp(request: Request): Promise<McpAuthResult> {
 
   // 1. Conexão por login
   if (token.startsWith(PREFIXO.acesso)) {
-    const tenant = await lojaDoAcesso(token);
-    if (!tenant) throw new McpAuthError("Conexão vencida ou desconectada. Autorize a loja de novo.", 401);
-    exigirLojaComConector(tenant);
-    return { tipo: "loja", tenant };
+    const conexao = await conexaoDoAcesso(token);
+    if (!conexao) throw new McpAuthError("Conexão vencida ou desconectada. Autorize a loja de novo.", 401);
+    exigirLojaComConector(conexao.tenant);
+    return {
+      tipo: "loja",
+      tenant: conexao.tenant,
+      escopos: conexao.escopos,
+      origem: { tipo: "conexao", id: conexao.conexaoId, nome: conexao.assistente },
+    };
   }
 
-  // 2. Superadmin Ávila Ops
+  // 2. Chave secreta da API, com o escopo do conector
+  if (token.startsWith(PREFIXO_CHAVE.SECRETA)) {
+    const chave = tipoPeloFormato(token) === "SECRETA"
+      ? await prisma.chaveApi.findUnique({ where: { hash: hashDaChave(token) }, include: { tenant: true } })
+      : null;
+    if (!chave || chave.revogadaEm) throw new McpAuthError("Chave de API inválida ou revogada.", 401);
+    // Chave criada para o ERP não vira chave do conector sozinha: quem a criou
+    // marcou escopos pensando na API, e o conector alcança mais coisa.
+    if (!chave.escopos.includes(ESCOPO_DO_CONECTOR)) {
+      throw new McpAuthError("Esta chave não tem o escopo `mcp:usar`. Crie no painel uma chave secreta com ele para usar o conector.", 403);
+    }
+    exigirLojaComConector(chave.tenant);
+    if (!chave.ultimoUsoEm || Date.now() - chave.ultimoUsoEm.getTime() > 60_000) {
+      prisma.chaveApi.update({ where: { id: chave.id }, data: { ultimoUsoEm: new Date() } }).catch(() => {});
+    }
+    return {
+      tipo: "loja",
+      tenant: chave.tenant,
+      escopos: chave.escopos,
+      origem: { tipo: "chave", id: chave.id, nome: chave.nome },
+    };
+  }
+
+  // 3. Superadmin Ávila Ops
   const adminToken = process.env.LOJAS_ADMIN_TOKEN ?? "";
   if (adminToken && comparaSegura(token, adminToken)) {
     return { tipo: "admin" };
   }
 
-  // 3. Chave de Lojista: lojas_live_<slug>_<hex>
+  // 4. Chave antiga do conector: lojas_live_<slug>_<hex>
   if (!token.startsWith("lojas_live_")) {
-    throw new McpAuthError("Formato de chave inválido. A chave deve iniciar com lojas_live_", 401);
+    throw new McpAuthError("Credencial em formato desconhecido.", 401);
   }
 
   const partes = token.split("_");
@@ -125,5 +167,10 @@ export async function autenticarMcp(request: Request): Promise<McpAuthResult> {
   // tem por que saber.
   exigirLojaComConector(tenant);
 
-  return { tipo: "loja", tenant };
+  return {
+    tipo: "loja",
+    tenant,
+    escopos: ESCOPOS_DO_MCP,
+    origem: { tipo: "chave-antiga", id: tenant.slug, nome: "Chave antiga do conector" },
+  };
 }

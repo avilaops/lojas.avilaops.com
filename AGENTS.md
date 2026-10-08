@@ -98,8 +98,14 @@ Este repositório pertence à Ávila Ops Tecnologia, que ajuda pequenas empresas
   (`/oauth/*`, `/.well-known/*`, regras em `src/lib/mcp-oauth.ts`). Nenhuma
   lista de clientes aceitos: quem fala o protocolo se registra sozinho. Erro só
   é redirecionado depois de conferir o `redirect_uri`, PKCE S256 é obrigatório,
-  e código e tokens ficam só como sha256. A chave `lojas_live_…` continua, para
-  n8n e scripts. Ver `docs/MCP.md`.
+  e código e tokens ficam só como sha256. Ver `docs/MCP.md`.
+- **No conector, cada ferramenta tem escopo e cada chamada deixa rastro.**
+  Ferramenta nova entra em `FERRAMENTAS` (`src/lib/mcp-permissoes.ts`) junto
+  com `MCP_TOOLS`: é o escopo que diz se ela lê ou altera e a quem aparece. A
+  conexão pode o que o lojista marcou em `/autorizar`; chave secreta só entra
+  com `mcp:usar`; a chave `lojas_live_…` não é mais emitida. O histórico
+  (`ChamadaMcp`) guarda ferramenta e identificador, **nunca argumentos nem
+  resultado**: campo novo ali passa por `alvoDaChamada`.
 - **API para desenvolvedores passa por uma porta só.** Rota de `/api/v1` usa
   `rotaDaApi({ escopo })` (`src/lib/api-rotas.ts`) e não autentica, não monta
   erro nem põe CORS sozinha. A loja vem da chave, e toda consulta filtra pelo

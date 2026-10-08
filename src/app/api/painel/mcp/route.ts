@@ -1,8 +1,6 @@
-import { randomBytes } from "node:crypto";
 import { lojistaAtual } from "@/lib/sessao";
 import { exigir } from "@/lib/operadores";
 import { prisma } from "@/lib/db";
-import { cifrar } from "@/lib/cofre";
 
 /** GET — Status da conexão MCP da loja e se possui chave ativa. */
 export async function GET() {
@@ -21,43 +19,22 @@ export async function GET() {
   });
 }
 
-/** POST — Gera ou rotaciona a chave de API da loja (Exclusivo LOJA_PRO). */
+/**
+ * POST — a chave antiga do conector (`lojas_live_…`) não é mais emitida.
+ *
+ * Ela ficava cifrada no `Tenant`, uma por loja e com acesso inteiro. Quem
+ * precisa de chave para n8n ou script cria uma chave secreta com o escopo
+ * `mcp:usar` em Chaves da API: fica só o hash, dá para ter várias e cada uma
+ * pode só o que foi marcado. As chaves antigas que existem seguem valendo até
+ * serem revogadas aqui. Ver docs/MCP.md.
+ */
 export async function POST() {
-  const { s, erro } = await exigir("configuracoes");
+  const { erro } = await exigir("configuracoes");
   if (erro) return erro;
-  const loja = s.tenant;
-
-  if (loja.plano !== "LOJA_PRO") {
-    return Response.json(
-      {
-        erro: "O conector MCP para Claude / IA é um recurso exclusivo do plano Loja Pro (R$ 497/mês). Faça o upgrade na aba Assinatura para ativar.",
-        upgradeNecessario: true,
-      },
-      { status: 403 },
-    );
-  }
-
-  // Gera chave no padrão lojas_live_<slug>_<hex32>
-  const tokenAleatorio = randomBytes(16).toString("hex");
-  const chavePublica = `lojas_live_${loja.slug}_${tokenAleatorio}`;
-  const apiKeyEnc = cifrar(chavePublica);
-  const agora = new Date();
-
-  await prisma.tenant.update({
-    where: { id: loja.id },
-    data: {
-      apiKeyEnc,
-      apiKeyCriadaEm: agora,
-    },
-  });
-
-  return Response.json({
-    sucesso: true,
-    chave: chavePublica,
-    criadaEm: agora,
-    endpointUrl: "https://lojas.avilaops.com/api/mcp",
-    mensagem: "Guarde esta chave com segurança. Ela não será exibida novamente por completo.",
-  });
+  return Response.json(
+    { erro: "Esta chave não é mais emitida. Crie uma chave secreta com o escopo mcp:usar em Chaves da API, logo abaixo." },
+    { status: 410 },
+  );
 }
 
 /** DELETE — Revoga a chave de API da loja. */
@@ -76,7 +53,7 @@ export async function DELETE() {
 
   return Response.json({
     sucesso: true,
-    mensagem: "Chave de API revogada. O Claude e agentes externos não poderão mais acessar sua loja até que uma nova chave seja gerada.",
+    mensagem: "Chave antiga revogada. As automações que a usavam param agora; os assistentes conectados por login e as chaves secretas continuam.",
   });
 }
 

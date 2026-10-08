@@ -1,5 +1,6 @@
 import type { Tenant } from "@prisma/client";
 import { prisma } from "./db";
+import { resumoDoAcesso } from "./mcp-permissoes";
 import {
   gerarSegredo,
   hashDoSegredo,
@@ -34,8 +35,8 @@ export function clientePorId(id: string | null | undefined) {
   return id ? prisma.clienteMcp.findUnique({ where: { id } }) : Promise.resolve(null);
 }
 
-/** O lojista disse sim: nasce a conexão, ainda só com o código. */
-export async function criarCodigo(tenantId: string, operadorId: string | null, pedido: PedidoDeAutorizacao): Promise<string> {
+/** O lojista disse sim: nasce a conexão, ainda só com o código e com o que ele marcou na tela. */
+export async function criarCodigo(tenantId: string, operadorId: string | null, pedido: PedidoDeAutorizacao, escopos: readonly string[]): Promise<string> {
   const agora = Date.now();
   // Código que ninguém trocou não vira conexão; some na autorização seguinte.
   await prisma.conexaoMcp.deleteMany({
@@ -51,6 +52,7 @@ export async function criarCodigo(tenantId: string, operadorId: string | null, p
       codigoExpiraEm: new Date(agora + VALIDADE.codigoMs),
       desafio: pedido.desafio,
       retorno: pedido.retorno,
+      escopos: [...escopos],
     },
   });
   return codigo.valor;
@@ -134,16 +136,27 @@ export async function revogarPorToken(token: string) {
 /** De quanto em quanto tempo o uso é anotado: escrever a cada chamada seria um UPDATE por ferramenta. */
 const ANOTAR_USO_MS = 5 * 60_000;
 
+export interface AcessoDaConexao {
+  tenant: Tenant;
+  conexaoId: string;
+  /** Nome do assistente, como ele se registrou. */
+  assistente: string;
+  escopos: string[];
+}
+
 /**
- * A loja de um token de acesso, ou `null`.
+ * A conexão de um token de acesso, ou `null`.
  *
  * Plano e status da loja não são conferidos aqui: quem decide o que cada um
  * significa é `autenticarMcp`, com a mesma regra da chave.
  */
-export async function lojaDoAcesso(token: string): Promise<Tenant | null> {
+export async function conexaoDoAcesso(token: string): Promise<AcessoDaConexao | null> {
   if (!pareceSegredo("acesso", token)) return null;
   const agora = Date.now();
-  const conexao = await prisma.conexaoMcp.findUnique({ where: { acessoHash: hashDoSegredo(token) }, include: { tenant: true } });
+  const conexao = await prisma.conexaoMcp.findUnique({
+    where: { acessoHash: hashDoSegredo(token) },
+    include: { tenant: true, cliente: { select: { nome: true } } },
+  });
   if (!conexao || conexao.revogadaEm || !conexao.acessoExpiraEm || conexao.acessoExpiraEm.getTime() <= agora) return null;
 
   if (conexao.operadorId) {
@@ -153,7 +166,12 @@ export async function lojaDoAcesso(token: string): Promise<Tenant | null> {
   if (!conexao.ultimoUsoEm || agora - conexao.ultimoUsoEm.getTime() > ANOTAR_USO_MS) {
     await prisma.conexaoMcp.updateMany({ where: { id: conexao.id }, data: { ultimoUsoEm: new Date(agora) } });
   }
-  return conexao.tenant;
+  return { tenant: conexao.tenant, conexaoId: conexao.id, assistente: conexao.cliente.nome, escopos: conexao.escopos };
+}
+
+/** Só a loja do token; para quem não precisa saber o que a conexão pode. */
+export async function lojaDoAcesso(token: string): Promise<Tenant | null> {
+  return (await conexaoDoAcesso(token))?.tenant ?? null;
 }
 
 // ── Painel ─────────────────────────────────────────────────────────────
@@ -161,6 +179,8 @@ export async function lojaDoAcesso(token: string): Promise<Tenant | null> {
 export interface ConexaoDoPainel {
   id: string;
   assistente: string;
+  /** "Só consulta", "Consulta e altera tudo" ou as áreas, por extenso. */
+  acesso: string;
   conectadaEm: string;
   ultimoUsoEm: string | null;
 }
@@ -170,11 +190,12 @@ export async function conexoesDaLoja(tenantId: string): Promise<ConexaoDoPainel[
   const linhas = await prisma.conexaoMcp.findMany({
     where: { tenantId, revogadaEm: null, renovacaoExpiraEm: { gt: new Date() } },
     orderBy: { criadaEm: "desc" },
-    select: { id: true, criadaEm: true, ultimoUsoEm: true, cliente: { select: { nome: true } } },
+    select: { id: true, criadaEm: true, ultimoUsoEm: true, escopos: true, cliente: { select: { nome: true } } },
   });
   return linhas.map((l) => ({
     id: l.id,
     assistente: l.cliente.nome,
+    acesso: resumoDoAcesso(l.escopos),
     conectadaEm: l.criadaEm.toISOString(),
     ultimoUsoEm: l.ultimoUsoEm?.toISOString() ?? null,
   }));
