@@ -126,8 +126,12 @@ Este repositório pertence à Ávila Ops Tecnologia, que ajuda pequenas empresas
 - **Um caminho só para o Google.** Loja com GTM recebe os eventos de
   e-commerce como objeto no `dataLayer` (`{ event, ecommerce }`, formato GA4) e
   não por `gtag('event')`; sem GTM é o contrário. Os dois juntos fazem o mesmo
-  gatilho disparar duas vezes. O marcador `window.__lojaPixels` sai no HTML
-  (`Pixels.tsx`), antes de qualquer evento. O que vai ao Merchant é o que a
+  gatilho disparar duas vezes, e isso inclui a conversão do Ads: com GTM ela é
+  tag do contêiner, não `gtag('event','conversion')`. O `value` do `purchase`
+  é a receita dos itens (total menos frete); o frete vai só em `shipping`. O
+  marcador `window.__lojaPixels` sai no HTML (`Pixels.tsx`), antes de qualquer
+  evento. No dossiê de catálogo, foto só é própria com `fotoExata: true`
+  declarado: ausência não é confirmação (`scripts/lib/dossie-regras.mjs`). O que vai ao Merchant é o que a
   página mostra: descrição curta + longa e a ficha visível como
   `product_detail` (`catalogo-merchant.ts`); nada inventado nem de chave interna.
 - **Português nos nomes e comentários**, como no resto do monorepo.
