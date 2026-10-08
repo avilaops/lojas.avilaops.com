@@ -203,3 +203,49 @@ Docker. A mudança não toca catálogo nem busca.
 6. Search Console: cadastrar `https://pkvedacoes.com.br/sitemap.xml` e, no
    Merchant, a fonte `https://pkvedacoes.com.br/feed/merchant.xml` (vazia até
    o item 1).
+
+## Atualização de 08/10/2026: o que foi aplicado em produção
+
+Sessão no servidor, com acesso ao banco. Dump de antes:
+`/opt/backups/retidos-pk-merchant-20261008/lojas-antes-carga-pk.dump` no
+`applications`. As cargas entraram por `importarProdutos`, o mesmo caminho da
+planilha do painel.
+
+| Medida | Antes | Depois |
+|---|---:|---:|
+| Produtos publicados | 767 | 803 (entraram os 36 anéis guia) |
+| Com descrição curta e longa | 0 | 803 |
+| Com `mpn` (código PK) e marca | 0 | 803 |
+| Com prateleira Google | 0 | 803 (671 em 6732, 132 em 111) |
+| Com preço | 0 | 785 |
+| Logo e favicon | não | sim |
+
+- **Prateleira Google.** Gaxetas e raspadores foram para **6732** (Ferragens >
+  Encanamento > Juntas e conexões para encanamento > Anéis de vedação), a única
+  folha de vedação da taxonomia. Anel guia não é vedação e ficou em 111.
+- **Preço.** Decisão do Nicolas em 08/10: "Preço Unitário R$" da planilha
+  `Inventário` da PK (Drive, posição de 31/12/2025) **mais 20%**, com **pedido
+  mínimo de R$ 300,00**. O cruzamento é pelo código PK e confere a referência
+  na descrição do inventário: 747 conferem, 38 são itens "SR" (sem referência
+  para contradizer) e entraram só pelo código. Ficaram **sem preço 18
+  produtos**: 4 sem código no inventário (`GNY.2284`, `GNY.5086`, `GNY.5231`,
+  `PKG.2851 BS`) e 14 em que a referência do inventário diverge da loja
+  (`docs/importacao/pkvedacoes-precos-divergentes-2026-10-08.csv`, para a PK
+  dizer qual medida vale).
+- **Pedido mínimo.** Publicado no aviso do topo da loja.
+- **Imagens.** Continuam as 5 ilustrações de família (`representativa`). O
+  Google aceita ilustração em Ferragens, então as 671 gaxetas e raspadores
+  podem ir ao feed; os 132 anéis guia (prateleira 111) continuam precisando de
+  foto real.
+
+### Por que o feed continua vazio
+
+A loja ainda não vende: plano Site, sem Mercado Pago conectado e sem CEP de
+origem. O Merchant só aceita oferta que se compra na página de destino, e desde
+08/10 o feed de loja que não vende sai vazio (`docs/MERCHANT-CENTER.md`).
+Faltam, nesta ordem: passar o plano para Loja (com a decisão de cobrança da
+assinatura: sem `cobrancaIsenta` a rotina de assinatura suspende loja paga sem
+assinatura), conectar o Mercado Pago da PK no painel, gravar o CEP de origem e
+a tabela ou integração de frete, e só então cadastrar
+`https://pkvedacoes.com.br/feed/merchant.xml` no Merchant Center, com o valor
+mínimo de pedido repetido no serviço de frete da conta.
