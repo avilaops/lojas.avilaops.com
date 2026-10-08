@@ -249,3 +249,15 @@ assinatura), conectar o Mercado Pago da PK no painel, gravar o CEP de origem e
 a tabela ou integração de frete, e só então cadastrar
 `https://pkvedacoes.com.br/feed/merchant.xml` no Merchant Center, com o valor
 mínimo de pedido repetido no serviço de frete da conta.
+
+### Complemento de 08/10
+
+- **Categorias.** As cinco saíram do texto de reserva: título, descrição e
+  palavras-chave escritos à mão (`seoOrigem = manual`) e parágrafo de
+  apresentação em `Categoria.descricao`, com os limites do catálogo da PK.
+- **Pedido mínimo.** `Tenant.pedidoMinimoCentavos = 30000`; aparece na ficha e
+  na política de envio. O carrinho não pôde ser conferido na loja publicada:
+  no plano Site a ficha não tem botão de compra.
+- **Sem canal de pedido.** `Tenant.whatsapp` está vazio, então a ficha mostra
+  preço e nenhum botão de pedido; o visitante só tem o telefone e o e-mail da
+  página de contato. Falta o número de WhatsApp da PK.
