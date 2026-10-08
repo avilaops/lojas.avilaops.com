@@ -30,6 +30,21 @@ export default function FotoDoCartao({ src, alt, className = "", loading = "lazy
       <div className="produto-sem-foto flex h-full w-full items-center justify-center text-xs text-muted-foreground">Sem foto do produto</div>
     );
   }
-  // eslint-disable-next-line @next/next/no-img-element
-  return <img src={src} alt={alt} loading={loading} onError={() => setFalhou(true)} className={className} />;
+  // Foto enviada à plataforma tem variantes por largura (`?w=`): no celular o
+  // cartão tem ~180 px e baixar a de 480 px era o que o PageSpeed apontava em
+  // "melhorar a entrega de imagens". O navegador escolhe pela tela.
+  const base = /\/uploads\//.test(src) && /\?w=\d+$/.test(src) ? src.replace(/\?w=\d+$/, "") : null;
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={src}
+      srcSet={base ? `${base}?w=320 320w, ${base}?w=480 480w, ${base}?w=800 800w` : undefined}
+      sizes={base ? "(max-width: 640px) 46vw, (max-width: 1024px) 31vw, 280px" : undefined}
+      alt={alt}
+      loading={loading}
+      decoding="async"
+      onError={() => setFalhou(true)}
+      className={className}
+    />
+  );
 }

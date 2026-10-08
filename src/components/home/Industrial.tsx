@@ -33,6 +33,7 @@ export default function Industrial({ t, categorias, vitrine, temDestaques, vende
       <section className="industrial-topo" aria-labelledby="industrial-titulo">
         {/* Fundo por CSS, e só em tela larga: no celular a foto ficava atrás do
             formulário, a meia opacidade, e custava o maior download da página. */}
+        {foto && <link rel="preload" as="image" href={reduzida(foto, 1200)} media="(min-width: 761px)" fetchPriority="high" />}
         {foto && <div className="industrial-topo-foto" aria-hidden="true" style={{ "--industrial-foto": `url("${reduzida(foto, 1200)}")` } as React.CSSProperties} />}
         <div className="container-loja industrial-topo-conteudo">
           <p className="industrial-topo-marca">{t.nome}</p>

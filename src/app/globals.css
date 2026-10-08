@@ -1395,3 +1395,20 @@ body:has(.whatsapp-flutuante) .rodape-loja { padding-bottom: calc(5.5rem + env(s
 }
 /* Valor longo na ficha do cartão (material, perfil) quebra a linha em vez de ser cortado. */
 .cartao-produto-tecnico .cartao-produto-tecnica > div { max-width: 100%; white-space: normal; }
+
+/* Página de contato padrão das lojas. */
+.pagina-contato { display: grid; gap: 2.5rem; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); align-items: start; padding-block: clamp(2rem, 5vw, 3.5rem); }
+.pagina-contato h1 { font-size: clamp(1.6rem, 3vw, 2.2rem); font-weight: 700; line-height: 1.15; letter-spacing: -.01em; }
+.pagina-contato > div > p { margin-top: .9rem; max-width: 30rem; color: var(--muted-foreground); line-height: 1.6; }
+.pagina-contato > div > .btn-primario { margin-top: 1.5rem; display: inline-flex; align-items: center; gap: .5rem; min-height: 3rem; padding-inline: 1.25rem; }
+.pagina-contato dl { display: grid; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); }
+.pagina-contato dl > div { display: grid; grid-template-columns: 1.5rem 1fr; gap: .15rem .9rem; padding: 1rem 1.15rem; border-bottom: 1px solid var(--border); }
+.pagina-contato dl > div:last-child { border-bottom: 0; }
+.pagina-contato dl svg { grid-row: 1 / span 2; width: 1.25rem; height: 1.25rem; margin-top: .15rem; color: var(--primary); }
+.pagina-contato dt { color: var(--muted-foreground); font-size: .8125rem; }
+.pagina-contato dd { font-weight: 600; line-height: 1.5; overflow-wrap: anywhere; }
+.pagina-contato dd address { font-style: normal; }
+.pagina-contato dd a { text-decoration: underline; text-underline-offset: 3px; }
+.pagina-contato dd address + a { display: inline-flex; align-items: center; gap: .2rem; margin-top: .25rem; color: var(--primary); font-size: .875rem; }
+.pagina-contato dd address + a svg { grid-row: auto; width: .875rem; height: .875rem; margin: 0; }
+@media (max-width: 760px) { .pagina-contato { grid-template-columns: 1fr; gap: 1.75rem; } }

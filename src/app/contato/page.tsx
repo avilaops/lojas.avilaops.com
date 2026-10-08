@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { contatoConfigurado, enderecoCompleto, exigirTenant, temaDo } from "@/lib/tenant";
 import { mascararDocumento } from "@avilaops/checkout";
 import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
-import { ArrowUpRight, Clock3, MapPin, MessageCircle, Phone, Mail } from "lucide-react";
+import { ArrowUpRight, Building2, Clock3, MapPin, MessageCircle, Phone, Mail } from "lucide-react";
 import { contratoDo } from "@/lib/templates";
 import { descricaoDaPagina } from "@/lib/textos-loja";
 
@@ -53,24 +53,27 @@ export default async function Contato() {
       </dl>
     </section>
   );
+  // Página de contato de quem compra peça: o canal mais rápido em destaque, os
+  // demais com link que funciona no toque (ligar, escrever, abrir o mapa) e a
+  // identificação da empresa, que é o que o comprador e o Merchant conferem.
+  const mapa = endereco ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${t.nome} ${endereco}`)}` : null;
   return (
-    <div className="container-loja max-w-2xl py-10">
-      <h1 className="text-2xl font-bold">Contato</h1>
-      <dl className="mt-6 space-y-3 text-sm">
+    <div className="container-loja pagina-contato">
+      <div>
+        <h1>Fale com a {t.nome}</h1>
+        <p>Envie a medida, o código ou a referência do que você procura. Respondemos pelo canal que você escolher.</p>
         {t.whatsapp && (
-          <div>
-            <dt className="font-semibold">WhatsApp</dt>
-            <dd>
-              <a className="underline" href={linkWhatsApp(t.whatsapp, "Olá! Vim pelo site.")} target="_blank" rel="noopener">
-                Iniciar conversa
-              </a>
-            </dd>
-          </div>
+          <a className="btn-primario" href={linkWhatsApp(t.whatsapp, "Olá! Vim pelo site.")} target="_blank" rel="noopener noreferrer">
+            <MessageCircle size={20} aria-hidden="true" /> Conversar no WhatsApp
+          </a>
         )}
-        {t.telefone && (<div><dt className="font-semibold">Telefone</dt><dd>{t.telefone}</dd></div>)}
-        {t.emailContato && (<div><dt className="font-semibold">E-mail</dt><dd><a className="underline" href={`mailto:${t.emailContato}`}>{t.emailContato}</a></dd></div>)}
-        {endereco && (<div><dt className="font-semibold">Endereço</dt><dd>{endereco}</dd></div>)}
-        {t.horario && (<div><dt className="font-semibold">Horário</dt><dd>{t.horario}</dd></div>)}
+      </div>
+      <dl>
+        {t.telefone && <div><Phone aria-hidden="true" /><dt>Telefone</dt><dd><a href={`tel:${t.telefone.replace(/[^+\d]/g, "")}`}>{t.telefone}</a></dd></div>}
+        {t.emailContato && <div><Mail aria-hidden="true" /><dt>E-mail</dt><dd><a href={`mailto:${t.emailContato}`}>{t.emailContato}</a></dd></div>}
+        {endereco && <div><MapPin aria-hidden="true" /><dt>Endereço</dt><dd><address>{endereco}</address>{mapa && <a href={mapa} target="_blank" rel="noopener noreferrer">Abrir no mapa <ArrowUpRight size={14} aria-hidden="true" /></a>}</dd></div>}
+        {t.horario && <div><Clock3 aria-hidden="true" /><dt>Horário de atendimento</dt><dd>{t.horario}</dd></div>}
+        {(t.razaoSocial || t.cnpj) && <div><Building2 aria-hidden="true" /><dt>Empresa</dt><dd>{t.razaoSocial ?? t.nome}{t.cnpj ? <><br />CNPJ {mascararDocumento(t.cnpj)}</> : null}</dd></div>}
       </dl>
     </div>
   );
