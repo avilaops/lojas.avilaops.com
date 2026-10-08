@@ -31,6 +31,7 @@ NOVO=$(mktemp)
     echo "		on_demand"
     echo "	}"
     echo "	encode zstd gzip"
+    echo "	import lojas_cabecalhos"
     echo "	import lojas_vitrine_cache"
     echo "	import lojas_log"
     echo "	import lojas_teto_corpo"

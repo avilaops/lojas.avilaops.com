@@ -109,3 +109,17 @@ lojas.avilaops.com, *.lojas.avilaops.com {
 #	import lojas_vitrine_cache
 #	import lojas_log
 #	import lojas_teto_corpo
+
+# Cabeçalhos de segurança dos domínios próprios das lojas (08/10/2026). O bloco
+# de lojas.avilaops.com já os tinha; os domínios gerados pelo caddy-sync.sh e o
+# brilhax.caddy importam este trecho. HSTS sem includeSubDomains: o domínio é do
+# lojista e pode ter subdomínio fora daqui. A CSP segue em modo de relato.
+(lojas_cabecalhos) {
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		X-Frame-Options "SAMEORIGIN"
+		Content-Security-Policy-Report-Only "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://connect.facebook.net https://analytics.tiktok.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https:; frame-ancestors 'self'; base-uri 'self'; form-action 'self' https://www.mercadopago.com.br"
+	}
+}
