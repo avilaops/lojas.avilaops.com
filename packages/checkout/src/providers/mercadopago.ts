@@ -6,6 +6,22 @@ import type { MapeamentoStatus, PaymentProvider, WebhookEntrada } from "./types.
 const API = "https://api.mercadopago.com";
 
 /**
+ * Tempo-limite das chamadas. Sem ele, um Mercado Pago que pendura a conexão
+ * prende a requisição do checkout até o proxy desistir e trava a reconciliação
+ * no primeiro pedido do laço.
+ *
+ * Estourar NÃO quer dizer que a cobrança não foi criada: o `fetch` rejeita, o
+ * método rejeita e quem chama decide (o checkout marca a tentativa como incerta
+ * e mantém a reserva; a chave de idempotência protege a nova tentativa). Por
+ * isso cobrança e estorno têm folga, e não se baixa este número para "responder
+ * mais rápido".
+ */
+const TEMPO_LIMITE_COBRANCA_MS = 20_000;
+const TEMPO_LIMITE_ESTORNO_MS = 20_000;
+/** Leitura simples, repetida em laço pela reconciliação: falha cedo e segue. */
+const TEMPO_LIMITE_CONSULTA_MS = 10_000;
+
+/**
  * Status do Mercado Pago traduzidos.
  *
  * `in_process` e `in_mediation` viram "em_analise" e NÃO "aprovado": é análise
@@ -87,6 +103,7 @@ export class MercadoPagoProvider implements PaymentProvider {
         "x-idempotency-key": pedido.referencia,
       },
       body: JSON.stringify(corpo),
+      signal: AbortSignal.timeout(TEMPO_LIMITE_COBRANCA_MS),
     });
 
     const dados = await resposta.json();
@@ -104,6 +121,7 @@ export class MercadoPagoProvider implements PaymentProvider {
   async consultar(pagamentoId: string): Promise<ResultadoPagamento> {
     const resposta = await fetch(`${API}/v1/payments/${pagamentoId}`, {
       headers: { authorization: `Bearer ${this.config.accessToken}` },
+      signal: AbortSignal.timeout(TEMPO_LIMITE_CONSULTA_MS),
     });
 
     if (!resposta.ok) {
@@ -134,6 +152,7 @@ export class MercadoPagoProvider implements PaymentProvider {
         "x-idempotency-key": `refund:${pagamentoId}:${opcoes.valorEmCentavos ?? "total"}`,
       },
       body: JSON.stringify(corpo),
+      signal: AbortSignal.timeout(TEMPO_LIMITE_ESTORNO_MS),
     });
 
     if (!resposta.ok) {
@@ -257,6 +276,8 @@ export class MercadoPagoProvider implements PaymentProvider {
       : primeiro.nome;
   }
 
+  // Resposta crua do Mercado Pago: campos aninhados e opcionais, lidos com `?.`.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private traduzir(dados: Record<string, any>): ResultadoPagamento {
     const status: StatusPagamento = STATUS[dados.status] ?? "pendente";
     const pix = dados?.point_of_interaction?.transaction_data;

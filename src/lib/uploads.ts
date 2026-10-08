@@ -4,8 +4,12 @@ import path from "node:path";
 import { otimizarAoEntrar } from "./imagens";
 import { removedorConfigurado, removerFundo } from "./fundo";
 import { UPLOADS_DIR } from "./uploads-arquivos";
+import { TETO_IMAGEM_BYTES, TETO_IMAGEM_URL_BYTES, UploadInvalido, lerComTeto } from "./limites-upload";
 
 export { MIME_POR_EXT, UPLOADS_DIR } from "./uploads-arquivos";
+// Uma definição só: as rotas fazem `instanceof UploadInvalido`, e duas classes
+// com o mesmo nome fariam o `catch` deixar de reconhecer o erro (viraria 500).
+export { UploadInvalido } from "./limites-upload";
 
 /**
  * Fotos de produto e logo. Ficam em disco (volume /opt/lojas/uploads no
@@ -14,12 +18,9 @@ export { MIME_POR_EXT, UPLOADS_DIR } from "./uploads-arquivos";
  * domínio de loja.
  *
  * Só imagem, até 5 MB, tipo conferido pelos bytes (não pela extensão que o
- * navegador mandou).
+ * navegador mandou). Os tetos moram em `limites-upload.ts`.
  */
-const LIMITE = 5 * 1024 * 1024;
 const BASE = process.env.LOJAS_BASE_DOMAIN ?? "lojas.avilaops.com";
-
-export class UploadInvalido extends Error {}
 
 function tipoPelosBytes(b: Buffer): { ext: string; mime: string } | null {
   if (b.length > 8 && b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47) return { ext: "png", mime: "image/png" };
@@ -41,7 +42,7 @@ export async function salvarBytes(slug: string, bytes: Buffer, ext: string): Pro
 }
 
 export async function salvarImagem(slug: string, arquivo: File): Promise<{ url: string; caminho: string }> {
-  if (arquivo.size > LIMITE) throw new UploadInvalido("Imagem acima de 5 MB.");
+  if (arquivo.size > TETO_IMAGEM_BYTES) throw new UploadInvalido("Imagem acima de 5 MB.");
   const original = Buffer.from(await arquivo.arrayBuffer());
   const tipo = tipoPelosBytes(original);
   if (!tipo) throw new UploadInvalido("Envie PNG, JPG, WEBP, GIF ou SVG.");
@@ -73,9 +74,10 @@ export async function importarImagemDeUrl(slug: string, url: string, tratar = fa
   const r = await fetch(alvo, { headers: { "user-agent": "Mozilla/5.0 (compatible; LojasAvilaOps/1.0)" }, redirect: "follow", signal: AbortSignal.timeout(20_000) });
   if (!r.ok) throw new UploadInvalido(`Origem respondeu ${r.status}.`);
   const tamanho = Number(r.headers.get("content-length") ?? 0);
-  if (tamanho > LIMITE * 2) throw new UploadInvalido("Imagem acima de 10 MB.");
-  const original = Buffer.from(await r.arrayBuffer());
-  if (original.length > LIMITE * 2) throw new UploadInvalido("Imagem acima de 10 MB.");
+  if (tamanho > TETO_IMAGEM_URL_BYTES) throw new UploadInvalido("Imagem acima de 10 MB.");
+  // Origem sem `content-length` (resposta em pedaços) não passa pela conferência
+  // acima: a leitura em fluxo para no teto em vez de carregar o arquivo inteiro.
+  const original = await lerComTeto(r, TETO_IMAGEM_URL_BYTES, "Imagem acima de 10 MB.");
   const tipo = tipoPelosBytes(original);
   if (!tipo) throw new UploadInvalido("A URL não devolveu uma imagem.");
 

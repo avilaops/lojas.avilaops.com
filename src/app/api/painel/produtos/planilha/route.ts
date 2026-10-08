@@ -1,6 +1,7 @@
 import { exigir } from "@/lib/operadores";
 import { lerCsvProdutos, produtosDeLinhas } from "@/lib/planilha-produtos";
 import { ErroPlanilha, linhasDeXlsx } from "@/lib/xlsx-leitor";
+import { TETO_PLANILHA_BYTES, corpoAcimaDoTeto } from "@/lib/limites-upload";
 
 /**
  * POST /api/painel/produtos/planilha — o arquivo vira a prévia da importação.
@@ -16,19 +17,19 @@ import { ErroPlanilha, linhasDeXlsx } from "@/lib/xlsx-leitor";
  */
 export const dynamic = "force-dynamic";
 
-/** Catálogo de 20 mil linhas em .xlsx dá poucos MB; acima disto é engano. */
-const TETO_BYTES = 12 * 1024 * 1024;
+const GRANDE_DEMAIS = "Arquivo muito grande (máximo 12 MB). Divida a planilha em partes.";
 
 export async function POST(request: Request) {
   const { erro } = await exigir("catalogo");
   if (erro) return erro;
 
+  // Antes de `formData()`, que lê o corpo inteiro para a memória.
+  if (corpoAcimaDoTeto(request, TETO_PLANILHA_BYTES)) return Response.json({ erro: GRANDE_DEMAIS }, { status: 413 });
+
   const formulario = await request.formData().catch(() => null);
   const arquivo = formulario?.get("arquivo");
   if (!(arquivo instanceof File)) return Response.json({ erro: "Nenhum arquivo enviado." }, { status: 422 });
-  if (arquivo.size > TETO_BYTES) {
-    return Response.json({ erro: "Arquivo muito grande (máximo 12 MB). Divida a planilha em partes." }, { status: 413 });
-  }
+  if (arquivo.size > TETO_PLANILHA_BYTES) return Response.json({ erro: GRANDE_DEMAIS }, { status: 413 });
 
   const nome = arquivo.name.toLowerCase();
   // O .xls antigo é outro formato (binário, anterior a 2007) e não é lido

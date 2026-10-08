@@ -67,6 +67,11 @@ ganho de tempo — o build já falha em cerca de um minuto quando um teste cai.
   banco. Latência de página fica para o log do Caddy. Ver `docs/METRICAS.md`.)
 - [ ] Melhorar isolamento operacional: limites de upload, timeout de integrações,
   idempotência e alertas n8n acionáveis.
+  (Entraram limite de upload e tempo-limite: `src/lib/limites-upload.ts`, 413
+  antes de ler o corpo em `/api/painel/imagens` e `/api/painel/produtos/planilha`,
+  5 MB também no `?tratar=1`, leitura com teto em `importarImagemDeUrl` e
+  tempo-limite nas três chamadas de `packages/checkout/src/providers/mercadopago.ts`.
+  Faltam idempotência e alertas n8n. Ver `docs/ISOLAMENTO-OPERACIONAL.md`.)
 - [ ] Backup, migração e rollback documentados como rotina verificável do deploy.
 
 ## Pendências menores

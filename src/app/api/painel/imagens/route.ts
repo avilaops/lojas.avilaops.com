@@ -4,6 +4,7 @@ import { unlink } from "node:fs/promises";
 import path from "node:path";
 import { UPLOADS_DIR, UploadInvalido, salvarImagem, salvarBytes } from "@/lib/uploads";
 import { FundoIndisponivel, removedorConfigurado, removerFundo } from "@/lib/fundo";
+import { TETO_IMAGEM_BYTES, corpoAcimaDoTeto } from "@/lib/limites-upload";
 
 /**
  * POST multipart (campo `arquivo`) → { url }. Usado para foto de produto,
@@ -17,6 +18,9 @@ export async function POST(request: Request) {
   const { s, erro } = await exigir("catalogo");
   if (erro) return erro;
   const loja = s.tenant;
+
+  // Antes de `formData()`, que lê o corpo inteiro para a memória.
+  if (corpoAcimaDoTeto(request, TETO_IMAGEM_BYTES)) return Response.json({ erro: "Imagem acima de 5 MB." }, { status: 413 });
 
   const form = await request.formData().catch(() => null);
   const arquivo = form?.get("arquivo");
@@ -33,6 +37,8 @@ export async function POST(request: Request) {
       return Response.json({ url: r.url, tratada: false, ...(produto ? { sku, produto: produto.nome, produtoId: produto.id } : {}) });
     }
     if (!removedorConfigurado()) return Response.json({ erro: "Tratamento de imagem indisponível nesta instalação." }, { status: 503 });
+    // O removedor aceita até 30 MB (tem outros chamadores); o painel, 5 MB.
+    if (arquivo.size > TETO_IMAGEM_BYTES) return Response.json({ erro: "Imagem acima de 5 MB." }, { status: 422 });
     const bytes = Buffer.from(await arquivo.arrayBuffer());
     const recortada = await removerFundo(bytes);
     const r = await salvarBytes(loja.slug, recortada, "webp");
