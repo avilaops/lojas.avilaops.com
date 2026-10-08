@@ -19,7 +19,15 @@ export async function avisarQuemEsperava(): Promise<{ avisos: number }> {
     take: 500,
   });
 
+  let avisos = 0;
   for (const a of pendentes) {
+    // Reivindica antes de avisar, pelo mesmo motivo do carrinho abandonado:
+    // duas passadas simultâneas liam o mesmo pedido de aviso em aberto. Sem
+    // chave no evento de propósito — quem pede o aviso de novo, depois de o
+    // produto acabar outra vez, tem de recebê-lo de novo.
+    const meu = await prisma.avisoEstoque.updateMany({ where: { id: a.id, avisadoEm: null }, data: { avisadoEm: new Date() } });
+    if (meu.count !== 1) continue;
+    avisos++;
     await emitir({
       tipo: "loja.voltou-ao-estoque",
       slug: a.tenant.slug,
@@ -33,10 +41,9 @@ export async function avisarQuemEsperava(): Promise<{ avisos: number }> {
       produtoNome: a.produto.nome,
       precoCentavos: a.produto.precoCentavos,
     });
-    await prisma.avisoEstoque.update({ where: { id: a.id }, data: { avisadoEm: new Date() } });
   }
 
-  return { avisos: pendentes.length };
+  return { avisos };
 }
 
 /** Quem a loja tem esperando, por produto — vira lista de reposição no painel. */

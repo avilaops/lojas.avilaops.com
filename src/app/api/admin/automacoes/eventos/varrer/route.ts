@@ -17,7 +17,10 @@ export async function POST(request: Request) {
   if (!autorizado(request)) return naoAutorizado();
   const agora = Date.now();
   const naoEntregues = await prisma.automacaoEvento.updateMany({
-    where: { status: "EMITIDO", emitidoEm: { lt: new Date(agora - 15 * 60_000) } },
+    // Os `mercadolivre.*` são a fila de ENTRADA, consumida pela rotina de
+    // avisos e não pelo n8n: marcá-los como "n8n não reivindicou" tirava da
+    // fila um pedido do canal só porque a rotina atrasou.
+    where: { status: "EMITIDO", emitidoEm: { lt: new Date(agora - 15 * 60_000) }, NOT: { tipo: { startsWith: "mercadolivre." } } },
     data: { status: "FALHOU", detalhe: "n8n não reivindicou em 15 min", concluidoEm: new Date() },
   });
   const presos = await prisma.automacaoEvento.updateMany({

@@ -7,6 +7,8 @@ import { emitir, itensParaTexto, lojista } from "./eventos";
 import { baixarEstoqueDoPedido } from "./estoque";
 import { marcarConvertido } from "./carrinhos";
 import { COOKIE_SESSAO } from "./atribuicao";
+import { alertar } from "./alertas";
+import { urlDaLoja } from "./tenant";
 
 
 /**
@@ -131,6 +133,11 @@ export async function atualizarStatusPagamento(
       where: { id: pedido.id },
       data: { pagamentoStatus: `divergencia:${status}:${valorEmCentavos}` },
     });
+    await alertar({
+      codigo: "pagamento.divergencia", slug: t.slug, lojaNome: t.nome, recurso: pedido.referencia,
+      detalhe: `Pedido ${pedido.numero}: total ${pedido.totalCentavos} centavos, pagamento ${pagamentoId} de ${valorEmCentavos} centavos.`,
+      link: `${urlDaLoja(t)}/painel/pedidos`,
+    });
     return;
   }
   // Pedido já em separação/enviado não volta para "pago" por webhook repetido.
@@ -141,20 +148,31 @@ export async function atualizarStatusPagamento(
   });
 
   if (novo === "PAGO" && !pedido.estoqueBaixado) {
-    await baixarEstoqueDoPedido(pedido.id);
+    try {
+      await baixarEstoqueDoPedido(pedido.id);
+    } catch (erro) {
+      // Dinheiro recebido e pedido que não pode ser separado: é o caso que não
+      // pode ficar só no log. O erro segue, para o gateway registrar a falha.
+      await alertar({
+        codigo: "pagamento.sem-estoque", slug: t.slug, lojaNome: t.nome, recurso: pedido.referencia,
+        detalhe: `Pedido ${pedido.numero}, pagamento ${pagamentoId}: ${erro instanceof Error ? erro.message : String(erro)}`,
+        link: `${urlDaLoja(t)}/painel/pedidos`,
+      });
+      throw erro;
+    }
     const itens = pedido.itens.map((i) => ({ nome: i.nome, quantidade: i.quantidade, precoCentavos: i.precoUnitarioCentavos }));
     await emitir({
       tipo: "pedido.pago", slug: t.slug, referencia: pedido.referencia, numero: pedido.numero, totalCentavos: pedido.totalCentavos,
       clienteNome: pedido.clienteNome, clienteEmail: pedido.clienteEmail, clienteTelefone: pedido.clienteTelefone,
       itens, itensTexto: itensParaTexto(itens), ...lojista(t),
-    });
+    }, { chave: `pago:${pedido.referencia}` });
   } else if (["recusado", "cancelado"].includes(status) && avancaDeAguardando) {
     await liberarReservas(t.id, pedido.referencia);
     // Só quando a recusa MUDA o pedido. Sem a condição, cada reenvio da mesma
     // notificação (o Mercado Pago reenvia até receber 2xx) mandava de novo
     // "pagamento recusado" ao cliente, e uma recusa atrasada chegando depois do
     // pagamento aprovado avisava recusa de um pedido já pago.
-    if (status === "recusado") await emitir({ tipo: "pedido.recusado", slug: t.slug, referencia: pedido.referencia, clienteNome: pedido.clienteNome, clienteEmail: pedido.clienteEmail, clienteTelefone: pedido.clienteTelefone, ...lojista(t) });
+    if (status === "recusado") await emitir({ tipo: "pedido.recusado", slug: t.slug, referencia: pedido.referencia, clienteNome: pedido.clienteNome, clienteEmail: pedido.clienteEmail, clienteTelefone: pedido.clienteTelefone, ...lojista(t) }, { chave: `recusado:${pedido.referencia}` });
   }
 }
 

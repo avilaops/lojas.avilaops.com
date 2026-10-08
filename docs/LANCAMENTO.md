@@ -1,5 +1,10 @@
 # O que falta para lançar o lojas.avilaops.com
 
+> **Riscado em 08/10/2026, por decisão do Nicolas:** Sandro Motos não é cliente
+> da Ávila Ops, e a Ávila Ops não tem contrato com a CepCerto. Os itens 4 e 16
+> (parte da CepCerto) saem da lista, e a loja `sandromotos` não serve de
+> demonstração nem de exemplo. O resto do documento é o retrato de 29/08/2026.
+
 > Levantamento do Comercial em 29/08/2026, logo depois do deploy completo.
 > "Lançar" aqui não é uma data: é a **primeira loja paga**. Até ela, o
 > produto está em pré-lançamento e nada de feature nova entra
@@ -32,7 +37,7 @@ foi exercitado com dinheiro.
 | 13 roteador n8n | **feito**: `categoria.seo-*` fecham como PROCESSADO |
 | 15 WhatsApp obrigatório | **feito** na tela e na API do `/criar` |
 | 3 rotacionar MP + webhook no painel | **Nicolas** (só o painel do MP permite) |
-| 4 fotos do Sandro | **Nicolas/Sandro**: as 28 fotos são stock da Unsplash; a fonte honesta é o dono mandar 10 fotos pelo WhatsApp |
+| 4 fotos do Sandro | ~~**Nicolas/Sandro**: as 28 fotos são stock da Unsplash; a fonte honesta é o dono mandar 10 fotos pelo WhatsApp~~ (riscado em 08/10/2026) |
 | 5 templates Meta | **Nicolas** |
 | 17 tutorial | **feito (texto)**: `/ajuda` com os 7 capítulos, no menu, rodapé e sitemap. PDF e os 3 vídeos de celular continuam com o Nicolas |
 | 16 removedor de fundo | **feito**: o container das lojas entra na rede do Odoo no deploy; "Tratar com IA" no painel responde em ~2 s |
@@ -49,7 +54,7 @@ foi exercitado com dinheiro.
 | 1 | **Uma compra real de R$ 1** numa loja com o Mercado Pago do lojista configurado: PIX → webhook → pedido pago → WhatsApp/e-mail → separar → enviado com rastreio. Registrar o print de cada passo. | Dev | É a única prova do portão 1. Hoje nenhuma loja consegue receber. |
 | 2 | **Reativar a `demo` e isentá-la da cobrança** (assinatura interna ou flag), para a rotina diária não suspender de novo. | Dev | A única loja de demonstração está sem checkout desde hoje. |
 | 3 | **Rotacionar `MP_ACCESS_TOKEN`/`MP_WEBHOOK_SECRET`** (colados no chat em 28/08), corrigir a URL do webhook de assinatura no painel do MP (ainda aponta para host morto) e **provar a mensalidade com R$ 0,10**. | Dev + Nicolas | Portão 2. Credencial em conversa está queimada. |
-| 4 | **Fotos reais na loja do Sandro Motos.** Hoje "Baú Givi" é uma moto na estrada e "Pneu" é uma montanha (stock). Fotos do Instagram/fornecedor ou fundo branco pelo removedor. | Dev (Comercial passa as fontes) | É a demo que vai para o celular do dono; foto errada desmonta a conversa. |
+| 4 | ~~**Fotos reais na loja do Sandro Motos.** Hoje "Baú Givi" é uma moto na estrada e "Pneu" é uma montanha (stock). Fotos do Instagram/fornecedor ou fundo branco pelo removedor.~~ (riscado em 08/10/2026) | Dev (Comercial passa as fontes) | É a demo que vai para o celular do dono; foto errada desmonta a conversa. |
 | 5 | **Templates de WhatsApp aprovados na Meta** (os nós do fluxo já apontam para a Cloud API, mas sem template não sai nada). | Nicolas | Régua e avisos de pedido pago dependem disso. |
 
 ## Landing e palavras (portão 4, semana de 01 a 05/09)
@@ -59,7 +64,7 @@ foi exercitado com dinheiro.
 | 6 | **Um nome só para os planos.** Landing diz Essencial / Negócio / Escala; wizard `/criar`, ficha e docs dizem Site / Loja / Loja Pro. | GPT decide, Dev aplica |
 | 7 | **Promessa do hero.** "Sua loja começa bonita. E cresce pronta." é frase de agência. A ficha vende: *loja pronta em um dia, Pix na hora, sem comissão, R$ 119 fixo, dinheiro na conta do lojista*. Nada disso aparece no primeiro scroll. | GPT |
 | 8 | **Preço honesto.** "Implantação a partir de R$ 497 (12x de R$ 49,70)" = R$ 596 com juros apresentado como parcela; e "PayPal e Éfi em implantação" é promessa. Tirar os dois até serem verdade. | GPT |
-| 9 | **Prova real no lugar de exemplos inventados** (Doce Brasa, Norte Studio, Casa Serena). "Explorar uma loja" hoje leva à demo suspensa. Usar Sandro Motos (com autorização) ou Brilhax. | GPT + Comercial |
+| 9 | **Prova real no lugar de exemplos inventados** (Doce Brasa, Norte Studio, Casa Serena). "Explorar uma loja" hoje leva à demo suspensa. Usar a Brilhax, com autorização. | GPT + Comercial |
 | 10 | **Cortar a landing pela metade** e mostrar os 7 layouts (a página mostra 3). | GPT + Dev |
 | 11 | Página `/lojas` + conteúdo para "criar loja virtual Ribeirão Preto"; sitemap com mais do que 2 URLs; propriedade no Search Console. | GPT (já no quadro, 05/09) |
 
@@ -71,7 +76,7 @@ foi exercitado com dinheiro.
 | 13 | Roteador do n8n não conhece `categoria.seo-pendente` / `categoria.seo-publicado`: caem em "Encerrar: Ignorado". Adicionar ao switch ou parar de emitir. | Dev |
 | 14 | `GEMINI_API_KEY` não existe no servidor: o SEO de categorias sai só pelo fallback. Decidir se vale a chave. | Conselho |
 | 15 | WhatsApp obrigatório no `/criar` (hoje é opcional; a régua inteira depende dele). | Dev |
-| 16 | Removedor de fundo nas fotos e contrato server-side da CepCerto (já no quadro, outubro). | Dev |
+| 16 | Removedor de fundo nas fotos ~~e contrato server-side da CepCerto~~ (riscado em 08/10/2026). | Dev |
 | 17 | Tutorial/ajuda da plataforma (já no quadro, 05/09). | GPT + Dev |
 
 ## O que está bom e não precisa de mão
@@ -85,6 +90,6 @@ feed do Merchant; automações v1 com idempotência; rotina de SEO ligada.
 1. **Lançamento = primeira loja paga.** Sem data.
 2. **Congelar feature** nas Lojas até lá; só os itens 1–11 desta lista.
 3. **Critério de "pronto para vender"**: compra real de R$ 1 numa loja +
-   cobrança de R$ 0,10 da mensalidade + demo no celular do Sandro.
+   cobrança de R$ 0,10 da mensalidade.
 
 — Comercial, 29/08/2026

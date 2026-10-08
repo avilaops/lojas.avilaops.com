@@ -106,6 +106,14 @@ Este repositório pertence à Ávila Ops Tecnologia, que ajuda pequenas empresas
   com `mcp:usar`; a chave `lojas_live_…` não é mais emitida. O histórico
   (`ChamadaMcp`) guarda ferramenta e identificador, **nunca argumentos nem
   resultado**: campo novo ali passa por `alvoDaChamada`.
+- **Evento que vira mensagem leva a chave do fato.** `emitir(evento, { chave })`
+  (`src/lib/eventos.ts`): o mesmo fato dá o mesmo `eventId`, e a segunda emissão
+  esbarra na chave primária. Sem chave, "uma vez só" depende de ler antes de
+  escrever, e isso quebra com duas notificações ao mesmo tempo, que é o normal
+  (o gateway reenvia; rotina e n8n chamam juntos). Onde o fato pode se repetir
+  de verdade, reivindique antes com `updateMany` condicional. Falha que precisa
+  de gente sai por `alertar` (`src/lib/alertas.ts`), não por `console.error`.
+  Ver `docs/ISOLAMENTO-OPERACIONAL.md`.
 - **API para desenvolvedores passa por uma porta só.** Rota de `/api/v1` usa
   `rotaDaApi({ escopo })` (`src/lib/api-rotas.ts`) e não autentica, não monta
   erro nem põe CORS sozinha. A loja vem da chave, e toda consulta filtra pelo
@@ -178,5 +186,10 @@ Este repositório pertence à Ávila Ops Tecnologia, que ajuda pequenas empresas
   e só vale com `MP_APP_ID`, `MP_APP_SECRET` e `MP_APP_WEBHOOK_SECRET` juntos.
   Renovar o acesso é da rotina `mercadopago.renovar`, nunca da cobrança: o
   refresh é de uso único. Ver `docs/MERCADO-PAGO-OAUTH.md`.
+- **Sandro Motos não é cliente, e não há contrato com a CepCerto** (Nicolas,
+  08/10/2026). A loja `sandromotos` não é demonstração nem exemplo, e o nome
+  não entra em site, proposta ou case. Pendência que dependa da CepCerto não
+  existe: a cotação é do Melhor Envio. O que sobrou dela no código é a emissão
+  de etiqueta antiga (`src/lib/postagem.ts`), que não se estende.
 - **Português nos nomes e comentários**, como no resto do monorepo.
 - **TypeScript estrito**; `npm run typecheck` antes de entregar.

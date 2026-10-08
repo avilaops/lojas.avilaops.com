@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import type { Prisma, Tenant } from "@prisma/client";
 import { prisma } from "./db";
 import { urlDaLoja } from "./tenant";
@@ -109,7 +109,13 @@ export type EventoPlataforma =
    * Emitido pela rotina `loja.indicacoes`.
    */
   | { tipo: "loja.indicacoes"; slug: string; nome: string; url: string; emailContato: string | null; whatsapp: string | null }
-  | ({ tipo: "pedido.cancelado"; slug: string; referencia: string; numero: number; clienteNome: string; clienteEmail: string; clienteTelefone: string; totalCentavos: number; motivo: string; linkPedido: string } & Lojista);
+  | ({ tipo: "pedido.cancelado"; slug: string; referencia: string; numero: number; clienteNome: string; clienteEmail: string; clienteTelefone: string; totalCentavos: number; motivo: string; linkPedido: string } & Lojista)
+  /**
+   * Algo quebrou na operação de uma loja e precisa de gente. Emitido só por
+   * `alertar` (alertas.ts), que é quem traz o texto de cada `codigo`: o evento
+   * já chega dizendo a loja, o que aconteceu e o que fazer.
+   */
+  | { tipo: "operacao.alerta"; slug: string; lojaNome: string; codigo: string; recurso: string; oQueQuebrou: string; oQueFazer: string; detalhe: string; link: string | null };
 
 export type TipoEvento = EventoPlataforma["tipo"];
 
@@ -143,8 +149,40 @@ export function novoEventId(): string {
   return `evt_${randomUUID().replace(/-/g, "")}`;
 }
 
-export async function emitir(evento: EventoPlataforma): Promise<void> {
-  const eventId = novoEventId();
+/**
+ * O `eventId` de um fato de negócio: o mesmo fato dá sempre o mesmo id.
+ *
+ * `eventId` sorteado protege a reentrega de UMA emissão, e mais nada: o mesmo
+ * fato emitido duas vezes (duas notificações do Mercado Pago no mesmo instante,
+ * a rotina e o n8n chamando juntos) eram dois eventos válidos e dois avisos ao
+ * cliente. Com a chave, a segunda emissão esbarra na chave primária de
+ * `AutomacaoEvento` e não sai.
+ */
+export function eventIdDaChave(tipo: string, slug: string, chave: string): string {
+  // JSON de uma lista, e não os três colados com separador: assim nenhum campo
+  // invade o vizinho, contenha o que contiver.
+  return `evt_${createHash("sha256").update(JSON.stringify([tipo, slug, chave])).digest("hex").slice(0, 32)}`;
+}
+
+function jaExiste(erro: unknown): boolean {
+  return typeof erro === "object" && erro !== null && (erro as { code?: unknown }).code === "P2002";
+}
+
+export interface OpcoesDeEmissao {
+  /**
+   * O que identifica o fato dentro do tipo e da loja: `pago:<referencia>`,
+   * `pergunta:<id>`. Com ela, emitir de novo o mesmo fato não faz nada.
+   *
+   * **Todo evento que vira mensagem para comprador ou lojista leva chave.** Sem
+   * ela, quem garante "uma vez só" é uma leitura feita antes da escrita, e isso
+   * só vale quando ninguém mais está escrevendo ao mesmo tempo.
+   */
+  chave?: string;
+}
+
+/** Devolve `false` quando o fato já tinha sido emitido (só acontece com `chave`). */
+export async function emitir(evento: EventoPlataforma, opcoes: OpcoesDeEmissao = {}): Promise<boolean> {
+  const eventId = opcoes.chave ? eventIdDaChave(evento.tipo, evento.slug, opcoes.chave) : novoEventId();
   const correlationId = correlacaoDe(evento);
   const envelope = { eventId, versao: VERSAO_CONTRATO, ocorridoEm: new Date().toISOString(), origem: "lojas.avilaops.com", correlationId, ...evento };
 
@@ -157,6 +195,8 @@ export async function emitir(evento: EventoPlataforma): Promise<void> {
       data: { eventId, tipo: evento.tipo, slug: evento.slug, versao: VERSAO_CONTRATO, correlationId, payload: envelope as unknown as Prisma.InputJsonValue },
     });
   } catch (erro) {
+    // Com chave, a linha que já existe É a resposta: o fato já saiu.
+    if (opcoes.chave && jaExiste(erro)) return false;
     console.error("[eventos] não registrou", eventId, erro);
   }
 
@@ -175,10 +215,11 @@ export async function emitir(evento: EventoPlataforma): Promise<void> {
     void processarEventosProprios({ eventId }).catch((erro) => {
       console.error("[eventos] consumo imediato falhou", eventId, erro);
     });
-    return;
+    return true;
   }
 
   await entregar(envelope, eventId, evento.tipo);
+  return true;
 }
 
 /**

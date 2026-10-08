@@ -71,7 +71,10 @@ ganho de tempo — o build já falha em cerca de um minuto quando um teste cai.
   antes de ler o corpo em `/api/painel/imagens` e `/api/painel/produtos/planilha`,
   5 MB também no `?tratar=1`, leitura com teto em `importarImagemDeUrl` e
   tempo-limite nas três chamadas de `packages/checkout/src/providers/mercadopago.ts`.
-  Faltam idempotência e alertas n8n. Ver `docs/ISOLAMENTO-OPERACIONAL.md`.)
+  Idempotência e o evento de alerta entraram em 08/10/2026: chave do fato em
+  `emitir`, reivindicação antes de avisar e `operacao.alerta` com loja, o que
+  quebrou e o que fazer. Falta o ramo desse evento no fluxo do n8n, que se
+  publica fora deste repositório. Ver `docs/ISOLAMENTO-OPERACIONAL.md`.)
 - [ ] Backup, migração e rollback documentados como rotina verificável do deploy.
 
 ## Pendências menores

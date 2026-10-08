@@ -90,10 +90,10 @@ export async function PATCH(request: Request) {
       lojistaWhatsapp: loja.whatsapp,
       emailRemetente: loja.emailRemetente,
     };
-    if (r.data.status === "EM_SEPARACAO") await emitir({ tipo: "pedido.em-separacao", ...comum });
-    if (r.data.status === "ENVIADO") await emitir({ tipo: "pedido.enviado", transportadora: a.freteNome, rastreio: a.rastreio, ...comum });
-    if (r.data.status === "ENTREGUE") await emitir({ tipo: "pedido.entregue", ...comum });
-    if (r.data.status === "CANCELADO") await emitir({ tipo: "pedido.cancelado", totalCentavos: a.totalCentavos, motivo: "cancelado pela loja", ...comum });
+    if (r.data.status === "EM_SEPARACAO") await emitir({ tipo: "pedido.em-separacao", ...comum }, { chave: `em-separacao:${comum.referencia}` });
+    if (r.data.status === "ENVIADO") await emitir({ tipo: "pedido.enviado", transportadora: a.freteNome, rastreio: a.rastreio, ...comum }, { chave: `enviado:${comum.referencia}` });
+    if (r.data.status === "ENTREGUE") await emitir({ tipo: "pedido.entregue", ...comum }, { chave: `entregue:${comum.referencia}` });
+    if (r.data.status === "CANCELADO") await emitir({ tipo: "pedido.cancelado", totalCentavos: a.totalCentavos, motivo: "cancelado pela loja", ...comum }, { chave: `cancelado:${comum.referencia}` });
   }
 
   return Response.json({ id: a.id, status: a.status, rastreio: a.rastreio });

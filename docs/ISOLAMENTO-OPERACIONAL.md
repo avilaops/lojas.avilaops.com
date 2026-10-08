@@ -76,14 +76,83 @@ Mercado Pago, consulta: a reconciliação (`src/lib/pedidos-reconciliar.ts`)
 consulta em laço. Com tempo-limite, um pedido preso conta como falha e o laço
 segue para o próximo.
 
-## Falta
+## Idempotência (08/10/2026)
 
-- **Idempotência.** Levantar os webhooks de entrada (Mercado Pago, Melhor
-  Envio, marketplaces) e as escritas da API que ainda aceitam repetição.
-- **Alertas n8n acionáveis.** O payload do evento precisa dizer a loja, o que
-  quebrou e o que fazer. O fluxo vive em
-  `docs/n8n/lojas-onboarding-e-pedidos.json`; a publicação é no n8n, fora
-  deste repositório.
+O levantamento das entradas que um serviço de fora pode repetir mostrou que
+**estoque, pedido e fatura já estavam protegidos no banco** (transação com
+`FOR UPDATE`, `@@unique` e `upsert`). O que repetia era **mensagem**: quase todo
+`emitir()` era decidido por uma leitura feita antes da escrita, e duas
+notificações no mesmo instante mandavam dois avisos.
+
+A simultaneidade é real, não teórica: o Mercado Pago reenvia até receber 2xx, e
+cada rotina é chamada no mesmo horário pelo agendador da plataforma e pelo n8n.
+
+O que mudou:
+
+- **Chave do fato na emissão.** `emitir(evento, { chave })` (`src/lib/eventos.ts`)
+  tira o `eventId` do fato (`eventIdDaChave`), e a segunda emissão esbarra na
+  chave primária de `AutomacaoEvento`. Levam chave: `pedido.pago`,
+  `pedido.recusado`, as quatro viradas de status do pedido, `carrinho.abandonado`,
+  mensalidade paga e recusada, `canal.pergunta-recebida` e todo alerta.
+  **Evento novo que vira mensagem para comprador ou lojista leva chave.**
+- **Reivindicar antes de avisar** onde o fato pode se repetir de verdade:
+  carrinho abandonado (`ABERTO` → `LEMBRADO`) e volta ao estoque
+  (`avisadoEm`), com `updateMany` condicional antes do `emitir`.
+- **Suspender e reativar** a loja mudam a linha com o status atual no `where`;
+  quem não mudou não avisa.
+- **Pedido do Mercado Livre não regride.** O ML manda a ordem de novo a cada
+  mudança, e o aviso devolvia a "pago" o pedido que a loja já tinha enviado
+  (`statusDepoisDoAviso`, `src/lib/mercadolivre-pedidos.ts`).
+- **Fila do Mercado Livre.** A rota de notificações só engole a repetição
+  (P2002); outro erro sobe, para o ML tentar de novo. A varredura de eventos
+  não marca mais `mercadolivre.*` como "n8n não reivindicou".
+
+Prova: `tests/integration/idempotencia.test.ts` (o mesmo fato em chamadas
+simultâneas, contra o Postgres) e `src/lib/idempotencia.test.ts`.
+
+O que **não** mudou, e por quê:
+
+- O webhook de mensalidade trata como "repetida" a segunda notificação com o
+  mesmo `tópico:id`. Se o Mercado Pago reutiliza o id a cada mudança de estado,
+  uma mudança legítima é descartada e só a varredura diária a pega. Não há como
+  confirmar o comportamento do Mercado Pago pelo repositório, e nunca houve uma
+  cobrança de mensalidade em produção para observar. Fica para quando houver.
+- O webhook de pagamento não tem janela de tempo na assinatura (o de
+  mensalidade tem, de 10 minutos). O efeito de uma notificação antiga
+  reapresentada é uma consulta a mais ao gateway.
+- Os quatro retornos de OAuth mostram "falhou" se o mesmo `code` for
+  apresentado duas vezes, mesmo com a conta já conectada. Nenhum dado se perde.
+
+## Alertas acionáveis (08/10/2026)
+
+Falha de pagamento, de webhook e de rotina morria em `console.error`. Agora sai
+como evento `operacao.alerta` (`src/lib/alertas.ts`), que já chega dizendo:
+
+| Campo | O que traz |
+|---|---|
+| `slug`, `lojaNome` | a loja (`plataforma` quando não é de loja nenhuma) |
+| `codigo` | estável, para o fluxo rotear: ver a lista abaixo |
+| `recurso` | o que foi atingido: referência do pedido, nome da rotina |
+| `oQueQuebrou`, `oQueFazer` | frases prontas, escritas no código e não no fluxo |
+| `detalhe`, `link` | a mensagem do erro e a tela onde resolver, quando existe |
+
+| Código | Quando |
+|---|---|
+| `pagamento.divergencia` | o valor pago difere do total do pedido |
+| `pagamento.sem-estoque` | pagamento aprovado e a baixa de estoque falhou |
+| `mensalidade.webhook-falhou` | notificação de mensalidade que não pôde ser processada |
+| `rotina.falhando` | a terceira falha seguida de uma rotina |
+| `canal.aviso-falhou` | reservado; ainda sem emissor |
+
+Um alerta por fato: a chave é `codigo` + `recurso`, então o gateway reenviando
+a mesma notificação não abre dez tarefas.
+
+**Falta do lado do n8n.** O evento vai para o fluxo
+(`docs/n8n/lojas-onboarding-e-pedidos.json`), que hoje não conhece o tipo e o
+encerra como ignorado. Falta um ramo `operacao.alerta` que abra a tarefa com
+`oQueQuebrou` no título e `oQueFazer` no corpo. A publicação é no n8n, fora
+deste repositório. Até lá o alerta existe só na fila
+(`GET /api/admin/automacoes/eventos`).
 
 Fora do código da aplicação:
 

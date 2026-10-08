@@ -4,6 +4,7 @@ import { emitir } from "./eventos";
 import { esquecerTenantEmCache } from "./tenant";
 import { fimDoTeste } from "./planos";
 import { alterarPreapproval, atualizarValorPreapproval, buscarCobrancasDaAssinatura, buscarPagamentoAutorizado, buscarPreapproval, criarPreapproval, type PagamentoAutorizado } from "./mercadopago-assinatura";
+import { alertar } from "./alertas";
 
 /**
  * Mensalidade da loja.
@@ -86,14 +87,18 @@ async function suspender(t: Tenant, motivo: string) {
   // regra. Guard no lugar errado é guard que um caminho novo esquece.
   if (t.cobrancaIsenta) return;
   if (t.status === "SUSPENSA" || t.status === "CANCELADA") return;
-  await prisma.tenant.update({ where: { id: t.id }, data: { status: "SUSPENSA", suspensaEm: new Date() } });
+  // Quem suspende é quem muda a linha: o webhook e a varredura diária chegam
+  // juntos, cada um com o `t` que leu antes, e os dois avisavam o lojista.
+  const mudou = await prisma.tenant.updateMany({ where: { id: t.id, status: t.status }, data: { status: "SUSPENSA", suspensaEm: new Date() } });
+  if (mudou.count !== 1) return;
   esquecerTenantEmCache(t.slug);
   await emitir({ tipo: "loja.suspensa", slug: t.slug, nome: t.nome, motivo, link: LINK_ASSINATURA, emailContato: t.loginEmail ?? t.emailContato, whatsapp: t.whatsapp });
 }
 
 async function reativar(t: Tenant) {
   if (t.status !== "SUSPENSA") return;
-  await prisma.tenant.update({ where: { id: t.id }, data: { status: "ATIVA", suspensaEm: null } });
+  const mudou = await prisma.tenant.updateMany({ where: { id: t.id, status: "SUSPENSA" }, data: { status: "ATIVA", suspensaEm: null } });
+  if (mudou.count !== 1) return;
   esquecerTenantEmCache(t.slug);
   await emitir({ tipo: "loja.reativada", slug: t.slug, nome: t.nome, url: `https://${t.slug}.${BASE}`, emailContato: t.loginEmail ?? t.emailContato, whatsapp: t.whatsapp });
 }
@@ -116,7 +121,11 @@ export async function processarNotificacao(n: Notificacao): Promise<{ processada
     await prisma.cobrancaEvento.update({ where: { id: evento.id }, data: { processadoEm: new Date(), tenantId: r.tenantId ?? null } });
     return { processada: true, motivo: r.motivo };
   } catch (erro) {
-    await prisma.cobrancaEvento.update({ where: { id: evento.id }, data: { erro: String(erro instanceof Error ? erro.message : erro).slice(0, 2000) } });
+    const mensagem = String(erro instanceof Error ? erro.message : erro);
+    await prisma.cobrancaEvento.update({ where: { id: evento.id }, data: { erro: mensagem.slice(0, 2000) } });
+    // A rota responde 200 mesmo assim, então o Mercado Pago não reenvia: sem o
+    // alerta, a única chance de alguém saber é a varredura do dia seguinte.
+    await alertar({ codigo: "mensalidade.webhook-falhou", slug: "plataforma", lojaNome: "Plataforma", recurso: chave, detalhe: mensagem });
     throw erro;
   }
 }
@@ -162,7 +171,7 @@ async function aplicarCobranca(c: PagamentoAutorizado) {
   if (aprovada) {
     await prisma.tenant.update({ where: { id: t.id }, data: { ultimoPagamentoEm: new Date(), tentativasFalhas: 0 } });
     await reativar(t);
-    await emitir({ tipo: "loja.mensalidade-paga", slug: t.slug, nome: t.nome, centavos, emailContato: t.loginEmail ?? t.emailContato, whatsapp: t.whatsapp });
+    await emitir({ tipo: "loja.mensalidade-paga", slug: t.slug, nome: t.nome, centavos, emailContato: t.loginEmail ?? t.emailContato, whatsapp: t.whatsapp }, { chave: `paga:${c.id}` });
     return { motivo: "mensalidade paga", tenantId: t.id };
   }
   const tentativas = t.tentativasFalhas + 1;
@@ -177,7 +186,7 @@ async function aplicarCobranca(c: PagamentoAutorizado) {
   // cobrança no n8n muda o tom conforme esse número — sem ele a mensagem
   // teria de falar em "em breve", que ninguém trata como urgente.
   const diasRestantes = Math.max(0, Math.ceil(30 + DIAS_TOLERANCIA - dias));
-  await emitir({ tipo: "loja.mensalidade-recusada", slug: t.slug, nome: t.nome, tentativas, diasRestantes, link: LINK_ASSINATURA, emailContato: t.loginEmail ?? t.emailContato, whatsapp: t.whatsapp });
+  await emitir({ tipo: "loja.mensalidade-recusada", slug: t.slug, nome: t.nome, tentativas, diasRestantes, link: LINK_ASSINATURA, emailContato: t.loginEmail ?? t.emailContato, whatsapp: t.whatsapp }, { chave: `recusada:${c.id}:${situacao}` });
   return { motivo: `recusada (${tentativas}ª), dentro da tolerância`, tenantId: t.id };
 }
 

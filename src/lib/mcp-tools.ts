@@ -766,10 +766,10 @@ export const MCP_TOOLS: McpTool[] = [
           lojistaWhatsapp: tenant.whatsapp,
           emailRemetente: tenant.emailRemetente,
         };
-        if (status === "EM_SEPARACAO") await emitir({ tipo: "pedido.em-separacao", ...comum });
-        if (status === "ENVIADO") await emitir({ tipo: "pedido.enviado", transportadora: a.freteNome, rastreio: a.rastreio, ...comum });
-        if (status === "ENTREGUE") await emitir({ tipo: "pedido.entregue", ...comum });
-        if (status === "CANCELADO") await emitir({ tipo: "pedido.cancelado", totalCentavos: a.totalCentavos, motivo: "cancelado pela loja", ...comum });
+        if (status === "EM_SEPARACAO") await emitir({ tipo: "pedido.em-separacao", ...comum }, { chave: `em-separacao:${comum.referencia}` });
+        if (status === "ENVIADO") await emitir({ tipo: "pedido.enviado", transportadora: a.freteNome, rastreio: a.rastreio, ...comum }, { chave: `enviado:${comum.referencia}` });
+        if (status === "ENTREGUE") await emitir({ tipo: "pedido.entregue", ...comum }, { chave: `entregue:${comum.referencia}` });
+        if (status === "CANCELADO") await emitir({ tipo: "pedido.cancelado", totalCentavos: a.totalCentavos, motivo: "cancelado pela loja", ...comum }, { chave: `cancelado:${comum.referencia}` });
       }
       return { sucesso: true, id: a.id, status: a.status, rastreio: a.rastreio };
     },

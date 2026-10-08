@@ -117,7 +117,7 @@ export async function registrarPerguntaMl(loja: Tenant, perguntaId: string) {
       texto: dados.texto,
       linkPainel: `${urlDaLoja(loja)}/painel/configuracoes/canais`,
       ...lojista(loja),
-    });
+    }, { chave: `pergunta:${dados.mlId}` });
   }
 
   return { perguntaId: pergunta.id, nova: !existente, statusMl: dados.statusMl };

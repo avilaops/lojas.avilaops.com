@@ -3,7 +3,7 @@
  * precisam encontrar, no nosso servidor, sem chamar buscador nenhum.
  *
  *   npx tsx scripts/conferir-publicacao.ts https://vedashow.com.br
- *   npx tsx scripts/conferir-publicacao.ts https://sandromotos.lojas.avilaops.com
+ *   npx tsx scripts/conferir-publicacao.ts https://demo.lojas.avilaops.com
  *
  * Sai com código 1 se alguma verificação falhar. Serve para rodar depois de
  * criar uma loja, depois de apontar domínio próprio e depois de cada deploy.

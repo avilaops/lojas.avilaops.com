@@ -4,6 +4,7 @@ import { prisma } from "./db";
 import { chamarMl } from "./mercadolivre";
 import { baixarEstoqueDoPedido } from "./estoque";
 import { emitir, itensParaTexto, lojista } from "./eventos";
+import type { PedidoStatus } from "@prisma/client";
 
 /**
  * Venda no Mercado Livre vira pedido da loja.
@@ -123,6 +124,24 @@ function centavos(valor: unknown): number {
  * podem não virar venda, e tratá-los como pagos tiraria do ar um item que
  * continua disponível.
  */
+/** Quanto o pedido já andou. O que não está aqui (cancelado, estornado) é fim de linha. */
+const ANDAMENTO: Partial<Record<PedidoStatus, number>> = { AGUARDANDO_PAGAMENTO: 0, PAGO: 1, EM_SEPARACAO: 2, ENVIADO: 3, ENTREGUE: 4 };
+
+/**
+ * O status que fica quando chega um aviso do canal para um pedido que já existe.
+ *
+ * O aviso só sabe o que o canal sabe: pago ou cancelado. O que a loja fez
+ * depois (separou, enviou) é nosso, e o aviso não desfaz. Cancelamento no canal
+ * vale sempre; pedido já encerrado aqui não ressuscita.
+ */
+export function statusDepoisDoAviso(atual: PedidoStatus, doAviso: PedidoStatus): PedidoStatus {
+  const a = ANDAMENTO[atual];
+  const n = ANDAMENTO[doAviso];
+  if (a === undefined) return atual;
+  if (n === undefined) return doAviso;
+  return n > a ? doAviso : atual;
+}
+
 export function statusDoPedidoMl(status: string | undefined): StatusPedido {
   if (status === "paid") return "PAGO";
   if (status === "cancelled" || status === "invalid") return "CANCELADO";
@@ -360,7 +379,10 @@ export async function registrarPedidoMl(loja: Tenant, ordemId: string) {
   const pedido = existente
     ? await prisma.pedido.update({
         where: { id: existente.id },
-        data: { status: mapeado.status, pagamentoStatus: mapeado.pagamentoStatus, pagamentoId: mapeado.pagamentoId },
+        // O ML manda `orders_v2` várias vezes na vida da ordem. Gravando o
+        // status do aviso sem olhar o atual, o pedido que a loja já tinha
+        // enviado voltava a "pago" a cada aviso.
+        data: { status: statusDepoisDoAviso(existente.status, mapeado.status), pagamentoStatus: mapeado.pagamentoStatus, pagamentoId: mapeado.pagamentoId },
         select: { id: true, numero: true, referencia: true, estoqueBaixado: true },
       })
     : await prisma.pedido.create({
@@ -425,7 +447,7 @@ export async function registrarPedidoMl(loja: Tenant, ordemId: string) {
       // enviar a confirmação para um e-mail que não existe.
       canal: "mercadolivre",
       ...lojista(loja),
-    });
+    }, { chave: `pago:${pedido.referencia}` });
   }
 
   return { pedidoId: pedido.id, referencia: pedido.referencia, novo: !existente, status: mapeado.status, estoqueBaixado, avisos: mapeado.avisos };

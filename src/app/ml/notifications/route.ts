@@ -52,8 +52,11 @@ export async function POST(request: Request) {
         correlationId: `ml:${aviso.resource}`,
       },
     })
-    .catch(() => {
-      /* repetida: o ML reenvia o mesmo aviso, e o unique do eventId barra. */
+    .catch((erro: unknown) => {
+      // Repetida: o ML reenvia o mesmo aviso, e o unique do eventId barra.
+      // Qualquer outro erro (banco fora) sobe: respondendo 200 aqui o aviso se
+      // perdia para sempre, e com erro o ML tenta de novo.
+      if ((erro as { code?: unknown } | null)?.code !== "P2002") throw erro;
     });
 
   return new Response("ok");
