@@ -9,7 +9,7 @@ RUN npm ci
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1 FUNDO_MODELOS_DIR=/app/modelos
 RUN node --input-type=module -e "import { baixarModelo } from './packages/removedor-de-fundo/src/modelo.ts'; await baixarModelo('u2netp')"
-RUN npx prisma generate && npm run typecheck && npm test && npm run build
+RUN npx prisma generate && npm run typecheck && npm run lint && npm test && npm run build
 FROM base AS runtime
 ENV NODE_ENV=production PORT=3080 HOSTNAME=0.0.0.0 FUNDO_MODELOS_DIR=/app/modelos
 COPY --from=build /app/.next/standalone ./

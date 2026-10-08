@@ -120,7 +120,9 @@ Este repositório pertence à Ávila Ops Tecnologia, que ajuda pequenas empresas
   `tenant.id` dela. Escopo novo entra em `ESCOPOS` junto com a rota que o exige;
   chave publicável é só `vitrine:ler`. O que sai é projeção explícita de
   `api-recursos.ts`, nunca `...produto`. Chave guardada só como sha256.
-  `/v1` sem `/api` é outro contrato (`gapp.ts`). Ver `docs/API.md`.
+  `/v1` sem `/api` é outro contrato (`gapp.ts`). Rota nova entra em `ROTAS`
+  (`src/lib/api-indice.ts`) no mesmo commit: é de lá que saem `GET /api/v1` e a
+  página pública `/developers`. Ver `docs/API.md`.
 - **Métrica por loja guarda host, grupo, status e duração — e mais nada.**
   `registrar` (`src/lib/metricas-tenant.ts`) não aceita outro campo: caminho,
   query, cabeçalho, IP e mensagem de erro não entram. Rota nova se mede com
