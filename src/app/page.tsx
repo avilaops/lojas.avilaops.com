@@ -48,7 +48,14 @@ export default async function Home() {
         const completas = (await vitrineDaLoja(t.id, { moto, limite: 24, imagemOrigem: "propria", compraveis: true }))
           .filter((produto) => produto.imagens.length > 0 && regrasProduto.compravel(produto));
         const idsDestaques = new Set(destaquesProntos.map((produto) => produto.id));
-        return [...destaquesProntos, ...completas.filter((produto) => !idsDestaques.has(produto.id))].slice(0, 12);
+        const comFotoPropria = [...destaquesProntos, ...completas.filter((produto) => !idsDestaques.has(produto.id))].slice(0, 12);
+        if (comFotoPropria.length) return comFotoPropria;
+        // Loja cujo catálogo inteiro usa foto de série (peça técnica vendida
+        // por desenho de catálogo) não tem o que passar no filtro acima, e a
+        // home com banner ficava com a seção de produtos vazia. Aí valem os
+        // destaques e a vitrine comuns, como na home sem banner.
+        const destaquesComuns = await listarProdutos(t.id, { destaque: true, moto, limite: 12 });
+        return destaquesComuns.length ? destaquesComuns : vitrineDaLoja(t.id, { moto });
       })()
     : destaques.length ? destaques : await vitrineDaLoja(t.id, { moto });
   const dados = { t, identidade: identidadeDa(t), categorias, vitrine, temDestaques: destaques.length > 0, vende: lojaVende(t), moto, necessidades };
