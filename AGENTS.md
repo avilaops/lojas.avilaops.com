@@ -134,5 +134,23 @@ Este repositório pertence à Ávila Ops Tecnologia, que ajuda pequenas empresas
   (`?sso=`), falha do Google ou `?senha=1`, que é a porta de quem tem só e-mail
   e senha da loja (cadastro por `/criar`). Não tire essa porta enquanto o
   cadastro de loja não criar a conta no Auth.
+- **Um caminho só para o Google.** Loja com GTM recebe os eventos de
+  e-commerce como objeto no `dataLayer` (`{ event, ecommerce }`, formato GA4) e
+  não por `gtag('event')`; sem GTM é o contrário. Os dois juntos fazem o mesmo
+  gatilho disparar duas vezes, e isso inclui a conversão do Ads: com GTM ela é
+  tag do contêiner, não `gtag('event','conversion')`. O `value` do `purchase`
+  é a receita dos itens (total menos frete); o frete vai só em `shipping`. O
+  marcador `window.__lojaPixels` sai no HTML (`Pixels.tsx`), antes de qualquer
+  evento. No dossiê de catálogo, foto só é própria com `fotoExata: true`
+  declarado: ausência não é confirmação (`scripts/lib/dossie-regras.mjs`). O que vai ao Merchant é o que a
+  página mostra: descrição curta + longa e a ficha visível como
+  `product_detail` (`catalogo-merchant.ts`); nada inventado nem de chave interna.
+- **Recebimento tem dois caminhos e nenhum estado misto.** A loja conecta a
+  conta do Mercado Pago por OAuth (`src/lib/mercado-pago-conta.ts`) ou cola as
+  chaves da própria aplicação; quem diz qual é `Tenant.mpRefreshTokenEnc`.
+  Gravar por um caminho apaga os campos do outro. O aplicativo é da plataforma
+  e só vale com `MP_APP_ID`, `MP_APP_SECRET` e `MP_APP_WEBHOOK_SECRET` juntos.
+  Renovar o acesso é da rotina `mercadopago.renovar`, nunca da cobrança: o
+  refresh é de uso único. Ver `docs/MERCADO-PAGO-OAUTH.md`.
 - **Português nos nomes e comentários**, como no resto do monorepo.
 - **TypeScript estrito**; `npm run typecheck` antes de entregar.

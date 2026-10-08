@@ -122,6 +122,14 @@ export const ROTINAS = {
     // Rede de segurança do webhook: dinheiro do lojista depende de estar de pé.
     falhasAteAlerta: 2,
   },
+  "mercadopago.renovar": {
+    titulo: "Acesso ao MP",
+    descricao: "Renova o acesso das lojas conectadas ao Mercado Pago que vence em até 30 dias",
+    cadencia: { tipo: "diaria", hora: 4 },
+    travaMinutos: 15,
+    // Falhar é a loja caminhando para parar de receber: aparece no primeiro dia.
+    falhasAteAlerta: 1,
+  },
   "seo.categorias": {
     titulo: "SEO de categoria",
     descricao: "Gera e publica em lote o SEO de categoria pendente, fora do acesso público",

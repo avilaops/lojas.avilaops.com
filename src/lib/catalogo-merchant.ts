@@ -3,10 +3,52 @@ import { gtinValido, ofertaDaVariante } from "./catalogo-oferta";
 import { categoriaGoogle, categoriaGoogleProduto, prateleirasDaLoja } from "./categoria-google";
 import { idDaCategoriaGoogle } from "./google-product-taxonomy";
 import { marcaConfirmada } from "./marca-confirmada";
+import { fichaDoProduto } from "./ficha";
+import { textoPuro } from "./seo-texto";
+import { paragrafosDaDescricao } from "./descricao-produto";
 
 const esc=(s:string)=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 const tag=(k:string,v:string)=>`<g:${k}>${esc(v)}</g:${k}>`;
 const preco=(n:number)=>`${(n/100).toFixed(2)} BRL`;
+
+/**
+ * A descrição que vai ao Merchant é a que a página mostra: a curta (abaixo do
+ * título) e a longa (seção "Descrição"), nesta ordem, em texto puro. Antes só
+ * a curta saía quando existia, e a longa, que é onde estão uso, diluição e
+ * superfícies, ficava fora do anúncio. O Google compara a descrição do feed
+ * com a página de destino, então o que sai daqui é o que está lá.
+ */
+export function descricaoMerchant(p:{nome:string;descricaoCurta:string|null;descricao:string|null}):string {
+  const curta=textoPuro(p.descricaoCurta);
+  // Parágrafos preservados: é como a página mostra e como o Google exibe.
+  const longa=p.descricao?paragrafosDaDescricao(p.descricao).join("\n\n"):"";
+  const partes=curta&&longa&&curta!==longa&&!longa.startsWith(curta)?[curta,longa]:[longa||curta];
+  return (partes.filter(Boolean).join("\n\n")||p.nome).slice(0,5000);
+}
+
+/**
+ * `product_detail`: a ficha técnica visível (`fichaDoProduto`) em pares
+ * nome/valor, que o Google mostra como "Especificações" e usa para casar o
+ * anúncio com a busca ("shampoo 1,5 L", "boina 6 polegadas"). Só o que a
+ * ficha já publica; nada é inventado nem vem de chave interna.
+ */
+/**
+ * Preço por unidade de medida (`unit_pricing_measure` + base), que o Google
+ * recomenda para consumível vendido por volume: é o que deixa comparar 500 ml
+ * a R$ 30 com 1,5 L a R$ 70 na mesma prateleira. Só sai quando o cadastro
+ * tem `atributos.volumeMl` numérico; a base é 1 l, sempre.
+ */
+export function unidadeDePrecoMerchant(atributos:unknown):string {
+  const v=Number((atributos as Record<string,unknown>|null)?.volumeMl);
+  if(!Number.isFinite(v)||v<=0||v>100000) return "";
+  const medida=v>=1000?`${Number((v/1000).toFixed(3))}l`:`${Number(v.toFixed(1))}ml`;
+  return tag("unit_pricing_measure",medida)+tag("unit_pricing_base_measure","1l");
+}
+
+export function detalhesMerchant(atributos:unknown):string {
+  return fichaDoProduto((atributos??{}) as Record<string,unknown>).slice(0,100)
+    .map(l=>`<g:product_detail>${tag("section_name","Especificações")}${tag("attribute_name",l.rotulo.slice(0,140))}${tag("attribute_value",l.valor.slice(0,1000))}</g:product_detail>`).join("");
+}
 
 /**
  * @param prateleira resolvedor de `google_product_category`. O padrão decide só
@@ -32,12 +74,13 @@ export function itensMerchant(p:ProdutoCatalogo,base:string,prateleira:(nome:str
     const googleCategoria=idDaCategoriaGoogle(p.googleProductCategory) || categoriaGoogleProduto(p.nome,p.categoria?.nome,prateleira);
     const dimensoesDeEnvioValidas=[v.comprimentoCm,v.larguraCm,v.alturaCm].every(n=>typeof n==="number" && Number.isFinite(n) && n>=1 && n<=400);
     return [`<item>${[
-      tag("id",externo),tag("title",titulo.slice(0,150)),tag("description",(p.descricaoCurta||p.descricao||p.nome).replace(/<[^>]*>/g," ").slice(0,5000)),tag("link",link),
+      tag("id",externo),tag("title",titulo.slice(0,150)),tag("description",descricaoMerchant(p)),tag("link",link),
       tag("image_link",imagens[0].url),...imagens.slice(1,10).map(m=>tag("additional_image_link",m.url)),
       tag("availability",v.compravel?"in_stock":"out_of_stock"), tag("price",preco(precoPromocional?v.precoDeCentavos!:v.precoCentavos)), precoPromocional?tag("sale_price",preco(v.precoCentavos)):"", tag("condition","new"),
       marca?tag("brand",marca):"",gtinValido(v.gtin)?tag("gtin",v.gtin!):"",v.mpn?tag("mpn",v.mpn):"",
       v.identificadoresEstado==="sem_identificador"&&!v.gtin&&!v.mpn?tag("identifier_exists","no"):"",
       p.categoria?tag("product_type",p.categoria.nome):"",googleCategoria?tag("google_product_category",String(googleCategoria)):"",
+      detalhesMerchant(p.atributos),unidadeDePrecoMerchant(p.atributos),
       dimensoesDeEnvioValidas?tag("shipping_length",`${v.comprimentoCm} cm`)+tag("shipping_width",`${v.larguraCm} cm`)+tag("shipping_height",`${v.alturaCm} cm`):"",
       v.pesoKg!=null&&Number.isFinite(v.pesoKg)&&v.pesoKg>0&&v.pesoKg<=1000?tag("shipping_weight",`${v.pesoKg} kg`):"",
       freteGratis(v.precoCentavos)?`<g:shipping>${tag("country","BR")}${tag("price",preco(0))}</g:shipping>`:"",
