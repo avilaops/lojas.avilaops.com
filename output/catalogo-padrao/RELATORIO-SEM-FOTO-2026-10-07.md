@@ -26,16 +26,23 @@ Arquivos:
 
 | Confiança | Produtos | Significado |
 |---|---:|---|
-| alta | 45 | produto e apresentação confirmados em página do fabricante ou em dois varejistas |
-| média | 34 | produto confirmado; apresentação (volume, numeração, concentração) ou fonte oficial pendente |
+| alta | 36 | produto e apresentação confirmados em página do fabricante ou em dois varejistas, com a apresentação fixada pelo cadastro ou única no fabricante |
+| média | 43 | produto confirmado; apresentação (volume, numeração, concentração) ou fonte oficial pendente |
 | baixa | 16 | nome ambíguo, produto não localizado com esse nome ou marca em dúvida |
 
 - **93 de 95** têm a página de onde as fotos oficiais podem ser copiadas
-  (fabricante quando existe, senão o melhor varejista). **Foto exata só nos 44
-  de confiança alta** (`fotoExata: true`, apresentação confirmada); nos 34 de
-  média a foto entra como representativa, com a família no nome, porque o
-  volume ou a numeração em estoque ainda não foi conferido; os de baixa ficam
-  sem foto até a decisão do lojista.
+  (fabricante quando existe, senão o melhor varejista). **Foto exata só nos 35
+  de confiança alta** (`fotoExata: true`: a apresentação está no nome
+  cadastrado ou o fabricante vende uma só); nos 43 de média a foto entra como
+  representativa, com a família no nome, porque o volume ou a numeração em
+  estoque ainda não foi conferido; os de baixa ficam sem foto até a decisão do
+  lojista. Cadastro sem volume (Carpet, Solupan, Ferrux, Lamax, Glass Pro,
+  Hydro Blend, Renovex, Sanitizante Carro Novo, V80) não ganha foto exata da
+  apresentação que escolhemos: a hipótese fica anotada e a foto é da família.
+- **Canhões de espuma (00068, 00069)**: sem `volumeMl`; o litro é a capacidade
+  do reservatório, não a quantidade vendida. **Epóxi Titânio (00116)**:
+  proporção de mistura e cor após cura saíram da ficha porque foram lidas na
+  página da versão Express; voltam quando conferidas na embalagem da comum.
 - **Kits (00089, 00090)**: sem `volumeMl`, para o Merchant não calcular preço
   por litro de um conjunto de dois produtos diferentes.
 - **0 fotos copiadas nesta sessão**: a rede bloqueia o acesso aos sites dos
@@ -75,7 +82,8 @@ Arquivos:
 2. **Volumes assumidos.** 23 cadastros não dizem a apresentação (Acitrox,
    Carpet, Ferrux, Glass Pro, Split, Rubber Pro, Renovex, Solupan, V-Paint,
    pincéis Vonixx…). Foi escolhida a menor apresentação de varejo e a dúvida
-   está anotada item a item.
+   está anotada item a item; nenhum deles tem foto exata nem confiança alta
+   enquanto a embalagem não for conferida.
 3. **Nomes que não existem como estão**: Sanitizante Bom Ar (não é Nitro; é
    Vintex), Arominha Spray 200 ml Nitro, Lamax MOL 1,5 L, HT7 1,5 L (fabricante
    vende 500 ml e 1 L), Revoke 5 L e Speel Car 5 L (não encontrados), Limpa Pneus
@@ -95,12 +103,17 @@ Arquivos:
 LOJAS_ADMIN_TOKEN=... node scripts/completar-catalogo-sem-foto.mjs \
   --loja brilhax --dossie output/catalogo-padrao/brilhax-sem-foto-2026-10-07.json
 
-# aplica os de confiança alta e média (os de baixa só com --incluir-baixa)
+# aplica os de confiança alta e média (os de baixa só com --incluir-baixa;
+# produto que já está ativo com preço só com --incluir-ativos)
 LOJAS_ADMIN_TOKEN=... node scripts/completar-catalogo-sem-foto.mjs \
   --loja brilhax --dossie output/catalogo-padrao/brilhax-sem-foto-2026-10-07.json --aplicar
 ```
 
-O script não ativa produto nem mexe em preço, estoque ou destaque. Produto que
+O script não ativa produto nem mexe em preço, estoque ou destaque, e pula quem
+já foi publicado desde o snapshot (ativo com preço) a menos que se peça: oferta
+no ar não recebe hipótese sem decisão. Lote que a API recusar interrompe a
+aplicação e o processo termina com erro, listando no `.resultado.json` de qual
+lote em diante nada foi gravado. Produto que
 ficar sem foto reconhecida na página-fonte recebe só texto e categoria, e sai
 listado no `.plano.json` para a foto ser subida à mão pelo painel. Antes de
 mexer em dado, dump do banco, como manda o `AGENTS.md`.

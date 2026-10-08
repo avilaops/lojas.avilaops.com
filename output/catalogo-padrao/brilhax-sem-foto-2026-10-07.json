@@ -925,16 +925,18 @@
   ],
   "paginaDasFotos": "https://hartenquimica.com.br/products/tec_carpet",
   "fotos": [],
-  "confianca": "alta",
+  "confianca": "media",
   "duvidas": [
    "Cadastro sem volume: só encontramos a apresentação de 500 ml. Confirmar.",
    "A marca 'Nitro' destes produtos é a linha Nitro Automotive Line / NitroX da Harten Química (hartenquimica.com.br, Shopify), não a Nitro Química (nitroquimica.com.br, que fabrica nitrocelulose e especialidades químicas). Confirmar com o lojista antes de publicar 'Harten' no cadastro.",
-   "Rodada GTIN: Buscas por nome da linha Nitro/Harten (e pesquisa restrita a Cosmos/Systax) não trouxeram GTIN; Harten não publica EAN nas páginas indexadas."
+   "Rodada GTIN: Buscas por nome da linha Nitro/Harten (e pesquisa restrita a Cosmos/Systax) não trouxeram GTIN; Harten não publica EAN nas páginas indexadas.",
+   "Revisão 08/10: o cadastro não fixa a apresentação e o fabricante vende mais de uma (ou a identidade do item ainda depende de confirmação), então a foto entra como representativa e a confiança passa a média até a conferência física da embalagem."
   ],
   "lote": "nitro-1.json",
   "aplicar": true,
-  "fotoExata": true,
-  "imagemOrigem": "propria"
+  "fotoExata": false,
+  "imagemOrigem": "representativa",
+  "imagemFamilia": "Nitro Carpet Limpador Concentrado de Carpetes e Estofados"
  },
  {
   "id": "cmtv7cco4002gpd01jzxzoseq",
@@ -1193,17 +1195,19 @@
   ],
   "paginaDasFotos": "https://bugattiquimica.com/produto/desengraxante-concentrado/",
   "fotos": [],
-  "confianca": "alta",
+  "confianca": "media",
   "duvidas": [
    "O nome cadastrado não traz volume; assumido 5 L por ser a embalagem padrão (os SKUs 00150 e 00151 cobrem 20 L e 50 L).",
    "O conteúdo da página do fabricante não pôde ser lido diretamente (rede bloqueada); descrição baseada no resumo da busca e no anúncio do Mercado Livre.",
    "GTIN candidato: Cosmos: 'DETERGENTE DESENGRAXANTE SOLUPAN(5LT)', 5 L bate, mas a ficha não identifica o fabricante e 'Solupan' é nome usado por vários (Xike, DX-40...). Confirmar que é Bugatti antes de usar.",
-   "Rodada GTIN: Fonte: https://cosmos.bluesoft.com.br/produtos/7898592802088-detergente-desengraxante-solupan-5lt"
+   "Rodada GTIN: Fonte: https://cosmos.bluesoft.com.br/produtos/7898592802088-detergente-desengraxante-solupan-5lt",
+   "Revisão 08/10: o cadastro não fixa a apresentação e o fabricante vende mais de uma (ou a identidade do item ainda depende de confirmação), então a foto entra como representativa e a confiança passa a média até a conferência física da embalagem."
   ],
   "lote": "bugatti-vonixx.json",
   "aplicar": true,
-  "fotoExata": true,
-  "imagemOrigem": "propria"
+  "fotoExata": false,
+  "imagemOrigem": "representativa",
+  "imagemFamilia": "Bugatti Química Solupan Desengraxante Concentrado 1/40"
  },
  {
   "id": "cmtv7ccru0034pd013x2vd6yd",
@@ -1680,9 +1684,7 @@
   "atributos": {
    "peso": "25 g",
    "codigoFabricante": "0893480131",
-   "aplicacao": "Colagem e reparo de metais, plásticos, madeira, pedra e azulejos; tubulações, radiadores, tanques, blocos de motor e peças fundidas",
-   "proporcaoMistura": "1 parte de resina para 1 parte de endurecedor",
-   "corAposCura": "Cinza"
+   "aplicacao": "Colagem e reparo de metais, plásticos, madeira, pedra e azulejos; tubulações, radiadores, tanques, blocos de motor e peças fundidas"
   },
   "fontes": [
    {
@@ -1721,7 +1723,7 @@
   "confianca": "media",
   "duvidas": [
    "Há duas versões de 25 g: Adesivo Epóxi Titânio (0893480131) e Adesivo Epóxi Titânio Express (0893480025, cura inicial em 5 min, densidade 1,05, viscosidade 17 Pa.s, resistência de -30 °C a +85 °C, aplicação de +5 °C a +45 °C). O cadastro não diz 'Express'; confirmar na embalagem qual é vendida.",
-   "A proporção 1:1 e a cor cinza após cura foram lidas na página da versão Express; confirmar se valem para a versão comum antes de publicar.",
+   "Proporção de mistura (1:1) e cor após cura (cinza) foram lidas na página da versão Express (0893480025) e ficaram fora da ficha; só entram depois de conferidas na embalagem da versão comum (0893480131).",
    "Nenhuma fonte exibiu o EAN.",
    "Rodada GTIN: Loja do Mecânico mostra 0893480025 para a versão 'Express' 25 g, que é outro artigo. EAN não localizado.",
    "Foto entra como representativa: produto confirmado, apresentação (volume/numeração) não conferida na fonte."
@@ -2226,17 +2228,19 @@
   ],
   "paginaDasFotos": "https://www.hartenquimica.com.br/products/tec_metal_ft60",
   "fotos": [],
-  "confianca": "alta",
+  "confianca": "media",
   "duvidas": [
    "Cadastro sem volume: propusemos 500 ml (menor de varejo); existe também 1,5 L. Confirmar.",
    "pH não confirmado.",
    "A marca 'Nitro' destes produtos é a linha Nitro Automotive Line / NitroX da Harten Química (hartenquimica.com.br, Shopify), não a Nitro Química (nitroquimica.com.br, que fabrica nitrocelulose e especialidades químicas). Confirmar com o lojista antes de publicar 'Harten' no cadastro.",
-   "Rodada GTIN: Buscas por nome da linha Nitro/Harten (e pesquisa restrita a Cosmos/Systax) não trouxeram GTIN; Harten não publica EAN nas páginas indexadas."
+   "Rodada GTIN: Buscas por nome da linha Nitro/Harten (e pesquisa restrita a Cosmos/Systax) não trouxeram GTIN; Harten não publica EAN nas páginas indexadas.",
+   "Revisão 08/10: o cadastro não fixa a apresentação e o fabricante vende mais de uma (ou a identidade do item ainda depende de confirmação), então a foto entra como representativa e a confiança passa a média até a conferência física da embalagem."
   ],
   "lote": "nitro-1.json",
   "aplicar": true,
-  "fotoExata": true,
-  "imagemOrigem": "propria"
+  "fotoExata": false,
+  "imagemOrigem": "representativa",
+  "imagemFamilia": "Nitro Ferrux Descontaminante Ferroso Concentrado"
  },
  {
   "id": "cmtv7cd0z004opd01r31xxraj",
@@ -2311,17 +2315,19 @@
   ],
   "paginaDasFotos": "https://www.romacardetailing.com.br/glass-pro-500ml-limpador-de-vidros-em-geral-nitro-automotive-line",
   "fotos": [],
-  "confianca": "alta",
+  "confianca": "media",
   "duvidas": [
    "Existe a variante 'Glass Pro Antiembaçante' (ação antiembaçante, hidrorrepelente e cristalizadora). Confirmar se a loja vende o Glass Pro comum ou o Antiembaçante.",
    "Página individual do produto no site do fabricante não localizada (só listagem da coleção Automotiva).",
    "A marca 'Nitro' destes produtos é a linha Nitro Automotive Line / NitroX da Harten Química (hartenquimica.com.br, Shopify), não a Nitro Química (nitroquimica.com.br, que fabrica nitrocelulose e especialidades químicas). Confirmar com o lojista antes de publicar 'Harten' no cadastro.",
-   "Rodada GTIN: Buscas por nome da linha Nitro/Harten (e pesquisa restrita a Cosmos/Systax) não trouxeram GTIN; Harten não publica EAN nas páginas indexadas."
+   "Rodada GTIN: Buscas por nome da linha Nitro/Harten (e pesquisa restrita a Cosmos/Systax) não trouxeram GTIN; Harten não publica EAN nas páginas indexadas.",
+   "Revisão 08/10: o cadastro não fixa a apresentação e o fabricante vende mais de uma (ou a identidade do item ainda depende de confirmação), então a foto entra como representativa e a confiança passa a média até a conferência física da embalagem."
   ],
   "lote": "nitro-1.json",
   "aplicar": true,
-  "fotoExata": true,
-  "imagemOrigem": "propria"
+  "fotoExata": false,
+  "imagemOrigem": "representativa",
+  "imagemFamilia": "Nitro Glass Pro Limpador de Vidros Pronto para Uso"
  },
  {
   "id": "cmtv7cd2b004wpd01md980g00",
@@ -2596,16 +2602,18 @@
   ],
   "paginaDasFotos": "https://www.hartenquimica.com.br/products/hydro-blend-cera-liquida-hibrida-com-protecao-de-alta-performance",
   "fotos": [],
-  "confianca": "alta",
+  "confianca": "media",
   "duvidas": [
    "Modo de uso exato (tempo de cura, método de aplicação) não confirmado; o último parágrafo é genérico e deve ser conferido com a embalagem.",
    "A marca 'Nitro' destes produtos é a linha Nitro Automotive Line / NitroX da Harten Química (hartenquimica.com.br, Shopify), não a Nitro Química (nitroquimica.com.br, que fabrica nitrocelulose e especialidades químicas). Confirmar com o lojista antes de publicar 'Harten' no cadastro.",
-   "Rodada GTIN: Buscas por nome da linha Nitro/Harten (e pesquisa restrita a Cosmos/Systax) não trouxeram GTIN; Harten não publica EAN nas páginas indexadas."
+   "Rodada GTIN: Buscas por nome da linha Nitro/Harten (e pesquisa restrita a Cosmos/Systax) não trouxeram GTIN; Harten não publica EAN nas páginas indexadas.",
+   "Revisão 08/10: o cadastro não fixa a apresentação e o fabricante vende mais de uma (ou a identidade do item ainda depende de confirmação), então a foto entra como representativa e a confiança passa a média até a conferência física da embalagem."
   ],
   "lote": "nitro-1.json",
   "aplicar": true,
-  "fotoExata": true,
-  "imagemOrigem": "propria"
+  "fotoExata": false,
+  "imagemOrigem": "representativa",
+  "imagemFamilia": "Nitro Hydro Blend Cera Líquida Híbrida Carnaúba e SiO2"
  },
  {
   "id": "cmtv7cd52005epd01kmfdc46a",
@@ -2959,18 +2967,20 @@
   ],
   "paginaDasFotos": "https://www.romacardetailing.com.br/lamax-500ml-lava-autos-desincrustante-nitro-automotive-line",
   "fotos": [],
-  "confianca": "alta",
+  "confianca": "media",
   "duvidas": [
    "Cadastro está com marca 'Limpador Multiuso Concentrado' (errada) e sem SKU; a marca correta é Nitro (Harten Química) e o tipo é lava-autos desincrustante/desengraxante.",
    "Cadastro sem volume: propusemos 500 ml (menor de varejo); existe também 5 L. Confirmar.",
    "pH não confirmado.",
    "A marca 'Nitro' destes produtos é a linha Nitro Automotive Line / NitroX da Harten Química (hartenquimica.com.br, Shopify), não a Nitro Química (nitroquimica.com.br, que fabrica nitrocelulose e especialidades químicas). Confirmar com o lojista antes de publicar 'Harten' no cadastro.",
-   "Rodada GTIN: Buscas por nome da linha Nitro/Harten (e pesquisa restrita a Cosmos/Systax) não trouxeram GTIN; Harten não publica EAN nas páginas indexadas. SKU ausente no cadastro."
+   "Rodada GTIN: Buscas por nome da linha Nitro/Harten (e pesquisa restrita a Cosmos/Systax) não trouxeram GTIN; Harten não publica EAN nas páginas indexadas. SKU ausente no cadastro.",
+   "Revisão 08/10: o cadastro não fixa a apresentação e o fabricante vende mais de uma (ou a identidade do item ainda depende de confirmação), então a foto entra como representativa e a confiança passa a média até a conferência física da embalagem."
   ],
   "lote": "nitro-1.json",
   "aplicar": true,
-  "fotoExata": true,
-  "imagemOrigem": "propria"
+  "fotoExata": false,
+  "imagemOrigem": "representativa",
+  "imagemFamilia": "Nitro Lamax Lava Autos Desincrustante Concentrado"
  },
  {
   "id": "cmtv7cd8c005wpd010jqsswui",
@@ -5407,17 +5417,19 @@
   ],
   "paginaDasFotos": "https://www.hartenquimica.com.br/products/renovex-restauracao-e-protecao-para-superficies-plasticas",
   "fotos": [],
-  "confianca": "alta",
+  "confianca": "media",
   "duvidas": [
    "Volume não consta no cadastro; escolhido 500 ml (menor apresentação de varejo; existe 1,5 L).",
    "A marca 'Nitro' destes produtos é a linha Nitro Automotive da Harten Química (hartenquimica.com.br, Brasil, fundada em 2002), e NÃO a Nitro Química (nitroquimica.com.br, fabricante de nitrocelulose). Toda fonte de varejo encontrada atribui a linha à Harten Química. Confirmar com a loja/nota fiscal.",
    "GTIN não exposto em nenhum resultado de busca; não deduzido.",
-   "Rodada GTIN: Buscas por nome da linha Nitro/Harten (e pesquisa restrita a Cosmos/Systax) não trouxeram GTIN; Harten não publica EAN nas páginas indexadas."
+   "Rodada GTIN: Buscas por nome da linha Nitro/Harten (e pesquisa restrita a Cosmos/Systax) não trouxeram GTIN; Harten não publica EAN nas páginas indexadas.",
+   "Revisão 08/10: o cadastro não fixa a apresentação e o fabricante vende mais de uma (ou a identidade do item ainda depende de confirmação), então a foto entra como representativa e a confiança passa a média até a conferência física da embalagem."
   ],
   "lote": "nitro-2.json",
   "aplicar": true,
-  "fotoExata": true,
-  "imagemOrigem": "propria"
+  "fotoExata": false,
+  "imagemOrigem": "representativa",
+  "imagemFamilia": "Nitro Renovex Restaurador e Protetor de Plásticos"
  },
  {
   "id": "cmtv7cdso009ipd01oqpikz2d",
@@ -5749,18 +5761,20 @@
   ],
   "paginaDasFotos": "https://www.hartenquimica.com.br/products/sanitizante-carro-novo",
   "fotos": [],
-  "confianca": "alta",
+  "confianca": "media",
   "duvidas": [
    "Existe também 'Sanitizante Carro Novo' da Vintex (1,5 L e 5 L; ex.: GVL Distribuidora). Confirmar que o item da loja é o Nitro 200 ml.",
    "Modo de uso detalhado (tempo de ação, portas fechadas etc.) não foi lido; só a aplicação genérica.",
    "A marca 'Nitro' destes produtos é a linha Nitro Automotive da Harten Química (hartenquimica.com.br, Brasil, fundada em 2002), e NÃO a Nitro Química (nitroquimica.com.br, fabricante de nitrocelulose). Toda fonte de varejo encontrada atribui a linha à Harten Química. Confirmar com a loja/nota fiscal.",
    "GTIN não exposto em nenhum resultado de busca; não deduzido.",
-   "Rodada GTIN: Buscas por nome da linha Nitro/Harten (e pesquisa restrita a Cosmos/Systax) não trouxeram GTIN; Harten não publica EAN nas páginas indexadas."
+   "Rodada GTIN: Buscas por nome da linha Nitro/Harten (e pesquisa restrita a Cosmos/Systax) não trouxeram GTIN; Harten não publica EAN nas páginas indexadas.",
+   "Revisão 08/10: o cadastro não fixa a apresentação e o fabricante vende mais de uma (ou a identidade do item ainda depende de confirmação), então a foto entra como representativa e a confiança passa a média até a conferência física da embalagem."
   ],
   "lote": "nitro-2.json",
   "aplicar": true,
-  "fotoExata": true,
-  "imagemOrigem": "propria"
+  "fotoExata": false,
+  "imagemOrigem": "representativa",
+  "imagemFamilia": "Nitro Sanitizante Carro Novo"
  },
  {
   "id": "cmtv7cdv1009ypd01kjxz65z2",
@@ -6150,14 +6164,13 @@
   "gtin": null,
   "gtinFonte": null,
   "atributos": {
-   "volume": "1 L (reservatório)",
+   "capacidadeDoReservatorio": "1 L",
    "gicle": "1,3 mm",
    "cor": "amarelo",
    "pressaoIndicada": "1750 a 2200 PSI",
    "vazaoIndicada": "5,5 a 10 L/min (bico 1,3 mm para 7 a 8 L/min)",
    "ajusteDoBico": "0 a 45 graus, horizontal ou vertical",
-   "aplicacao": "pré-lavagem com espuma em lavadora de alta pressão",
-   "volumeMl": 1000
+   "aplicacao": "pré-lavagem com espuma em lavadora de alta pressão"
   },
   "fontes": [
    {
@@ -6206,7 +6219,8 @@
    "Modo de uso é prática padrão de snow foam, não lido na página do fabricante.",
    "EAN não encontrado.",
    "Rodada GTIN: Magalu lista 'Snow Foam Canhão de Espuma Detailer' (1 L) sem EAN; cor do bico não indicada.",
-   "Foto entra como representativa: produto confirmado, apresentação (volume/numeração) não conferida na fonte."
+   "Foto entra como representativa: produto confirmado, apresentação (volume/numeração) não conferida na fonte.",
+   "Sem `volumeMl`: 1 L é a capacidade do reservatório do equipamento, não a quantidade vendida; o Merchant não deve calcular preço por litro de um canhão de espuma."
   ],
   "lote": "vintex-detailer.json",
   "aplicar": true,
@@ -6238,15 +6252,14 @@
   "gtin": null,
   "gtinFonte": null,
   "atributos": {
-   "volume": "1 L (reservatório)",
+   "capacidadeDoReservatorio": "1 L",
    "gicle": "1,1 mm (informado por revendedor)",
    "cor": "vermelho",
    "rosca": "14 mm (informado por revendedor)",
    "pressaoIndicada": "1750 a 2200 PSI (linha Snow Foam Detailer)",
    "vazaoIndicada": "5,5 a 10 L/min (linha)",
    "ajusteDoBico": "0 a 45 graus, horizontal ou vertical",
-   "aplicacao": "pré-lavagem com espuma em lavadora de alta pressão",
-   "volumeMl": 1000
+   "aplicacao": "pré-lavagem com espuma em lavadora de alta pressão"
   },
   "fontes": [
    {
@@ -6277,7 +6290,8 @@
    "A pesquisa específica sobre o bico vermelho não pôde ser concluída (cota de buscas da sessão esgotada).",
    "EAN não encontrado.",
    "Rodada GTIN: Magalu lista 'Snow Foam Canhão de Espuma Detailer' (1 L) sem EAN; cor do bico não indicada.",
-   "Foto entra como representativa: produto confirmado, apresentação (volume/numeração) não conferida na fonte."
+   "Foto entra como representativa: produto confirmado, apresentação (volume/numeração) não conferida na fonte.",
+   "Sem `volumeMl`: 1 L é a capacidade do reservatório do equipamento, não a quantidade vendida; o Merchant não deve calcular preço por litro de um canhão de espuma."
   ],
   "lote": "vintex-detailer.json",
   "aplicar": true,
@@ -6785,16 +6799,18 @@
   ],
   "paginaDasFotos": "https://www.vonixx.com.br/produto/v80/",
   "fotos": [],
-  "confianca": "alta",
+  "confianca": "media",
   "duvidas": [
    "Tempo de cura e rendimento não constam nas fontes lidas; o modo de uso é orientação geral de selante e deve ser conferido no rótulo.",
    "O nome correto do fabricante é 'V80' (sem hífen); ajustar o cadastro.",
-   "Rodada GTIN: Listagens Mercado Livre/Magalu do V80 500ml sem EAN. SiO2-PRO 500ml tem 7898511027110 (eBay), outro produto."
+   "Rodada GTIN: Listagens Mercado Livre/Magalu do V80 500ml sem EAN. SiO2-PRO 500ml tem 7898511027110 (eBay), outro produto.",
+   "Revisão 08/10: o cadastro não fixa a apresentação e o fabricante vende mais de uma (ou a identidade do item ainda depende de confirmação), então a foto entra como representativa e a confiança passa a média até a conferência física da embalagem."
   ],
   "lote": "bugatti-vonixx.json",
   "aplicar": true,
-  "fotoExata": true,
-  "imagemOrigem": "propria"
+  "fotoExata": false,
+  "imagemOrigem": "representativa",
+  "imagemFamilia": "Vonixx V80 Selante Sintético para Pintura"
  },
  {
   "id": "cmtv7cebn00ckpd01otxroaq1",

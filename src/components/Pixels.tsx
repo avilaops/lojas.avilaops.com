@@ -34,33 +34,38 @@ export default function Pixels({ p }: { p: PixelsDaLoja }) {
   }, [aceito]);
 
   const gtag = p.ga4Id || p.googleAdsId;
+  // O `consent default` tem de ser o primeiro comando do dataLayer: o GTM e o
+  // gtag.js processam a fila em ordem, e um `view_item` enfileirado antes dele
+  // chegaria às tags sem o estado `denied`. Por isso ele vai no script em
+  // linha, junto do marcador, e não nos loaders `afterInteractive`.
   // `ads_data_redaction`: enquanto o anúncio está negado, o Google também
   // tira os identificadores de clique das URLs que recebe. É o par do Consent
   // Mode v2 que a documentação pede junto do `default` negado.
-  const padraoConsentimento =
+  const inicioDoDataLayer =
     "window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}" +
     "gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'denied',wait_for_update:500});" +
-    "gtag('set','ads_data_redaction',true);";
+    "gtag('set','ads_data_redaction',true);" +
+    `window.__lojaPixels={gtm:${p.gtmId ? "true" : "false"}};`;
 
   return (
     <>
-      {/* Marcador lido por eventos-loja.ts para escolher o caminho do Google
-          (dataLayer com GTM, gtag sem). Script em linha no HTML, e não
-          next/script, porque o view_item da página do produto dispara na
-          hidratação e o afterInteractive pode chegar depois dele. */}
-      {(p.gtmId || gtag) && (
-        <script dangerouslySetInnerHTML={{ __html: `window.__lojaPixels={gtm:${p.gtmId ? "true" : "false"}};window.dataLayer=window.dataLayer||[];` }} />
-      )}
+      {/* Consentimento padrão e marcador lido por eventos-loja.ts para escolher
+          o caminho do Google (dataLayer com GTM, gtag sem). Script em linha no
+          HTML, e não next/script, porque o view_item da página do produto
+          dispara na hidratação e o afterInteractive pode chegar depois dele:
+          o marcador só aparece depois do `consent default`, então nenhum
+          evento entra na fila antes dele. */}
+      {(p.gtmId || gtag) && <script dangerouslySetInnerHTML={{ __html: inicioDoDataLayer }} />}
       {p.gtmId && (
         <Script id="gtm" strategy="afterInteractive">
-          {`${padraoConsentimento}(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','${p.gtmId}');`}
+          {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','${p.gtmId}');`}
         </Script>
       )}
 
       {gtag && (
         <>
           <Script id="gtag-init" strategy="afterInteractive">
-            {`${padraoConsentimento}gtag('js',new Date());${p.ga4Id ? `gtag('config','${p.ga4Id}');` : ""}${p.googleAdsId ? `gtag('config','${p.googleAdsId}');` : ""}`}
+            {`gtag('js',new Date());${p.ga4Id ? `gtag('config','${p.ga4Id}');` : ""}${p.googleAdsId ? `gtag('config','${p.googleAdsId}');` : ""}`}
           </Script>
           <Script src={`https://www.googletagmanager.com/gtag/js?id=${gtag}`} strategy="afterInteractive" />
         </>

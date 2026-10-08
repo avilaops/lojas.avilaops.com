@@ -23,6 +23,9 @@
  *     marketplace como única fonte não vira foto própria (`imagemLicenciada`
  *     declarado é a exceção);
  *   - não aplica item de confiança baixa sem `--incluir-baixa`;
+ *   - não mexe em produto já ativo com preço sem `--incluir-ativos`: o dossiê
+ *     foi pesquisado sobre um catálogo em que todos os sem foto estavam
+ *     inativos, e oferta publicada recebe hipótese só por decisão explícita;
  *   - não grava foto que não conseguiu extrair: o produto recebe texto e
  *     categoria, e o relatório lista o que ficou sem imagem;
  *   - não troca a categoria da loja sem `--mudar-categoria`: a importação
@@ -51,11 +54,12 @@ const base = (args.base ?? "https://lojas.avilaops.com").replace(/\/$/, "");
 const token = process.env.LOJAS_ADMIN_TOKEN;
 const aplicar = args.aplicar === true;
 const incluirBaixa = args["incluir-baixa"] === true;
+const incluirAtivos = args["incluir-ativos"] === true;
 const somenteSku = typeof args.sku === "string" ? new Set(args.sku.split(",")) : null;
 const mudarCategoria = args["mudar-categoria"] === true;
 
 if (!loja || !dossiePath || typeof dossiePath !== "string") {
-  console.error("uso: LOJAS_ADMIN_TOKEN=... node scripts/completar-catalogo-sem-foto.mjs --loja <slug> --dossie <arquivo.json> [--aplicar] [--incluir-baixa] [--mudar-categoria] [--sku 00120,00121] [--base https://lojas.avilaops.com]");
+  console.error("uso: LOJAS_ADMIN_TOKEN=... node scripts/completar-catalogo-sem-foto.mjs --loja <slug> --dossie <arquivo.json> [--aplicar] [--incluir-baixa] [--incluir-ativos] [--mudar-categoria] [--sku 00120,00121] [--base https://lojas.avilaops.com]");
   process.exit(2);
 }
 if (!token) {
@@ -139,6 +143,10 @@ for (const item of dossie) {
   const atual = (item.sku && porSku.get(item.sku)) || (item.slug && porSlug.get(item.slug));
   if (!atual) { pulados.push({ sku: item.sku, motivo: "não encontrado na loja (sku/slug)" }); continue; }
   if (atual.imagens?.length) { pulados.push({ sku: item.sku, motivo: "já tem foto na loja; nada a fazer aqui" }); continue; }
+  // O dossiê foi pesquisado sobre produtos inativos e sem preço. Se um deles
+  // foi publicado desde então, o lojista já decidiu o que a oferta diz: nome,
+  // descrição e foto por hipótese só entram com a opção explícita.
+  if (atual.ativo && (atual.precoCentavos ?? 0) > 0 && !incluirAtivos) { pulados.push({ sku: item.sku, motivo: "produto já ativo com preço (use --incluir-ativos)" }); continue; }
 
   // Dúvida de unidade de venda (caixa x unidade x metro) com GTIN/MPN no
   // dossiê: o identificador é da unidade, e aplicá-lo à caixa é identidade
@@ -197,6 +205,7 @@ const resultados = [];
 // dependendo do site de terceiro. Esses produtos voltam para "sem foto" no
 // mesmo ato, e o script termina com erro para ninguém ler o 200 como sucesso.
 const fotosNaoCopiadas = [];
+let loteComErro = null;
 for (let i = 0; i < plano.length; i += 20) {
   const fatia = plano.slice(i, i + 20);
   const lote = fatia.map((p) => p.entrada);
@@ -204,7 +213,7 @@ for (let i = 0; i < plano.length; i += 20) {
   const corpo = await r.json().catch(() => ({}));
   resultados.push({ lote: i / 20 + 1, status: r.status, corpo });
   console.log(`lote ${i / 20 + 1}: HTTP ${r.status}`, JSON.stringify(corpo).slice(0, 600));
-  if (!r.ok) break;
+  if (!r.ok) { loteComErro = { lote: i / 20 + 1, status: r.status, skus: fatia.map((p) => p.sku) }; break; }
   const falhas = Array.isArray(corpo?.imagens?.falhas) ? corpo.imagens.falhas : [];
   if (!falhas.length) continue;
   // A rota identifica a falha pelo nome do produto ("<nome>: <erro>").
@@ -215,5 +224,10 @@ for (let i = 0; i < plano.length; i += 20) {
   for (const p of comFalha) fotosNaoCopiadas.push({ sku: p.sku, nome: p.entrada.nome, falhas: falhas.filter((f) => f.startsWith(`${p.entrada.nome}:`)), fotoRemovida: r2.ok });
   console.log(`  ${comFalha.length} produto(s) ficaram sem foto porque a cópia falhou (HTTP ${r2.status} ao desfazer): ${comFalha.map((p) => p.sku).join(", ")}`);
 }
-await writeFile(planoPath.replace(/\.plano\.json$/, ".resultado.json"), JSON.stringify({ aplicadoEm: new Date().toISOString(), loja, resultados, fotosNaoCopiadas }, null, 1));
+await writeFile(planoPath.replace(/\.plano\.json$/, ".resultado.json"), JSON.stringify({ aplicadoEm: new Date().toISOString(), loja, resultados, fotosNaoCopiadas, loteComErro }, null, 1));
+if (loteComErro) {
+  const restantes = plano.length - (loteComErro.lote - 1) * 20;
+  console.error(`lote ${loteComErro.lote} respondeu HTTP ${loteComErro.status}; os ${restantes} produtos a partir dele não foram aplicados. Veja .resultado.json.`);
+  process.exit(1);
+}
 if (fotosNaoCopiadas.length) { console.error(`${fotosNaoCopiadas.length} foto(s) não copiada(s) para /uploads; os produtos voltaram a ficar sem foto. Veja .resultado.json.`); process.exit(1); }
