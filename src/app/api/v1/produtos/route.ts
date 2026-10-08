@@ -2,7 +2,8 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { rotaDaApi } from "@/lib/api-rotas";
 import { produtoDaApi } from "@/lib/api-recursos";
-import { lerBooleano, lerData, lerPaginacao, lista } from "@/lib/api-resposta";
+import { criarProdutoPelaApi, NovoProduto } from "@/lib/api-produtos";
+import { lerBooleano, lerCorpo, lerData, lerPaginacao, lista } from "@/lib/api-resposta";
 import { termosDeBusca } from "@/lib/catalogo";
 import { urlDaLoja } from "@/lib/tenant";
 
@@ -46,4 +47,19 @@ export const GET = rotaDaApi({ escopo: "catalogo:ler" }, async ({ tenant, url })
 
   const base = urlDaLoja(tenant);
   return lista(produtos.map((p) => produtoDaApi(p, base)), pagina, total);
+});
+
+/**
+ * POST /api/v1/produtos — cria um produto simples (sem variações).
+ *
+ * Nasce **inativo**, a menos que o corpo diga `ativo: true`: a foto entra pelo
+ * painel, e produto sem foto na vitrine é o que o lojista descobre pelo
+ * cliente. Slug ou SKU já em uso responde `conflito` (409): reenviar o mesmo
+ * cadastro depois de um erro de rede não cria um segundo produto.
+ */
+export const POST = rotaDaApi({ escopo: "produtos:escrever" }, async ({ request, tenant, chave }) => {
+  const dados = await lerCorpo(request, NovoProduto);
+  const produto = await criarProdutoPelaApi(tenant.id, dados, `api:${chave.id}`);
+  const { variantes, ...resto } = produto;
+  return { dados: produtoDaApi(resto, urlDaLoja(tenant), variantes) };
 });

@@ -63,7 +63,9 @@ chegasse, sem ninguém ter decidido isso.
 | `loja:ler` | `GET /api/v1/loja` |
 | `catalogo:ler` | `GET /api/v1/produtos`, `GET /api/v1/produtos/{id}` |
 | `catalogo:escrever` | `PATCH /api/v1/ofertas` |
-| `pedidos:ler` | `GET /api/v1/pedidos` |
+| `produtos:escrever` | `POST /api/v1/produtos`, `PATCH /api/v1/produtos/{id}` |
+| `pedidos:ler` | `GET /api/v1/pedidos`, `GET /api/v1/pedidos/{id}` |
+| `pedidos:escrever` | `PATCH /api/v1/pedidos/{id}` |
 | `vitrine:ler` | `GET /api/v1/vitrine/loja`, `GET /api/v1/vitrine/produtos` |
 
 `GET /api/v1` (sem chave) devolve esta lista como dado.
@@ -128,6 +130,40 @@ PATCH /api/v1/ofertas
 - O histórico do produto grava `origem = api:<id da chave>`: o lojista que vê
   um preço mudar sozinho sabe qual integração mexeu.
 
+## Cadastro de produto (`POST /api/v1/produtos`, `PATCH /api/v1/produtos/{id}`)
+
+A escrita é a do painel (`salvarProdutoNoCatalogo`); o contrato de entrada e a
+tradução dos erros ficam em `src/lib/api-produtos.ts`.
+
+- **Escopo próprio, `produtos:escrever`.** Não é `catalogo:escrever`: a chave
+  que o lojista criou para o ERP acertar preço e estoque não pode amanhecer
+  podendo criar produto.
+- **Produto criado nasce inativo**, a menos que venha `ativo: true`. A foto
+  entra pelo painel, e produto sem foto na vitrine é o que o lojista descobre
+  pelo cliente.
+- **Sem imagem pela API.** Aceitar URL de fora poria na vitrine de um cliente
+  uma imagem que a loja não controla.
+- **Edição não mexe em preço nem estoque.** Isso é de `/ofertas`. Dois caminhos
+  para o mesmo número é como o ERP e o cadastro passam a brigar.
+- **`categoria` é o slug de uma categoria que já existe.** A API não cria
+  categoria: erro de digitação viraria categoria nova na vitrine.
+- Slug ou SKU já em uso responde `conflito` (409). Reenviar o mesmo cadastro
+  depois de um erro de rede não cria um segundo produto.
+- Só produto simples. Variações continuam sendo cadastradas pelo painel.
+
+## Pedido (`GET` e `PATCH /api/v1/pedidos/{id}`)
+
+`{id}` aceita o id ou a referência. O `PATCH` avança o pedido: `status`
+(`EM_SEPARACAO`, `ENVIADO`, `ENTREGUE`, `CANCELADO`) e `rastreio`.
+
+- É a mesma função do painel e do conector MCP (`mudarStatusDoPedido`,
+  `src/lib/pedidos-status.ts`): mesma regra, mesmo aviso ao comprador.
+- O aviso sai **uma vez por virada**, mesmo com duas integrações marcando
+  "enviado" ao mesmo tempo. A resposta traz `mudou: false` quando o pedido já
+  estava naquele status.
+- Pedido que não foi pago só pode ser cancelado (`conflito`, 409, nos outros).
+- **Pagamento não muda por aqui.** `PAGO` e `ESTORNADO` vêm do gateway.
+
 ## Limite em memória
 
 O limitador conta na memória do processo: a plataforma roda num container só.
@@ -144,8 +180,9 @@ contagem muda de lugar (Postgres ou Redis) sem mudar o contrato.
 
 ## Próximos passos (fora desta fundação)
 
-1. Mais escrita pela chave secreta: criar e editar produto (campos editoriais,
-   por `salvarProdutoNoCatalogo`) e `pedidos:escrever` (status e rastreio).
+1. ~~Mais escrita pela chave secreta~~ feito em 08/10/2026: criar e editar
+   produto (`produtos:escrever`) e avançar pedido (`pedidos:escrever`). Falta
+   variação e imagem pela API.
 2. Webhooks para o desenvolvedor, saindo do mesmo `emitir` de `eventos.ts`.
 3. Carrinho e checkout pela chave publicável, passando por
    `montarPedidoSeguro` + `resolverItensDoCatalogo` (preço nunca do navegador).

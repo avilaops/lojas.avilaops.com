@@ -11,6 +11,7 @@ import { emitir } from "@/lib/eventos";
 import type { Tenant, PedidoStatus } from "@prisma/client";
 import { invalidarCatalogo } from "./catalogo-cache";
 import { salvarProdutoNoCatalogo } from "./catalogo-escrita";
+import { mudarStatusDoPedido, type StatusDaLoja } from "./pedidos-status";
 
 export interface McpTool {
   name: string;
@@ -741,36 +742,11 @@ export const MCP_TOOLS: McpTool[] = [
       required: ["id", "status"],
     },
     handler: async (args, { tenant }) => {
-      const pedido = await prisma.pedido.findFirst({ where: { id: args.id, tenantId: tenant.id } });
-      if (!pedido) throw new Error("Pedido não encontrado.");
-      const status = args.status as PedidoStatus;
-      if (pedido.status === "AGUARDANDO_PAGAMENTO" && status !== "CANCELADO") {
-        throw new Error("Pedido ainda não foi pago; no momento só é possível cancelar.");
-      }
-      const a = await prisma.pedido.update({
-        where: { id: pedido.id },
-        data: { status, ...(args.rastreio !== undefined ? { rastreio: args.rastreio || null } : {}) },
+      // A mesma função do painel e da API: mesma regra, mesmo aviso ao comprador.
+      const { pedido: a } = await mudarStatusDoPedido(tenant, String(args.id), {
+        status: args.status as StatusDaLoja,
+        ...(args.rastreio !== undefined ? { rastreio: args.rastreio || null } : {}),
       });
-      if (status !== pedido.status) {
-        const comum = {
-          slug: tenant.slug,
-          referencia: a.referencia,
-          numero: a.numero,
-          clienteNome: a.clienteNome,
-          clienteEmail: a.clienteEmail,
-          clienteTelefone: a.clienteTelefone,
-          linkPedido: `${urlDaLoja(tenant)}/pedido/${a.referencia}`,
-          lojaNome: tenant.nome,
-          lojaUrl: urlDaLoja(tenant),
-          lojistaEmail: tenant.loginEmail ?? tenant.emailContato,
-          lojistaWhatsapp: tenant.whatsapp,
-          emailRemetente: tenant.emailRemetente,
-        };
-        if (status === "EM_SEPARACAO") await emitir({ tipo: "pedido.em-separacao", ...comum }, { chave: `em-separacao:${comum.referencia}` });
-        if (status === "ENVIADO") await emitir({ tipo: "pedido.enviado", transportadora: a.freteNome, rastreio: a.rastreio, ...comum }, { chave: `enviado:${comum.referencia}` });
-        if (status === "ENTREGUE") await emitir({ tipo: "pedido.entregue", ...comum }, { chave: `entregue:${comum.referencia}` });
-        if (status === "CANCELADO") await emitir({ tipo: "pedido.cancelado", totalCentavos: a.totalCentavos, motivo: "cancelado pela loja", ...comum }, { chave: `cancelado:${comum.referencia}` });
-      }
       return { sucesso: true, id: a.id, status: a.status, rastreio: a.rastreio };
     },
   },

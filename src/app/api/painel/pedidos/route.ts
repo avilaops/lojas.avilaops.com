@@ -1,8 +1,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { lojistaAtual } from "@/lib/sessao";
-import { emitir } from "@/lib/eventos";
-import { urlDaLoja } from "@/lib/tenant";
+import { mudarStatusDoPedido, MudancaDeStatusRecusada } from "@/lib/pedidos-status";
 import { filtroDePedidos, paginaValida, POR_PAGINA_PEDIDOS } from "@/lib/pedidos-painel";
 
 const Entrada = z.object({
@@ -62,38 +61,14 @@ export async function PATCH(request: Request) {
   const r = Entrada.safeParse(await request.json().catch(() => null));
   if (!r.success) return Response.json({ erro: "Dados inválidos." }, { status: 422 });
 
-  const pedido = await prisma.pedido.findFirst({ where: { id: r.data.id, tenantId: loja.id } });
-  if (!pedido) return Response.json({ erro: "Pedido não encontrado." }, { status: 404 });
-  if (pedido.status === "AGUARDANDO_PAGAMENTO" && r.data.status && r.data.status !== "CANCELADO") {
-    return Response.json({ erro: "Pedido ainda não foi pago." }, { status: 409 });
-  }
-  const a = await prisma.pedido.update({
-    where: { id: pedido.id },
-    data: { ...(r.data.status ? { status: r.data.status } : {}), ...(r.data.rastreio !== undefined ? { rastreio: r.data.rastreio } : {}) },
-  });
-  // Toda virada de situação avisa uma vez só: salvar o rastreio de novo, ou
-  // marcar entregue depois, não pode gerar um segundo e-mail. O que o n8n faz
-  // com cada uma é decisão do fluxo; aqui só se registra que aconteceu.
-  const mudou = r.data.status && r.data.status !== pedido.status;
-  if (mudou) {
-    const comum = {
-      slug: loja.slug,
-      referencia: a.referencia,
-      numero: a.numero,
-      clienteNome: a.clienteNome,
-      clienteEmail: a.clienteEmail,
-      clienteTelefone: a.clienteTelefone,
-      linkPedido: `${urlDaLoja(loja)}/pedido/${a.referencia}`,
-      lojaNome: loja.nome,
-      lojaUrl: urlDaLoja(loja),
-      lojistaEmail: loja.loginEmail ?? loja.emailContato,
-      lojistaWhatsapp: loja.whatsapp,
-      emailRemetente: loja.emailRemetente,
-    };
-    if (r.data.status === "EM_SEPARACAO") await emitir({ tipo: "pedido.em-separacao", ...comum }, { chave: `em-separacao:${comum.referencia}` });
-    if (r.data.status === "ENVIADO") await emitir({ tipo: "pedido.enviado", transportadora: a.freteNome, rastreio: a.rastreio, ...comum }, { chave: `enviado:${comum.referencia}` });
-    if (r.data.status === "ENTREGUE") await emitir({ tipo: "pedido.entregue", ...comum }, { chave: `entregue:${comum.referencia}` });
-    if (r.data.status === "CANCELADO") await emitir({ tipo: "pedido.cancelado", totalCentavos: a.totalCentavos, motivo: "cancelado pela loja", ...comum }, { chave: `cancelado:${comum.referencia}` });
+  let a;
+  try {
+    ({ pedido: a } = await mudarStatusDoPedido(loja, r.data.id, { status: r.data.status, rastreio: r.data.rastreio }));
+  } catch (e) {
+    if (!(e instanceof MudancaDeStatusRecusada)) throw e;
+    return e.motivo === "nao_encontrado"
+      ? Response.json({ erro: "Pedido não encontrado." }, { status: 404 })
+      : Response.json({ erro: "Pedido ainda não foi pago." }, { status: 409 });
   }
 
   return Response.json({ id: a.id, status: a.status, rastreio: a.rastreio });
