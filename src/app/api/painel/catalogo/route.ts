@@ -66,6 +66,15 @@ export async function GET(request: Request) {
       identificadoresPendentes: p.variantes.length > 0,
       fotoMerchantRevisar: p.imagens.length === 0 || p.imagemOrigem !== "propria" || p.midias[0]?.correspondencia !== "confirmada",
       temFoto: p.imagens.length > 0,
+      // Nome do item no ERP da loja, gravado pela sincronização em
+      // `atributos._erpDescricao`. O nome da vitrine é do lojista; este é o
+      // que ele reconhece no balcão.
+      descricaoErp: descricaoNoErp(p.atributos),
     })),
   });
+}
+
+function descricaoNoErp(atributos: unknown): string | null {
+  const v = (atributos as Record<string, unknown> | null)?._erpDescricao;
+  return typeof v === "string" && v.trim() ? v.trim() : null;
 }

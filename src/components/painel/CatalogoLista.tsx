@@ -39,6 +39,8 @@ type Item = {
   identificadoresPendentes: boolean;
   fotoMerchantRevisar: boolean;
   temFoto: boolean;
+  /** Descrição do item no ERP da loja, quando a loja sincroniza com um. */
+  descricaoErp: string | null;
 };
 
 type Resposta = { total: number; pagina: number; paginas: number; porPagina: number; produtos: Item[] };
@@ -171,7 +173,7 @@ export default function CatalogoLista({
                 {!p.ativo && " (inativo)"}
               </>
             )}
-            subtitulo={(p) => [p.categoria, p.sku && `Código ${p.sku}`].filter(Boolean).join(" · ") || null}
+            subtitulo={(p) => [p.descricaoErp && p.descricaoErp !== p.nome && `ERP: ${p.descricaoErp}`, p.categoria, p.sku && `Código ${p.sku}`].filter(Boolean).join(" · ") || null}
             selo={(p) => (
               <>
                 <b className="tabular-nums">{preco(p)}</b>
@@ -189,7 +191,7 @@ export default function CatalogoLista({
               </>
             )}
             colunas={[
-              { rotulo: "Produto", celula: (p) => (
+              { rotulo: dados.produtos.some((p) => p.descricaoErp) ? "Nome no e-commerce" : "Produto", celula: (p: Item) => (
                 <>
                   {p.destaque && "★ "}
                   {p.nome}
@@ -204,6 +206,11 @@ export default function CatalogoLista({
                   {p.identificadoresPendentes && <span className="ml-2 inline-flex rounded bg-amber-50 px-1.5 py-0.5 text-[11px] text-amber-800">GTIN/MPN a confirmar</span>}
                 </>
               ) },
+              // Só aparece em loja que sincroniza com ERP: sem nenhum valor na
+              // página, a coluna some em vez de ocupar espaço com traços.
+              ...(dados.produtos.some((p) => p.descricaoErp)
+                ? [{ rotulo: "Descrição no ERP", celula: (p: Item) => <span className="text-muted-foreground">{p.descricaoErp ?? "—"}</span> }]
+                : []),
               { rotulo: "Categoria", celula: (p) => p.categoria ?? "—", largura: "w-32" },
               { rotulo: "Código", celula: (p) => p.sku ?? "—", largura: "w-24" },
               { rotulo: "Preço", celula: preco, largura: "w-28", numero: true },
