@@ -33,8 +33,21 @@ export const CRAWLERS_DE_TREINAMENTO = ["GPTBot", "Google-Extended", "ClaudeBot"
 /** O que nenhuma máquina tem por que indexar numa loja: é de quem está comprando. */
 export const CAMINHOS_PRIVADOS_DA_LOJA = ["/carrinho", "/checkout", "/pedido/", "/conta", "/api/"];
 
+/**
+ * A loja continua existindo para os buscadores?
+ *
+ * Suspensa é loja com a cobrança atrasada: perde o checkout, não a presença.
+ * Bloquear o robots nesse estado apagava a indexação inteira, e a volta leva
+ * semanas: a Vedashow ficou com 1.681 páginas "bloqueadas pelo robots.txt" no
+ * Search Console depois de uma suspensão em setembro de 2026. Só loja em
+ * provisionamento ou cancelada some da busca.
+ */
+export function visivelNaBusca(t: Pick<Tenant, "status">): boolean {
+  return t.status === "ATIVA" || t.status === "SUSPENSA";
+}
+
 export function regrasRobots(t: Tenant): MetadataRoute.Robots {
-  if (t.status !== "ATIVA") return { rules: { userAgent: "*", disallow: "/" } };
+  if (!visivelNaBusca(t)) return { rules: { userAgent: "*", disallow: "/" } };
 
   const rules: MetadataRoute.Robots["rules"] = [
     { userAgent: "*", allow: "/", disallow: CAMINHOS_PRIVADOS_DA_LOJA },
@@ -63,7 +76,7 @@ export type EstadoDescoberta = {
 /** O que o painel mostra e o que o teste de publicação confere. */
 export function estadoDescoberta(t: Tenant, host: string | null): EstadoDescoberta {
   const base = urlDaLoja(t);
-  const ativa = t.status === "ATIVA";
+  const ativa = visivelNaBusca(t);
   return {
     dominioCanonico: base.replace(/^https?:\/\//, ""),
     noEnderecoOficial: noEnderecoOficial(t, host),

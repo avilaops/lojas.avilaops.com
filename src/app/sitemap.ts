@@ -7,6 +7,7 @@ import { emPromocao } from "@/lib/produto-regras";
 import { postsPublicados } from "@/lib/blog";
 import { listarPublicadas } from "@/lib/publicacoes-consulta";
 import { politicasPublicadas } from "@/lib/politicas";
+import { visivelNaBusca } from "@/lib/descoberta";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +34,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ];
   }
   const t = await tenantAtual();
-  if (!t || t.status !== "ATIVA") return [];
+  if (!t || !visivelNaBusca(t)) return [];
   const base = urlDaLoja(t);
   const [categorias, produtos, publicacoes] = await Promise.all([listarCategorias(t.id), listarProdutos(t.id), listarPublicadas(t.id, 500)]);
   // A mesma regra do menu e da página: ver `src/lib/promocoes.ts`.

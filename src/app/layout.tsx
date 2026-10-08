@@ -1,3 +1,4 @@
+import { visivelNaBusca } from "@/lib/descoberta";
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import MedirSessao from "@/components/MedirSessao";
@@ -116,7 +117,7 @@ export async function generateMetadata(): Promise<Metadata> {
      * lê o `noindex` que está nela.
      */
     robots:
-      t.status !== "ATIVA"
+      !visivelNaBusca(t)
         ? { index: false, follow: false }
         : noEnderecoOficial(t, h.get("x-forwarded-host") ?? h.get("host"))
           ? PREVIA_CHEIA

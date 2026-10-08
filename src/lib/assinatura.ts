@@ -80,22 +80,41 @@ export async function cancelarAssinatura(t: Tenant) {
   await prisma.tenant.update({ where: { id: t.id }, data: { assinaturaStatus: "CANCELADA", assinaturaInitPoint: null } });
 }
 
-async function suspender(t: Tenant, motivo: string) {
+/**
+ * Suspender e reativar loja é decisão de gente, não da rotina (Nicolas,
+ * 08/10/2026). A plataforma só enxerga pagamento feito pela assinatura do
+ * Mercado Pago; quem paga por fora parecia inadimplente, e a rotina suspendeu
+ * loja que ninguém tinha cobrado. Por padrão ela só aponta quem cairia na
+ * regra (`aSuspender` no resultado da rotina) e o status muda à mão, por
+ * `PATCH /api/admin/tenants/<slug>`. `LOJAS_SUSPENSAO_AUTOMATICA=true` religa.
+ */
+export function suspensaoAutomatica(env: Record<string, string | undefined> = process.env): boolean {
+  return env.LOJAS_SUSPENSAO_AUTOMATICA === "true";
+}
+
+async function suspender(t: Tenant, motivo: string): Promise<boolean> {
+  if (!suspensaoAutomatica()) {
+    console.warn(`[assinatura] ${t.slug} cairia em suspensão (${motivo}); suspensão automática desligada`);
+    return false;
+  }
   // A isenção mora aqui, no único ponto por onde toda suspensão passa. Ela
   // nasceu só dentro da rotina diária e a demo foi suspensa assim mesmo: o
   // caminho do webhook (assinatura cancelada no Mercado Pago) não conhecia a
   // regra. Guard no lugar errado é guard que um caminho novo esquece.
-  if (t.cobrancaIsenta) return;
-  if (t.status === "SUSPENSA" || t.status === "CANCELADA") return;
+  if (t.cobrancaIsenta) return false;
+  if (t.status === "SUSPENSA" || t.status === "CANCELADA") return false;
   // Quem suspende é quem muda a linha: o webhook e a varredura diária chegam
   // juntos, cada um com o `t` que leu antes, e os dois avisavam o lojista.
   const mudou = await prisma.tenant.updateMany({ where: { id: t.id, status: t.status }, data: { status: "SUSPENSA", suspensaEm: new Date() } });
-  if (mudou.count !== 1) return;
+  if (mudou.count !== 1) return false;
   esquecerTenantEmCache(t.slug);
   await emitir({ tipo: "loja.suspensa", slug: t.slug, nome: t.nome, motivo, link: LINK_ASSINATURA, emailContato: t.loginEmail ?? t.emailContato, whatsapp: t.whatsapp });
+  return true;
 }
 
 async function reativar(t: Tenant) {
+  // Mesma regra: quem suspendeu à mão é quem reativa.
+  if (!suspensaoAutomatica()) return;
   if (t.status !== "SUSPENSA") return;
   const mudou = await prisma.tenant.updateMany({ where: { id: t.id, status: "SUSPENSA" }, data: { status: "ATIVA", suspensaEm: null } });
   if (mudou.count !== 1) return;
@@ -197,10 +216,11 @@ async function aplicarCobranca(c: PagamentoAutorizado) {
  * DIAS_TOLERANCIA depois do período de teste, e as que ficaram > 30 +
  * tolerância sem pagamento. O fim do teste é o de `fimDoTeste` (planos.ts).
  */
-export async function verificarInadimplencia(): Promise<{ suspensas: string[]; sincronizadas: number; faturasNovas: number }> {
+export async function verificarInadimplencia(): Promise<{ suspensas: string[]; aSuspender: Array<{ slug: string; motivo: string }>; sincronizadas: number; faturasNovas: number }> {
   const agora = Date.now();
   const lojas = await prisma.tenant.findMany({ where: { status: "ATIVA" } });
   const suspensas: string[] = [];
+  const aSuspender: Array<{ slug: string; motivo: string }> = [];
   let sincronizadas = 0;
 
   // Puxa o status de quem já tem assinatura antes de julgar qualquer um.
@@ -239,9 +259,9 @@ export async function verificarInadimplencia(): Promise<{ suspensas: string[]; s
     if (t.assinaturaStatus !== "AUTORIZADA" && diasDesdeFimDoTeste > DIAS_TOLERANCIA && !t.setupPagoEm) motivo = "período de teste encerrado sem assinatura";
     else if (t.assinaturaStatus === "AUTORIZADA" && diasDesdePagamento !== null && diasDesdePagamento > 30 + DIAS_TOLERANCIA) motivo = "mais de um mês sem pagamento confirmado";
     if (motivo) {
-      await suspender(t, motivo);
-      suspensas.push(t.slug);
+      if (await suspender(t, motivo)) suspensas.push(t.slug);
+      else if (!t.cobrancaIsenta) aSuspender.push({ slug: t.slug, motivo });
     }
   }
-  return { suspensas, sincronizadas, faturasNovas };
+  return { suspensas, aSuspender, sincronizadas, faturasNovas };
 }

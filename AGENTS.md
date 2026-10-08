@@ -223,5 +223,11 @@ Este repositório pertence à Ávila Ops Tecnologia, que ajuda pequenas empresas
   Importação em lote e sincronização do ERP (`PUT /api/admin/tenants/<slug>/produtos`)
   avisam como a edição do painel. O Google não tem ping: lê o sitemap, e a aba
   Buscadores conta páginas pela mesma régua dele (`CONDICAO_PUBLICAVEL`).
+- **Suspender loja é decisão de gente.** A rotina `cobranca.verificar` só
+  aponta quem cairia na regra (`aSuspender`); `suspender()` e `reativar()` em
+  `src/lib/assinatura.ts` não mudam status sem `LOJAS_SUSPENSAO_AUTOMATICA=true`.
+  O status muda por `PATCH /api/admin/tenants/<slug>`. E loja suspensa
+  continua na busca (`visivelNaBusca` em `descoberta.ts`): perde o checkout,
+  não o robots, o sitemap nem o `index`. Só cancelada e em provisionamento somem.
 - **Português nos nomes e comentários**, como no resto do monorepo.
 - **TypeScript estrito**; `npm run typecheck` antes de entregar.
