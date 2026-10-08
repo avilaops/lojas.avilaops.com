@@ -109,6 +109,14 @@ LOJAS_ADMIN_TOKEN=... node scripts/completar-catalogo-sem-foto.mjs \
   --loja brilhax --dossie output/catalogo-padrao/brilhax-sem-foto-2026-10-07.json --aplicar
 ```
 
+A página-fonte só rende foto quando continua sendo a página pedida: redirecionamento
+para categoria, busca ou home, título de "nenhum resultado" sem `Product` em
+JSON-LD, logo e imagem social não entram; cada página tem 20 s de prazo. A
+família da foto representativa é limitada aos 40 caracteres que a API aceita
+(o plano registra quando foi encurtada). Os Limpa Vidros Vintex (00097, 00101)
+tiram a foto da página de varejo da apresentação exata, porque a da loja
+oficial é listagem da linha e redireciona.
+
 O script não ativa produto nem mexe em preço, estoque ou destaque, e pula quem
 já foi publicado desde o snapshot (ativo com preço) a menos que se peça: oferta
 no ar não recebe hipótese sem decisão. Lote que a API recusar interrompe a
