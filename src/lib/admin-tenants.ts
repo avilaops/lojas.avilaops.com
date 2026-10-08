@@ -20,6 +20,14 @@ function dadosDoTenant(entrada: Partial<TenantEntrada>): Prisma.TenantUpdateInpu
     dados.mpPublicKey = mercadoPago.publicKey;
     dados.mpAccessTokenEnc = cifrar(mercadoPago.accessToken);
     dados.mpWebhookSecretEnc = mercadoPago.webhookSecret ? cifrar(mercadoPago.webhookSecret) : null;
+    // Chave colada substitui a conexão por OAuth inteira. Deixar o refresh
+    // antigo faria a rotina de renovação trocar, meses depois, o token colado
+    // pelo da conta que o lojista tinha acabado de abandonar.
+    dados.mpRefreshTokenEnc = null;
+    dados.mpExpiraEm = null;
+    dados.mpConectadoEm = null;
+    dados.mpUserId = null;
+    dados.mpConta = null;
   }
   return dados;
 }

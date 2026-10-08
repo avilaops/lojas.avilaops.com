@@ -16,6 +16,7 @@ import { processarAvisosMl } from "./mercadolivre-avisos";
 import { rodarMercadoLivre } from "./mercadolivre-publicacao";
 import { processarEventosProprios } from "./automacoes-consumo";
 import { lembrarPixPendente, pedirIndicacoes } from "./avisos-que-esperam";
+import { renovarAcessos as renovarAcessosDoMercadoPago } from "./mercado-pago-conta";
 
 /**
  * Quem faz o trabalho de cada rotina.
@@ -42,6 +43,7 @@ const TRABALHOS: Record<NomeDeRotina, () => Promise<unknown>> = {
   "carrinhos.verificar": () => verificarCarrinhosAbandonados(),
   "estoque.avisos": () => avisarQuemEsperava(),
   "pedidos.verificar": () => reconciliarPagamentosPendentes(),
+  "mercadopago.renovar": () => renovarAcessosDoMercadoPago(),
   "seo.categorias": () => processarSeoCategoriasPendentes({ limite: 10 }),
   "cobranca.verificar": () => verificarInadimplencia(),
   "relatorios.semanal": () => emitirRelatoriosSemanais(),

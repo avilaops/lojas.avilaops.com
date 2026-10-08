@@ -307,7 +307,16 @@ export const MCP_TOOLS: McpTool[] = [
         destaque: { type: "boolean", description: "Destaque na página inicial." },
         descricaoCurta: { type: "string", description: "Resumo do produto." },
         descricao: { type: "string", description: "Descrição longa." },
-        imagens: { type: "array", items: { type: "string" }, description: "Lista de URLs de imagens." },
+        imagens: { type: "array", items: { type: "string" }, description: "Lista de URLs de imagens (substitui a galeria inteira; para adicionar/remover uma foto use gerenciar_fotos_produto)." },
+        marca: { type: "string", description: "Marca ou fabricante." },
+        sku: { type: "string", description: "Código SKU (só produto sem variações; com variações, edite na grade)." },
+        gtin: { type: "string", description: "Código de barras EAN/GTIN (só produto sem variações)." },
+        pesoKg: { type: "number", description: "Peso em kg para frete (ex: 0.5). Só produto sem variações." },
+        alturaCm: { type: "number", description: "Altura da embalagem em cm. Só produto sem variações." },
+        larguraCm: { type: "number", description: "Largura da embalagem em cm. Só produto sem variações." },
+        comprimentoCm: { type: "number", description: "Comprimento da embalagem em cm. Só produto sem variações." },
+        categoriaNome: { type: "string", description: "Nome da categoria (será criada se não existir)." },
+        atributos: { type: "object", description: "Características livres exibidas na ficha, ex: { \"cor\": \"azul\", \"volumeMl\": 500 }." },
       },
       required: ["id"],
     },
@@ -316,6 +325,17 @@ export const MCP_TOOLS: McpTool[] = [
         where: { id: args.id, tenantId: tenant.id },
       });
       if (!p) throw new Error("Produto não encontrado nesta loja.");
+
+      let categoriaId: string | undefined;
+      if (args.categoriaNome) {
+        const cslug = slugificar(args.categoriaNome);
+        const cat = await prisma.categoria.upsert({
+          where: { tenantId_slug: { tenantId: tenant.id, slug: cslug } },
+          create: { tenantId: tenant.id, slug: cslug, nome: args.categoriaNome },
+          update: {},
+        });
+        categoriaId = cat.id;
+      }
 
       const atualizado = await salvarProdutoNoCatalogo(tenant.id, args.id, {
           ...(args.nome ? { nome: args.nome } : {}),
@@ -327,6 +347,15 @@ export const MCP_TOOLS: McpTool[] = [
           ...(args.descricaoCurta !== undefined ? { descricaoCurta: args.descricaoCurta } : {}),
           ...(args.descricao !== undefined ? { descricao: args.descricao } : {}),
           ...(args.imagens !== undefined ? { imagens: args.imagens } : {}),
+          ...(args.marca !== undefined ? { marca: args.marca || null } : {}),
+          ...(args.sku !== undefined ? { sku: args.sku || null } : {}),
+          ...(args.gtin !== undefined ? { gtin: args.gtin || null } : {}),
+          ...(args.pesoKg !== undefined ? { pesoKg: args.pesoKg ? Number(args.pesoKg) : null } : {}),
+          ...(args.alturaCm !== undefined ? { alturaCm: args.alturaCm ? Number(args.alturaCm) : null } : {}),
+          ...(args.larguraCm !== undefined ? { larguraCm: args.larguraCm ? Number(args.larguraCm) : null } : {}),
+          ...(args.comprimentoCm !== undefined ? { comprimentoCm: args.comprimentoCm ? Number(args.comprimentoCm) : null } : {}),
+          ...(args.atributos !== undefined ? { atributos: args.atributos } : {}),
+          ...(categoriaId !== undefined ? { categoriaId } : {}),
       }, { origem: "mcp" });
       invalidarCatalogo(tenant.id);
 
@@ -643,6 +672,482 @@ export const MCP_TOOLS: McpTool[] = [
         origem: categoria.seoOrigem ?? "manual",
       });
       return { publicado: true, categoriaId: categoria.id, slug: categoria.slug, ...gerado.rascunho };
+    },
+  },
+
+  // 14. Detalhe completo do pedido
+  {
+    name: "obter_pedido",
+    description: "Detalhe completo de um pedido: itens, cliente, endereço de entrega, pagamento, frete, rastreio e canal de origem.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        id: { type: "string", description: "ID do pedido." },
+        referencia: { type: "string", description: "Referência pública do pedido (a que o cliente vê)." },
+      },
+    },
+    handler: async (args, { tenant }) => {
+      if (!args.id && !args.referencia) throw new Error("Informe o 'id' ou a 'referencia' do pedido.");
+      const pedido = await prisma.pedido.findFirst({
+        where: { tenantId: tenant.id, ...(args.id ? { id: args.id } : { referencia: args.referencia }) },
+        include: { itens: true, postagem: true, sessao: { select: { canal: true, origem: true, campanha: true } } },
+      });
+      if (!pedido) throw new Error("Pedido não encontrado.");
+      return {
+        id: pedido.id,
+        referencia: pedido.referencia,
+        numero: pedido.numero,
+        status: pedido.status,
+        data: pedido.criadoEm.toISOString(),
+        cliente: {
+          nome: pedido.clienteNome,
+          email: pedido.clienteEmail,
+          telefone: pedido.clienteTelefone,
+          documento: pedido.clienteDocumento,
+        },
+        entrega: pedido.entrega,
+        frete: { nome: pedido.freteNome, valor: formatarBRL(pedido.freteCentavos), prazoDiasUteis: pedido.fretePrazoDiasUteis },
+        pagamento: { meio: pedido.meioPagamento, gateway: pedido.gateway, status: pedido.pagamentoStatus },
+        cupom: pedido.cupomCodigo,
+        subtotal: formatarBRL(pedido.subtotalCentavos),
+        desconto: formatarBRL(pedido.descontoCentavos),
+        total: formatarBRL(pedido.totalCentavos),
+        rastreio: pedido.rastreio || pedido.postagem?.codigoObjeto || null,
+        canal: pedido.canal,
+        atribuicao: pedido.sessao ? { canal: pedido.sessao.canal, origem: pedido.sessao.origem, campanha: pedido.sessao.campanha } : { canal: "direto" },
+        itens: pedido.itens.map((i) => ({
+          nome: i.nome,
+          sku: i.sku,
+          variante: i.varianteNome,
+          quantidade: i.quantidade,
+          precoUnitario: formatarBRL(i.precoUnitarioCentavos),
+          subtotal: formatarBRL(i.precoUnitarioCentavos * i.quantidade),
+        })),
+      };
+    },
+  },
+
+  // 15. Avançar a situação do pedido
+  {
+    name: "atualizar_status_pedido",
+    description: "Avança a situação de um pedido pago (EM_SEPARACAO, ENVIADO, ENTREGUE ou CANCELADO) e dispara o aviso ao cliente. O status de pagamento muda só pelo gateway.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        id: { type: "string", description: "ID do pedido." },
+        status: { type: "string", enum: ["EM_SEPARACAO", "ENVIADO", "ENTREGUE", "CANCELADO"], description: "Nova situação do pedido." },
+        rastreio: { type: "string", description: "Código de rastreio (opcional; entra no aviso de ENVIADO)." },
+      },
+      required: ["id", "status"],
+    },
+    handler: async (args, { tenant }) => {
+      const pedido = await prisma.pedido.findFirst({ where: { id: args.id, tenantId: tenant.id } });
+      if (!pedido) throw new Error("Pedido não encontrado.");
+      const status = args.status as PedidoStatus;
+      if (pedido.status === "AGUARDANDO_PAGAMENTO" && status !== "CANCELADO") {
+        throw new Error("Pedido ainda não foi pago; no momento só é possível cancelar.");
+      }
+      const a = await prisma.pedido.update({
+        where: { id: pedido.id },
+        data: { status, ...(args.rastreio !== undefined ? { rastreio: args.rastreio || null } : {}) },
+      });
+      if (status !== pedido.status) {
+        const comum = {
+          slug: tenant.slug,
+          referencia: a.referencia,
+          numero: a.numero,
+          clienteNome: a.clienteNome,
+          clienteEmail: a.clienteEmail,
+          clienteTelefone: a.clienteTelefone,
+          linkPedido: `${urlDaLoja(tenant)}/pedido/${a.referencia}`,
+          lojaNome: tenant.nome,
+          lojaUrl: urlDaLoja(tenant),
+          lojistaEmail: tenant.loginEmail ?? tenant.emailContato,
+          lojistaWhatsapp: tenant.whatsapp,
+          emailRemetente: tenant.emailRemetente,
+        };
+        if (status === "EM_SEPARACAO") await emitir({ tipo: "pedido.em-separacao", ...comum });
+        if (status === "ENVIADO") await emitir({ tipo: "pedido.enviado", transportadora: a.freteNome, rastreio: a.rastreio, ...comum });
+        if (status === "ENTREGUE") await emitir({ tipo: "pedido.entregue", ...comum });
+        if (status === "CANCELADO") await emitir({ tipo: "pedido.cancelado", totalCentavos: a.totalCentavos, motivo: "cancelado pela loja", ...comum });
+      }
+      return { sucesso: true, id: a.id, status: a.status, rastreio: a.rastreio };
+    },
+  },
+
+  // 16. Clientes — listar (somente leitura)
+  {
+    name: "listar_clientes",
+    description: "Lista os clientes cadastrados na loja (somente leitura), com total de pedidos. Ordena pelos mais recentes.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        busca: { type: "string", description: "Filtra por nome ou e-mail." },
+        limite: { type: "number", description: "Máximo de clientes (padrão 20, teto 100)." },
+      },
+    },
+    handler: async (args, { tenant }) => {
+      const limite = Math.min(Number(args.limite) || 20, 100);
+      const termo = args.busca ? String(args.busca).trim() : "";
+      const clientes = await prisma.comprador.findMany({
+        where: {
+          tenantId: tenant.id,
+          ...(termo ? { OR: [{ nome: { contains: termo, mode: "insensitive" } }, { email: { contains: termo, mode: "insensitive" } }] } : {}),
+        },
+        include: { _count: { select: { pedidos: true } } },
+        orderBy: { criadoEm: "desc" },
+        take: limite,
+      });
+      return {
+        total: clientes.length,
+        clientes: clientes.map((c) => ({
+          id: c.id,
+          nome: c.nome,
+          email: c.email,
+          telefone: c.telefone,
+          pedidos: c._count.pedidos,
+          desde: c.criadoEm.toISOString(),
+          ultimoAcesso: c.ultimoAcesso?.toISOString() ?? null,
+        })),
+      };
+    },
+  },
+
+  // 17. Cliente — detalhe (somente leitura)
+  {
+    name: "obter_cliente",
+    description: "Detalhe de um cliente da loja (somente leitura): contato, endereços salvos, últimos pedidos e total gasto.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        id: { type: "string", description: "ID do cliente." },
+        email: { type: "string", description: "E-mail do cliente nesta loja." },
+      },
+    },
+    handler: async (args, { tenant }) => {
+      if (!args.id && !args.email) throw new Error("Informe o 'id' ou o 'email' do cliente.");
+      const cliente = await prisma.comprador.findFirst({
+        where: { tenantId: tenant.id, ...(args.id ? { id: args.id } : { email: String(args.email).toLowerCase() }) },
+        include: {
+          enderecos: true,
+          pedidos: { orderBy: { criadoEm: "desc" }, take: 10, select: { id: true, referencia: true, status: true, totalCentavos: true, criadoEm: true } },
+        },
+      });
+      if (!cliente) throw new Error("Cliente não encontrado nesta loja.");
+      const pago = cliente.pedidos.filter((p) => ["PAGO", "EM_SEPARACAO", "ENVIADO", "ENTREGUE"].includes(p.status));
+      return {
+        id: cliente.id,
+        nome: cliente.nome,
+        email: cliente.email,
+        telefone: cliente.telefone,
+        documento: cliente.documento,
+        desde: cliente.criadoEm.toISOString(),
+        enderecos: cliente.enderecos.map((e) => ({ apelido: e.apelido, cep: e.cep, logradouro: e.logradouro, numero: e.numero, complemento: e.complemento, bairro: e.bairro, cidade: e.cidade, uf: e.uf, principal: e.principal })),
+        ultimosPedidos: cliente.pedidos.map((p) => ({ id: p.id, referencia: p.referencia, status: p.status, total: formatarBRL(p.totalCentavos), data: p.criadoEm.toISOString() })),
+        totalGastoPago: formatarBRL(pago.reduce((s, p) => s + p.totalCentavos, 0)),
+      };
+    },
+  },
+
+  // 18. Avaliações — listar
+  {
+    name: "listar_avaliacoes",
+    description: "Lista avaliações de produtos da loja, com filtro por situação (pendentes, aprovadas ou todas).",
+    inputSchema: {
+      type: "object",
+      properties: {
+        situacao: { type: "string", enum: ["pendentes", "aprovadas", "todas"], description: "Padrão: pendentes." },
+        limite: { type: "number", description: "Máximo de avaliações (padrão 20, teto 100)." },
+      },
+    },
+    handler: async (args, { tenant }) => {
+      const limite = Math.min(Number(args.limite) || 20, 100);
+      const situacao = (args.situacao as string) ?? "pendentes";
+      const avaliacoes = await prisma.avaliacao.findMany({
+        where: {
+          tenantId: tenant.id,
+          ...(situacao === "aprovadas" ? { aprovada: true } : situacao === "pendentes" ? { aprovada: false } : {}),
+        },
+        include: { produto: { select: { nome: true, slug: true } } },
+        orderBy: { criadoEm: "desc" },
+        take: limite,
+      });
+      return {
+        total: avaliacoes.length,
+        avaliacoes: avaliacoes.map((a) => ({
+          id: a.id,
+          produto: a.produto.nome,
+          autor: a.nome,
+          nota: a.nota,
+          texto: a.texto,
+          aprovada: a.aprovada,
+          data: a.criadoEm.toISOString(),
+        })),
+      };
+    },
+  },
+
+  // 19. Avaliações — moderar
+  {
+    name: "moderar_avaliacao",
+    description: "Aprova (publica na loja), reprova (oculta) ou exclui uma avaliação de produto.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        id: { type: "string", description: "ID da avaliação." },
+        acao: { type: "string", enum: ["aprovar", "reprovar", "excluir"], description: "O que fazer com a avaliação." },
+      },
+      required: ["id", "acao"],
+    },
+    handler: async (args, { tenant }) => {
+      const av = await prisma.avaliacao.findFirst({ where: { id: args.id, tenantId: tenant.id } });
+      if (!av) throw new Error("Avaliação não encontrada nesta loja.");
+      if (args.acao === "excluir") {
+        await prisma.avaliacao.delete({ where: { id: av.id } });
+        return { sucesso: true, mensagem: "Avaliação excluída." };
+      }
+      const aprovada = args.acao === "aprovar";
+      await prisma.avaliacao.update({ where: { id: av.id }, data: { aprovada } });
+      return { sucesso: true, id: av.id, aprovada, mensagem: aprovada ? "Avaliação publicada na loja." : "Avaliação ocultada da loja." };
+    },
+  },
+
+  // 20. Cupons — listar
+  {
+    name: "listar_cupons",
+    description: "Lista os cupons de desconto da loja, com uso, limite, mínimo, validade e situação.",
+    inputSchema: {
+      type: "object",
+      properties: { apenasAtivos: { type: "boolean", description: "Retornar só cupons ativos." } },
+    },
+    handler: async (args, { tenant }) => {
+      const cupons = await prisma.cupom.findMany({
+        where: { tenantId: tenant.id, ...(args.apenasAtivos ? { ativo: true } : {}) },
+        orderBy: { criadoEm: "desc" },
+      });
+      return {
+        total: cupons.length,
+        cupons: cupons.map((c) => ({
+          id: c.id,
+          codigo: c.codigo,
+          tipo: c.tipo,
+          beneficio: c.tipo === "PERCENTUAL" ? `${c.valor}%` : c.tipo === "FIXO" ? formatarBRL(c.valor) : "Frete Grátis",
+          minimo: c.minimoCentavos > 0 ? formatarBRL(c.minimoCentavos) : null,
+          usos: c.usos,
+          usosMax: c.usosMax,
+          validoAte: c.validoAte?.toISOString() ?? null,
+          ativo: c.ativo,
+        })),
+      };
+    },
+  },
+
+  // 21. Cupons — atualizar / desativar / excluir
+  {
+    name: "atualizar_cupom",
+    description: "Ativa, desativa, ajusta limite/mínimo/validade ou exclui um cupom existente.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        codigo: { type: "string", description: "Código do cupom." },
+        ativo: { type: "boolean", description: "Ligar ou desligar o cupom." },
+        usosMax: { type: "number", description: "Novo limite de utilizações (0 remove o limite)." },
+        minimoReais: { type: "number", description: "Novo valor mínimo do pedido em Reais." },
+        validoAte: { type: "string", description: "Data de validade ISO (ex: 2026-12-31); string vazia remove a validade." },
+        excluir: { type: "boolean", description: "Se true, exclui o cupom." },
+      },
+      required: ["codigo"],
+    },
+    handler: async (args, { tenant }) => {
+      const codigo = String(args.codigo).trim().toUpperCase().replace(/\s+/g, "");
+      const cupom = await prisma.cupom.findUnique({ where: { tenantId_codigo: { tenantId: tenant.id, codigo } } });
+      if (!cupom) throw new Error("Cupom não encontrado nesta loja.");
+      if (args.excluir) {
+        await prisma.cupom.delete({ where: { id: cupom.id } });
+        return { sucesso: true, mensagem: `Cupom ${codigo} excluído.` };
+      }
+      let validoAte: Date | null | undefined;
+      if (args.validoAte !== undefined) {
+        validoAte = args.validoAte ? new Date(args.validoAte) : null;
+        if (validoAte && isNaN(validoAte.getTime())) throw new Error("Data de validade inválida. Use o formato ISO, ex: 2026-12-31.");
+      }
+      const atualizado = await prisma.cupom.update({
+        where: { id: cupom.id },
+        data: {
+          ...(args.ativo !== undefined ? { ativo: Boolean(args.ativo) } : {}),
+          ...(args.usosMax !== undefined ? { usosMax: Number(args.usosMax) > 0 ? Number(args.usosMax) : null } : {}),
+          ...(args.minimoReais !== undefined ? { minimoCentavos: Math.round(Number(args.minimoReais) * 100) } : {}),
+          ...(validoAte !== undefined ? { validoAte } : {}),
+        },
+      });
+      return { sucesso: true, codigo: atualizado.codigo, ativo: atualizado.ativo, usosMax: atualizado.usosMax, validoAte: atualizado.validoAte?.toISOString() ?? null };
+    },
+  },
+
+  // 22. Fotos do produto
+  {
+    name: "gerenciar_fotos_produto",
+    description: "Adiciona, remove, reordena ou define a foto principal de um produto. A primeira imagem da galeria é a principal da vitrine.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        id: { type: "string", description: "ID do produto." },
+        acao: { type: "string", enum: ["adicionar", "remover", "definir_principal", "reordenar"], description: "Operação na galeria." },
+        url: { type: "string", description: "URL de uma foto (para adicionar, remover ou definir_principal)." },
+        urls: { type: "array", items: { type: "string" }, description: "Lista de URLs: várias para adicionar, ou a galeria inteira na nova ordem (reordenar)." },
+      },
+      required: ["id", "acao"],
+    },
+    handler: async (args, { tenant }) => {
+      const p = await prisma.produto.findFirst({ where: { id: args.id, tenantId: tenant.id }, select: { imagens: true, nome: true } });
+      if (!p) throw new Error("Produto não encontrado nesta loja.");
+      const atual = [...p.imagens];
+      const novas = Array.isArray(args.urls) ? (args.urls as unknown[]).map((u) => String(u).trim()).filter(Boolean) : [];
+      const url = args.url ? String(args.url).trim() : "";
+      let nova: string[];
+      if (args.acao === "adicionar") {
+        const add = url ? [url, ...novas] : novas;
+        if (!add.length) throw new Error("Informe 'url' ou 'urls' para adicionar.");
+        nova = [...atual, ...add.filter((u) => !atual.includes(u))];
+      } else if (args.acao === "remover") {
+        if (!url) throw new Error("Informe a 'url' da foto a remover.");
+        nova = atual.filter((u) => u !== url);
+      } else if (args.acao === "definir_principal") {
+        if (!url || !atual.includes(url)) throw new Error("A 'url' precisa ser uma foto já existente no produto.");
+        nova = [url, ...atual.filter((u) => u !== url)];
+      } else {
+        if (!novas.length) throw new Error("Informe 'urls' com a galeria na nova ordem.");
+        nova = novas;
+      }
+      const atualizado = await salvarProdutoNoCatalogo(tenant.id, args.id, { imagens: nova }, { origem: "mcp" });
+      invalidarCatalogo(tenant.id);
+      return { sucesso: true, produto: p.nome, totalFotos: atualizado.imagens.length, fotoPrincipal: atualizado.imagens[0] ?? null, imagens: atualizado.imagens };
+    },
+  },
+
+  // 23. Estoque — ajustar (produto sem variações)
+  {
+    name: "ajustar_estoque",
+    description: "Define a quantidade em estoque de um produto sem variações. Produtos com variações são ajustados pela grade no painel.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        id: { type: "string", description: "ID do produto." },
+        estoque: { type: "number", description: "Nova quantidade absoluta em estoque (0 ou mais)." },
+        ilimitado: { type: "boolean", description: "Marca o produto como estoque não controlado (ilimitado)." },
+      },
+      required: ["id"],
+    },
+    handler: async (args, { tenant }) => {
+      const p = await prisma.produto.findFirst({ where: { id: args.id, tenantId: tenant.id }, select: { nome: true } });
+      if (!p) throw new Error("Produto não encontrado nesta loja.");
+      if (args.estoque === undefined && !args.ilimitado) throw new Error("Informe 'estoque' (quantidade) ou 'ilimitado: true'.");
+      const valor = args.ilimitado ? null : Math.max(0, Math.round(Number(args.estoque)));
+      const atualizado = await salvarProdutoNoCatalogo(tenant.id, args.id, { estoque: valor }, { origem: "mcp" });
+      invalidarCatalogo(tenant.id);
+      return { sucesso: true, produto: p.nome, estoque: atualizado.estoque, disponibilidade: atualizado.disponibilidade };
+    },
+  },
+
+  // 24. Estoque baixo
+  {
+    name: "listar_estoque_baixo",
+    description: "Lista produtos ativos com estoque igual ou abaixo de um limite (padrão 5), para reposição.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        limite: { type: "number", description: "Nível de alerta de estoque (padrão 5)." },
+        max: { type: "number", description: "Máximo de produtos retornados (padrão 50, teto 200)." },
+      },
+    },
+    handler: async (args, { tenant }) => {
+      const limiar = args.limite !== undefined ? Math.max(0, Math.round(Number(args.limite))) : 5;
+      const max = Math.min(Number(args.max) || 50, 200);
+      const produtos = await prisma.produto.findMany({
+        where: { tenantId: tenant.id, ativo: true, estoque: { not: null, lte: limiar } },
+        orderBy: { estoque: "asc" },
+        take: max,
+        select: { id: true, nome: true, sku: true, estoque: true, slug: true },
+      });
+      return {
+        limiar,
+        total: produtos.length,
+        produtos: produtos.map((p) => ({ id: p.id, nome: p.nome, sku: p.sku, estoque: p.estoque, linkLoja: `${urlDaLoja(tenant)}/produtos/${p.slug}` })),
+      };
+    },
+  },
+
+  // 25. Atribuição — de onde vêm as vendas
+  {
+    name: "resumo_atribuicao",
+    description: "De onde vêm as vendas: sessões e faturamento pago por canal de origem (orgânico, pago, social, direto…) nos últimos N dias.",
+    inputSchema: {
+      type: "object",
+      properties: { dias: { type: "number", description: "Janela em dias (padrão 30, teto 90)." } },
+    },
+    handler: async (args, { tenant }) => {
+      const dias = Math.min(Math.max(Number(args.dias) || 30, 1), 90);
+      const desde = new Date(Date.now() - dias * 24 * 60 * 60 * 1000);
+      const PAGOS: PedidoStatus[] = ["PAGO", "EM_SEPARACAO", "ENVIADO", "ENTREGUE"];
+      const [sessoes, pedidos] = await Promise.all([
+        prisma.sessaoVitrine.groupBy({ by: ["canal"], where: { tenantId: tenant.id, criadoEm: { gte: desde } }, _count: { _all: true } }),
+        prisma.pedido.findMany({
+          where: { tenantId: tenant.id, status: { in: PAGOS }, criadoEm: { gte: desde } },
+          select: { totalCentavos: true, sessao: { select: { canal: true } } },
+        }),
+      ]);
+      const porCanal = new Map<string, { pedidos: number; centavos: number }>();
+      for (const p of pedidos) {
+        const canal = p.sessao?.canal ?? "direto";
+        const atualCanal = porCanal.get(canal) ?? { pedidos: 0, centavos: 0 };
+        atualCanal.pedidos += 1;
+        atualCanal.centavos += p.totalCentavos;
+        porCanal.set(canal, atualCanal);
+      }
+      const sessoesPorCanal = new Map(sessoes.map((s) => [s.canal, s._count._all]));
+      const canais = new Set<string>([...porCanal.keys(), ...sessoesPorCanal.keys()]);
+      return {
+        janelaDias: dias,
+        canais: [...canais]
+          .map((canal) => ({
+            canal,
+            sessoes: sessoesPorCanal.get(canal) ?? 0,
+            pedidosPagos: porCanal.get(canal)?.pedidos ?? 0,
+            faturamento: formatarBRL(porCanal.get(canal)?.centavos ?? 0),
+          }))
+          .sort((a, b) => b.pedidosPagos - a.pedidosPagos || b.sessoes - a.sessoes),
+      };
+    },
+  },
+
+  // 26. Marketing — funil, conversão, cupons e abandono
+  {
+    name: "resumo_marketing",
+    description: "Visão de marketing dos últimos N dias: funil da vitrine (sessões → viram produto → iniciam checkout → compram), taxa de conversão, cupons mais usados e carrinhos abandonados.",
+    inputSchema: {
+      type: "object",
+      properties: { dias: { type: "number", description: "Janela em dias (padrão 30, teto 90)." } },
+    },
+    handler: async (args, { tenant }) => {
+      const dias = Math.min(Math.max(Number(args.dias) || 30, 1), 90);
+      const desde = new Date(Date.now() - dias * 24 * 60 * 60 * 1000);
+      const PAGOS: PedidoStatus[] = ["PAGO", "EM_SEPARACAO", "ENVIADO", "ENTREGUE"];
+      const [totalSessoes, viuProduto, iniciouCheckout, pedidosPagos, abandono, cupons] = await Promise.all([
+        prisma.sessaoVitrine.count({ where: { tenantId: tenant.id, criadoEm: { gte: desde } } }),
+        prisma.sessaoVitrine.count({ where: { tenantId: tenant.id, criadoEm: { gte: desde }, viuProduto: true } }),
+        prisma.sessaoVitrine.count({ where: { tenantId: tenant.id, criadoEm: { gte: desde }, iniciouCheckout: true } }),
+        prisma.pedido.count({ where: { tenantId: tenant.id, status: { in: PAGOS }, criadoEm: { gte: desde } } }),
+        prisma.checkoutAberto.aggregate({ where: { tenantId: tenant.id, status: "ABERTO", criadoEm: { gte: desde } }, _count: { _all: true }, _sum: { totalCentavos: true } }),
+        prisma.cupom.findMany({ where: { tenantId: tenant.id, usos: { gt: 0 } }, orderBy: { usos: "desc" }, take: 5, select: { codigo: true, usos: true, tipo: true, valor: true } }),
+      ]);
+      const conversao = totalSessoes > 0 ? Math.round((pedidosPagos / totalSessoes) * 1000) / 10 : null;
+      return {
+        janelaDias: dias,
+        funil: { sessoes: totalSessoes, viramProduto: viuProduto, iniciaramCheckout: iniciouCheckout, compraram: pedidosPagos },
+        taxaConversaoPercent: conversao,
+        carrinhosAbandonados: { quantidade: abandono._count._all, valorEmAberto: formatarBRL(abandono._sum.totalCentavos ?? 0) },
+        cuponsMaisUsados: cupons.map((c) => ({ codigo: c.codigo, usos: c.usos, beneficio: c.tipo === "PERCENTUAL" ? `${c.valor}%` : c.tipo === "FIXO" ? formatarBRL(c.valor) : "Frete Grátis" })),
+      };
     },
   },
 ];

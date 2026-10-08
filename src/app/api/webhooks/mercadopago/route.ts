@@ -10,7 +10,11 @@ import { hostDoWebhook, medirRota } from "@/lib/metricas-rota";
  *
  * O `?loja=` existe porque o webhook chega sem cookie e às vezes sem o Host da
  * loja (o MP chama a URL que foi cadastrada, e pode ser a da plataforma).
- * O segredo de assinatura é o da loja, então uma loja não valida webhook de outra.
+ * Loja que cola as próprias chaves valida com o segredo dela. Loja conectada
+ * por OAuth valida com o segredo do aplicativo da plataforma, igual para todas:
+ * ali o que impede o aviso de uma loja de mexer no pedido de outra é a consulta
+ * do pagamento, feita com o token da loja do `?loja=`, que não enxerga o
+ * pagamento de outra conta.
  *
  * Pelo mesmo motivo a métrica vai para `<slug>.<LOJAS_BASE_DOMAIN>`, e não para
  * o host da requisição: só o slug é lido da query.
