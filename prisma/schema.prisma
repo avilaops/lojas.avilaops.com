@@ -128,6 +128,16 @@ model Tenant {
   mpPublicKey        String?
   mpAccessTokenEnc   String?
   mpWebhookSecretEnc String?
+  /// Preenchido só quando a loja conectou por OAuth (src/lib/mercado-pago-conta.ts):
+  /// é o que distingue a conexão das chaves coladas à mão. Com ele, a assinatura
+  /// do webhook é a do aplicativo da plataforma e `mpWebhookSecretEnc` fica nulo.
+  mpRefreshTokenEnc  String?
+  /// O acesso vale 180 dias; a rotina `mercadopago.renovar` troca antes de vencer.
+  mpExpiraEm         DateTime?
+  mpConectadoEm      DateTime?
+  mpUserId           String?
+  /// Apelido e e-mail da conta conectada, para o lojista reconhecer na tela.
+  mpConta            String?
 
   // ── Mercado Livre ─────────────────────────────────────────────────────
   /// Mesma conta do Mercado Pago (provado em 02/09/2026: o token do MP

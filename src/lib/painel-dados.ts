@@ -109,6 +109,9 @@ export async function dadosDoPainel(secao: SecaoPainel) {
       mpPublicKey: loja.mpPublicKey,
       // Só o fato de existir credencial; o token cifrado nunca sai daqui.
       mpConfigurado: Boolean(loja.mpAccessTokenEnc),
+      // A conexão em si (conta, data) é lida do tenant pela página, como no
+      // Melhor Envio; aqui vai só o que muda o formulário das chaves.
+      mpPorOAuth: conectadoPorOAuth(loja),
       emailRemetente: loja.emailRemetente,
       provisionamento: (loja.provisionamento as Record<string, string>) ?? {},
       pixels: { gtmId: loja.gtmId, metaPixelId: loja.metaPixelId, ga4Id: loja.ga4Id, googleAdsId: loja.googleAdsId, googleAdsRotuloCompra: loja.googleAdsRotuloCompra, tiktokPixelId: loja.tiktokPixelId, googleMerchantId: loja.googleMerchantId, googleSeloAvaliacoes: loja.googleSeloAvaliacoes },
