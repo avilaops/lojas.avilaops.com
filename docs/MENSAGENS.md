@@ -48,6 +48,7 @@ A tabela viva é `CANAIS_POR_TIPO`, em `src/lib/acoes-do-evento.ts`.
 | `loja.criada` | lojista | lojista: `loja_no_ar` |
 | `loja.provisionada` | lojista | lojista: `loja_configurada` |
 | `categoria.seo-pendente` · `categoria.seo-publicado` | — | — (só encerram o ciclo) |
+| `operacao.alerta` | — | — (vai ao n8n: é alerta para a equipe, não mensagem a cliente; ver `docs/ISOLAMENTO-OPERACIONAL.md`) |
 
 **Um tipo só é nosso quando todos os canais dele estão configurados.** Sem
 `WHATSAPP_TOKEN`, `pedido.pago` volta inteiro para o n8n — com e-mail e

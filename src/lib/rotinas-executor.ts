@@ -17,6 +17,10 @@ import { rodarMercadoLivre } from "./mercadolivre-publicacao";
 import { processarEventosProprios } from "./automacoes-consumo";
 import { lembrarPixPendente, pedirIndicacoes } from "./avisos-que-esperam";
 import { renovarAcessos as renovarAcessosDoMercadoPago } from "./mercado-pago-conta";
+import { alertar } from "./alertas";
+
+/** Quantas falhas seguidas de uma rotina viram alerta para gente. */
+export const FALHAS_ATE_ALERTAR = 3;
 
 /**
  * Quem faz o trabalho de cada rotina.
@@ -142,8 +146,9 @@ async function executar(nome: NomeDeRotina): Promise<ResultadoDaRotina> {
   }
   const duracaoMs = Date.now() - comecou;
   const fim = new Date();
-  await prisma.rotina.update({
+  const depois = await prisma.rotina.update({
     where: { nome },
+    select: { falhasSeguidas: true },
     data: {
       executandoDesde: null,
       ultimaEm: fim,
@@ -155,6 +160,11 @@ async function executar(nome: NomeDeRotina): Promise<ResultadoDaRotina> {
       proximaEm: proximaExecucao(ROTINAS[nome].cadencia, fim),
     },
   });
+  // Na terceira, e só nela: uma falha isolada se resolve sozinha na rodada
+  // seguinte, e avisar a cada rodada de uma rotina de minuto seria ruído.
+  if (erro && depois.falhasSeguidas === FALHAS_ATE_ALERTAR) {
+    await alertar({ codigo: "rotina.falhando", slug: "plataforma", lojaNome: "Plataforma", recurso: nome, detalhe: erro, ocorrencia: fim.toISOString().slice(0, 10) });
+  }
   return { nome, duracaoMs, resumo, erro };
 }
 

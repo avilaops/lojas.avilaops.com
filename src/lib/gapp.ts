@@ -26,7 +26,7 @@ const BASE = (process.env.LOJAS_BASE_DOMAIN ?? "lojas.avilaops.com").toLowerCase
 /**
  * O contrato pertence à plataforma, não à loja do lojista.
  *
- * Sem isto, `sandromotos.lojas.avilaops.com/v1/health` responderia por uma app
+ * Sem isto, `<loja>.lojas.avilaops.com/v1/health` responderia por uma app
  * que não é dele, e o coletor poderia julgar a plataforma inteira pela vitrine
  * de um cliente.
  */

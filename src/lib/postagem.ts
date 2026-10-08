@@ -311,5 +311,5 @@ export async function avisarEnvio(t: Tenant, pedido: Pedido, rastreio: string) {
     lojistaEmail: t.loginEmail ?? t.emailContato,
     lojistaWhatsapp: t.whatsapp,
     emailRemetente: t.emailRemetente,
-  });
+  }, { chave: `enviado:${pedido.referencia}` });
 }

@@ -103,7 +103,7 @@ const OFICIOS = [
   {
     tom: "grafite",
     segmento: "Motopeças e oficina",
-    marca: "Sandro Motos",
+    marca: "Moto Norte",
     frase: "O cliente escolhe a moto e só vê o que serve nela.",
     itens: ["Garagem por marca, modelo e ano", "Código original e equivalentes", "Selo \"serve na sua moto\""],
   },

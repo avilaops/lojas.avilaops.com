@@ -47,6 +47,11 @@ export async function verificarCarrinhosAbandonados(): Promise<{ lembrados: numb
       await prisma.checkoutAberto.update({ where: { id: c.id }, data: { status: "CONVERTIDO" } });
       continue;
     }
+    // Reivindica antes de avisar. A rotina e o n8n chamam esta verificação no
+    // mesmo horário: lendo ABERTO, avisando e só depois gravando LEMBRADO, as
+    // duas passadas mandavam o mesmo lembrete ao comprador.
+    const meu = await prisma.checkoutAberto.updateMany({ where: { id: c.id, status: "ABERTO" }, data: { status: "LEMBRADO", lembradoEm: new Date() } });
+    if (meu.count !== 1) continue;
     const itens = (c.itens as unknown as ItemCheckoutAberto[]).map((i) => ({ nome: i.nome, quantidade: i.quantidade, precoCentavos: i.precoUnitario }));
     const t = c.tenant;
     await emitir({
@@ -65,8 +70,7 @@ export async function verificarCarrinhosAbandonados(): Promise<{ lembrados: numb
       lojistaWhatsapp: t.whatsapp,
       lojistaEmail: t.loginEmail ?? t.emailContato,
       emailRemetente: t.emailRemetente,
-    });
-    await prisma.checkoutAberto.update({ where: { id: c.id }, data: { status: "LEMBRADO", lembradoEm: new Date() } });
+    }, { chave: `abandonado:${c.referencia}` });
     lembrados++;
   }
   return { lembrados };

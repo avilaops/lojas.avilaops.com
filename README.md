@@ -78,9 +78,8 @@ padrão não é "ajuste", é o plano Pro ou um projeto à parte.
    **Falta só preencher `MP_ACCESS_TOKEN`/`MP_WEBHOOK_SECRET` da conta Avila Ops
    em `/opt/lojas/.env` e cadastrar o webhook no painel MP.** Setup R$ 497 é
    marcado à parte: `POST /api/admin/tenants/:slug/setup`.
-6. Confirmar o contrato server-side da CepCerto (hoje usa o endpoint do widget
-   com `Origin` da plataforma; se eles exigirem o token de servidor, trocar em
-   `cotarCepCerto`).
+6. ~~Contrato server-side da CepCerto~~ - riscado em 08/10/2026: a Ávila Ops não
+   tem contrato com a CepCerto. A cotação já é do Melhor Envio (`src/lib/frete.ts`).
 7. ~~Marcar pedido como enviado + rastreio pelo painel~~ - feito em 24/08/2026
    (`PATCH /api/admin/tenants/:slug/pedidos/:id` + botões Separar / Marcar
    enviado / Marcar entregue no portal).

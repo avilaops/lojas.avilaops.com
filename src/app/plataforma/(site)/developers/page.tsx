@@ -39,7 +39,7 @@ export default function DevelopersPage() {
             <li className="py-2.5"><strong className="text-foreground">obter_loja:</strong> Consulta informações gerais, catálogo e status operacional.</li>
             <li className="py-2.5"><strong className="text-foreground">atualizar_marca:</strong> Atualiza cores, layout visual, slogan e avisos.</li>
             <li className="py-2.5"><strong className="text-foreground">criar_produto / atualizar_produto:</strong> Gerencia produtos, estoque, fotos e medidas.</li>
-            <li className="py-2.5"><strong className="text-foreground">listar_pedidos / emitir_etiqueta_envio:</strong> Consulta vendas e despacha etiquetas de frete via CepCerto.</li>
+            <li className="py-2.5"><strong className="text-foreground">listar_pedidos / emitir_etiqueta_envio:</strong> Consulta vendas e despacha etiquetas de frete.</li>
             <li className="py-2.5"><strong className="text-foreground">resumo_vendas:</strong> Relatório financeiro e métricas de conversão.</li>
           </ul>
         </div>
