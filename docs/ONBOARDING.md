@@ -107,7 +107,7 @@ diz se está feito, o que falta e leva à tela onde se resolve.
 | Identidade | a loja tem símbolo da marca (`logoUrl`) e WhatsApp | `/painel/configuracoes/marca` |
 | Domínio (opcional) | há domínio próprio (`dominioPrincipal`); não consulta DNS | `/painel/configuracoes/dominio` |
 | Catálogo | há pelo menos um produto ativo | `/painel/produtos` |
-| Recebimento | há credencial do Mercado Pago salva (`mpConfigurado`) | `/painel/configuracoes/recebimento` |
+| Recebimento | há credencial do Mercado Pago salva (`mpConfigurado`), por conexão da conta ou por chaves coladas | `/painel/configuracoes/recebimento` |
 | Entrega | há CEP de origem com 8 dígitos, ou tabela de frete, ou entrega local, ou retirada com endereço público completo | `/painel/configuracoes/entrega` |
 | Publicação | a loja está `ATIVA` e os quatro passos obrigatórios estão feitos | abre a loja |
 

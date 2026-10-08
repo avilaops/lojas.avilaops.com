@@ -1,5 +1,6 @@
 import type { Tenant } from "@prisma/client";
 import { decifrar } from "./cofre";
+import { conectadoPorOAuth } from "./mercado-pago-conta";
 
 /**
  * Confere se a credencial do Mercado Pago realmente cobra.
@@ -39,7 +40,7 @@ export async function testarRecebimento(
   const publicKey = digitado?.publicKey?.trim() || t.mpPublicKey || "";
 
   if (!accessToken) {
-    return { ok: false, mensagem: "Nenhuma credencial salva ainda. Cole o access token e teste.", avisos: [] };
+    return { ok: false, mensagem: "Nenhuma conta conectada ainda. Conecte o Mercado Pago e teste.", avisos: [] };
   }
 
   const avisos: string[] = [];
@@ -52,7 +53,10 @@ export async function testarRecebimento(
   if (!publicKey) {
     avisos.push("Falta a public key: sem ela a loja não consegue aceitar cartão.");
   }
-  if (!t.mpWebhookSecretEnc) {
+  // Só vale para chave colada: na conexão por OAuth o segredo é o do aplicativo
+  // da plataforma, e avisar o lojista de algo que ele não resolve só assusta.
+  const porOAuth = conectadoPorOAuth(t) && !digitado?.accessToken?.trim();
+  if (!porOAuth && !t.mpWebhookSecretEnc) {
     avisos.push("Sem o segredo do webhook, o pedido só é confirmado na verificação periódica, não na hora do pagamento.");
   }
 
@@ -69,7 +73,9 @@ export async function testarRecebimento(
   if (resposta.status === 401 || resposta.status === 403) {
     return {
       ok: false,
-      mensagem: "O Mercado Pago recusou este access token. Confira se copiou a credencial de produção inteira, sem espaços.",
+      mensagem: porOAuth
+        ? "O Mercado Pago recusou o acesso desta conexão. Desconecte e conecte a conta de novo."
+        : "O Mercado Pago recusou este access token. Confira se copiou a credencial de produção inteira, sem espaços.",
       avisos,
     };
   }

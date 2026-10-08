@@ -29,6 +29,7 @@ e preso por teste. Quem muda um deles mexe em `ROTINAS`, não na tela.
 | `carrinhos.verificar` | Carrinho abandonado | a cada hora | marca carrinho parado há 45 min e emite `carrinho.abandonado` | `POST /api/admin/carrinhos/verificar` |
 | `estoque.avisos` | Voltou ao estoque | a cada hora | avisa quem esperava produto que voltou | `POST /api/admin/estoque/avisos` |
 | `pedidos.verificar` | Pagamento pendente | a cada hora | confere no gateway os pedidos aguardando pagamento (Pix, boleto) dos últimos 7 dias. Rede de segurança do webhook | `POST /api/admin/pedidos/verificar` |
+| `mercadopago.renovar` | Acesso ao MP | todo dia às 4h | renova o acesso das lojas conectadas ao Mercado Pago por OAuth que vence em até 30 dias. Termina em erro se alguma loja não renovar (`docs/MERCADO-PAGO-OAUTH.md`) | — |
 | `seo.categorias` | SEO de categoria | todo dia às 3h | gera e publica SEO pendente em lote, sem IA no acesso público | `POST /api/admin/seo/categorias` |
 | `cobranca.verificar` | Régua de cobrança | todo dia às 6h | suspende quem passou da tolerância | `POST /api/admin/cobranca/verificar` |
 | `relatorios.semanal` | Relatório semanal | segunda às 7h | emite `loja.relatorio-semanal` por loja com movimento | `POST /api/admin/relatorios/semanal` |

@@ -64,6 +64,10 @@ export interface LojaView {
   entregaLocal: Array<{ prefixos: string[]; nome: string; preco: number; prazoDiasUteis: number; gratisAcima?: number | null }>;
   /** Já tem credencial salva: o checkout aparece na loja. */
   mpConfigurado: boolean;
+  /** A credencial veio da conexão por OAuth, e não de chave colada. */
+  mpPorOAuth: boolean;
+  /** O aplicativo da plataforma existe: o botão de conectar aparece acima deste formulário. */
+  mpOAuthDisponivel: boolean;
   assinatura: { status: string; plano: string; podeTrocarPlano: boolean; isenta: boolean; precoCentavos: number; planoNome: string; ultimoPagamentoEm: string | null; setupPagoEm: string | null; criadoEm: string; testeAte: string; emTeste: boolean; faturas: Array<{ id: string; centavos: number; status: string; pagaEm: string | null; criadoEm: string }> };
 }
 export interface EnderecoEntregaView { logradouro: string; numero: string; complemento?: string | null; bairro: string; cidade: string; uf: string; cep: string }
@@ -157,7 +161,9 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
     cep: loja.endereco?.cep ?? loja.cepOrigem ?? "", enderecoPublico: loja.enderecoPublico,
   });
   const [entrega, setEntrega] = useState({ retiradaNaLoja: loja.retiradaNaLoja, despachoDiasUteis: loja.despachoDiasUteis, freteGratisAcima: loja.freteGratisAcima != null ? String(loja.freteGratisAcima / 100).replace(".", ",") : "", tabela: loja.tabelaFrete.map((f) => ({ ufs: f.ufs.join(","), preco: String(f.preco / 100).replace(".", ","), prazo: String(f.prazoDiasUteis), nome: f.nome ?? "" })), local: loja.entregaLocal.map((f) => ({ prefixos: f.prefixos.join(","), nome: f.nome, preco: String(f.preco / 100).replace(".", ","), prazo: String(f.prazoDiasUteis), gratis: f.gratisAcima != null ? String(f.gratisAcima / 100).replace(".", ",") : "" })) });
-  const [mp, setMp] = useState({ publicKey: loja.mpPublicKey ?? "", accessToken: "", webhookSecret: "" });
+  // Conectada por OAuth, a public key salva é a da conexão: pré-preencher o
+  // formulário das chaves com ela convidaria a salvar um par que não combina.
+  const [mp, setMp] = useState({ publicKey: loja.mpPorOAuth ? "" : loja.mpPublicKey ?? "", accessToken: "", webhookSecret: "" });
   // Diagnóstico do recebimento: credencial errada só dava erro na primeira
   // venda, com o comprador esperando. Aqui o lojista confere antes.
   const [diagnostico, setDiagnostico] = useState<{ ok: boolean; mensagem: string; conta?: { apelido: string | null; email: string | null }; avisos: string[] } | null>(null);
@@ -560,8 +566,20 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
       )}
 
       {aba === "Recebimento" && (
-        <Secao titulo="Recebimento (Mercado Pago)" descricao="O dinheiro cai direto na sua conta. Crie as credenciais em Mercado Pago → Suas integrações → Credenciais de produção.">
-          <div className="flex flex-wrap items-center gap-3 text-sm">
+        <Secao
+          titulo={loja.mpOAuthDisponivel ? "Chaves da sua aplicação (avançado)" : "Recebimento (Mercado Pago)"}
+          descricao={loja.mpOAuthDisponivel
+            ? "Só para quem prefere usar a própria aplicação do Mercado Pago em vez de conectar a conta acima. Crie as credenciais em Mercado Pago → Suas integrações → Credenciais de produção."
+            : "O dinheiro cai direto na sua conta. Crie as credenciais em Mercado Pago → Suas integrações → Credenciais de produção."}
+        >
+          {/* Com a conexão acima no ar, é ela que diz se a loja recebe; aqui o
+              selo repetiria a mesma coisa duas vezes na tela. */}
+          {loja.mpPorOAuth && (
+            <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
+              A loja está conectada pelo Mercado Pago. Salvar chaves aqui substitui essa conexão.
+            </p>
+          )}
+          <div className={`flex flex-wrap items-center gap-3 text-sm ${loja.mpPorOAuth ? "hidden" : ""}`}>
             {loja.mpConfigurado ? (
               <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">Recebendo</span>
             ) : (
@@ -572,7 +590,7 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Campo label="Public key"><input className={inputClasse} value={mp.publicKey} onChange={(e) => setMp({ ...mp, publicKey: e.target.value })} placeholder="APP_USR-…" /></Campo>
-            <Campo label="Access token" ajuda={loja.mpPublicKey ? "Já configurado. Preencha só para trocar." : undefined}><input className={inputClasse} type="password" value={mp.accessToken} onChange={(e) => setMp({ ...mp, accessToken: e.target.value })} placeholder="APP_USR-…" /></Campo>
+            <Campo label="Access token" ajuda={loja.mpConfigurado && !loja.mpPorOAuth ? "Já configurado. Preencha só para trocar." : undefined}><input className={inputClasse} type="password" value={mp.accessToken} onChange={(e) => setMp({ ...mp, accessToken: e.target.value })} placeholder="APP_USR-…" /></Campo>
             <Campo label="Segredo do webhook" ajuda="Cadastre a URL abaixo no painel do Mercado Pago e cole aqui o segredo que ele gerar."><input className={inputClasse} type="password" value={mp.webhookSecret} onChange={(e) => setMp({ ...mp, webhookSecret: e.target.value })} /></Campo>
           </div>
 
