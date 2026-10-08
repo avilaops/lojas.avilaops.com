@@ -45,7 +45,13 @@ export default function CarrinhoClient({ loja, vende }: { loja: TenantPublico; v
     );
   }
 
-  const resumo = itens.map((i) => `${i.quantidade}x ${i.nome}`).join("\n");
+  // O pedido que vai pelo WhatsApp tem de poder ser separado sem voltar ao
+  // site: quantidade, nome (que traz a medida), valor e o endereço da peça.
+  const origem = typeof window === "undefined" ? "" : window.location.origin;
+  const resumo = [
+    ...itens.map((i) => `${i.quantidade}x ${i.nome} (${formatarBRL(i.precoCentavos)} cada)${origem && i.slug ? `\n${origem}/produtos/${i.slug}` : ""}`),
+    `Total dos produtos: ${formatarBRL(itens.reduce((s, i) => s + i.precoCentavos * i.quantidade, 0))}`,
+  ].join("\n");
 
   // Barra de frete grátis: mostra o quanto falta em vez de só anunciar o valor
   // na vitrine. O cupom de frete grátis já resolve sozinho, então some.

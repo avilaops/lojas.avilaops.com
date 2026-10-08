@@ -6,6 +6,7 @@ import { ROTULOS_COLUNA, colunasVisiveis, linhaTecnica, type Coluna, type LinhaT
 import { mensagemDoProduto } from "@/lib/whatsapp-produto";
 import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
 import { urlDaLoja } from "@/lib/tenant";
+import AddToCartButton from "@/components/cart/AddToCartButton";
 
 function celula(linha: LinhaTecnica, coluna: Coluna) {
   if (coluna === "equivalentes") return linha.equivalentes.join(", ") || "—";
@@ -64,9 +65,11 @@ export default function TabelaTecnica({ produtos, vende, titulo, nomeDaLoja, loj
               <td className="ct-preco">{preco(produto, vende)}</td>
               {loja && (
                 <td className="ct-acao">
-                  {!vende && loja.whatsapp
-                    ? <a href={linkWhatsApp(loja.whatsapp, mensagemDoProduto(produto, urlDaLoja(loja)))} target="_blank" rel="noopener">Pedir</a>
-                    : <Link href={`/produtos/${linha.slug}`}>{vende ? "Comprar" : "Ver"}</Link>}
+                  {estadoDeVenda(produto, { vende }).acao === "consulta-preco" && loja.whatsapp
+                    ? <a href={linkWhatsApp(loja.whatsapp, mensagemDoProduto(produto, urlDaLoja(loja), true))} target="_blank" rel="noopener">Consultar</a>
+                    : (vende || loja.whatsapp) && produto.opcoes.length === 0 && !estadoDeVenda(produto, { vende }).esgotado
+                      ? <AddToCartButton compacto pedido={!vende} disponivel item={{ id: produto.id, slug: produto.slug, nome: produto.nome, precoCentavos: produto.precoCentavos, imagem: produto.imagens[0] }} />
+                      : <Link href={`/produtos/${linha.slug}`}>Ver</Link>}
                 </td>
               )}
             </tr>

@@ -264,9 +264,12 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
             ) : estado.acao === "carrinho" ? (
               <AddToCartButton item={{ id: escolhida?`${p.id}:${escolhida.id}`:p.id, slug: p.slug, nome: p.nome, precoCentavos: p.precoCentavos, imagem: p.imagens[0] }} disponivel irParaCarrinho />
             ) : t.whatsapp ? (
-              <a className="btn-primario acao-whatsapp w-full" href={linkWhatsApp(t.whatsapp, mensagemDoProduto(p, urlDaLoja(t)))} target="_blank" rel="noopener">
-                Pedir pelo WhatsApp
-              </a>
+              <>
+                <AddToCartButton pedido item={{ id: p.id, slug: p.slug, nome: p.nome, precoCentavos: p.precoCentavos, imagem: p.imagens[0] }} disponivel />
+                <a className="btn-secundario acao-whatsapp mt-2 w-full" href={linkWhatsApp(t.whatsapp, mensagemDoProduto(p, urlDaLoja(t)))} target="_blank" rel="noopener">
+                  Pedir só este item pelo WhatsApp
+                </a>
+              </>
             ) : null}
           </div>
 

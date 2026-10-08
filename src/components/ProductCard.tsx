@@ -214,6 +214,16 @@ export default function ProductCard({ produto, loja, vende, whatsapp, moto = nul
             item={{ id: produto.id, slug: produto.slug, nome: produto.nome, precoCentavos: produto.precoCentavos, imagem }}
             disponivel={disponivel}
           />
+        ) : whatsapp && produto.opcoes.length === 0 ? (
+          // Loja que fecha pelo WhatsApp também monta pedido: quem compra oito
+          // medidas diferentes junta tudo no carrinho e manda uma mensagem só,
+          // em vez de abrir uma conversa por peça.
+          <AddToCartButton
+            compacto={compacto}
+            pedido
+            item={{ id: produto.id, slug: produto.slug, nome: produto.nome, precoCentavos: produto.precoCentavos, imagem }}
+            disponivel={disponivel}
+          />
         ) : whatsapp ? (
           <a className="btn-primario acao-whatsapp w-full text-xs" href={linkWhatsApp(whatsapp, mensagemDoProduto(produto, urlDaLoja(loja)))} target="_blank" rel="noopener">
             Pedir pelo WhatsApp

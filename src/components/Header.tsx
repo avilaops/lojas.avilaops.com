@@ -44,7 +44,8 @@ export default function Header({ loja, logoUrl, categorias, exemploBusca, mostra
           </Link>
         )}
         <MenuMobile className="ml-auto sm:hidden" nome={loja.nome} vende={loja.vende} mostrarPromocoes={mostrarPromocoes} categorias={categorias} />
-        {loja.vende && <CartButton />}
+        {/* Loja que fecha pelo WhatsApp também tem carrinho: é a lista do pedido. */}
+        {(loja.vende || loja.whatsapp) && <CartButton />}
       </div>
 
       {/* A barra mostra as principais, não o catálogo de categorias inteiro.
