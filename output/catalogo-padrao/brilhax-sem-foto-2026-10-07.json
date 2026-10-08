@@ -435,14 +435,16 @@
   "duvidas": [
    "A Vonixx tem três aplicadores de espuma (com encaixe de mão, ergonômico 10,6 cm e 9,5x5,5 cm); o pacote de 2 unidades do varejo é o 'anatômico com encaixe de mão'. Confirmar na embalagem.",
    "A frase de modo de uso é orientação geral de aplicador, não texto do fabricante.",
-   "Rodada GTIN: Código interno Vonixx 2005001 lido em varejista (Casas Bahia/Extra/Ponto Frio), ficha 'Aplicador de Espuma Anatômico com 2 Unidades'; EAN não exibido."
+   "Rodada GTIN: Código interno Vonixx 2005001 lido em varejista (Casas Bahia/Extra/Ponto Frio), ficha 'Aplicador de Espuma Anatômico com 2 Unidades'; EAN não exibido.",
+   "MPN movido para candidato: lido em varejista, não em página do fabricante."
   ],
   "lote": "bugatti-vonixx.json",
   "aplicar": true,
-  "mpn": "2005001",
+  "mpn": null,
   "mpnFonte": "https://www.casasbahia.com.br/aplicador-de-espuma-anatomico-com-2-unidades-vonixx-2005001/p/1582392560",
   "fotoExata": true,
-  "imagemOrigem": "propria"
+  "imagemOrigem": "propria",
+  "mpnCandidato": "2005001"
  },
  {
   "id": "cmtv7ccf5000ypd01do3gb24i",
@@ -2080,16 +2082,19 @@
   "fotos": [],
   "confianca": "alta",
   "duvidas": [
-   "A Würth vende em embalagem com 5 unidades (cód. 0695940111); o cadastro da loja parece ser por unidade. Confirmar.",
+   "Unidade de venda não confirmada: a página e o código Würth 0695940111 são da embalagem com 5 unidades e o cadastro diz uma unidade. Até confirmar, sem MPN, foto só representativa e item fora da aplicação.",
    "Sem EAN em nenhuma fonte.",
    "Rodada GTIN: Código Würth 0695940111 (página de kit com 5 un.); EAN não apareceu."
   ],
   "lote": "wurth.json",
-  "aplicar": true,
-  "mpn": "0695940111",
+  "aplicar": false,
+  "mpn": null,
   "mpnFonte": "https://www.wurth.com.br/p/10186211/espatula-plastica-5-125mm-embalagem-com-5-unidades-wurth-0695940111-kit",
-  "fotoExata": true,
-  "imagemOrigem": "propria"
+  "fotoExata": false,
+  "imagemOrigem": "representativa",
+  "mpnCandidato": "0695940111",
+  "imagemFamilia": "Würth Espátula Plástica 5 pol",
+  "unidadeVendaConfirmada": false
  },
  {
   "id": "cmtv7ccxf0040pd01zv9prwun",
