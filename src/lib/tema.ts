@@ -163,7 +163,7 @@ export function corTextoLegivel(fundo: string, preferida: string): string {
   return contraste(fundo, "#ffffff") >= contraste(fundo, "#111111") ? "#ffffff" : "#111111";
 }
 
-export function cssDoTema(tema: TemaLoja): string {
+export function cssDoTema(tema: TemaLoja, familia?: string): string {
   const escuro = tema.modo === "escuro";
   const fundo = tema.corFundo ?? (escuro ? "#0b0b0c" : "#ffffff");
   const texto = tema.corTexto ?? (escuro ? "#fafafa" : "#18181b");
@@ -172,7 +172,9 @@ export function cssDoTema(tema: TemaLoja): string {
   const borda = escuro ? "#2a2a2e" : "#e4e4e7";
   const textoSuave = escuro ? "#a1a1aa" : "#71717a";
   const raio = RAIOS[tema.raio];
-  const fonte = FONTES[tema.fonte].family;
+  // `familia` é a fonte hospedada pelo site (`fontes-loja.ts`); sem ela vale o nome
+  // da família, para quem ainda carrega a folha do Google (prévia do painel).
+  const fonte = familia ?? FONTES[tema.fonte].family;
 
   return `:root{
 --background:${fundo};--foreground:${texto};

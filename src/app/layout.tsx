@@ -13,7 +13,8 @@ import "@avilaops/checkout/checkout.css";
 import { noEnderecoOficial, tenantAtual, tenantPublico, temaDo, urlDaLoja, enderecoDo, formatarCep, identidadeDa } from "@/lib/tenant";
 import { descricaoDaLoja } from "@/lib/textos-loja";
 import { listarCategorias } from "@/lib/catalogo";
-import { cssDoTema, fonteGoogleHref } from "@/lib/tema";
+import { cssDoTema } from "@/lib/tema";
+import { familiaHospedada } from "@/lib/fontes-loja";
 import { contratoDo, usaBlocoProprio } from "@/lib/templates";
 import { CartProvider } from "@/components/cart/CartProvider";
 import Header from "@/components/Header";
@@ -162,7 +163,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const cabecalhoProprio = usaBlocoProprio(tema, "cabecalho");
   const carrinhoProprio = usaBlocoProprio(tema, "carrinho");
   const identidade = identidadeDa(t);
-  const fonte = fonteGoogleHref(tema);
   // Link para página vazia não entra no menu nem no rodapé: "Promoções" e
   // "Blog" seguem o mesmo critério que já tira as duas do sitemap.
   const [categorias, temPromocoes, publicacoes] = await Promise.all([
@@ -220,19 +220,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="pt-BR" data-ck-theme={tema.modo === "escuro" ? "dark" : "light"} data-template={contrato.atributoHtml ? contrato.layout : undefined} data-modo={tema.modo} suppressHydrationWarning={contrato.atributoHtml}>
       <head>
-        {/* A folha da fonte não segura a primeira pintura: o texto sai na fonte
-            do sistema e troca quando ela chega (`display=swap` já está na URL).
-            Como `<link rel="stylesheet">` no head, o PageSpeed media 1,5 s de
-            bloqueio no celular. Sem JavaScript vale o `<noscript>`. */}
-        {fonte && (
-          <>
-            <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-            <link rel="preload" as="style" href={fonte} />
-            <script dangerouslySetInnerHTML={{ __html: `(function(){var l=document.createElement("link");l.rel="stylesheet";l.href=${JSON.stringify(fonte)};document.head.appendChild(l)})()` }} />
-            <noscript><link rel="stylesheet" href={fonte} /></noscript>
-          </>
-        )}
-        <style dangerouslySetInnerHTML={{ __html: `${cssDoTema(tema)}:root{--brand-support:${identidade.corApoio}}` }} />
+        <style dangerouslySetInnerHTML={{ __html: `${cssDoTema(tema, familiaHospedada(tema.fonte))}:root{--brand-support:${identidade.corApoio}}` }} />
         {contrato.atributoHtml && <script dangerouslySetInnerHTML={{ __html: `try{var m=localStorage.getItem(${JSON.stringify(`loja:${t.slug}:modo`).replace(/</g,"\\u003c")});if(m==='claro'||m==='escuro'){document.documentElement.dataset.modo=m;document.documentElement.dataset.ckTheme=m==='escuro'?'dark':'light'}}catch(e){}` }}/ >}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSite) }} />
