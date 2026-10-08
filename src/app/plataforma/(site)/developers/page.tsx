@@ -139,6 +139,20 @@ export default function DevelopersPage() {
           </ul>
         </Bloco>
 
+        <Bloco titulo="Compra pelo site ou app próprio">
+          <p className="mt-2 text-sm text-muted-foreground">{api.compra.quem}</p>
+          <dl className="mt-3 grid gap-3 text-sm text-muted-foreground">
+            <div>
+              <dt className="font-bold text-foreground">Corpo de POST /api/v1/vitrine/checkout</dt>
+              <dd><code className="font-mono text-xs break-words">{api.compra.corpo}</code></dd>
+            </div>
+            <div>
+              <dt className="font-bold text-foreground">Regras</dt>
+              <dd>{api.compra.regras}</dd>
+            </div>
+          </dl>
+        </Bloco>
+
         <Bloco titulo="Webhooks">
           <p className="mt-2 text-sm text-muted-foreground">
             Em vez de consultar os pedidos de tempos em tempos, seu sistema é avisado. {api.webhooks.cadastro}

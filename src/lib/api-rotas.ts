@@ -6,6 +6,7 @@ import { LimitadorPorJanela, cabecalhosDoLimite } from "@/lib/api-limite";
 import { ErroApi, corpoDeErro } from "@/lib/api-resposta";
 import { hostDoSlug, registrarSemDerrubar } from "@/lib/metricas-rota";
 import { HOST_SEM_LOJA } from "@/lib/metricas-tenant";
+import { enderecoDaRequisicao } from "@/lib/requisicao-origem";
 
 /**
  * A porta da API para desenvolvedores: toda rota de `/api/v1` passa por
@@ -23,7 +24,7 @@ import { HOST_SEM_LOJA } from "@/lib/metricas-tenant";
 export interface ContextoApi {
   request: Request;
   tenant: Tenant;
-  chave: Pick<ChaveApi, "id" | "tipo" | "escopos">;
+  chave: Pick<ChaveApi, "id" | "tipo" | "escopos" | "origens">;
   url: URL;
 }
 
@@ -67,8 +68,8 @@ async function autenticar(request: Request): Promise<{ tenant: Tenant; chave: Ch
 
 const CORS: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, OPTIONS",
-  "Access-Control-Allow-Headers": "Authorization, X-Api-Key, Content-Type",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Authorization, X-Api-Key, Content-Type, Idempotency-Key",
   "Access-Control-Expose-Headers": "RateLimit-Limit, RateLimit-Remaining, RateLimit-Reset, X-Requisicao-Id",
   "Access-Control-Max-Age": "86400",
 };
@@ -81,6 +82,20 @@ export interface OpcoesDaRota {
    * site de embutir a chave secreta no JavaScript e funcionar "por enquanto".
    */
   navegador?: boolean;
+  /**
+   * Rota que escreve a partir de uma chave pública (cotar frete, comprar).
+   *
+   * Duas defesas que leitura não precisa:
+   *
+   * - **Origem.** Se a requisição traz `Origin` (veio de um navegador), ela tem
+   *   de estar na lista da chave. É o que impede outro site de usar a chave do
+   *   lojista para criar pedido. Sem `Origin` (app nativo, servidor) passa: a
+   *   lista não segura script, e não finge que segura.
+   * - **Limite por endereço**, por minuto, além do limite da chave. A chave é
+   *   compartilhada por todos os visitantes; sem isto, um só esgota a cota de
+   *   todos, e cada compra cria reserva de estoque e cobrança de verdade.
+   */
+  escrita?: { exigeOrigem: boolean; porEnderecoPorMinuto: number };
 }
 
 type Manipulador<P> = (ctx: ContextoApi & { params: P }) => Promise<unknown>;
@@ -108,9 +123,27 @@ export function rotaDaApi<P = Record<string, never>>(opcoes: OpcoesDaRota, fazer
         throw new ErroApi(
           "escopo_insuficiente",
           chave.tipo === "PUBLICAVEL"
-            ? "Chave publicável só lê a vitrine. Esta rota exige uma chave secreta (`lojas_sk_`)."
+            ? opcoes.escopo === "vitrine:comprar"
+              ? "Esta chave publicável só lê a vitrine. Para vender, crie no painel uma chave publicável com a compra permitida."
+              : "Chave publicável só lê a vitrine. Esta rota exige uma chave secreta (`lojas_sk_`)."
             : `Esta chave não tem o escopo \`${opcoes.escopo}\`. Crie outra chave com ele no painel.`,
         );
+      }
+
+      if (opcoes.escrita) {
+        const origem = request.headers.get("origin");
+        if (origem && opcoes.escrita.exigeOrigem) {
+          if (!chave.origens.includes(origem)) {
+            throw new ErroApi("origem_nao_permitida", "Esta chave não está autorizada a comprar a partir deste site. Inclua o endereço do site na chave, no painel da loja.");
+          }
+          // Resposta que depende de quem pediu: só a origem conferida a lê.
+          cabecalhos["Access-Control-Allow-Origin"] = origem;
+          cabecalhos["Vary"] = "Origin";
+        }
+        const porEndereco = limitador.consumir(`${chave.id}:${opcoes.escopo}:${enderecoDaRequisicao(request)}`, opcoes.escrita.porEnderecoPorMinuto);
+        if (!porEndereco.permitido) {
+          throw new ErroApi("limite_excedido", `Limite de ${porEndereco.limite} por minuto para esta operação.`, { "Retry-After": String(porEndereco.reiniciaEm) });
+        }
       }
 
       const limite = limitador.consumir(chave.id, LIMITE_POR_MINUTO[chave.tipo]);
@@ -125,7 +158,7 @@ export function rotaDaApi<P = Record<string, never>>(opcoes: OpcoesDaRota, fazer
       return medida(Response.json(corpo, { headers: cabecalhos }));
     } catch (e) {
       if (e instanceof ErroApi) {
-        return medida(Response.json(corpoDeErro(e.codigo, e.message, requisicao), {
+        return medida(Response.json(corpoDeErro(e.codigo, e.message, requisicao, e.detalhe), {
           status: e.status,
           headers: { ...cabecalhos, ...e.cabecalhos },
         }));

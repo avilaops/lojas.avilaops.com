@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { exigir } from "@/lib/operadores";
-import { ESCOPOS, ESCOPOS_SECRETA, chaveMascarada, escoposDaChave, gerarChave, planoPermite } from "@/lib/api-chaves";
+import { ESCOPOS, ESCOPOS_SECRETA, chaveMascarada, escoposDaChave, gerarChave, lerOrigens, planoPermite } from "@/lib/api-chaves";
+import { lojaVende } from "@/lib/tenant";
 
 /**
  * Chaves da API para desenvolvedores, no painel da loja.
@@ -26,6 +27,9 @@ export async function GET() {
 
   return Response.json({
     podeSecreta: planoPermite("SECRETA", s.tenant.plano),
+    // Chave que vende só faz sentido em loja que vende: plano com checkout e
+    // recebimento configurado.
+    podeVender: lojaVende(s.tenant),
     escopos: ESCOPOS_SECRETA.map((e) => ({ escopo: e, descricao: ESCOPOS[e] })),
     chaves: chaves.map((c) => ({
       id: c.id,
@@ -33,6 +37,7 @@ export async function GET() {
       tipo: c.tipo,
       mascara: chaveMascarada(c),
       escopos: c.escopos,
+      origens: c.origens,
       criadaEm: c.criadaEm,
       ultimoUsoEm: c.ultimoUsoEm,
       revogadaEm: c.revogadaEm,
@@ -44,6 +49,8 @@ const NovaChave = z.object({
   nome: z.string().trim().min(2, "Dê um nome para reconhecer a chave (ex.: ERP).").max(60),
   tipo: z.enum(["SECRETA", "PUBLICAVEL"]),
   escopos: z.array(z.string()).default([]),
+  /** Os sites de onde a chave publicável pode comprar. Só vale com `vitrine:comprar`. */
+  origens: z.array(z.string()).default([]),
 });
 
 export async function POST(request: Request) {
@@ -68,9 +75,17 @@ export async function POST(request: Request) {
   }
 
   const escopos = escoposDaChave(tipo, lido.data.escopos);
+  // Origens só existem em chave que compra; nas outras não significam nada, e
+  // guardar seria prometer uma restrição que a leitura não aplica.
+  let origens: string[] = [];
+  if (escopos.includes("vitrine:comprar")) {
+    const lidas = lerOrigens(lido.data.origens);
+    if ("erro" in lidas) return Response.json({ erro: lidas.erro }, { status: 400 });
+    origens = lidas.origens;
+  }
   const gerada = gerarChave(tipo);
   const chave = await prisma.chaveApi.create({
-    data: { tenantId: loja.id, tipo, nome, escopos, hash: gerada.hash, prefixo: gerada.prefixo, final: gerada.final },
+    data: { tenantId: loja.id, tipo, nome, escopos, origens, hash: gerada.hash, prefixo: gerada.prefixo, final: gerada.final },
   });
 
   return Response.json({
@@ -78,6 +93,7 @@ export async function POST(request: Request) {
     nome: chave.nome,
     tipo: chave.tipo,
     escopos: chave.escopos,
+    origens: chave.origens,
     chave: gerada.chave,
     mascara: chaveMascarada(chave),
     criadaEm: chave.criadaEm,

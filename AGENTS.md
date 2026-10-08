@@ -128,7 +128,10 @@ Este repositório pertence à Ávila Ops Tecnologia, que ajuda pequenas empresas
   `rotaDaApi({ escopo })` (`src/lib/api-rotas.ts`) e não autentica, não monta
   erro nem põe CORS sozinha. A loja vem da chave, e toda consulta filtra pelo
   `tenant.id` dela. Escopo novo entra em `ESCOPOS` junto com a rota que o exige;
-  chave publicável é só `vitrine:ler`. O que sai é projeção explícita de
+  chave publicável é `vitrine:ler` e, só quando o lojista marcou,
+  `vitrine:comprar` (com a lista de sites em `ChaveApi.origens`): rota que
+  escreve por chave pública declara `escrita` em `rotaDaApi`, que confere a
+  origem e limita por endereço. O que sai é projeção explícita de
   `api-recursos.ts`, nunca `...produto`. Chave guardada só como sha256.
   `/v1` sem `/api` é outro contrato (`gapp.ts`). Rota nova entra em `ROTAS`
   (`src/lib/api-indice.ts`) no mesmo commit: é de lá que saem `GET /api/v1` e a

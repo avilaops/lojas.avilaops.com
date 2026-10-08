@@ -497,6 +497,9 @@ model Pedido {
   /// ingestão idempotente: a notificação do ML chega mais de uma vez, e o
   /// mesmo pedido não pode virar dois.
   canalPedidoId String?
+  /// De onde o pedido entrou quando não foi pelo checkout da vitrine:
+  /// "api:<id da chave>". Nulo = checkout da própria loja.
+  origem        String?
 
   /**
    * Sessão da vitrine em que a compra foi fechada. Nulo em pedido anterior à
@@ -1570,8 +1573,12 @@ model ChaveApi {
   /// Começo e fim da chave, para o painel mostrar "lojas_sk_3f9a…c21e".
   prefixo  String
   final    String
-  /// Escopos de `ESCOPOS` em src/lib/api-chaves.ts. Publicável é sempre ["vitrine:ler"].
+  /// Escopos de `ESCOPOS` em src/lib/api-chaves.ts. Publicável é "vitrine:ler"
+  /// e, quando o lojista marcou, "vitrine:comprar".
   escopos  String[]
+  /// Os sites de onde esta chave pode comprar (`https://loja.com.br`). Só vale
+  /// para chave com "vitrine:comprar": navegador em outra origem é recusado.
+  origens  String[] @default([])
 
   ultimoUsoEm DateTime?
   revogadaEm  DateTime?

@@ -26,8 +26,18 @@ export const CODIGOS_DE_ERRO = {
   nao_encontrado: 404,
   /** O pedido é válido, mas o estado atual não permite: slug ou SKU já em uso, pedido que ainda não foi pago. */
   conflito: 409,
+  /** A chave compra, mas não a partir deste site: a origem não está na lista da chave. */
+  origem_nao_permitida: 403,
+  /** A loja existe e mostra a vitrine, mas não está recebendo pedidos. */
+  loja_nao_vende: 403,
+  /** A compra não pode ser feita como veio. `detalhe` diz o motivo (ex.: `item_indisponivel`). */
+  pedido_invalido: 422,
   limite_excedido: 429,
   erro_interno: 500,
+  /** O gateway respondeu que não. Nada foi cobrado; pode tentar de novo. */
+  gateway_recusou: 502,
+  /** Não se sabe se a cobrança nasceu. Consulte o pedido antes de tentar de novo. */
+  pagamento_a_confirmar: 503,
 } as const;
 
 export type CodigoDeErro = keyof typeof CODIGOS_DE_ERRO;
@@ -37,6 +47,8 @@ export class ErroApi extends Error {
     public codigo: CodigoDeErro,
     mensagem: string,
     public cabecalhos: Record<string, string> = {},
+    /** Complemento estável para máquina: o motivo da recusa, a referência do pedido. */
+    public detalhe?: string,
   ) {
     super(mensagem);
     this.name = "ErroApi";
@@ -47,8 +59,8 @@ export class ErroApi extends Error {
   }
 }
 
-export function corpoDeErro(codigo: CodigoDeErro, mensagem: string, requisicao: string) {
-  return { erro: { codigo, mensagem }, requisicao };
+export function corpoDeErro(codigo: CodigoDeErro, mensagem: string, requisicao: string, detalhe?: string) {
+  return { erro: { codigo, mensagem, ...(detalhe ? { detalhe } : {}) }, requisicao };
 }
 
 export interface Paginacao {

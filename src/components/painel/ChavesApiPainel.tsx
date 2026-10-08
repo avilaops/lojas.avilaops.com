@@ -20,6 +20,7 @@ interface ChaveView {
   tipo: Tipo;
   mascara: string;
   escopos: string[];
+  origens: string[];
   criadaEm: string;
   ultimoUsoEm: string | null;
   revogadaEm: string | null;
@@ -27,6 +28,7 @@ interface ChaveView {
 
 interface Estado {
   podeSecreta: boolean;
+  podeVender: boolean;
   escopos: Array<{ escopo: string; descricao: string }>;
   chaves: ChaveView[];
 }
@@ -40,6 +42,8 @@ export default function ChavesApiPainel() {
   const [nome, setNome] = useState("");
   const [tipo, setTipo] = useState<Tipo>("PUBLICAVEL");
   const [escopos, setEscopos] = useState<string[]>(["loja:ler", "catalogo:ler"]);
+  const [vende, setVende] = useState(false);
+  const [sites, setSites] = useState("");
   const [nova, setNova] = useState<{ chave: string; nome: string } | null>(null);
   const [copiada, setCopiada] = useState(false);
   const [ocupado, setOcupado] = useState(false);
@@ -71,7 +75,11 @@ export default function ChavesApiPainel() {
       const r = await fetch("/api/painel/chaves", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ nome, tipo, escopos: tipo === "SECRETA" ? escopos : [] }),
+        body: JSON.stringify(
+          tipo === "SECRETA"
+            ? { nome, tipo, escopos }
+            : { nome, tipo, escopos: vende ? ["vitrine:comprar"] : [], origens: vende ? sites.split(/\s+/).filter(Boolean) : [] },
+        ),
       });
       const d = await r.json();
       if (!r.ok) throw new Error(d?.erro ?? "Não foi possível criar a chave.");
@@ -163,6 +171,34 @@ export default function ChavesApiPainel() {
           </fieldset>
         </div>
 
+        {tipo === "PUBLICAVEL" && estado && (
+          <fieldset className="grid gap-2 text-xs">
+            <legend className="mb-1 font-semibold text-foreground">Compra pelo site ou app próprio</legend>
+            <label className={`flex items-start gap-2 ${estado.podeVender ? "" : "opacity-50"}`}>
+              <input type="checkbox" checked={vende} disabled={!estado.podeVender} onChange={(e) => setVende(e.target.checked)} />
+              <span>
+                Permitir que esta chave feche compras (<code>vitrine:comprar</code>): cotar frete, criar o pedido e a cobrança.
+                {!estado.podeVender && " Disponível quando a loja estiver recebendo pedidos, com o pagamento configurado."}
+              </span>
+            </label>
+            {vende && (
+              <label className="grid gap-1 font-semibold text-foreground">
+                Sites que podem comprar com esta chave, um por linha
+                <textarea
+                  value={sites}
+                  onChange={(e) => setSites(e.target.value)}
+                  rows={2}
+                  placeholder={"https://www.sualoja.com.br\nhttps://sualoja.com.br"}
+                  className="rounded-lg border border-border bg-background px-3 py-2 font-mono text-xs font-normal"
+                />
+                <span className="font-normal text-muted-foreground">
+                  Navegador em outro endereço é recusado. Deixe vazio só se a chave for de um aplicativo, que não tem endereço.
+                </span>
+              </label>
+            )}
+          </fieldset>
+        )}
+
         {tipo === "SECRETA" && estado && (
           <fieldset className="grid gap-2 text-xs">
             <legend className="mb-1 font-semibold text-foreground">O que a chave pode ler</legend>
@@ -204,7 +240,10 @@ export default function ChavesApiPainel() {
                     <div className="font-normal text-muted-foreground">{ROTULO_TIPO[c.tipo]}</div>
                   </td>
                   <td className="p-3 font-mono">{c.mascara}</td>
-                  <td className="p-3">{c.escopos.join(", ")}</td>
+                  <td className="p-3">
+                    {c.escopos.join(", ")}
+                    {c.origens.length > 0 && <div className="font-mono text-[11px] text-muted-foreground">{c.origens.join(", ")}</div>}
+                  </td>
                   <td className="p-3">{c.revogadaEm ? `revogada em ${data(c.revogadaEm)}` : data(c.ultimoUsoEm)}</td>
                   <td className="p-3 text-right">
                     {!c.revogadaEm && (
