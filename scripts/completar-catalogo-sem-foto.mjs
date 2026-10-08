@@ -81,9 +81,19 @@ async function catalogoAtual() {
  * `<img>` cujo endereço parece foto de produto. Nada de miniatura, ícone,
  * logo ou bandeira de pagamento.
  */
+const PARECE_LOGO = /(logo|icon|favicon|bandeira|flag|selo|badge|sprite|banner|placeholder|no-?image|sem-?imagem)/i;
+const PAGINA_SEM_PRODUTO = /(nenhum resultado|sem resultados?|nenhum produto|p[áa]gina n[ãa]o encontrada|produto n[ãa]o encontrado|not found|no results)/i;
+
 function extrairFotos(html, urlPagina) {
   const achadas = [];
   const absoluta = (u) => { try { return new URL(u.replace(/&amp;/g, "&"), urlPagina).toString(); } catch { return null; } };
+  // Busca vazia ou 404 disfarçado de 200 ainda traz og:image (logo da loja,
+  // imagem social). Se o título diz que não há produto e a página não declara
+  // nenhum Product em JSON-LD, não há foto a copiar.
+  const titulo = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] ?? "";
+  const h1 = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i)?.[1] ?? "";
+  const declaraProduto = /"@type"\s*:\s*"?(\[[^\]]*)?Product/i.test(html);
+  if (!declaraProduto && (PAGINA_SEM_PRODUTO.test(titulo) || PAGINA_SEM_PRODUTO.test(h1))) return [];
   for (const m of html.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)) {
     try {
       const bloco = JSON.parse(m[1].trim());
@@ -99,25 +109,49 @@ function extrairFotos(html, urlPagina) {
   for (const m of html.matchAll(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image(?::secure_url)?["']/gi)) achadas.push(m[1]);
   if (achadas.length === 0) {
     for (const m of html.matchAll(/<img[^>]+(?:data-src|src)=["']([^"']+\.(?:jpe?g|png|webp)(?:\?[^"']*)?)["']/gi)) {
-      if (!/(logo|icon|favicon|bandeira|flag|selo|badge|sprite|banner|thumb|\b\d{2,3}x\d{2,3}\b)/i.test(m[1])) achadas.push(m[1]);
+      if (!/(thumb|\b\d{2,3}x\d{2,3}\b)/i.test(m[1])) achadas.push(m[1]);
     }
   }
+  // Logo, selo e banner não são foto de produto venham de onde vierem: o
+  // og:image de uma listagem é a imagem social da loja, não o produto.
   const vistas = new Set();
-  return achadas.map(absoluta).filter((u) => u && /^https:\/\//.test(u) && !vistas.has(u) && (vistas.add(u), true)).slice(0, 10);
+  return achadas.map(absoluta).filter((u) => u && /^https:\/\//.test(u) && !PARECE_LOGO.test(u) && !vistas.has(u) && (vistas.add(u), true)).slice(0, 10);
 }
+
+/** Mesma página depois de seguir redirecionamentos? Ignora protocolo, `www.`, barra final, query e âncora. */
+function mesmaPagina(pedida, final) {
+  const chave = (u) => { try { const x = new URL(u); return `${x.hostname.replace(/^www\./, "")}${x.pathname.replace(/\/+$/, "").toLowerCase()}`; } catch { return u; } };
+  return chave(pedida) === chave(final);
+}
+
+const PRAZO_PAGINA_MS = 20_000;
 
 async function fotosDaFonte(item) {
   if (Array.isArray(item.fotos) && item.fotos.length) return { fotos: item.fotos.slice(0, 10), origem: "dossie" };
   const pagina = item.paginaDasFotos || item.fontes?.find((f) => f.tipo === "fabricante")?.url || item.fontes?.[0]?.url;
   if (!pagina) return { fotos: [], origem: "sem pagina" };
   try {
-    const r = await fetch(pagina, { headers: { "user-agent": "Mozilla/5.0 (compatible; LojasAvilaOps-catalogo/1.0; +https://lojas.avilaops.com)" }, redirect: "follow" });
+    // Prazo explícito, que vale também para a leitura do corpo: uma origem que
+    // aceita a conexão e não termina de responder não pode segurar as 90 e
+    // tantas páginas seguintes.
+    const r = await fetch(pagina, { headers: { "user-agent": "Mozilla/5.0 (compatible; LojasAvilaOps-catalogo/1.0; +https://lojas.avilaops.com)" }, redirect: "follow", signal: AbortSignal.timeout(PRAZO_PAGINA_MS) });
     if (!r.ok) return { fotos: [], origem: `pagina HTTP ${r.status}`, pagina };
-    const fotos = extrairFotos(await r.text(), pagina);
+    // Redirecionou para outra página (categoria, busca, home): o que está lá
+    // não é este produto, e o og:image seria a imagem social da loja.
+    if (r.url && !mesmaPagina(pagina, r.url)) return { fotos: [], origem: `pagina redirecionou para ${r.url}`, pagina };
+    const fotos = extrairFotos(await r.text(), r.url || pagina);
     return { fotos, origem: fotos.length ? "pagina" : "pagina sem foto reconhecida", pagina };
   } catch (e) {
-    return { fotos: [], origem: `pagina falhou: ${e instanceof Error ? e.message : String(e)}`, pagina };
+    const prazo = e instanceof Error && e.name === "TimeoutError";
+    return { fotos: [], origem: prazo ? `pagina excedeu ${PRAZO_PAGINA_MS / 1000} s` : `pagina falhou: ${e instanceof Error ? e.message : String(e)}`, pagina };
   }
+}
+
+const FAMILIA_MAX = 40;
+function encurtarFamilia(texto) {
+  if (texto.length <= FAMILIA_MAX) return texto;
+  const corte = texto.slice(0, FAMILIA_MAX + 1).lastIndexOf(" ");
+  return (corte > 0 ? texto.slice(0, corte) : texto.slice(0, FAMILIA_MAX)).replace(/[\s,;:.-]+$/, "");
 }
 
 function gtinValido(valor) {
@@ -159,7 +193,12 @@ for (const item of dossie) {
   // seja apenas anúncio de terceiro (marketplace), salvo licença declarada;
   // o dossiê pode rebaixar para representativa (precisa da família) ou negar.
   const exata = fotoPodeSerPropria(item);
-  const familia = typeof item.imagemFamilia === "string" && item.imagemFamilia.trim() ? item.imagemFamilia.trim() : null;
+  // `ProdutoImportadoSchema` aceita família de até 40 caracteres; uma família
+  // longa derrubaria o lote inteiro com 422. Encurta em fronteira de palavra
+  // e anota no plano, em vez de deixar a API recusar.
+  const familiaDossie = typeof item.imagemFamilia === "string" && item.imagemFamilia.trim() ? item.imagemFamilia.trim() : null;
+  const familia = familiaDossie ? encurtarFamilia(familiaDossie) : null;
+  const familiaEncurtada = familiaDossie && familia !== familiaDossie ? familiaDossie : undefined;
   const podeFoto = exata || Boolean(familia);
   const motivoSemFoto = !exata && fonteSoDeMarketplace(item) && item.fotoExata === true ? "única fonte é marketplace: foto não entra como própria" : item.fotoExata === true ? "foto não entra" : "foto não declarada exata (fotoExata: true) e sem família: não entra";
   const { fotos, origem, pagina } = podeFoto ? await fotosDaFonte(item) : { fotos: [], origem: motivoSemFoto, pagina: undefined };
@@ -187,7 +226,7 @@ for (const item of dossie) {
     atributos: { ...(atual.atributos ?? {}), ...(item.atributos ?? {}), _dossieFonte: fonteDossie, ...(atual.atributos?._catalogoFonte ? {} : { _catalogoFonte: fonteDossie }) },
     ...(fotos.length ? (exata ? { imagens: fotos, imagemOrigem: "propria" } : { imagens: fotos, imagemOrigem: "representativa", imagemFamilia: familia }) : {}),
   };
-  plano.push({ sku: item.sku, nomeAtual: atual.nome, confianca: item.confianca, fotos: fotos.length, imagemOrigem: fotos.length ? (exata ? "propria" : "representativa") : null, origemDasFotos: origem, categoriaAtual, categoriaProposta: item.categoriaLoja ?? null, categoriaEnviada: Boolean(trocaCategoria), duvidas: item.duvidas ?? [], entrada });
+  plano.push({ sku: item.sku, nomeAtual: atual.nome, confianca: item.confianca, fotos: fotos.length, imagemOrigem: fotos.length ? (exata ? "propria" : "representativa") : null, origemDasFotos: origem, ...(familiaEncurtada ? { familiaEncurtada, familiaEnviada: familia } : {}), categoriaAtual, categoriaProposta: item.categoriaLoja ?? null, categoriaEnviada: Boolean(trocaCategoria), duvidas: item.duvidas ?? [], entrada });
 }
 
 const planoPath = dossiePath.replace(/\.json$/, "") + ".plano.json";
