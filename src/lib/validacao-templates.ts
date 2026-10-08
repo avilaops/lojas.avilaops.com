@@ -113,3 +113,22 @@ export function avaliarMedida(caso: CasoDeValidacao, medida: MedidaDoCaso): stri
   }
   return falhas;
 }
+
+/**
+ * Erro de console que a prévia provoca e o template não: os links da home
+ * apontam para páginas da loja, que não existem no domínio do painel (por isso
+ * o palco é `inert`). O Next pré-carrega cada um, recebe 404 e o navegador
+ * registra o erro. Só o 404: um 500 (ou qualquer outro status) no
+ * pré-carregamento é defeito e reprova. O status sai do texto do Chromium
+ * (`…responded with a status of 404 (Not Found)`); texto diferente não casa e
+ * o erro reprova, que é o lado barulhento.
+ */
+export function ePreCarregamentoDeLink(endereco: string, texto: string): boolean {
+  if (!/\bstatus of 404\b/.test(texto)) return false;
+  try {
+    const url = new URL(endereco);
+    return url.searchParams.has("_rsc") && url.pathname !== "/painel/previa";
+  } catch {
+    return false;
+  }
+}

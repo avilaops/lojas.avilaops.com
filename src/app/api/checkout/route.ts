@@ -9,6 +9,7 @@ import { buscarCupomValido, descontoDoCupom, normalizarCodigo } from "@/lib/cupo
 import { GatewayNaoConfigurado, providerDaLoja } from "@/lib/gateway";
 import { registrarPedido } from "@/lib/pedidos";
 import { compradorAtual } from "@/lib/conta";
+import { medirRota } from "@/lib/metricas-rota";
 
 /**
  * Cobrança. O @avilaops/checkout faz o trabalho pesado (recalcular o total
@@ -16,7 +17,7 @@ import { compradorAtual } from "@/lib/conta";
  * — o handler do pacote é criado por requisição porque provider, catálogo e
  * cupom são do pedido, não da instância.
  */
-export async function POST(request: Request) {
+export const POST = medirRota("checkout", async function (request: Request) {
   const t = await tenantAtual();
   if (!t) return Response.json({ erro: "loja não encontrada" }, { status: 404 });
   if (!lojaVende(t)) return Response.json({ erro: "Esta loja não está recebendo pedidos no momento." }, { status: 403 });
@@ -84,4 +85,4 @@ export async function POST(request: Request) {
     if(e instanceof PedidoInvalidoError) return Response.json({erro:e.message,codigo:e.codigo},{status:422});
     throw e;
   }
-}
+});

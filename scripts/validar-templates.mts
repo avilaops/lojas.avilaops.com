@@ -20,7 +20,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { chromium } from "playwright";
 import { VALORES_LAYOUT } from "../src/lib/tema";
-import { VIEWPORTS, avaliarMedida, casosDeValidacao, type MedidaDoCaso } from "../src/lib/validacao-templates";
+import { VIEWPORTS, avaliarMedida, casosDeValidacao, ePreCarregamentoDeLink, type MedidaDoCaso } from "../src/lib/validacao-templates";
 
 const SAIDA = ".work/engineer/validacao-templates.json";
 const SLUG_QA = "qa-validacao-templates";
@@ -172,24 +172,14 @@ const ASSENTOU = `document.fonts.status === "loaded" && [...document.querySelect
  * As imagens do tema de teste (`tests/fixtures/tema-premium-completo.json`)
  * não existem: uma está num host fictício, a outra em `/media/` de uma loja.
  * O script responde as duas com esta, senão o Automotivo Premium falharia por
- * endereço de teste e não por defeito do template.
+ * endereço de teste e não por defeito do template. Endereço exato, sem
+ * curinga: qualquer outra imagem quebrada, mesmo vizinha destas, reprova.
  */
-const IMAGENS_DO_FIXTURE = ["https://exemplo.test/**", "**/media/automotivo-premium/**"];
+const IMAGENS_DO_FIXTURE = new Set([
+  "https://exemplo.test/editorial/acessorios.webp",
+  new URL("/media/automotivo-premium/editorial-cuidado-v1.webp", BASE).href,
+]);
 const IMAGEM_NEUTRA = '<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1200"><rect width="1600" height="1200" fill="#9ca3af"/></svg>';
-
-/**
- * Os links da home apontam para páginas da loja, que não existem no domínio do
- * painel (por isso o palco é `inert`). O Next pré-carrega cada um, recebe 404 e
- * o navegador registra o erro: é da prévia, não do template.
- */
-function ePreCarregamentoDeLink(endereco: string): boolean {
-  try {
-    const url = new URL(endereco);
-    return url.searchParams.has("_rsc") && url.pathname !== "/painel/previa";
-  } catch {
-    return false;
-  }
-}
 
 async function main() {
   const temaPremium = JSON.parse(readFileSync(new URL("../tests/fixtures/tema-premium-completo.json", import.meta.url), "utf8")) as Record<string, unknown>;
@@ -217,15 +207,16 @@ async function main() {
       let preCarregamentosIgnorados = 0;
       try {
         await contexto.addCookies([{ name: "lojas_sessao", value: cookie, domain: HOST_BASE, path: "/" }]);
-        for (const padrao of IMAGENS_DO_FIXTURE) {
-          await contexto.route(padrao, (rota) => rota.fulfill({ contentType: "image/svg+xml", body: IMAGEM_NEUTRA }));
-        }
+        await contexto.route(
+          (url) => IMAGENS_DO_FIXTURE.has(url.href),
+          (rota) => rota.fulfill({ contentType: "image/svg+xml", body: IMAGEM_NEUTRA }),
+        );
         const pagina = await contexto.newPage();
         const errosDePagina: string[] = [];
         pagina.on("pageerror", (e) => errosDePagina.push(e.message));
         pagina.on("console", (m) => {
           if (m.type() !== "error") return;
-          if (ePreCarregamentoDeLink(m.location().url)) preCarregamentosIgnorados++;
+          if (ePreCarregamentoDeLink(m.location().url, m.text())) preCarregamentosIgnorados++;
           else errosDePagina.push(`${m.text()} (${m.location().url})`);
         });
         // `load` e não `networkidle`: o Next não lê o corpo do 404 dos

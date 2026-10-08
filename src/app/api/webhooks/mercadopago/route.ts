@@ -2,6 +2,7 @@ import { criarRotaWebhook } from "@avilaops/checkout/server";
 import { prisma } from "@/lib/db";
 import { providerDaLoja } from "@/lib/gateway";
 import { atualizarStatusPagamento } from "@/lib/pedidos";
+import { hostDoWebhook, medirRota } from "@/lib/metricas-rota";
 
 /**
  * Webhook do Mercado Pago. URL cadastrada no painel MP de cada loja:
@@ -10,8 +11,11 @@ import { atualizarStatusPagamento } from "@/lib/pedidos";
  * O `?loja=` existe porque o webhook chega sem cookie e às vezes sem o Host da
  * loja (o MP chama a URL que foi cadastrada, e pode ser a da plataforma).
  * O segredo de assinatura é o da loja, então uma loja não valida webhook de outra.
+ *
+ * Pelo mesmo motivo a métrica vai para `<slug>.<LOJAS_BASE_DOMAIN>`, e não para
+ * o host da requisição: só o slug é lido da query.
  */
-export async function POST(request: Request) {
+export const POST = medirRota("webhook", async function (request: Request) {
   const slug = new URL(request.url).searchParams.get("loja");
   if (!slug) return Response.json({ erro: "loja ausente" }, { status: 400 });
   const t = await prisma.tenant.findUnique({ where: { slug } });
@@ -23,4 +27,4 @@ export async function POST(request: Request) {
     aoAtualizarStatus: ({ pagamentoId, status, valorEmCentavos }) =>
       atualizarStatusPagamento(t, pagamentoId, status, valorEmCentavos),
   })(request);
-}
+}, { host: hostDoWebhook });
