@@ -1390,3 +1390,5 @@ body:has(.whatsapp-flutuante) .rodape-loja { padding-bottom: calc(5.5rem + env(s
   .ct-listagem .ct-tabela .ct-marca, .ct-listagem .ct-tabela .ct-medidas, .ct-listagem .ct-tabela .ct-aplicacao, .ct-listagem .ct-tabela .ct-codigoOriginal { display: none; }
   .ct-listagem .ct-tabela .ct-acao { grid-column: 2; grid-row: 2 / span 2; align-self: end; width: auto; }
 }
+/* Valor longo na ficha do cartão (material, perfil) quebra a linha em vez de ser cortado. */
+.cartao-produto-tecnico .cartao-produto-tecnica > div { max-width: 100%; white-space: normal; }

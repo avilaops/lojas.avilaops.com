@@ -309,3 +309,15 @@ mínimo de pedido repetido no serviço de frete da conta.
   "Pedir" por linha) no lugar da grade com a mesma foto repetida; no celular
   cada peça vira um bloco com nome, código, preço e a ação. E-mail de contato
   da loja: `vendas@pkvedacoes.com.br`.
+- **PageSpeed (08/10).** Relatório de celular da home: desempenho 67 a 76,
+  acessibilidade 97. Corrigido na plataforma: fontes do tema servidas pelo
+  próprio site com pré-carga do recorte latino (`fontes-loja.ts`), aviso de
+  cookies no HTML inicial (era o LCP), foto do topo só em tela larga, logo em
+  160 px, contraste. Medido com Lighthouse no `apps-noclient`
+  (`/opt/build/lighthouse/rodar.sh`): FCP 2,5 → 1,4 s, CLS 0,05,
+  acessibilidade 100; LCP observado igual ao FCP. O que resta de bloqueio é o
+  Tag Manager e o Analytics da loja.
+- **Atributos técnicos.** Material, dureza, perfil, tipo de vedação, pressão,
+  velocidade e temperatura por família (dados do catálogo da PK) em
+  `atributos` dos 803 produtos; saem na ficha, no JSON-LD e no feed
+  (`product_detail` e `material`).
