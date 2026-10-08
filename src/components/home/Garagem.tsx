@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/LinkLoja";
 import { mesclarMotos, queryDaMoto, type Moto } from "@/lib/motos";
 import SeletorMoto from "@/components/SeletorMoto";
 

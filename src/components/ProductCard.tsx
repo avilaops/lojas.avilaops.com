@@ -1,6 +1,6 @@
 import { fichaDoProduto } from "@/lib/ficha";
 import { codigoPublico, rotuloDoCodigo } from "@/lib/codigo-publico";
-import Link from "next/link";
+import Link from "@/components/LinkLoja";
 import * as regras from "@/lib/produto-regras";
 import type { Produto, Tenant } from "@prisma/client";
 import { formatarBRL, medidaResumida } from "@/lib/catalogo";

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/LinkLoja";
 import { ArrowRight, BadgeCheck, Bike, CircleDollarSign } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import { formatarBRL } from "@/lib/catalogo";

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/LinkLoja";
 import { ArrowRight, Gauge, Wrench } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import { formatarBRL } from "@/lib/catalogo";

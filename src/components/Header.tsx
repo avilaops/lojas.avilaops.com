@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/LinkLoja";
 import { Store, UserRound } from "lucide-react";
 import type { TenantPublico } from "@/lib/tenant";
 import CartButton from "@/components/cart/CartButton";

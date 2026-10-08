@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/LinkLoja";
 import ProductCard from "@/components/ProductCard";
 import type { DadosHome } from "./tipos";
 import { retiradaPublicaDisponivel } from "@/lib/tenant";

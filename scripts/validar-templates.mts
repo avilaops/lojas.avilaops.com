@@ -20,7 +20,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { chromium } from "playwright";
 import { VALORES_LAYOUT } from "../src/lib/tema";
-import { VIEWPORTS, avaliarMedida, casosDeValidacao, ePreCarregamentoDeLink, type MedidaDoCaso } from "../src/lib/validacao-templates";
+import { VIEWPORTS, avaliarMedida, casosDeValidacao, type MedidaDoCaso } from "../src/lib/validacao-templates";
 
 const SAIDA = ".work/engineer/validacao-templates.json";
 const SLUG_QA = "qa-validacao-templates";
@@ -162,7 +162,7 @@ const MEDICAO = `(() => {
   };
 })()`;
 
-type Medido = Omit<MedidaDoCaso, "errosDePagina"> & { exemplosDeTransicao: string[] };
+type Medido = Omit<MedidaDoCaso, "errosDePagina" | "preCarregamentosForaDaPrevia"> & { exemplosDeTransicao: string[] };
 
 // Fontes carregadas e imagens do palco resolvidas (carregou ou quebrou): é o
 // que muda largura e altura depois do `load`.
@@ -188,7 +188,7 @@ async function main() {
   if (RETRATOS) mkdirSync(RETRATOS, { recursive: true });
 
   const navegador = await chromium.launch(process.env.CHROMIUM ? { executablePath: process.env.CHROMIUM } : {});
-  const resultados: Array<{ id: string; passou: boolean; falhas: string[]; medida: MedidaDoCaso | null; exemplosDeTransicao: string[]; preCarregamentosIgnorados: number }> = [];
+  const resultados: Array<{ id: string; passou: boolean; falhas: string[]; medida: MedidaDoCaso | null; exemplosDeTransicao: string[] }> = [];
 
   try {
     // Um contexto por vez, em sequência: o servidor tem 4 GB.
@@ -204,7 +204,6 @@ async function main() {
       let falhas: string[];
       let medida: MedidaDoCaso | null = null;
       let exemplosDeTransicao: string[] = [];
-      let preCarregamentosIgnorados = 0;
       try {
         await contexto.addCookies([{ name: "lojas_sessao", value: cookie, domain: HOST_BASE, path: "/" }]);
         await contexto.route(
@@ -215,19 +214,22 @@ async function main() {
         const errosDePagina: string[] = [];
         pagina.on("pageerror", (e) => errosDePagina.push(e.message));
         pagina.on("console", (m) => {
-          if (m.type() !== "error") return;
-          if (ePreCarregamentoDeLink(m.location().url, m.text())) preCarregamentosIgnorados++;
-          else errosDePagina.push(`${m.text()} (${m.location().url})`);
+          if (m.type() === "error") errosDePagina.push(`${m.text()} (${m.location().url})`);
         });
-        // `load` e não `networkidle`: o Next não lê o corpo do 404 dos
-        // pré-carregamentos, a requisição fica aberta e a rede nunca sossega.
+        // A prévia desliga o pré-carregamento dos links da home. Conta na
+        // saída, e não na volta: qualquer status reprova, não só o 404.
+        let preCarregamentosForaDaPrevia = 0;
+        pagina.on("request", (requisicao) => {
+          const url = new URL(requisicao.url());
+          if (url.searchParams.has("_rsc") && url.pathname !== "/painel/previa") preCarregamentosForaDaPrevia++;
+        });
         await pagina.goto(new URL(caso.caminho, BASE).href, { waitUntil: "load", timeout: 60_000 });
         await pagina.waitForFunction(ASSENTOU, undefined, { timeout: 30_000 });
-        // Dá tempo de a hidratação terminar, de os pré-carregamentos voltarem
-        // e de transição de entrada acabar.
+        // Dá tempo de a hidratação terminar, de um pré-carregamento indevido
+        // sair e de transição de entrada acabar.
         await pagina.waitForTimeout(1500);
         const { exemplosDeTransicao: exemplos, ...medido } = (await pagina.evaluate(MEDICAO)) as Medido;
-        medida = { ...medido, errosDePagina };
+        medida = { ...medido, errosDePagina, preCarregamentosForaDaPrevia };
         exemplosDeTransicao = exemplos;
         falhas = avaliarMedida(caso, medida);
         if (RETRATOS) await pagina.screenshot({ path: join(RETRATOS, `${caso.id}.png`) });
@@ -237,7 +239,7 @@ async function main() {
         await contexto.close();
       }
       const passou = falhas.length === 0;
-      resultados.push({ id: caso.id, passou, falhas, medida, exemplosDeTransicao, preCarregamentosIgnorados });
+      resultados.push({ id: caso.id, passou, falhas, medida, exemplosDeTransicao });
       console.log(passou ? `ok      ${caso.id}` : `FALHOU  ${caso.id}\n${falhas.map((f) => `          · ${f}`).join("\n")}`);
     }
   } finally {

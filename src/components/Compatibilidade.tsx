@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/LinkLoja";
 import { descreverAnos, encaixe, lerCompatibilidade, linhaServe, nomeDaMoto, queryDaMoto, type Moto } from "@/lib/motos";
 
 /**

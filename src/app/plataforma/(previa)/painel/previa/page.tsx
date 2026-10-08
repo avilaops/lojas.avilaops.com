@@ -8,6 +8,7 @@ import { catalogoDeDemonstracao, examinarRascunho, lojaDaPrevia } from "@/lib/pr
 import { campanhasDaLoja } from "@/lib/campanhas";
 import { comporHome } from "@/components/home/composicao";
 import { CartProvider } from "@/components/cart/CartProvider";
+import { SemPreCarregamento } from "@/components/LinkLoja";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CabecalhoPremium from "@/components/templates/automotivo-premium/Cabecalho";
@@ -91,17 +92,21 @@ export default async function PreviaDoTema({ searchParams }: { searchParams: Pro
         <a className="underline" href="/painel/configuracoes/marca">Voltar para Marca</a>
       </p>
       {/* `inert`: os links da home apontam para páginas da loja, que não
-          existem no domínio do painel. A prévia é para olhar, não para navegar. */}
+          existem no domínio do painel. A prévia é para olhar, não para navegar.
+          Pelo mesmo motivo o pré-carregamento é desligado aqui, e só aqui:
+          `inert` segura o clique, não o `?_rsc=` que o link dispara ao aparecer. */}
       <div inert data-layout={tema.layout} className="flex min-h-screen flex-col pb-14">
-        <CartProvider slug={`previa-${loja.slug}`}>
-          {usaBlocoProprio(tema, "cabecalho")
-            ? <CabecalhoPremium loja={publico} logo={previa.logoUrl} logoEscuro={tema.premium?.logoEscuroUrl} mostrarNome={tema.premium?.mostrarNome} categorias={menu} modo={tema.modo} />
-            : <Header loja={publico} logoUrl={previa.logoUrl} mostrarNome={tema.mostrarNomeNoCabecalho} categorias={menu} mostrarPromocoes={campanhasDaLoja(tema).length > 0} />}
-          <main className="flex-1">
-            {comporHome(tema, { t: previa, identidade, categorias, vitrine, temDestaques: vitrine.some((p) => p.destaque), vende: lojaVende(previa) })}
-          </main>
-          <Footer tenant={previa} categorias={menu} />
-        </CartProvider>
+        <SemPreCarregamento>
+          <CartProvider slug={`previa-${loja.slug}`}>
+            {usaBlocoProprio(tema, "cabecalho")
+              ? <CabecalhoPremium loja={publico} logo={previa.logoUrl} logoEscuro={tema.premium?.logoEscuroUrl} mostrarNome={tema.premium?.mostrarNome} categorias={menu} modo={tema.modo} />
+              : <Header loja={publico} logoUrl={previa.logoUrl} mostrarNome={tema.mostrarNomeNoCabecalho} categorias={menu} mostrarPromocoes={campanhasDaLoja(tema).length > 0} />}
+            <main className="flex-1">
+              {comporHome(tema, { t: previa, identidade, categorias, vitrine, temDestaques: vitrine.some((p) => p.destaque), vende: lojaVende(previa) })}
+            </main>
+            <Footer tenant={previa} categorias={menu} />
+          </CartProvider>
+        </SemPreCarregamento>
       </div>
     </>
   );

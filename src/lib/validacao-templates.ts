@@ -49,6 +49,8 @@ export type MedidaDoCaso = {
   culpado: string | null;
   /** Exceções da página e `console.error`. */
   errosDePagina: string[];
+  /** Requisições com `_rsc` para caminho que não é `/painel/previa`, de qualquer status. */
+  preCarregamentosForaDaPrevia: number;
   /** Cor e fundo computados do `body`, em hex. */
   corTexto: string;
   corFundo: string;
@@ -111,24 +113,11 @@ export function avaliarMedida(caso: CasoDeValidacao, medida: MedidaDoCaso): stri
     if (medida.animacoesAtivas > 0) falhas.push(`${medida.animacoesAtivas} animação(ões) ativa(s) com movimento reduzido`);
     if (medida.transicoesComDuracao > 0) falhas.push(`${medida.transicoesComDuracao} elemento(s) com transição com movimento reduzido`);
   }
-  return falhas;
-}
-
-/**
- * Erro de console que a prévia provoca e o template não: os links da home
- * apontam para páginas da loja, que não existem no domínio do painel (por isso
- * o palco é `inert`). O Next pré-carrega cada um, recebe 404 e o navegador
- * registra o erro. Só o 404: um 500 (ou qualquer outro status) no
- * pré-carregamento é defeito e reprova. O status sai do texto do Chromium
- * (`…responded with a status of 404 (Not Found)`); texto diferente não casa e
- * o erro reprova, que é o lado barulhento.
- */
-export function ePreCarregamentoDeLink(endereco: string, texto: string): boolean {
-  if (!/\bstatus of 404\b/.test(texto)) return false;
-  try {
-    const url = new URL(endereco);
-    return url.searchParams.has("_rsc") && url.pathname !== "/painel/previa";
-  } catch {
-    return false;
+  // A home aponta para páginas da loja, que não existem no domínio do painel:
+  // a prévia desliga o pré-carregamento (`SemPreCarregamento`), então qualquer
+  // `_rsc` que escape é link fora do `LinkLoja` ou prévia sem o provedor.
+  if (medida.preCarregamentosForaDaPrevia > 0) {
+    falhas.push(`${medida.preCarregamentosForaDaPrevia} pré-carregamento(s) fora de /painel/previa`);
   }
+  return falhas;
 }

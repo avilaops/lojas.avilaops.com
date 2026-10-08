@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/LinkLoja";
 import { PRINCIPAIS } from "@/components/Header";
 import IconeCategoria from "@/components/IconeCategoria";
 import { categoriasParaVitrine } from "@/lib/catalogo";

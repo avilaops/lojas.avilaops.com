@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/LinkLoja";
 import { temaDo } from "@/lib/tenant";
 import { PRINCIPAIS } from "@/components/Header";
 import { categoriasParaVitrine } from "@/lib/catalogo";

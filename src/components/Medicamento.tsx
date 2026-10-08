@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/LinkLoja";
 import { formatarBRL } from "@/lib/catalogo";
 import {
   avisoDaTarja,

@@ -97,16 +97,18 @@ resolve e tira o arquivo da lista.
 Baixa prioridade: entram depois da Tranche 3, ou antes, de carona em tarefa que
 já mexa nos mesmos arquivos.
 
-- [ ] Prévia do tema sem pré-carregamento de páginas da loja. Abrir
-  `/painel/previa` dispara de 5 a 16 requisições `?_rsc=` que respondem 404
+- [x] Prévia do tema sem pré-carregamento de páginas da loja. Abrir
+  `/painel/previa` disparava de 5 a 16 requisições `?_rsc=` que respondiam 404
   (`/produtos`, `/categoria/<slug>`: páginas da loja, que não existem no domínio
-  do painel). Não quebra nada; é ruído no console e no servidor. Desligar o
-  `prefetch` dos `next/link` só quando a home é desenhada pela prévia, num ponto
-  único e não link a link; a loja publicada continua pré-carregando como hoje.
-  Feito quando a abertura da prévia não gera nenhum `_rsc` fora de
-  `/painel/previa` e a exceção do `_rsc` (`preCarregamentosIgnorados`) sai de
-  `scripts/validar-templates.mts` e de `docs/VALIDACAO-TEMPLATES.md`, com a
-  rodada ainda em 96/96.
+  do painel). (Os componentes da loja importam o link de
+  `src/components/LinkLoja.tsx`, que obedece a um contexto; a prévia o liga num
+  ponto só, com `SemPreCarregamento` em volta do palco, e a loja publicada
+  continua pré-carregando. A guarda está em `src/lib/previa-tema.test.ts`:
+  componente da loja com `next/link` direto reprova o `npm test`. A exceção do
+  `_rsc` saiu de `scripts/validar-templates.mts` e de
+  `docs/VALIDACAO-TEMPLATES.md` e virou a regra 7: qualquer `_rsc` fora de
+  `/painel/previa` reprova o caso. Rodada de 08/10/2026: 104/104 (a matriz
+  ganhou o layout Indústria no mesmo dia), zero `_rsc` fora da prévia.)
 
 ## Critérios de entrega
 

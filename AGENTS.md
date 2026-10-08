@@ -61,7 +61,11 @@ Este repositório pertence à Ávila Ops Tecnologia, que ajuda pequenas empresas
   `?t=` sobre o catálogo de demonstração de `src/lib/previa-tema.ts`; não grava,
   não mede e não emite evento. A home sai de `comporHome`
   (`src/components/home/composicao.tsx`), a mesma da loja publicada: layout novo
-  entra lá, não em outra cadeia de `? :`.
+  entra lá, não em outra cadeia de `? :`. Componente da loja (`src/components/`
+  fora de `painel/` e `aplicacao/`) importa o link de `@/components/LinkLoja`,
+  não de `next/link`: é por ele que a prévia desliga o pré-carregamento
+  (`SemPreCarregamento`), já que as páginas da loja não existem no domínio do
+  painel e cada link da home pediria um `?_rsc=` que volta 404.
 - **Política é do lojista, com rede de proteção.** O texto padrão continua
   sendo o que vai ao ar em loja que não mexeu (`src/lib/politicas.ts`); o que o
   lojista escreve substitui. O que a lei fixa não é configuração: o prazo de

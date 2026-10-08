@@ -145,3 +145,31 @@ test("a loja publicada e a prévia montam a home pelo mesmo mapa", () => {
   const composicao = fonte("src/components/home/composicao.tsx");
   for (const layout of VALORES_LAYOUT) assert.match(composicao, new RegExp(`^  "?${layout}"?: `, "m"), `composicao.tsx não tem ${layout}`);
 });
+
+// A prévia desenha a home no domínio do painel, onde as páginas da loja não
+// existem: link de componente da loja passa pelo `LinkLoja`, que obedece ao
+// `SemPreCarregamento` da prévia. Um `next/link` direto voltaria a pedir
+// `?_rsc=` de `/produtos` e `/categoria/<slug>` e a receber 404.
+const COMPONENTES = "src/components";
+const DO_PAINEL = /^(painel|aplicacao)\//;
+
+test("componente da loja importa o LinkLoja, não o next/link", () => {
+  const arquivos = (readdirSync(COMPONENTES, { recursive: true }) as string[])
+    .map((a) => a.replaceAll("\\", "/"))
+    .filter((a) => a.endsWith(".tsx") && !DO_PAINEL.test(a) && a !== "LinkLoja.tsx");
+  assert.ok(arquivos.length > 30, "a varredura de src/components não achou os componentes da loja");
+  const comNextLink = arquivos.filter((a) => /from\s+["']next\/link["']/.test(fonte(`${COMPONENTES}/${a}`)));
+  assert.deepEqual(comNextLink, [], `troque o import por "@/components/LinkLoja" em: ${comNextLink.map((a) => `${COMPONENTES}/${a}`).join(", ")}`);
+  // O único que fala com o Next é o próprio LinkLoja.
+  assert.match(fonte(`${COMPONENTES}/LinkLoja.tsx`), /import Link from "next\/link"/);
+});
+
+test("a prévia desliga o pré-carregamento, e só ela", () => {
+  assert.match(fonte(`${ROTA}/painel/previa/page.tsx`), /<SemPreCarregamento>[\s\S]+<\/SemPreCarregamento>/);
+  const usam = ["src/app", COMPONENTES].flatMap((raiz) =>
+    (readdirSync(raiz, { recursive: true }) as string[])
+      .map((a) => `${raiz}/${a.replaceAll("\\", "/")}`)
+      .filter((a) => a.endsWith(".tsx") && a !== `${COMPONENTES}/LinkLoja.tsx` && /<SemPreCarregamento\b/.test(fonte(a))),
+  );
+  assert.deepEqual(usam, [`${ROTA}/painel/previa/page.tsx`]);
+});

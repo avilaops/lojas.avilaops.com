@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/LinkLoja";
 import { reabrirConsentimento, salvarConsentimento, useConsentimento } from "@/lib/consentimento";
 
 /**

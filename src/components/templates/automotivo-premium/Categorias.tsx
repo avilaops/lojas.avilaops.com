@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/LinkLoja";
 import Image from "next/image";
 import { LayoutGrid } from "lucide-react";
 import type { Categoria } from "@prisma/client";

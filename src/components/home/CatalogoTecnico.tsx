@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/LinkLoja";
 import { ArrowRight, Search } from "lucide-react";
 import { formatarBRL } from "@/lib/catalogo";
 import { estadoDeVenda } from "@/lib/produto-regras";

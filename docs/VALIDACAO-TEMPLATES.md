@@ -11,8 +11,8 @@ modos × 2 preferências de movimento.
 | Modo | `claro` e `escuro` (o `modo` do tema, gravado em `data-modo`) |
 | Movimento | `normal` e `reduzido` (`prefers-reduced-motion: reduce`) |
 
-- `src/lib/validacao-templates.ts`: a matriz (`casosDeValidacao`), o julgamento
-  (`avaliarMedida`) e o filtro de erro de console (`ePreCarregamentoDeLink`). Puro, preso em `src/lib/validacao-templates.test.ts`, que
+- `src/lib/validacao-templates.ts`: a matriz (`casosDeValidacao`) e o julgamento
+  (`avaliarMedida`). Puro, preso em `src/lib/validacao-templates.test.ts`, que
   entra em `npm test`.
 - `scripts/validar-templates.mts`: abre cada caso no Chromium, mede e sai com
   `1` se algum falhar.
@@ -28,19 +28,19 @@ Um caso passa quando nenhuma destas regras dispara:
 3. **Não vaza de lado.** A página não passa da largura da tela; a falha traz o
    primeiro elemento culpado. A faixa fixa da prévia não conta.
 4. **Sem erro de página.** Nenhuma exceção e nenhum `console.error` (recurso
-   que não carrega, como imagem quebrada, entra aqui). Fica de fora uma coisa
-   só: requisição de pré-carregamento de link (`?_rsc=`) que voltou **404**. A
-   home aponta para páginas da loja, que não existem no domínio do painel, e
-   isso é da prévia, não do template. Qualquer outro status no `_rsc` (500, 403)
-   ou falha de rede reprova, assim como 404 em recurso sem `_rsc` e em
-   `/painel/previa`. Quem decide é `ePreCarregamentoDeLink`
-   (`src/lib/validacao-templates.ts`), presa em `npm test`. O resultado guarda
-   quantos foram ignorados em `preCarregamentosIgnorados`.
+   que não carrega, como imagem quebrada, entra aqui).
 5. **Contraste AA do texto base.** Cor do `body` sobre o fundo do `body`, no
    mínimo 4,5:1 (`contraste` de `src/lib/tema.ts`).
 6. **Movimento reduzido de verdade** (só nos casos `reduzido`): nenhuma animação
    ativa (`document.getAnimations()`) e nenhum elemento, `::before` ou `::after`
    do template com `transition-duration` maior que zero.
+7. **Sem pré-carregamento fora da prévia.** Nenhuma requisição com `_rsc` para
+   caminho que não seja `/painel/previa`, de qualquer status. A home aponta
+   para páginas da loja, que não existem no domínio do painel; a prévia desliga
+   o pré-carregamento com `SemPreCarregamento` e os componentes da loja usam
+   `src/components/LinkLoja.tsx`. Requisição que escape é link com `next/link`
+   direto ou prévia sem o provedor. A contagem fica na medida, em
+   `preCarregamentosForaDaPrevia`.
 
 A regra 6 é o que a regra geral de `src/app/globals.css`
 (`[data-layout] *` dentro de `@media (prefers-reduced-motion: reduce)`) atende
@@ -48,10 +48,7 @@ para os onze layouts comuns; o Automotivo Premium tem a sua em `premium.css`.
 
 ## Como o script espera e o que ele substitui
 
-- **Espera `load`, fontes e imagens do palco, mais 1,5 s.** Não espera
-  `networkidle`: o Next não lê o corpo do 404 dos pré-carregamentos, a
-  requisição fica aberta e a rede nunca sossega (a primeira rodada estourou os
-  60 s em todos os casos por isso).
+- **Espera `load`, fontes e imagens do palco, mais 1,5 s.**
 - **Imagens do tema de teste.** As duas de
   `tests/fixtures/tema-premium-completo.json` não existem (`exemplo.test` e
   `/media/automotivo-premium/…`); o script responde as duas com uma imagem
@@ -154,3 +151,9 @@ culpado.
   parte numa loja de teste com um item no carrinho, nos layouts Clássico e
   Automotivo Premium, com `prefers-reduced-motion: reduce`: conteúdo inteiro,
   nenhuma transição e nenhuma animação.
+- **2026-10-08, 104/104.** Primeira rodada com a regra 7 e com o layout
+  Indústria na matriz: zero requisição `_rsc` fora de `/painel/previa` nos 104
+  casos e nenhum erro de página, sem exceção nenhuma no script. Sem o
+  `SemPreCarregamento` na página, os 8 casos do Clássico reprovam com 11
+  (celular) e 13 (desktop) pré-carregamentos. A home da loja de teste, no
+  domínio dela, segue pré-carregando (13 `_rsc`).

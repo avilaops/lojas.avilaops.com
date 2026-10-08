@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/LinkLoja";
 import { temaDo } from "@/lib/tenant";
 import ProductCard from "@/components/ProductCard";
 import { paragrafosDaDescricao } from "@/lib/descricao-produto";

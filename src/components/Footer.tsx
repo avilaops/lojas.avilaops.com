@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/LinkLoja";
 import type { Tenant } from "@prisma/client";
 import { enderecoCompleto, lojaVende } from "@/lib/tenant";
 import { PreferenciasCookies } from "@/components/Consentimento";

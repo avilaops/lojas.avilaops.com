@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/LinkLoja";
 import { temaDo } from "@/lib/tenant";
 import { ArrowRight, Search, ShieldCheck, Stethoscope } from "lucide-react";
 import ProductCard from "@/components/ProductCard";

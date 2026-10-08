@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/LinkLoja";
 import type { ProvaSocial as Dados } from "@/lib/catalogo";
 
 /**

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useSyncExternalStore } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/LinkLoja";
 import { usePathname } from "next/navigation";
 import { Menu, X, Moon, Sun, UserRound, ChevronDown, Search } from "lucide-react";
 import type { TenantPublico } from "@/lib/tenant";
