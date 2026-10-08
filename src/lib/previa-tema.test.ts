@@ -97,7 +97,7 @@ test("o catálogo de demonstração serve a todos os layouts", () => {
 });
 
 const ROTA = "src/app/plataforma/(previa)";
-const arquivosDaRota = (readdirSync(ROTA, { recursive: true }) as string[]).filter((a) => /\.tsx?$/.test(a)).map((a) => `${ROTA}/${a}`);
+const arquivosDaRota = (readdirSync(ROTA, { recursive: true }) as string[]).filter((a) => /\.tsx?$/.test(a)).map((a) => `${ROTA}/${a.replaceAll("\\", "/")}`);
 const fonte = (caminho: string) => readFileSync(caminho, "utf8");
 
 test("a prévia não grava, não mede e não avisa ninguém", () => {
