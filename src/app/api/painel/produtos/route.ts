@@ -4,7 +4,7 @@ import { ProdutoEntradaSchema, ProdutoPlanilhaSchema, conferirImagem } from "@/l
 import { importarProdutos } from "@/lib/admin-tenants";
 import { lojistaAtual } from "@/lib/sessao";
 import { exigir } from "@/lib/operadores";
-import { avisarBuscadores, caminhosDoProduto } from "@/lib/indexnow";
+import { avisarERegistrar, caminhosDoProduto } from "@/lib/indexnow";
 import { slugificar } from "@/lib/catalogo";
 import type { Prisma } from "@prisma/client";
 import { invalidarCatalogo } from "@/lib/catalogo-cache";
@@ -22,7 +22,7 @@ export async function PUT(request: Request) {
   try { resultado = await importarProdutos(loja.id, r.data); } catch (e) { return respostaErroCatalogo(e); }
   // Indexação garantida: produto novo ou alterado é avisado aos buscadores.
   const recentes = await prisma.produto.findMany({ where: { tenantId: loja.id, ativo: true }, include: { categoria: true }, orderBy: { atualizadoEm: "desc" }, take: 50 });
-  void avisarBuscadores(loja, recentes.flatMap((p) => caminhosDoProduto(p.slug, p.categoria?.slug)));
+  void avisarERegistrar(loja, recentes.flatMap((p) => caminhosDoProduto(p.slug, p.categoria?.slug)));
   return Response.json(resultado);
 }
 
@@ -101,6 +101,6 @@ export async function PATCH(request: Request) {
   try { atualizado = await salvarProdutoNoCatalogo(loja.id, id, { ...campos, ...(valoresCampos ? { camposPersonalizados: valoresCampos as unknown as Prisma.InputJsonValue } : {}), ...(slug ? { slug: slugificar(slug) } : {}), ...(categoriaId !== undefined ? { categoriaId } : {}), ...(atributos ? { atributos: atributos as Prisma.InputJsonValue } : {}), ...(compatibilidade ? { compatibilidade: compatibilidade as unknown as Prisma.InputJsonValue } : {}) }, { origem: "painel", versao: versaoCatalogo, exigirSemImagem: associarFotoSku, ...(correspondenciaFinal ? { metadadosMidia: { fonte: "painel", correspondencia: correspondenciaFinal, somentePrincipal: true } } : {}) });
   } catch(e) { return respostaErroCatalogo(e); }
   invalidarCatalogo(loja.id);
-  void avisarBuscadores(loja, caminhosDoProduto(atualizado.slug, categoria ?? undefined));
+  void avisarERegistrar(loja, caminhosDoProduto(atualizado.slug, categoria ?? undefined));
   return Response.json({ id: atualizado.id, slug: atualizado.slug, versaoCatalogo: atualizado.versaoCatalogo });
 }

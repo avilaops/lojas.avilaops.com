@@ -203,5 +203,11 @@ Este repositório pertence à Ávila Ops Tecnologia, que ajuda pequenas empresas
   não entra em site, proposta ou case. Pendência que dependa da CepCerto não
   existe: a cotação é do Melhor Envio. O que sobrou dela no código é a emissão
   de etiqueta antiga (`src/lib/postagem.ts`), que não se estende.
+- **"Buscadores avisados" só com aceite.** `avisarBuscadores` (`src/lib/indexnow.ts`)
+  devolve quantos endpoints do IndexNow responderam 2xx; quem grava
+  `Tenant.indexadoEm` usa `avisarERegistrar`, que só grava com pelo menos um.
+  Importação em lote e sincronização do ERP (`PUT /api/admin/tenants/<slug>/produtos`)
+  avisam como a edição do painel. O Google não tem ping: lê o sitemap, e a aba
+  Buscadores conta páginas pela mesma régua dele (`CONDICAO_PUBLICAVEL`).
 - **Português nos nomes e comentários**, como no resto do monorepo.
 - **TypeScript estrito**; `npm run typecheck` antes de entregar.

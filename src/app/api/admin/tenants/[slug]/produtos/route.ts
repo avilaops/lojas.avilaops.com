@@ -4,6 +4,7 @@ import { autorizado, naoAutorizado } from "@/lib/admin-auth";
 import { ProdutoImportadoSchema } from "@/lib/admin-schemas";
 import { importarProdutos } from "@/lib/admin-tenants";
 import { importarImagemDeUrl } from "@/lib/uploads";
+import { avisarERegistrar } from "@/lib/indexnow";
 
 const BASE = (process.env.LOJAS_BASE_DOMAIN ?? "lojas.avilaops.com").toLowerCase();
 
@@ -62,5 +63,10 @@ export async function PUT(request: Request, { params }: Ctx) {
   }
 
   const resultado = await importarProdutos(t.id, r.data);
+  // Importação em lote e sincronização do ERP entram por aqui, e não avisavam
+  // ninguém: só a edição pelo painel avisava. Vai sem esperar a resposta, para
+  // o lote não ficar preso a um buscador lento.
+  const slugs = r.data.map((p) => p.slug).filter((s): s is string => Boolean(s));
+  if (slugs.length) void avisarERegistrar(t, ["/produtos", ...slugs.map((s) => `/produtos/${s}`)]).catch(() => undefined);
   return Response.json({ ...resultado, imagens });
 }

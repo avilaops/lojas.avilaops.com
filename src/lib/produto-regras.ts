@@ -78,6 +78,12 @@ export function publicavel(p: Pick<ProdutoRegras, "ativo" | "imagens" | "precoCe
   return p.ativo && (p.imagens.length > 0 || p.precoCentavos > 0);
 }
 
+/** A mesma régua de `publicavel`, como filtro de consulta. Mudou uma, muda a outra. */
+export const CONDICAO_PUBLICAVEL = {
+  ativo: true,
+  OR: [{ NOT: { imagens: { isEmpty: true } } }, { precoCentavos: { gt: 0 } }],
+};
+
 /**
  * Oferta de verdade: preço "de" maior que o preço, com foto própria e à venda.
  *

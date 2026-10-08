@@ -2,7 +2,8 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { lojistaAtual } from "@/lib/sessao";
 import { exigir } from "@/lib/operadores";
-import { avisarBuscadores, chaveIndexNow } from "@/lib/indexnow";
+import { avisarERegistrar, chaveIndexNow } from "@/lib/indexnow";
+import { CONDICAO_PUBLICAVEL } from "@/lib/produto-regras";
 import { urlDaLoja } from "@/lib/tenant";
 
 /** GET — situação da indexação da loja (o que o painel mostra na aba Buscadores). */
@@ -11,7 +12,9 @@ export async function GET() {
   if (!loja) return Response.json({ erro: "Sessão expirada." }, { status: 401 });
   const base = urlDaLoja(loja);
   const [produtos, categorias] = await Promise.all([
-    prisma.produto.count({ where: { tenantId: loja.id, ativo: true } }),
+    // A mesma régua do sitemap: produto sem foto e sem preço não é página
+    // publicada, e contá-lo aqui fazia a tela prometer mais do que o Google vê.
+    prisma.produto.count({ where: { tenantId: loja.id, ...CONDICAO_PUBLICAVEL } }),
     prisma.categoria.count({ where: { tenantId: loja.id } }),
   ]);
   return Response.json({
@@ -65,7 +68,7 @@ export async function POST() {
   if (erro) return erro;
   const loja = s.tenant;
   const [produtos, categorias] = await Promise.all([
-    prisma.produto.findMany({ where: { tenantId: loja.id, ativo: true }, select: { slug: true } }),
+    prisma.produto.findMany({ where: { tenantId: loja.id, ...CONDICAO_PUBLICAVEL }, select: { slug: true } }),
     prisma.categoria.findMany({ where: { tenantId: loja.id }, select: { slug: true } }),
   ]);
   const caminhos = [
@@ -73,7 +76,8 @@ export async function POST() {
     ...categorias.map((c) => `/categoria/${c.slug}`),
     ...produtos.map((p) => `/produtos/${p.slug}`),
   ];
-  await avisarBuscadores(loja, caminhos);
-  await prisma.tenant.update({ where: { id: loja.id }, data: { indexadoEm: new Date() } });
-  return Response.json({ ok: true, urls: caminhos.length });
+  const r = await avisarERegistrar(loja, caminhos);
+  if (!r.enviado) return Response.json({ erro: "O aviso aos buscadores está desligado para esta loja." }, { status: 409 });
+  if (r.aceitos === 0) return Response.json({ erro: "Os buscadores não aceitaram o aviso agora. Tente de novo em alguns minutos." }, { status: 502 });
+  return Response.json({ ok: true, urls: r.urls });
 }
