@@ -19,15 +19,27 @@ export const metadata: Metadata = {
  * Com o login único ligado (`SSO_APP_ID`), a conta Avila Ops vem primeiro; o
  * Google (`GOOGLE_CLIENT_ID`) vem logo abaixo; e-mail e senha da loja ficam por
  * último. Cada porta só aparece quando está configurada.
+ *
+ * Com o login único ligado, esta página nem aparece: quem chega é mandado
+ * direto ao Auth, como no ERP. As contas ficam num lugar só, e liberar ou
+ * bloquear alguém no Lojas é marcar a aplicação na conta dele lá.
+ *
+ * A página só se mostra em três casos, e nenhum deles pode virar laço:
+ * - o Auth devolveu um recado (`?sso=`): a pessoa já foi e voltou;
+ * - o Google falhou (`?google=`);
+ * - `?senha=1`: a porta de quem tem só e-mail e senha da loja. Lojista que se
+ *   cadastrou em /criar não tem conta no Auth, e sem esta porta ficaria preso
+ *   na tela de login de lá. "Esqueci a senha" e "Criar" apontam para cá.
  */
-export default async function EntrarPage({ searchParams }: { searchParams: Promise<{ sso?: string; google?: string }> }) {
+export default async function EntrarPage({ searchParams }: { searchParams: Promise<{ sso?: string; google?: string; senha?: string }> }) {
   const lojista = await lojistaAtual();
   if (lojista) redirect("/painel");
 
-  const { sso, google } = await searchParams;
+  const { sso, google, senha } = await searchParams;
   const recado = sso ? RECADOS_SSO[sso] : undefined;
   const loginUnico = configSSO() !== null;
   const comGoogle = googleConfigurado();
+  if (loginUnico && !sso && !google && senha !== "1") redirect(CAMINHO_RETORNO);
 
   return (
     <div className="pl-site-claro pl-auth-pagina">

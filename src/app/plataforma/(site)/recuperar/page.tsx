@@ -12,7 +12,7 @@ export default function RecuperarPage() {
         <h1>Recuperar senha</h1>
         <p>Informe o e-mail da loja. Enviamos um link válido por 1 hora.</p>
         <div className="mt-6"><RecuperarForm modo="pedir" /></div>
-        <p className="pl-auth-links"><Link href="/entrar">Voltar para o login</Link></p>
+        <p className="pl-auth-links"><Link href="/entrar?senha=1">Voltar para o login</Link></p>
       </div>
     </div>
   );
