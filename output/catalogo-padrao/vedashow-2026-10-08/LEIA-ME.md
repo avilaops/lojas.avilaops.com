@@ -60,8 +60,10 @@ Para refazer: `match.py` e `gera_patch.py` leem `veda.json` (export do catálogo
 - `vedashow-fotos-fabricante-{a,b}.json`: imagem oficial de fabricante (Schaeffler, SKF, NTN,
   Timken, NSK) em 93 produtos, aplicada como `representativa` (os próprios fabricantes dizem
   que a imagem é da série). `vedashow-fotos-diversos.json`: 7 fotos de item exato (Telhanorte).
-- **Pendente:** `imdepa-fotos-plano.json` lista 295 produtos sem imagem que batem por designação
-  com 214 páginas da Imdepa. O site só responde a navegador (verificação anti-robô para
-  servidor); as páginas foram lidas pelo Chrome do Nicolas, mas as URLs das fotos não chegaram
-  a ser trazidas para o servidor. A URL atual da foto está no HTML de `/p/<id>/x`
-  (`images.cws.digital/produtos/gg/…`), e o servidor baixa a imagem normalmente.
+- **Fotos da Imdepa (251 produtos):** `imdepa-fotos-plano.json` casa por designação os sem imagem
+  com 214 páginas da Imdepa; `imdepa-urls.json` tem a URL da foto de cada página em 08/10 (as
+  URLs trocam com o tempo). O site só responde a navegador, então as páginas foram lidas pelo
+  Chrome do Nicolas; as imagens foram copiadas para `/uploads`. 16 entraram como `propria`
+  (mesma marca e código) e 235 como `representativa`, com `imagemFamilia` igual ao código Imdepa.
+- **Marca "Diversas":** por decisão do Nicolas, os 3.335 produtos sem fabricante no cadastro
+  receberam a marca "Diversas".
