@@ -139,6 +139,33 @@ export default function DevelopersPage() {
           </ul>
         </Bloco>
 
+        <Bloco titulo="Webhooks">
+          <p className="mt-2 text-sm text-muted-foreground">
+            Em vez de consultar os pedidos de tempos em tempos, seu sistema é avisado. {api.webhooks.cadastro}
+          </p>
+          <ul className="mt-3 divide-y divide-border text-sm text-muted-foreground">
+            {Object.entries(api.webhooks.eventos).map(([tipo, descricao]) => (
+              <li key={tipo} className="py-1.5">
+                <code className="font-mono text-xs text-foreground">{tipo}</code> {descricao}
+              </li>
+            ))}
+          </ul>
+          <dl className="mt-4 grid gap-3 text-sm text-muted-foreground">
+            <div>
+              <dt className="font-bold text-foreground">Corpo</dt>
+              <dd><code className="font-mono text-xs">{api.webhooks.corpo}</code></dd>
+            </div>
+            <div>
+              <dt className="font-bold text-foreground">Assinatura</dt>
+              <dd>{api.webhooks.assinatura}</dd>
+            </div>
+            <div>
+              <dt className="font-bold text-foreground">Entrega</dt>
+              <dd>{api.webhooks.entrega}</dd>
+            </div>
+          </dl>
+        </Bloco>
+
         <Bloco titulo="Escopos">
           <ul className="mt-3 divide-y divide-border text-sm text-muted-foreground">
             {Object.entries(api.escopos).map(([escopo, descricao]) => (

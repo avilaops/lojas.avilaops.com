@@ -1,5 +1,6 @@
 import { ESCOPOS } from "./api-chaves";
 import { CODIGOS_DE_ERRO, POR_PAGINA_MAXIMO, POR_PAGINA_PADRAO } from "./api-resposta";
+import { ESPERAS_MIN, EVENTOS_DE_WEBHOOK, TENTATIVAS_MAXIMAS } from "./webhooks-api";
 
 /**
  * O índice da API para desenvolvedores: as rotas, o escopo de cada uma e como
@@ -33,5 +34,13 @@ export function indiceDaApi() {
     erros: CODIGOS_DE_ERRO,
     escopos: ESCOPOS,
     rotas: ROTAS,
+    webhooks: {
+      cadastro: "Painel da loja, em IA e API. Só https, em domínio público.",
+      eventos: EVENTOS_DE_WEBHOOK,
+      corpo: '{ "id", "tipo", "criadoEm", "dados": { "pedido": <o mesmo de GET /api/v1/pedidos/{id}> } }',
+      cabecalhos: ["x-lojas-evento", "x-lojas-entrega", "x-lojas-assinatura"],
+      assinatura: "x-lojas-assinatura: t=<segundos>,v1=<hmac>. O hmac é HMAC-SHA256, em hexadecimal, de `<t>.<corpo exato>` com o segredo do webhook. Recuse se t tiver mais de 5 minutos.",
+      entrega: `Pelo menos uma vez: o mesmo \`id\` pode chegar de novo, e é por ele que se reconhece a repetição. Responda 2xx em até 8 segundos. Sem 2xx, ${TENTATIVAS_MAXIMAS} tentativas ao todo, com esperas de ${ESPERAS_MIN.join(", ")} minutos. Redirecionamento não é seguido.`,
+    },
   };
 }

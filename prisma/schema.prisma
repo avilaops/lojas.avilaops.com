@@ -277,6 +277,7 @@ model Tenant {
   chavesApi      ChaveApi[]
   conexoesMcp    ConexaoMcp[]
   chamadasMcp    ChamadaMcp[]
+  webhooksApi    WebhookApi[]
 
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
@@ -1497,6 +1498,64 @@ model ChamadaMcp {
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
+  @@index([tenantId, criadaEm])
+}
+
+/// Webhook cadastrado pelo lojista: um endereço dele que a plataforma avisa
+/// quando um pedido muda. Regras em src/lib/webhooks-api.ts; ver docs/API.md.
+model WebhookApi {
+  id       String @id @default(cuid())
+  tenantId String
+  /// Rótulo do lojista: "ERP", "Planilha". Só para ele reconhecer.
+  nome     String
+  url      String
+  /// Cifrado (cofre.ts), e não em hash como as chaves: para assinar cada
+  /// entrega é preciso o valor. Mostrado ao lojista uma vez, na criação.
+  segredoEnc String
+  /// Tipos de `EVENTOS_DE_WEBHOOK`.
+  eventos  String[]
+
+  ativo           Boolean   @default(true)
+  /// Entregas ESGOTADAS em sequência (não tentativas). Zera na primeira que chega.
+  falhasSeguidas  Int       @default(0)
+  desligadoEm     DateTime?
+  desligadoMotivo String?
+  ultimaEntregaEm DateTime?
+  criadoEm        DateTime  @default(now())
+
+  tenant   Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  entregas EntregaWebhook[]
+
+  @@index([tenantId])
+}
+
+/// Uma entrega de um evento a um webhook. A fila é esta tabela.
+model EntregaWebhook {
+  id        String @id @default(cuid())
+  webhookId String
+  tenantId  String
+  /// O `eventId` do `AutomacaoEvento`: é o `id` que o receptor vê, e com o
+  /// `webhookId` forma a chave que impede o mesmo fato de entrar duas vezes.
+  eventId   String
+  tipo      String
+  /// O corpo exato que vai (e que é assinado), montado quando o evento ocorreu.
+  corpo     Json
+
+  /// PENDENTE | ENVIANDO | ENTREGUE | FALHOU
+  status        String    @default("PENDENTE")
+  tentativas    Int       @default(0)
+  proximaEm     DateTime  @default(now())
+  enviandoDesde DateTime?
+  ultimoStatus  Int?
+  ultimoErro    String?
+
+  criadaEm   DateTime  @default(now())
+  entregueEm DateTime?
+
+  webhook WebhookApi @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+
+  @@unique([webhookId, eventId])
+  @@index([status, proximaEm])
   @@index([tenantId, criadaEm])
 }
 

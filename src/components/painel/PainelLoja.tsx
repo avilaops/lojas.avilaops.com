@@ -17,6 +17,7 @@ import type { DiagnosticoFeed } from "@/lib/catalogo";
 import Anuncios, { type PixelsView } from "./Anuncios";
 import McpPainel from "./McpPainel";
 import ChavesApiPainel from "./ChavesApiPainel";
+import WebhooksPainel from "./WebhooksPainel";
 import CatalogoLista from "./CatalogoLista";
 import SoltarPlanilha from "./SoltarPlanilha";
 import { FileCheck2 } from "lucide-react";
@@ -487,6 +488,7 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
         <>
           <McpPainel lojaPlano={loja.plano} lojaSlug={loja.slug} aoIrParaAssinatura={() => irPara("Assinatura")} />
           <ChavesApiPainel />
+          <WebhooksPainel />
         </>
       )}
 
