@@ -3,7 +3,6 @@
 import Script from "next/script";
 import { useEffect } from "react";
 import { useConsentimento } from "@/lib/consentimento";
-import { configurarDestinos } from "@/lib/eventos-loja";
 import type { PixelsDaLoja } from "@/lib/pixels";
 
 
@@ -35,14 +34,6 @@ export default function Pixels({ p }: { p: PixelsDaLoja }) {
   }, [aceito]);
 
   const gtag = p.ga4Id || p.googleAdsId;
-
-  // Diz aos eventos de e-commerce por onde chegar ao Google: só pelo
-  // dataLayer do GTM quando não há gtag, pelo gtag quando há. Ver eventos-loja.
-  useEffect(() => {
-    configurarDestinos({ gtm: Boolean(p.gtmId), gtag: Boolean(gtag) });
-  }, [p.gtmId, gtag]);
-
-  const padraoConsentimento =
   // O `consent default` tem de ser o primeiro comando do dataLayer: o GTM e o
   // gtag.js processam a fila em ordem, e um `view_item` enfileirado antes dele
   // chegaria às tags sem o estado `denied`. Por isso ele vai no script em
