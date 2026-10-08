@@ -40,9 +40,12 @@ function preco(produto: Produto, vende: boolean) {
  */
 export default function TabelaTecnica({ produtos, vende, titulo, nomeDaLoja, loja }: { produtos: Produto[]; vende: boolean; titulo: string; nomeDaLoja: string; loja?: Tenant }) {
   const linhas = produtos.map((produto) => ({ produto, linha: linhaTecnica(produto) }));
-  const colunas = colunasVisiveis(linhas.map((l) => l.linha));
+  // Na listagem da loja, coluna que diz a mesma coisa em toda linha (a marca,
+  // quando a loja é o fabricante) só empurra o preço para fora da tela.
+  const marcas = new Set(linhas.map((l) => l.linha.marca ?? ""));
+  const colunas = colunasVisiveis(linhas.map((l) => l.linha)).filter((c) => !(loja && c === "marca" && marcas.size <= 1));
   return (
-    <div className="ct-rolagem" role="region" aria-label={titulo} tabIndex={0}>
+    <div className={`ct-rolagem${loja ? " ct-listagem" : ""}`} role="region" aria-label={titulo} tabIndex={0}>
       <table className="ct-tabela">
         <caption className="sr-only">{titulo} de {nomeDaLoja}</caption>
         <thead>
