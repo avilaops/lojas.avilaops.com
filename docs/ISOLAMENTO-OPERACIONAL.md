@@ -47,6 +47,7 @@ rejeita e quem chamou decide o que fazer; nenhuma chamada é repetida sozinha.
 | `packages/checkout/src/providers/mercadopago.ts` | Mercado Pago: consultar | 10 s |
 | `src/lib/mercadopago-assinatura.ts` | Mercado Pago: assinatura do plano | 20 s |
 | `src/lib/recebimento.ts` | Mercado Pago: conta do lojista | 10 s |
+| `src/lib/mercado-pago-conta.ts` | Mercado Pago: conectar e renovar o acesso (OAuth) | 20 s |
 | `src/lib/mercadolivre.ts` | Mercado Livre | 20 s (token), 30 s (`chamarMl`), 15 s (demais chamadas) |
 | `src/lib/canal-shopee.ts` | Shopee | 20 s (token), 15 s (API) |
 | `src/lib/canal-amazon.ts` | Amazon | 20 s (token), 15 s (API) |

@@ -8,6 +8,7 @@ import { resumoDeVendas, type ResumoVendas } from "@/lib/relatorio";
 import { diagnosticoDoFeed, type DiagnosticoFeed } from "@/lib/catalogo";
 import { filaDeEspera } from "@/lib/estoque-avisos";
 import { postagemAAcertar } from "@/lib/postagem";
+import { aplicativoConfigurado as mercadoPagoDisponivel, conectadoPorOAuth } from "@/lib/mercado-pago-conta";
 import type { SecaoPainel } from "@/components/painel/PainelLoja";
 
 /**
@@ -112,6 +113,7 @@ export async function dadosDoPainel(secao: SecaoPainel) {
       // A conexão em si (conta, data) é lida do tenant pela página, como no
       // Melhor Envio; aqui vai só o que muda o formulário das chaves.
       mpPorOAuth: conectadoPorOAuth(loja),
+      mpOAuthDisponivel: mercadoPagoDisponivel(),
       emailRemetente: loja.emailRemetente,
       provisionamento: (loja.provisionamento as Record<string, string>) ?? {},
       pixels: { gtmId: loja.gtmId, metaPixelId: loja.metaPixelId, ga4Id: loja.ga4Id, googleAdsId: loja.googleAdsId, googleAdsRotuloCompra: loja.googleAdsRotuloCompra, tiktokPixelId: loja.tiktokPixelId, googleMerchantId: loja.googleMerchantId, googleSeloAvaliacoes: loja.googleSeloAvaliacoes },
