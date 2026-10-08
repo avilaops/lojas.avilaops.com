@@ -25,6 +25,7 @@ export const ROTAS = [
   { metodo: "GET", caminho: "/api/v1/vitrine/produtos", escopo: "vitrine:ler", descricao: "Produtos ativos, como a vitrine mostra. Filtros: busca, categoria, destaque, ordem." },
   { metodo: "GET", caminho: "/api/v1/vitrine/produtos/{id}", escopo: "vitrine:ler", descricao: "Um produto ativo (id ou slug) com a descrição e as variações. O id de cada variação é o que vai no carrinho." },
   { metodo: "POST", caminho: "/api/v1/vitrine/frete", escopo: "vitrine:ler", descricao: "Opções de entrega para um CEP e um carrinho, com a retirada na loja quando há. O id da opção vai em freteId na compra." },
+  { metodo: "POST", caminho: "/api/v1/vitrine/cupom", escopo: "vitrine:comprar", descricao: "Confere um cupom para um carrinho e devolve o desconto. Uma recusa só (cupom_invalido), e erro conta num limite próprio. Com cep, cupom de frete grátis devolve as entregas já com ele." },
   { metodo: "POST", caminho: "/api/v1/vitrine/checkout", escopo: "vitrine:comprar", descricao: "Fecha a compra: cria o pedido e a cobrança e devolve o Pix, o boleto ou o resultado do cartão. O preço sai do servidor. Aceita Idempotency-Key." },
   { metodo: "GET", caminho: "/api/v1/vitrine/pedidos/{referencia}", escopo: "vitrine:comprar", descricao: "Andamento do pedido pela referência devolvida na compra, para a tela do Pix saber que foi pago. Sem dado pessoal." },
 ] as const;
@@ -40,8 +41,8 @@ export function indiceDaApi() {
     rotas: ROTAS,
     compra: {
       quem: "Chave publicável com o escopo vitrine:comprar, marcado pelo lojista no painel, e os sites autorizados.",
-      corpo: '{ "itens": [{ "id", "quantidade" }], "cliente": { "nome", "sobrenome", "email", "telefone", "documento" }, "entrega": { "cep", "logradouro", "numero", "complemento"?, "bairro", "cidade", "uf" } | null, "freteId", "meioPagamento": "pix" | "cartao" | "boleto", "cartao"?: { "token", "parcelas"?, "bandeira"? }, "totalCentavos"? }',
-      regras: "O preço e o frete saem do servidor. Campo desconhecido é erro. A referência do pedido vem na resposta. Envie Idempotency-Key para repetir sem cobrar de novo. O token do cartão é gerado no navegador com a chave pública do Mercado Pago que vem em /vitrine/loja.",
+      corpo: '{ "itens": [{ "id", "quantidade" }], "cliente": { "nome", "sobrenome", "email", "telefone", "documento" }, "entrega": { "cep", "logradouro", "numero", "complemento"?, "bairro", "cidade", "uf" } | null, "freteId", "meioPagamento": "pix" | "cartao" | "boleto", "cartao"?: { "token", "parcelas"?, "bandeira"? }, "cupom"?, "totalCentavos"? }',
+      regras: "O preço e o frete saem do servidor. Campo desconhecido é erro. Cupom que não vale recusa a compra (cupom_invalido), não cobra sem desconto. A referência do pedido vem na resposta. Envie Idempotency-Key para repetir sem cobrar de novo. O token do cartão é gerado no navegador com a chave pública do Mercado Pago que vem em /vitrine/loja.",
     },
     webhooks: {
       cadastro: "Painel da loja, em IA e API. Só https, em domínio público.",

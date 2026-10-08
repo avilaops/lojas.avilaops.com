@@ -22,17 +22,29 @@ const MAXIMO_DE_CHAVES = 10_000;
 export class LimitadorPorJanela {
   private contagens = new Map<string, { inicio: number; usadas: number }>();
 
-  constructor(private agora: () => number = Date.now) {}
+  constructor(
+    private agora: () => number = Date.now,
+    /** Um minuto é o contrato dos cabeçalhos `RateLimit-*`; janela maior é para contar erro, não requisição. */
+    private janelaMs: number = JANELA_MS,
+  ) {}
+
+  /** O limite já foi atingido? Não consome: é para contar só o que deu errado depois. */
+  esgotado(chave: string, limite: number): { esgotado: boolean; reiniciaEm: number } {
+    const agora = this.agora();
+    const atual = this.contagens.get(chave);
+    if (!atual || agora - atual.inicio >= this.janelaMs) return { esgotado: false, reiniciaEm: 0 };
+    return { esgotado: atual.usadas >= limite, reiniciaEm: Math.max(1, Math.ceil((atual.inicio + this.janelaMs - agora) / 1000)) };
+  }
 
   consumir(chave: string, limite: number): ResultadoLimite {
     const agora = this.agora();
     let atual = this.contagens.get(chave);
-    if (!atual || agora - atual.inicio >= JANELA_MS) {
+    if (!atual || agora - atual.inicio >= this.janelaMs) {
       if (this.contagens.size >= MAXIMO_DE_CHAVES) this.varrer(agora);
       atual = { inicio: agora, usadas: 0 };
       this.contagens.set(chave, atual);
     }
-    const reiniciaEm = Math.max(1, Math.ceil((atual.inicio + JANELA_MS - agora) / 1000));
+    const reiniciaEm = Math.max(1, Math.ceil((atual.inicio + this.janelaMs - agora) / 1000));
     if (atual.usadas >= limite) return { permitido: false, limite, restante: 0, reiniciaEm };
     atual.usadas += 1;
     return { permitido: true, limite, restante: limite - atual.usadas, reiniciaEm };
@@ -40,7 +52,7 @@ export class LimitadorPorJanela {
 
   /** Esquece janelas vencidas; sem isto, chave que parou de chamar ficaria para sempre. */
   private varrer(agora: number) {
-    for (const [k, v] of this.contagens) if (agora - v.inicio >= JANELA_MS) this.contagens.delete(k);
+    for (const [k, v] of this.contagens) if (agora - v.inicio >= this.janelaMs) this.contagens.delete(k);
   }
 }
 

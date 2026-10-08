@@ -140,7 +140,7 @@ export function rotaDaApi<P = Record<string, never>>(opcoes: OpcoesDaRota, fazer
           cabecalhos["Access-Control-Allow-Origin"] = origem;
           cabecalhos["Vary"] = "Origin";
         }
-        const porEndereco = limitador.consumir(`${chave.id}:${opcoes.escopo}:${enderecoDaRequisicao(request)}`, opcoes.escrita.porEnderecoPorMinuto);
+        const porEndereco = limitador.consumir(`${chave.id}:${new URL(request.url).pathname}:${enderecoDaRequisicao(request)}`, opcoes.escrita.porEnderecoPorMinuto);
         if (!porEndereco.permitido) {
           throw new ErroApi("limite_excedido", `Limite de ${porEndereco.limite} por minuto para esta operação.`, { "Retry-After": String(porEndereco.reiniciaEm) });
         }

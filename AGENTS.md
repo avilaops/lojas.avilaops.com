@@ -131,7 +131,9 @@ Este repositório pertence à Ávila Ops Tecnologia, que ajuda pequenas empresas
   chave publicável é `vitrine:ler` e, só quando o lojista marcou,
   `vitrine:comprar` (com a lista de sites em `ChaveApi.origens`): rota que
   escreve por chave pública declara `escrita` em `rotaDaApi`, que confere a
-  origem e limita por endereço. O que sai é projeção explícita de
+  origem e limita por endereço. Cupom por chave pública tem uma recusa só
+  (`cupom_invalido`) e o erro conta (`src/lib/api-cupom.ts`): não devolva o
+  motivo. O que sai é projeção explícita de
   `api-recursos.ts`, nunca `...produto`. Chave guardada só como sha256.
   `/v1` sem `/api` é outro contrato (`gapp.ts`). Rota nova entra em `ROTAS`
   (`src/lib/api-indice.ts`) no mesmo commit: é de lá que saem `GET /api/v1` e a

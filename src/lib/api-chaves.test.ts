@@ -80,6 +80,21 @@ test("limitador conta por chave e reabre a janela depois de um minuto", () => {
   assert.equal(l.consumir("a", 2).permitido, true);
 });
 
+test("limitador com janela própria: consultar não gasta, e só o que foi consumido conta", () => {
+  let agora = 0;
+  const l = new LimitadorPorJanela(() => agora, 600_000);
+  assert.equal(l.esgotado("a", 2).esgotado, false, "sem uso, nada a barrar");
+  l.consumir("a", 2);
+  assert.equal(l.esgotado("a", 2).esgotado, false);
+  assert.equal(l.esgotado("a", 2).esgotado, false, "perguntar não consome");
+  l.consumir("a", 2);
+  assert.deepEqual(l.esgotado("a", 2), { esgotado: true, reiniciaEm: 600 });
+  agora = 60_000;
+  assert.equal(l.esgotado("a", 2).esgotado, true, "um minuto não reabre janela de dez");
+  agora = 600_000;
+  assert.equal(l.esgotado("a", 2).esgotado, false);
+});
+
 test("paginação: padrão, máximo e erro em vez de correção silenciosa", () => {
   assert.deepEqual(lerPaginacao(new URLSearchParams()), { pagina: 1, porPagina: 50, pular: 0 });
   assert.deepEqual(lerPaginacao(new URLSearchParams("pagina=3&porPagina=20")), { pagina: 3, porPagina: 20, pular: 40 });

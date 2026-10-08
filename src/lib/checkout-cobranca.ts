@@ -103,6 +103,9 @@ export function paraPayload(c: CorpoValidado): PayloadCheckout {
   };
 }
 
+export const CUPOM_INVALIDO = "cupom_invalido";
+export const MENSAGEM_CUPOM_INVALIDO = "Cupom inválido ou que não se aplica a este pedido.";
+
 export type ResultadoDaCobranca =
   | { tipo: "ok"; referencia: string; pagamento: ResultadoPagamento }
   /** O pedido não pode ser feito como veio. Nada foi reservado nem cobrado. */
@@ -115,7 +118,19 @@ export type ResultadoDaCobranca =
 export interface OpcoesDaCobranca {
   provider: PaymentProvider;
   compradorId?: string | null;
+  /**
+   * Cupom que não vale recusa o pedido, em vez de cobrar sem desconto.
+   *
+   * A vitrine confere o cupom antes, na tela, e manda `totalExibido`: ali o
+   * cupom que deixou de valer aparece como total divergente. Quem compra pela
+   * API pode não ter conferido nada, e cobrar o preço cheio de quem mandou um
+   * cupom é cobrar valor que a pessoa não aceitou.
+   */
+  cupomEstrito?: boolean;
 }
+
+/** O cupom veio e não vale. Um motivo só para fora: qual deles é o que um estranho usaria para adivinhar cupom. */
+class CupomRecusado extends Error {}
 
 /** Lê o corpo cru. `null` no lugar do corpo dá o mesmo erro de corpo inválido. */
 export function lerCorpoDoCheckout(bruto: unknown): { corpo: CorpoValidado } | { tipo: "invalido"; status: 422; codigo: "corpo_invalido"; mensagem: string } {
@@ -147,7 +162,9 @@ export async function criarCobranca(t: Tenant, corpo: CorpoValidado, opcoes: Opc
       const subtotal = itens.reduce((s, i) => s + i.precoUnitario * i.quantidade, 0);
       cupomResolvido = await buscarCupomValido(t.id, codigoCupom, subtotal);
     }
-    return "cupom" in cupomResolvido ? cupomResolvido.cupom : null;
+    if ("cupom" in cupomResolvido) return cupomResolvido.cupom;
+    if (opcoes.cupomEstrito) throw new CupomRecusado();
+    return null;
   }
 
   const catalogo: ResolucaoCatalogo = {
@@ -171,6 +188,7 @@ export async function criarCobranca(t: Tenant, corpo: CorpoValidado, opcoes: Opc
     montado = await montarPedidoSeguro(payload, catalogo);
     await reservarEstoque(t.id, referencia, montado.pedido.itens);
   } catch (erro) {
+    if (erro instanceof CupomRecusado) return { tipo: "invalido", status: 422, codigo: CUPOM_INVALIDO, mensagem: MENSAGEM_CUPOM_INVALIDO };
     if (erro instanceof PedidoInvalidoError) return { tipo: "invalido", status: 422, codigo: erro.codigo, mensagem: erro.message };
     if (erro instanceof ErroCatalogo) return { tipo: "invalido", status: erro.status, codigo: "catalogo", mensagem: erro.message };
     throw erro;

@@ -7,6 +7,7 @@ import { referenciaDaCompra } from "../../src/lib/api-checkout";
 import { cifrar } from "../../src/lib/cofre";
 import { salvarGradeNoCatalogo, salvarProdutoNoCatalogo } from "../../src/lib/catalogo-escrita";
 import { resolverItensPadronizados } from "../../src/lib/catalogo-resolver";
+import { POST as postCupom } from "../../src/app/api/v1/vitrine/cupom/route";
 import { POST as postCheckout } from "../../src/app/api/v1/vitrine/checkout/route";
 import { POST as postFrete } from "../../src/app/api/v1/vitrine/frete/route";
 import { GET as getPedido } from "../../src/app/api/v1/vitrine/pedidos/[referencia]/route";
@@ -158,7 +159,6 @@ test("preço, total e campo desconhecido no corpo não mudam o que é cobrado", 
     compra(p.id, { preco: 1 }),
     compra(p.id, { itens: [{ id: p.id, quantidade: 1, precoUnitario: 1 }] }),
     compra(p.id, { referencia: "eu-escolho-a-referencia-0001" }),
-    compra(p.id, { cupom: "DESCONTO100" }),
   ]) {
     const r = await comprar(k, adulterado);
     assert.equal(r.status, 400, JSON.stringify(adulterado));
@@ -310,4 +310,112 @@ test("frete, produto com variações e loja dão ao front o que ele precisa para
   assert.deepEqual(dadosDaLoja.pagamento, { meios: ["pix", "cartao", "boleto"], mercadoPagoPublicKey: "TEST-public-key" });
   assert.equal(dadosDaLoja.retiradaNaLoja, true);
   assert.equal(JSON.stringify(dadosDaLoja).includes("TEST-token"), false);
+});
+
+// ── Cupom ───────────────────────────────────────────────────────────────
+const cupom = (tenantId: string, codigo: string, extras: Record<string, unknown> = {}) =>
+  prisma.cupom.create({ data: { tenantId, codigo, tipo: "PERCENTUAL", valor: 10, ...extras } });
+const conferir = (k: string, corpo: unknown, opcoes: { origem?: string | null; endereco?: string } = {}) =>
+  chamar(postCupom, "POST", "/api/v1/vitrine/cupom", k, { ...opcoes, corpo });
+
+test("cupom: a rota mostra o desconto e a compra cobra com ele", async (t) => {
+  limpar(t);
+  const l = await loja();
+  const k = await chave(l.id);
+  const p = await produto(l.id);
+  await cupom(l.id, "BEMVINDO10");
+
+  // Código como a pessoa digita: minúsculo e com espaço.
+  const visto = await conferir(k, { codigo: " bemvindo10 ", itens: [{ id: p.id, quantidade: 2 }] });
+  assert.equal(visto.status, 200, JSON.stringify(visto.corpo));
+  assert.deepEqual(visto.corpo.dados, { codigo: "BEMVINDO10", tipo: "PERCENTUAL", descontoCentavos: 998 });
+
+  const r = await comprar(k, compra(p.id, { itens: [{ id: p.id, quantidade: 2 }], cupom: "BEMVINDO10", totalCentavos: 8982 }));
+  assert.equal(r.status, 200, JSON.stringify(r.corpo));
+  assert.equal((r.corpo.dados as Record<string, unknown>).valorCentavos, 8982);
+  assert.deepEqual(cobrancasNoGateway.map((x) => x.valor), [8982]);
+  const pedido = await prisma.pedido.findUniqueOrThrow({ where: { referencia: String((r.corpo.dados as Record<string, unknown>).referencia) } });
+  assert.equal(pedido.cupomCodigo, "BEMVINDO10");
+  assert.equal(pedido.totalCentavos, 8982);
+});
+
+test("cupom: não existir, estar inativo, vencido, esgotado ou abaixo do mínimo dão a mesma resposta", async (t) => {
+  limpar(t);
+  const l = await loja();
+  const outra = await loja();
+  const k = await chave(l.id);
+  const p = await produto(l.id);
+  await cupom(l.id, "INATIVO", { ativo: false });
+  await cupom(l.id, "VENCIDO", { validoAte: new Date(Date.now() - 86_400_000) });
+  await cupom(l.id, "ESGOTADO", { usosMax: 1, usos: 1 });
+  await cupom(l.id, "MINIMO", { minimoCentavos: 1_000_000 });
+  // Cupom válido, mas de outra loja: a chave não o enxerga.
+  await cupom(outra.id, "DAOUTRA");
+
+  const respostas = new Set<string>();
+  for (const codigo of ["NAOEXISTE", "INATIVO", "VENCIDO", "ESGOTADO", "MINIMO", "DAOUTRA"]) {
+    const r = await conferir(k, { codigo, itens: [{ id: p.id, quantidade: 1 }] });
+    assert.equal(r.status, 422, codigo);
+    respostas.add(JSON.stringify(r.corpo.erro));
+  }
+  assert.equal(respostas.size, 1, [...respostas].join(" | "));
+  assert.deepEqual(JSON.parse([...respostas][0]), { codigo: "pedido_invalido", mensagem: "Cupom inválido ou que não se aplica a este pedido.", detalhe: "cupom_invalido" });
+
+  // Na compra, cupom que não vale recusa o pedido: não cobra o preço cheio, não segura estoque.
+  const recusada = await comprar(k, compra(p.id, { cupom: "VENCIDO" }));
+  assert.equal(recusada.status, 422);
+  assert.equal(recusada.corpo.erro?.detalhe, "cupom_invalido");
+  assert.equal(cobrancasNoGateway.length, 0);
+  assert.equal(await prisma.reservaEstoque.count({ where: { tenantId: l.id } }), 0);
+  assert.equal(await prisma.pedido.count({ where: { tenantId: l.id } }), 0);
+});
+
+test("cupom: quem erra demais para de receber resposta, até para o cupom certo; acertar não gasta", async (t) => {
+  limpar(t);
+  const l = await loja();
+  const k = await chave(l.id);
+  const p = await produto(l.id);
+  await cupom(l.id, "CERTO10");
+  const itens = [{ id: p.id, quantidade: 1 }];
+  const adivinhador = "10.200.0.1";
+  const cliente = "10.200.0.2";
+
+  // Acertar várias vezes não esgota nada.
+  for (let i = 0; i < 7; i++) assert.equal((await conferir(k, { codigo: "CERTO10", itens }, { endereco: cliente })).status, 200);
+
+  // A compra com cupom errado conta junto com a rota de cupom.
+  assert.equal((await comprar(k, compra(p.id, { cupom: "CHUTE0" }), { endereco: adivinhador })).status, 422);
+  for (let i = 1; i < 5; i++) assert.equal((await conferir(k, { codigo: `CHUTE${i}`, itens }, { endereco: adivinhador })).status, 422);
+  const barrado = await conferir(k, { codigo: "CERTO10", itens }, { endereco: adivinhador });
+  assert.equal(barrado.status, 429);
+  assert.equal(barrado.corpo.erro?.codigo, "limite_excedido");
+  assert.ok(Number(barrado.cabecalhos.get("retry-after")) > 60, "a janela do erro de cupom é de dez minutos");
+  const compraBarrada = await comprar(k, compra(p.id, { cupom: "CERTO10" }), { endereco: adivinhador });
+  assert.equal(compraBarrada.status, 429);
+  // Sem cupom, o mesmo endereço ainda compra: o limite é do cupom, não da loja.
+  assert.equal((await comprar(k, compra(p.id), { endereco: adivinhador })).status, 200);
+  // E outro endereço segue usando o cupom.
+  assert.equal((await conferir(k, { codigo: "CERTO10", itens }, { endereco: cliente })).status, 200);
+});
+
+test("cupom: só chave que vende, do site autorizado; frete grátis devolve as entregas", async (t) => {
+  limpar(t);
+  const l = await loja();
+  const k = await chave(l.id);
+  const soVitrine = await chave(l.id, { compra: false });
+  const p = await produto(l.id);
+  await cupom(l.id, "FRETEZERO", { tipo: "FRETE_GRATIS", valor: 0 });
+  const itens = [{ id: p.id, quantidade: 1 }];
+
+  assert.equal((await conferir(soVitrine, { codigo: "FRETEZERO", itens })).corpo.erro?.codigo, "escopo_insuficiente");
+  assert.equal((await conferir(k, { codigo: "FRETEZERO", itens }, { origem: "https://site-de-outro.example" })).corpo.erro?.codigo, "origem_nao_permitida");
+  assert.equal((await conferir(k, { codigo: "FRETEZERO", itens, desconto: 100 })).status, 400);
+
+  const semCep = await conferir(k, { codigo: "FRETEZERO", itens });
+  assert.deepEqual(semCep.corpo.dados, { codigo: "FRETEZERO", tipo: "FRETE_GRATIS", descontoCentavos: 0 });
+  const comCep = await conferir(k, { codigo: "FRETEZERO", itens, cep: "14010000" });
+  assert.equal(comCep.status, 200, JSON.stringify(comCep.corpo));
+  const fretes = (comCep.corpo.dados as Record<string, unknown>).fretes as Array<Record<string, unknown>>;
+  assert.ok(fretes.some((f) => f.id === "retirada-na-loja"));
+  assert.ok(fretes.every((f) => Number.isInteger(f.precoCentavos)));
 });
