@@ -220,7 +220,18 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="pt-BR" data-ck-theme={tema.modo === "escuro" ? "dark" : "light"} data-template={contrato.atributoHtml ? contrato.layout : undefined} data-modo={tema.modo} suppressHydrationWarning={contrato.atributoHtml}>
       <head>
-        {fonte && <link rel="stylesheet" href={fonte} />}
+        {/* A folha da fonte não segura a primeira pintura: o texto sai na fonte
+            do sistema e troca quando ela chega (`display=swap` já está na URL).
+            Como `<link rel="stylesheet">` no head, o PageSpeed media 1,5 s de
+            bloqueio no celular. Sem JavaScript vale o `<noscript>`. */}
+        {fonte && (
+          <>
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+            <link rel="preload" as="style" href={fonte} />
+            <script dangerouslySetInnerHTML={{ __html: `(function(){var l=document.createElement("link");l.rel="stylesheet";l.href=${JSON.stringify(fonte)};document.head.appendChild(l)})()` }} />
+            <noscript><link rel="stylesheet" href={fonte} /></noscript>
+          </>
+        )}
         <style dangerouslySetInnerHTML={{ __html: `${cssDoTema(tema)}:root{--brand-support:${identidade.corApoio}}` }} />
         {contrato.atributoHtml && <script dangerouslySetInnerHTML={{ __html: `try{var m=localStorage.getItem(${JSON.stringify(`loja:${t.slug}:modo`).replace(/</g,"\\u003c")});if(m==='claro'||m==='escuro'){document.documentElement.dataset.modo=m;document.documentElement.dataset.ckTheme=m==='escuro'?'dark':'light'}}catch(e){}` }}/ >}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />

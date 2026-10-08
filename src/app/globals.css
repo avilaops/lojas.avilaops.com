@@ -1292,7 +1292,10 @@ body:has(.whatsapp-flutuante) .rodape-loja { padding-bottom: calc(5.5rem + env(s
 .home-industrial h2 { font-size: clamp(1.45rem, 2.4vw, 1.9rem); font-weight: 700; letter-spacing: -.01em; line-height: 1.2; }
 
 .industrial-topo { position: relative; isolation: isolate; overflow: hidden; background: var(--ind-escuro); color: #fff; }
-.industrial-topo-foto { position: absolute; inset: 0 0 0 auto; z-index: -1; width: min(62%, 60rem); height: 100%; object-fit: cover; object-position: 70% center; -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 55%); mask-image: linear-gradient(90deg, transparent 0%, #000 55%); }
+.industrial-topo-foto { display: none; }
+@media (min-width: 761px) {
+  .industrial-topo-foto { display: block; position: absolute; inset: 0 0 0 auto; z-index: -1; width: min(62%, 60rem); background: var(--industrial-foto) 70% center / cover no-repeat; -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 55%); mask-image: linear-gradient(90deg, transparent 0%, #000 55%); }
+}
 .industrial-topo-conteudo { padding-block: clamp(2.5rem, 7vw, 5.5rem); }
 .industrial-topo-conteudo > * { max-width: 44rem; }
 .industrial-topo-marca { color: var(--ind-apoio); font-size: .95rem; font-weight: 600; }
@@ -1309,7 +1312,7 @@ body:has(.whatsapp-flutuante) .rodape-loja { padding-bottom: calc(5.5rem + env(s
 .industrial-medida-entrada input { width: 100%; min-width: 0; height: 3rem; padding-inline: .75rem .25rem; border: 0; background: transparent; font-size: 1.15rem; font-weight: 600; font-variant-numeric: tabular-nums; outline: none; }
 .industrial-medida-entrada input::placeholder { color: color-mix(in srgb, var(--foreground) 32%, transparent); font-weight: 500; }
 .industrial-medida-entrada abbr { padding-right: .7rem; color: var(--muted-foreground); font-size: .8rem; font-weight: 500; text-decoration: none; }
-.industrial-medida-botao { grid-column: 1 / -1; height: 3rem; border-radius: .6rem; background: var(--ind-apoio); color: #fff; font-size: 1rem; font-weight: 700; transition: filter .15s; }
+.industrial-medida-botao { grid-column: 1 / -1; height: 3rem; border-radius: .6rem; background: var(--ind-apoio); color: var(--ind-escuro); font-size: 1rem; font-weight: 700; transition: filter .15s; }
 .industrial-medida-botao:hover { filter: brightness(1.08); }
 .industrial-medida-botao:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
 .industrial-medida-ajuda { margin-top: .6rem; color: var(--muted-foreground); font-size: .8rem; line-height: 1.4; }
@@ -1340,7 +1343,7 @@ body:has(.whatsapp-flutuante) .rodape-loja { padding-bottom: calc(5.5rem + env(s
 .industrial-empresa aside { padding: 1.75rem; border-radius: 1rem; background: var(--ind-escuro); color: #fff; }
 .industrial-empresa aside h3 { font-size: 1.25rem; font-weight: 700; }
 .industrial-empresa aside p { margin-top: .5rem; color: rgba(255,255,255,.8); font-size: .95rem; line-height: 1.5; }
-.industrial-contato-botao { display: flex; align-items: center; justify-content: center; min-height: 3rem; margin-top: 1.25rem; padding-inline: 1rem; border-radius: .6rem; background: var(--ind-apoio); color: #fff; font-weight: 700; text-align: center; }
+.industrial-contato-botao { display: flex; align-items: center; justify-content: center; min-height: 3rem; margin-top: 1.25rem; padding-inline: 1rem; border-radius: .6rem; background: var(--ind-apoio); color: var(--ind-escuro); font-weight: 700; text-align: center; }
 .industrial-contato-botao:hover { filter: brightness(1.08); }
 .industrial-contato-botao:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
 .industrial-empresa aside ul { margin-top: 1.25rem; display: grid; gap: .6rem; font-size: .95rem; }
@@ -1349,7 +1352,6 @@ body:has(.whatsapp-flutuante) .rodape-loja { padding-bottom: calc(5.5rem + env(s
 .industrial-empresa aside li a { font-weight: 600; }
 
 @media (max-width: 760px) {
-  .industrial-topo-foto { inset: auto 0 0 0; width: 100%; height: 46%; opacity: .5; -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 70%); mask-image: linear-gradient(180deg, transparent 0%, #000 70%); }
   .industrial-medida-campos { gap: .5rem; }
   .industrial-medida label { font-size: .72rem; }
   .industrial-medida-entrada input { height: 2.85rem; padding-left: .55rem; font-size: 1.05rem; }

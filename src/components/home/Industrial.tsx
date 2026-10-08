@@ -5,6 +5,11 @@ import { paragrafosDaDescricao } from "@/lib/descricao-produto";
 import BuscaPorMedida from "./BuscaPorMedida";
 import type { DadosHome } from "./tipos";
 
+/** Imagem enviada à plataforma sai na largura pedida (`?w=`); as de fora ficam como estão. */
+function reduzida(url: string, largura: 480 | 1200): string {
+  return /\/uploads\//.test(url) && !/\.svg$/i.test(url) && !url.includes("?") ? `${url}?w=${largura}` : url;
+}
+
 /**
  * Home de fabricante que vende peça técnica por medida.
  *
@@ -26,8 +31,9 @@ export default function Industrial({ t, categorias, vitrine, temDestaques, vende
   return (
     <main className="home-industrial">
       <section className="industrial-topo" aria-labelledby="industrial-titulo">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        {foto && <img className="industrial-topo-foto" src={foto} alt="" width={1536} height={1024} fetchPriority="high" />}
+        {/* Fundo por CSS, e só em tela larga: no celular a foto ficava atrás do
+            formulário, a meia opacidade, e custava o maior download da página. */}
+        {foto && <div className="industrial-topo-foto" aria-hidden="true" style={{ "--industrial-foto": `url("${reduzida(foto, 1200)}")` } as React.CSSProperties} />}
         <div className="container-loja industrial-topo-conteudo">
           <p className="industrial-topo-marca">{t.nome}</p>
           <h1 id="industrial-titulo">{titulo}</h1>
@@ -47,7 +53,7 @@ export default function Industrial({ t, categorias, vitrine, temDestaques, vende
               <li key={c.id}>
                 <Link href={`/categoria/${c.slug}`}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  {c.imagemUrl && <img src={c.imagemUrl} alt="" loading="lazy" decoding="async" width={320} height={320} />}
+                  {c.imagemUrl && <img src={reduzida(c.imagemUrl, 480)} alt="" loading="lazy" decoding="async" width={320} height={320} />}
                   <span className="industrial-linha-texto">
                     <strong>{c.nome}</strong>
                     {c.descricao && <span>{paragrafosDaDescricao(c.descricao)[0]}</span>}
