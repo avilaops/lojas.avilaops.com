@@ -137,14 +137,20 @@ Este repositório pertence à Ávila Ops Tecnologia, que ajuda pequenas empresas
   `CREATE OR REPLACE FUNCTION` troca o corpo inteiro sem avisar. Migração que
   mexe em `produto_texto_de_busca()` parte do corpo em vigor, não de uma versão
   antiga. Ver `docs/BUSCA-REGRESSAO.md`.
-- **Versão antiga mora no GitHub, não no servidor.** O deploy é
-  `deploy/deploy.sh`: ele guarda `app.anterior` só enquanto roda, para o
-  rollback automático, e apaga a cópia quando a nova passa. Não copie `app`,
-  `standalone.tgz` nem pastas de build para `/opt/lojas/rollback`,
-  `releases` ou `backups` "por segurança": a raiz do servidor tem 38 GB e
-  chegou a 97% em 28/09/2026 com essas cópias. Voltar versão é republicar o
-  commit. Antes de mexer em dado, faça dump do banco; é o único backup que o
-  GitHub não substitui.
+- **Versão antiga mora no GitHub, não no servidor.** O deploy é o
+  `avila-deploy` do repositório `avilaops/infra`, chamado pelo job `deploy`
+  com a imagem construída aqui: migra antes de trocar o container, confere
+  `/api/health` e volta sozinho para a imagem anterior se a saúde falhar. O
+  `deploy/deploy.sh` deste repositório é legado (parado no servidor desde
+  28/09/2026). Não copie `app`, `standalone.tgz` nem pastas de build para
+  `/opt/lojas/rollback`, `releases` ou `backups` "por segurança": a raiz do
+  servidor tem 38 GB e chegou a 97% em 28/09/2026 com essas cópias. Voltar
+  versão é republicar o commit. Ver `docs/BACKUP-E-ROLLBACK.md`.
+- **Rollback troca a imagem, não desfaz migração.** Migração só acrescenta
+  (tabela, coluna nula, índice); remover coluna vai em deploy separado, depois
+  de o código que a usava ter saído. Antes de migração que mexe em dado
+  existente, faça dump do banco: é o único backup que o GitHub não substitui, e
+  o dump automático antes da migração ainda não está instalado no servidor.
 - **Evento de e-commerce vai por onde a loja mede.** Loja com só o GTM colado
   recebe `view_item`, `add_to_cart`, `begin_checkout` e `purchase` no
   `dataLayer` como `{ event, ecommerce }` (`cargaGtm` em
