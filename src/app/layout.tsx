@@ -14,7 +14,7 @@ import { noEnderecoOficial, tenantAtual, tenantPublico, temaDo, urlDaLoja, ender
 import { descricaoDaLoja } from "@/lib/textos-loja";
 import { listarCategorias } from "@/lib/catalogo";
 import { cssDoTema } from "@/lib/tema";
-import { familiaHospedada } from "@/lib/fontes-loja";
+import { familiaHospedada, preCargasDaFonte } from "@/lib/fontes-loja";
 import { contratoDo, usaBlocoProprio } from "@/lib/templates";
 import { CartProvider } from "@/components/cart/CartProvider";
 import Header from "@/components/Header";
@@ -220,6 +220,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="pt-BR" data-ck-theme={tema.modo === "escuro" ? "dark" : "light"} data-template={contrato.atributoHtml ? contrato.layout : undefined} data-modo={tema.modo} suppressHydrationWarning={contrato.atributoHtml}>
       <head>
+        {preCargasDaFonte(tema.fonte).map((href) => <link key={href} rel="preload" as="font" type="font/woff2" href={href} crossOrigin="anonymous" />)}
         <style dangerouslySetInnerHTML={{ __html: `${cssDoTema(tema, familiaHospedada(tema.fonte))}:root{--brand-support:${identidade.corApoio}}` }} />
         {contrato.atributoHtml && <script dangerouslySetInnerHTML={{ __html: `try{var m=localStorage.getItem(${JSON.stringify(`loja:${t.slug}:modo`).replace(/</g,"\\u003c")});if(m==='claro'||m==='escuro'){document.documentElement.dataset.modo=m;document.documentElement.dataset.ckTheme=m==='escuro'?'dark':'light'}}catch(e){}` }}/ >}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
