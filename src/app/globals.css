@@ -81,8 +81,12 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
    nome industrial de relance. Nas outras páginas a tira segue sendo o único
    caminho por departamento, então continua. */
 body:has(.atalhos-cat) .nav-loja { display: none; }
-.nav-loja a { position: relative; }
-.nav-loja a::after { content: ""; position: absolute; right: 0; bottom: -10px; left: 0; height: 2px; background: var(--primary); transform: scaleX(0); transition: transform .2s; }
+/* A altura da tira é a dos links, não um padding da caixa: assim o sublinhado
+   cabe dentro dela e a caixa não tem o que rolar na vertical. Antes, o
+   `bottom: -10px` do sublinhado criava 12px de sobra vertical numa caixa com
+   `overflow: auto`, e o iOS deixava a tira deslizar para cima. */
+.nav-loja a { position: relative; display: inline-flex; align-items: center; min-height: 44px; white-space: nowrap; }
+.nav-loja a::after { content: ""; position: absolute; right: 0; bottom: 0; left: 0; height: 2px; background: var(--primary); transform: scaleX(0); transition: transform .2s; }
 .nav-loja a:hover::after { transform: scaleX(1); }
 
 /* Os campos secundários somem atrás de um botão só no celular, onde eles
@@ -980,7 +984,7 @@ body:has(.home-automotivo) .rodape-loja { margin-top: 1rem; }
    Ela aparecia no computador logo abaixo dos nomes e parecia parte do desenho,
    quando é só o navegador dizendo que há mais conteúdo. O desvanecimento na
    borda direita já diz isso melhor. */
-.nav-loja-tira { scrollbar-width: none; -ms-overflow-style: none; }
+.nav-loja-tira { overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: none; -ms-overflow-style: none; }
 .nav-loja-tira::-webkit-scrollbar { display: none; }
 
 /* ── Farmácia e drogaria (layout "farmacia" e segmento "farmacia") ─────────
