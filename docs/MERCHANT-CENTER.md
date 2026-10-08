@@ -18,6 +18,19 @@ conta do Google de cada loja. Nada aqui é por loja em código: sai de colunas d
 | Frete grátis | `shippingDetails` e `g:shipping`, só quando o produto sozinho passa do `freteGratisAcima` (`src/lib/envio-declarado.ts`) |
 | Avaliações do Consumidor | convite no pedido pago e selo opcional (`src/lib/avaliacoes-google.ts`) |
 
+## Quem entra no feed
+
+- **Só loja que vende.** `/feed/merchant.xml` sai vazio enquanto `lojaVende` for
+  falso (plano Site, loja não ativa ou sem pagamento conectado). O Merchant exige
+  que o produto seja comprado na página de destino; catálogo com pedido por
+  telefone ou WhatsApp não é oferta do Shopping.
+- **Foto própria, com duas exceções do Google.** Imagem `representativa` ou
+  ilustrada bloqueia a oferta (`foto_representativa`), menos quando a prateleira
+  Google do produto fica em **Ferragens (632)** ou **Veículos e peças (888)**:
+  a especificação de `image_link` aceita ilustração nesses dois ramos, e ali a
+  ocorrência vira aviso (`categoriaAceitaIlustracao` em
+  `src/lib/google-product-taxonomy.ts`). Fora deles continua erro.
+
 ## O que se faz na conta, uma vez por loja
 
 1. **Fonte de dados**: cadastrar `https://<domínio>/feed/merchant.xml`. Sem isso o

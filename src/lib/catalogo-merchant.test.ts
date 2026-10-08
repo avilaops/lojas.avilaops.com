@@ -69,3 +69,17 @@ test("volume cadastrado vira preço por litro; sem volume não sai nada", () => 
   Object.assign(p, { atributos: { volumeMl: "abc" } });
   assert.doesNotMatch(gerarFeedMerchant(loja, "https://brilhax.com", [p]), /unit_pricing/);
 });
+
+test("ilustração de família só entra no feed nos ramos em que o Google a aceita", () => {
+  const gerar = (googleProductCategory: string) => {
+    const p = produto("confirmada");
+    const midia = (p.midias as unknown as Array<Record<string, unknown>>)[0];
+    Object.assign(midia, { origem: "representativa", familia: "Gaxeta PU - Tipo B" });
+    Object.assign(p, { googleProductCategory, categoria: null, categoriaId: null });
+    return gerarFeedMerchant({ nome: "PK Vedações", slogan: null }, "https://pkvedacoes.com.br", [p]);
+  };
+  // 6732: Ferragens > Encanamento > Juntas e conexões > Anéis de vedação.
+  assert.match(gerar("6732"), /<item>.*<g:google_product_category>6732</);
+  // 111 (Comercial e industrial) fica fora da exceção e continua exigindo foto.
+  assert.doesNotMatch(gerar("111"), /<item>/);
+});

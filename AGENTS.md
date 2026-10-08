@@ -153,6 +153,11 @@ Este repositório pertence à Ávila Ops Tecnologia, que ajuda pequenas empresas
   declarado: ausência não é confirmação (`scripts/lib/dossie-regras.mjs`). O que vai ao Merchant é o que a
   página mostra: descrição curta + longa e a ficha visível como
   `product_detail` (`catalogo-merchant.ts`); nada inventado nem de chave interna.
+- **O feed do Merchant segue a regra do Google, não a conveniência.** Loja que
+  não vende (`lojaVende` falso) publica feed vazio. Ilustração ou foto de série
+  só entra quando a prateleira Google é de Ferragens (632) ou Veículos e peças
+  (888), as duas exceções da especificação de `image_link`; não amplie essa
+  lista sem a regra do Google escrita. Ver `docs/MERCHANT-CENTER.md`.
 - **Recebimento tem dois caminhos e nenhum estado misto.** A loja conecta a
   conta do Mercado Pago por OAuth (`src/lib/mercado-pago-conta.ts`) ou cola as
   chaves da própria aplicação; quem diz qual é `Tenant.mpRefreshTokenEnc`.

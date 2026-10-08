@@ -2,7 +2,7 @@ import type { Prisma } from "@prisma/client";
 import { gtinValido, INCLUIR_OFERTA, ofertaDaVariante } from "./catalogo-oferta";
 import { marcaConfirmada } from "./marca-confirmada";
 import { categoriaGoogle, categoriaGoogleProduto } from "./categoria-google";
-import { idDaCategoriaGoogle } from "./google-product-taxonomy";
+import { categoriaAceitaIlustracao, idDaCategoriaGoogle } from "./google-product-taxonomy";
 
 export const INCLUIR_CATALOGO = { categoria: true, midias: { orderBy: { ordem: "asc" as const } }, variantes: { include: { ...INCLUIR_OFERTA, publicacoes: true }, orderBy: { ordem: "asc" as const } } } satisfies Prisma.ProdutoInclude;
 export type ProdutoCatalogo = Prisma.ProdutoGetPayload<{ include: typeof INCLUIR_CATALOGO }>;
@@ -46,7 +46,9 @@ export function diagnosticarProduto(p: ProdutoCatalogo, prateleira: (nome: strin
     const midias=midiasDaOferta(p,v.id);
     if(!midias.length) add("foto_ausente","imagens","erro","google","Esta apresentação não tem foto.","Envie uma foto do item exato.",v.id);
     else {
-      if(midias[0].origem!=="propria") add("foto_representativa","imagens","erro","google","A imagem principal é representativa ou ilustrada.","Escolha uma foto fiel à apresentação vendida.",v.id);
+      // Ilustração só bloqueia fora dos ramos em que o Google a aceita
+      // (Ferragens e Veículos e peças); neles a pendência fica como aviso.
+      if(midias[0].origem!=="propria") add("foto_representativa","imagens",categoriaAceitaIlustracao(googleCategoriaManual ?? googleCategoriaAutomatica)?"aviso":"erro","google","A imagem principal é representativa ou ilustrada.","Escolha uma foto fiel à apresentação vendida.",v.id);
       // A conferência por SKU é recomendada, mas não é um atributo exigido pelo
       // Merchant. Mantê-la como aviso preserva ofertas com fotografia própria
       // enquanto deixa a pendência visível para revisão. Ausência de foto ou
