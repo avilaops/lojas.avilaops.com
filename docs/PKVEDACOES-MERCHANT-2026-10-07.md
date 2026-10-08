@@ -261,3 +261,19 @@ mínimo de pedido repetido no serviço de frete da conta.
 - **Sem canal de pedido.** `Tenant.whatsapp` está vazio, então a ficha mostra
   preço e nenhum botão de pedido; o visitante só tem o telefone e o e-mail da
   página de contato. Falta o número de WhatsApp da PK.
+- **Ficha cadastral da PK (08/10).** Plano **Loja Pro** (R$ 497/mês, cobrado
+  fora da plataforma: `cobrancaIsenta = true`, como as outras lojas de
+  cliente), WhatsApp, CNPJ, razão social, endereço público e CEP de origem
+  `07756-590`. A ficha passou a ter o botão de pedido pelo WhatsApp.
+- **Fotos reais.** O site institucional da própria PK
+  (`parkitsvedacoes.com.br`) tem duas fotos de produto: raspadores e gaxetas.
+  A de raspadores virou a imagem principal dos 109 raspadores (a ilustração
+  ficou em segundo); a de gaxetas entrou como segunda imagem das 562 gaxetas,
+  porque mostra vários perfis juntos. Continuam `representativa`: são da
+  família, não do SKU. A imagem de "guia" desse site está corrompida, então
+  os 132 anéis guia seguem só com a ilustração. Foto de concorrente não foi
+  usada: é de outro fabricante e o Merchant exige imagem do item vendido.
+- **Mercado Pago por OAuth.** O código já existe (`docs/MERCADO-PAGO-OAUTH.md`),
+  mas o servidor está sem `MP_APP_ID`, `MP_APP_SECRET` e
+  `MP_APP_WEBHOOK_SECRET`; sem as três o botão "Conectar Mercado Pago" não
+  aparece no painel da PK.
