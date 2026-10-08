@@ -277,3 +277,20 @@ mínimo de pedido repetido no serviço de frete da conta.
   mas o servidor está sem `MP_APP_ID`, `MP_APP_SECRET` e
   `MP_APP_WEBHOOK_SECRET`; sem as três o botão "Conectar Mercado Pago" não
   aparece no painel da PK.
+- **Vitrine de loja (08/10).** Layout `distribuidora` no lugar do catálogo
+  técnico, com a identidade do novo site da PK
+  (`parkitsvedacoes.com.br/new_site`): Poppins, azul `#014b88`, texto
+  `#242a56`, apoio `#ff6600`, banner com a foto e a chamada do site
+  (`banner-pk-desktop-v2.webp`, 2880×720, e `banner-pk-celular-v2.webp`),
+  slogan "Soluções em vedação industrial", texto do Sobre vindo do site da PK
+  e imagem em cada categoria. Destaques da home: os dois produtos de maior
+  quantidade no Inventário de cada família. O pedido mínimo saiu do topo e
+  da ficha: aparece no carrinho e na política de envio.
+- **Peso.** Os 803 produtos têm `pesoKg` calculado pela geometria
+  (π/4 · (DE² − DI²) · altura) e pela densidade do material (PU 1,20 g/cm³,
+  nylon com fibra 1,35 g/cm³), arredondado para cima; é teto, não pesagem.
+  Sem isso o frete seria cotado com 1 kg por item.
+- **Frete.** `/api/frete` só devolve "Retirar na loja": a cotação é pelo
+  Melhor Envio conectado por loja, e o servidor está sem
+  `MELHOR_ENVIO_CLIENT_ID` e `MELHOR_ENVIO_CLIENT_SECRET`. Vale para todas as
+  lojas. Alternativa sem aplicativo: `Tenant.tabelaFrete` por UF.
