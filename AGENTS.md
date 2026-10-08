@@ -38,6 +38,12 @@ Este repositório pertence à Ávila Ops Tecnologia, que ajuda pequenas empresas
 - **Dinheiro em centavos, inteiro.** Ver `packages/checkout/src/core/types.ts`.
 - **Preço nunca vem do navegador.** Toda rota que cobra passa por
   `montarPedidoSeguro` com `resolverItensDoCatalogo`.
+- **Quem cobra é `criarCobranca`** (`src/lib/checkout-cobranca.ts`), com o
+  gateway por parâmetro: validar, montar pelo catálogo, reservar, cobrar,
+  registrar. Rota nova que vende chama essa função, não reescreve a sequência.
+  Recusa com resposta do gateway (`CobrancaRecusada`) solta a reserva; só
+  tempo-limite é "incerto", e quem resolve o incerto é a rotina
+  `reservas.reconciliar`. Ver `docs/ISOLAMENTO-OPERACIONAL.md`.
 - **Tokens de gateway só cifrados** (`src/lib/cofre.ts`). Nunca logar, nunca
   devolver em resposta de API.
 - **Ramo da loja é dado, não código.** `Tenant.segmento` liga blocos de vitrine:
