@@ -123,5 +123,11 @@ Este repositório pertence à Ávila Ops Tecnologia, que ajuda pequenas empresas
   chegou a 97% em 28/09/2026 com essas cópias. Voltar versão é republicar o
   commit. Antes de mexer em dado, faça dump do banco; é o único backup que o
   GitHub não substitui.
+- **A entrada do painel é o Auth.** Com `SSO_APP_ID` configurado, `/entrar`
+  manda direto ao login único (auth.avilaops.com), como o ERP; quem entra no
+  Lojas se libera na conta do Auth. A página só aparece com recado do Auth
+  (`?sso=`), falha do Google ou `?senha=1`, que é a porta de quem tem só e-mail
+  e senha da loja (cadastro por `/criar`). Não tire essa porta enquanto o
+  cadastro de loja não criar a conta no Auth.
 - **Português nos nomes e comentários**, como no resto do monorepo.
 - **TypeScript estrito**; `npm run typecheck` antes de entregar.

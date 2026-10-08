@@ -20,7 +20,7 @@ export default function RecuperarForm({ modo, token = "" }: { modo: "pedir" | "t
       const d = await r.json();
       if (!r.ok) throw new Error(d?.erro ?? "Falha.");
       if (modo === "pedir") setMsg(d.mensagem ?? "Enviado.");
-      else { setMsg("Senha alterada. Entrando…"); setTimeout(() => router.push("/entrar"), 1200); }
+      else { setMsg("Senha alterada. Entrando…"); setTimeout(() => router.push("/entrar?senha=1"), 1200); }
     } catch (x) {
       setErro(x instanceof Error ? x.message : "Falha.");
     } finally {
