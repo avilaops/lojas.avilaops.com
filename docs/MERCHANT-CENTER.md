@@ -16,7 +16,7 @@ conta do Google de cada loja. Nada aqui é por loja em código: sai de colunas d
 | Imagem grande na busca | `max-image-preview:large` em toda página indexável (`src/app/layout.tsx`) |
 | Política de devolução | `MerchantReturnPolicy` na loja, lida de `regrasDevolucao` (`src/lib/politicas.ts`) |
 | Frete grátis | `shippingDetails` e `g:shipping`, só quando o produto sozinho passa do `freteGratisAcima` (`src/lib/envio-declarado.ts`) |
-| Pedido mínimo | `Tenant.pedidoMinimoCentavos` (painel, aba Entrega): aparece na ficha do produto, no carrinho (com o que falta e o botão travado), no texto padrão de `/politicas/envio` e no `llms.txt`; o `/api/checkout` recusa abaixo dele (`avaliarPedidoMinimo` em `packages/checkout/src/core/pedido-minimo.ts`). Conta o subtotal de produtos, sem frete e antes do cupom |
+| Pedido mínimo | `Tenant.pedidoMinimoCentavos` (painel, aba Entrega): não aparece na vitrine nem na ficha (espanta quem ainda está olhando); aparece no carrinho (com o que falta e o botão travado), no texto padrão de `/politicas/envio` e no `llms.txt`; o `/api/checkout` recusa abaixo dele (`avaliarPedidoMinimo` em `packages/checkout/src/core/pedido-minimo.ts`). Conta o subtotal de produtos, sem frete e antes do cupom |
 | Avaliações do Consumidor | convite no pedido pago e selo opcional (`src/lib/avaliacoes-google.ts`) |
 
 ## Quem entra no feed

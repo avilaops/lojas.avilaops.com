@@ -31,7 +31,6 @@ import { paragrafosDaDescricao } from "@/lib/descricao-produto";
 import { marcaConfirmada } from "@/lib/marca-confirmada";
 import { envioSchema } from "@/lib/envio-declarado";
 import { usaBlocoProprio } from "@/lib/templates";
-import { avaliarPedidoMinimo } from "@avilaops/checkout";
 
 const MEIOS: Record<string, string> = { pix: "Pix", cartao: "Cartão", boleto: "Boleto" };
 
@@ -72,8 +71,6 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
   if(varianteId&&!ofertas.some(v=>v.id===varianteId))notFound();
   if(escolhida)Object.assign(p,{precoCentavos:escolhida.precoCentavos,precoDeCentavos:escolhida.precoDeCentavos,estoque:escolhida.estoque,sku:escolhida.sku,gtin:escolhida.gtin,disponibilidade:escolhida.disponibilidade,imagens:midiasDaOferta(p,escolhida.id).map(m=>m.url)});
   const vende = lojaVende(t);
-  // Zero ou dado inválido não vira "pedido mínimo de R$ 0,00" na página.
-  const pedidoMinimo = avaliarPedidoMinimo(0, t.pedidoMinimoCentavos).minimo;
   // Preço zero é "ainda não precificado", não "de graça": item de referência
   // vindo do ERP entra no catálogo para ser encontrado, e o preço vem por
   // consulta. Ver ProductCard, que aplica a mesma regra na vitrine.
@@ -285,7 +282,6 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
               ? "Despacho no mesmo dia útil para pagamentos confirmados durante o expediente"
               : `Envio em até ${t.despachoDiasUteis} ${t.despachoDiasUteis === 1 ? "dia útil" : "dias úteis"} após o pagamento`}</li>
             {t.freteGratisAcima != null && <li>✔ Frete grátis acima de {formatarBRL(t.freteGratisAcima)}</li>}
-            {pedidoMinimo != null && <li>Pedido mínimo de {formatarBRL(pedidoMinimo)} em produtos</li>}
             {codigoPublico(p.sku) && <li className="text-xs">{rotuloDoCodigo(p.sku, p.gtin)} {codigoPublico(p.sku)}</li>}
           </ul>
           <nav className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm" aria-label="Entrega, trocas e atendimento">
