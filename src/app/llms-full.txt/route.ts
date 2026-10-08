@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { identidadeDa, tenantAtual, urlDaLoja } from "@/lib/tenant";
 import { listarCategorias, listarProdutos } from "@/lib/catalogo";
 import { emEstoque, publicavel } from "@/lib/produto-regras";
+import { descricaoDaLoja } from "@/lib/textos-loja";
 import { LAYOUTS } from "@/lib/tema";
 import { PLANOS, mensalidade } from "@/lib/planos";
 
@@ -75,13 +76,22 @@ Avila Ops: https://avilaops.com
   const linhasCategorias = categorias.length
     ? categorias.map((c) => `- [${c.nome}](${base}/categoria/${c.slug})${c.seoDescription ?? c.descricao ? `: ${c.seoDescription ?? c.descricao}` : ""}`).join("\n")
     : "- Nenhuma categoria publicada.";
+  // Só o que o lojista preencheu: "Público: Não informado" é confissão de
+  // cadastro incompleto publicada para todo assistente que ler o arquivo.
+  const linhasIdentidade = [
+    ["Segmento", identidade.segmento === "outro" ? "" : identidade.segmento],
+    ["Personalidade", identidade.personalidade.join(", ")],
+    ["Tom de voz", identidade.tomDeVoz],
+    ["Público", identidade.publico],
+    ["Direção fotográfica", identidade.direcaoFotografica],
+  ].filter(([, valor]) => valor).map(([rotulo, valor]) => `- ${rotulo}: ${valor}`).join("\n");
   const linhasProdutos = produtos.length
     ? produtos.map((p) => `- [${p.nome}](${base}/produtos/${p.slug}): ${p.precoCentavos > 0 ? `R$ ${(p.precoCentavos / 100).toFixed(2).replace(".", ",")}` : "preço sob consulta"}${!emEstoque(p) ? " (esgotado)" : ""}${p.marca ? ` · ${p.marca}` : ""}`).join("\n")
     : "- Nenhum produto publicado.";
 
   return resposta(`# ${t.nome}
 
-> ${t.slogan ?? `Loja virtual ${t.nome}`}
+> ${descricaoDaLoja(t, identidade.diferencial)}
 
 ## Sobre
 
@@ -89,11 +99,7 @@ ${t.sobre || identidade.diferencial || "Catálogo e canais de atendimento da loj
 
 ## Identidade da marca
 
-- Segmento: ${identidade.segmento}
-- Personalidade: ${identidade.personalidade.join(", ")}
-- Tom de voz: ${identidade.tomDeVoz}
-- Público: ${identidade.publico || "Não informado"}
-- Direção fotográfica: ${identidade.direcaoFotografica || "Não informada"}
+${linhasIdentidade}
 
 ## Categorias
 

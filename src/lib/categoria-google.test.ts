@@ -171,3 +171,20 @@ test("estética automotiva: o nome do item refina a etapa do serviço", () => {
   const casa = prateleirasDaLoja(["Aromatizantes", "Velas"]);
   assert.equal(categoriaGoogleProduto("Aromatizante de ambiente lavanda", "Aromatizantes", casa), undefined);
 });
+
+/** As cinco categorias da PK Vedações, como o lojista as nomeou. */
+const PK_VEDACOES = ["Gaxeta PU - Tipo B", "Gaxeta PU - Tipo STD", "Gaxeta PU - Tipo BS", "Raspador PU - Tipo D", "Anel guia"];
+
+test("família industrial com material e tipo no nome recebe a prateleira industrial", () => {
+  const prateleira = prateleirasDaLoja(PK_VEDACOES);
+  for (const nome of PK_VEDACOES) assert.equal(prateleira(nome), 111, `sem prateleira: ${nome}`);
+  assert.equal(categoriaGoogleProduto("Gaxeta PU - Tipo B 100 × 114 × 12 mm", "Gaxeta PU - Tipo B", prateleira), 111);
+  assert.equal(prateleirasDaLoja(["Retentores industriais", "Rolamentos"])("Retentores industriais"), 111);
+});
+
+test("o qualificador precisa ser do ramo: gaxeta de geladeira não é vedação hidráulica", () => {
+  assert.equal(prateleirasDaLoja(["Gaxetas de geladeira", "Peças de fogão"])("Gaxetas de geladeira"), undefined);
+  assert.equal(prateleirasDaLoja(PK_VEDACOES)("Gaxeta de geladeira"), undefined);
+  // Nome exato continua valendo como antes.
+  assert.equal(prateleirasDaLoja(["Retentores", "Rolamentos"])("Retentores"), 111);
+});

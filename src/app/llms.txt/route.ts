@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import { tenantAtual, urlDaLoja, identidadeDa, enderecoCompleto, lojaVende, prazoDeDespacho, retiradaPublicaDisponivel } from "@/lib/tenant";
 import { listarCategorias, listarProdutos, formatarBRL } from "@/lib/catalogo";
+import { descricaoDaLoja } from "@/lib/textos-loja";
 
 /**
  * llms.txt da LOJA — o mapa que assistentes de IA (ChatGPT, Perplexity, Gemini)
@@ -69,7 +70,9 @@ políticas dela. Este arquivo descreve a plataforma, não uma loja.
   const linhas = [
     `# ${t.nome}`,
     "",
-    `> ${t.slogan ?? identidade.diferencial ?? `Loja virtual ${t.nome}`}`,
+    // `??` deixava passar diferencial em branco: a PK Vedações publicava "> "
+    // vazio. A mesma frase da meta description, pela mesma regra.
+    `> ${descricaoDaLoja(t, identidade.diferencial)}`,
     "",
     "## Sobre",
     t.sobre ? t.sobre.split(/\n{2,}/)[0] : identidade.diferencial || `${t.nome} vende pela internet.`,

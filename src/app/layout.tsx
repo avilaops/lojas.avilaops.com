@@ -10,6 +10,7 @@ import "./globals.css";
 import "@avilaops/checkout/tokens.css";
 import "@avilaops/checkout/checkout.css";
 import { noEnderecoOficial, tenantAtual, tenantPublico, temaDo, urlDaLoja, enderecoDo, formatarCep, identidadeDa } from "@/lib/tenant";
+import { descricaoDaLoja } from "@/lib/textos-loja";
 import { listarCategorias } from "@/lib/catalogo";
 import { cssDoTema, fonteGoogleHref } from "@/lib/tema";
 import { contratoDo, usaBlocoProprio } from "@/lib/templates";
@@ -97,7 +98,8 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase: new URL(urlDaLoja(t)),
     ...iconesDa(t.faviconUrl, t.nome),
     title: { default: t.slogan ? `${t.nome} | ${t.slogan}` : t.nome, template: `%s · ${t.nome}` },
-    description: t.slogan ?? `Loja virtual ${t.nome}`,
+    // Slogan, diferencial ou o primeiro parágrafo do "Sobre": ver textos-loja.
+    description: descricaoDaLoja(t, identidadeDa(t).diferencial),
     /**
      * Quem não pode ser indexado:
      *   - loja fora do ar (provisionando, suspensa, cancelada);

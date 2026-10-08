@@ -38,6 +38,39 @@ export function paraGa4(itens: ItemEvento[]) {
 }
 
 /**
+ * Para onde os eventos vão, dito pelo componente `Pixels` ao montar.
+ *
+ * `gtag('event', …)` empurra um objeto `arguments` para o `dataLayer`, e o Tag
+ * Manager não transforma isso em gatilho: a tag do GA4 dentro do container lê
+ * `{ event, ecommerce }`. Loja que só colou o GTM (a PK Vedações, em
+ * 07/10/2026) tinha view_item, add_to_cart e purchase disparando para
+ * ninguém. Quando o gtag está configurado (GA4 ou Google Ads direto), o GA4
+ * já recebe por ele, e mandar também pelo dataLayer contaria a venda duas
+ * vezes num container que tenha a tag do GA4.
+ */
+let destinos = { gtm: false, gtag: false };
+export function configurarDestinos(d: { gtm: boolean; gtag: boolean }) {
+  destinos = d;
+}
+
+type ExtraEvento = { valor?: number; transacao?: string; frete?: number };
+
+/** O mesmo evento no formato que o Tag Manager lê: `event` + `ecommerce`. */
+export function cargaGtm(nome: string, itens: ItemEvento[], extra: ExtraEvento = {}) {
+  const valor = extra.valor ?? itens.reduce((s, i) => s + i.precoCentavos * (i.quantidade ?? 1), 0);
+  return {
+    event: nome,
+    ecommerce: {
+      currency: "BRL",
+      value: reais(valor),
+      items: paraGa4(itens),
+      ...(extra.transacao ? { transaction_id: extra.transacao } : {}),
+      ...(extra.frete != null ? { shipping: reais(extra.frete) } : {}),
+    },
+  };
+}
+
+function disparar(nomes: { ga4: string; meta: string; tiktok: string }, itens: ItemEvento[], extra: ExtraEvento = {}) {
  * O que vai para o Tag Manager.
  *
  * `gtag('event', …)` empurra um objeto `arguments` no dataLayer, que só o
@@ -71,6 +104,20 @@ function disparar(nomes: { ga4: string; meta: string; tiktok: string }, itens: I
   const valor = extra.valor ?? itens.reduce((s, i) => s + i.precoCentavos * (i.quantidade ?? 1), 0);
 
   try {
+    if (destinos.gtm && !destinos.gtag) {
+      w.dataLayer = w.dataLayer ?? [];
+      // Limpar o `ecommerce` anterior é o que o Google recomenda, para a tag
+      // não reaproveitar os itens do evento passado.
+      w.dataLayer.push({ ecommerce: null });
+      w.dataLayer.push(cargaGtm(nomes.ga4, itens, extra));
+    }
+    w.gtag?.("event", nomes.ga4, {
+      currency: "BRL",
+      value: reais(valor),
+      items: paraGa4(itens),
+      ...(extra.transacao ? { transaction_id: extra.transacao } : {}),
+      ...(extra.frete != null ? { shipping: reais(extra.frete) } : {}),
+    });
     // Um caminho só para o Google. Com GTM, o evento vai como objeto no
     // dataLayer e o contêiner decide o que fazer com ele; chamar `gtag('event')`
     // junto faria o mesmo gatilho disparar duas vezes. Sem GTM, o gtag.js do
