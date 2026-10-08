@@ -1,7 +1,7 @@
 # Validação dos templates
 
 Rotina que abre a prévia do painel (`/painel/previa?t=…`) para cada template e
-mede, em vez de olhar e achar. São **96 casos**: 12 layouts × 2 viewports × 2
+mede, em vez de olhar e achar. São **104 casos**: 13 layouts × 2 viewports × 2
 modos × 2 preferências de movimento.
 
 | Eixo | Valores |
@@ -133,7 +133,7 @@ FALHOU  mercado.movel.escuro.reduzido
           · 14 elemento(s) com transição com movimento reduzido
 ```
 
-No fim, a contagem (`96 casos · 95 passaram · 1 falharam`) e o caminho do
+No fim, a contagem (`104 casos · 103 passaram · 1 falharam`) e o caminho do
 resultado completo, `.work/engineer/validacao-templates.json` (fora do git):
 para cada caso, as falhas, a medida inteira e até seis exemplos de elemento com
 transição. Código de saída `0` quando todos os casos rodados passam, `1` quando

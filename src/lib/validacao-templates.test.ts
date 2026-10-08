@@ -37,9 +37,9 @@ test("viewports são o celular de referência e o desktop comum", () => {
   assert.deepEqual(VIEWPORTS.desktop, { width: 1280, height: 800 });
 });
 
-test("a matriz tem 96 casos de id único, 8 por layout", () => {
-  assert.equal(casos.length, 96);
-  assert.equal(new Set(casos.map((c) => c.id)).size, 96);
+test("a matriz tem 104 casos de id único, 8 por layout", () => {
+  assert.equal(casos.length, 104);
+  assert.equal(new Set(casos.map((c) => c.id)).size, 104);
   for (const layout of VALORES_LAYOUT) {
     assert.equal(casos.filter((c) => c.layout === layout).length, 8, layout);
   }
@@ -68,10 +68,10 @@ test("o Automotivo Premium parte do tema preenchido e troca só o modo", () => {
 });
 
 test("sem o tema premium a matriz continua inteira", () => {
-  assert.equal(casosDeValidacao().length, 96);
+  assert.equal(casosDeValidacao().length, 104);
 });
 
-test("medida limpa passa nos 96 casos", () => {
+test("medida limpa passa nos 104 casos", () => {
   for (const caso of casos) assert.deepEqual(avaliarMedida(caso, limpa(caso)), [], caso.id);
 });
 

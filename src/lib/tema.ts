@@ -21,7 +21,16 @@ export const TemaSchema = z.object({
    * (banner, categorias, destaques, sobre) — o lojista escolhe uma, não
    * desenha. É o limite entre "personalizar" e "customizar".
    */
-  layout: z.enum(["spotlight", "mercado", "catalogo-tecnico", "distribuidora", "automotivo", "automotivo-premium", "farmacia", "conversao", "classico", "vitrine", "editorial", "minimal"]).default("classico"),
+  layout: z.enum(["spotlight", "mercado", "catalogo-tecnico", "distribuidora", "industrial", "automotivo", "automotivo-premium", "farmacia", "conversao", "classico", "vitrine", "editorial", "minimal"]).default("classico"),
+  /**
+   * Campos da home `industrial` (fabricante que vende por medida). A foto do
+   * topo e os diferenciais são da loja; o resto da página sai do catálogo e
+   * do cadastro (categorias, destaques, sobre, contato).
+   */
+  industrial: z.object({
+    heroImagem: z.string().max(1000).regex(/^(https:\/\/|\/(?!\/))[^<>"\\]*$/).optional(),
+    diferenciais: z.array(z.object({ titulo: z.string().trim().min(2).max(60), texto: z.string().trim().min(2).max(220) })).max(6).optional(),
+  }).optional(),
   premium: z.object({
     heroTitulo: z.string().max(120).optional(),
     heroTexto: z.string().max(300).optional(),
@@ -71,6 +80,7 @@ export const LAYOUTS: Array<{ valor: TemaLoja["layout"]; rotulo: string; descric
   { valor: "spotlight", rotulo: "Spotlight", descricao: "Hero de alto impacto, produto principal e navegação visual. Ideal para performance e marca." },
   { valor: "mercado", rotulo: "Mercado", descricao: "Catálogo denso, departamentos e mais produtos por tela. Ideal para distribuidoras." },
   { valor: "catalogo-tecnico", rotulo: "Catálogo Técnico", descricao: "Tabela de peças no lugar da grade de fotos: código, código original, equivalentes, medidas e aplicação. Para peças, rolamentos e ferragens, onde se compra pelo código e pela medida." },
+  { valor: "industrial", rotulo: "Indústria", descricao: "Abre pela busca por medida, apresenta as linhas de produto com a especificação e fecha com diferenciais e contato comercial. Para fabricante e peça técnica." },
   { valor: "distribuidora", rotulo: "Distribuidora", descricao: "Vitrine de campanhas em imagem, navegação por categoria e produtos em destaque. Para lojas que anunciam com artes próprias." },
   { valor: "farmacia", rotulo: "Farmácia", descricao: "Abre pela busca da substância e pelo que a pessoa está sentindo, não pela vitrine. Departamentos de drogaria, selo de receita no card e o farmacêutico responsável à vista. Para farmácia e drogaria." },
   { valor: "automotivo", rotulo: "Automotivo", descricao: "Mostra o catálogo na ordem do serviço: lavar, corrigir, proteger. Para estética automotiva, acessórios e oficina, onde a ordem de aplicação é o que o cliente não sabe." },

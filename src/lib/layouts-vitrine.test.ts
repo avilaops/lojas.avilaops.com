@@ -15,6 +15,7 @@ import { MCP_TOOLS } from "./mcp-tools";
 const FORA_DA_LANDING: Record<string, string> = {
   "automotivo-premium": "é a loja inteira, não uma home; miniatura de home não o representa",
   "catalogo-tecnico": "tabela de peças não cabe numa miniatura de home; quem quer ver como fica abre a prévia do painel (/painel/previa)",
+  industrial: "a home é a busca por medida sobre a foto da fábrica e as linhas com a descrição de cada categoria: sem os dados da loja a miniatura seria um formulário vazio",
   farmacia: "ainda sem composição própria: a home abre por busca e por atalhos que saem do catálogo da loja, e uma miniatura genérica inventaria uma drogaria",
 };
 

@@ -9,6 +9,7 @@ import Conversao from "./Conversao";
 import Distribuidora from "./Distribuidora";
 import Editorial from "./Editorial";
 import Farmacia from "./Farmacia";
+import Industrial from "./Industrial";
 import Mercado from "./Mercado";
 import Minimal from "./Minimal";
 import Spotlight from "./Spotlight";
@@ -28,6 +29,7 @@ const HOMES: Record<TemaLoja["layout"], ComponentType<DadosHome>> = {
   mercado: Mercado,
   "catalogo-tecnico": CatalogoTecnico,
   distribuidora: Distribuidora,
+  industrial: Industrial,
   automotivo: Automotivo,
   farmacia: Farmacia,
   conversao: Conversao,

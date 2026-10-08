@@ -21,7 +21,7 @@ const ROTULOS_COMPACTOS: Record<string, string> = {
 };
 
 export default function ProductCard({ produto, loja, vende, whatsapp, moto = null, ocultarSeloDestaque = false, compacto = false, alternarImagem = true }: { produto: Produto; loja: Tenant; vende: boolean; whatsapp: string | null; moto?: Moto | null; ocultarSeloDestaque?: boolean; compacto?: boolean; alternarImagem?: boolean }) {
-  const tecnico = temaDo(loja).layout === "distribuidora";
+  const tecnico = ["distribuidora", "industrial"].includes(temaDo(loja).layout);
   const serve = moto != null && encaixe(produto.compatibilidade, moto) === "serve";
   const modelos = lerCompatibilidade(produto.compatibilidade);
   const imagem = produto.imagens[0];
