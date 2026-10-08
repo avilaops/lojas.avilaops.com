@@ -37,6 +37,13 @@ test("página de fotos em marketplace basta para barrar, mesmo com fonte de fabr
   assert.equal(fotoPodeSerPropria(item), false);
 });
 
+test("ausência de fotoExata não é confirmação: sem `true`, a foto não é própria", () => {
+  // Os 95 itens do dossiê da Brilhax saíram sem o campo; a execução padrão
+  // gravava como própria a foto de varejista de apresentação não conferida.
+  assert.equal(fotoPodeSerPropria({ fontes: [{ tipo: "distribuidor", url: "https://www.v-onestore.com.br/acitrox" }], paginaDasFotos: "https://www.v-onestore.com.br/acitrox" }), false);
+  assert.equal(fotoPodeSerPropria({ fotoExata: true, fontes: [{ tipo: "distribuidor", url: "https://www.v-onestore.com.br/acitrox" }], paginaDasFotos: "https://www.v-onestore.com.br/acitrox" }), true);
+});
+
 test("foto do fabricante com foto exata continua própria; foto não exata nunca é", () => {
   assert.equal(fotoPodeSerPropria({ fotoExata: true, fontes: [{ tipo: "fabricante", url: "https://www.tekbond.com.br/p" }], paginaDasFotos: "https://www.tekbond.com.br/p" }), true);
   assert.equal(fotoPodeSerPropria({ fotoExata: false, fontes: [{ tipo: "fabricante" }] }), false);

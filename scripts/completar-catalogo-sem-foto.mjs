@@ -153,7 +153,7 @@ for (const item of dossie) {
   const exata = fotoPodeSerPropria(item);
   const familia = typeof item.imagemFamilia === "string" && item.imagemFamilia.trim() ? item.imagemFamilia.trim() : null;
   const podeFoto = exata || Boolean(familia);
-  const motivoSemFoto = !exata && fonteSoDeMarketplace(item) && item.fotoExata !== false ? "única fonte é marketplace: foto não entra como própria" : "foto não exata e sem família: não entra";
+  const motivoSemFoto = !exata && fonteSoDeMarketplace(item) && item.fotoExata === true ? "única fonte é marketplace: foto não entra como própria" : item.fotoExata === true ? "foto não entra" : "foto não declarada exata (fotoExata: true) e sem família: não entra";
   const { fotos, origem, pagina } = podeFoto ? await fotosDaFonte(item) : { fotos: [], origem: motivoSemFoto, pagina: undefined };
   const gtin = typeof item.gtin === "string" && gtinValido(item.gtin) ? item.gtin : undefined;
   const mpn = typeof item.mpn === "string" && item.mpn.trim() ? item.mpn.trim().slice(0, 60) : undefined;
@@ -187,12 +187,29 @@ for (const p of pulados) console.log(`  pulado ${p.sku ?? "-"}: ${p.motivo}`);
 if (!aplicar) { console.log("\nEnsaio. Rode com --aplicar para gravar."); process.exit(0); }
 
 const resultados = [];
+// A rota responde 200 mesmo quando não consegue copiar uma imagem: ela guarda
+// a URL externa em `imagens` e lista o problema em `imagens.falhas`. Foto que
+// não chegou a /uploads não é própria nem representativa: é a vitrine
+// dependendo do site de terceiro. Esses produtos voltam para "sem foto" no
+// mesmo ato, e o script termina com erro para ninguém ler o 200 como sucesso.
+const fotosNaoCopiadas = [];
 for (let i = 0; i < plano.length; i += 20) {
-  const lote = plano.slice(i, i + 20).map((p) => p.entrada);
+  const fatia = plano.slice(i, i + 20);
+  const lote = fatia.map((p) => p.entrada);
   const r = await fetch(`${base}/api/admin/tenants/${loja}/produtos?importarImagens=1`, { method: "PUT", headers: cabecalhos, body: JSON.stringify(lote) });
   const corpo = await r.json().catch(() => ({}));
   resultados.push({ lote: i / 20 + 1, status: r.status, corpo });
   console.log(`lote ${i / 20 + 1}: HTTP ${r.status}`, JSON.stringify(corpo).slice(0, 600));
   if (!r.ok) break;
+  const falhas = Array.isArray(corpo?.imagens?.falhas) ? corpo.imagens.falhas : [];
+  if (!falhas.length) continue;
+  // A rota identifica a falha pelo nome do produto ("<nome>: <erro>").
+  const comFalha = fatia.filter((p) => falhas.some((f) => typeof f === "string" && f.startsWith(`${p.entrada.nome}:`)));
+  if (!comFalha.length) { fotosNaoCopiadas.push(...falhas.map((f) => ({ sku: null, falha: f }))); continue; }
+  const desfazer = comFalha.map((p) => ({ sku: p.entrada.sku, slug: p.entrada.slug, nome: p.entrada.nome, precoCentavos: p.entrada.precoCentavos, imagens: [], imagemOrigem: "propria", imagemFamilia: null }));
+  const r2 = await fetch(`${base}/api/admin/tenants/${loja}/produtos`, { method: "PUT", headers: cabecalhos, body: JSON.stringify(desfazer) });
+  for (const p of comFalha) fotosNaoCopiadas.push({ sku: p.sku, nome: p.entrada.nome, falhas: falhas.filter((f) => f.startsWith(`${p.entrada.nome}:`)), fotoRemovida: r2.ok });
+  console.log(`  ${comFalha.length} produto(s) ficaram sem foto porque a cópia falhou (HTTP ${r2.status} ao desfazer): ${comFalha.map((p) => p.sku).join(", ")}`);
 }
-await writeFile(planoPath.replace(/\.plano\.json$/, ".resultado.json"), JSON.stringify({ aplicadoEm: new Date().toISOString(), loja, resultados }, null, 1));
+await writeFile(planoPath.replace(/\.plano\.json$/, ".resultado.json"), JSON.stringify({ aplicadoEm: new Date().toISOString(), loja, resultados, fotosNaoCopiadas }, null, 1));
+if (fotosNaoCopiadas.length) { console.error(`${fotosNaoCopiadas.length} foto(s) não copiada(s) para /uploads; os produtos voltaram a ficar sem foto. Veja .resultado.json.`); process.exit(1); }

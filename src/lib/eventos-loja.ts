@@ -109,6 +109,15 @@ export const verProduto = (item: ItemEvento) => disparar({ ga4: "view_item", met
 export const adicionarAoCarrinho = (item: ItemEvento) => disparar({ ga4: "add_to_cart", meta: "AddToCart", tiktok: "AddToCart" }, [item]);
 export const iniciarCheckout = (itens: ItemEvento[]) => disparar({ ga4: "begin_checkout", meta: "InitiateCheckout", tiktok: "InitiateCheckout" }, itens);
 
+/**
+ * O `value` da compra é a receita dos itens, com desconto, sem frete: é o que
+ * a referência do GA4 pede para `purchase` (o frete vai em `shipping`), e o
+ * total cobrado inflava a receita de toda venda com frete pago.
+ */
+export function receitaDosItens(totalCentavos: number, freteCentavos: number): number {
+  return Math.max(0, totalCentavos - Math.max(0, freteCentavos));
+}
+
 /** Compra concluída — o evento que o anúncio otimiza. Roda uma vez por pedido. */
 export function comprar(itens: ItemEvento[], dados: { totalCentavos: number; freteCentavos: number; referencia: string; googleAdsId?: string | null; rotuloCompra?: string | null }) {
   const marca = `compra:${dados.referencia}`;
@@ -118,16 +127,19 @@ export function comprar(itens: ItemEvento[], dados: { totalCentavos: number; fre
   } catch {
     /* storage bloqueado: segue e aceita o risco de contar de novo */
   }
+  const receita = receitaDosItens(dados.totalCentavos, dados.freteCentavos);
   disparar({ ga4: "purchase", meta: "Purchase", tiktok: "CompletePayment" }, itens, {
-    valor: dados.totalCentavos,
+    valor: receita,
     transacao: dados.referencia,
     frete: dados.freteCentavos,
   });
-  // Conversão do Google Ads: exige o rótulo, não basta o id da conta.
-  if (dados.googleAdsId && dados.rotuloCompra) {
+  // Conversão do Google Ads: exige o rótulo, não basta o id da conta. Com GTM
+  // ela é tag do contêiner, lida do `purchase` no dataLayer; chamar `gtag`
+  // junto contaria a mesma venda duas vezes (um caminho só para o Google).
+  if (dados.googleAdsId && dados.rotuloCompra && !janela()?.__lojaPixels?.gtm) {
     janela()?.gtag?.("event", "conversion", {
       send_to: `${dados.googleAdsId}/${dados.rotuloCompra}`,
-      value: reais(dados.totalCentavos),
+      value: reais(receita),
       currency: "BRL",
       transaction_id: dados.referencia,
     });

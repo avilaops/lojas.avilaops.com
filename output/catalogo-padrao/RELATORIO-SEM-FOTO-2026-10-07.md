@@ -31,14 +31,20 @@ Arquivos:
 | baixa | 16 | nome ambíguo, produto não localizado com esse nome ou marca em dúvida |
 
 - **93 de 95** têm a página de onde as fotos oficiais podem ser copiadas
-  (fabricante quando existe, senão o melhor varejista).
+  (fabricante quando existe, senão o melhor varejista). **Foto exata só nos 45
+  de confiança alta** (`fotoExata: true`, apresentação confirmada); nos 34 de
+  média a foto entra como representativa, com a família no nome, porque o
+  volume ou a numeração em estoque ainda não foi conferido; os de baixa ficam
+  sem foto até a decisão do lojista.
+- **Kits (00089, 00090)**: sem `volumeMl`, para o Merchant não calcular preço
+  por litro de um conjunto de dois produtos diferentes.
 - **0 fotos copiadas nesta sessão**: a rede bloqueia o acesso aos sites dos
   fabricantes e varejistas. É o script, rodando na máquina do Nicolas, que lê a
   página-fonte, extrai as imagens (JSON-LD `Product.image`, `og:image`) e manda
   a plataforma copiá-las para `/uploads`.
-- **GTIN: 7 confirmados** (Würth Limpa Contato pela base Cosmos e os seis
-  marcadores industriais Würth, EAN lido na ficha de wurth.com.br) e **12
-  candidatos** (Vintex, Vonixx V-Paint em volume diferente, Solupan e HT7 sem
+- **GTIN: 6 confirmados** (os seis marcadores industriais Würth, EAN lido na
+  ficha de wurth.com.br) e **13 candidatos** (o Limpa Contato Würth voltou a
+  candidato: a base Cosmos não separa a linha padrão da W-Max; (Vintex, Vonixx V-Paint em volume diferente, Solupan e HT7 sem
   marca na base, luva Würth com EAN de outro país, Lava Autos 1,5 L visto só em
   marketplace). Candidato não vai ao feed: fica em `gtinCandidato` para
   conferir na embalagem. Nenhum GTIN foi deduzido. **MPN: 16** lidos em página

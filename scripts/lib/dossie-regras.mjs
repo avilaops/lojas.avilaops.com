@@ -40,12 +40,16 @@ export function fonteSoDeMarketplace(item) {
 }
 
 /**
- * Foto como `propria` exige foto exata E fonte que não seja só anúncio de
- * terceiro, salvo `imagemLicenciada: true` declarado no dossiê.
+ * Foto como `propria` exige foto exata declarada (`fotoExata: true`) E fonte
+ * que não seja só anúncio de terceiro, salvo `imagemLicenciada: true`.
+ *
+ * Ausência não é confirmação: o dossiê da Brilhax saiu sem o campo em 95
+ * itens, e `!== false` deixava passar como própria a foto de varejista de um
+ * item cuja apresentação o próprio dossiê manda conferir (revisão do PR #66).
  * @param {{ fotoExata?: boolean; imagemOrigem?: string | null; imagemLicenciada?: boolean } & Parameters<typeof fonteSoDeMarketplace>[0]} item
  */
 export function fotoPodeSerPropria(item) {
-  const exata = item.fotoExata !== false && item.imagemOrigem !== "representativa";
+  const exata = item.fotoExata === true && item.imagemOrigem !== "representativa";
   if (!exata) return false;
   return !fonteSoDeMarketplace(item) || item.imagemLicenciada === true;
 }

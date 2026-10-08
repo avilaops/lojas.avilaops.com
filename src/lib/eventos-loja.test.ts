@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { entradasDoDataLayer, paraGa4 } from "./eventos-loja";
+import { entradasDoDataLayer, paraGa4, receitaDosItens } from "./eventos-loja";
 
 const itens = [
   { id: "p1", nome: "Shampoo 1,5 L", precoCentavos: 4990, quantidade: 2, categoria: "Lavagem" },
@@ -32,4 +32,13 @@ test("evento sem transação não inventa transaction_id nem frete", () => {
   assert.equal("transaction_id" in evento.ecommerce, false);
   assert.equal("shipping" in evento.ecommerce, false);
   assert.deepEqual(evento.ecommerce.items, paraGa4([itens[1]]));
+});
+
+test("o value da compra é a receita dos itens: o frete sai e vai só em shipping", () => {
+  // Pedido de R$ 124,80 com R$ 25,00 de frete: value 99,80, shipping 25.
+  assert.equal(receitaDosItens(12480, 2500), 9980);
+  assert.equal(receitaDosItens(12480, 0), 12480);
+  // Frete negativo ou maior que o total não produz receita negativa.
+  assert.equal(receitaDosItens(1000, -500), 1000);
+  assert.equal(receitaDosItens(1000, 5000), 0);
 });
