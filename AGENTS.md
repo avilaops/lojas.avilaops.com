@@ -191,6 +191,14 @@ Este repositório pertence à Ávila Ops Tecnologia, que ajuda pequenas empresas
   carrinho e recusa em `montarPedidoSeguro` (`pedido_minimo`). Valor nenhum em
   código, e o que a loja mostra tem de ser o que o checkout cobra: o Merchant
   compara os dois. Ver `docs/MERCHANT-CENTER.md`.
+- **Layout Indústria é para peça vendida por medida.** A home (`Industrial.tsx`)
+  abre pela busca das três medidas, com meio milímetro de folga sobre os filtros
+  que o catálogo já tem (`BuscaPorMedida.tsx`); foto do topo e diferenciais são
+  de `tema.industrial`, o resto sai do catálogo e do cadastro. Quem decide se o
+  catálogo e as categorias listam em grade ou em tabela é o contrato do template
+  (`listagem` em `src/lib/templates.ts`, lido por `listaEmTabela`), não um
+  `layout ===` na página; a tabela é o `TabelaTecnica`, o mesmo da home do
+  Catálogo Técnico.
 - **Recebimento tem dois caminhos e nenhum estado misto.** A loja conecta a
   conta do Mercado Pago por OAuth (`src/lib/mercado-pago-conta.ts`) ou cola as
   chaves da própria aplicação; quem diz qual é `Tenant.mpRefreshTokenEnc`.

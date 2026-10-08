@@ -304,3 +304,8 @@ mínimo de pedido repetido no serviço de frete da conta.
   ilustração do perfil em segundo. A foto de guias veio do novo site da PK
   (512 px, ampliada): falta a PK confirmar que representa o anel guia de
   nylon vendido aqui. O banner em imagem saiu de uso.
+- **Catálogo em tabela (08/10).** No layout Indústria, `/produtos` e as
+  categorias listam em tabela de medidas (código, referência, medidas, preço e
+  "Pedir" por linha) no lugar da grade com a mesma foto repetida; no celular
+  cada peça vira um bloco com nome, código, preço e a ação. E-mail de contato
+  da loja: `vendas@pkvedacoes.com.br`.
