@@ -57,6 +57,7 @@ export interface LojaView {
   provisionamento: Record<string, string>;
   pixels: PixelsView;
   freteGratisAcima: number | null;
+  pedidoMinimoCentavos: number | null;
   retiradaNaLoja: boolean;
   despachoDiasUteis: number;
   estoqueBaixoEm: number;
@@ -160,7 +161,7 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
     cidade: loja.endereco?.cidade ?? "", uf: loja.endereco?.uf ?? "",
     cep: loja.endereco?.cep ?? loja.cepOrigem ?? "", enderecoPublico: loja.enderecoPublico,
   });
-  const [entrega, setEntrega] = useState({ retiradaNaLoja: loja.retiradaNaLoja, despachoDiasUteis: loja.despachoDiasUteis, freteGratisAcima: loja.freteGratisAcima != null ? String(loja.freteGratisAcima / 100).replace(".", ",") : "", tabela: loja.tabelaFrete.map((f) => ({ ufs: f.ufs.join(","), preco: String(f.preco / 100).replace(".", ","), prazo: String(f.prazoDiasUteis), nome: f.nome ?? "" })), local: loja.entregaLocal.map((f) => ({ prefixos: f.prefixos.join(","), nome: f.nome, preco: String(f.preco / 100).replace(".", ","), prazo: String(f.prazoDiasUteis), gratis: f.gratisAcima != null ? String(f.gratisAcima / 100).replace(".", ",") : "" })) });
+  const [entrega, setEntrega] = useState({ retiradaNaLoja: loja.retiradaNaLoja, despachoDiasUteis: loja.despachoDiasUteis, freteGratisAcima: loja.freteGratisAcima != null ? String(loja.freteGratisAcima / 100).replace(".", ",") : "", pedidoMinimo: loja.pedidoMinimoCentavos != null ? String(loja.pedidoMinimoCentavos / 100).replace(".", ",") : "", tabela: loja.tabelaFrete.map((f) => ({ ufs: f.ufs.join(","), preco: String(f.preco / 100).replace(".", ","), prazo: String(f.prazoDiasUteis), nome: f.nome ?? "" })), local: loja.entregaLocal.map((f) => ({ prefixos: f.prefixos.join(","), nome: f.nome, preco: String(f.preco / 100).replace(".", ","), prazo: String(f.prazoDiasUteis), gratis: f.gratisAcima != null ? String(f.gratisAcima / 100).replace(".", ",") : "" })) });
   // Conectada por OAuth, a public key salva é a da conexão: pré-preencher o
   // formulário das chaves com ela convidaria a salvar um par que não combina.
   const [mp, setMp] = useState({ publicKey: loja.mpPorOAuth ? "" : loja.mpPublicKey ?? "", accessToken: "", webhookSecret: "" });
@@ -518,7 +519,9 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
             <label className="flex min-h-[44px] items-center gap-2 text-sm"><input type="checkbox" className="h-5 w-5" checked={entrega.retiradaNaLoja} onChange={(e) => setEntrega({ ...entrega, retiradaNaLoja: e.target.checked })} /> Retirada na loja</label>
             <Campo label="Despacho (dias úteis)"><input className={inputClasse} type="number" min={0} max={30} value={entrega.despachoDiasUteis} onChange={(e) => setEntrega({ ...entrega, despachoDiasUteis: Number(e.target.value) })} /></Campo>
             <Campo label="Frete grátis acima de (R$)"><input className={inputClasse} value={entrega.freteGratisAcima} onChange={(e) => setEntrega({ ...entrega, freteGratisAcima: e.target.value })} placeholder="200,00" /></Campo>
+            <Campo label="Pedido mínimo em produtos (R$)"><input className={inputClasse} inputMode="decimal" value={entrega.pedidoMinimo} onChange={(e) => setEntrega({ ...entrega, pedidoMinimo: e.target.value })} placeholder="Sem mínimo" /></Campo>
           </div>
+          <p className="text-xs text-muted-foreground">Pedido mínimo: abaixo desse valor em produtos (sem frete, antes de cupom) o carrinho avisa quanto falta e a compra não é concluída. Deixe em branco para não ter mínimo. Se a loja anuncia no Google, repita o mesmo valor em &quot;valor mínimo do pedido&quot; no serviço de frete do Merchant Center.</p>
           {entrega.retiradaNaLoja && (!loja.enderecoPublico || !loja.endereco?.logradouro || !loja.endereco?.numero || !loja.endereco?.cidade || !loja.endereco?.uf || loja.endereco?.cep?.replace(/\D/g, "").length !== 8) && (
             <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">Para oferecer retirada, complete o endereço e marque a exibição pública na seção Conta. Salve o endereço e volte aqui para ativar.</p>
           )}
@@ -553,6 +556,8 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
             <button className="btn-primario" disabled={ocupado} onClick={() => chamar("/api/painel/loja", "PATCH", {
               retiradaNaLoja: entrega.retiradaNaLoja, despachoDiasUteis: entrega.despachoDiasUteis,
               freteGratisAcima: entrega.freteGratisAcima ? centavos(entrega.freteGratisAcima) : null,
+              // Em branco, zero ou texto que não é número: sem mínimo.
+              pedidoMinimoCentavos: centavos(entrega.pedidoMinimo) > 0 ? centavos(entrega.pedidoMinimo) : null,
               tabelaFrete: entrega.tabela.filter((f) => f.ufs && f.preco).map((f) => ({ ufs: f.ufs.split(",").map((u) => u.trim()).filter(Boolean), preco: centavos(f.preco), prazoDiasUteis: Number(f.prazo) || 7, nome: f.nome || undefined })),
               // Faixa sem prefixo é descartada aqui e ignorada na cotação: sem
               // isso ela valeria para todo CEP do país.

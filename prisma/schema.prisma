@@ -121,6 +121,9 @@ model Tenant {
   ///    "prazoDiasUteis": 0, "gratisAcima": 19900 }]
   entregaLocal           Json    @default("[]")
   freteGratisAcima       Int? // centavos
+  /// Subtotal mínimo de produtos (sem frete, antes do cupom) para a loja
+  /// aceitar o pedido. Nulo = sem mínimo. Ver `avaliarPedidoMinimo`.
+  pedidoMinimoCentavos   Int? // centavos
 
   // ── Pagamento (tokens cifrados com LOJAS_SECRET) ──────────────────────
   /// Mercado Pago é o único gateway, por decisão de escopo de 31/08/2026.

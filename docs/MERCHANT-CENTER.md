@@ -16,6 +16,7 @@ conta do Google de cada loja. Nada aqui é por loja em código: sai de colunas d
 | Imagem grande na busca | `max-image-preview:large` em toda página indexável (`src/app/layout.tsx`) |
 | Política de devolução | `MerchantReturnPolicy` na loja, lida de `regrasDevolucao` (`src/lib/politicas.ts`) |
 | Frete grátis | `shippingDetails` e `g:shipping`, só quando o produto sozinho passa do `freteGratisAcima` (`src/lib/envio-declarado.ts`) |
+| Pedido mínimo | `Tenant.pedidoMinimoCentavos` (painel, aba Entrega): aparece na ficha do produto, no carrinho (com o que falta e o botão travado), no texto padrão de `/politicas/envio` e no `llms.txt`; o `/api/checkout` recusa abaixo dele (`avaliarPedidoMinimo` em `packages/checkout/src/core/pedido-minimo.ts`). Conta o subtotal de produtos, sem frete e antes do cupom |
 | Avaliações do Consumidor | convite no pedido pago e selo opcional (`src/lib/avaliacoes-google.ts`) |
 
 ## Quem entra no feed
@@ -39,7 +40,9 @@ conta do Google de cada loja. Nada aqui é por loja em código: sai de colunas d
 2. **Política de devolução**: em Entregas e devoluções, informar prazo e custo
    iguais aos de `/politicas/devolucao`. O padrão da plataforma é 7 dias, grátis.
 3. **Frete**: configurar o serviço de envio da conta. O feed não declara preço de
-   frete cotado por CEP.
+   frete cotado por CEP. Loja com pedido mínimo repete o valor em **"valor mínimo
+   do pedido"** do serviço de frete: o feed não leva esse dado, e o Google exige
+   que o mínimo informado na conta seja o mesmo que a loja mostra e cobra.
 4. **Avaliações do Consumidor**: ativar o programa em Qualidade da loja e gravar
    o ID da conta no painel, em Anúncios.
 

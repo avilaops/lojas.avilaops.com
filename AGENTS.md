@@ -158,6 +158,13 @@ Este repositório pertence à Ávila Ops Tecnologia, que ajuda pequenas empresas
   só entra quando a prateleira Google é de Ferragens (632) ou Veículos e peças
   (888), as duas exceções da especificação de `image_link`; não amplie essa
   lista sem a regra do Google escrita. Ver `docs/MERCHANT-CENTER.md`.
+- **Pedido mínimo é dado da loja e vale no servidor.**
+  `Tenant.pedidoMinimoCentavos` (nulo = sem mínimo) é comparado com o subtotal
+  de produtos, sem frete e antes do cupom, por `avaliarPedidoMinimo`
+  (`packages/checkout/src/core/pedido-minimo.ts`): a mesma função avisa no
+  carrinho e recusa em `montarPedidoSeguro` (`pedido_minimo`). Valor nenhum em
+  código, e o que a loja mostra tem de ser o que o checkout cobra: o Merchant
+  compara os dois. Ver `docs/MERCHANT-CENTER.md`.
 - **Recebimento tem dois caminhos e nenhum estado misto.** A loja conecta a
   conta do Mercado Pago por OAuth (`src/lib/mercado-pago-conta.ts`) ou cola as
   chaves da própria aplicação; quem diz qual é `Tenant.mpRefreshTokenEnc`.

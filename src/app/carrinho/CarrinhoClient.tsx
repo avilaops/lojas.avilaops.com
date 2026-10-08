@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { useCart } from "@/components/cart/CartProvider";
+import { avaliarPedidoMinimo } from "@avilaops/checkout";
 import { formatarBRL } from "@/lib/catalogo";
 import type { TenantPublico } from "@/lib/tenant";
 import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
@@ -51,6 +52,11 @@ export default function CarrinhoClient({ loja, vende }: { loja: TenantPublico; v
   const alvoFrete = loja.freteGratisAcima;
   const freteGratisPorCupom = cupom?.tipo === "FRETE_GRATIS";
   const faltamParaFrete = alvoFrete != null ? alvoFrete - subtotal : null;
+
+  // Pedido mínimo da loja: mesma conta do servidor (subtotal de produtos, sem
+  // frete e antes do cupom). Aqui é aviso e botão travado; quem recusa de
+  // verdade é o /api/checkout.
+  const minimo = avaliarPedidoMinimo(subtotal, loja.pedidoMinimoCentavos);
 
   return (
     <div className="container-loja grid min-w-0 gap-8 py-8 md:grid-cols-[minmax(0,1fr)_320px]">
@@ -116,8 +122,17 @@ export default function CarrinhoClient({ loja, vende }: { loja: TenantPublico; v
             </div>
           </div>
         )}
+        {minimo.minimo != null && !minimo.atingido && (
+          <p role="status" className="mt-3 rounded-lg bg-amber-50 p-3 text-xs font-medium text-amber-900">
+            Pedido mínimo de <b>{formatarBRL(minimo.minimo)}</b> em produtos. Faltam <b>{formatarBRL(minimo.falta)}</b>.
+          </p>
+        )}
         <p className="mt-2 text-xs text-muted-foreground">Frete calculado no próximo passo.</p>
-        {vende ? (
+        {vende && !minimo.atingido ? (
+          <button type="button" disabled aria-disabled="true" className="btn-primario mt-4 w-full cursor-not-allowed opacity-50">
+            Finalizar compra
+          </button>
+        ) : vende ? (
           <Link href="/checkout" className="btn-primario mt-4 w-full">
             Finalizar compra
           </Link>

@@ -178,3 +178,52 @@ describe("montarPedidoSeguro , retirada e normalização", () => {
     assert.equal(pedido.referencia, "PED-XYZ");
   });
 });
+
+describe("montarPedidoSeguro , pedido mínimo da loja", () => {
+  // v-floc custa 3140. O mínimo é dado da loja; estes valores são só do teste.
+  const comMinimo = (pedidoMinimo: number | null): ResolucaoCatalogo => ({ ...catalogo, pedidoMinimo });
+
+  it("recusa abaixo do mínimo e diz quanto falta", async () => {
+    await assert.rejects(
+      () => montarPedidoSeguro(payload(), comMinimo(5000)),
+      (erro: unknown) => {
+        assert.ok(erro instanceof PedidoInvalidoError);
+        assert.equal(erro.codigo, "pedido_minimo");
+        assert.match(erro.message.replace(/\s/g, " "), /Pedido mínimo de R\$ 50,00 em produtos\. Faltam R\$ 18,60\./);
+        return true;
+      },
+    );
+  });
+
+  it("frete não conta para o mínimo", async () => {
+    // 3140 de produto + 2500 de Sedex passa de 5000, e mesmo assim é recusado.
+    await assert.rejects(
+      () => montarPedidoSeguro(payload(), comMinimo(5000)),
+      (erro: unknown) => erro instanceof PedidoInvalidoError && erro.codigo === "pedido_minimo",
+    );
+  });
+
+  it("aceita exatamente no mínimo e acima dele", async () => {
+    const noLimite = await montarPedidoSeguro(payload(), comMinimo(3140));
+    assert.equal(noLimite.total, 3140 + 2500);
+    const acima = await montarPedidoSeguro(payload({ itens: [{ id: "v-floc", quantidade: 2 }] }), comMinimo(5000));
+    assert.equal(acima.total, 3140 * 2 + 2500);
+  });
+
+  it("cupom não tira o pedido do mínimo: vale o subtotal antes do desconto", async () => {
+    const { total } = await montarPedidoSeguro(payload(), { ...comMinimo(3140), resolverDesconto: async () => 1000 });
+    assert.equal(total, 3140 + 2500 - 1000);
+  });
+
+  it("loja sem mínimo (nulo ou zero) aceita qualquer valor", async () => {
+    assert.equal((await montarPedidoSeguro(payload(), comMinimo(null))).total, 5640);
+    assert.equal((await montarPedidoSeguro(payload(), comMinimo(0))).total, 5640);
+  });
+
+  it("o mínimo é conferido antes de cotar frete", async () => {
+    let cotou = false;
+    const espiao: ResolucaoCatalogo = { ...comMinimo(5000), resolverFretes: async () => { cotou = true; return [SEDEX]; } };
+    await assert.rejects(() => montarPedidoSeguro(payload(), espiao));
+    assert.equal(cotou, false);
+  });
+});

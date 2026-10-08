@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { tenantAtual, urlDaLoja, identidadeDa, enderecoCompleto, lojaVende, prazoDeDespacho, retiradaPublicaDisponivel } from "@/lib/tenant";
 import { listarCategorias, listarProdutos, formatarBRL } from "@/lib/catalogo";
 import { descricaoDaLoja } from "@/lib/textos-loja";
+import { avaliarPedidoMinimo } from "@avilaops/checkout";
 
 /**
  * llms.txt da LOJA — o mapa que assistentes de IA (ChatGPT, Perplexity, Gemini)
@@ -66,6 +67,7 @@ políticas dela. Este arquivo descreve a plataforma, não uma loja.
   ]);
   const endereco = t.enderecoPublico ? enderecoCompleto(t) : "";
   const vende = lojaVende(t);
+  const pedidoMinimo = avaliarPedidoMinimo(0, t.pedidoMinimoCentavos).minimo;
 
   const linhas = [
     `# ${t.nome}`,
@@ -91,6 +93,7 @@ políticas dela. Este arquivo descreve a plataforma, não uma loja.
     retiradaPublicaDisponivel(t) ? `- Retirada na loja disponível` : `- Entrega para todo o Brasil`,
     vende ? `- Envio ${prazoDeDespacho(t.despachoDiasUteis)} após o pagamento` : "",
     vende && t.freteGratisAcima != null ? `- Frete grátis acima de ${formatarBRL(t.freteGratisAcima)}` : "",
+    vende && pedidoMinimo != null ? `- Pedido mínimo de ${formatarBRL(pedidoMinimo)} em produtos` : "",
     "",
     "## Contato",
     t.whatsapp ? `- WhatsApp: https://wa.me/${t.whatsapp}` : "",

@@ -2,7 +2,7 @@ import type { Tenant } from "@prisma/client";
 import type { Endereco } from "./tenant";
 import { retiradaPublicaDisponivel } from "./retirada-publica";
 import { porOndeFalarCom, prazoDeDespacho } from "./textos-loja";
-import { mascararDocumento } from "@avilaops/checkout";
+import { avaliarPedidoMinimo, formatarBRL, mascararDocumento } from "@avilaops/checkout";
 
 /**
  * Políticas da loja.
@@ -176,6 +176,7 @@ export function modeloDePolitica(t: Tenant, tipo: TipoPolitica): string[] {
   const cidade = e.cidade ? `${e.cidade}${e.uf ? "/" + e.uf : ""}` : "nossa loja";
   const contato = porOndeFalarCom(t);
   const regras = lerRegrasDevolucao(t.regrasDevolucao);
+  const pedidoMinimo = avaliarPedidoMinimo(0, t.pedidoMinimoCentavos).minimo;
 
   switch (tipo) {
     case "envio":
@@ -186,6 +187,9 @@ export function modeloDePolitica(t: Tenant, tipo: TipoPolitica): string[] {
         retiradaPublicaDisponivel(t)
           ? `Você pode retirar o pedido sem custo em ${cidade}, a partir do próximo dia útil após a confirmação. Aguarde o aviso de "pedido separado" antes de ir até a loja.`
           : "Esta loja não oferece retirada no balcão.",
+        ...(pedidoMinimo != null
+          ? [`O pedido mínimo é de ${formatarBRL(pedidoMinimo)} em produtos, sem contar o frete. Abaixo desse valor a compra não é concluída.`]
+          : []),
         `Em caso de avaria no transporte ou extravio, comunique-nos ${contato} com fotos da embalagem. A reposição ou o estorno são por nossa conta.`,
       ];
 

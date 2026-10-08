@@ -118,6 +118,7 @@ export async function dadosDoPainel(secao: SecaoPainel) {
       provisionamento: (loja.provisionamento as Record<string, string>) ?? {},
       pixels: { gtmId: loja.gtmId, metaPixelId: loja.metaPixelId, ga4Id: loja.ga4Id, googleAdsId: loja.googleAdsId, googleAdsRotuloCompra: loja.googleAdsRotuloCompra, tiktokPixelId: loja.tiktokPixelId, googleMerchantId: loja.googleMerchantId, googleSeloAvaliacoes: loja.googleSeloAvaliacoes },
       freteGratisAcima: loja.freteGratisAcima,
+      pedidoMinimoCentavos: loja.pedidoMinimoCentavos,
       retiradaNaLoja: loja.retiradaNaLoja,
       despachoDiasUteis: loja.despachoDiasUteis,
       estoqueBaixoEm: loja.estoqueBaixoEm,

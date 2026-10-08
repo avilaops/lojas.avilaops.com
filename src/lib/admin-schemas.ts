@@ -120,6 +120,8 @@ export const TenantEntradaSchema = z.object({
     }))
     .optional(),
   freteGratisAcima: z.number().int().nonnegative().nullable().optional(),
+  // Subtotal mínimo de produtos, em centavos. Nulo (ou zero) = sem mínimo.
+  pedidoMinimoCentavos: z.number().int().nonnegative().nullable().optional(),
   meiosPagamento: z.array(z.enum(["pix", "cartao", "boleto"])).min(1).optional(),
   gtmId: z.string().regex(/^GTM-[A-Z0-9]+$/).nullable().optional(),
   metaPixelId: z.string().regex(/^\d{6,20}$/).nullable().optional(),

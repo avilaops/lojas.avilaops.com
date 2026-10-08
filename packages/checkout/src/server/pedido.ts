@@ -1,4 +1,5 @@
 import { calcularTotais } from "../core/totais.ts";
+import { avaliarPedidoMinimo, avisoDePedidoMinimo } from "../core/pedido-minimo.ts";
 import { validarCelular, validarDocumento, apenasDigitos } from "../core/brasil.ts";
 import type {
   Centavos,
@@ -64,11 +65,17 @@ export interface ResolucaoCatalogo {
   }) => Promise<OpcaoFrete[]>;
   /** Desconto de cupom, se houver. Sempre calculado aqui. */
   resolverDesconto?: (contexto: { itens: ItemCarrinho[] }) => Promise<Centavos>;
+  /**
+   * Subtotal mínimo de produtos que a loja aceita, se houver. É dado da loja
+   * (nunca do payload) e é conferido contra os preços do catálogo.
+   */
+  pedidoMinimo?: Centavos | null;
 }
 
 export type CodigoPedidoInvalido =
   | "carrinho_vazio"
   | "item_indisponivel"
+  | "pedido_minimo"
   | "frete_invalido"
   | "cliente_invalido"
   | "endereco_obrigatorio"
@@ -120,6 +127,15 @@ export async function montarPedidoSeguro(
       "Um dos produtos não está mais disponível. Revise o carrinho.",
       "item_indisponivel",
     );
+  }
+
+  // Pedido mínimo da loja: subtotal de produtos a preço de catálogo, sem frete
+  // e antes do cupom (mesmo critério do frete grátis). O carrinho já avisa e
+  // trava o botão; aqui é o que vale para a requisição que não veio da tela.
+  const subtotalProdutos = calcularTotais({ itens }).subtotal;
+  const avisoMinimo = avisoDePedidoMinimo(avaliarPedidoMinimo(subtotalProdutos, catalogo.pedidoMinimo));
+  if (avisoMinimo) {
+    throw new PedidoInvalidoError(avisoMinimo, "pedido_minimo");
   }
 
   const documento = apenasDigitos(payload.cliente?.documento ?? "");

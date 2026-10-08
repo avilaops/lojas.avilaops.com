@@ -48,6 +48,8 @@ export const POST = medirRota("checkout", async function (request: Request) {
 
   const catalogo: ResolucaoCatalogo = {
     resolverItens: (ids) => resolverItensDoCatalogo(t.id, ids),
+    // Pedido mínimo é dado da loja; quem recusa é o montarPedidoSeguro.
+    pedidoMinimo: t.pedidoMinimoCentavos,
     resolverFretes: async ({ itens, cep }) => cotarFrete(t, cep, itens, { freteGratisCupom: (await cupom(itens))?.tipo === "FRETE_GRATIS" }),
     resolverDesconto: async ({ itens }) => {
       const c = await cupom(itens);

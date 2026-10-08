@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CheckoutScreen, MercadoPagoCardBrick } from "@avilaops/checkout/ui";
-import { FRETE_RETIRADA_ID, type ItemCarrinho, type MeioPagamento, type OpcaoFrete, type ResultadoPagamento } from "@avilaops/checkout";
+import { FRETE_RETIRADA_ID, avaliarPedidoMinimo, avisoDePedidoMinimo, type ItemCarrinho, type MeioPagamento, type OpcaoFrete, type ResultadoPagamento } from "@avilaops/checkout";
 import { useCart } from "@/components/cart/CartProvider";
 import { iniciarCheckout } from "@/lib/eventos-loja";
 import type { TenantPublico } from "@/lib/tenant";
@@ -81,6 +81,18 @@ export default function CheckoutClient({ loja, conta }: { loja: TenantPublico; c
       <div className="container-loja py-16 text-center">
         <p>Seu carrinho está vazio.</p>
         <Link href="/produtos" className="btn-primario mt-4">Ver produtos</Link>
+      </div>
+    );
+  }
+
+  // Quem chega aqui pela URL com o carrinho abaixo do pedido mínimo volta para
+  // o carrinho em vez de preencher tudo e só então ser recusado pelo servidor.
+  const avisoMinimo = resultado ? null : avisoDePedidoMinimo(avaliarPedidoMinimo(itens.reduce((s, i) => s + i.precoCentavos * i.quantidade, 0), loja.pedidoMinimoCentavos));
+  if (avisoMinimo) {
+    return (
+      <div className="container-loja py-16 text-center">
+        <p>{avisoMinimo}</p>
+        <Link href="/carrinho" className="btn-primario mt-4">Voltar ao carrinho</Link>
       </div>
     );
   }
