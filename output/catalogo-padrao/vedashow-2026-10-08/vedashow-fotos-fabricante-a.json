@@ -1,0 +1,1460 @@
+[
+  {
+    "sku": "3544",
+    "slug": "fag-1311ktv-c3-rolamento-unitario",
+    "nomeAtual": "Rolamento FAG 1311KTV C3",
+    "marca": "Fag",
+    "designacao": "1311-K-TV-C3",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/0000A0F3_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/self-aligning-ball-bearings/1311-k-tvh-c3/p/365917",
+    "fotoExata": true,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/self-aligning-ball-bearings/1311-k-tvh-c3/p/365917",
+        "nota": "Schaeffler medias, produto 1311-K-TVH-C3 (código 365917); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "alta",
+    "duvidas": [
+      "TV do nome = gaiola TVH na nomenclatura atual (1311-K-TVH-C3).",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "3383",
+    "slug": "fag-2209k-rolamento-unitario",
+    "nomeAtual": "Rolamento FAG 2209K",
+    "marca": "Fag",
+    "designacao": "2209-K",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/0000A0F3_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/self-aligning-ball-bearings/2209-k-tvh/p/366059",
+    "fotoExata": true,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/self-aligning-ball-bearings/2209-k-tvh/p/366059",
+        "nota": "Schaeffler medias, produto 2209-K-TVH (código 366059); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "media",
+    "duvidas": [
+      "Catálogo atual só lista 2209-K-TVH (gaiola de poliamida); nome da loja não informa gaiola nem folga.",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "2606",
+    "slug": "fag-22213mc3w33-rolamento-unitario",
+    "nomeAtual": "Rolamento FAG 22213MC3W33",
+    "marca": "Fag",
+    "designacao": "22213-M-C3-W33",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/001E222A_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/spherical-roller-bearings/22213-e1a-xl-m-c3/p/388594",
+    "fotoExata": true,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/spherical-roller-bearings/22213-e1a-xl-m-c3/p/388594",
+        "nota": "Schaeffler medias, produto 22213-E1A-XL-M-C3 (código 388594); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "media",
+    "duvidas": [
+      "Sufixos M/W33 não são da nomenclatura FAG atual; equivalente atual com gaiola de latão é 22213-E1A-XL-M-C3 (ranhura/furos de lubrificação de série).",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "3465",
+    "slug": "fag-518220-rolamento-unitario",
+    "nomeAtual": "Rolamento FAG 518220",
+    "marca": "Fag",
+    "designacao": "518220",
+    "fotos": [],
+    "paginaDasFotos": null,
+    "fotoExata": false,
+    "imagemFamilia": "",
+    "fontes": [],
+    "confianca": "baixa",
+    "duvidas": [
+      "Número especial FAG (linha automotiva/caminhão); não existe no catálogo medias. Sem fonte de fabricante com foto."
+    ]
+  },
+  {
+    "sku": "3437",
+    "slug": "fag-518772-a-rolamento-unitario",
+    "nomeAtual": "Rolamento FAG 518772 A",
+    "marca": "Fag",
+    "designacao": "518772-A",
+    "fotos": [],
+    "paginaDasFotos": null,
+    "fotoExata": false,
+    "imagemFamilia": "",
+    "fontes": [],
+    "confianca": "baixa",
+    "duvidas": [
+      "Número especial FAG (linha automotiva/caminhão); não existe no catálogo medias. Sem fonte de fabricante com foto."
+    ]
+  },
+  {
+    "sku": "2887",
+    "slug": "fag-5202-rolamento-unitario",
+    "nomeAtual": "Rolamento FAG 5202",
+    "marca": "Fag",
+    "designacao": "5202",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/0018EB82_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/angular-contact-ball-bearings/3202-bd-xl-tvh/p/360678",
+    "fotoExata": false,
+    "imagemFamilia": "FAG 3202-BD (equivalente ao 5202)",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/angular-contact-ball-bearings/3202-bd-xl-tvh/p/360678",
+        "nota": "Schaeffler medias, produto 3202-BD-XL-TVH (código 360678); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "baixa",
+    "duvidas": [
+      "5202 é designação antiga/ABMA do rolamento de esferas de contato angular de duas carreiras 15x35x15,9; FAG atual é 3202-BD-XL-TVH. Conferir na peça se é aberto, 2Z ou 2RS antes de usar.",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "3426",
+    "slug": "fag-577187-rolamento-unitario",
+    "nomeAtual": "Rolamento FAG 577187",
+    "marca": "Fag",
+    "designacao": "577187",
+    "fotos": [],
+    "paginaDasFotos": null,
+    "fotoExata": false,
+    "imagemFamilia": "",
+    "fontes": [],
+    "confianca": "baixa",
+    "duvidas": [
+      "Número especial FAG; não existe no catálogo medias. Sem fonte de fabricante com foto."
+    ]
+  },
+  {
+    "sku": "3541",
+    "slug": "fag-h5310a-rolamento-unitario",
+    "nomeAtual": "Rolamento FAG H5310A",
+    "marca": "Fag",
+    "designacao": "H5310A",
+    "fotos": [],
+    "paginaDasFotos": null,
+    "fotoExata": false,
+    "imagemFamilia": "",
+    "fontes": [],
+    "confianca": "baixa",
+    "duvidas": [
+      "Designação não encontrada no medias (H5310 / H5310A sem resultado). Não está claro que produto é; conferir a peça."
+    ]
+  },
+  {
+    "sku": "4825",
+    "slug": "fag-klm-503349-rolamento-unitario",
+    "nomeAtual": "Rolamento FAG KLM 503349",
+    "marca": "Fag",
+    "designacao": "KLM503349",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/001A3C90_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/tapered-roller-bearings/klm503349/p/2483097",
+    "fotoExata": true,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/tapered-roller-bearings/klm503349/p/2483097",
+        "nota": "Schaeffler medias, produto KLM503349 (código 2483097); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "alta",
+    "duvidas": [
+      "Página é do cone (anel interno com rolos) KLM503349, sem a capa LM503310; a foto mostra só o cone. Se a loja vende o conjunto, a página seria KLM503349-LM503310 (p/1065799).",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "3049",
+    "slug": "fag-3202-rolamento-radial-esfera-contato-angular-unitario",
+    "nomeAtual": "Rolamento Radial Esfera Contato Angular FAG 3202",
+    "marca": "Fag",
+    "designacao": "3202",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/0018EB82_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/angular-contact-ball-bearings/3202-bd-xl-tvh/p/360678",
+    "fotoExata": true,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/angular-contact-ball-bearings/3202-bd-xl-tvh/p/360678",
+        "nota": "Schaeffler medias, produto 3202-BD-XL-TVH (código 360678); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "media",
+    "duvidas": [
+      "Catálogo atual: 3202-BD-XL-TVH (aberto, gaiola de poliamida). Existe também 3202-BD-XL (gaiola de chapa); nome da loja não informa a gaiola.",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "3529",
+    "slug": "fag-7211b-rolamento-radial-esfera-contato-angular-unitario",
+    "nomeAtual": "Rolamento Radial Esfera Contato Angular FAG 7211B",
+    "marca": "Fag",
+    "designacao": "7211-B",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/00014D0D_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/angular-contact-ball-bearings/7211-b-xl-tvp/p/359667",
+    "fotoExata": true,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/angular-contact-ball-bearings/7211-b-xl-tvp/p/359667",
+        "nota": "Schaeffler medias, produto 7211-B-XL-TVP (código 359667); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "media",
+    "duvidas": [
+      "Catálogo atual: 7211-B-XL-TVP (poliamida), -JP (chapa) e -MP (latão); nome da loja não informa a gaiola. Usada a TVP.",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "1942",
+    "slug": "fag-6011-2rs-rolamento-radial-esfera-fixo-unitario",
+    "nomeAtual": "Rolamento Radial Esfera Fixo FAG 6011 2RS",
+    "marca": "Fag",
+    "designacao": "6011-2RS",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/00197B4D_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/deep-groove-ball-bearings/6011-2rsr/p/349432",
+    "fotoExata": true,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/deep-groove-ball-bearings/6011-2rsr/p/349432",
+        "nota": "Schaeffler medias, produto 6011-2RSR (código 349432); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "alta",
+    "duvidas": [
+      "2RS do nome = 2RSR na FAG.",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "3087",
+    "slug": "fag-6205-rolamento-radial-esfera-fixo-unitario",
+    "nomeAtual": "Rolamento Radial Esfera Fixo FAG 6205",
+    "marca": "Fag",
+    "designacao": "6205",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/0009835B_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/deep-groove-ball-bearings/6205-c%3ev/p/1638156",
+    "fotoExata": true,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/deep-groove-ball-bearings/6205-c%3ev/p/1638156",
+        "nota": "Schaeffler medias, produto 6205-C>V (código 1638156); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "media",
+    "duvidas": [
+      "FAG não lista mais 6205 puro; o atual é 6205-C (Geração C), aberto.",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "1800",
+    "slug": "fag-6206-rolamento-radial-esfera-fixo-unitario",
+    "nomeAtual": "Rolamento Radial Esfera Fixo FAG 6206",
+    "marca": "Fag",
+    "designacao": "6206",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/0009835B_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/deep-groove-ball-bearings/6206-c%3ev/p/1769390",
+    "fotoExata": true,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/deep-groove-ball-bearings/6206-c%3ev/p/1769390",
+        "nota": "Schaeffler medias, produto 6206-C>V (código 1769390); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "media",
+    "duvidas": [
+      "FAG não lista mais 6206 puro; o atual é 6206-C (Geração C), aberto.",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "1805",
+    "slug": "fag-6207-zz-rolamento-radial-esfera-fixo-unitario",
+    "nomeAtual": "Rolamento Radial Esfera Fixo FAG 6207-ZZ",
+    "marca": "Fag",
+    "designacao": "6207-2Z",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/0019831F_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/deep-groove-ball-bearings/6207-2z/p/350981",
+    "fotoExata": true,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/deep-groove-ball-bearings/6207-2z/p/350981",
+        "nota": "Schaeffler medias, produto 6207-2Z (código 350981); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "alta",
+    "duvidas": [
+      "ZZ = 2Z. Existe também a versão Geração C 6207-C-2Z (p/2585483).",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "1807",
+    "slug": "fag-6208-rolamento-radial-esfera-fixo-unitario",
+    "nomeAtual": "Rolamento Radial Esfera Fixo FAG 6208",
+    "marca": "Fag",
+    "designacao": "6208",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/000B4B37_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/deep-groove-ball-bearings/6208/p/350813",
+    "fotoExata": true,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/deep-groove-ball-bearings/6208/p/350813",
+        "nota": "Schaeffler medias, produto 6208 (código 350813); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "alta",
+    "duvidas": [
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "4978",
+    "slug": "fag-6209-2rs-rolamento-radial-esfera-fixo-unitario",
+    "nomeAtual": "Rolamento Radial Esfera Fixo FAG 6209 2RS",
+    "marca": "Fag",
+    "designacao": "6209-2RS",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/00197B4D_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/deep-groove-ball-bearings/6209-2rsr/p/354587",
+    "fotoExata": true,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/deep-groove-ball-bearings/6209-2rsr/p/354587",
+        "nota": "Schaeffler medias, produto 6209-2RSR (código 354587); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "alta",
+    "duvidas": [
+      "2RS = 2RSR. Existe também a Geração C 6209-C-2HRS (p/2610004).",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "1809",
+    "slug": "fag-6209-zz-rolamento-radial-esfera-fixo-unitario",
+    "nomeAtual": "Rolamento Radial Esfera Fixo FAG 6209-ZZ",
+    "marca": "Fag",
+    "designacao": "6209-2Z",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/0019831F_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/deep-groove-ball-bearings/6209-2z/p/354600",
+    "fotoExata": true,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/deep-groove-ball-bearings/6209-2z/p/354600",
+        "nota": "Schaeffler medias, produto 6209-2Z (código 354600); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "alta",
+    "duvidas": [
+      "ZZ = 2Z.",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "5368",
+    "slug": "fag-6211-2z-co7-c3-rolamento-radial-esfera-fixo-unitario",
+    "nomeAtual": "Rolamento Radial Esfera Fixo FAG 6211 2Z-CO7-C3",
+    "marca": "Fag",
+    "designacao": "6211-2Z-C3",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/0019831F_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/deep-groove-ball-bearings/6211-2z-c3/p/350985",
+    "fotoExata": true,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/deep-groove-ball-bearings/6211-2z-c3/p/350985",
+        "nota": "Schaeffler medias, produto 6211-2Z-C3 (código 350985); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "media",
+    "duvidas": [
+      "Sufixo \"CO7\" do nome não é designação FAG reconhecida no medias (talvez classe de ruído/vibração); ignorado.",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "3540",
+    "slug": "fag-6217-rolamento-radial-esfera-fixo-unitario",
+    "nomeAtual": "Rolamento Radial Esfera Fixo FAG 6217",
+    "marca": "Fag",
+    "designacao": "6217",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/000B4B37_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/deep-groove-ball-bearings/6217/p/350853",
+    "fotoExata": true,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/deep-groove-ball-bearings/6217/p/350853",
+        "nota": "Schaeffler medias, produto 6217 (código 350853); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "alta",
+    "duvidas": [
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "1879",
+    "slug": "fag-6219-zz-rolamento-radial-esfera-fixo-unitario",
+    "nomeAtual": "Rolamento Radial Esfera Fixo FAG 6219-ZZ",
+    "marca": "Fag",
+    "designacao": "6219-2Z",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/0019831F_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/deep-groove-ball-bearings/6219-2z/p/351013",
+    "fotoExata": true,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/deep-groove-ball-bearings/6219-2z/p/351013",
+        "nota": "Schaeffler medias, produto 6219-2Z (código 351013); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "alta",
+    "duvidas": [
+      "ZZ = 2Z.",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "3400",
+    "slug": "fag-62206-2rs-rolamento-radial-esfera-fixo-unitario",
+    "nomeAtual": "Rolamento Radial Esfera Fixo FAG 62206 2RS",
+    "marca": "Fag",
+    "designacao": "62206-2RS",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/00197B4D_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/deep-groove-ball-bearings/62206-a-2rsr/p/355009",
+    "fotoExata": true,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/deep-groove-ball-bearings/62206-a-2rsr/p/355009",
+        "nota": "Schaeffler medias, produto 62206-A-2RSR (código 355009); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "media",
+    "duvidas": [
+      "Catálogo atual: 62206-A-2RSR.",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "4975",
+    "slug": "fag-6309-zz-rolamento-radial-esfera-fixo-unitario",
+    "nomeAtual": "Rolamento Radial Esfera Fixo FAG 6309 ZZ",
+    "marca": "Fag",
+    "designacao": "6309-2Z",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/0019831F_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/deep-groove-ball-bearings/6309-2z/p/351929",
+    "fotoExata": true,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/deep-groove-ball-bearings/6309-2z/p/351929",
+        "nota": "Schaeffler medias, produto 6309-2Z (código 351929); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "alta",
+    "duvidas": [
+      "ZZ = 2Z.",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "5369",
+    "slug": "fag-6311-2z-co7-c3-rolamento-radial-esfera-fixo-unitario",
+    "nomeAtual": "Rolamento Radial Esfera Fixo FAG 6311 2Z-CO7-C3",
+    "marca": "Fag",
+    "designacao": "6311-2Z-C3",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/0019831F_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/deep-groove-ball-bearings/6311-2z-c3/p/351938",
+    "fotoExata": true,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/deep-groove-ball-bearings/6311-2z-c3/p/351938",
+        "nota": "Schaeffler medias, produto 6311-2Z-C3 (código 351938); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "media",
+    "duvidas": [
+      "Sufixo \"CO7\" do nome não é designação FAG reconhecida no medias; ignorado.",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "4973",
+    "slug": "fag-6313-rolamento-radial-esfera-fixo-unitario",
+    "nomeAtual": "Rolamento Radial Esfera Fixo FAG 6313",
+    "marca": "Fag",
+    "designacao": "6313",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/000B4B37_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/deep-groove-ball-bearings/6313/p/351820",
+    "fotoExata": true,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/deep-groove-ball-bearings/6313/p/351820",
+        "nota": "Schaeffler medias, produto 6313 (código 351820); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "alta",
+    "duvidas": [
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "4974",
+    "slug": "fag-6313-2rs-rolamento-radial-esfera-fixo-unitario",
+    "nomeAtual": "Rolamento Radial Esfera Fixo FAG 6313 2RS",
+    "marca": "Fag",
+    "designacao": "6313-2RS",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/00197B4D_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/deep-groove-ball-bearings/6313-2rsr/p/351895",
+    "fotoExata": true,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/deep-groove-ball-bearings/6313-2rsr/p/351895",
+        "nota": "Schaeffler medias, produto 6313-2RSR (código 351895); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "alta",
+    "duvidas": [
+      "2RS = 2RSR.",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "2490",
+    "slug": "fag-6411-c3-rolamento-radial-esfera-fixo-unitario",
+    "nomeAtual": "Rolamento Radial Esfera Fixo FAG 6411 C3",
+    "marca": "Fag",
+    "designacao": "6411-C3",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/000B4B37_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/deep-groove-ball-bearings/6411-c3/p/352409",
+    "fotoExata": true,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/deep-groove-ball-bearings/6411-c3/p/352409",
+        "nota": "Schaeffler medias, produto 6411-C3 (código 352409); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "alta",
+    "duvidas": [
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "3525",
+    "slug": "fag-1205-k-rolamento-radial-esfera-oscilante-unitario",
+    "nomeAtual": "Rolamento Radial Esfera Oscilante FAG 1205 K",
+    "marca": "Fag",
+    "designacao": "1205-K",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/0000A0F3_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/self-aligning-ball-bearings/1205-k-tvh-c3/p/365766",
+    "fotoExata": true,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/self-aligning-ball-bearings/1205-k-tvh-c3/p/365766",
+        "nota": "Schaeffler medias, produto 1205-K-TVH-C3 (código 365766); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "media",
+    "duvidas": [
+      "Catálogo só lista 1205-K-TVH-C3 (furo cônico, gaiola de poliamida, folga C3).",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "2907",
+    "slug": "fag-1209-tvh-c3-rolamento-radial-esfera-oscilante-unitario",
+    "nomeAtual": "Rolamento Radial Esfera Oscilante FAG 1209-TVH C3",
+    "marca": "Fag",
+    "designacao": "1209-TVH-C3",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/0000A0F3_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/self-aligning-ball-bearings/1209-tvh-c3/p/365848",
+    "fotoExata": true,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/self-aligning-ball-bearings/1209-tvh-c3/p/365848",
+        "nota": "Schaeffler medias, produto 1209-TVH-C3 (código 365848); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "alta",
+    "duvidas": [
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "3472",
+    "slug": "fag-1215-k-rolamento-radial-esfera-oscilante-unitario",
+    "nomeAtual": "Rolamento Radial Esfera Oscilante FAG 1215 K",
+    "marca": "Fag",
+    "designacao": "1215-K",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/0000A0F3_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/self-aligning-ball-bearings/1215-k-tvh/p/365788",
+    "fotoExata": true,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/self-aligning-ball-bearings/1215-k-tvh/p/365788",
+        "nota": "Schaeffler medias, produto 1215-K-TVH (código 365788); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "media",
+    "duvidas": [
+      "Catálogo atual: 1215-K-TVH (gaiola de poliamida).",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "1625",
+    "slug": "fag-1217-rolamento-radial-esfera-oscilante-unitario",
+    "nomeAtual": "Rolamento Radial Esfera Oscilante FAG 1217",
+    "marca": "Fag",
+    "designacao": "1217",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/0000A0F3_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/self-aligning-ball-bearings/1217-tvh/p/365871",
+    "fotoExata": true,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/ball-bearings/self-aligning-ball-bearings/1217-tvh/p/365871",
+        "nota": "Schaeffler medias, produto 1217-TVH (código 365871); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "media",
+    "duvidas": [
+      "Catálogo atual: 1217-TVH (gaiola de poliamida).",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "4966",
+    "slug": "fag-30309-jr-rolamento-radial-rolo-conico-unitario",
+    "nomeAtual": "Rolamento Radial Rolo Cônico FAG 30309 JR",
+    "marca": "Fag",
+    "designacao": "30309-JR",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/001DFA7E_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/tapered-roller-bearings/30309-a/p/383438",
+    "fotoExata": true,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/tapered-roller-bearings/30309-a/p/383438",
+        "nota": "Schaeffler medias, produto 30309-A (código 383438); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "media",
+    "duvidas": [
+      "\"JR\" é sufixo da Koyo/JTEKT, não da FAG; conferir se a peça é mesmo FAG. Página usada: FAG 30309-A.",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "4970",
+    "slug": "fag-30310-rolamento-radial-rolo-conico-unitario",
+    "nomeAtual": "Rolamento Radial Rolo Cônico FAG 30310",
+    "marca": "Fag",
+    "designacao": "30310",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/001DFA7E_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/tapered-roller-bearings/30310-a/p/383440",
+    "fotoExata": true,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/tapered-roller-bearings/30310-a/p/383440",
+        "nota": "Schaeffler medias, produto 30310-A (código 383440); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "media",
+    "duvidas": [
+      "Catálogo atual: 30310-A (também 30310-XL, p/830757, mesma foto).",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "4971",
+    "slug": "fag-30311-rolamento-radial-rolo-conico-unitario",
+    "nomeAtual": "Rolamento Radial Rolo Cônico FAG 30311",
+    "marca": "Fag",
+    "designacao": "30311",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/001DFA7E_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/tapered-roller-bearings/30311-a/p/384090",
+    "fotoExata": true,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/tapered-roller-bearings/30311-a/p/384090",
+        "nota": "Schaeffler medias, produto 30311-A (código 384090); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "media",
+    "duvidas": [
+      "Catálogo atual: 30311-A (também 30311-XL, p/383470, mesma foto).",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "2908",
+    "slug": "fag-32007-rolamento-radial-rolo-conico-unitario",
+    "nomeAtual": "Rolamento Radial Rolo Cônico FAG 32007",
+    "marca": "Fag",
+    "designacao": "32007",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/001DFA7E_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/tapered-roller-bearings/32007-x/p/384169",
+    "fotoExata": true,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/tapered-roller-bearings/32007-x/p/384169",
+        "nota": "Schaeffler medias, produto 32007-X (código 384169); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "media",
+    "duvidas": [
+      "Catálogo atual: 32007-X.",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "2066",
+    "slug": "fag-32212-a-rolamento-radial-rolo-conico-unitario",
+    "nomeAtual": "Rolamento Radial Rolo Cônico FAG 32212 A",
+    "marca": "Fag",
+    "designacao": "32212-A",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/001DFA7E_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/tapered-roller-bearings/32212-a/p/383602",
+    "fotoExata": true,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/tapered-roller-bearings/32212-a/p/383602",
+        "nota": "Schaeffler medias, produto 32212-A (código 383602); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "alta",
+    "duvidas": [
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "4972",
+    "slug": "fag-32213-rolamento-radial-rolo-conico-unitario",
+    "nomeAtual": "Rolamento Radial Rolo Cônico FAG 32213",
+    "marca": "Fag",
+    "designacao": "32213",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/001DFA7E_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/tapered-roller-bearings/32213-a/p/383604",
+    "fotoExata": true,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/tapered-roller-bearings/32213-a/p/383604",
+        "nota": "Schaeffler medias, produto 32213-A (código 383604); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "media",
+    "duvidas": [
+      "Catálogo atual: 32213-A.",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "1739",
+    "slug": "fag-32214-rolamento-radial-rolo-conico-unitario",
+    "nomeAtual": "Rolamento Radial Rolo Cônico FAG 32214",
+    "marca": "Fag",
+    "designacao": "32214",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/001DFA7E_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/tapered-roller-bearings/32214-a/p/383606",
+    "fotoExata": true,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/tapered-roller-bearings/32214-a/p/383606",
+        "nota": "Schaeffler medias, produto 32214-A (código 383606); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "media",
+    "duvidas": [
+      "Catálogo atual: 32214-A.",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "4969",
+    "slug": "fag-32216-rolamento-radial-rolo-conico-unitario",
+    "nomeAtual": "Rolamento Radial Rolo Cônico FAG 32216",
+    "marca": "Fag",
+    "designacao": "32216",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/001DFA7E_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/tapered-roller-bearings/32216-a/p/383610",
+    "fotoExata": true,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/tapered-roller-bearings/32216-a/p/383610",
+        "nota": "Schaeffler medias, produto 32216-A (código 383610); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "media",
+    "duvidas": [
+      "Catálogo atual: 32216-A.",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "4979",
+    "slug": "fag-32218-rolamento-radial-rolo-conico-unitario",
+    "nomeAtual": "Rolamento Radial Rolo Cônico FAG 32218",
+    "marca": "Fag",
+    "designacao": "32218",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/001DFA7E_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/tapered-roller-bearings/32218-a/p/384320",
+    "fotoExata": true,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/tapered-roller-bearings/32218-a/p/384320",
+        "nota": "Schaeffler medias, produto 32218-A (código 384320); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "media",
+    "duvidas": [
+      "Catálogo atual: 32218-A (também 32218-XL, p/383626, mesma foto).",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "1758",
+    "slug": "fag-39581-520-rolamento-radial-rolo-conico-unitario",
+    "nomeAtual": "Rolamento Radial Rolo Cônico FAG 39581/520",
+    "marca": "Fag",
+    "designacao": "39581/39520",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/001DFA7E_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/tapered-roller-bearings/k39580-39520/p/383888",
+    "fotoExata": false,
+    "imagemFamilia": "FAG cônico polegada K3958x-39520",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/tapered-roller-bearings/k39580-39520/p/383888",
+        "nota": "Schaeffler medias, produto K39580-39520 (código 383888); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "media",
+    "duvidas": [
+      "O conjunto K39581-39520 não tem página própria no medias (só o cone K39581, p/1206385, com foto de cone). Usada a página do conjunto vizinho K39580-39520, mesma capa e mesma série.",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "2896",
+    "slug": "fag-3982-3920-rolamento-radial-rolo-conico-unitario",
+    "nomeAtual": "Rolamento Radial Rolo Cônico FAG 3982/3920",
+    "marca": "Fag",
+    "designacao": "3982/3920",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/001DFA7E_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/tapered-roller-bearings/k3982-3920/p/383890",
+    "fotoExata": true,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/tapered-roller-bearings/k3982-3920/p/383890",
+        "nota": "Schaeffler medias, produto K3982-3920 (código 383890); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "alta",
+    "duvidas": [
+      "Catálogo: K3982-3920 (conjunto cone + capa).",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "4977",
+    "slug": "fag-22317-kymw33-rolamento-radial-rolo-esferico-unitario",
+    "nomeAtual": "Rolamento Radial Rolo Esférico FAG 22317 KYMW33",
+    "marca": "Fag",
+    "designacao": "22317-K-YM-W33",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/001E24FC_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/spherical-roller-bearings/22317-e1a-xl-k-m/p/388677",
+    "fotoExata": true,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/spherical-roller-bearings/22317-e1a-xl-k-m/p/388677",
+        "nota": "Schaeffler medias, produto 22317-E1A-XL-K-M (código 388677); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "media",
+    "duvidas": [
+      "YM/W33 são sufixos Timken, não FAG; conferir a marca da peça. Equivalente FAG com furo cônico e gaiola de latão: 22317-E1A-XL-K-M.",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "3627",
+    "slug": "fag-23056-e1-c3-rolamento-fag-rolamento-radial-rolo-esferico-unitario",
+    "nomeAtual": "Rolamento Radial Rolo Esférico FAG 23056 E1/C3 Rolamento FAG",
+    "marca": "Fag",
+    "designacao": "23056-E1-C3",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/001E258B_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/spherical-roller-bearings/23056-be-xl-c3/p/387079",
+    "fotoExata": true,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/spherical-roller-bearings/23056-be-xl-c3/p/387079",
+        "nota": "Schaeffler medias, produto 23056-BE-XL-C3 (código 387079); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "media",
+    "duvidas": [
+      "FAG não lista 23056-E1; o atual é 23056-BE-XL-C3 (furo cilíndrico). Conferir se a peça não é furo cônico (K).",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "3528",
+    "slug": "ina-2816-rolamento-unitario",
+    "nomeAtual": "Rolamento INA 2816",
+    "marca": "Ina",
+    "designacao": "2816",
+    "fotos": [],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/needle-roller-bearings/drawn-cup-needle-roller-bearings-with-open-ends/hk2816-b/p/381736",
+    "fotoExata": false,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/needle-roller-bearings/drawn-cup-needle-roller-bearings-with-open-ends/hk2816-b/p/381736",
+        "nota": "Schaeffler medias, produto HK2816 (código 381736); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "baixa",
+    "duvidas": [
+      "\"2816\" sozinho é ambíguo: pode ser HK2816 (métrico 28x35x16), SCE2816 (polegada) ou BCE2816 (fundo fechado). Usada a foto do HK2816; conferir a peça.",
+      "Foto existe na página do fabricante (https://cdn.schaeffler-ecommerce.com/cdn/00006BAD_b.png), mas o CDN responde 200 com content-type application/octet-stream em todos os tamanhos (o arquivo é um PNG válido); pela regra de conferência (image/*) não foi incluída em fotos. Se a loja baixar e regravar o arquivo, serve.",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "4879",
+    "slug": "ina-ar44880-z-rolamento-unitario",
+    "nomeAtual": "Rolamento INA AR44880 Z",
+    "marca": "Ina",
+    "designacao": "AR44880-Z",
+    "fotos": [],
+    "paginaDasFotos": null,
+    "fotoExata": false,
+    "imagemFamilia": "",
+    "fontes": [],
+    "confianca": "baixa",
+    "duvidas": [
+      "Designação não encontrada no medias. Sem fonte de fabricante com foto."
+    ]
+  },
+  {
+    "sku": "4857",
+    "slug": "ina-bk0810-rolamento-unitario",
+    "nomeAtual": "Rolamento INA BK0810",
+    "marca": "Ina",
+    "designacao": "BK0810",
+    "fotos": [],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/needle-roller-bearings/drawn-cup-needle-roller-bearings-with-closed-end/bk0810-b/p/382257",
+    "fotoExata": false,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/needle-roller-bearings/drawn-cup-needle-roller-bearings-with-closed-end/bk0810-b/p/382257",
+        "nota": "Schaeffler medias, produto BK0810 (código 382257); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "media",
+    "duvidas": [
+      "Foto existe na página do fabricante (https://cdn.schaeffler-ecommerce.com/cdn/00006BBD_b.png), mas o CDN responde 200 com content-type application/octet-stream em todos os tamanhos (o arquivo é um PNG válido); pela regra de conferência (image/*) não foi incluída em fotos. Se a loja baixar e regravar o arquivo, serve.",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "4791",
+    "slug": "ina-f-54976-rolamento-unitario",
+    "nomeAtual": "Rolamento INA F-54976",
+    "marca": "Ina",
+    "designacao": "F-54976",
+    "fotos": [],
+    "paginaDasFotos": null,
+    "fotoExata": false,
+    "imagemFamilia": "",
+    "fontes": [],
+    "confianca": "baixa",
+    "duvidas": [
+      "Número de desenho INA (F-…), peça especial/OEM; não existe no catálogo medias."
+    ]
+  },
+  {
+    "sku": "2451",
+    "slug": "ina-f113342-07-rolamento-unitario",
+    "nomeAtual": "Rolamento INA F113342.07",
+    "marca": "Ina",
+    "designacao": "F-113342.07",
+    "fotos": [],
+    "paginaDasFotos": null,
+    "fotoExata": false,
+    "imagemFamilia": "",
+    "fontes": [],
+    "confianca": "baixa",
+    "duvidas": [
+      "Número de desenho INA (F-…), peça especial/OEM; não existe no catálogo medias."
+    ]
+  },
+  {
+    "sku": "4740",
+    "slug": "ina-f24152-rolamento-unitario",
+    "nomeAtual": "Rolamento INA F24152",
+    "marca": "Ina",
+    "designacao": "F-24152",
+    "fotos": [],
+    "paginaDasFotos": null,
+    "fotoExata": false,
+    "imagemFamilia": "",
+    "fontes": [],
+    "confianca": "baixa",
+    "duvidas": [
+      "Número de desenho INA (F-…), peça especial/OEM; não existe no catálogo medias."
+    ]
+  },
+  {
+    "sku": "4816",
+    "slug": "ina-f44724-rolamento-unitario",
+    "nomeAtual": "Rolamento INA F44724",
+    "marca": "Ina",
+    "designacao": "F-44724",
+    "fotos": [],
+    "paginaDasFotos": null,
+    "fotoExata": false,
+    "imagemFamilia": "",
+    "fontes": [],
+    "confianca": "baixa",
+    "duvidas": [
+      "Número de desenho INA (F-…), peça especial/OEM; não existe no catálogo medias."
+    ]
+  },
+  {
+    "sku": "4773",
+    "slug": "ina-f45087-rolamento-unitario",
+    "nomeAtual": "Rolamento INA F45087",
+    "marca": "Ina",
+    "designacao": "F-45087",
+    "fotos": [],
+    "paginaDasFotos": null,
+    "fotoExata": false,
+    "imagemFamilia": "",
+    "fontes": [],
+    "confianca": "baixa",
+    "duvidas": [
+      "Número de desenho INA (F-…), peça especial/OEM; não existe no catálogo medias."
+    ]
+  },
+  {
+    "sku": "4772",
+    "slug": "ina-f45178-rolamento-unitario",
+    "nomeAtual": "Rolamento INA F45178",
+    "marca": "Ina",
+    "designacao": "F-45178",
+    "fotos": [],
+    "paginaDasFotos": null,
+    "fotoExata": false,
+    "imagemFamilia": "",
+    "fontes": [],
+    "confianca": "baixa",
+    "duvidas": [
+      "Número de desenho INA (F-…), peça especial/OEM; não existe no catálogo medias."
+    ]
+  },
+  {
+    "sku": "4774",
+    "slug": "ina-f45698-rolamento-unitario",
+    "nomeAtual": "Rolamento INA F45698",
+    "marca": "Ina",
+    "designacao": "F-45698",
+    "fotos": [],
+    "paginaDasFotos": null,
+    "fotoExata": false,
+    "imagemFamilia": "",
+    "fontes": [],
+    "confianca": "baixa",
+    "duvidas": [
+      "Número de desenho INA (F-…), peça especial/OEM; não existe no catálogo medias."
+    ]
+  },
+  {
+    "sku": "4779",
+    "slug": "ina-f45775-1a-rolamento-unitario",
+    "nomeAtual": "Rolamento INA F45775 1A",
+    "marca": "Ina",
+    "designacao": "F-45775.1A",
+    "fotos": [],
+    "paginaDasFotos": null,
+    "fotoExata": false,
+    "imagemFamilia": "",
+    "fontes": [],
+    "confianca": "baixa",
+    "duvidas": [
+      "Número de desenho INA (F-…), peça especial/OEM; não existe no catálogo medias."
+    ]
+  },
+  {
+    "sku": "3438",
+    "slug": "ina-f4650-rolamento-unitario",
+    "nomeAtual": "Rolamento INA F4650",
+    "marca": "Ina",
+    "designacao": "F-4650",
+    "fotos": [],
+    "paginaDasFotos": null,
+    "fotoExata": false,
+    "imagemFamilia": "",
+    "fontes": [],
+    "confianca": "baixa",
+    "duvidas": [
+      "Número de desenho INA (F-…), peça especial/OEM; não existe no catálogo medias."
+    ]
+  },
+  {
+    "sku": "3864",
+    "slug": "ina-f54825-2-rolamento-unitario",
+    "nomeAtual": "Rolamento INA F54825.2",
+    "marca": "Ina",
+    "designacao": "F-54825.2",
+    "fotos": [],
+    "paginaDasFotos": null,
+    "fotoExata": false,
+    "imagemFamilia": "",
+    "fontes": [],
+    "confianca": "baixa",
+    "duvidas": [
+      "Número de desenho INA (F-…), peça especial/OEM; não existe no catálogo medias."
+    ]
+  },
+  {
+    "sku": "3491",
+    "slug": "ina-f54970-rolamento-unitario",
+    "nomeAtual": "Rolamento INA F54970",
+    "marca": "Ina",
+    "designacao": "F-54970",
+    "fotos": [],
+    "paginaDasFotos": null,
+    "fotoExata": false,
+    "imagemFamilia": "",
+    "fontes": [],
+    "confianca": "baixa",
+    "duvidas": [
+      "Número de desenho INA (F-…), peça especial/OEM; não existe no catálogo medias."
+    ]
+  },
+  {
+    "sku": "4863",
+    "slug": "ina-fj1816-rolamento-unitario",
+    "nomeAtual": "Rolamento INA FJ1816",
+    "marca": "Ina",
+    "designacao": "FJ1816",
+    "fotos": [],
+    "paginaDasFotos": null,
+    "fotoExata": false,
+    "imagemFamilia": "",
+    "fontes": [],
+    "confianca": "baixa",
+    "duvidas": [
+      "FJ é designação Torrington/Koyo (bucha de agulhas), não INA; não existe no medias. O equivalente INA seria HK1816, mas não foi assumido."
+    ]
+  },
+  {
+    "sku": "5203",
+    "slug": "ina-hk4516-rolamento-unitario",
+    "nomeAtual": "Rolamento INA HK4516",
+    "marca": "Ina",
+    "designacao": "HK4516",
+    "fotos": [],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/needle-roller-bearings/drawn-cup-needle-roller-bearings-with-open-ends/hk4520-b/p/381775",
+    "fotoExata": false,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/needle-roller-bearings/drawn-cup-needle-roller-bearings-with-open-ends/hk4520-b/p/381775",
+        "nota": "Schaeffler medias, produto HK4520 (código 381775); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "media",
+    "duvidas": [
+      "HK4516 não está no medias (só HK4512-B e HK4520). Usada a página do HK4520: mesma série e construção, largura diferente.",
+      "Foto existe na página do fabricante (https://cdn.schaeffler-ecommerce.com/cdn/00006BAD_b.png), mas o CDN responde 200 com content-type application/octet-stream em todos os tamanhos (o arquivo é um PNG válido); pela regra de conferência (image/*) não foi incluída em fotos. Se a loja baixar e regravar o arquivo, serve.",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "4830",
+    "slug": "ina-n204-rolamento-unitario",
+    "nomeAtual": "Rolamento INA N204",
+    "marca": "Ina",
+    "designacao": "N204",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/00007F79_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/cylindrical-roller-bearings/n204-e-xl-tvp2/p/367516",
+    "fotoExata": true,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/cylindrical-roller-bearings/n204-e-xl-tvp2/p/367516",
+        "nota": "Schaeffler medias, produto N204-E-XL-TVP2 (código 367516); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "media",
+    "duvidas": [
+      "No catálogo Schaeffler o N204 é marca FAG (N204-E-XL-TVP2), não INA; a foto é do produto FAG.",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "5462",
+    "slug": "ina-nk12-16-rolamento-unitario",
+    "nomeAtual": "Rolamento INA NK12/16",
+    "marca": "Ina",
+    "designacao": "NK12/16",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/000069D9_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/needle-roller-bearings/machined-needle-roller-bearings/nk12/16-xl/p/382901",
+    "fotoExata": true,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/needle-roller-bearings/machined-needle-roller-bearings/nk12/16-xl/p/382901",
+        "nota": "Schaeffler medias, produto NK12/16-XL (código 382901); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "alta",
+    "duvidas": [
+      "Catálogo atual: NK12/16-XL.",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "3577",
+    "slug": "ina-nk42-20-rolamento-unitario",
+    "nomeAtual": "Rolamento INA NK42/20",
+    "marca": "Ina",
+    "designacao": "NK42/20",
+    "fotos": [
+      "https://cdn.schaeffler-ecommerce.com/cdn/000069D9_b.png"
+    ],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/needle-roller-bearings/machined-needle-roller-bearings/nk42/20-xl/p/382970",
+    "fotoExata": true,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/needle-roller-bearings/machined-needle-roller-bearings/nk42/20-xl/p/382970",
+        "nota": "Schaeffler medias, produto NK42/20-XL (código 382970); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "alta",
+    "duvidas": [
+      "Catálogo atual: NK42/20-XL.",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "4878",
+    "slug": "ina-sce1212-rolamento-unitario",
+    "nomeAtual": "Rolamento INA SCE1212",
+    "marca": "Ina",
+    "designacao": "SCE1212",
+    "fotos": [],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/needle-roller-bearings/drawn-cup-needle-roller-bearings-with-open-ends/sce1212/p/382104",
+    "fotoExata": false,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/needle-roller-bearings/drawn-cup-needle-roller-bearings-with-open-ends/sce1212/p/382104",
+        "nota": "Schaeffler medias, produto SCE1212 (código 382104); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "media",
+    "duvidas": [
+      "Foto existe na página do fabricante (https://cdn.schaeffler-ecommerce.com/cdn/00006BAD_b.png), mas o CDN responde 200 com content-type application/octet-stream em todos os tamanhos (o arquivo é um PNG válido); pela regra de conferência (image/*) não foi incluída em fotos. Se a loja baixar e regravar o arquivo, serve.",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  },
+  {
+    "sku": "4877",
+    "slug": "ina-sce2416-rolamento-radial-agulha-unitario",
+    "nomeAtual": "Rolamento Radial Agulha INA SCE2416",
+    "marca": "Ina",
+    "designacao": "SCE2416",
+    "fotos": [],
+    "paginaDasFotos": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/needle-roller-bearings/drawn-cup-needle-roller-bearings-with-open-ends/sce2416/p/1170809",
+    "fotoExata": false,
+    "imagemFamilia": "",
+    "fontes": [
+      {
+        "tipo": "fabricante",
+        "url": "https://medias.schaeffler.com.br/pt/produto/rotary/rolling-and-plain-bearings/roller-bearings/needle-roller-bearings/drawn-cup-needle-roller-bearings-with-open-ends/sce2416/p/1170809",
+        "nota": "Schaeffler medias, produto SCE2416 (código 1170809); imagem PRIMARY do produto no CDN oficial."
+      }
+    ],
+    "confianca": "media",
+    "duvidas": [
+      "Foto existe na página do fabricante (https://cdn.schaeffler-ecommerce.com/cdn/00006BAD_b.png), mas o CDN responde 200 com content-type application/octet-stream em todos os tamanhos (o arquivo é um PNG válido); pela regra de conferência (image/*) não foi incluída em fotos. Se a loja baixar e regravar o arquivo, serve.",
+      "Foto do catálogo medias é a imagem padrão da Schaeffler para este tipo/construção (a mesma em todas as medidas da série), não uma foto individual da peça."
+    ]
+  }
+]

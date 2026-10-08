@@ -46,3 +46,22 @@ Para refazer: `match.py` e `gera_patch.py` leem `veda.json` (export do catálogo
   outro da loja com foto (outra marca) recebeu essa foto como `representativa`, com
   `imagemFamilia` igual à do doador (`repr.json`). É o mesmo critério dos 94 que já existiam.
 - Nenhuma imagem veio de site de terceiro.
+
+## Segunda rodada (mesma data)
+
+- `patch2.json` (`gera_lote2.py`, `aplica2.mjs`): marca lida do nome (96), código do fabricante
+  como MPN em rolamentos, mancais e retentores com marca (1.061), `sem_identificador` nos itens
+  sem marca e sem código (3.332), peso estimado pela geometria e material (2.679) e embalagem
+  estimada pela medida da peça (3.104), ambos anotados em `_pesoOrigem` / `_embalagemOrigem`;
+  descrição com medida e material onde o nome confirma a medida do cadastro.
+- `patch-baixa.json`: texto e categoria Google dos 45 itens de identificação duvidosa.
+- `patch-imdepa-ok.json`: GTIN (44) e peso bruto (112) da cópia local do catálogo Imdepa
+  (`partsagricola.com.br/data/imdepa.json`), só com código Imdepa ou marca + código iguais.
+- `vedashow-fotos-fabricante-{a,b}.json`: imagem oficial de fabricante (Schaeffler, SKF, NTN,
+  Timken, NSK) em 93 produtos, aplicada como `representativa` (os próprios fabricantes dizem
+  que a imagem é da série). `vedashow-fotos-diversos.json`: 7 fotos de item exato (Telhanorte).
+- **Pendente:** `imdepa-fotos-plano.json` lista 295 produtos sem imagem que batem por designação
+  com 214 páginas da Imdepa. O site só responde a navegador (verificação anti-robô para
+  servidor); as páginas foram lidas pelo Chrome do Nicolas, mas as URLs das fotos não chegaram
+  a ser trazidas para o servidor. A URL atual da foto está no HTML de `/p/<id>/x`
+  (`images.cws.digital/produtos/gg/…`), e o servidor baixa a imagem normalmente.
