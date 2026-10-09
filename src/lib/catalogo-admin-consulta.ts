@@ -77,33 +77,42 @@ function base(tenantId: string): Prisma.Sql {
       p.imagens[1] AS imagem, cardinality(p.imagens) AS fotos, p."imagemOrigem",
       p.destaque, p.ativo, p.disponibilidade, p."atualizadoEm", p."criadoEm", p."versaoCatalogo",
       c.nome AS "categoriaNome", c.slug AS "categoriaSlug",
-      e.variacoes,
-      e.estado AS "estoqueEstado",
+      coalesce(e.variacoes, 0) AS variacoes,
+      coalesce(e.estado, 'desconhecido') AS "estoqueEstado",
       CASE WHEN e.estado = 'controlado' THEN e.disponivel END AS estoque,
       translate(lower(p.nome || ' ' || coalesce(p.sku, '') || ' ' || coalesce(p.marca, '')), ${DE}, ${PARA}) AS alvo,
       cardinality(p.imagens) = 0 AS "semFoto",
       p."precoCentavos" <= 0 AS "sobConsulta",
       cardinality(p.imagens) > 0 AND p."imagemOrigem" <> 'propria' AS "fotoDeOutro",
-      p.disponibilidade = 'in_stock' AND e.estado = 'controlado' AND e.disponivel <= 0 AS "anunciaSemSaldo"
+      coalesce(p.disponibilidade = 'in_stock' AND e.estado = 'controlado' AND e.disponivel <= 0, false) AS "anunciaSemSaldo"
     FROM "Produto" p
     LEFT JOIN "Categoria" c ON c.id = p."categoriaId"
-    LEFT JOIN LATERAL (
+    -- Uma passada só pelas apresentações da loja (a versão por produto custava ~300 ms em 5,6 mil itens).
+    -- Com grade, quem vende são as variações; a apresentação única é só o molde.
+    LEFT JOIN (
       SELECT
-        count(DISTINCT v.id) FILTER (WHERE NOT v.padrao)::int AS variacoes,
+        x."produtoId",
+        (count(*) FILTER (WHERE NOT x.padrao))::int AS variacoes,
         CASE
-          WHEN count(s.id) = 0 THEN 'desconhecido'
-          WHEN bool_or(s.fisico IS NULL) THEN 'nao-controla'
+          WHEN coalesce(sum(x.saldos) FILTER (WHERE x.padrao = NOT x.grade), 0) = 0 THEN 'desconhecido'
+          WHEN bool_or(x."semControle") FILTER (WHERE x.padrao = NOT x.grade) THEN 'nao-controla'
           ELSE 'controlado'
         END AS estado,
-        coalesce(sum(s.fisico - s.reservado) FILTER (WHERE s.fisico IS NOT NULL), 0)::int AS disponivel
-      FROM "Variante" v
-      LEFT JOIN "SaldoEstoque" s ON s."varianteId" = v.id AND s."tenantId" = v."tenantId"
-      WHERE v."produtoId" = p.id AND v."tenantId" = p."tenantId" AND v.ativo
-        -- Com grade, quem vende são as variações; a apresentação única é só o molde.
-        AND v.padrao = NOT EXISTS (
-          SELECT 1 FROM "Variante" g WHERE g."produtoId" = p.id AND g."tenantId" = p."tenantId" AND g.ativo AND NOT g.padrao
-        )
-    ) e ON true
+        coalesce(sum(x.disponivel) FILTER (WHERE x.padrao = NOT x.grade), 0)::int AS disponivel
+      FROM (
+        SELECT
+          v.id, v."produtoId", v.padrao,
+          bool_or(NOT v.padrao) OVER (PARTITION BY v."produtoId") AS grade,
+          count(s.id) AS saldos,
+          coalesce(bool_or(s.fisico IS NULL), false) AS "semControle",
+          coalesce(sum(s.fisico - s.reservado) FILTER (WHERE s.fisico IS NOT NULL), 0) AS disponivel
+        FROM "Variante" v
+        LEFT JOIN "SaldoEstoque" s ON s."varianteId" = v.id AND s."tenantId" = v."tenantId"
+        WHERE v."tenantId" = ${tenantId} AND v.ativo
+        GROUP BY v.id
+      ) x
+      GROUP BY x."produtoId"
+    ) e ON e."produtoId" = p.id
     WHERE p."tenantId" = ${tenantId}`;
 }
 
