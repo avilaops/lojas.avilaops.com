@@ -1,4 +1,6 @@
+import { randomBytes } from "node:crypto";
 import type { OperadorLoja, Tenant } from "@prisma/client";
+import type { ResultadoDoConvite } from "./convite-equipe";
 import { prisma } from "./db";
 import { conferirSenha, gerarHashSenha } from "./sessao";
 
@@ -76,24 +78,52 @@ export function conferirForcaDaSenha(senha: string): void {
   if (senha.length < 8) throw new ErroOperador("A senha precisa de pelo menos 8 caracteres.");
 }
 
+/** O que sai para a tela. Nunca `senhaHash`: o que não sai daqui não vaza. */
+const NA_TELA = {
+  id: true,
+  nome: true,
+  email: true,
+  papel: true,
+  ativo: true,
+  criadoEm: true,
+  conviteSituacao: true,
+  conviteDetalhe: true,
+  conviteEm: true,
+} as const;
+
 export async function listarOperadores(tenantId: string) {
   return prisma.operadorLoja.findMany({
     where: { tenantId },
     // Nunca devolve `senhaHash`: o que não sai daqui não vaza numa tela.
-    select: { id: true, nome: true, email: true, papel: true, ativo: true, ultimoAcessoEm: true, criadoEm: true },
+    select: { ...NA_TELA, ultimoAcessoEm: true },
     orderBy: [{ ativo: "desc" }, { nome: "asc" }],
   });
 }
 
+/**
+ * Senha de quem entra por convite.
+ *
+ * A coluna é obrigatória, e a pessoa convidada cria a senha dela no login
+ * único, não aqui. Fica um valor sorteado que ninguém conhece: a entrada por
+ * senha da loja não abre, e a do login único, sim.
+ */
+function senhaQueNinguemSabe(): string {
+  return gerarHashSenha(randomBytes(32).toString("base64url"));
+}
+
+/**
+ * Cria o acesso. Sem `senha`, a pessoa entra só pelo login único (é o caso do
+ * convite por e-mail); com ela, vale a senha combinada com o dono.
+ */
 export async function criarOperador(
   tenantId: string,
-  dados: { nome: string; email: string; senha: string; papel: string },
+  dados: { nome: string; email: string; senha?: string; papel: string },
 ) {
   const nome = dados.nome.trim();
   const email = normalizarEmail(dados.email);
   if (nome.length < 2) throw new ErroOperador("Informe o nome de quem vai usar o acesso.");
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new ErroOperador("E-mail inválido.");
-  conferirForcaDaSenha(dados.senha);
+  if (dados.senha) conferirForcaDaSenha(dados.senha);
 
   const papel = dados.papel === "GERENTE" ? "GERENTE" : "OPERADOR";
 
@@ -116,9 +146,24 @@ export async function criarOperador(
   }
 
   return prisma.operadorLoja.create({
-    data: { tenantId, nome, email, papel, senhaHash: gerarHashSenha(dados.senha) },
-    select: { id: true, nome: true, email: true, papel: true, ativo: true, criadoEm: true },
+    data: { tenantId, nome, email, papel, senhaHash: dados.senha ? gerarHashSenha(dados.senha) : senhaQueNinguemSabe() },
+    select: NA_TELA,
   });
+}
+
+/** Um acesso desta loja, para reenviar o convite. O `tenantId` entra no `where`. */
+export async function buscarOperador(tenantId: string, id: string) {
+  return prisma.operadorLoja.findFirst({ where: { id, tenantId }, select: NA_TELA });
+}
+
+/** Guarda o que aconteceu com o convite por e-mail. Nunca o endereço de criar a senha. */
+export async function registrarConvite(tenantId: string, id: string, convite: ResultadoDoConvite) {
+  const { count } = await prisma.operadorLoja.updateMany({
+    where: { id, tenantId },
+    data: { conviteSituacao: convite.situacao, conviteDetalhe: convite.detalhe.slice(0, 300), conviteEm: new Date() },
+  });
+  if (count === 0) throw new ErroOperador("Acesso não encontrado nesta loja.");
+  return prisma.operadorLoja.findFirstOrThrow({ where: { id, tenantId }, select: NA_TELA });
 }
 
 /**

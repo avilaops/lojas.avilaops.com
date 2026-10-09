@@ -26,6 +26,7 @@ import { lerDefinicoes } from "@/lib/campos-personalizados";
 import { TIPOS_POLITICA, lerRegrasDevolucao, modeloDePolitica, politicaPublicada } from "@/lib/politicas";
 import { prisma } from "@/lib/db";
 import { lojistaAtual, sessaoDoPainel } from "@/lib/sessao";
+import { configConvite } from "@/lib/convite-equipe";
 import { listarOperadores, permite } from "@/lib/operadores";
 import { dadosDoPainel } from "@/lib/painel-dados";
 import { urlDaLoja } from "@/lib/tenant";
@@ -73,7 +74,11 @@ export default async function Pagina({ params, searchParams }: {
           papel: o.papel,
           ativo: o.ativo,
           ultimoAcessoEm: o.ultimoAcessoEm?.toISOString() ?? null,
+          conviteSituacao: o.conviteSituacao,
+          conviteDetalhe: o.conviteDetalhe,
+          conviteEm: o.conviteEm?.toISOString() ?? null,
         }))}
+        conviteLigado={configConvite() !== null}
       />
     );
   }
