@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CheckoutScreen, MercadoPagoCardBrick } from "@avilaops/checkout/ui";
 import { FRETE_RETIRADA_ID, avaliarPedidoMinimo, avisoDePedidoMinimo, type ItemCarrinho, type MeioPagamento, type OpcaoFrete, type ResultadoPagamento } from "@avilaops/checkout";
 import { useCart } from "@/components/cart/CartProvider";
 import { iniciarCheckout } from "@/lib/eventos-loja";
-import { destinoAposFalhaDoCheckout } from "@/lib/pedido-a-confirmar";
+import { desfechoDoCheckout, esquecerPendencia, guardaDoNavegador, guardarPendencia, lerPendencia, lerSituacao } from "@/lib/pedido-a-confirmar";
 import type { TenantPublico } from "@/lib/tenant";
 
 /**
@@ -47,6 +47,14 @@ export default function CheckoutClient({ loja, conta }: { loja: TenantPublico; c
   );
   const [resultado, setResultado] = useState<ResultadoPagamento | null>(null);
   const [referencia] = useState(() => novaReferencia(loja.slug));
+  // Referência de uma visita anterior cujo pagamento ficou a confirmar. Enquanto
+  // ela não resolver, o formulário não abre: ele nasceria com referência nova,
+  // fora da trava de repetição, e cobraria de novo com a primeira em aberto.
+  const [anterior, setAnterior] = useState<{ referencia: string; situacao: "conferindo" | "pendente" | "pedido" } | null>(null);
+  const [anteriorLida, setAnteriorLida] = useState(false);
+  // Pagamento desta visita que ficou a confirmar: a tela troca na hora, com o
+  // link à vista, em vez de depender de a navegação acontecer.
+  const [aConfirmar, setAConfirmar] = useState<string | null>(null);
 
   const itensCheckout = useMemo<ItemCarrinho[]>(
     () => itens.map((i) => ({ id: i.id, nome: i.nome, quantidade: i.quantidade, precoUnitario: i.precoCentavos, imagem: i.imagem })),
@@ -62,6 +70,27 @@ export default function CheckoutClient({ loja, conta }: { loja: TenantPublico; c
     iniciarCheckout(itens.map((i) => ({ id: i.id, nome: i.nome, precoCentavos: i.precoCentavos, quantidade: i.quantidade })));
   }, [pronto, itens]);
 
+  const conferirAnterior = useCallback(async (ref: string) => {
+    setAnterior({ referencia: ref, situacao: "conferindo" });
+    const corpo = await fetch(`/api/checkout/pendente?referencia=${encodeURIComponent(ref)}`, { cache: "no-store" }).then((x) => (x.ok ? x.json() : null)).catch(() => null);
+    const situacao = lerSituacao(corpo);
+    if (situacao === "livre") {
+      esquecerPendencia(guardaDoNavegador(), loja.slug);
+      setAnterior(null);
+    } else {
+      // Consulta que falhou conta como pendente: na dúvida, não se cobra de novo.
+      setAnterior({ referencia: ref, situacao: situacao ?? "pendente" });
+    }
+  }, [loja.slug]);
+
+  /* eslint-disable react-hooks/set-state-in-effect -- lê a pendência do armazenamento externo do navegador, como o carrinho */
+  useEffect(() => {
+    const ref = lerPendencia(guardaDoNavegador(), loja.slug);
+    setAnteriorLida(true);
+    if (ref) void conferirAnterior(ref);
+  }, [loja.slug, conferirAnterior]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
   // Polling do PIX: quando cair, vai para a página do pedido.
   useEffect(() => {
     if (!resultado || resultado.status !== "pendente" || resultado.meioPagamento !== "pix") return;
@@ -76,7 +105,51 @@ export default function CheckoutClient({ loja, conta }: { loja: TenantPublico; c
     return () => clearInterval(timer);
   }, [resultado, limpar, referencia, router]);
 
-  if (!pronto) return null;
+  if (!pronto || !anteriorLida) return null;
+
+  if (aConfirmar) {
+    return (
+      <div className="container-loja max-w-lg py-16 text-center">
+        <h1 className="text-xl font-bold">Estamos confirmando o pagamento</h1>
+        <p className="mt-2 text-sm text-muted-foreground">Não pague de novo. A resposta do pagamento ainda não chegou; acompanhe pela página do pedido.</p>
+        <Link href={aConfirmar} className="btn-primario mt-6 w-full">Acompanhar o pedido</Link>
+      </div>
+    );
+  }
+
+  if (anterior && !resultado) {
+    const destino = `/pedido/${encodeURIComponent(anterior.referencia)}`;
+    if (anterior.situacao === "conferindo") {
+      return (
+        <div className="container-loja max-w-lg py-16 text-center">
+          <p className="text-sm text-muted-foreground">Conferindo um pagamento anterior…</p>
+        </div>
+      );
+    }
+    if (anterior.situacao === "pedido") {
+      return (
+        <div className="container-loja max-w-lg py-16 text-center">
+          <h1 className="text-xl font-bold">Sua compra anterior já virou pedido</h1>
+          <p className="mt-2 text-sm text-muted-foreground">O pagamento que estava a confirmar gerou um pedido. Veja o pedido antes de comprar de novo: os itens do carrinho podem ser os mesmos.</p>
+          <Link href={destino} className="btn-primario mt-6 w-full">Ver o pedido</Link>
+          <button type="button" className="btn-secundario mt-2 w-full" onClick={() => { esquecerPendencia(guardaDoNavegador(), loja.slug); setAnterior(null); }}>
+            Fazer outra compra
+          </button>
+        </div>
+      );
+    }
+    return (
+      <div className="container-loja max-w-lg py-16 text-center">
+        <h1 className="text-xl font-bold">Você tem um pagamento em confirmação</h1>
+        <p className="mt-2 text-sm text-muted-foreground">Não pague de novo. Seu pagamento anterior ainda não foi resolvido; finalizar outra compra agora poderia cobrar duas vezes. Seu carrinho continua guardado.</p>
+        <Link href={destino} className="btn-primario mt-6 w-full">Acompanhar o pedido</Link>
+        <button type="button" className="btn-secundario mt-2 w-full" onClick={() => void conferirAnterior(anterior.referencia)}>
+          Conferir de novo
+        </button>
+      </div>
+    );
+  }
+
   if (itens.length === 0 && !resultado) {
     return (
       <div className="container-loja py-16 text-center">
@@ -121,19 +194,21 @@ export default function CheckoutClient({ loja, conta }: { loja: TenantPublico; c
       }),
     });
     const corpo = await r.json().catch(() => null);
-    if (!r.ok) {
-      // Cobrança que pode ter nascido não reabre o formulário: o comprador vai
-      // para a página do pedido, com o carrinho guardado para o caso de ela
-      // não ter nascido. A promessa não resolve de propósito: o botão segue
-      // travado até a navegação e a tela não chega a dizer "nada foi cobrado".
-      const destino = destinoAposFalhaDoCheckout(corpo, referencia);
-      if (destino) {
-        router.push(destino);
-        return new Promise<ResultadoPagamento>(() => {});
-      }
-      throw new Error(corpo?.erro ?? "Não foi possível processar o pagamento.");
+    const desfecho = desfechoDoCheckout(r.ok, corpo, referencia);
+    if (desfecho.tipo === "erro") throw new Error(desfecho.mensagem);
+    if (desfecho.tipo === "a_confirmar") {
+      // Cobrança que pode ter nascido (ou nasceu, e só a resposta se perdeu) não
+      // reabre o formulário. A referência fica guardada para a próxima visita ao
+      // /checkout, o carrinho também, e a tela troca para um aviso com o link:
+      // se a navegação falhar, o comprador não fica diante de um botão travado.
+      // A promessa não resolve de propósito, para a tela de pagamento (que sai
+      // de cena nesta mesma renderização) não chegar a dizer "nada foi cobrado".
+      guardarPendencia(guardaDoNavegador(), loja.slug, desfecho.referencia);
+      setAConfirmar(desfecho.destino);
+      router.push(desfecho.destino);
+      return new Promise<ResultadoPagamento>(() => {});
     }
-    const res = corpo as ResultadoPagamento;
+    const res = desfecho.resultado;
     setResultado(res);
     if (res.status === "aprovado") {
       limpar();

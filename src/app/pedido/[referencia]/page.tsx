@@ -9,7 +9,7 @@ import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
 import EventoCompra from "@/components/EventoCompra";
 import { ConviteAvaliacaoGoogle } from "@/components/AvaliacoesGoogle";
 import { conviteAvaliacao } from "@/lib/avaliacoes-google";
-import { telaSemPedido } from "@/lib/pedido-a-confirmar";
+import { TEXTO_SEM_PEDIDO, telaSemPedido } from "@/lib/pedido-a-confirmar";
 
 export const metadata: Metadata = { title: "Pedido", robots: { index: false } };
 
@@ -34,21 +34,22 @@ export default async function PedidoPage({ params }: { params: Promise<{ referen
     const tentativa = await prisma.tentativaCatalogo.findUnique({ where: { tenantId_referencia: { tenantId: t.id, referencia } }, select: { estado: true } });
     const tela = telaSemPedido(tentativa?.estado);
     if (!tela) notFound();
-    const confirmando = tela === "confirmando";
+    const { titulo, texto } = TEXTO_SEM_PEDIDO[tela];
     return (
       <div className="container-loja max-w-2xl py-10">
         <p className="text-xs uppercase tracking-widest text-muted-foreground">Pedido {referencia}</p>
-        <h1 className="mt-1 text-2xl font-bold">{confirmando ? "Estamos confirmando o pagamento" : "Pagamento não concluído"}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {confirmando
-            ? "Não pague de novo. A resposta do pagamento ainda não chegou; quando ela chegar, o pedido aparece nesta página. Guarde este endereço e volte em alguns minutos."
-            : "Este pagamento não foi concluído e nenhum pedido foi gerado. Seu carrinho continua guardado para você tentar de novo."}
-        </p>
+        <h1 className="mt-1 text-2xl font-bold">{titulo}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">{texto}</p>
         <div className="mt-6 flex flex-wrap gap-2">
-          {confirmando ? <Link href="/produtos" className="btn-secundario">Continuar comprando</Link> : <Link href="/carrinho" className="btn-primario">Voltar ao carrinho</Link>}
+          {tela === "nao_concluido" ? <Link href="/carrinho" className="btn-primario">Voltar ao carrinho</Link> : <Link href="/produtos" className="btn-secundario">Continuar comprando</Link>}
           {t.whatsapp && (
-            <a className="btn-secundario" href={linkWhatsApp(t.whatsapp, `Olá! Sobre o pagamento do pedido ${referencia}`)} target="_blank" rel="noopener">
+            <a className={tela === "pago_sem_pedido" ? "btn-primario" : "btn-secundario"} href={linkWhatsApp(t.whatsapp, `Olá! Sobre o pagamento do pedido ${referencia}`)} target="_blank" rel="noopener">
               Falar com a loja
+            </a>
+          )}
+          {tela === "pago_sem_pedido" && t.emailContato && (
+            <a className="btn-secundario" href={`mailto:${t.emailContato}?subject=${encodeURIComponent(`Pagamento do pedido ${referencia}`)}`}>
+              Escrever para a loja
             </a>
           )}
         </div>

@@ -97,7 +97,7 @@ Os grupos são uma lista fechada (`GRUPOS`):
 
 | Grupo | Rotas | Loja vem de |
 |---|---|---|
-| `checkout` | `POST /api/checkout`, `GET /api/checkout/status` | host |
+| `checkout` | `POST /api/checkout`, `GET /api/checkout/status`, `GET /api/checkout/pendente` | host |
 | `frete` | `POST /api/frete` | host |
 | `busca` | `GET /api/busca` | host |
 | `webhook` | `POST /api/webhooks/mercadopago` | `?loja=<slug>` (o webhook pode chegar pelo host da plataforma) |
