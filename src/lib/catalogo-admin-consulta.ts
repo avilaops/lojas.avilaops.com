@@ -261,4 +261,19 @@ export async function consultarCatalogo(tenantId: string, c: ConsultaDoCatalogo)
   };
 }
 
+/**
+ * Um produto, com as mesmas colunas calculadas da consulta: é o que garante
+ * que a ficha e a lista digam o mesmo estoque e o mesmo estado.
+ */
+export async function linhaDoProduto(tenantId: string, id: string) {
+  const [linha] = await prisma.$queryRaw<Linha[]>(Prisma.sql`
+    SELECT b.id, b.slug, b.nome, b.marca, b.sku, b."precoCentavos", b."precoDeCentavos", b.imagem, b.fotos, b."imagemOrigem",
+           b.destaque, b.ativo, b.disponibilidade, b."atualizadoEm", b."criadoEm", b."versaoCatalogo",
+           b."categoriaNome", b."categoriaSlug", b.variacoes, b."estoqueEstado", b.estoque
+    FROM (${base(tenantId)}) b WHERE b.id = ${id}`);
+  if (!linha) return null;
+  const { categoriaNome, categoriaSlug, ...p } = linha;
+  return { ...p, categoria: categoriaSlug && categoriaNome ? { nome: categoriaNome, slug: categoriaSlug } : null };
+}
+
 export type ResultadoDaConsulta = Awaited<ReturnType<typeof consultarCatalogo>>;

@@ -6,6 +6,7 @@ import { invalidarCatalogo } from "@/lib/catalogo-cache";
 import { ajustarOfertaNoCatalogo } from "@/lib/catalogo-escrita";
 import { ErroCatalogo } from "@/lib/catalogo-oferta";
 import { origemDaAvilaOps } from "@/lib/catalogo-origem";
+import { linhaDoProduto } from "@/lib/catalogo-admin-consulta";
 import { EdicaoPeloAdmin } from "./editar";
 
 type Ctx = { params: Promise<{ slug: string; id: string }> };
@@ -46,8 +47,17 @@ export async function GET(request: Request, { params }: Ctx) {
     return Object.fromEntries(campos.map((campo) => [campo, origem[campo] ?? null]));
   };
 
+  const [resumo, categorias] = await Promise.all([
+    // Estoque oficial (das variações) e estado, calculados como na lista.
+    linhaDoProduto(t.id, produto.id),
+    // Todas as categorias da loja, inclusive as vazias: é a lista de onde se escolhe.
+    prisma.categoria.findMany({ where: { tenantId: t.id }, select: { slug: true, nome: true }, orderBy: { nome: "asc" } }),
+  ]);
+
   return Response.json({
     produto,
+    resumo,
+    categorias,
     historico: historico.map((h) => ({
       versao: h.versao,
       origem: h.origem,
