@@ -2,7 +2,8 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { lojistaAtual } from "@/lib/sessao";
 import { urlDaLoja, temaDo, identidadeDa } from "@/lib/tenant";
-import { NOME_PLANO, PRECO_PLANO } from "@/lib/assinatura";
+import { NOME_PLANO } from "@/lib/assinatura";
+import { mensalidadeDaLoja } from "@/lib/faixas-antigas";
 import { fimDoTeste } from "@/lib/planos";
 import { resumoDeVendas, type ResumoVendas } from "@/lib/relatorio";
 import { diagnosticoDoFeed, type DiagnosticoFeed } from "@/lib/catalogo";
@@ -129,7 +130,7 @@ export async function dadosDoPainel(secao: SecaoPainel) {
         plano: loja.plano,
         podeTrocarPlano: !loja.assinaturaId,
         isenta: loja.cobrancaIsenta,
-        precoCentavos: PRECO_PLANO[loja.plano],
+        precoCentavos: mensalidadeDaLoja(loja),
         planoNome: NOME_PLANO[loja.plano],
         ultimoPagamentoEm: loja.ultimoPagamentoEm?.toISOString() ?? null,
         setupPagoEm: loja.setupPagoEm?.toISOString() ?? null,

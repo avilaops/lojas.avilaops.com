@@ -5,6 +5,7 @@ import { esquecerTenantEmCache } from "./tenant";
 import { fimDoTeste } from "./planos";
 import { alterarPreapproval, atualizarValorPreapproval, buscarCobrancasDaAssinatura, buscarPagamentoAutorizado, buscarPreapproval, criarPreapproval, type PagamentoAutorizado } from "./mercadopago-assinatura";
 import { alertar } from "./alertas";
+import { mensalidadeDaLoja, PRECO_DE_TABELA } from "./faixas-antigas";
 
 /**
  * Mensalidade da loja.
@@ -19,7 +20,7 @@ import { alertar } from "./alertas";
  * pagamento a loja fica SUSPENSA (vitrine no ar, checkout some). Pagou de
  * novo → ATIVA na hora.
  */
-export const PRECO_PLANO: Record<Plano, number> = { SITE: 11000, LOJA: 26900, LOJA_PRO: 49700 };
+export const PRECO_PLANO: Record<Plano, number> = PRECO_DE_TABELA;
 export const NOME_PLANO: Record<Plano, string> = { SITE: "Site", LOJA: "Loja", LOJA_PRO: "Loja Pro" };
 const DIAS_TOLERANCIA = Number(process.env.LOJAS_DIAS_TOLERANCIA ?? 7);
 const BASE = process.env.LOJAS_BASE_DOMAIN ?? "lojas.avilaops.com";
@@ -40,7 +41,8 @@ export async function iniciarAssinatura(t: Tenant): Promise<{ status: string; in
     motivo: `Avila Ops · Loja ${t.nome} · plano ${NOME_PLANO[t.plano]}`,
     slug: t.slug,
     payerEmail: t.loginEmail,
-    valorCentavos: PRECO_PLANO[t.plano],
+    // Quem fechou por um preço que saiu de tabela paga o que combinou (faixas-antigas.ts).
+    valorCentavos: mensalidadeDaLoja(t),
     backUrl: `https://${BASE}/painel?assinatura=voltou`,
   });
   await prisma.tenant.update({

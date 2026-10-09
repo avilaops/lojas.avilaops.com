@@ -5,6 +5,9 @@ import { prisma } from "../../src/lib/db";
 import { processarNotificacao } from "../../src/lib/assinatura";
 import { POST as assinatura } from "../../src/app/api/admin/tenants/[slug]/assinatura/route";
 import { GET as lerIsencao, POST as mudarIsencao } from "../../src/app/api/admin/tenants/[slug]/isencao/route";
+import { GET as lerFaixa, POST as mudarFaixa } from "../../src/app/api/admin/tenants/[slug]/faixa/route";
+import { PLANOS } from "../../src/lib/planos";
+import { mensalidadeDaLoja } from "../../src/lib/faixas-antigas";
 
 /**
  * A mensalidade de uma loja de ponta a ponta — criar, alterar, pausar, retomar,
@@ -275,4 +278,65 @@ test("isenção exige o token de administração e valida a entrada", async () =
   assert.equal((await isencao(t.slug, { isenta: "sim" })).status, 422);
   assert.equal((await isencao(t.slug, { isenta: true, outro: 1 })).status, 422);
   assert.equal((await isencao("loja-que-nao-existe", { isenta: true })).status, 404);
+});
+
+// ── Faixa de preço antiga ────────────────────────────────────────────────
+
+async function faixa(slug: string, corpo?: unknown, token = "token-de-teste-do-admin") {
+  const req = new Request(`https://lojas.avilaops.com/api/admin/tenants/${slug}/faixa`, {
+    method: corpo === undefined ? "GET" : "POST",
+    headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+    ...(corpo === undefined ? {} : { body: JSON.stringify(corpo) }),
+  });
+  const r = await (corpo === undefined ? lerFaixa : mudarFaixa)(req, { params: Promise.resolve({ slug }) });
+  return { status: r.status, corpo: (await r.json()) as { erro?: string; mudou?: boolean; faixa?: string | null; mensalidadeCentavos?: number; tabelaCentavos?: number; plano?: string; depois?: { faixa: string | null; mensalidadeCentavos: number; plano: string } } };
+}
+
+test("faixa antiga: a loja passa ao plano da faixa e a mensalidade nasce com o preço antigo, sem cobrar nada na hora", async () => {
+  const t = await loja({ plano: "LOJA" });
+  const antes = await faixa(t.slug);
+  assert.deepEqual({ faixa: antes.corpo.faixa, paga: antes.corpo.mensalidadeCentavos }, { faixa: null, paga: 26900 });
+
+  const r = await faixa(t.slug, { faixa: "loja-pro-350" });
+  assert.equal(r.status, 200);
+  assert.deepEqual(r.corpo.depois, { ...r.corpo.depois, faixa: "loja-pro-350", mensalidadeCentavos: 35000, plano: "LOJA_PRO" });
+  assert.equal(mp.chamadas.length, 0, "atribuir a faixa não fala com o Mercado Pago");
+  const gravada = await atual(t.id);
+  assert.deepEqual({ plano: gravada.plano, faixa: gravada.faixaPreco, ass: gravada.assinaturaStatus }, { plano: "LOJA_PRO", faixa: "loja-pro-350", ass: "SEM_ASSINATURA" });
+
+  await agir(t.slug, { acao: "iniciar" });
+  const pedido = mp.chamadas.find((c) => c.metodo === "POST")!.corpo as { auto_recurring: { transaction_amount: number } };
+  assert.equal(pedido.auto_recurring.transaction_amount, 350);
+});
+
+test("faixa antiga é oculta: não está na tabela pública, e o preço da loja é o dela", async () => {
+  assert.equal(PLANOS.some((p) => (p.preco as number) === 350), false);
+  assert.deepEqual(PLANOS.map((p) => p.id), ["SITE", "LOJA", "LOJA_PRO"]);
+  const t = await loja({ faixaPreco: "loja-pro-350" });
+  // O painel do lojista mostra `mensalidadeDaLoja` (painel-dados.ts): o preço dele, não o de tabela.
+  assert.equal(mensalidadeDaLoja(await atual(t.id)), 35000);
+});
+
+test("faixa antiga só vale no plano dela: trocou de plano, paga a tabela; tirar a faixa volta à tabela", async () => {
+  const t = await loja({ faixaPreco: "loja-pro-350" });
+  await prisma.tenant.update({ where: { id: t.id }, data: { plano: "LOJA" } });
+  assert.deepEqual((await faixa(t.slug)).corpo.mensalidadeCentavos, 26900);
+
+  const outra = await loja({ faixaPreco: "loja-pro-350" });
+  const r = await faixa(outra.slug, { faixa: null });
+  assert.deepEqual({ status: r.status, faixa: r.corpo.depois?.faixa, paga: r.corpo.depois?.mensalidadeCentavos, plano: r.corpo.depois?.plano }, { status: 200, faixa: null, paga: 49700, plano: "LOJA_PRO" });
+  assert.equal((await faixa(outra.slug, { faixa: null })).corpo.mudou, false);
+});
+
+test("faixa antiga: recusa faixa desconhecida, loja com mensalidade no Mercado Pago e pedido sem token", async () => {
+  const t = await loja();
+  assert.equal((await faixa(t.slug, { faixa: "nao-existe" })).status, 422);
+  assert.equal((await faixa(t.slug, { faixa: "loja-pro-350", extra: 1 })).status, 422);
+  assert.equal((await faixa(t.slug, { faixa: "loja-pro-350" }, "token-errado")).status, 401);
+  assert.equal((await faixa(t.slug, undefined, "token-errado")).status, 401);
+
+  await agir(t.slug, { acao: "iniciar" });
+  const r = await faixa(t.slug, { faixa: "loja-pro-350" });
+  assert.equal(r.status, 409);
+  assert.equal((await atual(t.id)).faixaPreco, null);
 });

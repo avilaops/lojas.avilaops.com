@@ -50,7 +50,10 @@ export async function PATCH(request: Request) {
   if (s.tenant.assinaturaId) {
     return Response.json({ erro: "A assinatura já foi criada no Mercado Pago. Para trocar de plano, fale com o suporte." }, { status: 409 });
   }
-  await prisma.tenant.update({ where: { id: s.tenant.id }, data: { plano: r.data.plano } });
+  // Trocar de plano sai da faixa de preço antiga (o anúncio antigo era daquele
+  // plano): a loja passa a pagar a tabela do plano novo. Escolher o mesmo plano não mexe.
+  const saiDaFaixa = r.data.plano !== s.tenant.plano;
+  await prisma.tenant.update({ where: { id: s.tenant.id }, data: { plano: r.data.plano, ...(saiDaFaixa ? { faixaPreco: null } : {}) } });
   esquecerTenantEmCache(s.tenant.slug);
   return Response.json({ ok: true, plano: r.data.plano });
 }
