@@ -174,11 +174,6 @@ Este repositório pertence à Ávila Ops Tecnologia, que ajuda pequenas empresas
   de o código que a usava ter saído. Antes de migração que mexe em dado
   existente, faça dump do banco: é o único backup que o GitHub não substitui, e
   o dump automático antes da migração ainda não está instalado no servidor.
-- **Evento de e-commerce vai por onde a loja mede.** Loja com só o GTM colado
-  recebe `view_item`, `add_to_cart`, `begin_checkout` e `purchase` no
-  `dataLayer` como `{ event, ecommerce }` (`cargaGtm` em
-  `src/lib/eventos-loja.ts`); com GA4 ou Google Ads direto, só pelo `gtag`,
-  para não contar a venda duas vezes. `Pixels.tsx` decide ao montar.
 - **A entrada do painel é o Auth.** Com `SSO_APP_ID` configurado, `/entrar`
   manda direto ao login único (auth.avilaops.com), como o ERP; quem entra no
   Lojas se libera na conta do Auth. A página só aparece com recado do Auth

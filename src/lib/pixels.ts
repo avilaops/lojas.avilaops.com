@@ -42,3 +42,24 @@ export function pixelsDaPlataforma(env: Record<string, string | undefined> = pro
 
 /** Sem nenhum id não há cookie de terceiro: a loja não precisa pedir consentimento. */
 export const temRastreio = (p: PixelsDaLoja) => Boolean(p.gtmId || p.metaPixelId || p.ga4Id || p.googleAdsId || p.tiktokPixelId || p.googleMerchantId);
+
+/**
+ * O script em linha que abre o `dataLayer` no HTML da loja com GTM ou gtag.
+ *
+ * O `consent default` tem de ser o primeiro comando do dataLayer: o GTM e o
+ * gtag.js processam a fila em ordem, e um `view_item` enfileirado antes dele
+ * chegaria às tags sem o estado `denied`. Por isso ele vai aqui, junto do
+ * marcador `__lojaPixels` que `eventos-loja.ts` lê, e não nos loaders
+ * `afterInteractive`.
+ * `ads_data_redaction`: enquanto o anúncio está negado, o Google também tira
+ * os identificadores de clique das URLs que recebe. É o par do Consent Mode v2
+ * que a documentação pede junto do `default` negado.
+ */
+export function scriptInicialDoGoogle(p: Pick<PixelsDaLoja, "gtmId">): string {
+  return (
+    "window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}" +
+    "gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'denied',wait_for_update:500});" +
+    "gtag('set','ads_data_redaction',true);" +
+    `window.__lojaPixels={gtm:${p.gtmId ? "true" : "false"}};`
+  );
+}
