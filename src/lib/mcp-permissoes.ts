@@ -19,6 +19,12 @@ interface Ferramenta {
   /** Nome curto que o assistente mostra ao lojista ao pedir confirmação. */
   titulo: string;
   escopo: Escopo;
+  /**
+   * Só acrescenta: não sobrescreve, não muda estado, não exclui. É a definição
+   * de `destructiveHint: false` no protocolo MCP; toda ferramenta que altera e
+   * não tem esta marca é anunciada como destrutiva.
+   */
+  aditiva?: true;
 }
 
 /**
@@ -35,7 +41,7 @@ export const FERRAMENTAS: Record<string, Ferramenta> = {
   listar_categorias: { titulo: "Listar categorias", escopo: "catalogo:ler" },
   listar_estoque_baixo: { titulo: "Ver estoque baixo", escopo: "catalogo:ler" },
   listar_avaliacoes: { titulo: "Listar avaliações", escopo: "catalogo:ler" },
-  criar_produto: { titulo: "Criar produto", escopo: "catalogo:escrever" },
+  criar_produto: { titulo: "Criar produto", escopo: "catalogo:escrever", aditiva: true },
   atualizar_produto: { titulo: "Alterar produto", escopo: "catalogo:escrever" },
   atualizar_categoria: { titulo: "Alterar categoria", escopo: "catalogo:escrever" },
   gerar_seo_categoria: { titulo: "Gerar e publicar SEO da categoria", escopo: "catalogo:escrever" },
@@ -86,8 +92,9 @@ export function anotacoes(nome: string) {
   return {
     title: f?.titulo ?? nome,
     readOnlyHint: !altera,
-    // Nenhuma ferramenta apaga: o que há de mais forte é sobrescrever.
-    destructiveHint: false,
+    // Sobrescrever, mudar status e excluir são destrutivos para o protocolo.
+    // Desconhecida altera (`ferramentaAltera`) e não é aditiva: conta como destrutiva.
+    destructiveHint: altera && !f?.aditiva,
     openWorldHint: false,
   };
 }

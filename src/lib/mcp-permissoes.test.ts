@@ -41,6 +41,32 @@ test("o que altera a loja está marcado como alteração, e o nome não engana",
   assert.equal(anotacoes("ferramenta_nova").readOnlyHint, false);
 });
 
+test("só o que apenas acrescenta escapa de destructiveHint", () => {
+  for (const nome of Object.keys(FERRAMENTAS)) {
+    const { destructiveHint } = anotacoes(nome);
+    if (!ferramentaAltera(nome)) assert.equal(destructiveHint, false, `${nome} só lê`);
+    else assert.equal(destructiveHint, !FERRAMENTAS[nome].aditiva, nome);
+  }
+  // Sobrescrita, remoção, ajuste absoluto, mudança de status e exclusão.
+  for (const nome of [
+    "atualizar_produto",
+    "gerenciar_fotos_produto",
+    "ajustar_estoque",
+    "atualizar_status_pedido",
+    "emitir_etiqueta_envio",
+    "moderar_avaliacao",
+    "atualizar_cupom",
+    "criar_cupom",
+    "atualizar_marca",
+    "atualizar_categoria",
+    "gerar_seo_categoria",
+  ]) {
+    assert.equal(anotacoes(nome).destructiveHint, true, nome);
+  }
+  assert.deepEqual(Object.keys(FERRAMENTAS).filter((n) => FERRAMENTAS[n].aditiva), ["criar_produto"]);
+  assert.equal(anotacoes("ferramenta_nova").destructiveHint, true);
+});
+
 test("só consultar não deixa alterar nada", () => {
   const escopos = escoposDaAutorizacao({ nivel: "leitura" })!;
   for (const nome of Object.keys(FERRAMENTAS)) assert.equal(podeUsar(escopos, nome), !ferramentaAltera(nome), nome);

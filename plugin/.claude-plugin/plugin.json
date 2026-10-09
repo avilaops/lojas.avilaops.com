@@ -1,0 +1,19 @@
+{
+  "name": "lojas-avilaops",
+  "displayName": "Lojas por Avila Ops",
+  "version": "1.2.0",
+  "description": "Opere sua loja na plataforma Lojas por Avila Ops pelo Claude: catálogo, preços, estoque, pedidos, etiquetas de envio, cupons, clientes, avaliações e resumos de vendas.",
+  "author": {
+    "name": "Avila Ops",
+    "email": "nicolas@avilaops.com",
+    "url": "https://avilaops.com"
+  },
+  "homepage": "https://lojas.avilaops.com/developers",
+  "repository": "https://github.com/avilaops/lojas.avilaops.com",
+  "license": "MIT",
+  "keywords": ["ecommerce", "loja-virtual", "pedidos", "estoque", "catalogo", "brasil"],
+  "icon": "./icon.png",
+  "documentationUrl": "https://lojas.avilaops.com/developers",
+  "supportUrl": "mailto:nicolas@avilaops.com",
+  "privacyPolicyUrl": "https://lojas.avilaops.com/developers/privacidade"
+}

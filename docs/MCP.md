@@ -36,7 +36,10 @@ entra em `MCP_TOOLS`; o teste recusa ferramenta sem escopo.
   API ("Mudar acesso"), e vale na chamada seguinte. Só o painel muda isso: o
   assistente não amplia o próprio acesso.
 - `tools/list` devolve só o que a credencial pode usar, com `annotations`
-  (`readOnlyHint`) para o assistente saber quando pedir confirmação.
+  (`readOnlyHint` e `destructiveHint`) para o assistente saber quando pedir
+  confirmação. Toda ferramenta que altera é destrutiva, como o protocolo
+  define (sobrescrever, mudar status e excluir contam), salvo as marcadas
+  `aditiva` em `FERRAMENTAS`, que só acrescentam. A privacidade do conector está em `/developers/privacidade`.
   `tools/call` recusa o resto dizendo qual permissão falta.
 - Chave secreta só entra no conector com `mcp:usar`. Chave criada para o ERP
   com `catalogo:escrever` não vira chave do conector sozinha.
@@ -47,8 +50,8 @@ Cada `tools/call` executado vira uma linha em `ChamadaMcp`: quem (assistente
 ou chave), qual ferramenta, se alterou, se deu certo e o identificador do que
 foi tocado. **Sem argumentos e sem resultado**: `alvoDaChamada`
 (`src/lib/mcp-historico.ts`) só aceita o que parece código (SKU, id, número).
-O lojista lê em Painel, IA e API. Retenção de 90 dias, com a faxina feita
-quando a lista é aberta.
+O lojista lê em Painel, IA e API. Retenção de 90 dias: a rotina
+`mcp.historico` apaga de todas as lojas, todo dia às 2h (`docs/ROTINAS.md`).
 
 ## Limites e medição
 
