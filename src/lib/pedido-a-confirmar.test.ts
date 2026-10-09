@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  PENDENCIA_VALE_MS, TEXTO_SEM_PEDIDO, chaveDaPendencia, desfechoDoCheckout, destinoAposFalhaDoCheckout, esquecerPendencia, guardarPendencia,
-  lerPendencia, lerSituacao, situacaoDaReferencia, telaSemPedido, type GuardaDoNavegador,
+  PENDENCIA_VALE_MS, TEXTO_PENDENCIA_NO_CHECKOUT, TEXTO_SEM_PEDIDO, chaveDaPendencia, desfechoDoCheckout, destinoAposFalhaDoCheckout, encerraPendencia,
+  esquecerPendencia, guardarPendencia, lerPendencia, lerSituacao, situacaoAposConsulta, situacaoDaReferencia, telaSemPedido, type GuardaDoNavegador,
 } from "./pedido-a-confirmar";
 
 test("pagamento a confirmar leva à página do pedido, pela referência que o servidor devolveu", () => {
@@ -50,8 +50,10 @@ test("resposta 200 que não é um resultado de pagamento não vira erro de formu
 test("resposta não-ok: pagamento a confirmar leva a referência do servidor; o resto é erro do formulário", () => {
   assert.deepEqual(desfechoDoCheckout(false, { codigo: "pagamento_a_confirmar", referencia: "LOJA-ABC-1" }, "LOJA-XYZ-9"), { tipo: "a_confirmar", referencia: "LOJA-ABC-1", destino: "/pedido/LOJA-ABC-1" });
   assert.deepEqual(desfechoDoCheckout(false, { codigo: "pagamento_a_confirmar" }, "LOJA-XYZ-9"), { tipo: "a_confirmar", referencia: "LOJA-XYZ-9", destino: "/pedido/LOJA-XYZ-9" });
-  assert.deepEqual(desfechoDoCheckout(false, { codigo: "falha_gateway", erro: "Gateway fora." }, "r"), { tipo: "erro", mensagem: "Gateway fora." });
-  for (const corpo of [null, undefined, {}, { erro: 5 }, "texto"]) assert.deepEqual(desfechoDoCheckout(false, corpo, "r"), { tipo: "erro", mensagem: "Não foi possível processar o pagamento." }, JSON.stringify(corpo));
+  assert.deepEqual(desfechoDoCheckout(false, { codigo: "falha_gateway", erro: "Gateway fora." }, "r"), { tipo: "erro", mensagem: "Gateway fora.", conclusivo: true });
+  // Sem `codigo` a resposta não veio do servidor da loja (504 do proxy, página de erro): não é conclusiva.
+  for (const corpo of [null, undefined, {}, { erro: 5 }, "texto", { codigo: "" }, { codigo: 504 }]) assert.deepEqual(desfechoDoCheckout(false, corpo, "r"), { tipo: "erro", mensagem: "Não foi possível processar o pagamento.", conclusivo: false }, JSON.stringify(corpo));
+  assert.deepEqual(desfechoDoCheckout(false, { erro: "Gateway Timeout" }, "r"), { tipo: "erro", mensagem: "Gateway Timeout", conclusivo: false });
 });
 
 function guardaDeTeste(inicial: Record<string, string> = {}) {
@@ -99,8 +101,12 @@ test("referência pendente: storage bloqueado não derruba o checkout", () => {
 });
 
 test("voltar ao checkout com referência pendente: sem pedido e com cobrança possível, o formulário não abre", () => {
-  for (const estado of ["INCERTA", "COBRANCA_CRIADA", "PAGA_SEM_PEDIDO"]) assert.equal(situacaoDaReferencia(null, estado), "pendente", estado);
-  for (const estado of ["LIBERADA", "RESERVADA", "CONFIRMADA", "", null, undefined]) assert.equal(situacaoDaReferencia(null, estado), "livre", String(estado));
+  // RESERVADA entra: o navegador só pergunta por referência que enviou, então reserva sem desfecho é cobrança em curso ou tentativa que não chegou a ser marcada INCERTA.
+  for (const estado of ["INCERTA", "COBRANCA_CRIADA", "PAGA_SEM_PEDIDO", "RESERVADA"]) assert.equal(situacaoDaReferencia(null, estado), "pendente", estado);
+  for (const estado of ["LIBERADA", "CONFIRMADA", "", null, undefined]) assert.equal(situacaoDaReferencia(null, estado), "livre", String(estado));
+  for (const status of ["CANCELADO", "ESTORNADO"]) assert.equal(situacaoDaReferencia(status, "RESERVADA"), "livre", status);
+  // A página do pedido não muda: tentativa só reservada continua sem tela.
+  assert.equal(telaSemPedido("RESERVADA"), null);
   for (const status of ["AGUARDANDO_PAGAMENTO", "PAGO", "EM_SEPARACAO", "ENVIADO", "ENTREGUE"]) assert.equal(situacaoDaReferencia(status, "INCERTA"), "pedido", status);
   for (const status of ["CANCELADO", "ESTORNADO"]) assert.equal(situacaoDaReferencia(status, "COBRANCA_CRIADA"), "livre", status);
 });
@@ -123,4 +129,38 @@ test("o caminho inteiro: pagamento a confirmar guarda a referência, e o checkou
   assert.equal(situacaoDaReferencia(null, "LIBERADA"), "livre");
   esquecerPendencia(guarda, "loja-a");
   assert.equal(lerPendencia(guarda, "loja-a", 61_000), null);
+});
+
+test("consulta de pendência que falhou é situação própria: segura o formulário sem afirmar que há pagamento pendente", () => {
+  for (const s of ["pendente", "pedido", "livre"]) assert.equal(situacaoAposConsulta({ situacao: s }), s);
+  for (const corpo of [null, undefined, {}, { situacao: "outra" }, { erro: "x" }, "<html>"]) assert.equal(situacaoAposConsulta(corpo), "sem_resposta", JSON.stringify(corpo));
+  const { pendente, sem_resposta } = TEXTO_PENDENCIA_NO_CHECKOUT;
+  assert.match(sem_resposta.titulo, /Não conseguimos conferir agora/);
+  assert.match(sem_resposta.texto, /Tente de novo/);
+  assert.match(sem_resposta.texto, /não pague de novo/);
+  assert.doesNotMatch(`${sem_resposta.titulo} ${sem_resposta.texto}`, /em confirmação|ainda não foi resolvido/);
+  assert.match(pendente.titulo, /pagamento em confirmação/);
+  assert.match(pendente.texto, /Não pague de novo/);
+  assert.notEqual(pendente.conferir, sem_resposta.conferir);
+});
+
+test("pendência guardada antes do envio: só resposta conclusiva a esquece", () => {
+  const ref = "LOJA-ABC-1";
+  /** O que `aoFinalizar` faz: guarda, envia, e esquece se o desfecho encerra. `null` é o `fetch` que não voltou. */
+  const enviar = (resposta: { ok: boolean; corpo: unknown } | null) => {
+    const { guarda } = guardaDeTeste();
+    guardarPendencia(guarda, "loja-a", ref, 1_000);
+    if (resposta && encerraPendencia(desfechoDoCheckout(resposta.ok, resposta.corpo, ref))) esquecerPendencia(guarda, "loja-a");
+    return lerPendencia(guarda, "loja-a", 2_000);
+  };
+  // Não se sabe se a cobrança nasceu: recarregar a página encontra a referência.
+  assert.equal(enviar(null), ref, "erro de rede");
+  assert.equal(enviar({ ok: false, corpo: null }), ref, "504 do proxy, sem corpo");
+  assert.equal(enviar({ ok: false, corpo: { erro: "Gateway Timeout" } }), ref, "erro sem código do servidor");
+  assert.equal(enviar({ ok: false, corpo: { codigo: "pagamento_a_confirmar", referencia: ref } }), ref, "a confirmar");
+  assert.equal(enviar({ ok: true, corpo: "<html>" }), ref, "200 sem resultado");
+  // O servidor disse o que houve: o formulário pode abrir de novo na próxima visita.
+  assert.equal(enviar({ ok: false, corpo: { codigo: "falha_gateway", erro: "Nada foi cobrado." } }), null, "gateway recusou");
+  assert.equal(enviar({ ok: false, corpo: { codigo: "corpo_invalido", erro: "Confira o campo email." } }), null, "corpo inválido");
+  assert.equal(enviar({ ok: true, corpo: { id: "1", status: "pendente" } }), null, "resultado");
 });

@@ -7,7 +7,8 @@ import { CheckoutScreen, MercadoPagoCardBrick } from "@avilaops/checkout/ui";
 import { FRETE_RETIRADA_ID, avaliarPedidoMinimo, avisoDePedidoMinimo, type ItemCarrinho, type MeioPagamento, type OpcaoFrete, type ResultadoPagamento } from "@avilaops/checkout";
 import { useCart } from "@/components/cart/CartProvider";
 import { iniciarCheckout } from "@/lib/eventos-loja";
-import { desfechoDoCheckout, esquecerPendencia, guardaDoNavegador, guardarPendencia, lerPendencia, lerSituacao } from "@/lib/pedido-a-confirmar";
+import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
+import { TEXTO_PENDENCIA_NO_CHECKOUT, desfechoDoCheckout, encerraPendencia, esquecerPendencia, guardaDoNavegador, guardarPendencia, lerPendencia, situacaoAposConsulta } from "@/lib/pedido-a-confirmar";
 import type { TenantPublico } from "@/lib/tenant";
 
 /**
@@ -47,10 +48,11 @@ export default function CheckoutClient({ loja, conta }: { loja: TenantPublico; c
   );
   const [resultado, setResultado] = useState<ResultadoPagamento | null>(null);
   const [referencia] = useState(() => novaReferencia(loja.slug));
-  // Referência de uma visita anterior cujo pagamento ficou a confirmar. Enquanto
-  // ela não resolver, o formulário não abre: ele nasceria com referência nova,
-  // fora da trava de repetição, e cobraria de novo com a primeira em aberto.
-  const [anterior, setAnterior] = useState<{ referencia: string; situacao: "conferindo" | "pendente" | "pedido" } | null>(null);
+  // Referência de uma visita anterior cujo pagamento ficou a confirmar, ou cujo
+  // envio não teve resposta. Enquanto ela não resolver, o formulário não abre:
+  // ele nasceria com referência nova, fora da trava de repetição, e cobraria de
+  // novo com a primeira em aberto.
+  const [anterior, setAnterior] = useState<{ referencia: string; situacao: "conferindo" | "pendente" | "pedido" | "sem_resposta" } | null>(null);
   const [anteriorLida, setAnteriorLida] = useState(false);
   // Pagamento desta visita que ficou a confirmar: a tela troca na hora, com o
   // link à vista, em vez de depender de a navegação acontecer.
@@ -73,13 +75,14 @@ export default function CheckoutClient({ loja, conta }: { loja: TenantPublico; c
   const conferirAnterior = useCallback(async (ref: string) => {
     setAnterior({ referencia: ref, situacao: "conferindo" });
     const corpo = await fetch(`/api/checkout/pendente?referencia=${encodeURIComponent(ref)}`, { cache: "no-store" }).then((x) => (x.ok ? x.json() : null)).catch(() => null);
-    const situacao = lerSituacao(corpo);
+    const situacao = situacaoAposConsulta(corpo);
     if (situacao === "livre") {
       esquecerPendencia(guardaDoNavegador(), loja.slug);
       setAnterior(null);
     } else {
-      // Consulta que falhou conta como pendente: na dúvida, não se cobra de novo.
-      setAnterior({ referencia: ref, situacao: situacao ?? "pendente" });
+      // Consulta que falhou também segura o formulário (na dúvida, não se cobra
+      // de novo), mas com tela própria: não se sabe se o pagamento está pendente.
+      setAnterior({ referencia: ref, situacao });
     }
   }, [loja.slug]);
 
@@ -138,14 +141,28 @@ export default function CheckoutClient({ loja, conta }: { loja: TenantPublico; c
         </div>
       );
     }
+    const semResposta = anterior.situacao === "sem_resposta";
+    const { titulo, texto, conferir } = TEXTO_PENDENCIA_NO_CHECKOUT[semResposta ? "sem_resposta" : "pendente"];
     return (
       <div className="container-loja max-w-lg py-16 text-center">
-        <h1 className="text-xl font-bold">Você tem um pagamento em confirmação</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Não pague de novo. Seu pagamento anterior ainda não foi resolvido; finalizar outra compra agora poderia cobrar duas vezes. Seu carrinho continua guardado.</p>
-        <Link href={destino} className="btn-primario mt-6 w-full">Acompanhar o pedido</Link>
-        <button type="button" className="btn-secundario mt-2 w-full" onClick={() => void conferirAnterior(anterior.referencia)}>
-          Conferir de novo
-        </button>
+        <h1 className="text-xl font-bold">{titulo}</h1>
+        <p className="mt-2 text-sm text-muted-foreground">{texto}</p>
+        {/* Sem resposta, o que resolve é consultar de novo; pendente, é acompanhar o pedido. */}
+        {semResposta ? (
+          <button type="button" className="btn-primario mt-6 w-full" onClick={() => void conferirAnterior(anterior.referencia)}>{conferir}</button>
+        ) : (
+          <Link href={destino} className="btn-primario mt-6 w-full">Acompanhar o pedido</Link>
+        )}
+        {semResposta ? (
+          <Link href={destino} className="btn-secundario mt-2 w-full">Acompanhar o pedido</Link>
+        ) : (
+          <button type="button" className="btn-secundario mt-2 w-full" onClick={() => void conferirAnterior(anterior.referencia)}>{conferir}</button>
+        )}
+        {loja.whatsapp && (
+          <a className="btn-secundario mt-2 w-full" href={linkWhatsApp(loja.whatsapp, `Olá! Sobre o pagamento do pedido ${anterior.referencia}`)} target="_blank" rel="noopener">
+            Falar com a loja
+          </a>
+        )}
       </div>
     );
   }
@@ -179,6 +196,12 @@ export default function CheckoutClient({ loja, conta }: { loja: TenantPublico; c
   }
 
   async function aoFinalizar(dados: Parameters<NonNullable<React.ComponentProps<typeof CheckoutScreen>["aoFinalizar"]>>[0]) {
+    // A pendência é guardada antes do envio: se a resposta se perder no caminho
+    // (504 do proxy, rede que cai) com a cobrança em curso, recarregar a página
+    // encontra a referência e consulta a situação, em vez de abrir o formulário
+    // com referência nova. Ela só é esquecida quando a resposta é conclusiva.
+    const guarda = guardaDoNavegador();
+    guardarPendencia(guarda, loja.slug, referencia);
     const r = await fetch("/api/checkout", {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -195,6 +218,7 @@ export default function CheckoutClient({ loja, conta }: { loja: TenantPublico; c
     });
     const corpo = await r.json().catch(() => null);
     const desfecho = desfechoDoCheckout(r.ok, corpo, referencia);
+    if (encerraPendencia(desfecho)) esquecerPendencia(guarda, loja.slug);
     if (desfecho.tipo === "erro") throw new Error(desfecho.mensagem);
     if (desfecho.tipo === "a_confirmar") {
       // Cobrança que pode ter nascido (ou nasceu, e só a resposta se perdeu) não
@@ -203,7 +227,7 @@ export default function CheckoutClient({ loja, conta }: { loja: TenantPublico; c
       // se a navegação falhar, o comprador não fica diante de um botão travado.
       // A promessa não resolve de propósito, para a tela de pagamento (que sai
       // de cena nesta mesma renderização) não chegar a dizer "nada foi cobrado".
-      guardarPendencia(guardaDoNavegador(), loja.slug, desfecho.referencia);
+      guardarPendencia(guarda, loja.slug, desfecho.referencia);
       setAConfirmar(desfecho.destino);
       router.push(desfecho.destino);
       return new Promise<ResultadoPagamento>(() => {});
