@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "lojas-avilaops": {
+      "type": "http",
+      "url": "https://lojas.avilaops.com/api/mcp"
+    }
+  }
+}
