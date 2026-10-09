@@ -182,80 +182,95 @@ type Linha = {
   variacoes: number; estoqueEstado: "desconhecido" | "nao-controla" | "controlado"; estoque: number | null;
 };
 
-const n = (valor: unknown) => Number(valor ?? 0);
+const COLUNAS = Prisma.sql`b.id, b.slug, b.nome, b.marca, b.sku, b."precoCentavos", b."precoDeCentavos", b.imagem, b.fotos, b."imagemOrigem",
+  b.destaque, b.ativo, b.disponibilidade, b."atualizadoEm", b."criadoEm", b."versaoCatalogo",
+  b."categoriaNome", b."categoriaSlug", b.variacoes, b."estoqueEstado", b.estoque`;
+
+type Resumo = Record<
+  | "total" | "ativos" | "inativos" | "semFoto" | "sobConsulta" | "anunciaSemSaldo" | "fotoDeOutroItem"
+  | "controlamEstoque" | "naoControlamEstoque" | "estoqueDesconhecido" | "comVariacoes",
+  number
+>;
 
 export async function consultarCatalogo(tenantId: string, c: ConsultaDoCatalogo) {
-  const b = base(tenantId);
-  const onde = filtros(c);
   const grupo = chaveDoGrupo(c.grupo);
 
-  const [resumo, categorias, marcas, contagem] = await Promise.all([
-    // Indicadores do catálogo INTEIRO da loja: não mudam com o filtro.
-    prisma.$queryRaw<Array<Record<string, bigint>>>(Prisma.sql`
-      SELECT
-        count(*) AS total,
-        count(*) FILTER (WHERE b.ativo) AS ativos,
-        count(*) FILTER (WHERE NOT b.ativo) AS inativos,
-        -- Pendência só conta em produto ativo: rascunho incompleto é trabalho em andamento.
-        count(*) FILTER (WHERE b.ativo AND b."semFoto") AS "semFoto",
-        count(*) FILTER (WHERE b.ativo AND b."sobConsulta") AS "sobConsulta",
-        count(*) FILTER (WHERE b.ativo AND b."anunciaSemSaldo") AS "anunciaSemSaldo",
-        count(*) FILTER (WHERE b.ativo AND b."fotoDeOutro") AS "fotoDeOutroItem",
-        count(*) FILTER (WHERE b."estoqueEstado" = 'controlado') AS "controlamEstoque",
-        count(*) FILTER (WHERE b."estoqueEstado" = 'nao-controla') AS "naoControlamEstoque",
-        count(*) FILTER (WHERE b."estoqueEstado" = 'desconhecido') AS "estoqueDesconhecido",
-        count(*) FILTER (WHERE b.variacoes > 0) AS "comVariacoes"
-      FROM (${b}) b`),
-    prisma.$queryRaw<Array<{ valor: string | null; rotulo: string | null; total: bigint }>>(Prisma.sql`
-      SELECT b."categoriaSlug" AS valor, b."categoriaNome" AS rotulo, count(*) AS total
-      FROM (${b}) b GROUP BY 1, 2
-      ORDER BY (b."categoriaSlug" IS NULL) ASC, b."categoriaNome" COLLATE "ptbr_natural" ASC`),
-    prisma.$queryRaw<Array<{ valor: string | null; total: bigint }>>(Prisma.sql`
-      SELECT nullif(b.marca, '') AS valor, count(*) AS total
-      FROM (${b}) b GROUP BY 1
-      ORDER BY (nullif(b.marca, '') IS NULL) ASC, nullif(b.marca, '') COLLATE "ptbr_natural" ASC`),
-    prisma.$queryRaw<Array<{ total: bigint }>>(Prisma.sql`SELECT count(*) AS total FROM (${b}) b ${onde}`),
-  ]);
+  // Uma consulta só. A linha calculada de cada produto (`b`) é montada uma vez
+  // e lida por tudo: indicadores, facetas, total, grupos e a página. Em seis
+  // consultas separadas, cada uma refazia o cálculo de estoque da loja inteira.
+  const [linha] = await prisma.$queryRaw<
+    Array<{
+      resumo: Resumo;
+      categorias: Array<{ valor: string | null; rotulo: string | null; total: number }> | null;
+      marcas: Array<{ valor: string | null; total: number }> | null;
+      total: number;
+      grupos: Array<{ chave: string; total: number }> | null;
+      itens: Array<Omit<Linha, "atualizadoEm" | "criadoEm"> & { atualizadoEm: string; criadoEm: string }> | null;
+    }>
+  >(Prisma.sql`
+    WITH b AS MATERIALIZED (${base(tenantId)}),
+    f AS MATERIALIZED (SELECT * FROM b ${filtros(c)}),
+    t AS (SELECT count(*)::int AS n FROM f),
+    -- Página além do fim cai na última: o resultado pode ter encolhido entre um clique e outro.
+    pg AS (SELECT (LEAST(${c.pagina}::int, GREATEST(1, ceil(n::numeric / ${c.por}::int)::int)) - 1) * ${c.por}::int AS inicio FROM t)
+    SELECT
+      -- Indicadores do catálogo INTEIRO da loja: não mudam com o filtro.
+      (SELECT json_build_object(
+          'total', count(*),
+          'ativos', count(*) FILTER (WHERE b.ativo),
+          'inativos', count(*) FILTER (WHERE NOT b.ativo),
+          -- Pendência só conta em produto ativo: rascunho incompleto é trabalho em andamento.
+          'semFoto', count(*) FILTER (WHERE b.ativo AND b."semFoto"),
+          'sobConsulta', count(*) FILTER (WHERE b.ativo AND b."sobConsulta"),
+          'anunciaSemSaldo', count(*) FILTER (WHERE b.ativo AND b."anunciaSemSaldo"),
+          'fotoDeOutroItem', count(*) FILTER (WHERE b.ativo AND b."fotoDeOutro"),
+          'controlamEstoque', count(*) FILTER (WHERE b."estoqueEstado" = 'controlado'),
+          'naoControlamEstoque', count(*) FILTER (WHERE b."estoqueEstado" = 'nao-controla'),
+          'estoqueDesconhecido', count(*) FILTER (WHERE b."estoqueEstado" = 'desconhecido'),
+          'comVariacoes', count(*) FILTER (WHERE b.variacoes > 0)
+        ) FROM b) AS resumo,
+      (SELECT json_agg(x) FROM (
+          SELECT b."categoriaSlug" AS valor, b."categoriaNome" AS rotulo, count(*)::int AS total
+          FROM b GROUP BY 1, 2
+          ORDER BY (b."categoriaSlug" IS NULL) ASC, b."categoriaNome" COLLATE "ptbr_natural" ASC
+        ) x) AS categorias,
+      (SELECT json_agg(x) FROM (
+          SELECT nullif(b.marca, '') AS valor, count(*)::int AS total
+          FROM b GROUP BY 1
+          ORDER BY (nullif(b.marca, '') IS NULL) ASC, nullif(b.marca, '') COLLATE "ptbr_natural" ASC
+        ) x) AS marcas,
+      (SELECT n FROM t) AS total,
+      -- O total de cada grupo no resultado INTEIRO, não só nas linhas desta página.
+      ${grupo ? Prisma.sql`(SELECT json_agg(x) FROM (SELECT ${grupo} AS chave, count(*)::int AS total FROM f b GROUP BY 1) x)` : Prisma.sql`NULL::json`} AS grupos,
+      (SELECT json_agg(x) FROM (
+          SELECT ${COLUNAS} FROM f b ${ordenacao(c)} LIMIT ${c.por}::int OFFSET (SELECT inicio FROM pg)
+        ) x) AS itens`);
 
-  const total = n(contagem[0]?.total);
+  const total = Number(linha?.total ?? 0);
   const paginas = Math.max(1, Math.ceil(total / c.por));
-  // Página além do fim cai na última: o resultado pode ter encolhido entre um clique e outro.
   const pagina = Math.min(c.pagina, paginas);
   const inicio = (pagina - 1) * c.por;
+  const itens = linha?.itens ?? [];
 
-  const [linhas, grupos] = await Promise.all([
-    prisma.$queryRaw<Linha[]>(Prisma.sql`
-      SELECT b.id, b.slug, b.nome, b.marca, b.sku, b."precoCentavos", b."precoDeCentavos", b.imagem, b.fotos, b."imagemOrigem",
-             b.destaque, b.ativo, b.disponibilidade, b."atualizadoEm", b."criadoEm", b."versaoCatalogo",
-             b."categoriaNome", b."categoriaSlug", b.variacoes, b."estoqueEstado", b.estoque
-      FROM (${b}) b ${onde} ${ordenacao(c)} LIMIT ${c.por} OFFSET ${inicio}`),
-    // O total de cada grupo no resultado INTEIRO, não só nas linhas desta página.
-    grupo
-      ? prisma.$queryRaw<Array<{ chave: string; total: bigint }>>(Prisma.sql`SELECT ${grupo} AS chave, count(*) AS total FROM (${b}) b ${onde} GROUP BY 1`)
-      : Promise.resolve([] as Array<{ chave: string; total: bigint }>),
-  ]);
-
-  const r = resumo[0] ?? {};
   return {
-    itens: linhas.map(({ categoriaNome, categoriaSlug, ...p }) => ({
+    itens: itens.map(({ categoriaNome, categoriaSlug, atualizadoEm, criadoEm, ...p }) => ({
       ...p,
+      // O JSON do banco traz o instante sem fuso (coluna `timestamp`, gravada em UTC).
+      atualizadoEm: new Date(`${atualizadoEm}Z`).toISOString(),
+      criadoEm: new Date(`${criadoEm}Z`).toISOString(),
       categoria: categoriaSlug && categoriaNome ? { nome: categoriaNome, slug: categoriaSlug } : null,
     })),
     total,
     pagina,
     paginas,
     por: c.por,
-    de: linhas.length ? inicio + 1 : 0,
-    ate: inicio + linhas.length,
-    grupos: grupos.map((g) => ({ chave: g.chave, total: n(g.total) })),
-    resumo: Object.fromEntries(Object.entries(r).map(([chave, valor]) => [chave, n(valor)])) as Record<
-      | "total" | "ativos" | "inativos" | "semFoto" | "sobConsulta" | "anunciaSemSaldo" | "fotoDeOutroItem"
-      | "controlamEstoque" | "naoControlamEstoque" | "estoqueDesconhecido" | "comVariacoes",
-      number
-    >,
+    de: itens.length ? inicio + 1 : 0,
+    ate: inicio + itens.length,
+    grupos: linha?.grupos ?? [],
+    resumo: linha.resumo,
     facetas: {
-      categorias: categorias.map((x) => ({ valor: x.valor ?? SEM_CATEGORIA, rotulo: x.rotulo ?? "Sem categoria", total: n(x.total) })),
-      marcas: marcas.map((x) => ({ valor: x.valor ?? SEM_MARCA, rotulo: x.valor ?? "Sem marca", total: n(x.total) })),
+      categorias: (linha?.categorias ?? []).map((x) => ({ valor: x.valor ?? SEM_CATEGORIA, rotulo: x.rotulo ?? "Sem categoria", total: x.total })),
+      marcas: (linha?.marcas ?? []).map((x) => ({ valor: x.valor ?? SEM_MARCA, rotulo: x.valor ?? "Sem marca", total: x.total })),
     },
     lidoEm: new Date().toISOString(),
   };
@@ -267,9 +282,7 @@ export async function consultarCatalogo(tenantId: string, c: ConsultaDoCatalogo)
  */
 export async function linhaDoProduto(tenantId: string, id: string) {
   const [linha] = await prisma.$queryRaw<Linha[]>(Prisma.sql`
-    SELECT b.id, b.slug, b.nome, b.marca, b.sku, b."precoCentavos", b."precoDeCentavos", b.imagem, b.fotos, b."imagemOrigem",
-           b.destaque, b.ativo, b.disponibilidade, b."atualizadoEm", b."criadoEm", b."versaoCatalogo",
-           b."categoriaNome", b."categoriaSlug", b.variacoes, b."estoqueEstado", b.estoque
+    SELECT ${COLUNAS}
     FROM (${base(tenantId)}) b WHERE b.id = ${id}`);
   if (!linha) return null;
   const { categoriaNome, categoriaSlug, ...p } = linha;
