@@ -1,46 +1,82 @@
 # Lojas por Avila Ops
 
-Plugin que conecta o Claude à loja do lojista na plataforma
-[Lojas por Avila Ops](https://lojas.avilaops.com).
+Opere sua loja virtual pelo Claude. Este plugin conecta o Claude à sua loja na
+plataforma [Lojas por Avila Ops](https://lojas.avilaops.com) e permite
+cadastrar produtos, ajustar preços e estoque, acompanhar pedidos, emitir
+etiquetas de envio, criar cupons e ver resumos de vendas por conversa.
 
-## O que faz
+## Requisitos
 
-Declara um único conector MCP remoto:
-`https://lojas.avilaops.com/api/mcp` (Streamable HTTP, OAuth 2.1).
+- Loja ativa na plataforma Lojas por Avila Ops.
+- Plano **Loja Pro**. Em outros planos o conector recusa a conexão e informa
+  como fazer upgrade.
 
-Ferramentas disponíveis, limitadas ao que o lojista autoriza na conexão:
+## O que vem no plugin
 
-- Loja e marca: `obter_loja`, `atualizar_marca`
-- Catálogo: `listar_produtos`, `obter_produto`, `criar_produto`,
-  `atualizar_produto`, `gerenciar_fotos_produto`, `listar_categorias`,
-  `atualizar_categoria`, `gerar_seo_categoria`
-- Estoque: `listar_estoque_baixo`, `ajustar_estoque`
-- Pedidos: `listar_pedidos`, `obter_pedido`, `atualizar_status_pedido`,
-  `emitir_etiqueta_envio`
-- Clientes: `listar_clientes`, `obter_cliente`
-- Cupons: `listar_cupons`, `criar_cupom`, `atualizar_cupom`
-- Avaliações: `listar_avaliacoes`, `moderar_avaliacao`
-- Resumos: `resumo_vendas`, `resumo_marketing`, `resumo_atribuicao`
+| Componente | O que é |
+|---|---|
+| Conector MCP `lojas-avilaops` | Servidor remoto em `https://lojas.avilaops.com/api/mcp` (Streamable HTTP, OAuth 2.1). |
+| Habilidade `operar-loja` | Orienta o Claude a ler antes de alterar, confirmar com o lojista antes de mudar preço, estoque, pedido, cupom ou etiqueta, e a tratar os dados de clientes só para a tarefa pedida. |
 
-## Autenticação
+## Ferramentas do conector
 
-Ao conectar, o Claude abre o login da plataforma. O lojista entra, escolhe a
-loja e marca quais ferramentas a conexão pode usar. A conexão pode ser
-revogada a qualquer momento no painel da loja.
+O Claude só vê as ferramentas que o lojista autorizou para a conexão.
 
-## Tratamento de dados
+| Área | Consultar | Alterar |
+|---|---|---|
+| Loja | `obter_loja` | `atualizar_marca` |
+| Catálogo | `listar_produtos`, `obter_produto`, `listar_categorias`, `listar_estoque_baixo` | `criar_produto`, `atualizar_produto`, `gerenciar_fotos_produto`, `atualizar_categoria`, `gerar_seo_categoria`, `ajustar_estoque` |
+| Avaliações | `listar_avaliacoes` | `moderar_avaliacao` |
+| Pedidos | `listar_pedidos`, `obter_pedido` | `atualizar_status_pedido`, `emitir_etiqueta_envio` |
+| Clientes | `listar_clientes`, `obter_cliente` | — |
+| Promoções | `listar_cupons` | `criar_cupom`, `atualizar_cupom` |
+| Análises | `resumo_vendas`, `resumo_marketing`, `resumo_atribuicao` | — |
 
-- Lê dados pessoais de clientes da loja (nome, e-mail, endereço de entrega)
-  quando o lojista usa `listar_clientes`, `obter_cliente` ou as ferramentas de
-  pedidos. Esses dados já estão na plataforma; o plugin não cria cópia.
-- Não envia dados a nenhum serviço além do conector declarado.
-- Histórico de uso: a plataforma registra uma linha por chamada (ferramenta,
-  horário, sucesso e o identificador do item tocado), sem argumentos nem
-  resultados, guardada por 90 dias para o lojista auditar o que o assistente fez.
-- Limite de 120 chamadas por minuto por conexão.
+Toda ferramenta declara `title` e `readOnlyHint`, para o Claude saber quando
+pedir confirmação.
+
+## Como conectar
+
+1. Instale o plugin e peça ao Claude algo sobre a sua loja.
+2. O Claude abre a tela de login da plataforma. Entre com a conta do painel.
+3. Escolha a loja e o acesso: consultar e alterar, só consultar, ou por área
+   (loja, catálogo, pedidos, clientes, promoções, análises).
+4. Pronto. Para mudar o acesso ou desconectar, use Painel > IA e API.
+
+## Exemplos
+
+- "Quais produtos estão com estoque baixo?"
+- "Aumente em 10% o preço da categoria Camisetas." O Claude mostra a lista com
+  preço atual e novo e só altera depois da sua confirmação.
+- "Marque o pedido 1042 como enviado e emita a etiqueta."
+- "Crie um cupom BEMVINDO10 de 10% válido até o fim do mês."
+- "Como foram as vendas desta semana comparadas à anterior?"
+
+## Privacidade e tratamento de dados
+
+- **Dados pessoais:** as ferramentas de clientes e pedidos leem nome, e-mail e
+  endereço de entrega dos compradores da loja. Esses dados já estão na
+  plataforma; o plugin não cria cópias.
+- **Destinos:** nenhum dado vai para serviço além do conector declarado acima.
+- **Histórico de uso:** a plataforma registra uma linha por chamada
+  (ferramenta, horário, se alterou, se deu certo e o código do item tocado),
+  sem argumentos e sem resultados. O registro fica 90 dias, para o lojista
+  auditar o que o assistente fez.
+- **O que o Claude cria ou altera** (produtos, preços, cupons, status) passa a
+  fazer parte da loja e fica enquanto a loja existir, como qualquer alteração
+  feita no painel.
+- **Credenciais:** o login é feito por OAuth na própria plataforma. O token
+  vale 1 hora, renova sozinho e é guardado apenas como hash. Revogue a
+  qualquer momento em Painel > IA e API.
+- **Limite:** 120 chamadas por minuto por conexão.
 
 Política de privacidade: <https://avilaops.com/politica-de-privacidade/>
 
 ## Suporte
 
-nicolas@avilaops.com
+- Documentação: <https://lojas.avilaops.com/developers>
+- E-mail: <nicolas@avilaops.com>
+
+## Licença
+
+MIT. Veja [LICENSE](LICENSE).
