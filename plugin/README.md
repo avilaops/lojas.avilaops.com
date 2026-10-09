@@ -32,8 +32,9 @@ O Claude só vê as ferramentas que o lojista autorizou para a conexão.
 | Promoções | `listar_cupons` | `criar_cupom`, `atualizar_cupom` |
 | Análises | `resumo_vendas`, `resumo_marketing`, `resumo_atribuicao` | — |
 
-Toda ferramenta declara `title` e `readOnlyHint`, para o Claude saber quando
-pedir confirmação.
+Toda ferramenta declara `title`, `readOnlyHint` e `destructiveHint`, para o
+Claude saber quando pedir confirmação. `moderar_avaliacao` e `atualizar_cupom`
+podem excluir sem volta e vêm marcadas como destrutivas.
 
 ## Como conectar
 
@@ -70,7 +71,7 @@ pedir confirmação.
   qualquer momento em Painel > IA e API.
 - **Limite:** 120 chamadas por minuto por conexão.
 
-Política de privacidade: <https://avilaops.com/politica-de-privacidade/>
+Política de privacidade do conector: <https://lojas.avilaops.com/developers/privacidade>
 
 ## Suporte
 

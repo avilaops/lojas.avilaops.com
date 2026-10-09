@@ -1,7 +1,7 @@
 {
   "name": "lojas-avilaops",
   "displayName": "Lojas por Avila Ops",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Opere sua loja na plataforma Lojas por Avila Ops pelo Claude: catálogo, preços, estoque, pedidos, etiquetas de envio, cupons, clientes, avaliações e resumos de vendas.",
   "author": {
     "name": "Avila Ops",
@@ -15,5 +15,5 @@
   "icon": "./icon.png",
   "documentationUrl": "https://lojas.avilaops.com/developers",
   "supportUrl": "mailto:nicolas@avilaops.com",
-  "privacyPolicyUrl": "https://avilaops.com/politica-de-privacidade/"
+  "privacyPolicyUrl": "https://lojas.avilaops.com/developers/privacidade"
 }

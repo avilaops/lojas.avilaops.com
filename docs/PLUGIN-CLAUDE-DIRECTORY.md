@@ -23,8 +23,9 @@ O conector em si (`src/app/api/mcp/route.ts`, OAuth em `src/app/oauth/` e
 
 ## Antes de enviar
 
-1. O pacote precisa estar na branch padrão (`main`). O diretório só lê a branch
-   acompanhada.
+1. O pacote precisa estar na branch padrão (`main`) e o deploy dela concluído.
+   O diretório só lê a branch acompanhada, e a política de privacidade só
+   existe depois do deploy.
 2. Valide localmente:
 
    ```bash
@@ -84,7 +85,7 @@ Para mudar qualquer coisa: edite o arquivo, faça merge na `main` e use
   1. Aceite dos Software Directory Terms e da Directory Policy. Leia os dois
      links antes de marcar.
   2. A política de privacidade descreve com precisão os dados tratados. Ver
-     [Pendência da política de privacidade](#pendência-da-política-de-privacidade).
+     [Política de privacidade](#política-de-privacidade).
   3. O plugin não exfiltra credenciais nem executa código fora dos servidores
      MCP declarados. Verdadeiro: o pacote não tem hooks, scripts nem binários;
      só o conector declarado e uma habilidade em texto.
@@ -130,11 +131,18 @@ Para mudar qualquer coisa: edite o arquivo, faça merge na `main` e use
 | Binário que não seja PNG, JPEG, GIF, WebP, SVG ou fonte | Ícone só em PNG ou SVG. |
 | Lockfile na raiz do plugin | Não criar `package.json` nem lockfile em `plugin/`. |
 
-## Pendência da política de privacidade
+## Política de privacidade
 
-`privacyPolicyUrl` aponta para <https://avilaops.com/politica-de-privacidade/>,
-a política geral da Avila Ops. Em 09/10/2026 ela não citava o conector, o
-Claude nem o histórico de 90 dias. A política do diretório pede que a
-política de privacidade explique coleta, uso e retenção. Antes de marcar a
-segunda caixa da etapa 4, inclua na política uma seção sobre o conector com o
-conteúdo da seção "Privacidade e tratamento de dados" de `plugin/README.md`.
+`privacyPolicyUrl` aponta para <https://lojas.avilaops.com/developers/privacidade>
+(`src/app/plataforma/(site)/developers/privacidade/page.tsx`). A página lê os
+prazos do código que os aplica (`RETENCAO_DIAS`, `VALIDADE`, `FERRAMENTAS`),
+então muda sozinha quando eles mudam. Se o conector passar a ler ou guardar
+outro tipo de dado, atualize o texto da página no mesmo commit.
+
+A página só existe depois do deploy da `main`. Confira antes de validar:
+
+```bash
+curl -s -o /dev/null -w "%{http_code}\n" https://lojas.avilaops.com/developers/privacidade
+```
+
+Deve responder `200`.

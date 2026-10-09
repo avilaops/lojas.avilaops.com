@@ -41,6 +41,13 @@ test("o que altera a loja está marcado como alteração, e o nome não engana",
   assert.equal(anotacoes("ferramenta_nova").readOnlyHint, false);
 });
 
+test("o que pode excluir sem volta vem marcado como destrutivo", () => {
+  const destrutivas = Object.keys(FERRAMENTAS).filter((nome) => anotacoes(nome).destructiveHint);
+  assert.deepEqual(destrutivas.sort(), ["atualizar_cupom", "moderar_avaliacao"]);
+  for (const nome of destrutivas) assert.equal(ferramentaAltera(nome), true, nome);
+  assert.equal(anotacoes("ferramenta_nova").destructiveHint, true);
+});
+
 test("só consultar não deixa alterar nada", () => {
   const escopos = escoposDaAutorizacao({ nivel: "leitura" })!;
   for (const nome of Object.keys(FERRAMENTAS)) assert.equal(podeUsar(escopos, nome), !ferramentaAltera(nome), nome);

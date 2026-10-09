@@ -68,6 +68,10 @@ export default function DevelopersPage() {
             <code className="font-mono text-xs">mcp:usar</code> e envie no cabeçalho{" "}
             <code className="font-mono text-xs">Authorization: Bearer lojas_sk_…</code>.
           </p>
+          <p className="mt-3 text-sm text-muted-foreground">
+            O que o conector lê, guarda e por quanto tempo:{" "}
+            <Link href="/developers/privacidade" className="underline">privacidade do conector</Link>.
+          </p>
         </Bloco>
 
         <Bloco titulo={`Ferramentas do conector (${ferramentas.length})`}>
@@ -87,7 +91,7 @@ export default function DevelopersPage() {
                         <span>
                           <code className="font-mono text-xs text-foreground">{nome}</code> {f.titulo}
                         </span>
-                        <span className="text-xs">{ehEscrita(f.escopo) ? "altera" : "consulta"}</span>
+                        <span className="text-xs">{f.apaga ? "altera e pode excluir" : ehEscrita(f.escopo) ? "altera" : "consulta"}</span>
                       </li>
                     ))}
                   </ul>

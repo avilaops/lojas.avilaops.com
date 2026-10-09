@@ -34,6 +34,7 @@ aparece para os clientes da loja na hora.
 - `gerar_seo_categoria` devolve rascunho por padrão. Só use `publicar=true`
   depois que o lojista revisar o texto.
 - `moderar_avaliacao` com exclusão não tem volta. Prefira reprovar (ocultar).
+- `atualizar_cupom` com `excluir` não tem volta. Prefira desativar (`ativo: false`).
 
 ## Dados de clientes
 

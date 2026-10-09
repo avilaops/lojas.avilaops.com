@@ -19,6 +19,8 @@ interface Ferramenta {
   /** Nome curto que o assistente mostra ao lojista ao pedir confirmação. */
   titulo: string;
   escopo: Escopo;
+  /** Pode apagar algo sem volta (ex.: excluir avaliação ou cupom). */
+  apaga?: true;
 }
 
 /**
@@ -41,7 +43,7 @@ export const FERRAMENTAS: Record<string, Ferramenta> = {
   gerar_seo_categoria: { titulo: "Gerar e publicar SEO da categoria", escopo: "catalogo:escrever" },
   gerenciar_fotos_produto: { titulo: "Alterar fotos do produto", escopo: "catalogo:escrever" },
   ajustar_estoque: { titulo: "Ajustar estoque", escopo: "catalogo:escrever" },
-  moderar_avaliacao: { titulo: "Moderar avaliação", escopo: "catalogo:escrever" },
+  moderar_avaliacao: { titulo: "Moderar avaliação", escopo: "catalogo:escrever", apaga: true },
 
   listar_pedidos: { titulo: "Listar pedidos", escopo: "pedidos:ler" },
   obter_pedido: { titulo: "Ver pedido", escopo: "pedidos:ler" },
@@ -53,7 +55,7 @@ export const FERRAMENTAS: Record<string, Ferramenta> = {
 
   listar_cupons: { titulo: "Listar cupons", escopo: "promocoes:ler" },
   criar_cupom: { titulo: "Criar cupom", escopo: "promocoes:escrever" },
-  atualizar_cupom: { titulo: "Alterar cupom", escopo: "promocoes:escrever" },
+  atualizar_cupom: { titulo: "Alterar cupom", escopo: "promocoes:escrever", apaga: true },
 
   resumo_vendas: { titulo: "Resumo de vendas", escopo: "analises:ler" },
   resumo_atribuicao: { titulo: "Resumo de origem das vendas", escopo: "analises:ler" },
@@ -86,8 +88,8 @@ export function anotacoes(nome: string) {
   return {
     title: f?.titulo ?? nome,
     readOnlyHint: !altera,
-    // Nenhuma ferramenta apaga: o que há de mais forte é sobrescrever.
-    destructiveHint: false,
+    // Desconhecida conta como destrutiva, pelo mesmo motivo de `ferramentaAltera`.
+    destructiveHint: !f || Boolean(f.apaga),
     openWorldHint: false,
   };
 }

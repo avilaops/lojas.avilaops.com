@@ -36,7 +36,9 @@ entra em `MCP_TOOLS`; o teste recusa ferramenta sem escopo.
   API ("Mudar acesso"), e vale na chamada seguinte. Só o painel muda isso: o
   assistente não amplia o próprio acesso.
 - `tools/list` devolve só o que a credencial pode usar, com `annotations`
-  (`readOnlyHint`) para o assistente saber quando pedir confirmação.
+  (`readOnlyHint`, e `destructiveHint` nas que podem excluir sem volta,
+  marcadas com `apaga` em `FERRAMENTAS`) para o assistente saber quando pedir
+  confirmação. A privacidade do conector está em `/developers/privacidade`.
   `tools/call` recusa o resto dizendo qual permissão falta.
 - Chave secreta só entra no conector com `mcp:usar`. Chave criada para o ERP
   com `catalogo:escrever` não vira chave do conector sozinha.
