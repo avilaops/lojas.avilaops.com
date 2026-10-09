@@ -78,7 +78,8 @@ export default function PrivacidadeDoConectorPage() {
             <li>
               <strong className="text-foreground">Histórico de uso:</strong> uma linha por chamada, com a ferramenta, o horário, se
               alterou a loja, se deu certo e o código do item tocado (SKU, número do pedido). Sem argumentos e sem resultados: nome,
-              e-mail ou endereço de cliente não entram. Apagado depois de {RETENCAO_DIAS} dias.
+              e-mail ou endereço de cliente não entram. Uma faxina diária apaga, de todas as lojas, o que passou de
+              {RETENCAO_DIAS} dias.
             </li>
             <li>
               <strong className="text-foreground">O que o assistente cria ou altera</strong> (produto, preço, estoque, cupom, status de

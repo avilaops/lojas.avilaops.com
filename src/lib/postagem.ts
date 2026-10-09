@@ -25,6 +25,22 @@ const BASE = "https://cepcerto.com";
 
 export class PostagemIndisponivel extends Error {}
 
+/** O pedido não pode gerar etiqueta no estado em que está. */
+export class PedidoSemEtiqueta extends Error {}
+
+/**
+ * Por que o pedido não gera etiqueta, ou `null` se gera.
+ *
+ * Só pedido pago: antes disso o dinheiro do frete ainda não entrou na conta do
+ * lojista, e a etiqueta sairia da carteira da Avila Ops sem lastro. Vale para
+ * toda porta (painel, conector MCP), por isso fica aqui e não na rota.
+ */
+export function bloqueioDeEtiqueta(status: Pedido["status"]): string | null {
+  if (status === "AGUARDANDO_PAGAMENTO") return "Este pedido ainda não foi pago.";
+  if (status === "CANCELADO" || status === "ESTORNADO") return "Pedido cancelado não gera etiqueta.";
+  return null;
+}
+
 function chave(): string {
   const t = process.env.CEPCERTO_POSTAGEM_KEY ?? process.env.CEP_CERTO_POSTAGEM_API_KEY ?? "";
   if (!t) throw new PostagemIndisponivel("Postagem não configurada (CEPCERTO_POSTAGEM_KEY).");
@@ -117,6 +133,10 @@ export async function emitirEtiqueta(
   t: Tenant,
   pedido: Pedido & { itens: Array<{ produtoId: string | null; nome: string; quantidade: number; precoUnitarioCentavos: number }> },
 ): Promise<ResultadoEtiqueta> {
+  // Antes de qualquer consulta ou chamada à CepCerto: pedido não pago não custa nada.
+  const bloqueio = bloqueioDeEtiqueta(pedido.status);
+  if (bloqueio) throw new PedidoSemEtiqueta(bloqueio);
+
   // O frete do pedido foi cotado pelo Melhor Envio, e esta emissão ainda é da
   // CepCerto. O pedido guarda só o nome do serviço ("PAC", "Jadlog .Package"),
   // que é igual nos dois: sem esta trava a etiqueta sairia por outro contrato,

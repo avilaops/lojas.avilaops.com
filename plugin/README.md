@@ -33,8 +33,9 @@ O Claude só vê as ferramentas que o lojista autorizou para a conexão.
 | Análises | `resumo_vendas`, `resumo_marketing`, `resumo_atribuicao` | — |
 
 Toda ferramenta declara `title`, `readOnlyHint` e `destructiveHint`, para o
-Claude saber quando pedir confirmação. `moderar_avaliacao` e `atualizar_cupom`
-podem excluir sem volta e vêm marcadas como destrutivas.
+Claude saber quando pedir confirmação. Toda ferramenta que altera a loja é
+marcada como destrutiva (sobrescreve, muda status ou exclui), exceto
+`criar_produto`, que só acrescenta.
 
 ## Como conectar
 
@@ -61,8 +62,8 @@ podem excluir sem volta e vêm marcadas como destrutivas.
 - **Destinos:** nenhum dado vai para serviço além do conector declarado acima.
 - **Histórico de uso:** a plataforma registra uma linha por chamada
   (ferramenta, horário, se alterou, se deu certo e o código do item tocado),
-  sem argumentos e sem resultados. O registro fica 90 dias, para o lojista
-  auditar o que o assistente fez.
+  sem argumentos e sem resultados, para o lojista auditar o que o assistente
+  fez. Uma faxina diária apaga de todas as lojas o que passou de 90 dias.
 - **O que o Claude cria ou altera** (produtos, preços, cupons, status) passa a
   fazer parte da loja e fica enquanto a loja existir, como qualquer alteração
   feita no painel.

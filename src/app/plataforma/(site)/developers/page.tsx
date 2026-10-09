@@ -76,8 +76,8 @@ export default function DevelopersPage() {
 
         <Bloco titulo={`Ferramentas do conector (${ferramentas.length})`}>
           <p className="mt-2 text-sm text-muted-foreground">
-            O assistente só vê as ferramentas que a conexão pode usar. As que alteram a loja vêm marcadas, para ele pedir
-            confirmação antes de agir.
+            O assistente só vê as ferramentas que a conexão pode usar. As que alteram a loja vêm marcadas como destrutivas
+            (sobrescrevem, mudam status ou excluem), para ele pedir confirmação antes de agir.
           </p>
           <div className="mt-4 grid gap-5">
             {AREAS.map((area) => {
@@ -91,7 +91,7 @@ export default function DevelopersPage() {
                         <span>
                           <code className="font-mono text-xs text-foreground">{nome}</code> {f.titulo}
                         </span>
-                        <span className="text-xs">{f.apaga ? "altera e pode excluir" : ehEscrita(f.escopo) ? "altera" : "consulta"}</span>
+                        <span className="text-xs">{!ehEscrita(f.escopo) ? "consulta" : f.aditiva ? "acrescenta" : "altera"}</span>
                       </li>
                     ))}
                   </ul>
