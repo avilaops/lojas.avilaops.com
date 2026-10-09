@@ -31,5 +31,23 @@ export async function GET(request: Request, { params }: Ctx) {
     select: { versao: true, origem: true, campos: true, antes: true, depois: true, criadoEm: true },
   });
 
-  return Response.json({ produto, historico });
+  // `antes` e `depois` guardam o produto INTEIRO a cada versão (texto de busca,
+  // mídias, atributos). Para a ficha interessa o que mudou: só os campos
+  // listados em `campos` saem daqui.
+  const so = (retrato: unknown, campos: string[]) => {
+    const origem = retrato && typeof retrato === "object" ? (retrato as Record<string, unknown>) : {};
+    return Object.fromEntries(campos.map((campo) => [campo, origem[campo] ?? null]));
+  };
+
+  return Response.json({
+    produto,
+    historico: historico.map((h) => ({
+      versao: h.versao,
+      origem: h.origem,
+      campos: h.campos,
+      criadoEm: h.criadoEm,
+      antes: so(h.antes, h.campos),
+      depois: so(h.depois, h.campos),
+    })),
+  });
 }
