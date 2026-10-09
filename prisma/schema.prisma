@@ -1319,6 +1319,13 @@ model OperadorLoja {
   criadoEm       DateTime  @default(now())
   atualizadoEm   DateTime  @updatedAt
 
+  /// Convite por e-mail pedido ao login unico: ENVIADO | FALHOU | PENDENTE, o
+  /// motivo e quando. Nulo para quem recebeu senha combinada. O endereco de
+  /// criar a senha nunca e guardado. Ver src/lib/convite-equipe.ts.
+  conviteSituacao String?
+  conviteDetalhe  String?
+  conviteEm       DateTime?
+
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   /// O mesmo e-mail pode operar em lojas diferentes (contador, agencia), mas

@@ -65,6 +65,7 @@ rejeita e quem chamou decide o que fazer; nenhuma chamada é repetida sozinha.
 | `src/lib/email.ts` | SMTP (tempo-limite do socket) | 20 s |
 | `src/lib/google-entrada.ts` | Entrada com Google | 10 s |
 | `src/lib/sso.ts` | SSO | 8 s |
+| `src/lib/convite-equipe.ts` | Convite da equipe (provisionamento do Auth) | 8 s |
 | `src/lib/indexnow.ts` | IndexNow | 8 s |
 | `src/lib/provisionar.ts` | Cloudflare e API de e-mail (provisionamento) | 15 s |
 | `src/lib/uploads.ts` | Download de imagem por URL | 20 s |

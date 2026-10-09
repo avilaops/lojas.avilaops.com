@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { KeyRound, Plus, Power, Trash2, UserPlus } from "lucide-react";
+import { KeyRound, Mail, Plus, Power, Trash2, UserPlus } from "lucide-react";
 import { Secao } from "./campos";
 
 /**
@@ -19,7 +19,24 @@ export type OperadorNaTela = {
   papel: string;
   ativo: boolean;
   ultimoAcessoEm: string | null;
+  /** Convite por e-mail: ENVIADO | FALHOU | PENDENTE; nulo para quem recebeu senha combinada. */
+  conviteSituacao: string | null;
+  conviteDetalhe: string | null;
+  conviteEm: string | null;
 };
+
+const CONVITE: Record<string, string> = { ENVIADO: "Convite enviado", FALHOU: "Convite não enviado", PENDENTE: "Convite pendente" };
+
+/** A linha do convite sob o nome; `null` para quem nunca foi convidado. */
+function linhaDoConvite(o: Pick<OperadorNaTela, "conviteSituacao" | "conviteDetalhe" | "conviteEm">): string | null {
+  if (!o.conviteSituacao) return null;
+  const em = o.conviteEm
+    ? ` em ${new Date(o.conviteEm).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}`
+    : "";
+  return `${CONVITE[o.conviteSituacao] ?? o.conviteSituacao}${em}${o.conviteDetalhe ? `: ${o.conviteDetalhe}` : ""}`;
+}
+
+type Convite = { situacao: string; detalhe: string };
 
 const PAPEL: Record<string, { rotulo: string; explica: string }> = {
   GERENTE: { rotulo: "Gerente", explica: "Produtos, preços, pedidos e configurações" },
@@ -29,36 +46,70 @@ const PAPEL: Record<string, { rotulo: string; explica: string }> = {
 const quando = (iso: string | null) =>
   iso ? new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" }) : "nunca entrou";
 
-export default function Equipe({ dono, operadores }: { dono: string | null; operadores: OperadorNaTela[] }) {
+export default function Equipe({
+  dono,
+  operadores,
+  conviteLigado,
+}: {
+  dono: string | null;
+  operadores: OperadorNaTela[];
+  /** O login único está pronto para escrever o convite: senha em branco vira convite por e-mail. */
+  conviteLigado: boolean;
+}) {
   const router = useRouter();
   const [abrindo, setAbrindo] = useState(false);
   const [ocupado, setOcupado] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [aviso, setAviso] = useState<{ bom: boolean; texto: string } | null>(null);
   const [form, setForm] = useState({ nome: "", email: "", senha: "", papel: "OPERADOR" });
+  // Trava síncrona: dois toques no mesmo instante passam pelo `disabled`, que só
+  // vale depois do próximo desenho, e cada envio a mais é um e-mail a mais.
+  const enviando = useRef(false);
 
-  async function chamar(url: string, init: RequestInit) {
+  async function chamar(url: string, init: RequestInit): Promise<{ convite?: Convite } | null> {
+    if (enviando.current) return null;
+    enviando.current = true;
     setErro(null);
+    setAviso(null);
     setOcupado(true);
     try {
       const r = await fetch(url, { headers: { "content-type": "application/json" }, ...init });
-      const corpo = (await r.json().catch(() => ({}))) as { erro?: string };
+      const corpo = (await r.json().catch(() => ({}))) as { erro?: string; convite?: Convite };
       if (!r.ok) throw new Error(corpo.erro ?? "Não consegui salvar.");
       router.refresh();
-      return true;
+      return corpo;
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Falha inesperada.");
-      return false;
+      return null;
     } finally {
+      enviando.current = false;
       setOcupado(false);
     }
   }
 
+  /** Diz ao dono o que aconteceu com o convite, sem ele ter de procurar na lista. */
+  function avisarConvite(nome: string, email: string, convite: Convite | undefined, criou: boolean) {
+    if (!convite) return;
+    setAviso(
+      convite.situacao === "ENVIADO"
+        ? { bom: true, texto: `Convite enviado para ${email}: ${convite.detalhe}.` }
+        : { bom: false, texto: `${criou ? `${nome} ganhou o acesso, mas o convite não saiu` : "O convite não saiu"}. ${convite.detalhe}` },
+    );
+  }
+
   async function criar(e: React.FormEvent) {
     e.preventDefault();
-    if (await chamar("/api/painel/equipe", { method: "POST", body: JSON.stringify(form) })) {
+    const corpo = await chamar("/api/painel/equipe", { method: "POST", body: JSON.stringify(form) });
+    if (corpo) {
+      avisarConvite(form.nome.trim(), form.email.trim(), corpo.convite, true);
       setForm({ nome: "", email: "", senha: "", papel: "OPERADOR" });
       setAbrindo(false);
     }
+  }
+
+  async function convidar(o: OperadorNaTela) {
+    const corpo = await chamar(`/api/painel/equipe/${o.id}/convite`, { method: "POST" });
+    if (corpo) avisarConvite(o.nome, o.email, corpo.convite, false);
   }
 
   async function trocarSenha(o: OperadorNaTela) {
@@ -69,7 +120,12 @@ export default function Equipe({ dono, operadores }: { dono: string | null; oper
 
   return (
     <>
-      {erro && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{erro}</p>}
+      {erro && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{erro}</p>}
+      {aviso && (
+        <p role="status" className={`rounded-lg p-3 text-sm ${aviso.bom ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-amber-900"}`}>
+          {aviso.texto}
+        </p>
+      )}
 
       <Secao
         titulo="Quem entra no painel"
@@ -98,7 +154,19 @@ export default function Equipe({ dono, operadores }: { dono: string | null; oper
                 <span className="text-xs text-muted-foreground">
                   {o.email} · {PAPEL[o.papel]?.rotulo ?? o.papel} · {quando(o.ultimoAcessoEm)}
                 </span>
+                {linhaDoConvite(o) && <span className="block text-xs text-muted-foreground">{linhaDoConvite(o)}</span>}
               </span>
+
+              {conviteLigado && o.ativo && (
+                <button
+                  className="btn-secundario inline-flex h-9 items-center gap-1.5 px-3 text-xs"
+                  disabled={ocupado}
+                  onClick={() => convidar(o)}
+                  title="A pessoa recebe um e-mail para criar a própria senha e entrar"
+                >
+                  <Mail size={13} /> {o.conviteSituacao ? "Enviar convite de novo" : "Enviar convite"}
+                </button>
+              )}
 
               <button
                 className="btn-secundario inline-flex h-9 items-center gap-1.5 px-3 text-xs"
@@ -175,11 +243,13 @@ export default function Equipe({ dono, operadores }: { dono: string | null; oper
                 value={form.senha}
                 onChange={(e) => setForm({ ...form, senha: e.target.value })}
                 minLength={8}
-                placeholder="Pelo menos 8 caracteres"
-                required
+                placeholder={conviteLigado ? "Em branco: a pessoa cria a própria senha" : "Pelo menos 8 caracteres"}
+                required={!conviteLigado}
               />
               <small className="text-xs text-muted-foreground">
-                Combine com a pessoa e peça para ela trocar depois do primeiro acesso.
+                {conviteLigado
+                  ? "Deixe em branco e a pessoa recebe um convite por e-mail para criar a própria senha. Se preferir combinar uma senha com ela, escreva aqui."
+                  : "Combine com a pessoa e peça para ela trocar depois do primeiro acesso."}
               </small>
             </label>
 
