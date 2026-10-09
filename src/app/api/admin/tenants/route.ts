@@ -13,7 +13,7 @@ export async function GET(request: Request) {
       slug: true, nome: true, plano: true, status: true, dominioPrincipal: true, criadoEm: true,
       // Estado da mensalidade: o admin do app.avilaops.com cruza isto com o
       // Mercado Pago para achar divergência (pago lá, suspenso aqui).
-      assinaturaId: true, assinaturaStatus: true, ultimoPagamentoEm: true, setupPagoEm: true, suspensaEm: true, tentativasFalhas: true,
+      assinaturaId: true, assinaturaStatus: true, cobrancaIsenta: true, ultimoPagamentoEm: true, setupPagoEm: true, suspensaEm: true, tentativasFalhas: true,
       loginEmail: true, emailContato: true, whatsapp: true,
       _count: { select: { produtos: true, pedidos: true } },
     },
