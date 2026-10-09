@@ -206,7 +206,10 @@ tocar em servidor nenhum:
 5. restaura o dump **numa base nova** e compara com o retrato do passo 2. Tem
    de bater em tudo e ter exatamente a última migração pendente;
 6. aplica a migração na base restaurada e confere `prisma migrate status`;
-7. apaga as duas bases, também quando um passo falha.
+7. apaga as duas bases e a pasta temporária, também quando um passo falha ou
+   o ensaio é interrompido (Ctrl+C, `SIGTERM`): ele para entre dois passos,
+   limpa e sai com 130 ou 143. `SIGKILL` não dá para tratar; aí as bases somem
+   com `npm run banco:teste:parar` e sobra `/tmp/lojas-ensaio-*`.
 
 ```bash
 npm run banco:teste          # sobe o lojas-db-test
@@ -216,8 +219,9 @@ npm run banco:teste:parar
 
 Qualquer diferença sai listada (o que divergiu, antes e depois) e o comando
 sai com 1. O script recusa destino que não seja `127.0.0.1`, a porta do
-container de teste e base terminada em `_test`: a regra é `destinoDeEnsaio`,
-em `src/lib/ensaio-banco.ts`, e está presa em `npm test`
+container de teste e base terminada em `_test`, e recusa `TEST_DB_PORT=5432`,
+a porta do Postgres de verdade: as regras são `destinoDeEnsaio` e
+`portaDeEnsaio`, em `src/lib/ensaio-banco.ts`, e estão presas em `npm test`
 (`src/lib/ensaio-banco.test.ts`) junto com duas afirmações deste documento: o
 `deploy/deploy.sh` migra antes de trocar e não engole falha de migração, e
 todo arquivo deste repositório citado aqui existe.

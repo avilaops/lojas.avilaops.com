@@ -7,6 +7,7 @@ import { CheckoutScreen, MercadoPagoCardBrick } from "@avilaops/checkout/ui";
 import { FRETE_RETIRADA_ID, avaliarPedidoMinimo, avisoDePedidoMinimo, type ItemCarrinho, type MeioPagamento, type OpcaoFrete, type ResultadoPagamento } from "@avilaops/checkout";
 import { useCart } from "@/components/cart/CartProvider";
 import { iniciarCheckout } from "@/lib/eventos-loja";
+import { destinoAposFalhaDoCheckout } from "@/lib/pedido-a-confirmar";
 import type { TenantPublico } from "@/lib/tenant";
 
 /**
@@ -119,8 +120,19 @@ export default function CheckoutClient({ loja, conta }: { loja: TenantPublico; c
         cartao: dados.cartaoToken ? { token: dados.cartaoToken, parcelas: dados.parcelas, bandeira: dados.bandeira } : undefined,
       }),
     });
-    const corpo = await r.json();
-    if (!r.ok) throw new Error(corpo?.erro ?? "Não foi possível processar o pagamento.");
+    const corpo = await r.json().catch(() => null);
+    if (!r.ok) {
+      // Cobrança que pode ter nascido não reabre o formulário: o comprador vai
+      // para a página do pedido, com o carrinho guardado para o caso de ela
+      // não ter nascido. A promessa não resolve de propósito: o botão segue
+      // travado até a navegação e a tela não chega a dizer "nada foi cobrado".
+      const destino = destinoAposFalhaDoCheckout(corpo, referencia);
+      if (destino) {
+        router.push(destino);
+        return new Promise<ResultadoPagamento>(() => {});
+      }
+      throw new Error(corpo?.erro ?? "Não foi possível processar o pagamento.");
+    }
     const res = corpo as ResultadoPagamento;
     setResultado(res);
     if (res.status === "aprovado") {

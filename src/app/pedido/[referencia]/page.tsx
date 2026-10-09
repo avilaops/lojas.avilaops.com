@@ -9,6 +9,7 @@ import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
 import EventoCompra from "@/components/EventoCompra";
 import { ConviteAvaliacaoGoogle } from "@/components/AvaliacoesGoogle";
 import { conviteAvaliacao } from "@/lib/avaliacoes-google";
+import { telaSemPedido } from "@/lib/pedido-a-confirmar";
 
 export const metadata: Metadata = { title: "Pedido", robots: { index: false } };
 
@@ -27,7 +28,33 @@ export default async function PedidoPage({ params }: { params: Promise<{ referen
   const { referencia } = await params;
   // A referência é longa e aleatória; funciona como o link "do seu pedido".
   const pedido = await prisma.pedido.findFirst({ where: { tenantId: t.id, referencia }, include: { itens: true } });
-  if (!pedido) notFound();
+  if (!pedido) {
+    // Checkout que respondeu "pagamento a confirmar" manda o comprador para cá
+    // antes de existir pedido: a tentativa diz o que mostrar no lugar do 404.
+    const tentativa = await prisma.tentativaCatalogo.findUnique({ where: { tenantId_referencia: { tenantId: t.id, referencia } }, select: { estado: true } });
+    const tela = telaSemPedido(tentativa?.estado);
+    if (!tela) notFound();
+    const confirmando = tela === "confirmando";
+    return (
+      <div className="container-loja max-w-2xl py-10">
+        <p className="text-xs uppercase tracking-widest text-muted-foreground">Pedido {referencia}</p>
+        <h1 className="mt-1 text-2xl font-bold">{confirmando ? "Estamos confirmando o pagamento" : "Pagamento não concluído"}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {confirmando
+            ? "Não pague de novo. A resposta do pagamento ainda não chegou; quando ela chegar, o pedido aparece nesta página. Guarde este endereço e volte em alguns minutos."
+            : "Este pagamento não foi concluído e nenhum pedido foi gerado. Seu carrinho continua guardado para você tentar de novo."}
+        </p>
+        <div className="mt-6 flex flex-wrap gap-2">
+          {confirmando ? <Link href="/produtos" className="btn-secundario">Continuar comprando</Link> : <Link href="/carrinho" className="btn-primario">Voltar ao carrinho</Link>}
+          {t.whatsapp && (
+            <a className="btn-secundario" href={linkWhatsApp(t.whatsapp, `Olá! Sobre o pagamento do pedido ${referencia}`)} target="_blank" rel="noopener">
+              Falar com a loja
+            </a>
+          )}
+        </div>
+      </div>
+    );
+  }
   const convite = conviteAvaliacao(t, pedido);
 
   return (

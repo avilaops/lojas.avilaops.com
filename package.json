@@ -18,7 +18,7 @@
     "test": "tsx --test src/lib/*.test.ts packages/checkout/src/core/*.test.ts packages/checkout/src/server/*.test.ts packages/checkout/src/providers/*.test.ts",
     "banco:teste": "node scripts/banco-de-teste.mjs subir",
     "banco:teste:parar": "node scripts/banco-de-teste.mjs derrubar",
-    "banco:ensaio": "tsx scripts/ensaio-banco.mts",
+    "banco:ensaio": "node --import tsx scripts/ensaio-banco.mts",
     "test:integracao": "tsx --test tests/integration/*.test.ts"
   },
   "dependencies": {

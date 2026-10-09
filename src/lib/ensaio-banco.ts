@@ -33,6 +33,61 @@ export function destinoDeEnsaio(url: string, porta = "5548"): DestinoDeEnsaio {
   return { host: u.hostname, porta: u.port, base };
 }
 
+/** Porta do Postgres de verdade neste servidor e em produção: o ensaio nunca roda nela. */
+const PORTA_DO_POSTGRES_REAL = "5432";
+
+/**
+ * A porta que `TEST_DB_PORT` pede, ou a do `lojas-db-test`. `destinoDeEnsaio`
+ * confere o endereço contra a porta que recebe; sem esta recusa, um
+ * `TEST_DB_PORT=5432` passaria nela e apontaria o ensaio para o banco real.
+ */
+export function portaDeEnsaio(valor: string | undefined): string {
+  const porta = (valor ?? "").trim() || "5548";
+  if (!/^\d{2,5}$/.test(porta) || Number(porta) > 65535) {
+    throw new Error(`TEST_DB_PORT precisa ser um número de porta; recebeu ${porta}.`);
+  }
+  if (String(Number(porta)) === PORTA_DO_POSTGRES_REAL) {
+    throw new Error("O ensaio não roda na porta 5432: é a do Postgres de verdade. Use a do lojas-db-test (5548).");
+  }
+  return String(Number(porta));
+}
+
+/** Lançado no ponto de conferência seguinte ao sinal; a limpeza roda no `finally` de quem chama. */
+export class EnsaioInterrompido extends Error {
+  constructor(readonly sinal: string) {
+    super(`interrompido por ${sinal}`);
+  }
+}
+
+/** Código de saída de processo encerrado por sinal: 128 + número do sinal. */
+export function saidaPorSinal(sinal: string): number {
+  return 128 + ({ SIGINT: 2, SIGTERM: 15 }[sinal] ?? 1);
+}
+
+/**
+ * Troca o encerramento imediato de SIGINT/SIGTERM por uma parada entre passos.
+ *
+ * O ensaio é feito de comandos síncronos; com o comportamento padrão o sinal
+ * mata o processo no meio e as bases e a pasta temporária ficam para trás. Com
+ * o ouvinte registrado o processo segue vivo, e `conferir()`, chamado entre os
+ * passos, devolve a vez ao laço de eventos (é quando o ouvinte roda) e lança
+ * `EnsaioInterrompido` se algum sinal chegou. Um segundo sinal durante a
+ * limpeza não a interrompe.
+ */
+export function vigiarSinais(processo: { on(sinal: string, ouvinte: () => void): unknown }, sinais: string[] = ["SIGINT", "SIGTERM"]) {
+  let recebido: string | null = null;
+  for (const sinal of sinais) processo.on(sinal, () => { recebido ??= sinal; });
+  return {
+    get sinal() {
+      return recebido;
+    },
+    async conferir(): Promise<void> {
+      await new Promise((seguir) => setImmediate(seguir));
+      if (recebido) throw new EnsaioInterrompido(recebido);
+    },
+  };
+}
+
 /**
  * Migrações que estão no diretório e ainda não em `_prisma_migrations`, na
  * ordem em que o Prisma as aplicaria. O que não começa por dígito

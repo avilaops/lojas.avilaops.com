@@ -17,10 +17,16 @@ import { closeSync, cpSync, mkdtempSync, openSync, readdirSync, rmSync } from "n
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { compararRetratos, destinoDeEnsaio, migracoesPendentes, type RetratoDoBanco } from "../src/lib/ensaio-banco";
+import { compararRetratos, destinoDeEnsaio, EnsaioInterrompido, migracoesPendentes, portaDeEnsaio, saidaPorSinal, vigiarSinais, type RetratoDoBanco } from "../src/lib/ensaio-banco";
 
 const CONTAINER = "lojas-db-test";
-const PORTA = process.env.TEST_DB_PORT ?? "5548";
+let PORTA: string;
+try {
+  PORTA = portaDeEnsaio(process.env.TEST_DB_PORT);
+} catch (e) {
+  console.error(e instanceof Error ? e.message : e);
+  process.exit(1);
+}
 // Pelo arquivo, e não por `npx`: mesmo motivo de `scripts/banco-de-teste.mjs`.
 const PRISMA = createRequire(import.meta.url).resolve("prisma/build/index.js");
 const PRISMA_REAL = resolve("prisma");
@@ -112,6 +118,12 @@ if (!ultima || migracoes.length < 2) {
   process.exit(1);
 }
 
+// Registrado antes de criar a pasta e as bases: daqui em diante SIGINT e
+// SIGTERM param o ensaio entre dois passos e a limpeza do `finally` roda.
+// Vale com `node --import tsx` (é como o `npm run banco:ensaio` chama): o
+// comando `tsx` é um processo à parte que repassa o sinal e, sem resposta em
+// 30 ms, mata este com SIGKILL no meio de um passo, sem limpeza nenhuma.
+const sinais = vigiarSinais(process);
 const temporario = mkdtempSync(join(tmpdir(), "lojas-ensaio-"));
 const schemaAntes = join(temporario, "prisma", "schema.prisma");
 const schemaReal = join(PRISMA_REAL, "schema.prisma");
@@ -120,6 +132,7 @@ let saida = 1;
 
 try {
   // 1. O banco "antes do deploy": todas as migrações menos a última.
+  await sinais.conferir();
   cpSync(schemaReal, schemaAntes);
   cpSync(join(PRISMA_REAL, "migrations"), join(temporario, "prisma", "migrations"), { recursive: true });
   rmSync(join(temporario, "prisma", "migrations", ultima), { recursive: true });
@@ -127,6 +140,7 @@ try {
   migrar(BASE, schemaAntes);
 
   // 2. Dado de verdade para o dump carregar, e o retrato que a volta tem de reproduzir.
+  await sinais.conferir();
   psql(
     `INSERT INTO "Tenant" (id, slug, nome, "atualizadoEm") VALUES ('ensaio-1', 'ensaio-1', 'Ensaio 1', now()), ('ensaio-2', 'ensaio-2', 'Ensaio 2', now());`,
     BASE,
@@ -135,6 +149,7 @@ try {
 
   // 3. O dump "antes da migração", em SQL puro como o de produção. O `pg_dump`
   //    é o do container: mesma versão maior do servidor de banco.
+  await sinais.conferir();
   const saidaDoDump = openSync(dump, "w");
   try {
     const d = spawnSync("docker", ["exec", CONTAINER, "pg_dump", "-U", "postgres", "-d", BASE], { stdio: ["ignore", saidaDoDump, "pipe"], encoding: "utf8" });
@@ -145,10 +160,12 @@ try {
   }
 
   // 4. O "deploy": a última migração entra.
+  await sinais.conferir();
   migrar(BASE, schemaReal);
   exigirVazio("migração pendente depois do deploy", migracoesPendentes(pastas, aplicadas(BASE)));
 
   // 5. A "volta ao dump", num banco novo: nunca por cima do que está no ar.
+  await sinais.conferir();
   criarBase(BASE_VOLTA);
   const entradaDoDump = openSync(dump, "r");
   try {
@@ -173,6 +190,7 @@ try {
   }
 
   // 6. O "deploy de novo", sobre o banco restaurado.
+  await sinais.conferir();
   migrar(BASE_VOLTA, schemaReal);
   exigirVazio("migração pendente depois de migrar o banco restaurado", migracoesPendentes(pastas, aplicadas(BASE_VOLTA)));
   if (prisma(["migrate", "status"], BASE_VOLTA, schemaReal) !== 0) throw new EnsaioFalhou("prisma migrate status não saiu com 0 no banco restaurado");
@@ -186,18 +204,23 @@ try {
       resultado: "dump, migração, volta ao dump e migração de novo conferidos",
     }),
   );
+  // Sinal que chegou no último passo também conta: o ensaio não terminou a pedido de ninguém.
+  await sinais.conferir();
   saida = 0;
 } catch (e) {
-  console.error(e instanceof EnsaioFalhou ? `Ensaio falhou: ${e.message}` : e);
+  console.error(e instanceof EnsaioInterrompido ? `Ensaio ${e.message}; limpando.` : e instanceof EnsaioFalhou ? `Ensaio falhou: ${e.message}` : e);
 } finally {
-  // 7. Limpa também quando um passo falha.
+  // 7. Limpa também quando um passo falha ou o ensaio é interrompido. Com
+  //    Ctrl+C o comando em curso recebe o sinal junto e falha; o que decide a
+  //    saída é o sinal, não essa falha.
+  if (sinais.sinal) saida = saidaPorSinal(sinais.sinal);
   for (const base of [BASE, BASE_VOLTA]) {
     try {
       endereco(base);
       psql(`DROP DATABASE IF EXISTS "${base}" WITH (FORCE);`, "postgres");
     } catch (e) {
       console.error(`Não foi possível apagar ${base}: ${e instanceof Error ? e.message : String(e)}`);
-      saida = 1;
+      if (!sinais.sinal) saida = 1;
     }
   }
   rmSync(temporario, { recursive: true, force: true });

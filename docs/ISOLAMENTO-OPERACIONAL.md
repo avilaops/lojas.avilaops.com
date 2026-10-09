@@ -105,9 +105,9 @@ estouro.
 
 | Rota | No estouro do tempo-limite |
 |---|---|
-| `criarRotaPagamento` (cobrar) | 503 `pagamento_a_confirmar`, com a referência. Antes respondia 502 "Nada foi cobrado", que no estouro não se sabe. Vale também quando a cobrança passou e a gravação (`aoCriarPagamento`) falhou |
+| `criarRotaPagamento` (cobrar) | 503 `pagamento_a_confirmar`, com a referência. Antes respondia 502 "Nada foi cobrado", que no estouro não se sabe. Vale também quando a cobrança passou e a gravação (`aoCriarPagamento`) falhou. Tempo-limite antes de a cobrança começar (catálogo, frete) segue 502 `falha_gateway`: nada foi cobrado |
 | `criarRotaStatus` (consultar) | 502 "Não foi possível consultar o pagamento."; a tela do PIX pergunta de novo |
-| `criarRotaWebhook` (consultar) | 200 `{ recebido: true }` sem atualizar o status. O gateway não reenvia, então a notificação se perde e quem recupera o pedido é a reconciliação |
+| `criarRotaWebhook` (consultar) | 503 sem atualizar o status, para o gateway reenviar a notificação (decisão de 09/10/2026, tarefa 240). Só o tempo-limite da consulta: nada foi gravado e o reenvio repete só a consulta. Qualquer outra falha, inclusive tempo-limite na gravação, segue 200 e quem recupera o pedido é a reconciliação |
 
 ## Idempotência (08/10/2026)
 
