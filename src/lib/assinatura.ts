@@ -75,9 +75,29 @@ export async function reajustarAssinatura(t: Tenant, centavos: number) {
   esquecerTenantEmCache(t.slug);
 }
 
+/**
+ * Cancela a mensalidade no Mercado Pago e, só então, aqui.
+ *
+ * A ordem importa: antes a falha do Mercado Pago era só um `console.error`, e
+ * a loja ficava "cancelada" no nosso banco com a assinatura ainda cobrando o
+ * cartão do lojista todo mês — o pior desencontro possível. Agora, se o
+ * Mercado Pago não confirmar, nada muda e quem pediu recebe o erro.
+ *
+ * Uma exceção: quando a assinatura já está cancelada lá (alguém cancelou pelo
+ * painel do Mercado Pago), a alteração é recusada, mas o estado é o que
+ * queríamos. Confere lendo de volta antes de desistir.
+ */
 export async function cancelarAssinatura(t: Tenant) {
-  if (t.assinaturaId) await alterarPreapproval(t.assinaturaId, "cancelled").catch((e) => console.error("[assinatura] cancelar no MP:", e));
+  if (t.assinaturaId) {
+    try {
+      await alterarPreapproval(t.assinaturaId, "cancelled");
+    } catch (erro) {
+      const atual = await buscarPreapproval(t.assinaturaId).catch(() => null);
+      if (atual?.status !== "cancelled") throw erro;
+    }
+  }
   await prisma.tenant.update({ where: { id: t.id }, data: { assinaturaStatus: "CANCELADA", assinaturaInitPoint: null } });
+  esquecerTenantEmCache(t.slug);
 }
 
 /**
@@ -209,6 +229,50 @@ async function aplicarCobranca(c: PagamentoAutorizado) {
   return { motivo: `recusada (${tentativas}ª), dentro da tolerância`, tenantId: t.id };
 }
 
+/**
+ * Por que esta loja cairia na régua de inadimplência, ou `null` se não cairia.
+ *
+ * Não olha a isenção de propósito: é a pergunta "e se ela não fosse isenta?",
+ * que a rotina diária faz depois de pular as isentas e que o controle de
+ * isenção faz ANTES de tirar a isenção de alguém, para mostrar a consequência.
+ */
+export function motivoDeInadimplencia(t: Tenant, agora = Date.now()): string | null {
+  if (t.plano === "SITE" && t.assinaturaStatus === "SEM_ASSINATURA") return null;
+  const diasDesdeFimDoTeste = (agora - fimDoTeste(t).getTime()) / 86_400_000;
+  const diasDesdePagamento = t.ultimoPagamentoEm ? (agora - t.ultimoPagamentoEm.getTime()) / 86_400_000 : null;
+  if (t.assinaturaStatus !== "AUTORIZADA" && diasDesdeFimDoTeste > DIAS_TOLERANCIA && !t.setupPagoEm) return "período de teste encerrado sem assinatura";
+  if (t.assinaturaStatus === "AUTORIZADA" && diasDesdePagamento !== null && diasDesdePagamento > 30 + DIAS_TOLERANCIA) return "mais de um mês sem pagamento confirmado";
+  return null;
+}
+
+/**
+ * A isenção de mensalidade de uma loja e o que tirá-la provocaria.
+ *
+ * Isenta quer dizer: a plataforma não cobra esta loja (ela paga por fora, ou é
+ * da casa) e a régua de inadimplência a ignora. Tirar a isenção NÃO cria
+ * assinatura nem cobrança — isso continua sendo um ato à parte ("iniciar"). O
+ * que muda é que a loja passa a ser avaliada pela régua, e `seNaoFosseIsenta`
+ * diz hoje o que a régua concluiria.
+ */
+export function situacaoDaIsencao(t: Tenant, agora = Date.now()) {
+  return {
+    isenta: t.cobrancaIsenta,
+    plano: t.plano,
+    statusDaLoja: t.status,
+    assinaturaStatus: t.assinaturaStatus,
+    temAssinatura: Boolean(t.assinaturaId),
+    suspensaoAutomatica: suspensaoAutomatica(),
+    seNaoFosseIsenta: t.status === "ATIVA" ? motivoDeInadimplencia(t, agora) : null,
+  };
+}
+
+/** Marca ou tira a isenção. Só isso: não cria assinatura, não muda o status da loja, não avisa o lojista. */
+export async function definirIsencao(t: Tenant, isenta: boolean) {
+  const depois = await prisma.tenant.update({ where: { id: t.id }, data: { cobrancaIsenta: isenta } });
+  esquecerTenantEmCache(t.slug);
+  return depois;
+}
+
 // ── Verificação diária (cron via n8n → POST /api/admin/cobranca/verificar) ──
 
 /**
@@ -252,12 +316,7 @@ export async function verificarInadimplencia(): Promise<{ suspensas: string[]; a
 
   for (const t of atuais) {
     if (t.cobrancaIsenta) continue; // loja da casa: nem entra no cálculo (suspender() confere de novo)
-    if (t.plano === "SITE" && t.assinaturaStatus === "SEM_ASSINATURA") continue; // vitrine grátis enquanto não assina? não: mesma regra
-    const diasDesdeFimDoTeste = (agora - fimDoTeste(t).getTime()) / 86_400_000;
-    const diasDesdePagamento = t.ultimoPagamentoEm ? (agora - t.ultimoPagamentoEm.getTime()) / 86_400_000 : null;
-    let motivo: string | null = null;
-    if (t.assinaturaStatus !== "AUTORIZADA" && diasDesdeFimDoTeste > DIAS_TOLERANCIA && !t.setupPagoEm) motivo = "período de teste encerrado sem assinatura";
-    else if (t.assinaturaStatus === "AUTORIZADA" && diasDesdePagamento !== null && diasDesdePagamento > 30 + DIAS_TOLERANCIA) motivo = "mais de um mês sem pagamento confirmado";
+    const motivo = motivoDeInadimplencia(t, agora);
     if (motivo) {
       if (await suspender(t, motivo)) suspensas.push(t.slug);
       else if (!t.cobrancaIsenta) aSuspender.push({ slug: t.slug, motivo });

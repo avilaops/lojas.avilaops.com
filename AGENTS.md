@@ -235,5 +235,24 @@ Este repositório pertence à Ávila Ops Tecnologia, que ajuda pequenas empresas
   O status muda por `PATCH /api/admin/tenants/<slug>`. E loja suspensa
   continua na busca (`visivelNaBusca` em `descoberta.ts`): perde o checkout,
   não o robots, o sitemap nem o `index`. Só cancelada e em provisionamento somem.
+- **Histórico de catálogo diz quem.** `HistoricoCatalogo.origem` de alteração
+  feita por gente leva a pessoa (`src/lib/catalogo-origem.ts`): `painel:dono`,
+  `painel:<e-mail do operador>`, `avilaops:<nome>`. Automático diz o que é
+  (`importacao`, `api:<chave>`, `migracao:…`). Escrita nova de painel passa a
+  origem por essas funções; registro antigo gravado só como `painel` fica como
+  está — não se inventa autor.
+- **O painel da Ávila Ops lê o catálogo por consulta, não por cópia.**
+  `GET /api/admin/tenants/<slug>/produtos/consulta` (`catalogo-admin-consulta.ts`)
+  devolve a página, os totais e os indicadores, tudo calculado no banco, com
+  cada regra escrita uma vez (a coluna que o indicador conta é a que o filtro
+  lê). Estoque ali vem das variações (`SaldoEstoque`, físico menos reservado),
+  não de `Produto.estoque`, que é projeção. Edição pelo painel de lá é
+  `PATCH …/produtos/<id>`, pelos mesmos trilhos do painel da loja.
+- **Isenção de mensalidade não cobra nem descobra.** `Tenant.cobrancaIsenta`
+  só tira a loja da régua de inadimplência. Mudar é por
+  `POST /api/admin/tenants/<slug>/isencao`: não cria assinatura, não muda
+  status e não avisa o lojista; tirar de quem cairia na régua exige
+  `cienteDaRegua`. E cancelar mensalidade só vale aqui depois de o Mercado
+  Pago confirmar (`cancelarAssinatura`).
 - **Português nos nomes e comentários**, como no resto do monorepo.
 - **TypeScript estrito**; `npm run typecheck` antes de entregar.

@@ -135,7 +135,7 @@ export async function criarProdutoPelaApi(tenantId: string, dados: z.infer<typeo
 }
 
 /** Edita os campos editoriais. `idOuSlug` como no GET. */
-export async function editarProdutoPelaApi(tenantId: string, idOuSlug: string, dados: z.infer<typeof EdicaoDeProduto>, origem: string) {
+export async function editarProdutoPelaApi(tenantId: string, idOuSlug: string, dados: z.infer<typeof EdicaoDeProduto>, origem: string, versao?: number) {
   const atual = await prisma.produto.findFirst({ where: { tenantId, OR: [{ id: idOuSlug }, { slug: idOuSlug }] }, select: { id: true } });
   if (!atual) throw new ErroApi("nao_encontrado", "Produto não encontrado nesta loja.");
   const { categoria, slug, ...resto } = dados;
@@ -145,7 +145,7 @@ export async function editarProdutoPelaApi(tenantId: string, idOuSlug: string, d
       tenantId,
       atual.id,
       { ...resto, ...(slug ? { slug: slugificar(slug) } : {}), ...(categoriaId !== undefined ? { categoriaId } : {}) },
-      { origem },
+      { origem, ...(versao !== undefined ? { versao } : {}) },
     );
     limparCache(tenantId);
     return await prisma.produto.findUniqueOrThrow({ where: { id: atual.id }, include: INCLUIR });
