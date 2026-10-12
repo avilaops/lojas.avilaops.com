@@ -16,7 +16,7 @@ import {
   trocarCodigo,
 } from "../../src/lib/mcp-conexoes";
 import { gerarChave } from "../../src/lib/api-chaves";
-import { chamadasDaLoja, registrarChamada, RETENCAO_DIAS } from "../../src/lib/mcp-historico";
+import { chamadasDaLoja, expurgarHistoricoMcp, registrarChamada, RETENCAO_DIAS } from "../../src/lib/mcp-historico";
 import { hashDoSegredo } from "../../src/lib/mcp-oauth";
 import { ESCOPOS_DO_MCP, escoposDaAutorizacao, podeUsar } from "../../src/lib/mcp-permissoes";
 
@@ -286,18 +286,29 @@ test("o histórico mostra quem fez o quê, sem argumento nenhum, e é de cada lo
   assert.deepEqual((await chamadasDaLoja(outra.id)).map((c) => c.ferramenta), ["obter_loja"]);
 });
 
-test("o histórico some depois da retenção, quando o lojista abre a lista", async () => {
-  const loja = await lojaPro();
+test("a faxina diária apaga o vencido de todas as lojas, e só o vencido", async () => {
+  const lojas = [await lojaPro(), await lojaPro()];
   const origem = { tipo: "chave" as const, id: "chave-qa", nome: "n8n" };
-  await registrarChamada({ tenantId: loja.id, origem, ferramenta: "obter_loja", args: {}, ok: true, duracaoMs: 1 });
-  await registrarChamada({ tenantId: loja.id, origem, ferramenta: "listar_pedidos", args: {}, ok: true, duracaoMs: 1 });
-  await prisma.chamadaMcp.updateMany({
-    where: { tenantId: loja.id, ferramenta: "obter_loja" },
-    data: { criadaEm: new Date(Date.now() - (RETENCAO_DIAS + 1) * 86_400_000) },
-  });
+  const agora = new Date();
+  const diasAtras = (dias: number) => new Date(agora.getTime() - dias * 86_400_000);
+  for (const loja of lojas) {
+    await registrarChamada({ tenantId: loja.id, origem, ferramenta: "obter_loja", args: {}, ok: true, duracaoMs: 1 });
+    await registrarChamada({ tenantId: loja.id, origem, ferramenta: "listar_pedidos", args: {}, ok: true, duracaoMs: 1 });
+    await prisma.chamadaMcp.updateMany({ where: { tenantId: loja.id, ferramenta: "obter_loja" }, data: { criadaEm: diasAtras(RETENCAO_DIAS + 1) } });
+    await prisma.chamadaMcp.updateMany({ where: { tenantId: loja.id, ferramenta: "listar_pedidos" }, data: { criadaEm: diasAtras(RETENCAO_DIAS - 1) } });
+  }
 
-  assert.deepEqual((await chamadasDaLoja(loja.id)).map((c) => c.ferramenta), ["listar_pedidos"]);
-  assert.equal(await prisma.chamadaMcp.count({ where: { tenantId: loja.id } }), 1);
+  // Antes da faxina, a tela já não mostra o vencido, e ler não apaga nada.
+  assert.deepEqual((await chamadasDaLoja(lojas[0].id)).map((c) => c.ferramenta), ["listar_pedidos"]);
+  assert.equal(await prisma.chamadaMcp.count({ where: { tenantId: lojas[0].id } }), 2);
+
+  // A outra loja nunca abriu o painel: a faxina apaga o dela também.
+  const { apagadas } = await expurgarHistoricoMcp(agora);
+  assert.ok(apagadas >= 2);
+  for (const loja of lojas) {
+    const restantes = await prisma.chamadaMcp.findMany({ where: { tenantId: loja.id }, select: { ferramenta: true } });
+    assert.deepEqual(restantes.map((c) => c.ferramenta), ["listar_pedidos"], loja.id);
+  }
 });
 
 test("mudar o acesso no painel vale na chamada seguinte, com o mesmo token, e só na loja dona", async () => {

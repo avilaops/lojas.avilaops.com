@@ -97,9 +97,13 @@ Lojas por esse caminho rodou sem dump colado nela: o script era o de
 deploy do Lojas tinha passado pelo script novo, então a linha `dump conferido`
 e o arquivo `pre-migracao-*` nunca foram vistos em produção por esse caminho.
 Três outras aplicações já publicaram pelo script novo sem falha, nenhuma com
-dump ligado. Quem acompanha o primeiro
-deploy do Lojas é a raia de operações (tarefa 305 do quadro). Enquanto essa
-prova não existir, a regra do dump à mão, mais abaixo, continua valendo.
+dump ligado. Em 12/10/2026 18:03 UTC o Lojas publicou pelo script novo pela
+primeira vez (run 38288388707 do Actions): não havia migração pendente e o log
+diz `sem migracao pendente; dump dispensado`. Isso prova o script e o ramo sem
+migração, não o dump. Quem acompanha o primeiro
+deploy do Lojas com migração é a raia de operações (tarefa 305 do quadro).
+Enquanto essa prova não existir, a regra do dump à mão, mais abaixo, continua
+valendo.
 
 **Pelo `avila-deploy-local`** (o caminho do `BUILD-MANUAL.md` do `infra`, para
 quando o Actions não pode construir nem publicar), o dump está ligado para o
@@ -247,7 +251,8 @@ restaurar", no servidor.
 - **Prova, em deploy de verdade, do dump antes de migração**: o `avila-deploy`
   com o dump foi instalado em 09/10/2026 07:30 UTC (tarefa 262 do quadro da
   equipe) e o `avila-deploy-local` em 08/10/2026, mas nenhum dos dois publicou
-  o Lojas com migração pendente desde então. Falta ver a linha `dump conferido`
+  o Lojas com migração pendente desde então (o deploy de 12/10/2026 passou
+  pelo `avila-deploy` novo sem migração: dump dispensado). Falta ver a linha `dump conferido`
   e o arquivo `pre-migracao-*` num deploy do Lojas (acompanhamento na tarefa
   305). Ver "Backup do banco".
 - **Fotos das lojas** (`/opt/lojas/uploads`): `deploy/docker-compose.producao.yml`

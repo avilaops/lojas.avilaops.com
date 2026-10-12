@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { lojistaAtual } from "@/lib/sessao";
-import { avisarEnvio, emitirEtiqueta } from "@/lib/postagem";
+import { avisarEnvio, bloqueioDeEtiqueta, emitirEtiqueta } from "@/lib/postagem";
 
 /**
  * POST — gera a etiqueta de um pedido pago.
@@ -19,12 +19,8 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
     include: { itens: true },
   });
   if (!pedido) return Response.json({ erro: "Pedido não encontrado." }, { status: 404 });
-  if (pedido.status === "AGUARDANDO_PAGAMENTO") {
-    return Response.json({ erro: "Este pedido ainda não foi pago." }, { status: 409 });
-  }
-  if (pedido.status === "CANCELADO" || pedido.status === "ESTORNADO") {
-    return Response.json({ erro: "Pedido cancelado não gera etiqueta." }, { status: 409 });
-  }
+  const bloqueio = bloqueioDeEtiqueta(pedido.status);
+  if (bloqueio) return Response.json({ erro: bloqueio }, { status: 409 });
 
   try {
     const r = await emitirEtiqueta(loja, pedido);

@@ -20,6 +20,7 @@ import { renovarAcessos as renovarAcessosDoMercadoPago } from "./mercado-pago-co
 import { alertar } from "./alertas";
 import { entregarWebhooks } from "./webhooks-entrega";
 import { reconciliarReservas } from "./reservas-reconciliar";
+import { expurgarHistoricoMcp } from "./mcp-historico";
 
 /** Quantas falhas seguidas de uma rotina viram alerta para gente. */
 export const FALHAS_ATE_ALERTAR = 3;
@@ -53,6 +54,7 @@ const TRABALHOS: Record<NomeDeRotina, () => Promise<unknown>> = {
   "pedidos.verificar": () => reconciliarPagamentosPendentes(),
   "mercadopago.renovar": () => renovarAcessosDoMercadoPago(),
   "seo.categorias": () => processarSeoCategoriasPendentes({ limite: 10 }),
+  "mcp.historico": () => expurgarHistoricoMcp(),
   "cobranca.verificar": () => verificarInadimplencia(),
   "relatorios.semanal": () => emitirRelatoriosSemanais(),
 };

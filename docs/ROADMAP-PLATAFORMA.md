@@ -90,8 +90,9 @@ resolve e tira o arquivo da lista.
   a ordem do `deploy/deploy.sh` e os caminhos citados no documento. O dump
   antes de migração no deploy pelo Actions foi instalado em 09/10/2026 07:30
   UTC (`avila-deploy` novo, tarefa 262 do quadro da equipe). Ainda não foi
-  visto num deploy de verdade: nenhum deploy do Lojas passou pelo script novo
-  até 09/10/2026, e a linha `dump conferido` segue por observar (tarefa 305).
+  visto num deploy de verdade: o primeiro deploy do Lojas pelo script novo foi
+  em 12/10/2026, sem migração pendente (`dump dispensado`), e a linha
+  `dump conferido` segue por observar (tarefa 305).
   Até lá vale o dump à mão antes de migração que mexe em dado existente.)
 
 ## Pendências menores

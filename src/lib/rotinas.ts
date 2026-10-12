@@ -153,6 +153,14 @@ export const ROTINAS = {
     travaMinutos: 30,
     falhasAteAlerta: 2,
   },
+  "mcp.historico": {
+    titulo: "Histórico do MCP",
+    descricao: "Apaga de todas as lojas o histórico do conector MCP que passou da retenção",
+    cadencia: { tipo: "diaria", hora: 2 },
+    travaMinutos: 15,
+    // A política de privacidade promete o prazo; dois dias seguidos sem faxina já é aviso.
+    falhasAteAlerta: 2,
+  },
   "cobranca.verificar": {
     titulo: "Régua de cobrança",
     descricao: "Suspende loja que passou da tolerância e sincroniza as assinaturas",

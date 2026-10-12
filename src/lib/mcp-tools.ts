@@ -494,10 +494,8 @@ export const MCP_TOOLS: McpTool[] = [
       });
 
       if (!pedido) throw new Error("Pedido não encontrado.");
-      if (pedido.status === "CANCELADO" || pedido.status === "ESTORNADO") {
-        throw new Error(`Não é possível emitir etiqueta para pedido ${pedido.status}.`);
-      }
 
+      // `emitirEtiqueta` recusa pedido não pago ou cancelado antes de gastar.
       const res = await emitirEtiqueta(tenant, pedido);
 
       return {

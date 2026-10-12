@@ -66,6 +66,21 @@ export async function registrarChamada(c: ChamadaParaRegistrar): Promise<void> {
 /** Três meses respondem "o que aconteceu com este produto"; mais que isso é arquivo. */
 export const RETENCAO_DIAS = 90;
 
+/** Linha criada antes disto passou da retenção. */
+export function limiteDaRetencao(agora: Date): Date {
+  return new Date(agora.getTime() - RETENCAO_DIAS * 86_400_000);
+}
+
+/**
+ * Apaga, de todas as lojas, o histórico que passou da retenção. Roda pela
+ * rotina `mcp.historico` todo dia: a política de privacidade do conector
+ * promete o prazo, e loja que nunca abre o painel também tem de cumpri-lo.
+ */
+export async function expurgarHistoricoMcp(agora = new Date()): Promise<{ apagadas: number }> {
+  const { count } = await prisma.chamadaMcp.deleteMany({ where: { criadaEm: { lt: limiteDaRetencao(agora) } } });
+  return { apagadas: count };
+}
+
 export interface ChamadaDoPainel {
   id: string;
   quando: string;
@@ -79,16 +94,13 @@ export interface ChamadaDoPainel {
 }
 
 /**
- * As últimas chamadas da loja. A faxina do que passou da retenção acontece
- * aqui, quando o lojista abre o painel: a tabela só é lida por esta tela, e
- * assim não é preciso uma rotina só para ela.
+ * As últimas chamadas da loja. Quem apaga o que passou da retenção é a rotina
+ * `mcp.historico`; o filtro aqui só impede a tela de mostrar o que vence entre
+ * uma faxina e outra.
  */
 export async function chamadasDaLoja(tenantId: string, opcoes: { soAlteracoes?: boolean; limite?: number } = {}): Promise<ChamadaDoPainel[]> {
-  await prisma.chamadaMcp.deleteMany({
-    where: { tenantId, criadaEm: { lt: new Date(Date.now() - RETENCAO_DIAS * 86_400_000) } },
-  });
   const linhas = await prisma.chamadaMcp.findMany({
-    where: { tenantId, ...(opcoes.soAlteracoes ? { alterou: true } : {}) },
+    where: { tenantId, criadaEm: { gte: limiteDaRetencao(new Date()) }, ...(opcoes.soAlteracoes ? { alterou: true } : {}) },
     orderBy: { criadaEm: "desc" },
     take: Math.min(Math.max(opcoes.limite ?? 50, 1), 200),
   });
