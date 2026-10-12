@@ -57,8 +57,33 @@ else
   grep -v -E '^ML_APP_(ID|SECRET)=' "$env_do_lojas" > "$temp/env"
   printf 'ML_APP_ID=%s\nML_APP_SECRET=%s\n' "$id" "$segredo" >> "$temp/env"
   cat "$temp/env" > "$env_do_lojas"
-  echo "==> ML_APP_ID=$id gravado; recriando o container"
-  ( cd "$pasta" && docker compose up -d --force-recreate lojas >/dev/null 2>&1 )
+  echo "==> ML_APP_ID=$id gravado"
+fi
+
+# Recria com os mesmos arquivos de compose do container que está no ar. O
+# deploy junta três (o base, o do GitHub e o da imagem publicada); um
+# `docker compose up` só com o base subiria a imagem legada.
+no_container=$(docker exec lojas-avilaops sh -c 'printf "%s\n%s" "$ML_APP_ID" "$ML_APP_SECRET"' 2>/dev/null || true)
+if [ "$no_container" = "$(printf '%s\n%s' "$id" "$segredo")" ]; then
+  echo "==> container já está com o aplicativo $id"
+else
+  rotulo() { docker inspect lojas-avilaops -f "{{index .Config.Labels \"com.docker.compose.$1\"}}"; }
+  arquivos=$(rotulo project.config_files)
+  projeto=$(rotulo project)
+  servico=$(rotulo service)
+  imagem_antes=$(docker inspect lojas-avilaops -f '{{.Config.Image}}')
+  [ -n "$arquivos" ] && [ -n "$projeto" ] && [ -n "$servico" ] || { echo "ERRO: o container no ar não diz com que compose foi criado"; exit 1; }
+  compose=(docker compose --project-directory "$pasta" -p "$projeto")
+  IFS=, read -ra lista <<< "$arquivos"
+  for arquivo in "${lista[@]}"; do
+    [ -f "$arquivo" ] || { echo "ERRO: falta o arquivo de compose $arquivo"; exit 1; }
+    compose+=(-f "$arquivo")
+  done
+  "${compose[@]}" config --quiet
+  echo "==> recriando o container ($servico) com ${#lista[@]} arquivos de compose"
+  "${compose[@]}" up -d --no-deps --no-build --pull never --force-recreate "$servico" 2>&1 | tail -3
+  imagem_depois=$(docker inspect lojas-avilaops -f '{{.Config.Image}}')
+  [ "$imagem_antes" = "$imagem_depois" ] || { echo "ERRO: a imagem mudou na recriação ($imagem_depois)"; exit 1; }
 fi
 
 for _ in $(seq 1 40); do
