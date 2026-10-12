@@ -20,6 +20,10 @@
 .pl-site { position: relative; }
 .plataforma-shell main { padding-top: 72px; }
 .pl-workspace { color: #161b29; }
+/* Páginas de documentação: cartão claro dentro do site escuro. O link herda a
+   cor do site (regra acima), então o botão secundário, que é branco, precisa
+   da tinta escura dita aqui. */
+.pl-doc .btn-secundario { color: #161b29; }
 .pl-workspace-heading { padding-top: 22px; color: var(--pl-text); }
 .pl-workspace-heading > span { color: var(--pl-blue-light); font-size: 11px; font-weight: 750; letter-spacing: .18em; text-transform: uppercase; }
 .pl-workspace-heading h1 { max-width: 720px; margin-top: 13px; font-size: clamp(2.15rem, 5vw, 4rem); line-height: 1; letter-spacing: -.055em; }

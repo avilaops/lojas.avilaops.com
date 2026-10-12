@@ -25,7 +25,7 @@ const EXPLICACAO_DO_ERRO: Record<string, string> = {
 
 function Bloco({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-xl border border-border bg-card p-6">
+    <section className="rounded-xl border border-border bg-card p-6 text-foreground">
       <h2 className="text-xl font-bold">{titulo}</h2>
       {children}
     </section>
@@ -45,7 +45,7 @@ export default function DevelopersPage() {
   const ferramentas = Object.entries(FERRAMENTAS);
 
   return (
-    <div className="container-loja py-16 max-w-4xl">
+    <div className="pl-doc container-loja py-16 max-w-4xl">
       <div className="mb-8">
         <p className="text-xs font-semibold uppercase tracking-widest text-primary">Documentação Técnica</p>
         <h1 className="mt-2 text-3xl sm:text-4xl font-bold tracking-tight">Conector de IA e API</h1>
