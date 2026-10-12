@@ -40,7 +40,7 @@ export function destinoAposFalhaDoCheckout(corpo: unknown, referenciaEnviada: st
 export type DesfechoDoCheckout =
   | { tipo: "resultado"; resultado: ResultadoPagamento }
   | { tipo: "a_confirmar"; referencia: string; destino: string }
-  | { tipo: "erro"; mensagem: string };
+  | { tipo: "erro"; mensagem: string; conclusivo: boolean };
 
 export function desfechoDoCheckout(ok: boolean, corpo: unknown, referenciaEnviada: string): DesfechoDoCheckout {
   if (ok) {
@@ -52,8 +52,21 @@ export function desfechoDoCheckout(ok: boolean, corpo: unknown, referenciaEnviad
   }
   const destino = destinoAposFalhaDoCheckout(corpo, referenciaEnviada);
   if (destino) return { tipo: "a_confirmar", referencia: referenciaDaResposta(corpo, referenciaEnviada), destino };
-  const erro = (corpo as { erro?: unknown } | null)?.erro;
-  return { tipo: "erro", mensagem: typeof erro === "string" && erro ? erro : "Não foi possível processar o pagamento." };
+  const { erro, codigo } = (corpo ?? {}) as { erro?: unknown; codigo?: unknown };
+  // Só o servidor da loja manda `codigo`: sem ele a resposta veio do caminho
+  // (504 do proxy, página de erro) e não diz se a cobrança nasceu.
+  return { tipo: "erro", mensagem: typeof erro === "string" && erro ? erro : "Não foi possível processar o pagamento.", conclusivo: typeof codigo === "string" && codigo !== "" };
+}
+
+/**
+ * A pendência é guardada antes do `POST` e só sai quando a resposta é
+ * conclusiva: um resultado de pagamento, ou erro em que o servidor da loja
+ * disse o que houve. Resposta sem `codigo` e `fetch` que não voltou deixam a
+ * pendência guardada: recarregar a página não abre o formulário com
+ * referência nova enquanto a rota `/api/checkout/pendente` não disser `livre`.
+ */
+export function encerraPendencia(desfecho: DesfechoDoCheckout): boolean {
+  return desfecho.tipo === "resultado" || (desfecho.tipo === "erro" && desfecho.conclusivo);
 }
 
 export type TelaSemPedido = "confirmando" | "pago_sem_pedido" | "nao_concluido";
@@ -102,7 +115,11 @@ export const TEXTO_SEM_PEDIDO: Record<TelaSemPedido, { titulo: string; texto: st
  * O que o `/checkout` faz com a referência que ficou pendente no navegador.
  *
  *   - `pendente`: a cobrança pode ter nascido (ou nasceu) e não há pedido — o
- *     formulário não abre, a tela aponta para a página do pedido;
+ *     formulário não abre, a tela aponta para a página do pedido. Inclui a
+ *     tentativa `RESERVADA`: o navegador só pergunta por referência que ele
+ *     enviou ao checkout, então reserva sem desfecho é cobrança em curso, ou
+ *     tentativa que não conseguiu ser marcada `INCERTA`. Quem solta esse caso
+ *     é o prazo da pendência no navegador (`PENDENCIA_VALE_MS`);
  *   - `pedido`: a compra virou pedido — a tela avisa antes de deixar comprar
  *     de novo com o mesmo carrinho;
  *   - `livre`: não há cobrança em aberto para essa referência (reserva solta,
@@ -112,6 +129,7 @@ export type SituacaoDaReferencia = "pendente" | "pedido" | "livre";
 
 export function situacaoDaReferencia(statusDoPedido: string | null | undefined, estadoDaTentativa: string | null | undefined): SituacaoDaReferencia {
   if (statusDoPedido) return statusDoPedido === "CANCELADO" || statusDoPedido === "ESTORNADO" ? "livre" : "pedido";
+  if (estadoDaTentativa === "RESERVADA") return "pendente";
   const tela = telaSemPedido(estadoDaTentativa);
   return tela === "confirmando" || tela === "pago_sem_pedido" ? "pendente" : "livre";
 }
@@ -121,6 +139,32 @@ export function lerSituacao(corpo: unknown): SituacaoDaReferencia | null {
   const s = (corpo as { situacao?: unknown } | null)?.situacao;
   return s === "pendente" || s === "pedido" || s === "livre" ? s : null;
 }
+
+/**
+ * O que a tela faz depois de consultar a pendência. Consulta que falhou é
+ * `sem_resposta`, e não `pendente`: o formulário continua fechado (na dúvida
+ * não se cobra de novo), mas a tela não afirma que há pagamento em
+ * confirmação, porque a primeira tentativa pode já ter sido liberada.
+ */
+export type SituacaoAposConsulta = SituacaoDaReferencia | "sem_resposta";
+
+export function situacaoAposConsulta(corpo: unknown): SituacaoAposConsulta {
+  return lerSituacao(corpo) ?? "sem_resposta";
+}
+
+/** Título, texto e botão das duas telas do `/checkout` que seguram o formulário. Texto fixo. */
+export const TEXTO_PENDENCIA_NO_CHECKOUT: Record<"pendente" | "sem_resposta", { titulo: string; texto: string; conferir: string }> = {
+  pendente: {
+    titulo: "Você tem um pagamento em confirmação",
+    texto: "Não pague de novo. Seu pagamento anterior ainda não foi resolvido; finalizar outra compra agora poderia cobrar duas vezes. Seu carrinho continua guardado.",
+    conferir: "Conferir de novo",
+  },
+  sem_resposta: {
+    titulo: "Não conseguimos conferir agora",
+    texto: "Um pagamento anterior seu ficou a confirmar e a consulta não respondeu. Tente de novo em instantes. Até a consulta responder, não pague de novo; seu carrinho continua guardado.",
+    conferir: "Tentar de novo",
+  },
+};
 
 /**
  * A referência pendente fica no navegador, ao lado do carrinho.

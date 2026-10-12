@@ -79,19 +79,20 @@ resolve e tira o arquivo da lista.
   `emitir`, reivindicação antes de avisar e `operacao.alerta` com loja, o que
   quebrou e o que fazer. Falta o ramo desse evento no fluxo do n8n, que se
   publica fora deste repositório. Ver `docs/ISOLAMENTO-OPERACIONAL.md`.)
-- [ ] Backup, migração e rollback documentados como rotina verificável do deploy.
-  (Documentado e conferido em produção em 08/10/2026: `docs/BACKUP-E-ROLLBACK.md`
-  diz quem faz o deploy de verdade, o que ele garante, onde está o dump e como
-  voltar. O job de deploy passou a recusar publicar quando um run mais novo já
-  passou na frente. O procedimento virou comando: `npm run banco:ensaio`
+- [x] Backup, migração e rollback documentados como rotina verificável do deploy.
+  (`docs/BACKUP-E-ROLLBACK.md` diz quem faz o deploy de verdade, o que ele
+  garante, onde está o dump e como voltar; essa parte foi conferida no servidor
+  em 08/10/2026. O job de deploy passou a recusar publicar quando um run mais
+  novo já passou na frente. O procedimento virou comando: `npm run banco:ensaio`
   (`scripts/ensaio-banco.mts`, regras em `src/lib/ensaio-banco.ts`) faz dump,
   migração, volta ao dump e migração de novo no Postgres descartável; em
   08/10/2026, 62 migrações, 44 tabelas, zero divergências. O `npm test` prende
-  a ordem do `deploy/deploy.sh` e os caminhos citados no documento. Falta
-  o dump antes de migração no deploy pelo Actions: o `avila-deploy` instalado
-  é o de 18/09/2026, sem dump, e hoje só o caminho manual `avila-deploy-local`
-  faz. Instalar o `avila-deploy` novo é a tarefa 262 do quadro da equipe; o
-  item só fecha depois dela.)
+  a ordem do `deploy/deploy.sh` e os caminhos citados no documento. O dump
+  antes de migração no deploy pelo Actions foi instalado em 09/10/2026 07:30
+  UTC (`avila-deploy` novo, tarefa 262 do quadro da equipe). Ainda não foi
+  visto num deploy de verdade: nenhum deploy do Lojas passou pelo script novo
+  até 09/10/2026, e a linha `dump conferido` segue por observar (tarefa 305).
+  Até lá vale o dump à mão antes de migração que mexe em dado existente.)
 
 ## Pendências menores
 
