@@ -17,8 +17,10 @@ interface StatusMcp {
 interface Conexao {
   id: string;
   assistente: string;
+  autorizadaPor: string;
   acesso: string;
   escolha: Escolha;
+  teto: string[];
   conectadaEm: string;
   ultimoUsoEm: string | null;
 }
@@ -301,7 +303,7 @@ export default function McpPainel({
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-foreground">{c.assistente}</p>
                     <p className="text-xs text-muted-foreground">
-                      {c.acesso} · conectado em {dia(c.conectadaEm)} · {c.ultimoUsoEm ? `último uso em ${dia(c.ultimoUsoEm)}` : "ainda não usado"}
+                      {c.acesso} · conectado por {c.autorizadaPor} em {dia(c.conectadaEm)} · {c.ultimoUsoEm ? `último uso em ${dia(c.ultimoUsoEm)}` : "ainda não usado"}
                     </p>
                   </div>
                   <div className="flex gap-2">
@@ -319,7 +321,7 @@ export default function McpPainel({
                  </div>
                   {editando?.id === c.id && (
                     <div className="mt-3 grid gap-3 border-t border-border pt-3">
-                      <EscolhaDeAcesso nome={`acesso-${c.id}`} valor={editando.escolha} aoMudar={(escolha) => setEditando({ id: c.id, escolha })} />
+                      <EscolhaDeAcesso nome={`acesso-${c.id}`} valor={editando.escolha} aoMudar={(escolha) => setEditando({ id: c.id, escolha })} teto={c.teto} />
                       <button type="button" onClick={salvarAcesso} disabled={salvando || escolhaVazia(editando.escolha)} className="btn-primario h-9 justify-center px-4 text-xs">
                         {salvando ? "Salvando…" : escolhaVazia(editando.escolha) ? "Marque ao menos uma área" : "Salvar acesso"}
                       </button>

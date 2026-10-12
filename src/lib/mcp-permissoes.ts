@@ -1,4 +1,5 @@
 import type { Escopo } from "./api-chaves";
+import type { Permissao } from "./operadores";
 
 /**
  * O que cada ferramenta do conector MCP exige, e o que cada credencial pode.
@@ -153,6 +154,47 @@ export function escoposDaAutorizacao(pedido: { nivel?: unknown; areas?: unknown 
     if (acesso === "alterar" && a.escrever) escopos.push(a.escrever);
   }
   return escopos.length ? escopos : null;
+}
+
+// ── O teto: a conexão pode, no máximo, o que a pessoa pode no painel ────
+
+/**
+ * A permissão do painel (`PODE` em `operadores.ts`) que abre cada área do
+ * conector, para ler e para alterar. Onde a área tem rota de escrita no
+ * painel, é a que a rota exige: cupom é `exigir("catalogo")`, marca e layout
+ * são `exigir("configuracoes")`.
+ *
+ * Ler também passa por aqui, embora as páginas do painel não distingam papel:
+ * um assistente leva o que lê para fora da loja, e o balcão "vê e despacha
+ * pedidos" (`PAPEIS`). Lista de clientes e faturamento ficam com quem cuida
+ * da loja.
+ */
+export const PERMISSAO_DA_AREA: Record<IdDaArea, Permissao> = {
+  loja: "configuracoes",
+  catalogo: "catalogo",
+  pedidos: "pedidos",
+  clientes: "configuracoes",
+  promocoes: "catalogo",
+  analises: "configuracoes",
+};
+
+/**
+ * O máximo que o assistente de uma pessoa pode: as áreas cuja permissão ela
+ * tem no painel. Recebe a conferência, e não o papel, para este arquivo
+ * continuar sem banco: quem chama passa `(o) => permite(papel, o)`.
+ */
+export function escoposQuePode(pode: (o_que: Permissao) => boolean): Escopo[] {
+  return AREAS.filter((a) => pode(PERMISSAO_DA_AREA[a.id])).flatMap((a) => (a.escrever ? [a.ler, a.escrever] : [a.ler]));
+}
+
+/** O que sobra do que foi marcado depois do teto. A ordem é a do que foi marcado. */
+export function limitarAoTeto(escopos: readonly string[], teto: readonly string[]): string[] {
+  return escopos.filter((e) => teto.includes(e));
+}
+
+/** As áreas que o teto alcança, pelo nome que a tela mostra. */
+export function areasDoTeto(teto: readonly string[]): string[] {
+  return AREAS.filter((a) => teto.includes(a.ler)).map((a) => a.nome);
 }
 
 /** Como o painel resume o acesso de uma conexão. */

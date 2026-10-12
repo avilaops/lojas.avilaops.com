@@ -50,9 +50,10 @@ export default function PrivacidadeDoConectorPage() {
       <div className="grid gap-6">
         <Bloco titulo="Quem controla o acesso">
           <p>
-            O lojista. A conexão só existe depois que ele entra no painel e autoriza; na autorização ele escolhe o que o assistente
-            pode fazer (consultar e alterar, só consultar, ou área por área). Ele muda ou desliga a conexão quando quiser em Painel,
-            IA e API. O assistente não amplia o próprio acesso.
+            A loja. A conexão só existe depois que alguém da equipe entra no painel e autoriza; na autorização a pessoa escolhe o
+            que o assistente pode fazer (consultar e alterar, só consultar, ou área por área), e ele nunca pode mais do que ela
+            mesma pode no painel: se o acesso dela diminui, o do assistente diminui junto. O dono e os gerentes mudam ou desligam
+            qualquer conexão em Painel, IA e API. O assistente não amplia o próprio acesso.
           </p>
         </Bloco>
 
