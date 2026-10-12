@@ -27,6 +27,36 @@ junto da auditoria de 19/09/2026 e do que Amazon, Shopee e Magalu vão exigir.
 | **Escolher a categoria do ML à mão** (busca pública, categoria folha, recálculo de atributos; escolha manual não é sobrescrita pelo preditor) | `src/lib/mercadolivre-categorias.ts`, `painel/CategoriaMl.tsx` | pronto (19/09/2026) |
 | Faturamento (nota fiscal), catálogo do ML, Mercado Envios Flex | — | não começado |
 
+## O aplicativo da plataforma
+
+O aplicativo do Mercado Livre é um só, da plataforma; cada lojista conecta a
+própria conta nele. O Lojas lê `ML_APP_ID` e `ML_APP_SECRET` de
+`/opt/lojas/.env` (servidor `applications`), e o botão de conectar só aparece
+com os dois preenchidos.
+
+A fonte dos dois valores é a credencial do n8n **"Mercado Livre Avila Ops
+Marketplace BR (client id e secret)"** (`httpCustomAuth`, corpo com
+`client_id` e `client_secret`). Trocar a chave é colar na credencial, na tela
+do n8n, e rodar no servidor:
+
+```bash
+/opt/lojas/sincronizar-ml-do-n8n.sh
+```
+
+O roteiro (`deploy/sincronizar-ml-do-n8n.sh`) pede ao próprio n8n a credencial
+decifrada, recusa chave vazia ou com formato estranho, faz cópia do `.env`,
+grava os dois valores, recria o container e confere as credenciais no Mercado
+Livre. A chave não vai para a saída.
+
+No DevCenter, o aplicativo precisa de: redirect
+`https://lojas.avilaops.com/ml/callback`, notificações em
+`https://lojas.avilaops.com/ml/notifications`, PKCE desligado (o Lojas não
+envia `code_challenge`) e os tópicos `orders_v2`, `items`, `questions` e
+`shipments`, os quatro que `src/lib/mercadolivre-avisos.ts` processa.
+
+Trocar de aplicativo desconecta quem já conectou: o token de renovação é do
+aplicativo que o emitiu. Em 12/10/2026 nenhuma loja estava conectada.
+
 ## A venda voltando
 
 O webhook `/ml/notifications` responde 200 em segundos — o ML desliga a
