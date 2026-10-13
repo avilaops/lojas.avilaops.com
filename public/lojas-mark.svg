@@ -1,6 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
-  <title>Lojas Avila Ops</title>
-  <rect width="64" height="64" rx="18" fill="#2F6BFF"/>
-  <path d="M17 24.5 21 15h22l4 9.5v4.2a6.7 6.7 0 0 1-10.6 5.5A6.7 6.7 0 0 1 32 35.8a6.7 6.7 0 0 1-4.4-1.6A6.7 6.7 0 0 1 17 28.7v-4.2Z" fill="none" stroke="#fff" stroke-width="3" stroke-linejoin="round"/>
-  <path d="M21 34v15h22V34M27 49V38h10v11" fill="none" stroke="#fff" stroke-width="3" stroke-linejoin="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="t"><title id="t">Lojas</title>
+  <rect width="64" height="64" rx="14" fill="#16130F"/>
+  <g transform="translate(5.760000000000002 2.890000000000002) scale(0.82)">
+    <path d="M8 16a4 4 0 0 1 4-4h12v14a8 8 0 0 1-16 0Z" fill="#0153FD"/>
+    <path d="M24 12h16v14a8 8 0 0 1-16 0Z" fill="#F72927"/>
+    <path d="M40 12h12a4 4 0 0 1 4 4v10a8 8 0 0 1-16 0Z" fill="#FDC403"/>
+    <path d="M14 40v13a3 3 0 0 0 3 3h30a3 3 0 0 0 3-3V40" fill="none" stroke="#FBF8F4" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M25 56V45a7 7 0 0 1 14 0v11Z" fill="#FBF8F4"/>
+  </g>
 </svg>
