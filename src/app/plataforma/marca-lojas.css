@@ -1,0 +1,42 @@
+/*
+ * Marca Lojas: os tokens da plataforma, num lugar só.
+ *
+ * Vale para o site (lojas.avilaops.com), o estúdio de criação e o painel do
+ * lojista. NÃO vale para a vitrine de cliente: lá quem manda é Tenant.tema
+ * (src/lib/tema.ts), e a plataforma aparece só no selo do rodapé, em uma cor.
+ *
+ * A regra de uso está em docs/MARCA-LOJAS.md. Em uma linha: tinta e papel
+ * fazem a página, as três cores do toldo são tempero e nunca viram fundo de
+ * seção. Quem dá cor à página é o negócio do lojista.
+ */
+:root {
+  /* Neutros: a página */
+  --lj-tinta: #16130f;
+  --lj-tinta-2: #24201b;
+  --lj-tinta-suave: #6a6259;
+  --lj-papel: #fbf8f4;
+  --lj-papel-2: #f3efe8;
+  --lj-linha: #e6dfd4;
+
+  /* Toldo: as três cores da Avila Ops, na ordem do símbolo */
+  --lj-azul: #0153fd;
+  --lj-vermelho: #f72927;
+  --lj-amarelo: #fdc403;
+
+  /* Azul de interação: link, foco, seleção. Contraste AA sobre branco e papel. */
+  --lj-azul-forte: #0040c8;
+  --lj-azul-claro: #8fb0ff;
+  --lj-azul-suave: #eaf0ff;
+
+  /* Estado: escuros o bastante para texto; o vermelho do toldo não é erro */
+  --lj-ok: #0f7a4a;
+  --lj-alerta: #9a6400;
+  --lj-erro: #c4231f;
+
+  /* Faixa do toldo, para barras de progresso e divisórias de marca */
+  --lj-faixa: linear-gradient(90deg, var(--lj-azul) 0 33.33%, var(--lj-vermelho) 33.33% 66.66%, var(--lj-amarelo) 66.66%);
+
+  /* Letra */
+  --lj-fonte: Inter, "Segoe UI", system-ui, sans-serif;
+  --lj-fonte-vitrine: "Iowan Old Style", Palatino, Georgia, serif;
+}

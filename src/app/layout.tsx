@@ -89,9 +89,9 @@ export async function generateMetadata(): Promise<Metadata> {
       title: { default: "Lojas Avila Ops", template: "%s · Lojas Avila Ops" },
       description: "Comércio digital com identidade, operação e futuro.",
       applicationName: "Lojas Avila Ops",
-      // A marca da Avila Ops, só no domínio-base: loja de cliente nunca herda
+      // A marca Lojas, só no domínio-base: loja de cliente nunca herda
       // este ícone, ela usa o próprio `faviconUrl` ou a inicial do `icon.tsx`.
-      ...iconesDa("/media/avilaops", "Lojas Avila Ops"),
+      ...iconesDa("/media/lojas", "Lojas Avila Ops"),
       manifest: "/site.webmanifest",
       robots: PREVIA_CHEIA,
     };

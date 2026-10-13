@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 97 54" role="img" aria-labelledby="t">
+  <title id="t">Lojas</title>
+  <g transform="translate(3 0)"><g fill="none" stroke="#16130F" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9v28"/><circle cx="22" cy="28" r="9"/><path d="M41 19v23a8 8 0 0 1-8 8"/><circle cx="60" cy="28" r="9"/><path d="M69 19v18"/><path d="M91 19h-7a4.5 4.5 0 0 0 0 9h2a4.5 4.5 0 0 1 0 9h-7"/></g><circle cx="41" cy="8" r="4" fill="#F72927"/></g>
+</svg>
