@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { CAMINHO_RETORNO, configSSO, irDiretoAoAuth, consultarSSO, lerRespostaSSO, podeEntrarComoEquipe, urlDeLoginSSO } from "./sso";
+import { CAMINHO_CRIAR_SSO, CAMINHO_RETORNO, RECADOS_SSO, configSSO, destinoDaEntradaSSO, irDiretoAoAuth, consultarSSO, lerRespostaSSO, podeEntrarComoEquipe, urlDeLoginSSO } from "./sso";
 
 const cfg = { url: "https://auth.avilaops.com", app: "lojas-avilaops-com" };
 const TOKEN = "aaa.bbb.ccc";
@@ -47,8 +47,9 @@ test("sem sessão, resposta estranha e erro do Auth não viram entrada", () => {
   assert.equal(lerRespostaSSO(200, "ok").tipo, "indisponivel");
   assert.equal(lerRespostaSSO(500, { autenticado: true, permitido: true, sessao }).tipo, "indisponivel");
   assert.equal(lerRespostaSSO(302, null).tipo, "indisponivel");
-  assert.equal(lerRespostaSSO(200, { autenticado: true, permitido: true, sessao: { nome: "x" } }).tipo, "indisponivel");
-  assert.equal(lerRespostaSSO(200, { autenticado: true, permitido: true, sessao: { email: 7 } }).tipo, "indisponivel");
+  // Logado no Auth, mas o login social não trouxe e-mail: recado próprio, não "indisponível".
+  assert.equal(lerRespostaSSO(200, { autenticado: true, permitido: true, sessao: { nome: "x" } }).tipo, "sem_email");
+  assert.equal(lerRespostaSSO(200, { autenticado: true, permitido: true, sessao: { email: 7 } }).tipo, "sem_email");
 });
 
 test("a consulta manda só o cookie de sessão, para o app certo, e nunca um token malformado", async () => {
@@ -113,4 +114,24 @@ test("/entrar só pula para o Auth com sessão do login único; sem ela, a senha
   assert.equal(irDiretoAoAuth({ ...base, sso: "sem-loja" }), false);
   assert.equal(irDiretoAoAuth({ ...base, google: "falhou" }), false);
   assert.equal(irDiretoAoAuth({ ...base, senha: "1" }), false);
+});
+
+test("quem volta do Auth sem loja é convidado a criar, e não recebe 'sem-loja'", () => {
+  const base = { equipe: false, jaVoltou: true, urlLogin: "https://auth/login" };
+  const ok = lerRespostaSSO(200, { autenticado: true, permitido: true, sessao });
+  // E-mail social novo, ou diferente do e-mail da loja: vai à confirmação, que explica o caso.
+  assert.equal(destinoDaEntradaSSO(ok, { ...base, temLoja: false }), CAMINHO_CRIAR_SSO);
+  assert.equal(destinoDaEntradaSSO(ok, { ...base, temLoja: true }), "abrir");
+  assert.equal(destinoDaEntradaSSO(ok, { ...base, temLoja: false, equipe: true }), "/entrar/equipe");
+  // Sem e-mail nenhum: recado próprio.
+  const semEmail = lerRespostaSSO(200, { autenticado: true, permitido: true, sessao: { nome: "x" } });
+  assert.equal(destinoDaEntradaSSO(semEmail, { ...base, temLoja: false }), "/entrar?sso=sem-email");
+  assert.ok(RECADOS_SSO["sem-email"].includes("e-mail"));
+  // Cookie vencido: primeira vez vai ao login do Auth; na volta, para com recado.
+  const vencido = lerRespostaSSO(401, { autenticado: false });
+  assert.equal(destinoDaEntradaSSO(vencido, { ...base, jaVoltou: false, temLoja: false }), "https://auth/login");
+  assert.equal(destinoDaEntradaSSO(vencido, { ...base, temLoja: false }), "/entrar?sso=indisponivel");
+  // O recado de indisponível não manda usar uma senha que a pessoa pode não ter.
+  assert.match(RECADOS_SSO.indisponivel, /Tente de novo/);
+  assert.match(RECADOS_SSO.indisponivel, /Se a sua loja tem senha/);
 });
