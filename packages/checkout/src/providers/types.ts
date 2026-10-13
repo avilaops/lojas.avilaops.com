@@ -98,11 +98,31 @@ export interface Capacidades {
 }
 
 /**
+ * Estado local do Pix na conta do lojista.
+ *
+ * Não há API de banco: quem guarda a cobrança, os centavos já usados e o que o
+ * lojista decidiu é a loja. O adaptador só monta o BR Code e pergunta aqui.
+ */
+export interface EstadoPixManual {
+  reservar(dados: {
+    referencia: string;
+    totalCentavos: number;
+    txid: string;
+    expiraEm: Date;
+    montar: (valorCentavos: number) => string;
+  }): Promise<{ id: string; valorCentavos: number; copiaECola: string }>;
+  consultar(id: string): Promise<ResultadoPagamento | null>;
+  buscarPorReferencia(referencia: string): Promise<ResultadoPagamento | null>;
+  /** PNG do QR em base64. Falha aqui não impede o copia-e-cola. */
+  qr?(copiaECola: string): Promise<string | undefined>;
+}
+
+/**
  * Como montar um provedor para uma loja.
  *
  * `segredos` e `publicos` são o conteúdo da credencial da loja: segredos já
  * decifrados (só servidor), públicos podendo ir ao navegador (chave pública de
- * tokenização, MerchantId). Cada provedor define e valida as próprias chaves.
+ * tokenização, MerchantId, chave Pix). Cada provedor define e valida as próprias chaves.
  */
 export interface ContextoProvedor {
   segredos: Record<string, string | undefined>;
@@ -111,6 +131,8 @@ export interface ContextoProvedor {
   notificationUrl?: string;
   /** Nome curto da loja para a fatura do cartão (já saneado, até 13 caracteres). */
   descritorFatura?: string;
+  /** Só o Pix manual preenche. Mercado Pago e os outros ignoram. */
+  pixManual?: EstadoPixManual;
 }
 
 /**

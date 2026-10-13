@@ -78,13 +78,15 @@ export const SECOES: ItemNav[] = [
 /** Ativo por prefixo, para a rota de detalhe acender a seção que a contém. */
 function ativo(pathname: string, href: string): boolean {
   if (href === "/painel") return pathname === "/painel";
+  // A fila do Pix mora embaixo de Pedidos, mas é outra tela.
+  if (href === "/painel/pedidos" && pathname.startsWith("/painel/pedidos/pix")) return false;
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function Lista({ pathname, aoNavegar, aSeparar }: { pathname: string; aoNavegar?: () => void; aSeparar: number }) {
+function Lista({ pathname, aoNavegar, aSeparar, secoes }: { pathname: string; aoNavegar?: () => void; aSeparar: number; secoes: ItemNav[] }) {
   return (
     <nav className="pnav-lista" aria-label="Seções do painel">
-      {SECOES.map((s) => {
+      {secoes.map((s) => {
         const Icone = ICONES[s.icone];
         const aberto = ativo(pathname, s.href);
         return (
@@ -140,8 +142,11 @@ function Rodape({ pathname, aoNavegar, urlLoja }: { pathname: string; aoNavegar?
   );
 }
 
-export default function NavPainel({ nome, urlLoja, aSeparar = 0 }: { nome: string; urlLoja: string; aSeparar?: number }) {
+export default function NavPainel({ nome, urlLoja, aSeparar = 0, pixManual = false }: { nome: string; urlLoja: string; aSeparar?: number; pixManual?: boolean }) {
   const pathname = usePathname();
+  const secoes: ItemNav[] = pixManual
+    ? SECOES.flatMap((s) => (s.href === "/painel/pedidos" ? [s, { rotulo: "Pix a conferir", href: "/painel/pedidos/pix", icone: "pedidos" }] : [s]))
+    : SECOES;
   const [aberto, setAberto] = useState(false);
   const botaoMenu = useRef<HTMLButtonElement>(null);
   const primeiroItem = useRef<HTMLDivElement>(null);
@@ -172,7 +177,7 @@ export default function NavPainel({ nome, urlLoja, aSeparar = 0 }: { nome: strin
     return () => document.removeEventListener("keydown", aoTeclar);
   }, [aberto]);
 
-  const secaoAtual = [...SECOES].reverse().find((s) => ativo(pathname, s.href))?.rotulo
+  const secaoAtual = [...secoes].reverse().find((s) => ativo(pathname, s.href))?.rotulo
     ?? (ativo(pathname, "/painel/configuracoes") ? "Configurações" : "Painel");
 
   return (
@@ -187,7 +192,7 @@ export default function NavPainel({ nome, urlLoja, aSeparar = 0 }: { nome: strin
           <span>Buscar</span>
           <kbd>⌘K</kbd>
         </button>
-        <Lista pathname={pathname} aSeparar={aSeparar} />
+        <Lista pathname={pathname} aSeparar={aSeparar} secoes={secoes} />
         <Rodape pathname={pathname} urlLoja={urlLoja} />
       </aside>
 
@@ -211,7 +216,7 @@ export default function NavPainel({ nome, urlLoja, aSeparar = 0 }: { nome: strin
               <button onClick={() => setAberto(false)} aria-label="Fechar menu" className="pnav-botao pnav-fechar"><X size={18} /></button>
             </div>
             <div ref={primeiroItem} className="contents">
-              <Lista pathname={pathname} aoNavegar={() => setAberto(false)} aSeparar={aSeparar} />
+              <Lista pathname={pathname} aoNavegar={() => setAberto(false)} aSeparar={aSeparar} secoes={secoes} />
             </div>
             <Rodape pathname={pathname} urlLoja={urlLoja} aoNavegar={() => setAberto(false)} />
           </div>

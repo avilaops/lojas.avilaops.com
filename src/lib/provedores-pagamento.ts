@@ -1,4 +1,4 @@
-import { RegistroDeProvedores, definicaoMercadoPago } from "@avilaops/checkout/server";
+import { RegistroDeProvedores, definicaoMercadoPago, definicaoPixManual } from "@avilaops/checkout/server";
 
 /**
  * Os provedores de pagamento que esta instância conhece.
@@ -8,4 +8,4 @@ import { RegistroDeProvedores, definicaoMercadoPago } from "@avilaops/checkout/s
  * `pagamentos_<id>` (src/lib/recursos.ts), e quem decide se ela cobra com ele
  * é a credencial ativa dela.
  */
-export const provedoresDePagamento = new RegistroDeProvedores().registrar(definicaoMercadoPago);
+export const provedoresDePagamento = new RegistroDeProvedores().registrar(definicaoMercadoPago).registrar(definicaoPixManual);

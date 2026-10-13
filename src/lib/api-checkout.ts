@@ -8,6 +8,7 @@ import { CorpoDoCheckout, CUPOM_INVALIDO, criarCobranca } from "./checkout-cobra
 import { prisma } from "./db";
 import { GatewayNaoConfigurado } from "./gateway";
 import { resolverRecebimento, type Recebimento } from "./credenciais";
+import { consultarPixPorId } from "./pix-manual";
 import { lojaVende, urlDaLoja } from "./tenant";
 
 /**
@@ -91,9 +92,13 @@ export async function comprarPelaApi(tenant: Tenant, chave: Pick<ChaveApi, "id">
   if (idempotencia) {
     // Repetição de uma compra já feita: devolve a mesma cobrança, consultada de
     // novo no gateway para o Pix copia e cola voltar junto. Nada é cobrado.
-    const feito = await prisma.pedido.findFirst({ where: { tenantId: tenant.id, referencia }, select: { pagamentoId: true } });
+    const feito = await prisma.pedido.findFirst({ where: { tenantId: tenant.id, referencia }, select: { pagamentoId: true, gateway: true } });
     if (feito?.pagamentoId) {
-      return { ...cobrancaDaVitrine(referencia, await recebimento.provider.consultar(feito.pagamentoId), url), repetida: true };
+      const pagamento = feito.gateway === "pix_manual"
+        ? await consultarPixPorId(tenant.id, feito.pagamentoId)
+        : await recebimento.provider.consultar(feito.pagamentoId);
+      if (!pagamento) throw new ErroApi("pagamento_a_confirmar", "Esta compra já foi recebida e o pagamento está sendo confirmado. Consulte o pedido.", {}, referencia);
+      return { ...cobrancaDaVitrine(referencia, pagamento, url), repetida: true };
     }
     if (await prisma.tentativaCatalogo.findFirst({ where: { tenantId: tenant.id, referencia }, select: { id: true } })) {
       throw new ErroApi("pagamento_a_confirmar", "Esta compra já foi recebida e o pagamento está sendo confirmado. Consulte o pedido.", {}, referencia);

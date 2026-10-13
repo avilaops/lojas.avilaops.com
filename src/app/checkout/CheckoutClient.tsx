@@ -8,6 +8,7 @@ import { FRETE_RETIRADA_ID, avaliarPedidoMinimo, avisoDePedidoMinimo, type ItemC
 import { useCart } from "@/components/cart/CartProvider";
 import { iniciarCheckout } from "@/lib/eventos-loja";
 import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
+import PixNaConta from "@/components/checkout/PixNaConta";
 import { TEXTO_PENDENCIA_NO_CHECKOUT, desfechoDoCheckout, encerraPendencia, esquecerPendencia, guardaDoNavegador, guardarPendencia, lerPendencia, situacaoAposConsulta } from "@/lib/pedido-a-confirmar";
 import type { TenantPublico } from "@/lib/tenant";
 
@@ -237,10 +238,23 @@ export default function CheckoutClient({ loja, conta }: { loja: TenantPublico; c
     if (res.status === "aprovado") {
       limpar();
       router.push(`/pedido/${referencia}`);
-    } else if (res.meioPagamento === "boleto") {
+    } else if (res.meioPagamento === "boleto" || res.status === "aguardando_confirmacao") {
       limpar();
     }
     return res;
+  }
+
+  if (resultado && resultado.status === "aguardando_confirmacao" && resultado.pix) {
+    const valor = (resultado.valor / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    return (
+      <PixNaConta
+        referencia={referencia}
+        valorFormatado={valor}
+        copiaECola={resultado.pix.copiaECola}
+        qrCodeBase64={resultado.pix.qrCodeBase64}
+        expiraEm={resultado.pix.expiraEm}
+      />
+    );
   }
 
   if (resultado && resultado.status === "pendente" && resultado.pix) {
