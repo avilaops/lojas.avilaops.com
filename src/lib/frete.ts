@@ -1,19 +1,22 @@
 import type { Tenant } from "@prisma/client";
 import { FRETE_RETIRADA_ID, type ItemCarrinho, type OpcaoFrete } from "@avilaops/checkout";
+import { cotarCepCerto } from "@/lib/cepcerto";
 import { cotarMelhorEnvio } from "@/lib/melhor-envio";
-import { tokenDaLoja } from "@/lib/melhor-envio-conta";
+import { conectado as melhorEnvioConectado, tokenDaLoja } from "@/lib/melhor-envio-conta";
 import { retiradaPublicaDisponivel } from "@/lib/tenant";
 
 /**
  * Cotação de frete da plataforma.
  *
- * Roda no SERVIDOR, com a conta do Melhor Envio que o lojista conectou na
- * seção Entrega do painel: o token é dele, fica cifrado no tenant e nunca
- * chega ao navegador. Origem, caixa e peso padrão também são colunas do
- * tenant, não constantes.
+ * Roda no SERVIDOR. A loja que conectou a própria conta do Melhor Envio na
+ * seção Entrega cota no contrato dela (o token é dela, fica cifrado no tenant
+ * e nunca chega ao navegador). A que não conectou cota pela CepCerto, na conta
+ * da plataforma. Origem, caixa e peso padrão são colunas do tenant, não
+ * constantes.
  *
  * Ordem de decisão:
  *   - Melhor Envio conectado e respondeu → cotação real (mais retirada, se houver)
+ *   - loja sem Melhor Envio e CepCerto da plataforma respondeu → cotação real
  *   - senão → tabela por UF do tenant (mais retirada)
  *   - senão → só retirada, ou nada (o checkout mostra "frete a combinar")
  *
@@ -21,8 +24,10 @@ import { retiradaPublicaDisponivel } from "@/lib/tenant";
  * de CEP no tenant, entra sempre que o destino bate, e concorre em preço com a
  * transportadora.
  *
- * Até outubro de 2026 a cotação era da CepCerto. O contrato do Melhor Envio
- * mora em `melhor-envio.ts`; aqui fica só o que é da loja.
+ * Uma loja nunca mistura as duas: quem conectou o Melhor Envio não cai na
+ * CepCerto quando ele falha, porque o pedido sairia cotado numa conta e
+ * despachado na outra, a outro preço. Os contratos moram em `melhor-envio.ts`
+ * e `cepcerto.ts`; aqui fica só o que é da loja.
  */
 
 interface Caixa { altura: number; largura: number; comprimento: number }
@@ -65,16 +70,18 @@ async function cotarTransportadora(t: Tenant, cep: string, itens: ItemCarrinho[]
   const origem = (t.cepOrigem ?? "").replace(/\D/g, "");
   if (origem.length !== 8) return null;
 
-  const token = await tokenDaLoja(t);
-  if (!token) return null;
-
-  return cotarMelhorEnvio(token, {
+  const pedido = {
     cepOrigem: origem,
     cepDestino: cep,
     pesoKg: pesoTotalKg(t, itens),
     caixa: caixaDoCarrinho(t, itens),
     valorDeclarado: itens.reduce((s, i) => s + i.precoUnitario * i.quantidade, 0) / 100,
-  });
+  };
+
+  if (!melhorEnvioConectado(t)) return cotarCepCerto(pedido);
+
+  const token = await tokenDaLoja(t);
+  return token ? cotarMelhorEnvio(token, pedido) : null;
 }
 
 async function ufDoCep(cep: string): Promise<string | null> {

@@ -65,6 +65,7 @@ export interface LojaView {
   /** Já tem credencial salva: o checkout aparece na loja. */
   mpConfigurado: boolean;
   melhorEnvioConectado: boolean;
+  cotacaoDaPlataforma: boolean;
   /** A credencial veio da conexão por OAuth, e não de chave colada. */
   mpPorOAuth: boolean;
   /** O aplicativo da plataforma existe: o botão de conectar aparece acima deste formulário. */
@@ -315,6 +316,7 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
               mpConfigurado: loja.mpConfigurado,
               cepOrigem: loja.cepOrigem,
               melhorEnvioConectado: loja.melhorEnvioConectado,
+              cotacaoDaPlataforma: loja.cotacaoDaPlataforma,
               tabelaFrete: loja.tabelaFrete,
               entregaLocal: loja.entregaLocal,
               retiradaNaLoja: loja.retiradaNaLoja,

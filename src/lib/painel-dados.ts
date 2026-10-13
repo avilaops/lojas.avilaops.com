@@ -11,6 +11,7 @@ import { filaDeEspera } from "@/lib/estoque-avisos";
 import { postagemAAcertar } from "@/lib/postagem";
 import { aplicativoConfigurado as mercadoPagoDisponivel, conectadoPorOAuth } from "@/lib/mercado-pago-conta";
 import { conectado as melhorEnvioConectado } from "@/lib/melhor-envio-conta";
+import { cepCertoConfigurada } from "@/lib/cepcerto";
 import type { SecaoPainel } from "@/components/painel/PainelLoja";
 
 /**
@@ -114,6 +115,7 @@ export async function dadosDoPainel(secao: SecaoPainel) {
       mpConfigurado: Boolean(loja.mpAccessTokenEnc),
       // Só o fato de estar conectado, para o checklist: os tokens não saem daqui.
       melhorEnvioConectado: melhorEnvioConectado(loja),
+      cotacaoDaPlataforma: cepCertoConfigurada(),
       // A conexão em si (conta, data) é lida do tenant pela página, como no
       // Melhor Envio; aqui vai só o que muda o formulário das chaves.
       mpPorOAuth: conectadoPorOAuth(loja),

@@ -2,8 +2,9 @@
 # Leva os aplicativos da plataforma das credenciais do n8n para o Lojas.
 #
 # Mercado Livre, Melhor Envio e Mercado Pago têm, cada um, UM aplicativo da
-# plataforma; o lojista só conecta a própria conta nele. As chaves desses
-# aplicativos moram em credenciais do n8n (tipo httpCustomAuth, corpo JSON).
+# plataforma; o lojista só conecta a própria conta nele. A CepCerto é a conta
+# da plataforma que cota frete para a loja sem Melhor Envio. As chaves
+# moram em credenciais do n8n (tipo httpCustomAuth, corpo JSON).
 # Quem troca uma chave troca lá, na tela do n8n, e roda este roteiro: ele grava
 # as variáveis em /opt/lojas/.env, recria o container (env_file só é lido na
 # criação) e confere o que dá para conferir sem a conta de um lojista.
@@ -11,7 +12,7 @@
 # Roda no servidor applications, como root. Nenhum valor secreto vai para a
 # saída.
 #
-# Uso: sincronizar-apps-do-n8n.sh [todos|mercado-livre|melhor-envio|mercado-pago]
+# Uso: sincronizar-apps-do-n8n.sh [todos|mercado-livre|melhor-envio|mercado-pago|cepcerto]
 #   todos (padrão): aplicativo cuja credencial ainda tem o marcador é pulado.
 #   um nome: credencial com marcador é erro.
 set -euo pipefail
@@ -26,9 +27,10 @@ APPS='
 mercado-livre|tmCn4vuIaDwLCXHn|client_id=ML_APP_ID,client_secret=ML_APP_SECRET
 melhor-envio|4tVMMl4ZiDxpHyrP|client_id=MELHOR_ENVIO_CLIENT_ID,client_secret=MELHOR_ENVIO_CLIENT_SECRET
 mercado-pago|TQmPlfr8XkAfqMSZ|client_id=MP_APP_ID,client_secret=MP_APP_SECRET,webhook_secret=MP_APP_WEBHOOK_SECRET
+cepcerto|e6Nn4mafJ916JpbG|public_key=CEPCERTO_PUBLIC_KEY
 '
 
-case "$pedido" in todos|mercado-livre|melhor-envio|mercado-pago) ;; *) echo "Uso: $0 [todos|mercado-livre|melhor-envio|mercado-pago]"; exit 2 ;; esac
+case "$pedido" in todos|mercado-livre|melhor-envio|mercado-pago|cepcerto) ;; *) echo "Uso: $0 [todos|mercado-livre|melhor-envio|mercado-pago|cepcerto]"; exit 2 ;; esac
 
 temp=$(mktemp -d)
 trap 'rm -rf "$temp"' EXIT
@@ -77,6 +79,33 @@ JS
     echo "ERRO: $nome: as chaves ainda não foram coladas na credencial do n8n."; exit 1
   fi
   [ "$saida" = 0 ] || exit 1
+
+  # A chave da CepCerto só entra se a CepCerto estiver cotando de verdade.
+  # Com a chave no .env o painel passa a dar a Entrega como pronta para toda
+  # loja com CEP de origem; se a cotação falha lá, a loja fica sem frete e o
+  # painel diz que está tudo certo. A prova sai deste servidor, que é o IP que
+  # a CepCerto precisa ter autorizado.
+  if [ "$nome" = cepcerto ]; then
+    if ! prova=$(CHAVE=$(cut -d= -f2- "$temp/$nome.env") node -e '
+const chave = process.env.CHAVE;
+fetch("https://cepcerto.com/widget_frete/api/cotacao", {
+  method: "POST",
+  headers: { "content-type": "application/json", accept: "application/json", "x-cepcerto-public-key": chave },
+  body: JSON.stringify({ public_key: chave, cep_remetente: "01310100", cep_destinatario: "20040002", peso: "0.5", altura: "10", largura: "15", comprimento: "20", valor_encomenda: "50.00" }),
+  signal: AbortSignal.timeout(25000),
+}).then(async (r) => {
+  const d = await r.json().catch(() => ({}));
+  const n = Array.isArray(d.cotacoes) ? d.cotacoes.length : 0;
+  console.log(`${r.status} ${n ? n + " cotações na prova" : d.mensagem ?? "sem cotação"}`);
+  process.exit(n ? 0 : 1);
+}).catch((e) => { console.log(`sem resposta (${e.message})`); process.exit(1); });' 2>&1); then
+      echo "==> cepcerto: a CepCerto não cotou a prova ($prova); a chave NÃO foi gravada"
+      [ "$pedido" = todos ] && continue
+      exit 1
+    fi
+    echo "==> cepcerto: $prova"
+  fi
+
   cat "$temp/$nome.env" >> "$temp/novas"
   sincronizados="$sincronizados $nome"
 done <<< "$APPS"
@@ -151,6 +180,7 @@ for nome in $sincronizados; do
     mercado-livre) conferir "Mercado Livre" https://api.mercadolibre.com/oauth/token ML_APP_ID ML_APP_SECRET ;;
     mercado-pago) conferir "Mercado Pago" https://api.mercadopago.com/oauth/token MP_APP_ID MP_APP_SECRET ;;
     melhor-envio) echo "==> Melhor Envio: variáveis carregadas; confira o botão em Painel, Configurações, Entrega" ;;
+    cepcerto) echo "==> CepCerto: chave carregada; a cotação de prova passou antes de gravar" ;;
   esac
 done
 exit $falhou

@@ -23,6 +23,8 @@ export type EntradaChecklist = {
   cepOrigem: string | null;
   /** A loja conectou a própria conta do Melhor Envio (é ela que cota a transportadora). */
   melhorEnvioConectado: boolean;
+  /** A plataforma cota pela CepCerto para a loja que não conectou o Melhor Envio. */
+  cotacaoDaPlataforma: boolean;
   tabelaFrete: readonly unknown[];
   entregaLocal: readonly unknown[];
   retiradaNaLoja: boolean;
@@ -96,10 +98,11 @@ function entrega(e: EntradaChecklist): PassoChecklist {
   const temCepDeOrigem = (e.cepOrigem ?? "").replace(/\D/g, "").length === 8;
   const feito =
     // CEP de origem sozinho não entrega nada: quem cota a transportadora é o
-    // Melhor Envio da loja (`cotarTransportadora` em `frete.ts`). Só o CEP
-    // marcava o passo como pronto numa loja que não oferecia envio nenhum, e
-    // o checkout chegava ao comprador sem opção de entrega.
-    (temCepDeOrigem && e.melhorEnvioConectado) ||
+    // Melhor Envio da loja ou a CepCerto da plataforma (`cotarTransportadora`
+    // em `frete.ts`). Só o CEP marcava o passo como pronto numa loja que não
+    // oferecia envio nenhum, e o checkout chegava ao comprador sem opção de
+    // entrega.
+    (temCepDeOrigem && (e.melhorEnvioConectado || e.cotacaoDaPlataforma)) ||
     e.tabelaFrete.length > 0 ||
     e.entregaLocal.length > 0 ||
     // `retiradaNaLoja` nasce `true` no schema: sozinho não prova nada, então

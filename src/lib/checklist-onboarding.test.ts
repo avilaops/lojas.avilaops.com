@@ -15,6 +15,7 @@ const vazia: EntradaChecklist = {
   mpConfigurado: false,
   cepOrigem: null,
   melhorEnvioConectado: false,
+  cotacaoDaPlataforma: false,
   tabelaFrete: [],
   entregaLocal: [],
   retiradaNaLoja: true,
@@ -118,6 +119,9 @@ test("entrega: CEP de origem sozinho não liga o passo, e o detalhe diz a conseq
   assert.equal(p.feito, false);
   assert.match(p.detalhe, /nada cota o envio/);
   assert.match(p.detalhe, /sem opção de entrega/);
+  // Com a cotação da plataforma (CepCerto) o CEP de origem basta.
+  assert.equal(passo({ ...vazia, cepOrigem: "14010-000", retiradaNaLoja: false, cotacaoDaPlataforma: true }, "entrega").feito, true);
+  assert.equal(passo({ ...vazia, retiradaNaLoja: false, cotacaoDaPlataforma: true }, "entrega").feito, false);
   // Melhor Envio conectado sem CEP de origem também não cota.
   assert.equal(passo({ ...vazia, melhorEnvioConectado: true, retiradaNaLoja: false }, "entrega").feito, false);
 });
