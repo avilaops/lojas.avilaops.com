@@ -177,6 +177,7 @@ como evento `operacao.alerta` (`src/lib/alertas.ts`), que já chega dizendo:
 | `mensalidade.webhook-falhou` | notificação de mensalidade que não pôde ser processada |
 | `pagamento.sem-pedido` | pagamento aprovado no gateway sem pedido registrado |
 | `rotina.falhando` | a terceira falha seguida de uma rotina |
+| `frete.sem-opcao` | comprador informou um CEP válido e a loja não devolveu forma de entrega nenhuma (um por loja por dia) |
 | `canal.aviso-falhou` | reservado; ainda sem emissor |
 
 Um alerta por fato: a chave é `codigo` + `recurso`, então o gateway reenviando

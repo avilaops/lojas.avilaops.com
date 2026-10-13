@@ -10,6 +10,7 @@ import { diagnosticoDoFeed, type DiagnosticoFeed } from "@/lib/catalogo";
 import { filaDeEspera } from "@/lib/estoque-avisos";
 import { postagemAAcertar } from "@/lib/postagem";
 import { aplicativoConfigurado as mercadoPagoDisponivel, conectadoPorOAuth } from "@/lib/mercado-pago-conta";
+import { conectado as melhorEnvioConectado } from "@/lib/melhor-envio-conta";
 import type { SecaoPainel } from "@/components/painel/PainelLoja";
 
 /**
@@ -111,6 +112,8 @@ export async function dadosDoPainel(secao: SecaoPainel) {
       mpPublicKey: loja.mpPublicKey,
       // Só o fato de existir credencial; o token cifrado nunca sai daqui.
       mpConfigurado: Boolean(loja.mpAccessTokenEnc),
+      // Só o fato de estar conectado, para o checklist: os tokens não saem daqui.
+      melhorEnvioConectado: melhorEnvioConectado(loja),
       // A conexão em si (conta, data) é lida do tenant pela página, como no
       // Melhor Envio; aqui vai só o que muda o formulário das chaves.
       mpPorOAuth: conectadoPorOAuth(loja),

@@ -33,6 +33,10 @@ export const ALERTAS = {
     oQueQuebrou: "Um aviso do Mercado Livre (pedido, pergunta, anúncio ou envio) não pôde ser processado.",
     oQueFazer: "Abrir Painel, Configurações, Canais e conferir o pedido ou a pergunta no Mercado Livre. O aviso fica na fila como FALHOU e pode ser reenviado.",
   },
+  "frete.sem-opcao": {
+    oQueQuebrou: "Um comprador informou o CEP e a loja não devolveu nenhuma forma de entrega. Sem opção de entrega o pedido não fecha.",
+    oQueFazer: "Abrir Painel, Configurações, Entrega: conectar o Melhor Envio (com CEP de origem), ou cadastrar tabela de frete, entrega local ou retirada com endereço público.",
+  },
   "rotina.falhando": {
     oQueQuebrou: "Uma rotina da plataforma falhou três vezes seguidas.",
     oQueFazer: "Ver o erro em GET /api/admin/rotinas e, corrigida a causa, forçar a rotina em POST /api/admin/rotinas/<nome>.",

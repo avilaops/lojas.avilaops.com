@@ -283,6 +283,13 @@ export default function CheckoutClient({ loja, conta }: { loja: TenantPublico; c
         clienteInicial={conta ? { nome: conta.nome.split(" ")[0], sobrenome: conta.nome.split(" ").slice(1).join(" "), email: conta.email, telefone: conta.telefone ?? "", documento: conta.documento ?? "" } : undefined}
         enderecoInicial={conta?.endereco ? { ...conta.endereco, complemento: conta.endereco.complemento ?? "" } : undefined}
         aoInformarCep={aoInformarCep}
+        semEntrega={
+          loja.whatsapp ? (
+            <a className="btn-secundario mt-2 w-full" href={linkWhatsApp(loja.whatsapp, "Olá! Quero fechar um pedido e não apareceu forma de entrega para o meu CEP.")} target="_blank" rel="noopener">
+              Combinar a entrega pelo WhatsApp
+            </a>
+          ) : undefined
+        }
         aoIdentificar={(cliente) => { void fetch("/api/checkout/contato", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ referencia, cliente, itens: ids }) }).catch(() => undefined); }}
         aoFinalizar={aoFinalizar}
         desconto={cupom?.desconto ?? 0}

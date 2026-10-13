@@ -14,6 +14,7 @@ const vazia: EntradaChecklist = {
   produtosAtivos: 0,
   mpConfigurado: false,
   cepOrigem: null,
+  melhorEnvioConectado: false,
   tabelaFrete: [],
   entregaLocal: [],
   retiradaNaLoja: true,
@@ -29,6 +30,7 @@ const completa: EntradaChecklist = {
   produtosAtivos: 3,
   mpConfigurado: true,
   cepOrigem: "14010-000",
+  melhorEnvioConectado: true,
 };
 
 const enderecoCompleto = { logradouro: "Rua A", numero: "10", bairro: "Centro", cidade: "Ribeirão Preto", uf: "SP", cep: "14010-000" };
@@ -103,10 +105,21 @@ test("recebimento: sem credencial fica pendente e diz a consequência", () => {
   assert.match(p.detalhe, /o cliente monta o carrinho e não consegue pagar/);
 });
 
-test("entrega: CEP de origem com 8 dígitos liga o passo", () => {
-  const p = passo({ ...vazia, cepOrigem: "14010-000" }, "entrega");
+test("entrega: CEP de origem com o Melhor Envio conectado liga o passo", () => {
+  const p = passo({ ...vazia, cepOrigem: "14010-000", melhorEnvioConectado: true }, "entrega");
   assert.equal(p.feito, true);
   assert.equal(p.href, "/painel/configuracoes/entrega");
+});
+
+test("entrega: CEP de origem sozinho não liga o passo, e o detalhe diz a consequência", () => {
+  // A loja que só preencheu o CEP não cota transportadora nenhuma: o comprador
+  // chegava ao checkout sem opção de entrega e o painel dizia que estava pronto.
+  const p = passo({ ...vazia, cepOrigem: "14010-000", retiradaNaLoja: false }, "entrega");
+  assert.equal(p.feito, false);
+  assert.match(p.detalhe, /nada cota o envio/);
+  assert.match(p.detalhe, /sem opção de entrega/);
+  // Melhor Envio conectado sem CEP de origem também não cota.
+  assert.equal(passo({ ...vazia, melhorEnvioConectado: true, retiradaNaLoja: false }, "entrega").feito, false);
 });
 
 test("entrega: tabela de frete liga o passo", () => {
@@ -127,7 +140,7 @@ test("entrega: retiradaNaLoja sem endereço público não conta", () => {
 });
 
 test("entrega: CEP de origem incompleto fica pendente", () => {
-  assert.equal(passo({ ...vazia, cepOrigem: "14010" }, "entrega").feito, false);
+  assert.equal(passo({ ...vazia, cepOrigem: "14010", melhorEnvioConectado: true }, "entrega").feito, false);
 });
 
 test("loja completa sem domínio: publicada, e o domínio opcional não segura", () => {

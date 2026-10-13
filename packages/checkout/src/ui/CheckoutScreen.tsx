@@ -54,6 +54,11 @@ export interface CheckoutScreenProps {
   /** Cotação de frete por CEP, quando a loja recota ao saber o destino. */
   aoInformarCep?: (cep: string) => Promise<OpcaoFrete[]>;
   /**
+   * O que oferecer quando o CEP foi cotado e não há forma de entrega nenhuma:
+   * em geral, o contato da loja. Sem isto a pessoa lê só o aviso.
+   */
+  semEntrega?: React.ReactNode;
+  /**
    * Disparado quando a pessoa conclui o passo de identificação (nome, e-mail,
    * celular válidos). É o gancho do carrinho abandonado: a loja já sabe quem
    * é antes de saber se vai pagar. Falha aqui nunca trava o checkout.
@@ -129,6 +134,7 @@ export default function CheckoutScreen({
   meiosPagamento = ["pix", "cartao", "boleto"],
   aoFinalizar,
   aoInformarCep,
+  semEntrega,
   aoIdentificar,
   clienteInicial,
   enderecoInicial,
@@ -139,6 +145,9 @@ export default function CheckoutScreen({
   const [cliente, setCliente] = useState<Cliente>({ ...VAZIO_CLIENTE, ...clienteInicial });
   const [endereco, setEndereco] = useState<EnderecoEntrega>({ ...VAZIO_ENDERECO, ...enderecoInicial });
   const [opcoesFrete, setOpcoesFrete] = useState<OpcaoFrete[]>(fretes);
+  // Já houve cotação para um CEP inteiro: separa "ainda não informou o CEP" de
+  // "informou e a loja não entrega lá", que pedem avisos diferentes.
+  const [cepCotado, setCepCotado] = useState(false);
   const [freteId, setFreteId] = useState<string>(() => {
     const primeiraOpcao = fretes[0];
     return primeiraOpcao?.id === FRETE_RETIRADA_ID ? "" : primeiraOpcao?.id ?? "";
@@ -203,6 +212,7 @@ export default function CheckoutScreen({
 
     if (aoInformarCep) {
       const cotados = await aoInformarCep(apenasDigitos(mascarado));
+      setCepCotado(true);
       if (cotados.length) {
         setOpcoesFrete(cotados);
         setFreteId((atual) => (cotados.some((c) => c.id === atual) ? atual : cotados[0]!.id));
@@ -382,7 +392,18 @@ export default function CheckoutScreen({
                   </label>
                 ))}
               </div>
-              {erros.frete && <p className="ck-error" role="alert">{erros.frete}</p>}
+              {/* Sem opção nenhuma a lista fica vazia: antes era um quadro em
+                  branco, e a pessoa não sabia se faltava o CEP ou a entrega. */}
+              {opcoesFrete.length === 0 && !cepCotado && (
+                <p className="ck-hint">Informe o CEP abaixo para ver as formas de entrega.</p>
+              )}
+              {opcoesFrete.length === 0 && cepCotado && (
+                <div className="ck-error" role="alert">
+                  <p>Esta loja ainda não tem entrega pelo site para este CEP.</p>
+                  {semEntrega}
+                </div>
+              )}
+              {erros.frete && !(opcoesFrete.length === 0 && cepCotado) && <p className="ck-error" role="alert">{erros.frete}</p>}
             </section>
 
             {!retirada && (

@@ -21,6 +21,8 @@ export type EntradaChecklist = {
   produtosAtivos: number;
   mpConfigurado: boolean;
   cepOrigem: string | null;
+  /** A loja conectou a própria conta do Melhor Envio (é ela que cota a transportadora). */
+  melhorEnvioConectado: boolean;
   tabelaFrete: readonly unknown[];
   entregaLocal: readonly unknown[];
   retiradaNaLoja: boolean;
@@ -91,8 +93,13 @@ function recebimento(e: EntradaChecklist): PassoChecklist {
 }
 
 function entrega(e: EntradaChecklist): PassoChecklist {
+  const temCepDeOrigem = (e.cepOrigem ?? "").replace(/\D/g, "").length === 8;
   const feito =
-    (e.cepOrigem ?? "").replace(/\D/g, "").length === 8 ||
+    // CEP de origem sozinho não entrega nada: quem cota a transportadora é o
+    // Melhor Envio da loja (`cotarTransportadora` em `frete.ts`). Só o CEP
+    // marcava o passo como pronto numa loja que não oferecia envio nenhum, e
+    // o checkout chegava ao comprador sem opção de entrega.
+    (temCepDeOrigem && e.melhorEnvioConectado) ||
     e.tabelaFrete.length > 0 ||
     e.entregaLocal.length > 0 ||
     // `retiradaNaLoja` nasce `true` no schema: sozinho não prova nada, então
@@ -100,7 +107,9 @@ function entrega(e: EntradaChecklist): PassoChecklist {
     retiradaPublicaDisponivel({ retiradaNaLoja: e.retiradaNaLoja, enderecoPublico: e.enderecoPublico, endereco: e.endereco as Tenant["endereco"] });
   const detalhe = feito
     ? "A loja tem pelo menos uma forma de entregar o pedido."
-    : "Falta uma forma de entrega: CEP de origem, tabela de frete, entrega local ou retirada com endereço público.";
+    : temCepDeOrigem
+      ? "O CEP de origem está preenchido, mas nada cota o envio: conecte o Melhor Envio, ou cadastre tabela de frete, entrega local ou retirada com endereço público. Hoje o cliente chega ao pagamento sem opção de entrega."
+      : "Falta uma forma de entrega: Melhor Envio conectado, tabela de frete, entrega local ou retirada com endereço público.";
   return { id: "entrega", titulo: "Entrega", feito, opcional: false, detalhe, href: "/painel/configuracoes/entrega", acao: "Configurar a entrega" };
 }
 

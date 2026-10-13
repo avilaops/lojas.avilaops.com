@@ -4,6 +4,7 @@ import { resolverItensDoCatalogo } from "@/lib/catalogo";
 import { cotarFrete } from "@/lib/frete";
 import { buscarCupomValido } from "@/lib/cupons";
 import { medirRota } from "@/lib/metricas-rota";
+import { alertar } from "@/lib/alertas";
 
 const Entrada = z.object({
   cep: z.string(),
@@ -26,5 +27,20 @@ export const POST = medirRota("frete", async function (request: Request) {
     const c = await buscarCupomValido(t.id, r.data.cupom, subtotal);
     freteGratisCupom = "cupom" in c && c.cupom.tipo === "FRETE_GRATIS";
   }
-  return Response.json(await cotarFrete(t, r.data.cep, itens, { freteGratisCupom }));
+  const opcoes = await cotarFrete(t, r.data.cep, itens, { freteGratisCupom });
+  // CEP inteiro e nenhuma forma de entrega: o comprador não fecha o pedido, e
+  // sem este aviso ninguém fica sabendo (a Vedashow passou dias assim). Um por
+  // loja por dia; `alertar` nunca lança.
+  if (!opcoes.length && r.data.cep.replace(/\D/g, "").length === 8) {
+    void alertar({
+      codigo: "frete.sem-opcao",
+      slug: t.slug,
+      lojaNome: t.nome,
+      recurso: "frete",
+      detalhe: `CEP ${r.data.cep.replace(/\D/g, "").slice(0, 5)}-***, ${itens.length} item(ns) no carrinho`,
+      link: "/painel/configuracoes/entrega",
+      ocorrencia: new Date().toISOString().slice(0, 10),
+    });
+  }
+  return Response.json(opcoes);
 });
