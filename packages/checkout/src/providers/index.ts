@@ -3,3 +3,5 @@
 export * from "./types.ts";
 export { MercadoPagoProvider } from "./mercadopago.ts";
 export type { MercadoPagoConfig } from "./mercadopago.ts";
+export { RegistroDeProvedores } from "./registro.ts";
+export { definicaoMercadoPago } from "./mercadopago-definicao.ts";
