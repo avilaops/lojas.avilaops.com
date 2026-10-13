@@ -15,9 +15,7 @@ import Vendas from "./Vendas";
 import type { ResumoVendas } from "@/lib/relatorio";
 import type { DiagnosticoFeed } from "@/lib/catalogo";
 import Anuncios, { type PixelsView } from "./Anuncios";
-import McpPainel from "./McpPainel";
-import ChavesApiPainel from "./ChavesApiPainel";
-import WebhooksPainel from "./WebhooksPainel";
+import IaEApi from "./IaEApi";
 import CatalogoLista from "./CatalogoLista";
 import SoltarPlanilha from "./SoltarPlanilha";
 import { FileCheck2 } from "lucide-react";
@@ -271,7 +269,32 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
 
       {aba === "Visão geral" && (
         <div className="painel-overview">
-          <Vendas r={vendas} espera={espera} irPara={irPara} />
+          {/* Os quatro números que respondem "como está a loja" numa linha só.
+              Estavam em dois lugares (receita num cartão no topo, catálogo,
+              pedidos e loja em três cartões no fim) e a tela passava de duas
+              alturas de celular. */}
+          <div className="painel-metricas">
+            <a href="/painel/analises">
+              <small>Vendas · 30 dias</small>
+              <strong>{brl(vendas.receitaCentavos)}</strong>
+              <span>{vendas.variacao !== null ? `${vendas.variacao >= 0 ? "▲" : "▼"} ${Math.abs(vendas.variacao)}%` : "Análises →"}</span>
+            </a>
+            <button onClick={() => irPara("Pedidos")}>
+              <small>Pedidos</small>
+              <strong>{contagens.pedidos.toLocaleString("pt-BR")}</strong>
+              <span>{vendas.aSeparar > 0 ? `${vendas.aSeparar} a separar →` : "Ver →"}</span>
+            </button>
+            <button onClick={() => irPara("Produtos")}>
+              <small>Produtos</small>
+              <strong>{contagens.ativos.toLocaleString("pt-BR")}</strong>
+              <span>{contagens.ativos ? "Ver →" : "Cadastrar →"}</span>
+            </button>
+            <a href={loja.url} target="_blank" rel="noopener">
+              <small>Sua loja</small>
+              <strong>{loja.status === "ATIVA" ? "No ar" : "Em preparação"}</strong>
+              <span>Abrir ↗</span>
+            </a>
+          </div>
 
           {/* O painel responde o que precisa de acao, nao explica a plataforma.
               Havia aqui um bloco institucional ("Sua marca esta no ar. Cuide
@@ -328,23 +351,7 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
             );
           })()}
 
-          <div className="painel-metricas">
-            <button onClick={() => irPara("Produtos")}>
-              <small>Catálogo</small>
-              <strong>{contagens.ativos.toLocaleString("pt-BR")}</strong>
-              <span>{contagens.ativos ? "Ver produtos →" : "Cadastrar o primeiro →"}</span>
-            </button>
-            <button onClick={() => irPara("Pedidos")}>
-              <small>Pedidos</small>
-              <strong>{contagens.pedidos.toLocaleString("pt-BR")}</strong>
-              <span>Ver pedidos →</span>
-            </button>
-            <a href={loja.url} target="_blank" rel="noopener">
-              <small>Sua loja</small>
-              <strong>{loja.status === "ATIVA" ? "No ar" : "Em preparação"}</strong>
-              <span>Abrir loja ↗</span>
-            </a>
-          </div>
+          <Vendas r={vendas} espera={espera} irPara={irPara} />
         </div>
       )}
 
@@ -487,11 +494,7 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
       {aba === "Anúncios" && <Anuncios pixels={loja.pixels} catalogo={catalogo} feedUrl={`${loja.url}/feed/merchant.xml`} chamar={chamar} ocupado={ocupado} />}
 
       {aba === "IA" && (
-        <>
-          <McpPainel lojaPlano={loja.plano} lojaSlug={loja.slug} aoIrParaAssinatura={() => irPara("Assinatura")} />
-          <ChavesApiPainel />
-          <WebhooksPainel />
-        </>
+        <IaEApi lojaPlano={loja.plano} lojaSlug={loja.slug} aoIrParaAssinatura={() => irPara("Assinatura")} />
       )}
 
       {aba === "Pedidos" && (

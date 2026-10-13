@@ -1,8 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Check, Copy, KeyRound, Trash2 } from "lucide-react";
-import { Secao } from "./campos";
+import { Check, ChevronDown, Copy, KeyRound, Plus, Trash2 } from "lucide-react";
 
 /**
  * Chaves da API para desenvolvedores (`/api/v1`). Ver docs/API.md.
@@ -10,6 +9,11 @@ import { Secao } from "./campos";
  * A chave inteira aparece uma vez, logo depois de criada: o banco guarda só o
  * hash. A lista mostra começo e fim, o bastante para o lojista saber qual
  * integração está usando qual chave antes de revogar.
+ *
+ * A lista é de cartões, e não uma tabela: no celular a tabela passava da
+ * largura da tela e o botão de revogar ficava fora dela. O formulário abre por
+ * um botão quando a loja já tem chave, porque o que se vem fazer aqui, na
+ * maioria das vezes, é conferir ou revogar.
  */
 
 type Tipo = "SECRETA" | "PUBLICAVEL";
@@ -36,6 +40,10 @@ interface Estado {
 const ROTULO_TIPO: Record<Tipo, string> = { SECRETA: "Secreta", PUBLICAVEL: "Publicável" };
 
 const data = (iso: string | null) => (iso ? new Date(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" }) : "nunca");
+const dia = (iso: string) => new Date(iso).toLocaleDateString("pt-BR");
+
+/** A partir de quantas chaves a busca aparece: antes disso ela só ocupa espaço. */
+const BUSCA_A_PARTIR_DE = 6;
 
 export default function ChavesApiPainel() {
   const [estado, setEstado] = useState<Estado | null>(null);
@@ -48,6 +56,8 @@ export default function ChavesApiPainel() {
   const [copiada, setCopiada] = useState(false);
   const [ocupado, setOcupado] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [criando, setCriando] = useState(false);
+  const [busca, setBusca] = useState("");
 
   const carregar = useCallback(async () => {
     const r = await fetch("/api/painel/chaves");
@@ -85,6 +95,7 @@ export default function ChavesApiPainel() {
       if (!r.ok) throw new Error(d?.erro ?? "Não foi possível criar a chave.");
       setNova({ chave: d.chave, nome: d.nome });
       setNome("");
+      setCriando(false);
       await carregar();
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não foi possível criar a chave.");
@@ -118,17 +129,19 @@ export default function ChavesApiPainel() {
   const alternar = (escopo: string) =>
     setEscopos((atual) => (atual.includes(escopo) ? atual.filter((e) => e !== escopo) : [...atual, escopo]));
 
+  const semChaves = Boolean(estado && estado.chaves.length === 0);
+  const formularioAberto = criando || semChaves;
+  const termo = busca.trim().toLowerCase();
+  const visiveis = (estado?.chaves ?? []).filter((c) => !termo || `${c.nome} ${c.mascara} ${c.escopos.join(" ")}`.toLowerCase().includes(termo));
+
   return (
-    <Secao
-      titulo="API para desenvolvedores"
-      descricao="Chaves para integrar a loja a um ERP, PDV, planilha ou a um site e app próprios. A documentação das rotas fica em /api/v1."
-    >
-      {erro && <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-xs text-red-600 dark:text-red-400">{erro}</div>}
+    <div className="grid min-w-0 gap-3">
+      {erro && <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-xs text-red-700">{erro}</div>}
 
       {nova && (
-        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">
+        <div className="min-w-0 rounded-xl border border-amber-300 bg-amber-50 p-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="text-xs font-bold text-amber-800 dark:text-amber-300">
+            <span className="text-xs font-bold text-amber-900">
               Chave &quot;{nova.nome}&quot; criada. Copie agora: ela não será exibida de novo.
             </span>
             <button type="button" onClick={() => copiar(nova.chave)} className="inline-flex items-center gap-1 text-xs font-bold text-primary underline">
@@ -142,7 +155,17 @@ export default function ChavesApiPainel() {
         </div>
       )}
 
-      <form onSubmit={criar} className="grid gap-4 rounded-xl border border-border bg-card p-5">
+      {estado && !formularioAberto && (
+        <div className="flex min-w-0 items-center justify-between gap-3">
+          <p className="min-w-0 text-xs text-muted-foreground">Para ERP, PDV, planilha, site ou app. Rotas em <code>/api/v1</code>.</p>
+          <button type="button" onClick={() => setCriando(true)} className="btn-primario h-9 shrink-0 px-3 text-xs">
+            <Plus className="mr-1 h-3.5 w-3.5" /> Nova chave
+          </button>
+        </div>
+      )}
+
+      {formularioAberto && (
+      <form onSubmit={criar} className="grid min-w-0 gap-3 rounded-xl border border-border bg-card p-3 sm:p-4">
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="grid gap-1 text-xs font-semibold text-foreground">
             Nome da integração
@@ -213,51 +236,69 @@ export default function ChavesApiPainel() {
           </fieldset>
         )}
 
-        <div>
+        <div className="flex flex-wrap gap-2">
           <button type="submit" disabled={ocupado} className="btn-primario h-10 px-4 text-xs">
             <KeyRound className="mr-1 h-3.5 w-3.5" /> Criar chave
           </button>
+          {!semChaves && <button type="button" onClick={() => setCriando(false)} className="btn-secundario h-10 px-4 text-xs">Cancelar</button>}
         </div>
       </form>
+      )}
+
+      {estado && estado.chaves.length >= BUSCA_A_PARTIR_DE && (
+        <input
+          type="search"
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+          placeholder="Buscar por nome, chave ou escopo"
+          aria-label="Buscar chave"
+          className="h-10 w-full min-w-0 rounded-lg border border-border bg-background px-3 text-sm"
+        />
+      )}
 
       {estado && estado.chaves.length > 0 && (
-        <div className="overflow-x-auto rounded-xl border border-border bg-card">
-          <table className="w-full text-left text-xs">
-            <thead className="text-muted-foreground">
-              <tr>
-                <th className="p-3">Nome</th>
-                <th className="p-3">Chave</th>
-                <th className="p-3">Escopos</th>
-                <th className="p-3">Último uso</th>
-                <th className="p-3" />
-              </tr>
-            </thead>
-            <tbody>
-              {estado.chaves.map((c) => (
-                <tr key={c.id} className={`border-t border-border ${c.revogadaEm ? "opacity-50" : ""}`}>
-                  <td className="p-3 font-semibold text-foreground">
-                    {c.nome}
-                    <div className="font-normal text-muted-foreground">{ROTULO_TIPO[c.tipo]}</div>
-                  </td>
-                  <td className="p-3 font-mono">{c.mascara}</td>
-                  <td className="p-3">
-                    {c.escopos.join(", ")}
-                    {c.origens.length > 0 && <div className="font-mono text-[11px] text-muted-foreground">{c.origens.join(", ")}</div>}
-                  </td>
-                  <td className="p-3">{c.revogadaEm ? `revogada em ${data(c.revogadaEm)}` : data(c.ultimoUsoEm)}</td>
-                  <td className="p-3 text-right">
-                    {!c.revogadaEm && (
-                      <button type="button" onClick={() => revogar(c)} disabled={ocupado} className="btn-secundario h-8 px-2 text-red-600" title="Revogar chave">
-                        <Trash2 className="h-3.5 w-3.5" />
+        <ul className="min-w-0 divide-y divide-border rounded-xl border border-border bg-card">
+          {visiveis.map((c) => (
+            <li key={c.id} className={`min-w-0 ${c.revogadaEm ? "opacity-60" : ""}`}>
+              <details className="group min-w-0">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 [&::-webkit-details-marker]:hidden">
+                  <span className="min-w-0">
+                    <span className="flex min-w-0 items-center gap-2 text-sm font-semibold text-foreground">
+                      <span className="truncate">{c.nome}</span>
+                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${c.tipo === "SECRETA" ? "bg-foreground text-background" : "bg-muted text-foreground"}`}>{ROTULO_TIPO[c.tipo]}</span>
+                      {c.revogadaEm && <span className="shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-800">revogada</span>}
+                    </span>
+                    <span className="block truncate font-mono text-[11px] text-muted-foreground">{c.mascara} · último uso: {data(c.ultimoUsoEm)}</span>
+                  </span>
+                  <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition group-open:rotate-180" aria-hidden="true" />
+                </summary>
+                <div className="grid gap-2 px-3 pb-3">
+                  {c.escopos.length > 0 && (
+                    <p className="flex flex-wrap gap-1">
+                      {c.escopos.map((e) => <code key={e} className="rounded bg-muted px-1.5 py-0.5 text-[11px] text-foreground">{e}</code>)}
+                    </p>
+                  )}
+                  {c.origens.length > 0 && <p className="break-all font-mono text-[11px] text-muted-foreground">{c.origens.join(", ")}</p>}
+                  <p className="text-[11px] text-muted-foreground">
+                    Criada em {dia(c.criadaEm)}{c.revogadaEm ? ` · revogada em ${data(c.revogadaEm)}` : ""}
+                  </p>
+                  {!c.revogadaEm && (
+                    <div>
+                      <button type="button" onClick={() => revogar(c)} disabled={ocupado} className="btn-secundario h-9 px-3 text-xs text-red-600 hover:text-red-700">
+                        <Trash2 className="mr-1 h-3.5 w-3.5" /> Revogar chave
                       </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                    </div>
+                  )}
+                </div>
+              </details>
+            </li>
+          ))}
+          {visiveis.length === 0 && <li className="px-3 py-2.5 text-xs text-muted-foreground">Nenhuma chave com esse termo.</li>}
+        </ul>
       )}
-    </Secao>
+      {estado && estado.chaves.length > 0 && (
+        <p className="text-[11px] text-muted-foreground">A chave inteira só aparece ao criar. Perdeu? Revogue e crie outra.</p>
+      )}
+    </div>
   );
 }
