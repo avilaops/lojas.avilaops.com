@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { CAMINHO_RETORNO, configSSO, consultarSSO, lerRespostaSSO, urlDeLoginSSO } from "./sso";
+import { CAMINHO_RETORNO, configSSO, consultarSSO, lerRespostaSSO, podeEntrarComoEquipe, urlDeLoginSSO } from "./sso";
 
 const cfg = { url: "https://auth.avilaops.com", app: "lojas-avilaops-com" };
 const TOKEN = "aaa.bbb.ccc";
@@ -32,6 +32,7 @@ test("só um sim explícito do Auth abre a porta", () => {
     tipo: "ok",
     email: "dona@loja.com.br",
     nome: "Dona",
+    equipe: false,
   });
   // Auth que não conhece `?app=` responde sem `permitido`: é não, não sim.
   assert.equal(lerRespostaSSO(200, { autenticado: true, sessao }).tipo, "sem_acesso");
@@ -77,4 +78,27 @@ test("Auth fora do ar é indisponível, não erro na cara do lojista", async () 
 
   const htmlDeErro = (async () => new Response("<html>502</html>", { status: 502 })) as typeof fetch;
   assert.equal((await consultarSSO(cfg, TOKEN, htmlDeErro)).tipo, "indisponivel");
+});
+
+test("equipe da casa é só quem o Auth chama de ADMIN; dono de negócio cliente não é", () => {
+  const com = (papel: string) => lerRespostaSSO(200, { autenticado: true, permitido: true, sessao: { email: "a@avilaops.com", nome: "A", papel } });
+  assert.equal(podeEntrarComoEquipe(com("ADMIN")), true);
+  assert.equal(podeEntrarComoEquipe(com("CLIENTE")), false);
+  assert.equal(podeEntrarComoEquipe(com("admin")), false);
+  assert.equal(podeEntrarComoEquipe(lerRespostaSSO(200, { autenticado: true, permitido: true, sessao: { email: "a@avilaops.com" } })), false);
+});
+
+test("sem liberação no Auth, sem sessão ou com o Auth fora, ninguém entra como equipe", () => {
+  assert.equal(podeEntrarComoEquipe(lerRespostaSSO(200, { autenticado: true, permitido: false, sessao: { email: "a@avilaops.com", papel: "ADMIN" } })), false);
+  assert.equal(podeEntrarComoEquipe(lerRespostaSSO(401, null)), false);
+  assert.equal(podeEntrarComoEquipe(lerRespostaSSO(500, null)), false);
+});
+
+test("com LOJAS_EQUIPE, só os e-mails da lista entram, e ainda precisam ser da casa", () => {
+  const casa = lerRespostaSSO(200, { autenticado: true, permitido: true, sessao: { email: "Nicolas@AvilaOps.com", papel: "ADMIN" } });
+  const cliente = lerRespostaSSO(200, { autenticado: true, permitido: true, sessao: { email: "nicolas@avilaops.com", papel: "CLIENTE" } });
+  assert.equal(podeEntrarComoEquipe(casa, { LOJAS_EQUIPE: " nicolas@avilaops.com , socio@avilaops.com " }), true);
+  assert.equal(podeEntrarComoEquipe(casa, { LOJAS_EQUIPE: "socio@avilaops.com" }), false);
+  assert.equal(podeEntrarComoEquipe(cliente, { LOJAS_EQUIPE: "nicolas@avilaops.com" }), false);
+  assert.equal(podeEntrarComoEquipe(casa, { LOJAS_EQUIPE: " , " }), true);
 });

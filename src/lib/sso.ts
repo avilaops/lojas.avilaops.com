@@ -50,7 +50,7 @@ export function urlDeLoginSSO(cfg: ConfigSSO, hostBase: string): string {
 export type RespostaSSO =
   | { tipo: "sem_sessao" }
   | { tipo: "sem_acesso"; email: string }
-  | { tipo: "ok"; email: string; nome: string }
+  | { tipo: "ok"; email: string; nome: string; equipe: boolean }
   | { tipo: "indisponivel" };
 
 /**
@@ -64,14 +64,17 @@ export function lerRespostaSSO(status: number, corpo: unknown): RespostaSSO {
   if (status === 401) return { tipo: "sem_sessao" };
   if (status !== 200 || typeof corpo !== "object" || corpo === null) return { tipo: "indisponivel" };
 
-  const c = corpo as { autenticado?: unknown; permitido?: unknown; sessao?: { email?: unknown; nome?: unknown } };
+  const c = corpo as { autenticado?: unknown; permitido?: unknown; sessao?: { email?: unknown; nome?: unknown; papel?: unknown } };
   if (c.autenticado !== true) return { tipo: "sem_sessao" };
 
   const email = typeof c.sessao?.email === "string" ? c.sessao.email.trim().toLowerCase() : "";
   if (!email.includes("@")) return { tipo: "indisponivel" };
   if (c.permitido !== true) return { tipo: "sem_acesso", email };
 
-  return { tipo: "ok", email, nome: typeof c.sessao?.nome === "string" ? c.sessao.nome : "" };
+  // No Auth, `ADMIN` é a equipe da Avila Ops (plataforma e sócio). O dono de
+  // um negócio cliente chega como `CLIENTE`, mesmo sendo "admin" na conta dele.
+  const equipe = c.sessao?.papel === "ADMIN";
+  return { tipo: "ok", email, nome: typeof c.sessao?.nome === "string" ? c.sessao.nome : "", equipe };
 }
 
 /** Três blocos base64url separados por ponto: o formato de um JWT. */
@@ -101,6 +104,24 @@ export async function consultarSSO(
   } catch {
     return { tipo: "indisponivel" };
   }
+}
+
+/** Onde a equipe da casa escolhe em qual loja entrar. */
+export const CAMINHO_DA_EQUIPE = "/entrar/equipe";
+
+/**
+ * Esta pessoa pode entrar em qualquer loja, como equipe da Avila Ops?
+ *
+ * Duas condições, as duas obrigatórias quando a lista existe: o Auth dizer que
+ * ela é da casa, e o e-mail estar em `LOJAS_EQUIPE` (separados por vírgula).
+ * Sem a variável, vale só o que o Auth diz: mesmo desenho do `SSO_SUPERADMINS`
+ * de lá. A lista existe para o dia em que a casa tiver gente que não deve
+ * abrir o painel de todo cliente.
+ */
+export function podeEntrarComoEquipe(r: RespostaSSO, env: Record<string, string | undefined> = process.env): r is Extract<RespostaSSO, { tipo: "ok" }> {
+  if (r.tipo !== "ok" || !r.equipe) return false;
+  const lista = (env.LOJAS_EQUIPE ?? "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
+  return lista.length === 0 || lista.includes(r.email);
 }
 
 /** Recados da tela de entrada, pela chave que vem em `?sso=`. */
