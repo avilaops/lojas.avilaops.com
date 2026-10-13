@@ -129,6 +129,11 @@ model Tenant {
   /// "pagamentos_pagbank". Vazio = comportamento de sempre. Ver src/lib/recursos.ts.
   recursos String[] @default([])
 
+  /// Provedor e credencial que a loja usa para cobrar (src/lib/credenciais.ts).
+  /// Nulo = loja antiga ainda não migrada: vale o Mercado Pago das colunas mp*.
+  provedorPadrao     String?
+  credencialPadraoId String? @unique
+
   // ── Pagamento (tokens cifrados com LOJAS_SECRET) ──────────────────────
   /// Mercado Pago é o único gateway, por decisão de escopo de 31/08/2026.
   /// A conta é do lojista: o dinheiro nunca passa pela Avila Ops.
@@ -285,6 +290,7 @@ model Tenant {
   conexoesMcp    ConexaoMcp[]
   chamadasMcp    ChamadaMcp[]
   webhooksApi    WebhookApi[]
+  credenciaisPagamento CredencialPagamento[]
 
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
@@ -492,6 +498,9 @@ model Pedido {
 
   meioPagamento   String // pix | cartao | boleto
   gateway         String  @default("mercadopago")
+  /// Credencial que cobrou este pedido. Webhook e conciliação usam esta, não a
+  /// padrão atual da loja: trocar de provedor não perde pedido em aberto.
+  credencialId    String?
   pagamentoId     String?
   pagamentoStatus String?
   rastreio        String?
@@ -1601,4 +1610,35 @@ model ChaveApi {
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
+}
+
+/// Conta de um provedor de pagamento de uma loja. Uma por provedor por loja.
+/// Segredos cifrados com LOJAS_SECRET (src/lib/cofre.ts), em JSON.
+/// Mercado Pago com `segredosEnc` nulo = "legado": os segredos seguem nas
+/// colunas mp* do Tenant (OAuth e renovação escrevem lá).
+model CredencialPagamento {
+  id           String    @id @default(cuid())
+  tenantId     String
+  /// ProvedorId: mercadopago | pagbank | pagarme | cielo | pix_manual
+  provedor     String
+  /// oauth | chave | pix_direto
+  tipoConexao  String
+  /// conectado | erro | pendente
+  status       String    @default("pendente")
+  /// Última mensagem do teste, em português, para a tela.
+  mensagem     String?
+  segredosEnc  String?
+  /// O que pode ir à tela ou ao navegador: chave pública, MerchantId, chave Pix mascarada.
+  publicos     Json      @default("{}")
+  /// Segredo aleatório que identifica a credencial na URL do webhook.
+  webhookToken String    @unique
+  /// Como o provedor chama a conta (apelido, e-mail), para a tela.
+  conta        String?
+  testadoEm    DateTime?
+  criadoEm     DateTime  @default(now())
+  atualizadoEm DateTime  @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, provedor])
 }

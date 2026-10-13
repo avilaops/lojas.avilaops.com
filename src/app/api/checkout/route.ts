@@ -1,6 +1,7 @@
 import { criarCobranca, lerCorpoDoCheckout } from "@/lib/checkout-cobranca";
 import { compradorAtual } from "@/lib/conta";
-import { GatewayNaoConfigurado, providerDaLoja } from "@/lib/gateway";
+import { GatewayNaoConfigurado } from "@/lib/gateway";
+import { resolverRecebimento, type Recebimento } from "@/lib/credenciais";
 import { medirRota } from "@/lib/metricas-rota";
 import { lojaVende, tenantAtual } from "@/lib/tenant";
 
@@ -17,9 +18,9 @@ export const POST = medirRota("checkout", async function (request: Request) {
   if (!t) return Response.json({ erro: "loja não encontrada" }, { status: 404 });
   if (!lojaVende(t)) return Response.json({ erro: "Esta loja não está recebendo pedidos no momento." }, { status: 403 });
 
-  let provider;
+  let recebimento: Recebimento;
   try {
-    provider = providerDaLoja(t);
+    recebimento = await resolverRecebimento(t);
   } catch (erro) {
     if (erro instanceof GatewayNaoConfigurado) return Response.json({ erro: "Pagamento online ainda não configurado. Fale com a loja pelo WhatsApp." }, { status: 503 });
     throw erro;
@@ -30,7 +31,7 @@ export const POST = medirRota("checkout", async function (request: Request) {
 
   // Comprador logado: o pedido entra no histórico dele e o endereço fica salvo.
   const comprador = await compradorAtual(t);
-  const r = await criarCobranca(t, lido.corpo, { provider, compradorId: comprador?.id });
+  const r = await criarCobranca(t, lido.corpo, { provider: recebimento.provider, credencial: recebimento.credencial, compradorId: comprador?.id });
 
   switch (r.tipo) {
     case "ok":

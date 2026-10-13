@@ -1,5 +1,6 @@
 import { prisma } from "./db";
-import { GatewayNaoConfigurado, providerDaLoja } from "./gateway";
+import { GatewayNaoConfigurado } from "./gateway";
+import { providerDoPedido } from "./credenciais";
 import { atualizarStatusPagamento } from "./pedidos";
 
 /**
@@ -46,7 +47,7 @@ export async function reconciliarPagamentosPendentes(agora = new Date()): Promis
 
   for (const pedido of pedidos) {
     try {
-      const resultado = await providerDaLoja(pedido.tenant).consultar(pedido.pagamentoId!);
+      const resultado = await (await providerDoPedido(pedido.tenant, pedido)).consultar(pedido.pagamentoId!);
       resumo.conferidos++;
 
       if (resultado.status === "pendente") {
