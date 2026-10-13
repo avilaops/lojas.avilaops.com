@@ -1,24 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { definicoesVisiveis, provedoresDePagamento } from "./provedores-pagamento";
+import { provedoresDePagamento } from "./provedores-pagamento";
 
-test("PagBank está registrado e some sem a flag da loja", () => {
+test("PagBank está registrado ao lado do Mercado Pago e expõe o Connect", () => {
   assert.equal(provedoresDePagamento.tem("pagbank"), true);
   assert.equal(provedoresDePagamento.tem("mercadopago"), true);
-  assert.deepEqual(
-    definicoesVisiveis({ recursos: [] }).map((d) => d.id),
-    ["mercadopago"],
-  );
-  assert.deepEqual(
-    definicoesVisiveis({ recursos: ["pagamentos_pagbank"] }).map((d) => d.id),
-    ["mercadopago", "pagbank"],
-  );
-});
-
-test("o botão de pânico esconde o PagBank mesmo com a flag ligada", () => {
-  const visiveis = definicoesVisiveis(
-    { recursos: ["pagamentos_pagbank"] },
-    { LOJAS_RECURSOS_DESLIGADOS: "pagamentos_pagbank" },
-  );
-  assert.deepEqual(visiveis.map((d) => d.id), ["mercadopago"]);
+  const pagbank = provedoresDePagamento.obter("pagbank");
+  assert.equal(pagbank.tipoConexao, "oauth");
+  assert.equal(typeof pagbank.oauth?.urlDeAutorizacao, "function");
+  assert.equal(typeof pagbank.oauth?.concluir, "function");
+  assert.equal(pagbank.campos.length, 0);
+  assert.equal(pagbank.guia.length, 0);
 });

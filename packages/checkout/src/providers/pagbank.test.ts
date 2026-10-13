@@ -431,4 +431,30 @@ describe("definição do PagBank", () => {
     await producao.consultar("CHAR_TESTE");
     assert.equal(chamadas[0].url, "https://api.pagseguro.com/charges/CHAR_TESTE");
   });
+
+  it("chave de cartão ausente não derruba a conexão; erro de servidor derruba", async () => {
+    dublar(() => json({ message: "not found" }, 404));
+    const ausente = await definicaoPagBank.testarConexao({ segredos: { accessToken: "TEST-abc" }, publicos: {} });
+    assert.equal(ausente.ok, true);
+    if (ausente.ok) assert.match(ausente.avisos.join(" "), /chave pública do cartão/);
+
+    dublar(() => json({}, 400));
+    const pedidoInvalido = await definicaoPagBank.testarConexao({ segredos: { accessToken: "TEST-abc" }, publicos: {} });
+    assert.equal(pedidoInvalido.ok, true);
+
+    dublar(() => json({}, 500));
+    const servidor = await definicaoPagBank.testarConexao({ segredos: { accessToken: "TEST-abc" }, publicos: {} });
+    assert.equal(servidor.ok, false);
+    if (!servidor.ok) assert.match(servidor.mensagem, /erro \(500\)/);
+  });
+
+  it("criar repassa a notificationUrl do contexto", async () => {
+    dublar(() => json(pedidoApi([cobranca()])));
+    const url = "https://lojas.avilaops.com/api/webhooks/pagamentos/pagbank/tok";
+    const provider = definicaoPagBank.criar({ segredos: { accessToken: "TEST-abc" }, publicos: {}, notificationUrl: url });
+    await provider.cobrar(pedido("pix"), 3140);
+    const enviada = chamadas[0];
+    assert.ok(enviada);
+    assert.deepEqual(corpo(enviada).notification_urls, [url]);
+  });
 });

@@ -1,17 +1,20 @@
+import { concluir, urlDeAutorizacao } from "./pagbank-connect.ts";
 import { PagBankProvider } from "./pagbank.ts";
 import type { DefinicaoProvedor } from "./types.ts";
 
 /**
- * PagBank no registro. A conexão é OAuth (PagBank Connect): a documentação
- * publica a autorização em `https://connect.pagbank.com.br/oauth2/authorize`
- * e a troca do `code` em `POST /tokens`. Este arquivo só consome o access
- * token já obtido, como a definição do Mercado Pago. O redirect fica para a
- * tela de Recebimento.
+ * PagBank no registro. A conexão é OAuth (PagBank Connect): a tela chama
+ * `oauth.urlDeAutorizacao` e, na volta, `oauth.concluir`. Campos e guia ficam
+ * vazios porque o lojista não cola chave.
  *
  * `segredos.accessToken` é obrigatório. `segredos.chavePublicaWebhook` é a
  * chave pública (`type=webhook`) em Base64; sem ela, a primeira notificação
  * consulta `GET /public-keys/webhook`. `segredos.ambiente=sandbox` aponta
  * para o host de teste.
+ *
+ * `criar` repassa `notificationUrl` do contexto. Quem monta a credencial
+ * (src/lib/credenciais.ts) põe aí
+ * `/api/webhooks/pagamentos/{provedor}/{token}`.
  */
 export const definicaoPagBank: DefinicaoProvedor = {
   id: "pagbank",
@@ -54,6 +57,13 @@ export const definicaoPagBank: DefinicaoProvedor = {
     if (resposta.status === 401 || resposta.status === 403) {
       return { ok: false, mensagem: "O PagBank recusou o acesso. Conecte a conta de novo.", avisos };
     }
+    // 400/404: o token autenticou, mas a chave de cartão ainda não existe.
+    // Pix e boleto não dependem dela; marcar erro aqui impediria a loja de
+    // receber por esses meios logo depois do Connect.
+    if (resposta.status === 400 || resposta.status === 404) {
+      avisos.push("A chave pública do cartão ainda não está pronta. Pix e boleto já podem receber.");
+      return { ok: true, mensagem: "Conta conectada e pronta para receber.", avisos };
+    }
     if (!resposta.ok) {
       return { ok: false, mensagem: `O PagBank respondeu com erro (${resposta.status}). Tente de novo daqui a pouco.`, avisos };
     }
@@ -70,4 +80,5 @@ export const definicaoPagBank: DefinicaoProvedor = {
       ambiente: segredos.ambiente === "sandbox" ? "sandbox" : "producao",
     });
   },
+  oauth: { urlDeAutorizacao, concluir },
 };
