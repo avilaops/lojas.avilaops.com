@@ -31,6 +31,21 @@ export function configSSO(env: Record<string, string | undefined> = process.env)
   return { url, app };
 }
 
+/**
+ * `/entrar` pula direto para o Auth?
+ *
+ * Só quando a pessoa já tem a sessão do login único (`avila_sso`): aí o Auth
+ * responde na hora e ela cai no painel sem ver tela nenhuma. Sem essa sessão,
+ * a página aparece com as duas portas, a conta Avila Ops e a senha da loja.
+ *
+ * Até 13/10/2026 o pulo era incondicional, e o lojista que se cadastrou em
+ * /criar (conta só no Lojas, senha só aqui) era mandado a uma tela em que a
+ * senha dele não existe: "Login ou senha inválidos", sem saída à vista.
+ */
+export function irDiretoAoAuth(e: { loginUnico: boolean; temSessaoSSO: boolean; sso?: string; google?: string; senha?: string }): boolean {
+  return e.loginUnico && e.temSessaoSSO && !e.sso && !e.google && e.senha !== "1";
+}
+
 /** Caminho, neste app, para onde o Auth devolve a pessoa depois do login. */
 export const CAMINHO_RETORNO = "/api/painel/entrar/sso";
 

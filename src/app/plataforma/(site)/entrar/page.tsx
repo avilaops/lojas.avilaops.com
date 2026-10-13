@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { lojistaAtual } from "@/lib/sessao";
-import { CAMINHO_RETORNO, configSSO, RECADOS_SSO } from "@/lib/sso";
+import { CAMINHO_RETORNO, COOKIE_SSO, configSSO, irDiretoAoAuth, RECADOS_SSO } from "@/lib/sso";
 import EntrarForm from "@/components/painel/EntrarForm";
 import BotaoGoogle from "@/components/painel/BotaoGoogle";
 import { googleConfigurado } from "@/lib/google-entrada";
@@ -20,16 +21,12 @@ export const metadata: Metadata = {
  * Google (`GOOGLE_CLIENT_ID`) vem logo abaixo; e-mail e senha da loja ficam por
  * último. Cada porta só aparece quando está configurada.
  *
- * Com o login único ligado, esta página nem aparece: quem chega é mandado
- * direto ao Auth, como no ERP. As contas ficam num lugar só, e liberar ou
- * bloquear alguém no Lojas é marcar a aplicação na conta dele lá.
- *
- * A página só se mostra em três casos, e nenhum deles pode virar laço:
- * - o Auth devolveu um recado (`?sso=`): a pessoa já foi e voltou;
- * - o Google falhou (`?google=`);
- * - `?senha=1`: a porta de quem tem só e-mail e senha da loja. Lojista que se
- *   cadastrou em /criar não tem conta no Auth, e sem esta porta ficaria preso
- *   na tela de login de lá. "Esqueci a senha" e "Criar" apontam para cá.
+ * Quem já tem a sessão do login único vai direto ao Auth, que responde na
+ * hora (`irDiretoAoAuth`). Todo o resto vê esta página, com a senha da loja
+ * sempre presente: lojista que se cadastrou em /criar tem conta só no Lojas, e
+ * mandá-lo direto ao Auth o deixava preso numa tela que não conhece a senha
+ * dele. Recado do Auth (`?sso=`), falha do Google (`?google=`) e `?senha=1`
+ * sempre mostram a página, e por isso nada aqui vira laço.
  */
 export default async function EntrarPage({ searchParams }: { searchParams: Promise<{ sso?: string; google?: string; senha?: string }> }) {
   const lojista = await lojistaAtual();
@@ -39,7 +36,8 @@ export default async function EntrarPage({ searchParams }: { searchParams: Promi
   const recado = sso ? RECADOS_SSO[sso] : undefined;
   const loginUnico = configSSO() !== null;
   const comGoogle = googleConfigurado();
-  if (loginUnico && !sso && !google && senha !== "1") redirect(CAMINHO_RETORNO);
+  const temSessaoSSO = Boolean((await cookies()).get(COOKIE_SSO)?.value);
+  if (irDiretoAoAuth({ loginUnico, temSessaoSSO, sso, google, senha })) redirect(CAMINHO_RETORNO);
 
   return (
     <div className="pl-site-claro pl-auth-pagina">
