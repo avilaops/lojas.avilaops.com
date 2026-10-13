@@ -2,7 +2,7 @@ import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { identificarPorEmail } from "@/lib/operadores";
 import { abrirSessao } from "@/lib/sessao";
-import { COOKIE_SSO, configSSO, consultarSSO, urlDeLoginSSO } from "@/lib/sso";
+import { CAMINHO_DA_EQUIPE, COOKIE_SSO, configSSO, consultarSSO, podeEntrarComoEquipe, urlDeLoginSSO } from "@/lib/sso";
 import { normalizarHost } from "@/lib/tenant";
 
 export const dynamic = "force-dynamic";
@@ -34,6 +34,8 @@ export async function GET(request: Request) {
   if (r.tipo === "sem_acesso") redirect("/entrar?sso=sem-acesso");
 
   const quem = await identificarPorEmail(r.email);
+  // Equipe da casa não é dona nem funcionária de loja nenhuma: escolhe em qual entrar.
+  if (!quem && podeEntrarComoEquipe(r)) redirect(CAMINHO_DA_EQUIPE);
   if (!quem) redirect("/entrar?sso=sem-loja");
 
   await abrirSessao(quem.tenant.slug, quem.operador?.id);
