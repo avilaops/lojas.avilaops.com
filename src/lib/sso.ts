@@ -64,6 +64,7 @@ export function urlDeLoginSSO(cfg: ConfigSSO, hostBase: string): string {
 
 export type RespostaSSO =
   | { tipo: "sem_sessao" }
+  | { tipo: "sem_email" }
   | { tipo: "sem_acesso"; email: string }
   | { tipo: "ok"; email: string; nome: string; equipe: boolean }
   | { tipo: "indisponivel" };
@@ -83,7 +84,9 @@ export function lerRespostaSSO(status: number, corpo: unknown): RespostaSSO {
   if (c.autenticado !== true) return { tipo: "sem_sessao" };
 
   const email = typeof c.sessao?.email === "string" ? c.sessao.email.trim().toLowerCase() : "";
-  if (!email.includes("@")) return { tipo: "indisponivel" };
+  // Login social sem e-mail (GitHub com e-mail privado, Facebook sem e-mail):
+  // a pessoa está logada, mas não há com o que achar ou criar a loja.
+  if (!email.includes("@")) return { tipo: "sem_email" };
   if (c.permitido !== true) return { tipo: "sem_acesso", email };
 
   // No Auth, `ADMIN` é a equipe da Avila Ops (plataforma e sócio). O dono de
@@ -143,5 +146,29 @@ export function podeEntrarComoEquipe(r: RespostaSSO, env: Record<string, string 
 export const RECADOS_SSO: Record<string, string> = {
   "sem-loja": "Sua conta Avila Ops não está ligada a nenhuma loja. Entre com o e-mail e a senha da loja, ou peça ao dono para cadastrar este e-mail na equipe.",
   "sem-acesso": "Sua conta Avila Ops ainda não foi liberada para o Lojas. Entre com o e-mail e a senha da loja.",
-  indisponivel: "Não foi possível falar com o login da Avila Ops agora. Entre com o e-mail e a senha da loja.",
+  "sem-email": "A conta com que você entrou não informou um e-mail, e é pelo e-mail que achamos a sua loja. Entre de novo com Google ou Microsoft, ou com uma conta que mostre o e-mail.",
+  indisponivel: "Não foi possível falar com o login da Avila Ops agora. Tente de novo em alguns minutos. Se a sua loja tem senha própria, você também pode entrar com o e-mail e a senha dela.",
 };
+
+/** Onde quem entrou pelo login único e ainda não tem loja confirma a criação. */
+export const CAMINHO_CRIAR_SSO = "/criar/sso";
+
+/**
+ * Para onde vai quem voltou do Auth, depois de procurar o e-mail nas lojas.
+ *
+ * Sem loja, a pessoa é convidada a criar uma (`/criar/sso`), e não deixada
+ * num recado de "sem loja": é por aqui que o cliente novo do login social
+ * chega, e é também onde quem tem loja com outro e-mail recebe a explicação.
+ */
+export function destinoDaEntradaSSO(
+  r: RespostaSSO,
+  e: { temLoja: boolean; equipe: boolean; jaVoltou: boolean; urlLogin: string },
+): "abrir" | string {
+  if (r.tipo === "sem_sessao") return e.jaVoltou ? "/entrar?sso=indisponivel" : e.urlLogin;
+  if (r.tipo === "indisponivel") return "/entrar?sso=indisponivel";
+  if (r.tipo === "sem_acesso") return "/entrar?sso=sem-acesso";
+  if (r.tipo === "sem_email") return "/entrar?sso=sem-email";
+  if (e.temLoja) return "abrir";
+  if (e.equipe) return CAMINHO_DA_EQUIPE;
+  return CAMINHO_CRIAR_SSO;
+}
