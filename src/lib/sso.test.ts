@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { CAMINHO_RETORNO, configSSO, consultarSSO, lerRespostaSSO, podeEntrarComoEquipe, urlDeLoginSSO } from "./sso";
+import { CAMINHO_RETORNO, configSSO, irDiretoAoAuth, consultarSSO, lerRespostaSSO, podeEntrarComoEquipe, urlDeLoginSSO } from "./sso";
 
 const cfg = { url: "https://auth.avilaops.com", app: "lojas-avilaops-com" };
 const TOKEN = "aaa.bbb.ccc";
@@ -101,4 +101,16 @@ test("com LOJAS_EQUIPE, só os e-mails da lista entram, e ainda precisam ser da 
   assert.equal(podeEntrarComoEquipe(casa, { LOJAS_EQUIPE: "socio@avilaops.com" }), false);
   assert.equal(podeEntrarComoEquipe(cliente, { LOJAS_EQUIPE: "nicolas@avilaops.com" }), false);
   assert.equal(podeEntrarComoEquipe(casa, { LOJAS_EQUIPE: " , " }), true);
+});
+
+test("/entrar só pula para o Auth com sessão do login único; sem ela, a senha da loja aparece", () => {
+  const base = { loginUnico: true, temSessaoSSO: true };
+  assert.equal(irDiretoAoAuth(base), true);
+  // O lojista do cadastro próprio não tem sessão no Auth: vê a página.
+  assert.equal(irDiretoAoAuth({ ...base, temSessaoSSO: false }), false);
+  assert.equal(irDiretoAoAuth({ ...base, loginUnico: false }), false);
+  // Voltou do Auth, o Google falhou ou pediu a senha: nunca volta para lá.
+  assert.equal(irDiretoAoAuth({ ...base, sso: "sem-loja" }), false);
+  assert.equal(irDiretoAoAuth({ ...base, google: "falhou" }), false);
+  assert.equal(irDiretoAoAuth({ ...base, senha: "1" }), false);
 });
