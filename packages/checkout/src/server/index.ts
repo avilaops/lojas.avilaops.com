@@ -13,3 +13,6 @@ export type { PixManualConfig } from "../providers/pix-manual.ts";
 export { definicaoPixManual } from "../providers/pix-manual-definicao.ts";
 export * from "../core/pix-chave.ts";
 export { montarBrCodePix, crc16Pix, txidDaReferencia, valorComCentavosUnicos, valorPixEmReais } from "../core/pix-brcode.ts";
+export { PagBankProvider } from "../providers/pagbank.ts";
+export type { PagBankConfig } from "../providers/pagbank.ts";
+export { definicaoPagBank } from "../providers/pagbank-definicao.ts";
