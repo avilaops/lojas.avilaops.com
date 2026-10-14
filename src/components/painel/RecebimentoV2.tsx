@@ -1,5 +1,6 @@
 "use client";
 
+import { Secao, inputClasse } from "./campos";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { DadosDaTela } from "@/lib/recebimento-v2";
@@ -63,14 +64,10 @@ export default function RecebimentoV2({ dados, retorno, retornoMp }: { dados: Da
   }
 
   return (
-    <section className="grid gap-4">
-      <header>
-        <h2 className="text-lg font-semibold">Onde você recebe</h2>
-        <p className="text-sm text-slate-600">
-          O dinheiro das vendas cai direto na sua conta do provedor escolhido. A conta marcada como <strong>padrão</strong> é a que cobra os pedidos novos.
-          {!temPadrao && " Você ainda não tem uma conta padrão: conecte uma para começar a vender."}
-        </p>
-      </header>
+    <Secao
+      titulo="Onde você recebe"
+      descricao={`O dinheiro das vendas cai direto na sua conta do provedor escolhido. A conta marcada como padrão é a que cobra os pedidos novos.${temPadrao ? "" : " Você ainda não tem uma conta padrão: conecte uma para começar a vender."}`}
+    >
       {recado && (
         <p role={recado.tom === "erro" ? "alert" : "status"} className={`rounded-lg p-3 text-sm ${recado.tom === "erro" ? "bg-red-50 text-red-700" : "bg-emerald-50 text-emerald-800"}`}>
           {recado.texto}
@@ -80,7 +77,7 @@ export default function RecebimentoV2({ dados, retorno, retornoMp }: { dados: Da
       {dados.provedores.map((p) => (
         <CartaoProvedor key={p.id} provedor={p} credencial={porProvedor.get(p.id)} aoUsarComoPadrao={usarComoPadrao} aoSalvar={() => router.refresh()} />
       ))}
-    </section>
+    </Secao>
   );
 }
 
@@ -90,7 +87,7 @@ function CartaoProvedor({ provedor, credencial, aoUsarComoPadrao, aoSalvar }: { 
   const meios = [provedor.capacidades.pix && "Pix", provedor.capacidades.cartao && "cartão", provedor.capacidades.boleto && "boleto"].filter(Boolean).join(", ");
 
   return (
-    <article className="rounded-xl border border-slate-200 p-4">
+    <article className="rounded-xl border border-border bg-background p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h3 className="font-semibold">
@@ -168,7 +165,7 @@ function FormularioChaves({ provedor, aoSalvar }: { provedor: Provedor; aoSalvar
         <label key={c.chave} className="grid gap-1 text-sm">
           <span>{c.rotulo}{c.obrigatorio ? "" : " (opcional)"}</span>
           <input
-            className="campo"
+            className={inputClasse}
             type={c.segredo ? "password" : "text"}
             autoComplete="off"
             value={valores[c.chave] ?? ""}
