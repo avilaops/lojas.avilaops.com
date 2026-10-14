@@ -18,10 +18,23 @@ const pixDireto: DefinicaoProvedor = {
   testarConexao: async () => ({ ok: true, mensagem: "ok", avisos: [] }),
 };
 
-test("Mercado Pago aparece sempre; provedor não registrado não aparece nem com a flag", () => {
+test("Mercado Pago aparece sempre; PagBank só com a flag da loja", () => {
   assert.deepEqual(provedoresVisiveis({ recursos: [] }).map((d) => d.id), ["mercadopago"]);
-  assert.deepEqual(provedoresVisiveis({ recursos: ["pagamentos_pagbank"] }).map((d) => d.id), ["mercadopago"]);
+  assert.deepEqual(provedoresVisiveis({ recursos: ["pagamentos_pagbank"] }).map((d) => d.id), ["mercadopago", "pagbank"]);
   assert.equal(provedorVisivel({ recursos: [] }, "pagbank"), null);
+  const visivel = provedorVisivel({ recursos: ["pagamentos_pagbank"] }, "pagbank");
+  assert.equal(visivel?.oauth != null, true);
+});
+
+test("o botão de pânico esconde o PagBank mesmo com a flag ligada", () => {
+  const anterior = process.env.LOJAS_RECURSOS_DESLIGADOS;
+  process.env.LOJAS_RECURSOS_DESLIGADOS = "pagamentos_pagbank";
+  try {
+    assert.deepEqual(provedoresVisiveis({ recursos: ["pagamentos_pagbank"] }).map((d) => d.id), ["mercadopago"]);
+  } finally {
+    if (anterior === undefined) delete process.env.LOJAS_RECURSOS_DESLIGADOS;
+    else process.env.LOJAS_RECURSOS_DESLIGADOS = anterior;
+  }
 });
 
 test("separa segredos de públicos, descarta campo estranho e explica o obrigatório vazio", () => {
