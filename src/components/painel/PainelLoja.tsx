@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { IdentidadeLoja } from "@/lib/identidade";
-import type { TemaLoja } from "@/lib/tema";
 import { Campo, Secao, brl, inputClasse } from "./campos";
 import { PLANOS, mensalidade } from "@/lib/planos";
 import Marca from "./Marca";
@@ -24,6 +23,7 @@ import Pedidos from "./Pedidos";
 import NovoProduto from "./NovoProduto";
 import ChecklistOnboarding from "./ChecklistOnboarding";
 import { checklistDeOnboarding, resumoDoChecklist } from "@/lib/checklist-onboarding";
+import { LAYOUTS, type TemaLoja } from "@/lib/tema";
 
 export interface LojaView {
   slug: string;
@@ -124,7 +124,7 @@ const ASSINATURA: Record<string, { rotulo: string; classe: string }> = {
   CANCELADA: { rotulo: "Cancelada", classe: "bg-red-100 text-red-800" },
 };
 
-export default function PainelLoja({ secao, loja, contagens, cupons, categorias, avaliacoes, vendas, catalogo, espera, postagem }: { secao: SecaoPainel; loja: LojaView; contagens: { semEmbalagem: number; ativos: number; semFoto: number; pedidos: number }; cupons: CupomView[]; categorias: CategoriaView[]; avaliacoes: AvaliacaoPainelView[]; vendas: ResumoVendas; catalogo: DiagnosticoFeed; espera: Array<{ produto: string; pessoas: number }>; postagem: { etiquetas: number; custoCentavos: number; limiteCentavos: number } }) {
+export default function PainelLoja({ secao, loja, contagens, cupons, categorias, avaliacoes, vendas, catalogo, espera, postagem, layouts = LAYOUTS.filter((l) => l.valor !== "atelie"), pecas = [] }: { secao: SecaoPainel; loja: LojaView; contagens: { semEmbalagem: number; ativos: number; semFoto: number; pedidos: number }; cupons: CupomView[]; categorias: CategoriaView[]; avaliacoes: AvaliacaoPainelView[]; vendas: ResumoVendas; catalogo: DiagnosticoFeed; espera: Array<{ produto: string; pessoas: number }>; postagem: { etiquetas: number; custoCentavos: number; limiteCentavos: number }; layouts?: Array<{ valor: TemaLoja["layout"]; rotulo: string; descricao: string }>; pecas?: { slug: string; nome: string }[] }) {
   const router = useRouter();
   // A seção vem da URL, não do estado: quem manda na tela é o endereço.
   const aba = secao;
@@ -520,7 +520,7 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
         </>
       )}
 
-      {aba === "Marca" && <Marca loja={loja} categorias={categorias} chamar={chamar} ocupado={ocupado} />}
+      {aba === "Marca" && <Marca loja={loja} categorias={categorias} chamar={chamar} ocupado={ocupado} layouts={layouts} pecas={pecas} />}
 
       {aba === "Entrega" && (
         <Secao titulo="Entrega e frete" descricao="Vale quando o Melhor Envio não está conectado ou não atende o destino. Sem ele e sem tabela, o cliente vê apenas retirada na loja (ou frete a combinar).">

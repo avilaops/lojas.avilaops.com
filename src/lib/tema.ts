@@ -5,6 +5,14 @@ import { z } from "zod";
  * compor cabeçalho, navegação, home, produto e carrinho; catálogo, identidade,
  * preço e checkout continuam compartilhados. Nenhuma condição por loja.
  */
+
+/** Seções da home Ateliê, na ordem padrão. A loja liga, desliga e reordena. */
+export const SECOES_ATELIE = ["hero", "categorias", "destaques", "lookbook", "sobre"] as const;
+
+const CAMINHO_IMAGEM = /^(https:\/\/|\/(?!\/))[^<>"\\]*$/;
+const CAMINHO_INTERNO = /^\/(?!\/)[A-Za-z0-9._~!$&'()*+,;=:@%/?#-]*$/;
+const SLUG_PRODUTO = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
 export const TemaSchema = z.object({
   heroTitulo: z.string().max(120).optional(),
   heroTexto: z.string().max(220).optional(),
@@ -14,14 +22,14 @@ export const TemaSchema = z.object({
   corFundo: z.string().regex(/^#[0-9a-f]{6}$/i).optional(),
   corTexto: z.string().regex(/^#[0-9a-f]{6}$/i).optional(),
   modo: z.enum(["claro", "escuro"]).default("claro"),
-  fonte: z.enum(["sistema", "inter", "poppins", "montserrat", "playfair"]).default("sistema"),
+  fonte: z.enum(["sistema", "inter", "poppins", "montserrat", "playfair", "dm-serif"]).default("sistema"),
   raio: z.enum(["reto", "suave", "redondo"]).default("suave"),
   /**
    * Layout da página inicial. São composições fixas dos mesmos blocos
    * (banner, categorias, destaques, sobre) — o lojista escolhe uma, não
    * desenha. É o limite entre "personalizar" e "customizar".
    */
-  layout: z.enum(["spotlight", "mercado", "catalogo-tecnico", "distribuidora", "industrial", "automotivo", "automotivo-premium", "farmacia", "conversao", "classico", "vitrine", "editorial", "minimal"]).default("classico"),
+  layout: z.enum(["spotlight", "mercado", "catalogo-tecnico", "distribuidora", "industrial", "automotivo", "automotivo-premium", "farmacia", "conversao", "classico", "vitrine", "editorial", "minimal", "atelie"]).default("classico"),
   /**
    * Campos da home `industrial` (fabricante que vende por medida). A foto do
    * topo e os diferenciais são da loja; o resto da página sai do catálogo e
@@ -49,6 +57,22 @@ export const TemaSchema = z.object({
       texto: z.string().max(180),
       icone: z.enum(["lavagem", "polimento", "protecao", "vitrificacao", "acessorios", "kits", "moto"]),
     })).max(8).optional(),
+  }).optional(),
+  /**
+   * Home Ateliê (moda). O lookbook aponta produtos que já existem: o slug é o
+   * mesmo do catálogo, e tecido, cor e o resto continuam em campo
+   * personalizado. Sem foto ou com menos de duas peças, o look não aparece.
+   */
+  atelie: z.object({
+    secoes: z.array(z.enum(SECOES_ATELIE)).max(SECOES_ATELIE.length).optional(),
+    heroLink: z.string().max(300).regex(CAMINHO_INTERNO).optional(),
+    sobre: z.string().trim().max(600).optional(),
+    looks: z.array(z.object({
+      titulo: z.string().trim().min(2).max(80),
+      imagem: z.string().max(1000).regex(CAMINHO_IMAGEM).or(z.literal("")),
+      produtos: z.array(z.string().regex(SLUG_PRODUTO).max(80)).min(2).max(4)
+        .refine((slugs) => new Set(slugs).size === slugs.length, "As peças do look não se repetem."),
+    })).max(6).optional(),
   }).optional(),
   /**
    * O que a vitrine faz com categoria que não tem foto.
@@ -89,6 +113,7 @@ export const LAYOUTS: Array<{ valor: TemaLoja["layout"]; rotulo: string; descric
   { valor: "vitrine", rotulo: "Vitrine", descricao: "Banner grande de ponta a ponta, categorias em chips, grade cheia de produtos. Bom para muita foto." },
   { valor: "editorial", rotulo: "Editorial", descricao: "Texto de um lado, imagem do outro; categorias com foto; poucos destaques, grandes; bloco “sobre”. Bom para marca." },
   { valor: "minimal", rotulo: "Minimal", descricao: "Sem banner: slogan centralizado e produtos em 3 colunas. Bom para catálogo enxuto." },
+  { valor: "atelie", rotulo: "Ateliê", descricao: "Editorial de moda: foto grande, título em serifa e lookbook. A loja escolhe logo, cores, fonte, cantos, hero, banners, aviso e quais seções aparecem." },
 ];
 
 export type TemaLoja = z.infer<typeof TemaSchema>;
@@ -113,12 +138,13 @@ export function mesclarTema(atual: TemaLoja, mudancas: Partial<TemaLoja>): TemaL
   return r.success ? r.data : null;
 }
 
-const FONTES: Record<TemaLoja["fonte"], { family: string; google?: string }> = {
+const FONTES: Record<TemaLoja["fonte"], { family: string }> = {
   sistema: { family: 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' },
-  inter: { family: "Inter, system-ui, sans-serif", google: "Inter:wght@400;600;800" },
-  poppins: { family: "Poppins, system-ui, sans-serif", google: "Poppins:wght@400;600;800" },
-  montserrat: { family: "Montserrat, system-ui, sans-serif", google: "Montserrat:wght@400;600;800" },
-  playfair: { family: '"Playfair Display", Georgia, serif', google: "Playfair+Display:wght@400;700" },
+  inter: { family: "Inter, system-ui, sans-serif" },
+  poppins: { family: "Poppins, system-ui, sans-serif" },
+  montserrat: { family: "Montserrat, system-ui, sans-serif" },
+  playfair: { family: '"Playfair Display", Georgia, serif' },
+  "dm-serif": { family: '"DM Serif Display", Georgia, serif' },
 };
 
 const RAIOS: Record<TemaLoja["raio"], string> = { reto: "0px", suave: "0.625rem", redondo: "1.25rem" };
@@ -126,11 +152,6 @@ const RAIOS: Record<TemaLoja["raio"], string> = { reto: "0px", suave: "0.625rem"
 export function lerTema(bruto: unknown): TemaLoja {
   const r = TemaSchema.safeParse(bruto ?? {});
   return r.success ? r.data : TemaSchema.parse({});
-}
-
-export function fonteGoogleHref(tema: TemaLoja): string | null {
-  const g = FONTES[tema.fonte].google;
-  return g ? `https://fonts.googleapis.com/css2?family=${g}&display=swap` : null;
 }
 
 /**
@@ -172,8 +193,8 @@ export function cssDoTema(tema: TemaLoja, familia?: string): string {
   const borda = escuro ? "#2a2a2e" : "#e4e4e7";
   const textoSuave = escuro ? "#a1a1aa" : "#71717a";
   const raio = RAIOS[tema.raio];
-  // `familia` é a fonte hospedada pelo site (`fontes-loja.ts`); sem ela vale o nome
-  // da família, para quem ainda carrega a folha do Google (prévia do painel).
+  // `familia` é a fonte hospedada pelo site (`fontes-loja.ts`). Sem ela vale o
+  // nome da família, que o navegador só resolve se a folha já estiver na página.
   const fonte = familia ?? FONTES[tema.fonte].family;
 
   return `:root{

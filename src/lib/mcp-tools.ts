@@ -4,6 +4,7 @@ import { slugificar, formatarBRL } from "@/lib/catalogo";
 import { emitirEtiqueta } from "@/lib/postagem";
 import { urlDaLoja, temaDo } from "@/lib/tenant";
 import { VALORES_LAYOUT, mesclarTema, type TemaLoja } from "@/lib/tema";
+import { layoutsOferecidos, recusarLayoutBloqueado } from "@/lib/flags";
 import { resumoDeVendas } from "@/lib/relatorio";
 import { gerarRascunhoSeoCategoria, publicarSeoCategoria } from "@/lib/seo-categorias";
 import { avisarBuscadores } from "@/lib/indexnow";
@@ -65,18 +66,18 @@ export const MCP_TOOLS: McpTool[] = [
   // 2. Atualizar Marca e Layout
   {
     name: "atualizar_marca",
-    description: `Atualiza o layout da loja (dentre os ${VALORES_LAYOUT.length} modelos: ${VALORES_LAYOUT.join(", ")}), cores, slogan, modo e avisos.`,
+    description: `Atualiza o layout da loja (dentre os ${layoutsOferecidos().length} modelos: ${layoutsOferecidos().map((l) => l.valor).join(", ")}), cores, slogan, modo e avisos.`,
     inputSchema: {
       type: "object",
       properties: {
         layout: {
           type: "string",
-          enum: VALORES_LAYOUT,
+          enum: layoutsOferecidos().map((l) => l.valor),
           description: "Modelo visual da página inicial da loja.",
         },
         corPrimaria: { type: "string", description: "Cor primária em formato hexadecimal (ex: #2563eb ou #c62828)." },
         modo: { type: "string", enum: ["claro", "escuro"], description: "Modo visual claro ou escuro." },
-        fonte: { type: "string", enum: ["sistema", "inter", "poppins", "montserrat", "playfair"], description: "Tipografia da loja." },
+        fonte: { type: "string", enum: ["sistema", "inter", "poppins", "montserrat", "playfair", "dm-serif"], description: "Tipografia da loja." },
         slogan: { type: "string", description: "Frase de efeito / proposta de valor principal da loja." },
         avisoTopo: { type: "string", description: "Barra fina de anúncio no topo da loja (ex: Frete grátis acima de R$ 199)." },
       },
@@ -85,6 +86,8 @@ export const MCP_TOOLS: McpTool[] = [
       // O enum acima é o que a ferramenta anuncia; validar de novo é o que
       // impede um cliente MCP distraído de gravar um tema que a leitura
       // seguinte descarta inteiro.
+      const bloqueio = recusarLayoutBloqueado(tenant.tema, args.layout);
+      if (bloqueio) throw new Error(bloqueio);
       const novoTema = mesclarTema(temaDo(tenant), {
         ...(args.layout ? { layout: args.layout as TemaLoja["layout"] } : {}),
         ...(args.corPrimaria ? { corPrimaria: args.corPrimaria as string } : {}),

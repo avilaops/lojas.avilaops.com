@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
 import { LAYOUTS, VALORES_LAYOUT, TemaSchema, lerTema, mesclarTema } from "./tema";
+import { layoutsOferecidos, templateAtelieLigado } from "./flags";
 import { MCP_TOOLS } from "./mcp-tools";
 
 /**
@@ -17,15 +18,19 @@ const FORA_DA_LANDING: Record<string, string> = {
   "catalogo-tecnico": "tabela de peças não cabe numa miniatura de home; quem quer ver como fica abre a prévia do painel (/painel/previa)",
   industrial: "a home é a busca por medida sobre a foto da fábrica e as linhas com a descrição de cada categoria: sem os dados da loja a miniatura seria um formulário vazio",
   farmacia: "ainda sem composição própria: a home abre por busca e por atalhos que saem do catálogo da loja, e uma miniatura genérica inventaria uma drogaria",
+  atelie: "atrás da bandeira LOJAS_TEMPLATE_ATELIE, desligada por padrão; a landing não anuncia modelo que o painel ainda não oferece",
 };
 
 const fonte = (caminho: string) => readFileSync(caminho, "utf8");
 
-test("a ferramenta do MCP oferece exatamente os layouts que existem", () => {
+test("a ferramenta do MCP oferece os layouts liberados pela bandeira", () => {
   const marca = MCP_TOOLS.find((t) => t.name === "atualizar_marca")!;
   const layout = (marca.inputSchema.properties.layout as { enum: string[] }).enum;
-  assert.deepEqual([...layout].sort(), [...VALORES_LAYOUT].sort());
-  for (const valor of VALORES_LAYOUT) assert.ok(marca.description.includes(valor), `a descrição não cita ${valor}`);
+  const oferecidos = layoutsOferecidos().map((l) => l.valor);
+  assert.deepEqual([...layout].sort(), [...oferecidos].sort());
+  for (const valor of oferecidos) assert.ok(marca.description.includes(valor), `a descrição não cita ${valor}`);
+  if (!templateAtelieLigado()) assert.equal(layout.includes("atelie"), false);
+  assert.ok(VALORES_LAYOUT.includes("atelie"));
 });
 
 test("a landing ilustra todo layout que não estiver declarado fora", () => {
