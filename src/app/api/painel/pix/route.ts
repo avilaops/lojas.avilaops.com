@@ -12,11 +12,14 @@ export async function GET() {
 export async function POST(request: Request) {
   const { s, erro } = await exigir("pedidos");
   if (erro) return erro;
-  const corpo = (await request.json().catch(() => null)) as { referencia?: unknown; acao?: unknown } | null;
+  const corpo = (await request.json().catch(() => null)) as { referencia?: unknown; acao?: unknown; conferido?: unknown } | null;
   const referencia = typeof corpo?.referencia === "string" ? corpo.referencia.trim() : "";
   const acao = corpo?.acao;
   if (!referencia || (acao !== "confirmar" && acao !== "nao_recebido")) {
     return Response.json({ erro: "Diga se o Pix chegou ou não." }, { status: 422 });
+  }
+  if (acao === "confirmar" && corpo?.conferido !== true) {
+    return Response.json({ erro: "Confira o valor no extrato do banco antes de confirmar." }, { status: 422 });
   }
   const r = acao === "confirmar"
     ? await confirmarPixManual(s.tenant, referencia)

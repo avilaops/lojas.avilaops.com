@@ -294,6 +294,7 @@ export default function CheckoutClient({ loja, conta }: { loja: TenantPublico; c
         itens={itensCheckout}
         fretes={fretes}
         meiosPagamento={loja.meiosPagamento as MeioPagamento[]}
+        rotulosMeio={loja.pixNaConta ? { pix: { titulo: "PIX", sub: "Você paga e a loja confere na conta" } } : undefined}
         clienteInicial={conta ? { nome: conta.nome.split(" ")[0], sobrenome: conta.nome.split(" ").slice(1).join(" "), email: conta.email, telefone: conta.telefone ?? "", documento: conta.documento ?? "" } : undefined}
         enderecoInicial={conta?.endereco ? { ...conta.endereco, complemento: conta.endereco.complemento ?? "" } : undefined}
         aoInformarCep={aoInformarCep}

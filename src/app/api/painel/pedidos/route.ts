@@ -35,6 +35,7 @@ export async function GET(request: Request) {
       select: {
         id: true, numero: true, referencia: true, status: true, clienteNome: true, clienteTelefone: true,
         totalCentavos: true, criadoEm: true, rastreio: true,
+        cobrancaPix: { select: { informadoEm: true } },
         _count: { select: { itens: true } },
       },
       orderBy: { criadoEm: "desc" },
@@ -50,7 +51,12 @@ export async function GET(request: Request) {
     porPagina: POR_PAGINA,
     paginas: Math.max(1, Math.ceil(total / POR_PAGINA)),
     resumo: Object.fromEntries(porSituacao.map((g) => [g.status, g._count._all])) as Record<string, number>,
-    itens: itens.map((p) => ({ ...p, criadoEm: p.criadoEm.toISOString(), itens: p._count.itens })),
+    itens: itens.map(({ cobrancaPix, _count, ...p }) => ({
+      ...p,
+      criadoEm: p.criadoEm.toISOString(),
+      itens: _count.itens,
+      pixAConferir: p.status === "AGUARDANDO_PAGAMENTO" && !!cobrancaPix?.informadoEm,
+    })),
   });
 }
 

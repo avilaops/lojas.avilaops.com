@@ -36,6 +36,7 @@ type Item = {
   criadoEm: string;
   rastreio: string | null;
   itens: number;
+  pixAConferir?: boolean;
 };
 
 type Resposta = {
@@ -192,7 +193,9 @@ export default function Pedidos({
         selo={(p) => (
           <>
             <b className="tabular-nums">{brl(p.totalCentavos)}</b>
-            <span className="text-muted-foreground">{SITUACAO[p.status] ?? p.status}</span>
+            {p.pixAConferir
+              ? <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">Pix a conferir</span>
+              : <span className="text-muted-foreground">{SITUACAO[p.status] ?? p.status}</span>}
             {/* O código de rastreio aparece onde ele é digitado: quando o
                 pedido está em separação e falta despachar. */}
             {p.status === "EM_SEPARACAO" && (

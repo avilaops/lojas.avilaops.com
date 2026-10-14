@@ -1,3 +1,4 @@
+import { meiosAceitos, pixNaConta } from "./recursos";
 import { cache } from "react";
 import { headers } from "next/headers";
 import type { Tenant } from "@prisma/client";
@@ -194,7 +195,9 @@ export function tenantPublico(t: Tenant) {
     status: t.status,
     whatsapp: t.whatsapp,
     mpPublicKey: t.mpPublicKey,
-    meiosPagamento: t.meiosPagamento,
+    // Pix na conta da loja só tem Pix: cartão e boleto não passam por ele.
+    meiosPagamento: meiosAceitos(t),
+    pixNaConta: pixNaConta(t),
     retiradaNaLoja: retiradaPublicaDisponivel(t),
     despachoDiasUteis: t.despachoDiasUteis,
     estoqueBaixoEm: t.estoqueBaixoEm,

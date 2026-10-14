@@ -70,6 +70,9 @@ export default function PedidoDetalhe({ pedido, loja }: {
   const e = pedido.entrega;
   const telefone = pedido.clienteTelefone.replace(/\D/g, "");
   const podeAvancar = ["PAGO", "EM_SEPARACAO", "ENVIADO"].includes(pedido.status);
+  // Pix na conta ainda não conferido: nada de ficha de envio, senão o pedido
+  // sai antes do dinheiro.
+  const pixPendente = pedido.status === "AGUARDANDO_PAGAMENTO" && pedido.pixManual ? pedido.pixManual : null;
 
   if (imprimindo) {
     return <FichaPedido pedido={pedido} loja={loja} aoFechar={() => setImprimindo(false)} />;
@@ -83,10 +86,25 @@ export default function PedidoDetalhe({ pedido, loja }: {
         </Link>
         <span className={`rounded-full px-3 py-1 text-xs font-semibold ${COR[pedido.status] ?? "bg-muted"}`}>{PEDIDO[pedido.status] ?? pedido.status}</span>
         <span className="text-sm text-muted-foreground">{new Date(pedido.criadoEm).toLocaleString("pt-BR")}</span>
-        <button className="btn-secundario ml-auto inline-flex h-9 items-center gap-1.5 px-3 text-xs" onClick={() => setImprimindo(true)}>
-          <Printer size={14} /> Ficha de envio
-        </button>
+        {!pixPendente && (
+          <button className="btn-secundario ml-auto inline-flex h-9 items-center gap-1.5 px-3 text-xs" onClick={() => setImprimindo(true)}>
+            <Printer size={14} /> Ficha de envio
+          </button>
+        )}
       </div>
+
+      {pixPendente && (
+        <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-amber-900">
+          <p className="font-semibold">{pixPendente.informadoEm ? "Pix a conferir" : "Esperando o Pix do cliente"}</p>
+          <p className="mt-1 text-sm">
+            Procure no extrato do banco um Pix de exatamente <b className="tabular-nums text-base">{brl(pixPendente.valorCentavos)}</b>.
+            Os centavos identificam este pedido. Não separe nem envie antes de conferir.
+          </p>
+          {pixPendente.informadoEm && (
+            <Link href="/painel/pedidos/pix" className="btn-primario mt-3 inline-flex px-4">Conferir na fila de Pix</Link>
+          )}
+        </div>
+      )}
 
       {erro && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{erro}</p>}
       {ok && <p className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-700">{ok}</p>}

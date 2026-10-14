@@ -16,7 +16,7 @@ export default async function Pagina({ params }: { params: Promise<{ id: string 
   // caminho em que o id de outra loja chega a ser lido.
   const pedido = await prisma.pedido.findFirst({
     where: { id, tenantId: loja.id },
-    include: { itens: true, postagem: true },
+    include: { itens: true, postagem: true, cobrancaPix: { select: { valorCentavos: true, informadoEm: true } } },
   });
   if (!pedido) notFound();
 
@@ -47,6 +47,9 @@ export default async function Pagina({ params }: { params: Promise<{ id: string 
             : null,
           entrega: (pedido.entrega as { logradouro: string; numero: string; complemento?: string | null; bairro: string; cidade: string; uf: string; cep: string } | null) ?? null,
           criadoEm: pedido.criadoEm.toISOString(),
+          pixManual: pedido.gateway === "pix_manual" && pedido.cobrancaPix
+            ? { valorCentavos: pedido.cobrancaPix.valorCentavos, informadoEm: pedido.cobrancaPix.informadoEm?.toISOString() ?? null }
+            : null,
           itens: pedido.itens.map((i) => ({ nome: i.nome, quantidade: i.quantidade, sku: i.sku, precoUnitarioCentavos: i.precoUnitarioCentavos })),
         }}
       />

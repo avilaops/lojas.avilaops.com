@@ -34,10 +34,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   // produto ainda não saiu. Uma contagem por navegação é barata e evita que a
   // venda durma esperando alguém abrir a aba certa por conta própria.
   const aSeparar = await prisma.pedido.count({ where: { tenantId: loja.id, status: "PAGO" } });
+  const pixLigado = recursoAtivo(loja, "pagamentos_pix_manual");
+  const pixAConferir = pixLigado
+    ? await prisma.cobrancaPixManual.count({ where: { tenantId: loja.id, informadoEm: { not: null }, pedido: { status: "AGUARDANDO_PAGAMENTO" } } })
+    : 0;
 
   return (
     <div className="padm">
-      <NavPainel nome={loja.nome} urlLoja={urlDaLoja(loja)} aSeparar={aSeparar} pixManual={recursoAtivo(loja, "pagamentos_pix_manual")} />
+      <NavPainel nome={loja.nome} urlLoja={urlDaLoja(loja)} aSeparar={aSeparar} pixManual={pixLigado} pixAConferir={pixAConferir} />
       <BuscaPainel />
       <main className="padm-conteudo pl-workspace">{children}</main>
     </div>

@@ -36,6 +36,8 @@ export interface CheckoutScreenProps {
   fretes: OpcaoFrete[];
   /** Meios aceitos. A ordem é a exibida. */
   meiosPagamento?: MeioPagamento[];
+  /** Troca o texto de um meio, ex.: Pix conferido pela loja não aprova em segundos. */
+  rotulosMeio?: Partial<Record<MeioPagamento, { titulo: string; sub: string }>>;
   /**
    * Envia o pedido ao servidor, que recalcula o total e cobra no gateway.
    *
@@ -132,6 +134,7 @@ export default function CheckoutScreen({
   itens,
   fretes,
   meiosPagamento = ["pix", "cartao", "boleto"],
+  rotulosMeio,
   aoFinalizar,
   aoInformarCep,
   semEntrega,
@@ -489,8 +492,8 @@ export default function CheckoutScreen({
                     checked={meio === m} onChange={() => setMeio(m)}
                   />
                   <span className="ck-option-body">
-                    <span className="ck-option-title">{ROTULO_MEIO[m].titulo}</span>
-                    <span className="ck-option-sub">{ROTULO_MEIO[m].sub}</span>
+                    <span className="ck-option-title">{(rotulosMeio?.[m] ?? ROTULO_MEIO[m]).titulo}</span>
+                    <span className="ck-option-sub">{(rotulosMeio?.[m] ?? ROTULO_MEIO[m]).sub}</span>
                   </span>
                 </label>
               ))}

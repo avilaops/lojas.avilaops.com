@@ -83,7 +83,7 @@ function ativo(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function Lista({ pathname, aoNavegar, aSeparar, secoes }: { pathname: string; aoNavegar?: () => void; aSeparar: number; secoes: ItemNav[] }) {
+function Lista({ pathname, aoNavegar, aSeparar, pixAConferir = 0, secoes }: { pathname: string; aoNavegar?: () => void; aSeparar: number; pixAConferir?: number; secoes: ItemNav[] }) {
   return (
     <nav className="pnav-lista" aria-label="Seções do painel">
       {secoes.map((s) => {
@@ -96,6 +96,9 @@ function Lista({ pathname, aoNavegar, aSeparar, secoes }: { pathname: string; ao
               <span>{s.rotulo}</span>
               {/* Só em Pedidos, e só quando existe: selo que aparece sempre vira
                   enfeite e para de ser lido. */}
+              {s.href === "/painel/pedidos/pix" && pixAConferir > 0 && (
+                <b className="pnav-selo" title={`${pixAConferir} Pix esperando conferência no extrato`}>{pixAConferir}</b>
+              )}
               {s.href === "/painel/pedidos" && aSeparar > 0 && (
                 <b className="pnav-selo" title={`${aSeparar} pedido(s) pago(s) esperando separação`}>{aSeparar}</b>
               )}
@@ -142,7 +145,7 @@ function Rodape({ pathname, aoNavegar, urlLoja }: { pathname: string; aoNavegar?
   );
 }
 
-export default function NavPainel({ nome, urlLoja, aSeparar = 0, pixManual = false }: { nome: string; urlLoja: string; aSeparar?: number; pixManual?: boolean }) {
+export default function NavPainel({ nome, urlLoja, aSeparar = 0, pixManual = false, pixAConferir = 0 }: { nome: string; urlLoja: string; aSeparar?: number; pixManual?: boolean; pixAConferir?: number }) {
   const pathname = usePathname();
   const secoes: ItemNav[] = pixManual
     ? SECOES.flatMap((s) => (s.href === "/painel/pedidos" ? [s, { rotulo: "Pix a conferir", href: "/painel/pedidos/pix", icone: "pedidos" }] : [s]))
@@ -192,7 +195,7 @@ export default function NavPainel({ nome, urlLoja, aSeparar = 0, pixManual = fal
           <span>Buscar</span>
           <kbd>⌘K</kbd>
         </button>
-        <Lista pathname={pathname} aSeparar={aSeparar} secoes={secoes} />
+        <Lista pathname={pathname} aSeparar={aSeparar} pixAConferir={pixAConferir} secoes={secoes} />
         <Rodape pathname={pathname} urlLoja={urlLoja} />
       </aside>
 
@@ -216,7 +219,7 @@ export default function NavPainel({ nome, urlLoja, aSeparar = 0, pixManual = fal
               <button onClick={() => setAberto(false)} aria-label="Fechar menu" className="pnav-botao pnav-fechar"><X size={18} /></button>
             </div>
             <div ref={primeiroItem} className="contents">
-              <Lista pathname={pathname} aoNavegar={() => setAberto(false)} aSeparar={aSeparar} secoes={secoes} />
+              <Lista pathname={pathname} aoNavegar={() => setAberto(false)} aSeparar={aSeparar} pixAConferir={pixAConferir} secoes={secoes} />
             </div>
             <Rodape pathname={pathname} urlLoja={urlLoja} aoNavegar={() => setAberto(false)} />
           </div>

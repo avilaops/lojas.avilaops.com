@@ -77,7 +77,7 @@ export default async function PedidoPage({ params }: { params: Promise<{ referen
       )}
       {convite && <ConviteAvaliacaoGoogle convite={convite} />}
       <p className="text-xs uppercase tracking-widest text-muted-foreground">Pedido #{pedido.numero}</p>
-      <h1 className="mt-1 text-2xl font-bold">{ROTULO[pedido.status] ?? pedido.status}</h1>
+      <h1 className="mt-1 text-2xl font-bold">{pix ? (pix.informadoEm ? "Pix avisado, em conferência" : "Esperando o seu Pix") : (ROTULO[pedido.status] ?? pedido.status)}</h1>
       <p className="mt-1 text-sm text-muted-foreground">
         {pedido.status === "PAGO"
           ? `Obrigado, ${pedido.clienteNome.split(" ")[0]}! Enviamos a confirmação para ${pedido.clienteEmail}.`
