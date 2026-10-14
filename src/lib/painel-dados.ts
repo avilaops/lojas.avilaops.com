@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { lojistaAtual } from "@/lib/sessao";
 import { urlDaLoja, temaDo, identidadeDa } from "@/lib/tenant";
+import { layoutsOferecidos, templateAtelieLigado } from "@/lib/flags";
 import { NOME_PLANO } from "@/lib/assinatura";
 import { mensalidadeDaLoja } from "@/lib/faixas-antigas";
 import { fimDoTeste } from "@/lib/planos";
@@ -81,6 +82,15 @@ export async function dadosDoPainel(secao: SecaoPainel) {
     p.vendas ? filaDeEspera(id) : [],
     p.postagem ? postagemAAcertar(id) : { etiquetas: 0, custoCentavos: 0 },
   ]);
+
+  const pecas = secao === "Marca" && templateAtelieLigado()
+    ? await prisma.produto.findMany({
+      where: { tenantId: id, ativo: true },
+      select: { slug: true, nome: true },
+      orderBy: { nome: "asc" },
+      take: 300,
+    })
+    : [];
 
   return {
     /** Contagens do catálogo inteiro, para a tela não afirmar número de uma fatia. */
@@ -169,5 +179,7 @@ export async function dadosDoPainel(secao: SecaoPainel) {
     postagem: { etiquetas: postagem.etiquetas, custoCentavos: postagem.custoCentavos, limiteCentavos: loja.limitePostagemCentavos },
     avaliacoes: avaliacoes.map((a) => ({ id: a.id, produtoNome: a.produto.nome, nome: a.nome, nota: a.nota, texto: a.texto, aprovada: a.aprovada, criadoEm: a.criadoEm.toISOString() })),
     cupons: cupons.map((c) => ({ id: c.id, codigo: c.codigo, tipo: c.tipo, valor: c.valor, minimoCentavos: c.minimoCentavos, usosMax: c.usosMax, usos: c.usos, validoAte: c.validoAte?.toISOString() ?? null, ativo: c.ativo })),
+    layouts: layoutsOferecidos(),
+    pecas,
   };
 }

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" role="img">
+  <title>Look fictício, vestido e bolsa</title>
+  <rect width="1200" height="900" fill="#d8c2ad"/>
+  <path d="M430 80 L560 200 L520 780 L340 780 L300 200 Z" fill="#f6f1ea"/>
+  <rect x="640" y="460" width="280" height="250" rx="16" fill="#8d6a52"/>
+  <path d="M690 460 C690 360 870 360 870 460" fill="none" stroke="#f6f1ea" stroke-width="16"/>
+</svg>

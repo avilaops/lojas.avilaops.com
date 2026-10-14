@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1200" role="img">
+  <title>Ilustração fictícia da Bolsa Palha</title>
+  <rect width="900" height="1200" fill="#efe4d4"/>
+  <rect x="250" y="380" width="400" height="460" rx="24" fill="#c4a484"/>
+  <path d="M330 380 C330 250 570 250 570 380" fill="none" stroke="#7c4f3e" stroke-width="22"/>
+</svg>

@@ -1,4 +1,5 @@
 import { TenantAtualizacaoSchema } from "@/lib/admin-schemas";
+import { recusarLayoutBloqueado } from "@/lib/flags";
 import { atualizarTenant } from "@/lib/admin-tenants";
 import { provisionarLoja } from "@/lib/provisionar";
 import { exigir } from "@/lib/operadores";
@@ -15,6 +16,8 @@ export async function PATCH(request: Request) {
   // Status e slug não são do lojista.
   const r = TenantAtualizacaoSchema.omit({ status: true, slug: true, plano: true }).safeParse(await request.json().catch(() => null));
   if (!r.success) return Response.json({ erro: "Dados inválidos.", detalhes: r.error.flatten() }, { status: 422 });
+  const bloqueio = recusarLayoutBloqueado(loja.tema, r.data.tema?.layout);
+  if (bloqueio) return Response.json({ erro: bloqueio }, { status: 422 });
 
   if (r.data.retiradaNaLoja) {
     const atual = (s.tenant.endereco as Endereco | null) ?? {};

@@ -3,7 +3,7 @@ import { identidadeDa, tenantAtual, urlDaLoja } from "@/lib/tenant";
 import { listarCategorias, listarProdutos } from "@/lib/catalogo";
 import { emEstoque, publicavel } from "@/lib/produto-regras";
 import { descricaoDaLoja } from "@/lib/textos-loja";
-import { LAYOUTS } from "@/lib/tema";
+import { layoutsOferecidos } from "@/lib/flags";
 import { PLANOS, mensalidade } from "@/lib/planos";
 
 export const dynamic = "force-dynamic";
@@ -49,7 +49,7 @@ Pagamento pelo Mercado Pago (Pix, cartão e boleto) na conta da própria empresa
 - Eventos operacionais conectados a fluxos n8n.
 - WhatsApp integrado às jornadas de venda e relacionamento.
 - Diagnóstico de marca com direção visual, voz e fotografia persistentes.
-- ${LAYOUTS.length} layouts de loja, escolhidos no painel: ${LAYOUTS.map((l) => l.rotulo).join(", ")}.
+- ${layoutsOferecidos().length} layouts de loja, escolhidos no painel: ${layoutsOferecidos().map((l) => l.rotulo).join(", ")}.
 - Feed do Google Merchant Center, dados estruturados (Product, Offer, BreadcrumbList, MerchantReturnPolicy), sitemap, robots.txt e llms.txt por loja.
 
 ## Rotas públicas

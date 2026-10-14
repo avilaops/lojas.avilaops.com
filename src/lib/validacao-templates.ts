@@ -61,7 +61,7 @@ export type MedidaDoCaso = {
 };
 
 /**
- * Os 104 casos: cada layout em cada viewport, modo e preferência de movimento.
+ * Um caso por layout, viewport, modo e preferência de movimento.
  *
  * O tema do caso é o padrão do schema com o layout e o modo trocados. O
  * Automotivo Premium é o único com conteúdo próprio (`tema.premium`): sem ele

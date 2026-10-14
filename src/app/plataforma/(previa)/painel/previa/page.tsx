@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { lojistaAtual } from "@/lib/sessao";
 import { identidadeDa, lojaVende, tenantPublico } from "@/lib/tenant";
-import { LAYOUTS, cssDoTema, fonteGoogleHref } from "@/lib/tema";
+import { LAYOUTS, cssDoTema } from "@/lib/tema";
+import { familiaHospedada, familiaSerifAtelie } from "@/lib/fontes-loja";
 import { contratoDo, usaBlocoProprio } from "@/lib/templates";
-import { catalogoDeDemonstracao, examinarRascunho, lojaDaPrevia } from "@/lib/previa-tema";
+import { resolverLooks, slugsDosLooks } from "@/lib/atelie";
+import { catalogoDeDemonstracao, examinarRascunho, lojaDaPrevia, produtoParaLookDeDemonstracao } from "@/lib/previa-tema";
 import { campanhasDaLoja } from "@/lib/campanhas";
 import { comporHome } from "@/components/home/composicao";
 import { CartProvider } from "@/components/cart/CartProvider";
@@ -66,8 +68,12 @@ export default async function PreviaDoTema({ searchParams }: { searchParams: Pro
   const contrato = contratoDo(tema);
   const identidade = identidadeDa(previa);
   const publico = tenantPublico(previa);
-  const fonte = fonteGoogleHref(tema);
   const { categorias, vitrine } = catalogoDeDemonstracao();
+  const pecasDoLook = [
+    ...vitrine,
+    ...slugsDosLooks(tema).filter((slug) => !vitrine.some((produto) => produto.slug === slug)).map(produtoParaLookDeDemonstracao),
+  ];
+  const looks = resolverLooks(tema, pecasDoLook);
   const menu = categorias.map((c) => ({ slug: c.slug, nome: c.nome }));
   const rotulo = LAYOUTS.find((l) => l.valor === tema.layout)?.rotulo ?? tema.layout;
 
@@ -83,8 +89,7 @@ export default async function PreviaDoTema({ searchParams }: { searchParams: Pro
 
   return (
     <>
-      {fonte && <link rel="stylesheet" href={fonte} />}
-      <style dangerouslySetInnerHTML={{ __html: `${cssDoTema(tema)}:root{--brand-support:${identidade.corApoio}}` }} />
+      <style dangerouslySetInnerHTML={{ __html: `${cssDoTema(tema, familiaHospedada(tema.fonte))}:root{--brand-support:${identidade.corApoio};--fonte-serif:${familiaSerifAtelie().replace(/</g, "")}}` }} />
       <script dangerouslySetInnerHTML={{ __html: `(function(){var a=${atributos},d=document.documentElement.dataset;if(a.template)d.template=a.template;d.modo=a.modo;d.ckTheme=a.ckTheme})()` }} />
       <p role="status" className="fixed inset-x-0 bottom-0 z-[100] flex flex-wrap items-center justify-center gap-x-3 gap-y-1 px-4 py-2.5 text-center text-sm" style={{ background: "#111827", color: "#ffffff" }}>
         <strong>Prévia com produtos de demonstração. Nada foi salvo.</strong>
@@ -102,7 +107,7 @@ export default async function PreviaDoTema({ searchParams }: { searchParams: Pro
               ? <CabecalhoPremium loja={publico} logo={previa.logoUrl} logoEscuro={tema.premium?.logoEscuroUrl} mostrarNome={tema.premium?.mostrarNome} categorias={menu} modo={tema.modo} />
               : <Header loja={publico} logoUrl={previa.logoUrl} mostrarNome={tema.mostrarNomeNoCabecalho} categorias={menu} mostrarPromocoes={campanhasDaLoja(tema).length > 0} />}
             <main className="flex-1">
-              {comporHome(tema, { t: previa, identidade, categorias, vitrine, temDestaques: vitrine.some((p) => p.destaque), vende: lojaVende(previa) })}
+              {comporHome(tema, { t: previa, identidade, categorias, vitrine, temDestaques: vitrine.some((p) => p.destaque), vende: lojaVende(previa), looks })}
             </main>
             <Footer tenant={previa} categorias={menu} />
           </CartProvider>
