@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { ehRecurso, meiosAceitos, pixNaConta, recursoAtivo, recursosAtivos } from "./recursos";
+import { ehRecurso, meiosAceitos, pixNaConta, rotuloDosMeios, recursoAtivo, recursosAtivos } from "./recursos";
 
 test("loja sem recursos segue igual: tudo desligado", () => {
   assert.equal(recursoAtivo({ recursos: [] }, "recebimento_v2", {}), false);
@@ -29,4 +29,13 @@ test("Pix na conta da loja só oferece Pix; sem o recurso, valem os meios da loj
   assert.deepEqual(meiosAceitos(ligado), ["pix"]);
   assert.deepEqual(meiosAceitos({ ...ligado, recursos: [] }), meios);
   assert.deepEqual(meiosAceitos({ ...ligado, provedorPadrao: "mercadopago" }), meios);
+});
+
+test("rótulo dos meios segue o que a loja aceita", () => {
+  assert.equal(rotuloDosMeios(["pix", "cartao", "boleto"]), "Pix, cartão e boleto.");
+  assert.equal(rotuloDosMeios(["boleto", "pix"]), "Pix e boleto.");
+  assert.equal(rotuloDosMeios(["cartao"]), "Cartão.");
+  assert.equal(rotuloDosMeios([]), "Nenhum meio de pagamento ligado.");
+  const pixNaContaLigado = { provedorPadrao: "pix_manual", recursos: ["pagamentos_pix_manual"], meiosPagamento: ["pix", "cartao", "boleto"] };
+  assert.equal(rotuloDosMeios(meiosAceitos(pixNaContaLigado)), "Pix.");
 });

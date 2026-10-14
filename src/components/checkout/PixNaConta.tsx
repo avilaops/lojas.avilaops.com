@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "@/components/LinkLoja";
 
 /**
@@ -25,6 +25,9 @@ export default function PixNaConta({
   const [aviso, setAviso] = useState<string | null>(jaAvisou ? "A loja já foi avisada. Ela confere o Pix e libera o pedido." : null);
   const [erro, setErro] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
+  // A tela troca no lugar do checkout: sem isso o celular fica rolado lá
+  // embaixo e o título "Pague com Pix" some acima da dobra.
+  useEffect(() => { window.scrollTo({ top: 0 }); }, [aviso]);
   const prazo = expiraEm ? new Date(expiraEm).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" }) : null;
 
   async function avisar() {
@@ -57,6 +60,8 @@ export default function PixNaConta({
 
   return (
     <div className="container-loja max-w-lg py-10 text-center">
+      {/* O botão do WhatsApp cobria o "Já paguei" no celular: nesta tela ele sai. */}
+      <style>{".whatsapp-flutuante{display:none !important}"}</style>
       <h1 className="text-xl font-bold">Pague com Pix</h1>
       <p className="mt-1 text-sm text-muted-foreground">
         Abra o app do banco e escaneie o código, ou copie o código. Pague exatamente {valorFormatado}, sem arredondar: os centavos identificam o seu pedido.

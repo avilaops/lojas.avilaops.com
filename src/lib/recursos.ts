@@ -46,3 +46,13 @@ export function pixNaConta(t: Pick<Tenant, "provedorPadrao" | "recursos">): bool
 export function meiosAceitos(t: Pick<Tenant, "provedorPadrao" | "recursos" | "meiosPagamento">): string[] {
   return pixNaConta(t) ? ["pix"] : t.meiosPagamento;
 }
+
+const NOME_DO_MEIO: Record<string, string> = { pix: "Pix", cartao: "cartão", boleto: "boleto" };
+
+/** "Pix, cartão e boleto." / "Pix." — a frase dos meios que a loja aceita de verdade. */
+export function rotuloDosMeios(meios: string[]): string {
+  const nomes = ["pix", "cartao", "boleto"].filter((m) => meios.includes(m)).map((m) => NOME_DO_MEIO[m]);
+  if (nomes.length === 0) return "Nenhum meio de pagamento ligado.";
+  const frase = nomes.length === 1 ? nomes[0] : `${nomes.slice(0, -1).join(", ")} e ${nomes[nomes.length - 1]}`;
+  return `${frase.charAt(0).toUpperCase()}${frase.slice(1)}.`;
+}
