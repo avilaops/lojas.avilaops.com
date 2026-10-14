@@ -25,7 +25,7 @@ export async function registrarPedido(
 
   const salvo = await prisma.pedido.upsert({
     where: { referencia: pedido.referencia, tenantId: t.id },
-    update: { pagamentoId: dados.pagamentoId, pagamentoStatus: dados.status },
+    update: { pagamentoId: dados.pagamentoId, pagamentoStatus: dados.status, ...(dados.credencial ? { gateway: dados.credencial.provedor, credencialId: dados.credencial.id } : {}) },
     create: {
       tenantId: t.id,
       referencia: pedido.referencia,

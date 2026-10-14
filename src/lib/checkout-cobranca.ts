@@ -14,8 +14,10 @@ import { ErroCatalogo } from "./catalogo-oferta";
 import { liberarReservas, reservarEstoque } from "./catalogo-reservas";
 import { buscarCupomValido, descontoDoCupom, normalizarCodigo } from "./cupons";
 import { prisma } from "./db";
+import { meiosAceitos } from "./recursos";
 import { cotarFrete } from "./frete";
 import { registrarPedido } from "./pedidos";
+import { vincularCobrancaPix } from "./pix-manual";
 
 /**
  * A cobrança de um pedido, do corpo que chegou até o pagamento criado.
@@ -147,7 +149,7 @@ export async function criarCobranca(t: Tenant, corpo: CorpoValidado, opcoes: Opc
   // Antes de qualquer consulta ou reserva: o meio pedido é um que a loja aceita?
   // A tela já escondia os outros, mas o servidor aceitava qualquer coisa, e um
   // valor inválido reservava estoque para falhar só dentro do gateway.
-  if (!t.meiosPagamento.includes(corpo.meioPagamento)) {
+  if (!meiosAceitos(t).includes(corpo.meioPagamento)) {
     return { tipo: "invalido", status: 422, codigo: "meio_indisponivel", mensagem: "Esta loja não aceita este meio de pagamento." };
   }
   const e = corpo.entrega;
@@ -224,6 +226,7 @@ export async function criarCobranca(t: Tenant, corpo: CorpoValidado, opcoes: Opc
       pedidoResolvido: montado.pedido, cupomCodigo: c?.codigo, compradorId: opcoes.compradorId ?? null,
       credencial: opcoes.credencial ?? null,
     });
+    if (opcoes.credencial?.provedor === "pix_manual") await vincularCobrancaPix(t.id, referencia);
   } catch (erro) {
     await marcarIncerta(t.id, referencia);
     console.error("[checkout] cobrança criada e pedido não registrado", referencia, erro);

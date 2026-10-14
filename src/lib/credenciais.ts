@@ -4,6 +4,7 @@ import { ehProvedor, type ContextoProvedor, type PaymentProvider, type ProvedorI
 import { cifrar, decifrar } from "./cofre";
 import { prisma } from "./db";
 import { GatewayNaoConfigurado, providerDaLoja } from "./gateway";
+import { providerDoPixManual } from "./pix-manual";
 import { conectadoPorOAuth } from "./mercado-pago-conta";
 import { provedoresDePagamento } from "./provedores-pagamento";
 
@@ -65,7 +66,9 @@ export function providerDaCredencial(t: Tenant, c: CredencialPagamento): Payment
     throw new GatewayNaoConfigurado(`Provedor ${c.provedor} não disponível nesta versão.`);
   }
   try {
-    return provedoresDePagamento.obter(c.provedor).criar(contextoDaCredencial(t, c));
+    const ctx = contextoDaCredencial(t, c);
+    if (c.provedor === "pix_manual") return providerDoPixManual(t, ctx);
+    return provedoresDePagamento.obter(c.provedor).criar(ctx);
   } catch (erro) {
     throw new GatewayNaoConfigurado(erro instanceof Error ? erro.message : String(erro));
   }

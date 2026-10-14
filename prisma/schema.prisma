@@ -298,6 +298,7 @@ model Tenant {
   categorias        Categoria[]
   produtos          Produto[]
   pedidos           Pedido[]
+  cobrancasPix      CobrancaPixManual[]
   pesquisasCatalogo PesquisaCatalogoExecucao[]
   publicacoes       PublicacaoLoja[]
   sessoesVitrine    SessaoVitrine[]
@@ -531,13 +532,39 @@ model Pedido {
   tenant    Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   comprador Comprador?     @relation(fields: [compradorId], references: [id], onDelete: SetNull)
   sessao    SessaoVitrine? @relation(fields: [sessaoId], references: [id], onDelete: SetNull)
-  itens     PedidoItem[]
-  postagem  Postagem?
+  itens       PedidoItem[]
+  postagem    Postagem?
+  cobrancaPix CobrancaPixManual?
 
   @@unique([tenantId, canal, canalPedidoId])
   @@index([tenantId, status])
   @@index([pagamentoId])
   @@index([sessaoId])
+}
+
+/// Cobrança do Pix na conta do lojista. O valor pode ter centavos a mais que o
+/// pedido, para dois Pix do mesmo total não ficarem iguais no extrato.
+model CobrancaPixManual {
+  id            String    @id @default(cuid())
+  tenantId      String
+  pedidoId      String?   @unique
+  referencia    String    @unique
+  /// Identificador no BR Code (campo 62-05), já no formato do QR estático.
+  txid          String
+  valorCentavos Int
+  copiaECola    String
+  expiraEm      DateTime
+  /// Quando o comprador apertou "Já paguei". Nulo = ainda não avisou.
+  informadoEm   DateTime?
+  /// Caminho do comprovante, se ele enviou. Não é dado lido do arquivo.
+  comprovante   String?
+  criadoEm      DateTime  @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  pedido Pedido? @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, informadoEm])
+  @@index([expiraEm])
 }
 
 /// Unidade vendável. Produto simples tem uma variante padrao interna.

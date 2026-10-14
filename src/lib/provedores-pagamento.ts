@@ -1,4 +1,4 @@
-import { RegistroDeProvedores, definicaoMercadoPago, definicaoPagBank } from "@avilaops/checkout/server";
+import { RegistroDeProvedores, definicaoMercadoPago, definicaoPagBank, definicaoPixManual } from "@avilaops/checkout/server";
 
 /**
  * Os provedores de pagamento que esta instância conhece.
@@ -10,4 +10,4 @@ import { RegistroDeProvedores, definicaoMercadoPago, definicaoPagBank } from "@a
  *
  * Mercado Pago não tem flag: é o caminho de sempre (`providerDaLoja`).
  */
-export const provedoresDePagamento = new RegistroDeProvedores().registrar(definicaoMercadoPago).registrar(definicaoPagBank);
+export const provedoresDePagamento = new RegistroDeProvedores().registrar(definicaoMercadoPago).registrar(definicaoPagBank).registrar(definicaoPixManual);

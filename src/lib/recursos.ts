@@ -36,3 +36,13 @@ export function recursoAtivo(t: Pick<Tenant, "recursos">, recurso: Recurso, env:
 export function recursosAtivos(t: Pick<Tenant, "recursos">, env: Record<string, string | undefined> = process.env): Recurso[] {
   return RECURSOS.filter((r) => recursoAtivo(t, r, env));
 }
+
+/** A loja recebe pelo Pix na própria conta, conferido à mão. */
+export function pixNaConta(t: Pick<Tenant, "provedorPadrao" | "recursos">): boolean {
+  return t.provedorPadrao === "pix_manual" && recursoAtivo(t, "pagamentos_pix_manual");
+}
+
+/** Pix na conta só tem Pix: cartão e boleto não passam por ele. */
+export function meiosAceitos(t: Pick<Tenant, "provedorPadrao" | "recursos" | "meiosPagamento">): string[] {
+  return pixNaConta(t) ? ["pix"] : t.meiosPagamento;
+}

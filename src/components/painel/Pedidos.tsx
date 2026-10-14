@@ -1,5 +1,6 @@
 "use client";
 
+import { situacaoNaLista } from "@/lib/situacao-pedido";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Secao, brl, inputClasse } from "./campos";
@@ -36,6 +37,7 @@ type Item = {
   criadoEm: string;
   rastreio: string | null;
   itens: number;
+  pixAConferir?: boolean;
 };
 
 type Resposta = {
@@ -192,7 +194,7 @@ export default function Pedidos({
         selo={(p) => (
           <>
             <b className="tabular-nums">{brl(p.totalCentavos)}</b>
-            <span className="text-muted-foreground">{SITUACAO[p.status] ?? p.status}</span>
+            <Situacao p={p} />
             {/* O código de rastreio aparece onde ele é digitado: quando o
                 pedido está em separação e falta despachar. */}
             {p.status === "EM_SEPARACAO" && (
@@ -212,7 +214,7 @@ export default function Pedidos({
           { rotulo: "Pedido", celula: (p) => <span className="font-mono">#{p.numero}</span>, largura: "w-28" },
           { rotulo: "Cliente", celula: cliente },
           { rotulo: "Total", celula: (p) => brl(p.totalCentavos), largura: "w-28", numero: true },
-          { rotulo: "Situação", celula: (p) => SITUACAO[p.status] ?? p.status, largura: "w-40" },
+          { rotulo: "Situação", celula: (p) => <Situacao p={p} />, largura: "w-40" },
           { rotulo: "Data", celula: (p) => dia(p.criadoEm), largura: "w-24" },
         ]}
         acoes={acao}
@@ -255,4 +257,12 @@ export default function Pedidos({
       )}
     </Secao>
   );
+}
+
+/** Mesmo selo na tabela e nos cartões. */
+function Situacao({ p }: { p: Item }) {
+  const s = situacaoNaLista(p, SITUACAO);
+  return s.pixAConferir
+    ? <span className="whitespace-nowrap rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">{s.rotulo}</span>
+    : <span className="text-muted-foreground">{s.rotulo}</span>;
 }
