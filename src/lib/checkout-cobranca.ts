@@ -117,6 +117,8 @@ export type ResultadoDaCobranca =
 
 export interface OpcoesDaCobranca {
   provider: PaymentProvider;
+  /** Credencial que cobra (src/lib/credenciais.ts); vai para o pedido. */
+  credencial?: { id: string; provedor: string } | null;
   compradorId?: string | null;
   /**
    * Cupom que não vale recusa o pedido, em vez de cobrar sem desconto.
@@ -220,6 +222,7 @@ export async function criarCobranca(t: Tenant, corpo: CorpoValidado, opcoes: Opc
     await registrarPedido(t, {
       referencia, pagamentoId: pagamento.id, status: pagamento.status, total: montado.total, payload, catalogo,
       pedidoResolvido: montado.pedido, cupomCodigo: c?.codigo, compradorId: opcoes.compradorId ?? null,
+      credencial: opcoes.credencial ?? null,
     });
   } catch (erro) {
     await marcarIncerta(t.id, referencia);
