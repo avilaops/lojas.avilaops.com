@@ -165,4 +165,17 @@ export interface DefinicaoProvedor {
    * "erro" com a `mensagem`. Não lança: erro de rede vira `ok: false`.
    */
   testarConexao(ctx: ContextoProvedor): Promise<ResultadoTesteConexao>;
+  /**
+   * Só para `tipoConexao: "oauth"` (exceto Mercado Pago, que tem fluxo próprio
+   * em src/lib/mercado-pago-conta.ts). Adição opcional, não quebra quem não usa.
+   * `retorno` é a URL exata de volta, registrada no app do provedor.
+   */
+  oauth?: OAuthProvedor;
+}
+
+export interface OAuthProvedor {
+  /** URL para onde o lojista vai autorizar. `estado` volta igual em `?state=`. */
+  urlDeAutorizacao(estado: string, retorno: string): string;
+  /** Troca o `?code=` pelo conteúdo da credencial (tokens em `segredos`). */
+  concluir(codigo: string, retorno: string): Promise<{ segredos: Record<string, string | undefined>; publicos: Record<string, string | undefined>; conta?: string }>;
 }

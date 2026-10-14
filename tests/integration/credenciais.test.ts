@@ -71,3 +71,13 @@ test("pedido usa a credencial que o cobrou, não a padrão atual", async () => {
   assert.ok((await providerDoPedido(t, { credencialId: alheia.id })) instanceof MercadoPagoProvider);
   assert.ok((await providerDoPedido(t, { credencialId: null })) instanceof MercadoPagoProvider);
 });
+
+test("tela v2: MP legado desconectado nas colunas mp* não aparece como Conectado", async () => {
+  const { dadosDaTela } = await import("../../src/lib/recebimento-v2");
+  const t = await loja({ mpAccessTokenEnc: cifrar("TEST-token") });
+  await resolverRecebimento(t);
+  const conectada = await dadosDaTela(await prisma.tenant.findUniqueOrThrow({ where: { id: t.id } }));
+  assert.equal(conectada.credenciais[0]?.status, "conectado");
+  const desconectada = await prisma.tenant.update({ where: { id: t.id }, data: { mpAccessTokenEnc: null } });
+  assert.deepEqual((await dadosDaTela(desconectada)).credenciais, []);
+});
