@@ -1,7 +1,7 @@
 import type { Tenant } from "@prisma/client";
 import { PROVEDORES, type ContextoProvedor, type DefinicaoProvedor, type ProvedorId } from "@avilaops/checkout/server";
 import { prisma } from "./db";
-import { credencialParaTela, garantirCredencialMercadoPago } from "./credenciais";
+import { credencialParaTela, ehLegadoMercadoPago, garantirCredencialMercadoPago } from "./credenciais";
 import { provedoresDePagamento } from "./provedores-pagamento";
 import { recursoAtivo, type Recurso } from "./recursos";
 
@@ -34,7 +34,11 @@ export async function dadosDaTela(t: Tenant) {
       guia: d.guia,
       oauthDisponivel: d.id === "mercadopago" || Boolean(d.oauth),
     })),
-    credenciais: loja.credenciaisPagamento.map((c) => credencialParaTela(c, loja.credencialPadraoId)),
+    // MP legado reflete as colunas mp*: desconectado lá, não aparece como
+    // Conectado aqui (o status da linha é do dia do backfill).
+    credenciais: loja.credenciaisPagamento
+      .filter((c) => !(ehLegadoMercadoPago(c) && !loja.mpAccessTokenEnc))
+      .map((c) => credencialParaTela(c, loja.credencialPadraoId)),
   };
 }
 export type DadosDaTela = Awaited<ReturnType<typeof dadosDaTela>>;
