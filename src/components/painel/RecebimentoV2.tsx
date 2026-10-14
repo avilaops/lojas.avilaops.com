@@ -15,11 +15,30 @@ const STATUS: Record<string, { rotulo: string; classe: string }> = {
   nenhum: { rotulo: "Não conectado", classe: "bg-slate-100 text-slate-700" },
 };
 
-const RETORNO: Record<string, string> = {
-  ok: "Conta conectada.",
-  erro: "A conta foi conectada, mas o teste falhou. Veja a mensagem no cartão.",
-  falhou: "Não foi possível concluir a conexão. Tente de novo.",
-  indisponivel: "A conexão com este provedor ainda não está disponível.",
+type Recado = { tom: "ok" | "erro"; texto: string };
+
+const RETORNO: Record<string, Recado> = {
+  ok: { tom: "ok", texto: "Conta conectada." },
+  erro: { tom: "erro", texto: "A conta foi conectada, mas o teste falhou. Veja a mensagem no cartão." },
+  falhou: { tom: "erro", texto: "Não foi possível concluir a conexão. Nada mudou na loja: tente de novo." },
+  indisponivel: { tom: "erro", texto: "A conexão com este provedor ainda não está disponível nesta instalação." },
+};
+
+/** Volta do fluxo do Mercado Pago (`?mp=`), o mesmo texto do cartão antigo. */
+const RETORNO_MP: Record<string, Recado> = {
+  conectado: { tom: "ok", texto: "Conta do Mercado Pago conectada. A loja já pode receber por Pix, cartão e boleto." },
+  recusado: { tom: "erro", texto: "Você não autorizou a conexão com o Mercado Pago. Nada mudou na loja." },
+  incompleto: { tom: "erro", texto: "A autorização do Mercado Pago voltou incompleta ou vencida. Clique em conectar de novo." },
+  falhou: { tom: "erro", texto: "O Mercado Pago não concluiu a conexão. Nada mudou na loja: tente de novo em alguns minutos." },
+  teste: { tom: "erro", texto: "A conta que autorizou é de teste, e venda nela não é dinheiro de verdade. Entre no Mercado Pago com a conta da loja e conecte de novo." },
+  indisponivel: { tom: "erro", texto: "A conexão com o Mercado Pago ainda não está liberada nesta instalação. Fale com o suporte da Ávila Ops." },
+  "sem-permissao": { tom: "erro", texto: "Seu acesso não permite trocar a conta de recebimento. Fale com o dono da loja." },
+};
+
+/** Cor da mensagem do cartão: âmbar para pendente, vermelho só para erro. */
+const TOM_DA_MENSAGEM: Record<string, string> = {
+  erro: "bg-red-50 text-red-700",
+  pendente: "bg-amber-50 text-amber-900",
 };
 
 /**
@@ -28,11 +47,12 @@ const RETORNO: Record<string, string> = {
  * OAuth vira botão "Conectar com…"; chave e Pix direto viram formulário com
  * "Testar conexão" antes de salvar.
  */
-export default function RecebimentoV2({ dados, retorno }: { dados: DadosDaTela; retorno?: string }) {
+export default function RecebimentoV2({ dados, retorno, retornoMp }: { dados: DadosDaTela; retorno?: string; retornoMp?: string }) {
   const router = useRouter();
   const [erro, setErro] = useState<string | null>(null);
   const porProvedor = new Map(dados.credenciais.map((c) => [c.provedor, c]));
   const temPadrao = dados.credenciais.some((c) => c.padrao);
+  const recado = (retornoMp ? RETORNO_MP[retornoMp] : undefined) ?? (retorno ? RETORNO[retorno] : undefined);
 
   async function usarComoPadrao(c: Credencial) {
     setErro(null);
@@ -51,7 +71,11 @@ export default function RecebimentoV2({ dados, retorno }: { dados: DadosDaTela; 
           {!temPadrao && " Você ainda não tem uma conta padrão: conecte uma para começar a vender."}
         </p>
       </header>
-      {retorno && RETORNO[retorno] && <p role="status" className="rounded-lg bg-slate-50 p-3 text-sm">{RETORNO[retorno]}</p>}
+      {recado && (
+        <p role={recado.tom === "erro" ? "alert" : "status"} className={`rounded-lg p-3 text-sm ${recado.tom === "erro" ? "bg-red-50 text-red-700" : "bg-emerald-50 text-emerald-800"}`}>
+          {recado.texto}
+        </p>
+      )}
       {erro && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{erro}</p>}
       {dados.provedores.map((p) => (
         <CartaoProvedor key={p.id} provedor={p} credencial={porProvedor.get(p.id)} aoUsarComoPadrao={usarComoPadrao} aoSalvar={() => router.refresh()} />
@@ -79,7 +103,9 @@ function CartaoProvedor({ provedor, credencial, aoUsarComoPadrao, aoSalvar }: { 
         <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${status.classe}`}>{status.rotulo}</span>
       </div>
       {credencial?.conta && <p className="mt-2 text-sm">Conta: {credencial.conta}</p>}
-      {credencial?.mensagem && credencial.status !== "conectado" && <p className="mt-2 rounded bg-red-50 p-2 text-sm text-red-700">{credencial.mensagem}</p>}
+      {credencial?.mensagem && TOM_DA_MENSAGEM[credencial.status] && (
+        <p role={credencial.status === "erro" ? "alert" : undefined} className={`mt-2 rounded p-2 text-sm ${TOM_DA_MENSAGEM[credencial.status]}`}>{credencial.mensagem}</p>
+      )}
 
       <div className="mt-3 flex flex-wrap gap-2">
         {provedor.tipoConexao === "oauth" ? (

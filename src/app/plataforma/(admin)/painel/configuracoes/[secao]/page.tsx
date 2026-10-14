@@ -313,10 +313,9 @@ export default async function Pagina({ params, searchParams }: {
     if (recursoAtivo(loja, "recebimento_v2")) {
       return (
         <div className="grid gap-6">
-          <RecebimentoV2 dados={await dadosDaTela(loja)} retorno={sp.conexao ?? (sp.mp === "conectado" ? "ok" : undefined)} />
-          <Suspense fallback={null}>
-            <PainelLoja secao={alvo} {...(await dadosDoPainel(alvo))} />
-          </Suspense>
+          {/* Sem o formulário antigo de chaves embaixo: ele repetia "Ainda não
+              recebe" ao lado de um cartão Conectado (revisão do Designer, #98). */}
+          <RecebimentoV2 dados={await dadosDaTela(loja)} retorno={sp.conexao} retornoMp={sp.mp} />
         </div>
       );
     }
