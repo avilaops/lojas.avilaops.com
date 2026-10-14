@@ -125,6 +125,10 @@ model Tenant {
   /// aceitar o pedido. Nulo = sem mínimo. Ver `avaliarPedidoMinimo`.
   pedidoMinimoCentavos   Int? // centavos
 
+  /// Recursos ligados para esta loja (flags), ex.: "recebimento_v2",
+  /// "pagamentos_pagbank". Vazio = comportamento de sempre. Ver src/lib/recursos.ts.
+  recursos String[] @default([])
+
   // ── Pagamento (tokens cifrados com LOJAS_SECRET) ──────────────────────
   /// Mercado Pago é o único gateway, por decisão de escopo de 31/08/2026.
   /// A conta é do lojista: o dinheiro nunca passa pela Avila Ops.

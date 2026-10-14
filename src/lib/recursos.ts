@@ -1,0 +1,38 @@
+import type { Tenant } from "@prisma/client";
+
+/**
+ * Flags por loja: o que está ligado só para algumas lojas enquanto é novo.
+ *
+ * Mora em `Tenant.recursos` (lista de texto, vazia por padrão). Nome novo entra
+ * em RECURSOS antes de ser usado; nome desconhecido no banco é ignorado.
+ *
+ * `LOJAS_RECURSOS_DESLIGADOS` (separados por vírgula) desliga um recurso para
+ * todas as lojas de uma vez, sem migração: é o botão de pânico.
+ */
+export const RECURSOS = [
+  /** Nova tela Configurações → Recebimento, com escolha de provedor. */
+  "recebimento_v2",
+  "pagamentos_pagbank",
+  "pagamentos_pagarme",
+  "pagamentos_cielo",
+  /** Pix direto na conta do lojista, com baixa manual. */
+  "pagamentos_pix_manual",
+] as const;
+export type Recurso = (typeof RECURSOS)[number];
+
+export function ehRecurso(valor: unknown): valor is Recurso {
+  return typeof valor === "string" && (RECURSOS as readonly string[]).includes(valor);
+}
+
+function desligadosNoAmbiente(env: Record<string, string | undefined>): Set<string> {
+  return new Set((env.LOJAS_RECURSOS_DESLIGADOS ?? "").split(",").map((s) => s.trim()).filter(Boolean));
+}
+
+export function recursoAtivo(t: Pick<Tenant, "recursos">, recurso: Recurso, env: Record<string, string | undefined> = process.env): boolean {
+  if (desligadosNoAmbiente(env).has(recurso)) return false;
+  return (t.recursos ?? []).includes(recurso);
+}
+
+export function recursosAtivos(t: Pick<Tenant, "recursos">, env: Record<string, string | undefined> = process.env): Recurso[] {
+  return RECURSOS.filter((r) => recursoAtivo(t, r, env));
+}

@@ -1,7 +1,8 @@
 import type { Tenant } from "@prisma/client";
-import { MercadoPagoProvider, type PaymentProvider } from "@avilaops/checkout/server";
+import type { PaymentProvider } from "@avilaops/checkout/server";
 import { decifrar } from "./cofre";
 import { conectadoPorOAuth, segredoDoWebhookDoAplicativo } from "./mercado-pago-conta";
+import { provedoresDePagamento } from "./provedores-pagamento";
 
 /**
  * Provedor de pagamento da loja.
@@ -34,11 +35,11 @@ export function providerDaLoja(t: Tenant): PaymentProvider {
   if (!t.mpAccessTokenEnc) {
     throw new GatewayNaoConfigurado(`A loja ${t.slug} ainda não tem gateway de pagamento configurado.`);
   }
-  return new MercadoPagoProvider({
-    accessToken: decifrar(t.mpAccessTokenEnc),
-    webhookSecret: segredoDoWebhook(t),
+  // Mesmos parâmetros de antes, agora pelo registro (src/lib/provedores-pagamento.ts).
+  return provedoresDePagamento.obter("mercadopago").criar({
+    segredos: { accessToken: decifrar(t.mpAccessTokenEnc), webhookSecret: segredoDoWebhook(t) },
+    publicos: { publicKey: t.mpPublicKey ?? undefined },
     descritorFatura: t.nome.replace(/[^A-Za-z0-9 ]/g, "").toUpperCase().slice(0, 13),
-    pixExpiraEmMinutos: 30,
     // Por cobrança, com `?loja=`: o webhook chega no host da plataforma e acha a
     // loja pelo slug, sem depender da URL cadastrada na aplicação do MP.
     notificationUrl: `https://${BASE_PLATAFORMA}/api/webhooks/mercadopago?loja=${t.slug}`,
