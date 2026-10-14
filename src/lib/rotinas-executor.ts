@@ -19,6 +19,7 @@ import { lembrarPixPendente, pedirIndicacoes } from "./avisos-que-esperam";
 import { renovarAcessos as renovarAcessosDoMercadoPago } from "./mercado-pago-conta";
 import { alertar } from "./alertas";
 import { entregarWebhooks } from "./webhooks-entrega";
+import { expirarPixManual } from "./pix-manual";
 import { reconciliarReservas } from "./reservas-reconciliar";
 import { expurgarHistoricoMcp } from "./mcp-historico";
 
@@ -47,6 +48,7 @@ const TRABALHOS: Record<NomeDeRotina, () => Promise<unknown>> = {
   // resumo diz isso em vez de parecer que rodou e não achou ninguém.
   "webhooks.entregar": () => entregarWebhooks({ limite: 50 }),
   "reservas.reconciliar": () => reconciliarReservas(),
+  "pix.expirar": () => expirarPixManual(),
   "pix.lembrete": () => lembrarPixPendente(),
   "loja.indicacoes": () => pedirIndicacoes(),
   "carrinhos.verificar": () => verificarCarrinhosAbandonados(),

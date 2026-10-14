@@ -65,6 +65,9 @@ export async function lembrarPixPendente(agora = new Date()): Promise<ResumoAvis
     where: {
       status: "AGUARDANDO_PAGAMENTO",
       meioPagamento: { contains: "pix", mode: "insensitive" },
+      // O lembrete fala do Pix que o gateway confirma sozinho. O da conta do
+      // lojista espera a baixa manual e não entra aqui.
+      gateway: { not: "pix_manual" },
       criadoEm: {
         lte: new Date(agora.getTime() - PIX_DEPOIS_DE_MIN * 60_000),
         gte: new Date(agora.getTime() - PIX_ATE_HORAS * 3_600_000),

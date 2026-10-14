@@ -71,3 +71,133 @@ export interface WebhookEntrada {
 
 /** Status do gateway já traduzido para o nosso vocabulário. */
 export type MapeamentoStatus = Record<string, StatusPagamento>;
+
+/**
+ * Identificador estável do provedor. Vai para o banco (`Pedido.gateway`,
+ * credenciais), para a URL do webhook e para os nomes das flags: não renomear.
+ */
+export const PROVEDORES = ["mercadopago", "pagbank", "pagarme", "cielo", "pix_manual"] as const;
+export type ProvedorId = (typeof PROVEDORES)[number];
+
+export function ehProvedor(valor: unknown): valor is ProvedorId {
+  return typeof valor === "string" && (PROVEDORES as readonly string[]).includes(valor);
+}
+
+/** O que o provedor sabe fazer. A tela e o checkout perguntam isto, nunca o nome. */
+export interface Capacidades {
+  pix: boolean;
+  cartao: boolean;
+  boleto: boolean;
+  /** Estorno pela API; falso = o lojista devolve por fora e registra. */
+  estorno: boolean;
+  estornoParcial: boolean;
+  /** O provedor avisa por webhook. Falso = só conciliação periódica ou baixa manual. */
+  webhook: boolean;
+  /** O pagamento se confirma sozinho. Falso = `aguardando_confirmacao` até a baixa manual. */
+  confirmacaoAutomatica: boolean;
+}
+
+/**
+ * Estado local do Pix na conta do lojista.
+ *
+ * Não há API de banco: quem guarda a cobrança, os centavos já usados e o que o
+ * lojista decidiu é a loja. O adaptador só monta o BR Code e pergunta aqui.
+ */
+export interface EstadoPixManual {
+  reservar(dados: {
+    referencia: string;
+    totalCentavos: number;
+    txid: string;
+    expiraEm: Date;
+    montar: (valorCentavos: number) => string;
+  }): Promise<{ id: string; valorCentavos: number; copiaECola: string }>;
+  consultar(id: string): Promise<ResultadoPagamento | null>;
+  buscarPorReferencia(referencia: string): Promise<ResultadoPagamento | null>;
+  /** PNG do QR em base64. Falha aqui não impede o copia-e-cola. */
+  qr?(copiaECola: string): Promise<string | undefined>;
+}
+
+/**
+ * Como montar um provedor para uma loja.
+ *
+ * `segredos` e `publicos` são o conteúdo da credencial da loja: segredos já
+ * decifrados (só servidor), públicos podendo ir ao navegador (chave pública de
+ * tokenização, MerchantId, chave Pix). Cada provedor define e valida as próprias chaves.
+ */
+export interface ContextoProvedor {
+  segredos: Record<string, string | undefined>;
+  publicos: Record<string, string | undefined>;
+  /** URL completa do webhook desta loja/credencial, quando o provedor aceita por cobrança. */
+  notificationUrl?: string;
+  /** Nome curto da loja para a fatura do cartão (já saneado, até 13 caracteres). */
+  descritorFatura?: string;
+  /** Só o Pix manual preenche. Mercado Pago e os outros ignoram. */
+  pixManual?: EstadoPixManual;
+}
+
+/**
+ * Como o lojista liga o provedor, e portanto que tela a Recebimento mostra:
+ * - `oauth`: botão "Conectar com {nome}" (Mercado Pago hoje; PagBank Connect).
+ * - `chave`: o lojista cola as chaves seguindo `guia`, e "Testar conexão"
+ *   valida antes de salvar (Pagar.me, Cielo).
+ * - `pix_direto`: só a chave Pix e o nome do recebedor (ver `validarChavePix`).
+ */
+export type TipoConexao = "oauth" | "chave" | "pix_direto";
+
+/** Situação de uma credencial na tela: Conectado / Erro / Pendente. */
+export type StatusCredencial = "conectado" | "erro" | "pendente";
+
+/** Campo que o lojista preenche numa conexão `chave` ou `pix_direto`. */
+export interface CampoCredencial {
+  /** Chave em `segredos` ou `publicos` do ContextoProvedor. */
+  chave: string;
+  rotulo: string;
+  /** Segredo: cifrado no banco e nunca mostrado de volta. */
+  segredo: boolean;
+  obrigatorio: boolean;
+  ajuda?: string;
+}
+
+/** Um passo do "onde acho isto" para conexões por chave. */
+export interface PassoGuia {
+  texto: string;
+  url?: string;
+}
+
+/** Resultado de `testarConexao`. Mensagens em português simples, prontas para a tela. */
+export type ResultadoTesteConexao =
+  | { ok: true; mensagem: string; conta?: string; avisos: string[] }
+  | { ok: false; mensagem: string; avisos: string[] };
+
+export interface DefinicaoProvedor {
+  id: ProvedorId;
+  /** Nome para o lojista ("Mercado Pago", "PagBank"). */
+  nome: string;
+  capacidades: Capacidades;
+  tipoConexao: TipoConexao;
+  /** Campos da tela, para `chave` e `pix_direto`. Vazio para `oauth`. */
+  campos: CampoCredencial[];
+  /** Passo a passo de onde achar as chaves, para `chave`. */
+  guia: PassoGuia[];
+  /** Monta o adaptador. Lança se faltar credencial obrigatória. */
+  criar(ctx: ContextoProvedor): PaymentProvider;
+  /**
+   * Confere a credencial no provedor, sem cobrar nada. A tela chama antes de
+   * salvar e o status da credencial vem daqui: ok → "conectado", falha →
+   * "erro" com a `mensagem`. Não lança: erro de rede vira `ok: false`.
+   */
+  testarConexao(ctx: ContextoProvedor): Promise<ResultadoTesteConexao>;
+  /**
+   * Só para `tipoConexao: "oauth"` (exceto Mercado Pago, que tem fluxo próprio
+   * em src/lib/mercado-pago-conta.ts). Adição opcional, não quebra quem não usa.
+   * `retorno` é a URL exata de volta, registrada no app do provedor.
+   */
+  oauth?: OAuthProvedor;
+}
+
+export interface OAuthProvedor {
+  /** URL para onde o lojista vai autorizar. `estado` volta igual em `?state=`. */
+  urlDeAutorizacao(estado: string, retorno: string): string;
+  /** Troca o `?code=` pelo conteúdo da credencial (tokens em `segredos`). */
+  concluir(codigo: string, retorno: string): Promise<{ segredos: Record<string, string | undefined>; publicos: Record<string, string | undefined>; conta?: string }>;
+}

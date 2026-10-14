@@ -1,5 +1,6 @@
 import { prisma } from "./db";
-import { GatewayNaoConfigurado, providerDaLoja } from "./gateway";
+import { GatewayNaoConfigurado } from "./gateway";
+import { providerDoPedido } from "./credenciais";
 import { atualizarStatusPagamento } from "./pedidos";
 
 /**
@@ -36,7 +37,8 @@ export async function reconciliarPagamentosPendentes(agora = new Date()): Promis
   const desde = new Date(agora.getTime() - JANELA_DIAS * 24 * 60 * 60 * 1000);
 
   const pedidos = await prisma.pedido.findMany({
-    where: { status: "AGUARDANDO_PAGAMENTO", pagamentoId: { not: null }, criadoEm: { gte: desde } },
+    // Pix na conta não tem o que consultar no Mercado Pago: a baixa é manual.
+    where: { status: "AGUARDANDO_PAGAMENTO", pagamentoId: { not: null }, gateway: { not: "pix_manual" }, criadoEm: { gte: desde } },
     include: { tenant: true },
     orderBy: { criadoEm: "asc" },
     take: MAXIMO_POR_RODADA,
@@ -46,7 +48,7 @@ export async function reconciliarPagamentosPendentes(agora = new Date()): Promis
 
   for (const pedido of pedidos) {
     try {
-      const resultado = await providerDaLoja(pedido.tenant).consultar(pedido.pagamentoId!);
+      const resultado = await (await providerDoPedido(pedido.tenant, pedido)).consultar(pedido.pagamentoId!);
       resumo.conferidos++;
 
       if (resultado.status === "pendente") {
