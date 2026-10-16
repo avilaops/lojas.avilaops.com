@@ -44,6 +44,10 @@ try {
   await page.getByRole("button", { name: "Guardar certificado" }).click();
   await page.getByRole("status").filter({ hasText: "Certificado guardado" }).waitFor();
   assert.equal(await page.getByLabel("Senha do certificado").inputValue(), "");
+  assert.equal(await page.getByLabel("Senha do certificado").isVisible(), false);
+  await page.getByText("Substituir certificado", { exact: true }).click();
+  assert.equal(await page.getByLabel("Senha do certificado").isVisible(), true);
+  await page.getByText("Substituir certificado", { exact: true }).click();
   const estado = await (await context.request.get(`${base}/api/painel/fiscal`)).json();
   assert.equal(estado.configuracao.cnpj, cnpj);
   assert.ok(!("certificadoEnc" in estado.configuracao));
@@ -52,9 +56,11 @@ try {
   await prisma.fiscalLoja.update({ where: { tenantId: loja.id }, data: { proximaConsultaEm: new Date(Date.now() + 3_600_000) } });
   await page.getByRole("button", { name: "Consultar próximo lote" }).click();
   await page.getByRole("alert").filter({ hasText: "intervalo de espera" }).waitFor();
-  const doc = await prisma.documentoFiscalLoja.create({ data: { tenantId: loja.id, cnpj, nsu: "000000000000001", schema: "resNFe_v1.01.xsd", xml: "<resNFe><xNome>Fornecedor de teste</xNome></resNFe>" } });
+  const doc = await prisma.documentoFiscalLoja.create({ data: { tenantId: loja.id, cnpj, nsu: "000000000000001", schema: "resNFe_v1.01.xsd", chave: "1".repeat(44), xml: "<resNFe><xNome>Fornecedor de teste</xNome></resNFe>" } });
   await page.reload({ waitUntil: "networkidle" });
   await page.getByRole("link", { name: "Baixar XML" }).waitFor();
+  await page.getByText("Resumo de NF-e", { exact: true }).waitFor();
+  assert.equal(await page.getByText(doc.schema, { exact: true }).isVisible(), false);
   const xml = await context.request.get(`${base}/api/painel/fiscal/documentos/${doc.id}`);
   assert.equal(xml.status(), 200); assert.equal(await xml.text(), doc.xml);
   const anonimo = await browser.newContext();
@@ -71,6 +77,9 @@ try {
   await page.setViewportSize({ width: 393, height: 852 });
   await page.screenshot({ path: "output/fiscal-qa/mobile.png", fullPage: true });
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), "A tela não pode transbordar no celular.");
+  await page.setViewportSize({ width: 320, height: 852 });
+  await page.getByText("Identificação do documento", { exact: true }).click();
+  assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), "A chave de 44 dígitos não pode transbordar em 320 px.");
   assert.deepEqual(erros, []);
   console.log("QA fiscal: login, upload, senha incorreta, cofre, origem, intervalo, XML, permissões, desktop e celular aprovados.");
 } finally {
