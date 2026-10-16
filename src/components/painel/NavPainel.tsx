@@ -146,7 +146,7 @@ function Rodape({ pathname, aoNavegar, urlLoja }: { pathname: string; aoNavegar?
 }
 
 export default function NavPainel({ nome, urlLoja, aSeparar = 0, pixManual = false, pixAConferir = 0 }: { nome: string; urlLoja: string; aSeparar?: number; pixManual?: boolean; pixAConferir?: number }) {
-  const pathname = usePathname();
+  const pathname = usePathname().replace(/^\/plataforma(?=\/|$)/, "");
   const secoes: ItemNav[] = pixManual
     ? SECOES.flatMap((s) => (s.href === "/painel/pedidos" ? [s, { rotulo: "Pix a conferir", href: "/painel/pedidos/pix", icone: "pedidos" }] : [s]))
     : SECOES;

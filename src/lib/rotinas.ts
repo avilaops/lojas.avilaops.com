@@ -62,6 +62,13 @@ export interface DefinicaoRotina {
  * existindo — o endpoint virou o disparo manual, não mais o agendamento.
  */
 export const ROTINAS = {
+  "fiscal.receber": {
+    titulo: "Receber NF-e",
+    descricao: "Consulta documentos fiscais dos CNPJs com certificado A1 configurado",
+    cadencia: { tipo: "intervalo", minutos: 5 },
+    travaMinutos: 5,
+    falhasAteAlerta: 3,
+  },
   "mercadolivre.avisos": {
     titulo: "Vendas do ML",
     descricao: "Fila do Mercado Livre: venda vira pedido e baixa estoque, envio vira rastreio",
