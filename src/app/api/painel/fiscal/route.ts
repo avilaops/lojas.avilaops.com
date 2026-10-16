@@ -1,0 +1,66 @@
+import { prisma } from "@/lib/db";
+import { exigir } from "@/lib/operadores";
+import { chaveFiscal, ErroFiscal, lerCertificado, selarCertificado } from "@/lib/fiscal-certificado";
+import { UFS_FISCAIS } from "@/lib/fiscal-distribuicao";
+import { RESUMO_FISCAL, sincronizarNotas } from "@/lib/fiscal-loja";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+async function estado(tenantId: string) {
+  const [configuracao, documentos] = await Promise.all([
+    prisma.fiscalLoja.findUnique({ where: { tenantId }, select: RESUMO_FISCAL }),
+    prisma.documentoFiscalLoja.findMany({ where: { tenantId }, select: { id: true, cnpj: true, nsu: true, schema: true, chave: true, recebidoEm: true }, orderBy: [{ recebidoEm: "desc" }, { nsu: "desc" }], take: 100 }),
+  ]);
+  return { configuracao, documentos };
+}
+
+export async function GET() {
+  const { s, erro } = await exigir("fiscal");
+  if (erro) return erro;
+  return Response.json(await estado(s.tenant.id), { headers: { "Cache-Control": "no-store" } });
+}
+
+export async function POST(request: Request) {
+  const { s, erro } = await exigir("fiscal");
+  if (erro) return erro;
+  if (request.headers.get("origin") !== new URL(request.url).origin) {
+    return Response.json({ erro: "Origem não permitida." }, { status: 403 });
+  }
+  try {
+    if (new URL(request.url).searchParams.get("acao") === "consultar") {
+      const resultado = await sincronizarNotas(s.tenant.id);
+      return Response.json({ ...await estado(s.tenant.id), resultado });
+    }
+    chaveFiscal();
+    const reader = request.body?.getReader();
+    if (!reader) throw new ErroFiscal("Envie o certificado A1.");
+    const partes: Uint8Array[] = [];
+    let tamanho = 0;
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      tamanho += value.length;
+      if (tamanho > 96 * 1024) { await reader.cancel(); throw new ErroFiscal("Envie um certificado A1 de até 64 KB."); }
+      partes.push(value);
+    }
+    const form = await new Response(Buffer.concat(partes), { headers: { "Content-Type": request.headers.get("content-type") ?? "" } }).formData();
+    const arquivo = form.get("certificado");
+    const senha = form.get("senha");
+    const uf = String(form.get("uf") ?? "").toUpperCase();
+    if (!(arquivo instanceof File) || typeof senha !== "string" || senha.length > 1024 || !UFS_FISCAIS[uf]) throw new ErroFiscal("Informe certificado A1, senha e UF da empresa.");
+    const cnpj = s.tenant.cnpj?.replace(/[^0-9A-Z]/gi, "").toUpperCase() ?? "";
+    const pfx = Buffer.from(await arquivo.arrayBuffer());
+    try {
+      const info = lerCertificado(pfx, senha, cnpj);
+      const existente = await prisma.fiscalLoja.findUnique({ where: { tenantId: s.tenant.id }, select: { cnpj: true } });
+      if (existente && existente.cnpj !== cnpj) throw new ErroFiscal("A troca de CNPJ exige revisão do controle fiscal pelo suporte.");
+      const dados = { cnpj, uf, ...info, certificadoEnc: selarCertificado(pfx, senha) };
+      await prisma.fiscalLoja.upsert({ where: { tenantId: s.tenant.id }, create: { tenantId: s.tenant.id, ...dados }, update: dados });
+    } finally { pfx.fill(0); }
+    return Response.json(await estado(s.tenant.id));
+  } catch (erro) {
+    const mensagem = erro instanceof ErroFiscal ? erro.message : "Não foi possível concluir a operação fiscal. Confira se este CNPJ já está configurado em outra loja e contate o suporte se persistir.";
+    return Response.json({ erro: mensagem }, { status: 422 });
+  }
+}

@@ -28,6 +28,8 @@ export type Papel = "DONO" | "GERENTE" | "OPERADOR";
  * cada uma daqui é verificada numa rota de verdade.
  */
 export const PODE = {
+  /** Certificado privado e documentos fiscais da empresa. */
+  fiscal: ["DONO"],
   /** Cadastrar e editar produto, preço, categoria, promoção. */
   catalogo: ["DONO", "GERENTE"],
   /** Ver pedido, mudar situação, despachar. É o balcão. */

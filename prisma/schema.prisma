@@ -283,6 +283,8 @@ model Tenant {
   avisosEstoque    AvisoEstoque[]
   postagens        Postagem[]
   operadores       OperadorLoja[]
+  fiscal           FiscalLoja?
+  documentosFiscais DocumentoFiscalLoja[]
 
   apiKeyEnc      String?
   apiKeyCriadaEm DateTime?
@@ -304,6 +306,33 @@ model Tenant {
   sessoesVitrine    SessaoVitrine[]
 
   @@index([status])
+}
+
+model FiscalLoja {
+  tenantId String @id
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  cnpj String @unique
+  uf String
+  certificadoEnc String
+  titular String
+  validoAte DateTime
+  ultimoNsu String @default("000000000000000")
+  proximaConsultaEm DateTime @default(now())
+  ultimaMensagem String?
+}
+
+model DocumentoFiscalLoja {
+  id String @id @default(cuid())
+  tenantId String
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  cnpj String
+  nsu String
+  schema String
+  chave String?
+  xml String @db.Text
+  recebidoEm DateTime @default(now())
+  @@unique([tenantId, cnpj, nsu])
+  @@index([tenantId, recebidoEm])
 }
 
 model Categoria {
