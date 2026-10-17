@@ -1,4 +1,8 @@
-import { createCipheriv, createDecipheriv, randomBytes, X509Certificate } from "node:crypto";
+import { createCipheriv, createDecipheriv, createPrivateKey, createPublicKey, randomBytes, X509Certificate } from "node:crypto";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { createSecureContext } from "node:tls";
 import forge from "node-forge";
 
@@ -23,7 +27,10 @@ function lerCertificadoNativo(pfx: Buffer, senha: string): CertificadoLido {
   const contexto = createSecureContext({ pfx, passphrase: senha });
   const certificadoDer = contexto.context.getCertificate();
   if (!certificadoDer?.length) throw new Error("Certificado ausente no arquivo PKCS#12.");
-  const certificado = new X509Certificate(certificadoDer);
+  return infoCertificadoX509(new X509Certificate(certificadoDer));
+}
+
+function infoCertificadoX509(certificado: X509Certificate): CertificadoLido {
   const titular = String(certificado.toLegacyObject().subject?.CN ?? "");
   return {
     titular,
@@ -31,6 +38,38 @@ function lerCertificadoNativo(pfx: Buffer, senha: string): CertificadoLido {
     validoDe: new Date(certificado.validFrom),
     validoAte: new Date(certificado.validTo),
   };
+}
+
+/**
+ * Último recurso para variantes PKCS#12 que o OpenSSL embutido no Node e o
+ * node-forge não leem. Arquivo e senha vivem num diretório 0700, não aparecem
+ * na linha de comando e são apagados antes de a requisição continuar.
+ */
+function lerCertificadoOpenSSL(pfx: Buffer, senha: string): CertificadoLido {
+  const pasta = mkdtempSync(join(tmpdir(), "lojas-certificado-"));
+  const arquivo = join(pasta, "certificado.p12");
+  const segredo = join(pasta, "senha");
+  try {
+    writeFileSync(arquivo, pfx, { mode: 0o600 });
+    writeFileSync(segredo, `${senha}\n`, { mode: 0o600 });
+    const pem = execFileSync("openssl", [
+      "pkcs12", "-legacy", "-in", arquivo, "-passin", `file:${segredo}`,
+      "-clcerts", "-nodes",
+    ], { encoding: "utf8", maxBuffer: 512 * 1024, stdio: ["ignore", "pipe", "pipe"] });
+    const certificadoPem = pem.match(/-----BEGIN CERTIFICATE-----[\s\S]+?-----END CERTIFICATE-----/)?.[0];
+    const chavePem = pem.match(/-----BEGIN (?:RSA |EC )?PRIVATE KEY-----[\s\S]+?-----END (?:RSA |EC )?PRIVATE KEY-----/)?.[0];
+    if (!certificadoPem || !chavePem) throw new Error("Certificado ou chave privada ausente no arquivo PKCS#12.");
+
+    const certificado = new X509Certificate(certificadoPem);
+    const publicaDaChave = createPublicKey(createPrivateKey(chavePem)).export({ type: "spki", format: "der" });
+    const publicaDoCertificado = certificado.publicKey.export({ type: "spki", format: "der" });
+    if (!publicaDaChave.equals(publicaDoCertificado)) {
+      throw new ErroFiscal("O certificado não contém a chave privada correspondente.");
+    }
+    return infoCertificadoX509(certificado);
+  } finally {
+    rmSync(pasta, { recursive: true, force: true });
+  }
 }
 
 function lerCertificadoForge(pfx: Buffer, senha: string): CertificadoLido | null {
@@ -77,9 +116,23 @@ export function lerCertificado(pfx: Buffer, senha: string, cnpj: string) {
   try {
     nativo = lerCertificadoNativo(pfx, senha);
   } catch (erro) {
-    const compativel = lerCertificadoForge(pfx, senha);
-    if (compativel) return conferirCertificado(compativel, cnpj);
-    throw erroAoAbrirCertificado(erro);
+    let erroForge: unknown;
+    try {
+      const compativel = lerCertificadoForge(pfx, senha);
+      if (compativel) return conferirCertificado(compativel, cnpj);
+    } catch (falhaForge) {
+      erroForge = falhaForge;
+    }
+    try {
+      return conferirCertificado(lerCertificadoOpenSSL(pfx, senha), cnpj);
+    } catch (erroOpenSSL) {
+      const classificadoNativo = erroAoAbrirCertificado(erro);
+      if (!/não pôde ser aberto/.test(classificadoNativo.message)) throw classificadoNativo;
+      const classificado = erroAoAbrirCertificado(erroOpenSSL);
+      if (!/não pôde ser aberto/.test(classificado.message)) throw classificado;
+      if (erroForge instanceof ErroFiscal) throw erroForge;
+      throw classificadoNativo;
+    }
   }
   const info = lerCertificadoForge(pfx, senha) ?? nativo;
   return conferirCertificado(info, cnpj);
