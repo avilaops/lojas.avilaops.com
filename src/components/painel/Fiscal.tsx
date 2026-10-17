@@ -7,8 +7,8 @@ import { Secao, inputClasse } from "./campos";
 type Estado = {
   configuracao: { cnpj: string; uf: string; titular: string; validoAte: string; proximaConsultaEm: string; ultimaMensagem: string | null } | null;
   documentos: Array<{ id: string; nsu: string; schema: string; chave: string | null; recebidoEm: string }>;
+  ufEmpresa: string;
 };
-const UFS = "AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO".split(" ");
 const data = (valor: string) => new Date(valor).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
 const dia = (valor: string) => new Date(valor).toLocaleDateString("pt-BR");
 const cnpjFormatado = (cnpj: string) => cnpj.replace(/^(.{2})(.{3})(.{3})(.{4})(.{2})$/, "$1.$2.$3/$4-$5");
@@ -78,24 +78,20 @@ export default function Fiscal() {
           <input id={arquivoId} aria-label="Arquivo do certificado" name="certificado" type="file" accept=".pfx,.p12" required disabled={!!ocupado} className="sr-only" onChange={(e) => setArquivoNome(e.target.files?.[0]?.name ?? "")} />
         </label>
       </div>
-      <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_9rem]">
-        <label className="grid gap-2 text-sm font-medium">
-          Senha do certificado
-          <input name="senha" type="password" autoComplete="off" maxLength={1024} className={inputClasse} disabled={!!ocupado} />
-        </label>
-        <label className="grid gap-2 text-sm font-medium">
-          UF da empresa
-          <select name="uf" defaultValue={configuracao?.uf ?? ""} required className={inputClasse} disabled={!!ocupado}>
-            <option value="">Selecione</option>
-            {UFS.map((uf) => <option key={uf}>{uf}</option>)}
-          </select>
-        </label>
+      <label className="grid gap-2 text-sm font-medium">
+        Senha do certificado
+        <input name="senha" type="password" autoComplete="off" maxLength={1024} className={inputClasse} disabled={!!ocupado} />
+      </label>
+      <div className="rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm">
+        <span className="text-muted-foreground">UF da empresa</span>
+        <strong className="ml-2">{estado?.ufEmpresa || "Não cadastrada"}</strong>
+        {!estado?.ufEmpresa && <p className="mt-1 text-xs text-amber-900">Preencha a UF em Dados da empresa antes de guardar o certificado.</p>}
       </div>
-      <button disabled={!!ocupado || !estado} className="btn-primario w-full sm:w-fit">
+      <button disabled={!!ocupado || !estado?.ufEmpresa} className="btn-primario w-full sm:w-fit">
         <ShieldCheck size={17} aria-hidden="true" />
         {ocupado === "certificado" ? "Guardando certificado…" : "Guardar certificado"}
       </button>
-      <p className="text-xs leading-relaxed text-muted-foreground">O arquivo e a senha ficam criptografados. Use o certificado do CNPJ cadastrado em Dados da empresa.</p>
+      <p className="text-xs leading-relaxed text-muted-foreground">O arquivo e a senha ficam criptografados. O CNPJ e a UF são obtidos de Dados da empresa.</p>
     </form>
   );
 
