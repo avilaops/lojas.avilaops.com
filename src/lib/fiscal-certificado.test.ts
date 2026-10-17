@@ -81,6 +81,36 @@ test("usa o node-forge quando o OpenSSL recusa a criptografia legada do PKCS#12"
       lerCertificado(pfx, "senha", "12345678000190").titular,
       "EMPRESA LEGADA:12345678000190",
     );
+    assert.throws(
+      () => lerCertificado(pfx, "senha-incorreta", "12345678000190"),
+      /senha não corresponde/,
+    );
+  } finally {
+    rmSync(pasta, { recursive: true, force: true });
+  }
+});
+
+test("abre PKCS#12 legado com chave EC usando o OpenSSL do sistema", () => {
+  const pasta = mkdtempSync(join(tmpdir(), "fiscal-pkcs12-ec-"));
+  const chave = join(pasta, "chave.pem");
+  const certificado = join(pasta, "certificado.pem");
+  const arquivo = join(pasta, "certificado.p12");
+
+  try {
+    execFileSync("openssl", ["ecparam", "-name", "prime256v1", "-genkey", "-noout", "-out", chave]);
+    execFileSync("openssl", [
+      "req", "-new", "-x509", "-days", "1", "-key", chave, "-out", certificado,
+      "-subj", "/CN=EMPRESA EC:12345678000190",
+    ]);
+    execFileSync("openssl", [
+      "pkcs12", "-export", "-legacy", "-inkey", chave, "-in", certificado,
+      "-out", arquivo, "-passout", "pass:senha",
+    ]);
+
+    assert.equal(
+      lerCertificado(readFileSync(arquivo), "senha", "12345678000190").titular,
+      "EMPRESA EC:12345678000190",
+    );
   } finally {
     rmSync(pasta, { recursive: true, force: true });
   }
