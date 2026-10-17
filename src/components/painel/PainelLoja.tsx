@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { IdentidadeLoja } from "@/lib/identidade";
-import type { TemaLoja } from "@/lib/tema";
 import { Campo, Secao, brl, inputClasse } from "./campos";
 import { PLANOS, mensalidade } from "@/lib/planos";
 import Marca from "./Marca";
@@ -15,17 +14,16 @@ import Vendas from "./Vendas";
 import type { ResumoVendas } from "@/lib/relatorio";
 import type { DiagnosticoFeed } from "@/lib/catalogo";
 import Anuncios, { type PixelsView } from "./Anuncios";
-import McpPainel from "./McpPainel";
-import ChavesApiPainel from "./ChavesApiPainel";
-import WebhooksPainel from "./WebhooksPainel";
+import IaEApi from "./IaEApi";
 import CatalogoLista from "./CatalogoLista";
 import SoltarPlanilha from "./SoltarPlanilha";
-import { FileCheck2 } from "lucide-react";
+import { Download, FileCheck2 } from "lucide-react";
 import Inventario from "./Inventario";
 import Pedidos from "./Pedidos";
 import NovoProduto from "./NovoProduto";
 import ChecklistOnboarding from "./ChecklistOnboarding";
 import { checklistDeOnboarding, resumoDoChecklist } from "@/lib/checklist-onboarding";
+import { LAYOUTS, type TemaLoja } from "@/lib/tema";
 
 export interface LojaView {
   slug: string;
@@ -66,6 +64,8 @@ export interface LojaView {
   entregaLocal: Array<{ prefixos: string[]; nome: string; preco: number; prazoDiasUteis: number; gratisAcima?: number | null }>;
   /** Já tem credencial salva: o checkout aparece na loja. */
   mpConfigurado: boolean;
+  melhorEnvioConectado: boolean;
+  cotacaoDaPlataforma: boolean;
   /** A credencial veio da conexão por OAuth, e não de chave colada. */
   mpPorOAuth: boolean;
   /** O aplicativo da plataforma existe: o botão de conectar aparece acima deste formulário. */
@@ -73,7 +73,7 @@ export interface LojaView {
   assinatura: { status: string; plano: string; podeTrocarPlano: boolean; isenta: boolean; precoCentavos: number; planoNome: string; ultimoPagamentoEm: string | null; setupPagoEm: string | null; criadoEm: string; testeAte: string; emTeste: boolean; faturas: Array<{ id: string; centavos: number; status: string; pagaEm: string | null; criadoEm: string }> };
 }
 export interface EnderecoEntregaView { logradouro: string; numero: string; complemento?: string | null; bairro: string; cidade: string; uf: string; cep: string }
-export interface PedidoView { id: string; numero: number; referencia: string; status: string; clienteNome: string; clienteEmail: string; clienteTelefone: string; clienteDocumento: string; totalCentavos: number; subtotalCentavos: number; freteCentavos: number; descontoCentavos: number; cupomCodigo: string | null; meioPagamento: string; freteNome: string; rastreio: string | null; entrega: EnderecoEntregaView | null; etiqueta: { status: string; codigoObjeto: string | null; pdf: string | null; custoCentavos: number } | null; criadoEm: string; itens: Array<{ nome: string; quantidade: number; sku: string | null; precoUnitarioCentavos: number }> }
+export interface PedidoView { id: string; numero: number; referencia: string; status: string; clienteNome: string; clienteEmail: string; clienteTelefone: string; clienteDocumento: string; totalCentavos: number; subtotalCentavos: number; freteCentavos: number; descontoCentavos: number; cupomCodigo: string | null; meioPagamento: string; freteNome: string; rastreio: string | null; entrega: EnderecoEntregaView | null; etiqueta: { status: string; codigoObjeto: string | null; pdf: string | null; custoCentavos: number } | null; criadoEm: string; itens: Array<{ nome: string; quantidade: number; sku: string | null; precoUnitarioCentavos: number }>; pixManual?: { valorCentavos: number; informadoEm: string | null } | null }
 
 const STATUS: Record<string, string> = { ATIVA: "No ar", PROVISIONANDO: "Configurando", SUSPENSA: "Suspensa", CANCELADA: "Cancelada" };
 const CAMPOS_IMPORTACAO = [
@@ -124,7 +124,7 @@ const ASSINATURA: Record<string, { rotulo: string; classe: string }> = {
   CANCELADA: { rotulo: "Cancelada", classe: "bg-red-100 text-red-800" },
 };
 
-export default function PainelLoja({ secao, loja, contagens, cupons, categorias, avaliacoes, vendas, catalogo, espera, postagem }: { secao: SecaoPainel; loja: LojaView; contagens: { semEmbalagem: number; ativos: number; semFoto: number; pedidos: number }; cupons: CupomView[]; categorias: CategoriaView[]; avaliacoes: AvaliacaoPainelView[]; vendas: ResumoVendas; catalogo: DiagnosticoFeed; espera: Array<{ produto: string; pessoas: number }>; postagem: { etiquetas: number; custoCentavos: number; limiteCentavos: number } }) {
+export default function PainelLoja({ secao, loja, contagens, cupons, categorias, avaliacoes, vendas, catalogo, espera, postagem, layouts = LAYOUTS.filter((l) => l.valor !== "atelie"), pecas = [] }: { secao: SecaoPainel; loja: LojaView; contagens: { semEmbalagem: number; ativos: number; semFoto: number; pedidos: number }; cupons: CupomView[]; categorias: CategoriaView[]; avaliacoes: AvaliacaoPainelView[]; vendas: ResumoVendas; catalogo: DiagnosticoFeed; espera: Array<{ produto: string; pessoas: number }>; postagem: { etiquetas: number; custoCentavos: number; limiteCentavos: number }; layouts?: Array<{ valor: TemaLoja["layout"]; rotulo: string; descricao: string }>; pecas?: { slug: string; nome: string }[] }) {
   const router = useRouter();
   // A seção vem da URL, não do estado: quem manda na tela é o endereço.
   const aba = secao;
@@ -156,6 +156,8 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
   const [importando, setImportando] = useState<{ feitos: number; total: number } | null>(null);
   const [limiteEstoque, setLimiteEstoque] = useState(String(loja.estoqueBaixoEm));
   const [empresa, setEmpresa] = useState({ razaoSocial: loja.razaoSocial ?? "", cnpj: loja.cnpj ?? "" });
+  const [consultandoCnpj, setConsultandoCnpj] = useState(false);
+  const [consultandoCep, setConsultandoCep] = useState(false);
   const [enderecoEmpresa, setEnderecoEmpresa] = useState({
     logradouro: loja.endereco?.logradouro ?? "", numero: loja.endereco?.numero ?? "",
     complemento: loja.endereco?.complemento ?? "", bairro: loja.endereco?.bairro ?? "",
@@ -172,6 +174,56 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
   const [senha, setSenha] = useState({ atual: "", nova: "" });
 
   const centavos = (v: string) => Math.round(Number.parseFloat(v.replace(/[^\d,.-]/g, "").replace(",", ".")) * 100);
+
+  async function buscarDadosDoCnpj() {
+    const cnpj = empresa.cnpj.replace(/\D/g, "");
+    if (cnpj.length !== 14) return;
+    setErro(null); setOk(null); setConsultandoCnpj(true);
+    try {
+      const resposta = await fetch(`/api/painel/cnpj?cnpj=${encodeURIComponent(cnpj)}`);
+      const dados = await resposta.json().catch(() => ({}));
+      if (!resposta.ok) throw new Error(dados?.erro ?? "Não foi possível consultar o CNPJ.");
+      setEmpresa((atual) => ({ ...atual, razaoSocial: dados.razaoSocial || atual.razaoSocial }));
+      setEnderecoEmpresa((atual) => ({
+        ...atual,
+        logradouro: dados.endereco?.logradouro || atual.logradouro,
+        numero: dados.endereco?.numero || atual.numero,
+        complemento: dados.endereco?.complemento || atual.complemento,
+        bairro: dados.endereco?.bairro || atual.bairro,
+        cidade: dados.endereco?.cidade || atual.cidade,
+        uf: dados.endereco?.uf || atual.uf,
+        cep: dados.endereco?.cep || atual.cep,
+      }));
+      setOk("Dados encontrados. Confira e salve.");
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Não foi possível consultar o CNPJ.");
+    } finally {
+      setConsultandoCnpj(false);
+    }
+  }
+
+  async function buscarDadosDoCep() {
+    const cep = enderecoEmpresa.cep.replace(/\D/g, "");
+    if (cep.length !== 8) return;
+    setErro(null); setOk(null); setConsultandoCep(true);
+    try {
+      const resposta = await fetch(`/api/cep?cep=${encodeURIComponent(cep)}`);
+      const dados = await resposta.json().catch(() => ({}));
+      if (!resposta.ok) throw new Error(dados?.erro ?? "Não foi possível consultar o CEP.");
+      setEnderecoEmpresa((atual) => ({
+        ...atual,
+        logradouro: dados.logradouro || atual.logradouro,
+        bairro: dados.bairro || atual.bairro,
+        cidade: dados.cidade || atual.cidade,
+        uf: dados.uf || atual.uf,
+      }));
+      setOk("Endereço encontrado. Informe o número e salve.");
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Não foi possível consultar o CEP.");
+    } finally {
+      setConsultandoCep(false);
+    }
+  }
 
   /**
    * A planilha é lida no servidor, não no navegador: é lá que existe o
@@ -260,7 +312,7 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
       <div className="flex flex-wrap items-center gap-3 text-sm">
         <span className={`rounded-full px-3 py-1 text-xs font-semibold ${loja.status === "ATIVA" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>{STATUS[loja.status] ?? loja.status}</span>
         <span className="text-muted-foreground">Plano {loja.plano.replace("_", " ")}</span>
-        {loja.emailRemetente && <span className="text-muted-foreground">e-mail: {loja.emailRemetente}</span>}
+        {loja.emailContato && <span className="text-muted-foreground">e-mail: {loja.emailContato}</span>}
       </div>
 
       {erro && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{erro}</p>}
@@ -270,7 +322,32 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
 
       {aba === "Visão geral" && (
         <div className="painel-overview">
-          <Vendas r={vendas} espera={espera} irPara={irPara} />
+          {/* Os quatro números que respondem "como está a loja" numa linha só.
+              Estavam em dois lugares (receita num cartão no topo, catálogo,
+              pedidos e loja em três cartões no fim) e a tela passava de duas
+              alturas de celular. */}
+          <div className="painel-metricas">
+            <a href="/painel/analises">
+              <small>Vendas · 30 dias</small>
+              <strong>{brl(vendas.receitaCentavos)}</strong>
+              <span>{vendas.variacao !== null ? `${vendas.variacao >= 0 ? "▲" : "▼"} ${Math.abs(vendas.variacao)}%` : "Análises →"}</span>
+            </a>
+            <button onClick={() => irPara("Pedidos")}>
+              <small>Pedidos</small>
+              <strong>{contagens.pedidos.toLocaleString("pt-BR")}</strong>
+              <span>{vendas.aSeparar > 0 ? `${vendas.aSeparar} a separar →` : "Ver →"}</span>
+            </button>
+            <button onClick={() => irPara("Produtos")}>
+              <small>Produtos</small>
+              <strong>{contagens.ativos.toLocaleString("pt-BR")}</strong>
+              <span>{contagens.ativos ? "Ver →" : "Cadastrar →"}</span>
+            </button>
+            <a href={loja.url} target="_blank" rel="noopener">
+              <small>Sua loja</small>
+              <strong>{loja.status === "ATIVA" ? "No ar" : "Em preparação"}</strong>
+              <span>Abrir ↗</span>
+            </a>
+          </div>
 
           {/* O painel responde o que precisa de acao, nao explica a plataforma.
               Havia aqui um bloco institucional ("Sua marca esta no ar. Cuide
@@ -290,6 +367,8 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
               produtosAtivos: contagens.ativos,
               mpConfigurado: loja.mpConfigurado,
               cepOrigem: loja.cepOrigem,
+              melhorEnvioConectado: loja.melhorEnvioConectado,
+              cotacaoDaPlataforma: loja.cotacaoDaPlataforma,
               tabelaFrete: loja.tabelaFrete,
               entregaLocal: loja.entregaLocal,
               retiradaNaLoja: loja.retiradaNaLoja,
@@ -326,23 +405,7 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
             );
           })()}
 
-          <div className="painel-metricas">
-            <button onClick={() => irPara("Produtos")}>
-              <small>Catálogo</small>
-              <strong>{contagens.ativos.toLocaleString("pt-BR")}</strong>
-              <span>{contagens.ativos ? "Ver produtos →" : "Cadastrar o primeiro →"}</span>
-            </button>
-            <button onClick={() => irPara("Pedidos")}>
-              <small>Pedidos</small>
-              <strong>{contagens.pedidos.toLocaleString("pt-BR")}</strong>
-              <span>Ver pedidos →</span>
-            </button>
-            <a href={loja.url} target="_blank" rel="noopener">
-              <small>Sua loja</small>
-              <strong>{loja.status === "ATIVA" ? "No ar" : "Em preparação"}</strong>
-              <span>Abrir loja ↗</span>
-            </a>
-          </div>
+          <Vendas r={vendas} espera={espera} irPara={irPara} />
         </div>
       )}
 
@@ -382,6 +445,14 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
           </Secao>
 
           <Secao titulo="Importar planilha" descricao="Produto com o mesmo SKU é atualizado, não duplicado.">
+            <div>
+              <a
+                className="btn-secundario inline-flex h-11 items-center gap-2 px-4 text-sm"
+                href="/api/painel/exportar?tipo=produtos&formato=xlsx&modelo=1"
+              >
+                <Download size={16} aria-hidden="true" /> Exportar modelo de planilha
+              </a>
+            </div>
             <p className="text-xs text-muted-foreground">Colunas: <code>nome, preco, categoria, google_product_category, marca, sku, gtin, mpn, identificadores_estado, preco_de, descricao_curta, descricao, imagem, imagem_origem, imagem_familia, confirmar_imagem_exata, correspondencia_imagem, destaque, peso_kg, altura_cm, largura_cm, comprimento_cm, estoque, ativo</code></p>
             <p className="text-xs text-muted-foreground">Use MPN somente para o código do fabricante. Em <code>google_product_category</code>, informe o ID ou o caminho oficial confirmado. Em atualização por planilha, a célula vazia mantém o valor salvo; escreva <code>auto</code> para remover uma substituição e voltar à classificação automática. Em <code>identificadores_estado</code>, informe <code>desconhecido</code>, <code>informado</code> ou <code>sem_identificador</code>, conforme embalagem ou fornecedor. Em <code>confirmar_imagem_exata</code>, informe <code>sim</code> só depois de conferir que a foto principal mostra exatamente o produto e a apresentação daquele SKU. Em <code>correspondencia_imagem</code>, use <code>confirmada</code> ou <code>rejeitada</code> após conferir a foto principal. A rejeição bloqueia o item do Merchant até substituir a foto e revisar o estado. Em produtos com variantes, a planilha atualiza a apresentação padrão.</p>
             {/* São as mesmas colunas que a exportação do Catálogo grava: o
@@ -485,11 +556,7 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
       {aba === "Anúncios" && <Anuncios pixels={loja.pixels} catalogo={catalogo} feedUrl={`${loja.url}/feed/merchant.xml`} chamar={chamar} ocupado={ocupado} />}
 
       {aba === "IA" && (
-        <>
-          <McpPainel lojaPlano={loja.plano} lojaSlug={loja.slug} aoIrParaAssinatura={() => irPara("Assinatura")} />
-          <ChavesApiPainel />
-          <WebhooksPainel />
-        </>
+        <IaEApi lojaPlano={loja.plano} lojaSlug={loja.slug} aoIrParaAssinatura={() => irPara("Assinatura")} />
       )}
 
       {aba === "Pedidos" && (
@@ -513,7 +580,7 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
         </>
       )}
 
-      {aba === "Marca" && <Marca loja={loja} categorias={categorias} chamar={chamar} ocupado={ocupado} />}
+      {aba === "Marca" && <Marca loja={loja} categorias={categorias} chamar={chamar} ocupado={ocupado} layouts={layouts} pecas={pecas} />}
 
       {aba === "Entrega" && (
         <Secao titulo="Entrega e frete" descricao="Vale quando o Melhor Envio não está conectado ou não atende o destino. Sem ele e sem tabela, o cliente vê apenas retirada na loja (ou frete a combinar).">
@@ -701,16 +768,27 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
           )}
           <div className="grid gap-4 sm:grid-cols-2">
             <Campo label="Razão social" ajuda="O nome que está no cartão CNPJ, não o nome fantasia."><input className={inputClasse} value={empresa.razaoSocial} onChange={(e) => setEmpresa({ ...empresa, razaoSocial: e.target.value })} placeholder="Vedashow Comércio de Vedações Ltda" /></Campo>
-            <Campo label="CNPJ"><input className={inputClasse} value={empresa.cnpj} onChange={(e) => setEmpresa({ ...empresa, cnpj: e.target.value })} placeholder="00.000.000/0001-00" inputMode="numeric" /></Campo>
+            <Campo label="CNPJ" ajuda="Ao sair do campo, buscamos razão social e endereço."><input className={inputClasse} value={empresa.cnpj} onChange={(e) => setEmpresa({ ...empresa, cnpj: e.target.value })} onBlur={buscarDadosDoCnpj} placeholder="00.000.000/0001-00" inputMode="numeric" /></Campo>
           </div>
-          <div><button className="btn-primario" disabled={ocupado} onClick={() => chamar("/api/painel/loja", "PATCH", { razaoSocial: empresa.razaoSocial.trim() || null, cnpj: empresa.cnpj.trim() || null }, "Dados da empresa salvos.")}>Salvar</button></div>
+          <div className="flex flex-wrap gap-3">
+            <button className="btn-secundario" disabled={ocupado || consultandoCnpj || empresa.cnpj.replace(/\D/g, "").length !== 14} onClick={buscarDadosDoCnpj}>{consultandoCnpj ? "Buscando..." : "Buscar dados do CNPJ"}</button>
+            <button className="btn-primario" disabled={ocupado || consultandoCnpj} onClick={() => {
+              const cep = enderecoEmpresa.cep.replace(/\D/g, "");
+              chamar("/api/painel/loja", "PATCH", {
+                razaoSocial: empresa.razaoSocial.trim() || null,
+                cnpj: empresa.cnpj.trim() || null,
+                endereco: { logradouro: enderecoEmpresa.logradouro.trim(), numero: enderecoEmpresa.numero.trim(), complemento: enderecoEmpresa.complemento.trim(), bairro: enderecoEmpresa.bairro.trim(), cidade: enderecoEmpresa.cidade.trim(), uf: enderecoEmpresa.uf.trim().slice(0, 2), ...(cep.length === 8 ? { cep } : {}) },
+                ...(cep.length === 8 ? { cepOrigem: cep } : {}),
+              }, "Dados da empresa salvos.");
+            }}>Salvar</button>
+          </div>
         </Secao>
         <Secao titulo="Endereço da empresa e retirada" descricao="Mantenha o endereço correto para as informações legais, contato e cálculo de frete. O endereço aparece na página de contato quando a opção pública estiver ativa e nas políticas da loja.">
           {loja.retiradaNaLoja && !(enderecoEmpresa.logradouro && enderecoEmpresa.numero && enderecoEmpresa.cidade && enderecoEmpresa.uf && enderecoEmpresa.cep.replace(/\D/g, "").length === 8) && (
             <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">A retirada está ativa, mas o endereço está incompleto. Preencha rua, número, cidade, UF e CEP para orientar os clientes.</p>
           )}
           <div className="grid gap-4 sm:grid-cols-2">
-            <Campo label="CEP"><input className={inputClasse} inputMode="numeric" value={enderecoEmpresa.cep} onChange={(e) => setEnderecoEmpresa({ ...enderecoEmpresa, cep: e.target.value })} placeholder="00000-000" /></Campo>
+            <Campo label="CEP" ajuda="Ao sair do campo, buscamos rua, bairro, cidade e UF."><input className={inputClasse} inputMode="numeric" value={enderecoEmpresa.cep} onChange={(e) => setEnderecoEmpresa({ ...enderecoEmpresa, cep: e.target.value })} onBlur={buscarDadosDoCep} placeholder="00000-000" /></Campo>
             <Campo label="Logradouro"><input className={inputClasse} value={enderecoEmpresa.logradouro} onChange={(e) => setEnderecoEmpresa({ ...enderecoEmpresa, logradouro: e.target.value })} placeholder="Rua ou avenida" /></Campo>
             <Campo label="Número"><input className={inputClasse} value={enderecoEmpresa.numero} onChange={(e) => setEnderecoEmpresa({ ...enderecoEmpresa, numero: e.target.value })} /></Campo>
             <Campo label="Complemento"><input className={inputClasse} value={enderecoEmpresa.complemento} onChange={(e) => setEnderecoEmpresa({ ...enderecoEmpresa, complemento: e.target.value })} /></Campo>
@@ -719,7 +797,9 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
             <Campo label="UF"><input className={inputClasse} maxLength={2} value={enderecoEmpresa.uf} onChange={(e) => setEnderecoEmpresa({ ...enderecoEmpresa, uf: e.target.value.toUpperCase() })} placeholder="SP" /></Campo>
             <label className="flex min-h-[44px] items-center gap-2 text-sm"><input type="checkbox" className="h-5 w-5" checked={enderecoEmpresa.enderecoPublico || loja.retiradaNaLoja} disabled={loja.retiradaNaLoja} onChange={(e) => setEnderecoEmpresa({ ...enderecoEmpresa, enderecoPublico: e.target.checked })} /> Mostrar endereço na página de contato{loja.retiradaNaLoja && <span className="text-muted-foreground">(obrigatório para retirada)</span>}</label>
           </div>
-          <div><button className="btn-primario" disabled={ocupado} onClick={() => {
+          <div className="flex flex-wrap gap-3">
+            <button className="btn-secundario" disabled={ocupado || consultandoCep || enderecoEmpresa.cep.replace(/\D/g, "").length !== 8} onClick={buscarDadosDoCep}>{consultandoCep ? "Buscando..." : "Buscar endereço"}</button>
+            <button className="btn-primario" disabled={ocupado || consultandoCep} onClick={() => {
             const cep = enderecoEmpresa.cep.replace(/\D/g, "");
             chamar("/api/painel/loja", "PATCH", {
               endereco: { logradouro: enderecoEmpresa.logradouro.trim(), numero: enderecoEmpresa.numero.trim(), complemento: enderecoEmpresa.complemento.trim(), bairro: enderecoEmpresa.bairro.trim(), cidade: enderecoEmpresa.cidade.trim(), uf: enderecoEmpresa.uf.trim().slice(0, 2), ...(cep.length === 8 ? { cep } : {}) },

@@ -3,6 +3,7 @@ import { filtroDaUrl } from "@/lib/catalogo-filtros";
 import {
   FORMATOS,
   clientesEmLinhas,
+  modeloDeProdutosEmLinhas,
   montarPlanilha,
   pedidosEmLinhas,
   produtosEmLinhas,
@@ -36,18 +37,33 @@ export async function GET(request: Request) {
   }
   const escolha = TIPOS[tipo as keyof typeof TIPOS];
 
+  const formato: Formato = url.searchParams.get("formato") === "xlsx" ? "xlsx" : "csv";
+  const modelo = tipo === "produtos" && url.searchParams.get("modelo") === "1";
+
+  // O modelo não contém dado da loja. Mantê-lo atrás da sessão fazia o link
+  // abrir uma aba com JSON de "Sessão expirada" quando o painel ficava aberto
+  // por algumas horas, justamente antes do lojista começar a planilha.
+  if (modelo) {
+    const corpo = montarPlanilha(modeloDeProdutosEmLinhas(), formato, escolha.aba);
+    const { tipo: contentType, extensao } = FORMATOS[formato];
+    return new Response(corpo, {
+      headers: {
+        "content-type": contentType,
+        "content-disposition": `attachment; filename="modelo-produtos.${extensao}"`,
+        "cache-control": "public, max-age=3600",
+      },
+    });
+  }
+
   const { s, erro } = await exigir(escolha.permissao);
   if (erro) return erro;
   const loja = s.tenant;
 
-  const formato: Formato = url.searchParams.get("formato") === "xlsx" ? "xlsx" : "csv";
-
-  const linhas =
-    tipo === "produtos"
-      ? await produtosEmLinhas(loja.id, filtroDaUrl(url))
-      : tipo === "pedidos"
-        ? await pedidosEmLinhas(loja.id)
-        : await clientesEmLinhas(loja.id);
+  const linhas = tipo === "produtos"
+    ? await produtosEmLinhas(loja.id, filtroDaUrl(url))
+    : tipo === "pedidos"
+      ? await pedidosEmLinhas(loja.id)
+      : await clientesEmLinhas(loja.id);
 
   const corpo = montarPlanilha(linhas, formato, escolha.aba);
   const dia = new Date().toISOString().slice(0, 10);

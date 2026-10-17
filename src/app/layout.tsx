@@ -14,7 +14,8 @@ import { noEnderecoOficial, tenantAtual, tenantPublico, temaDo, urlDaLoja, ender
 import { descricaoDaLoja } from "@/lib/textos-loja";
 import { listarCategorias } from "@/lib/catalogo";
 import { cssDoTema } from "@/lib/tema";
-import { familiaHospedada, preCargasDaFonte } from "@/lib/fontes-loja";
+import { temaNaVitrine } from "@/lib/flags";
+import { familiaHospedada, familiaSerifAtelie, preCargasDaFonte } from "@/lib/fontes-loja";
 import { contratoDo, usaBlocoProprio } from "@/lib/templates";
 import { CartProvider } from "@/components/cart/CartProvider";
 import Header from "@/components/Header";
@@ -159,7 +160,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   }
 
   const tema = temaDo(t);
-  const contrato = contratoDo(tema);
+  const publicado = temaNaVitrine(tema);
+  const contrato = contratoDo(publicado);
   const cabecalhoProprio = usaBlocoProprio(tema, "cabecalho");
   const carrinhoProprio = usaBlocoProprio(tema, "carrinho");
   const identidade = identidadeDa(t);
@@ -221,7 +223,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="pt-BR" data-ck-theme={tema.modo === "escuro" ? "dark" : "light"} data-template={contrato.atributoHtml ? contrato.layout : undefined} data-modo={tema.modo} suppressHydrationWarning={contrato.atributoHtml}>
       <head>
         {preCargasDaFonte(tema.fonte).map((href) => <link key={href} rel="preload" as="font" type="font/woff2" href={href} crossOrigin="anonymous" />)}
-        <style dangerouslySetInnerHTML={{ __html: `${cssDoTema(tema, familiaHospedada(tema.fonte))}:root{--brand-support:${identidade.corApoio}}` }} />
+        <style dangerouslySetInnerHTML={{ __html: `${cssDoTema(tema, familiaHospedada(tema.fonte))}:root{--brand-support:${identidade.corApoio};--fonte-serif:${familiaSerifAtelie().replace(/</g, "")}}` }} />
         {contrato.atributoHtml && <script dangerouslySetInnerHTML={{ __html: `try{var m=localStorage.getItem(${JSON.stringify(`loja:${t.slug}:modo`).replace(/</g,"\\u003c")});if(m==='claro'||m==='escuro'){document.documentElement.dataset.modo=m;document.documentElement.dataset.ckTheme=m==='escuro'?'dark':'light'}}catch(e){}` }}/ >}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSite) }} />
@@ -230,7 +232,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             complemento; quem indexa continua sendo sitemap + páginas. */}
         <link rel="describedby" href="/llms.txt" />
       </head>
-      <body className="flex min-h-screen flex-col" data-layout={tema.layout}>
+      <body className="flex min-h-screen flex-col" data-layout={publicado.layout}>
         <Pixels p={pixels} />
         {/* Medição da própria vitrine, no próprio domínio. `useSearchParams`
             obriga o Suspense: sem ele a página inteira cairia em renderização
@@ -249,7 +251,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <Footer tenant={t} categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} temBlog={publicacoes > 0} />
           {carrinhoProprio && <CarrinhoLateral pedidoMinimoCentavos={publico.pedidoMinimoCentavos}/>}
           {t.whatsapp && <WhatsAppFlutuante numero={t.whatsapp} nome={t.nome} />}
-          {/* Navegação do celular. Vale para os doze layouts: é da loja, não
+          {/* Navegação do celular. Vale para todos os layouts: é da loja, não
               do template. As abas saem do que a loja faz — ver o componente. */}
           <BarraInferior vende={publico.vende} temContato={Boolean(t.whatsapp || t.telefone || t.emailContato)} />
           {t.googleMerchantId && t.googleSeloAvaliacoes && <SeloAvaliacaoGoogle merchantId={t.googleMerchantId} />}

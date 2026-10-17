@@ -174,6 +174,41 @@ export function linhaDoProduto(p: ProdutoDePlanilha): Valor[] {
   ];
 }
 
+/** Modelo editável que percorre exatamente o mesmo contrato da exportação e
+ * da importação. Uma linha concreta é mais útil que uma grade de 24 colunas
+ * vazias e pode ser apagada antes do envio. */
+export function modeloDeProdutosEmLinhas(): Valor[][] {
+  return [
+    [...COLUNAS_PRODUTO],
+    linhaDoProduto({
+      nome: "Produto de exemplo",
+      precoCentavos: 4990,
+      precoDeCentavos: null,
+      googleProductCategory: null,
+      marca: "Minha marca",
+      sku: "SKU-001",
+      gtin: "0789123456789",
+      mpn: null,
+      identificadoresEstado: "informado",
+      descricaoCurta: "Descrição curta do produto",
+      descricao: "Descrição completa do produto",
+      imagens: [],
+      imagemOrigem: null,
+      imagemFamilia: null,
+      imagemConfirmada: false,
+      correspondenciaImagem: "nao_confirmada",
+      destaque: false,
+      ativo: true,
+      estoque: 10,
+      pesoKg: 0.5,
+      alturaCm: 10,
+      larguraCm: 15,
+      comprimentoCm: 20,
+      categoria: { nome: "Categoria de exemplo" },
+    }),
+  ];
+}
+
 /**
  * O catálogo como planilha, respeitando o filtro que está na tela: quem
  * filtrou "sem preço" baixa os 5.588 sem preço, não o catálogo inteiro.

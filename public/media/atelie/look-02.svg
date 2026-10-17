@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" role="img">
+  <title>Look fictício, camisa e calça</title>
+  <rect width="1200" height="900" fill="#cbb59a"/>
+  <path d="M250 160 L430 240 L610 160 L700 280 L560 340 L560 760 L300 760 L300 340 L160 280 Z" fill="#f4ece3"/>
+  <path d="M700 180 H980 L1040 780 H900 L840 420 L780 780 H640 Z" fill="#7c4f3e" opacity=".8"/>
+</svg>

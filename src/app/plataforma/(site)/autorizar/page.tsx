@@ -3,9 +3,8 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import AutorizarConexao from "@/components/painel/AutorizarConexao";
-import { clientePorId } from "@/lib/mcp-conexoes";
+import { clientePorId, tetoDoPapel } from "@/lib/mcp-conexoes";
 import { abrirPedido, COOKIE_DO_PEDIDO } from "@/lib/mcp-oauth";
-import { permite } from "@/lib/operadores";
 import { sessaoDoPainel } from "@/lib/sessao";
 
 export const metadata: Metadata = {
@@ -95,7 +94,7 @@ export default async function AutorizarPage({ searchParams }: { searchParams: Pr
             : "Só continue se foi você quem acabou de pedir a conexão nesse endereço."}
         </p>
         <AutorizarConexao
-          podeAutorizar={permite(s.papel, "configuracoes")}
+          teto={tetoDoPapel(s.papel)}
           planoPermite={s.tenant.plano === "LOJA_PRO"}
           lojaAtiva={s.tenant.status === "ATIVA"}
         />

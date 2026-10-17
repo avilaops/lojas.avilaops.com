@@ -1,3 +1,4 @@
+import { meiosAceitos, pixNaConta } from "./recursos";
 import { cache } from "react";
 import { headers } from "next/headers";
 import type { Tenant } from "@prisma/client";
@@ -177,7 +178,12 @@ export function urlDaLoja(t: Tenant): string {
  * que é exatamente o que uma loja-demo deve fazer.
  */
 export function lojaVende(t: Tenant): boolean {
-  return t.status === "ATIVA" && t.plano !== "SITE" && Boolean(t.mpAccessTokenEnc);
+  if (t.status !== "ATIVA" || t.plano === "SITE") return false;
+  // Mercado Pago (ou loja ainda sem padrão): vale o token nas colunas mp*,
+  // como sempre. Outro provedor: vale ter credencial padrão, que só vira
+  // padrão se estiver Conectado (src/lib/credenciais.ts).
+  if (!t.provedorPadrao || t.provedorPadrao === "mercadopago") return Boolean(t.mpAccessTokenEnc);
+  return Boolean(t.credencialPadraoId);
 }
 
 /** O que o navegador pode saber da loja. Nunca inclui token cifrado. */
@@ -189,7 +195,9 @@ export function tenantPublico(t: Tenant) {
     status: t.status,
     whatsapp: t.whatsapp,
     mpPublicKey: t.mpPublicKey,
-    meiosPagamento: t.meiosPagamento,
+    // Pix na conta da loja só tem Pix: cartão e boleto não passam por ele.
+    meiosPagamento: meiosAceitos(t),
+    pixNaConta: pixNaConta(t),
     retiradaNaLoja: retiradaPublicaDisponivel(t),
     despachoDiasUteis: t.despachoDiasUteis,
     estoqueBaixoEm: t.estoqueBaixoEm,

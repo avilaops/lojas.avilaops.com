@@ -1,3 +1,6 @@
+import { prisma } from "@/lib/db";
+import { resolverLooks, slugsDosLooks } from "@/lib/atelie";
+import { temaNaVitrine } from "@/lib/flags";
 import { exigirTenant, identidadeDa, lojaVende, temaDo } from "@/lib/tenant";
 import { listarCategorias, listarProdutos, marcasDaLoja, motosDaLoja, necessidadesDaLoja, provaSocialDa, vitrineDaLoja } from "@/lib/catalogo";
 import { minhaMoto } from "@/lib/minha-moto";
@@ -30,7 +33,8 @@ export default async function Home() {
   const motopecas = t.segmento === "motopecas";
   const moto = motopecas ? await minhaMoto() : null;
   const tema = temaDo(t);
-  const layoutAtual = tema.layout;
+  const publicado = temaNaVitrine(tema);
+  const layoutAtual = publicado.layout;
   const campanhaVisual = layoutAtual === "distribuidora" && ((tema.campanhasHome?.length ?? 0) > 0 || Boolean(t.bannerUrl));
   const [categorias, destaques, prova, motos, marcas, necessidades] = await Promise.all([
     listarCategorias(t.id),
@@ -58,11 +62,16 @@ export default async function Home() {
         return destaquesComuns.length ? destaquesComuns : vitrineDaLoja(t.id, { moto });
       })()
     : destaques.length ? destaques : await vitrineDaLoja(t.id, { moto });
-  const dados = { t, identidade: identidadeDa(t), categorias, vitrine, temDestaques: destaques.length > 0, vende: lojaVende(t), moto, necessidades };
+  const slugs = publicado.layout === "atelie" ? slugsDosLooks(tema) : [];
+  const pecasDoLook = slugs.length
+    ? await prisma.produto.findMany({ where: { tenantId: t.id, ativo: true, slug: { in: slugs } } })
+    : [];
+  const looks = publicado.layout === "atelie" ? resolverLooks(tema, pecasDoLook) : [];
+  const dados = { t, identidade: identidadeDa(t), categorias, vitrine, temDestaques: destaques.length > 0, vende: lojaVende(t), moto, necessidades, looks };
 
   return (
     <>
-      {comporHome(tema, dados)}
+      {comporHome(publicado, dados)}
       {motos && <Garagem moto={moto} motos={motos} marcas={marcas} nomeDaLoja={t.nome} />}
       {!campanhaVisual && <ProvaSocial dados={prova} nomeDaLoja={t.nome} />}
       {!campanhaVisual && prova.media !== null && prova.total >= 3 && (

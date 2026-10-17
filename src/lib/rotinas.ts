@@ -109,6 +109,13 @@ export const ROTINAS = {
     travaMinutos: 15,
     falhasAteAlerta: 3,
   },
+  "pix.expirar": {
+    titulo: "Pix vencido",
+    descricao: "Cancela o Pix na conta que passou do prazo e devolve o estoque",
+    cadencia: { tipo: "intervalo", minutos: 10 },
+    travaMinutos: 10,
+    falhasAteAlerta: 2,
+  },
   "pix.lembrete": {
     titulo: "Lembrete de Pix",
     descricao: "Avisa quem gerou Pix há mais de 30 minutos e ainda não pagou",
@@ -158,6 +165,14 @@ export const ROTINAS = {
     descricao: "Gera e publica em lote o SEO de categoria pendente, fora do acesso público",
     cadencia: { tipo: "diaria", hora: 3 },
     travaMinutos: 30,
+    falhasAteAlerta: 2,
+  },
+  "mcp.historico": {
+    titulo: "Histórico do MCP",
+    descricao: "Apaga de todas as lojas o histórico do conector MCP que passou da retenção",
+    cadencia: { tipo: "diaria", hora: 2 },
+    travaMinutos: 15,
+    // A política de privacidade promete o prazo; dois dias seguidos sem faxina já é aviso.
     falhasAteAlerta: 2,
   },
   "cobranca.verificar": {

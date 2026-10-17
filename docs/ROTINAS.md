@@ -33,6 +33,7 @@ e preso por teste. Quem muda um deles mexe em `ROTINAS`, não na tela.
 | `pedidos.verificar` | Pagamento pendente | a cada hora | confere no gateway os pedidos aguardando pagamento (Pix, boleto) dos últimos 7 dias. Rede de segurança do webhook | `POST /api/admin/pedidos/verificar` |
 | `mercadopago.renovar` | Acesso ao MP | todo dia às 4h | renova o acesso das lojas conectadas ao Mercado Pago por OAuth que vence em até 30 dias. Termina em erro se alguma loja não renovar (`docs/MERCADO-PAGO-OAUTH.md`) | — |
 | `seo.categorias` | SEO de categoria | todo dia às 3h | gera e publica SEO pendente em lote, sem IA no acesso público | `POST /api/admin/seo/categorias` |
+| `mcp.historico` | Histórico do MCP | todo dia às 2h | apaga de todas as lojas o histórico do conector MCP com mais de 90 dias, prazo prometido em `/developers/privacidade` (`docs/MCP.md`) | — |
 | `cobranca.verificar` | Régua de cobrança | todo dia às 6h | suspende quem passou da tolerância | `POST /api/admin/cobranca/verificar` |
 | `relatorios.semanal` | Relatório semanal | segunda às 7h | emite `loja.relatorio-semanal` por loja com movimento | `POST /api/admin/relatorios/semanal` |
 

@@ -2,7 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { caminhosCitados, compararRetratos, destinoDeEnsaio, migracoesPendentes, ordemDoDeploy, type RetratoDoBanco } from "./ensaio-banco";
+import { EventEmitter } from "node:events";
+import { caminhosCitados, compararRetratos, destinoDeEnsaio, EnsaioInterrompido, migracoesPendentes, ordemDoDeploy, portaDeEnsaio, saidaPorSinal, vigiarSinais, type RetratoDoBanco } from "./ensaio-banco";
 
 const RAIZ = new URL("../../", import.meta.url);
 const ler = (caminho: string) => readFileSync(new URL(caminho, RAIZ), "utf8");
@@ -91,4 +92,42 @@ test("docs/BACKUP-E-ROLLBACK.md só cita caminho que existe no repositório", ()
 test("caminhosCitados ignora servidor, outro repositório, glob e marcador", () => {
   const texto = "`/opt/backups/db`, `scripts/deploy-container.sh` no `infra`, `src/lib/*.test.ts`, `docs/ROTINAS.md`, `tests/integration/catalogo.test.ts:12`, `host-lojas-<data>.sql.gz` e `npm run banco:ensaio`.";
   assert.deepEqual(caminhosCitados(texto), ["docs/ROTINAS.md", "scripts/deploy-container.sh", "tests/integration/catalogo.test.ts"]);
+});
+
+test("portaDeEnsaio recusa a porta do Postgres de verdade e o que não é porta", () => {
+  assert.equal(portaDeEnsaio(undefined), "5548");
+  assert.equal(portaDeEnsaio(""), "5548");
+  assert.equal(portaDeEnsaio(" 5599 "), "5599");
+  for (const real of ["5432", " 5432 ", "05432"]) assert.throws(() => portaDeEnsaio(real), /não roda na porta 5432/, real);
+  for (const ruim of ["abc", "5548;5432", "-1", "5432/x", "70000", "5"]) assert.throws(() => portaDeEnsaio(ruim), /número de porta/, ruim);
+});
+
+test("o script do ensaio lê a porta por portaDeEnsaio e confere os sinais entre os passos", () => {
+  const script = ler("scripts/ensaio-banco.mts");
+  assert.match(script, /portaDeEnsaio\(process\.env\.TEST_DB_PORT\)/);
+  assert.doesNotMatch(script, /process\.env\.TEST_DB_PORT\s*\?\?/);
+  assert.match(script, /vigiarSinais\(process\)/);
+  assert.ok((script.match(/await sinais\.conferir\(\)/g) ?? []).length >= 6, "uma conferência antes de cada passo");
+  // Pelo comando `tsx` o sinal vira SIGKILL no processo do ensaio e nada é limpo.
+  assert.equal(JSON.parse(ler("package.json")).scripts["banco:ensaio"], "node --import tsx scripts/ensaio-banco.mts");
+});
+
+test("vigiarSinais: o sinal vira EnsaioInterrompido na conferência seguinte, e o primeiro é o que vale", async () => {
+  const processo = new EventEmitter();
+  const sinais = vigiarSinais(processo);
+  await sinais.conferir();
+  assert.equal(sinais.sinal, null);
+
+  // Emitido "no meio de um passo": só aparece quando o laço de eventos anda.
+  setImmediate(() => processo.emit("SIGTERM"));
+  await assert.rejects(sinais.conferir(), (e: unknown) => e instanceof EnsaioInterrompido && e.sinal === "SIGTERM");
+  processo.emit("SIGINT");
+  await assert.rejects(sinais.conferir(), /interrompido por SIGTERM/);
+  assert.equal(sinais.sinal, "SIGTERM");
+});
+
+test("saidaPorSinal segue a convenção 128 + sinal", () => {
+  assert.equal(saidaPorSinal("SIGINT"), 130);
+  assert.equal(saidaPorSinal("SIGTERM"), 143);
+  assert.equal(saidaPorSinal("SIGHUP"), 129);
 });

@@ -3,8 +3,7 @@
 import Script from "next/script";
 import { useEffect } from "react";
 import { useConsentimento } from "@/lib/consentimento";
-import type { PixelsDaLoja } from "@/lib/pixels";
-
+import { scriptInicialDoGoogle, type PixelsDaLoja } from "@/lib/pixels";
 
 /**
  * Pixels de anúncio da loja. Cada um é opcional e só é carregado se o lojista
@@ -34,18 +33,7 @@ export default function Pixels({ p }: { p: PixelsDaLoja }) {
   }, [aceito]);
 
   const gtag = p.ga4Id || p.googleAdsId;
-  // O `consent default` tem de ser o primeiro comando do dataLayer: o GTM e o
-  // gtag.js processam a fila em ordem, e um `view_item` enfileirado antes dele
-  // chegaria às tags sem o estado `denied`. Por isso ele vai no script em
-  // linha, junto do marcador, e não nos loaders `afterInteractive`.
-  // `ads_data_redaction`: enquanto o anúncio está negado, o Google também
-  // tira os identificadores de clique das URLs que recebe. É o par do Consent
-  // Mode v2 que a documentação pede junto do `default` negado.
-  const inicioDoDataLayer =
-    "window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}" +
-    "gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'denied',wait_for_update:500});" +
-    "gtag('set','ads_data_redaction',true);" +
-    `window.__lojaPixels={gtm:${p.gtmId ? "true" : "false"}};`;
+  const inicioDoDataLayer = scriptInicialDoGoogle(p);
 
   return (
     <>

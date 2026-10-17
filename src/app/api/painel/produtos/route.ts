@@ -9,6 +9,7 @@ import { slugificar } from "@/lib/catalogo";
 import type { Prisma } from "@prisma/client";
 import { invalidarCatalogo } from "@/lib/catalogo-cache";
 import { salvarProdutoNoCatalogo, respostaErroCatalogo } from "@/lib/catalogo-escrita";
+import { origemDoPainel } from "@/lib/catalogo-origem";
 import { ErroCampo, lerDefinicoes, normalizarValores } from "@/lib/campos-personalizados";
 
 /** PUT — importa/atualiza em lote (CSV ou um único produto do formulário). */
@@ -34,7 +35,7 @@ export async function DELETE(request: Request) {
   const id = new URL(request.url).searchParams.get("id") ?? "";
   const p = await prisma.produto.findFirst({ where: { id, tenantId: loja.id } });
   if (!p) return Response.json({ erro: "Produto não encontrado." }, { status: 404 });
-  await salvarProdutoNoCatalogo(loja.id, id, { ativo: false }, { origem: "painel" });
+  await salvarProdutoNoCatalogo(loja.id, id, { ativo: false }, { origem: origemDoPainel(s) });
   invalidarCatalogo(loja.id);
   return Response.json({ ok: true });
 }
@@ -98,7 +99,7 @@ export async function PATCH(request: Request) {
   if (confirmarImagemExata && ((campos.imagemOrigem ?? p.imagemOrigem) !== "propria" || !((campos.imagens?.length ?? 0) || p.imagens.length))) return Response.json({ erro: "Confirme somente uma foto principal própria que esteja associada ao produto." }, { status: 422 });
   const correspondenciaFinal = confirmarImagemExata ? "confirmada" : correspondenciaImagem;
   if (correspondenciaFinal && ((campos.imagemOrigem ?? p.imagemOrigem) !== "propria" || !((campos.imagens?.length ?? 0) || p.imagens.length))) return Response.json({ erro: "A correspondência da imagem exige foto principal própria associada ao produto." }, { status: 422 });
-  try { atualizado = await salvarProdutoNoCatalogo(loja.id, id, { ...campos, ...(valoresCampos ? { camposPersonalizados: valoresCampos as unknown as Prisma.InputJsonValue } : {}), ...(slug ? { slug: slugificar(slug) } : {}), ...(categoriaId !== undefined ? { categoriaId } : {}), ...(atributos ? { atributos: atributos as Prisma.InputJsonValue } : {}), ...(compatibilidade ? { compatibilidade: compatibilidade as unknown as Prisma.InputJsonValue } : {}) }, { origem: "painel", versao: versaoCatalogo, exigirSemImagem: associarFotoSku, ...(correspondenciaFinal ? { metadadosMidia: { fonte: "painel", correspondencia: correspondenciaFinal, somentePrincipal: true } } : {}) });
+  try { atualizado = await salvarProdutoNoCatalogo(loja.id, id, { ...campos, ...(valoresCampos ? { camposPersonalizados: valoresCampos as unknown as Prisma.InputJsonValue } : {}), ...(slug ? { slug: slugificar(slug) } : {}), ...(categoriaId !== undefined ? { categoriaId } : {}), ...(atributos ? { atributos: atributos as Prisma.InputJsonValue } : {}), ...(compatibilidade ? { compatibilidade: compatibilidade as unknown as Prisma.InputJsonValue } : {}) }, { origem: origemDoPainel(s), versao: versaoCatalogo, exigirSemImagem: associarFotoSku, ...(correspondenciaFinal ? { metadadosMidia: { fonte: "painel", correspondencia: correspondenciaFinal, somentePrincipal: true } } : {}) });
   } catch(e) { return respostaErroCatalogo(e); }
   invalidarCatalogo(loja.id);
   void avisarERegistrar(loja, caminhosDoProduto(atualizado.slug, categoria ?? undefined));

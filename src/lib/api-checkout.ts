@@ -6,7 +6,9 @@ import { cobrancaDaVitrine } from "./api-recursos";
 import { ErroApi } from "./api-resposta";
 import { CorpoDoCheckout, CUPOM_INVALIDO, criarCobranca } from "./checkout-cobranca";
 import { prisma } from "./db";
-import { GatewayNaoConfigurado, providerDaLoja } from "./gateway";
+import { GatewayNaoConfigurado } from "./gateway";
+import { resolverRecebimento, type Recebimento } from "./credenciais";
+import { consultarPixPorId } from "./pix-manual";
 import { lojaVende, urlDaLoja } from "./tenant";
 
 /**
@@ -67,9 +69,9 @@ export function lerIdempotencia(request: Request): string | null {
 export async function comprarPelaApi(tenant: Tenant, chave: Pick<ChaveApi, "id">, request: Request, bruto: unknown) {
   // A chave autentica com a loja suspensa (a vitrine continua no ar); vender, não.
   if (!lojaVende(tenant)) throw new ErroApi("loja_nao_vende", "Esta loja não está recebendo pedidos no momento.");
-  let provider;
+  let recebimento: Recebimento;
   try {
-    provider = providerDaLoja(tenant);
+    recebimento = await resolverRecebimento(tenant);
   } catch (erro) {
     if (erro instanceof GatewayNaoConfigurado) throw new ErroApi("loja_nao_vende", "A loja ainda não configurou o recebimento.");
     throw erro;
@@ -90,9 +92,13 @@ export async function comprarPelaApi(tenant: Tenant, chave: Pick<ChaveApi, "id">
   if (idempotencia) {
     // Repetição de uma compra já feita: devolve a mesma cobrança, consultada de
     // novo no gateway para o Pix copia e cola voltar junto. Nada é cobrado.
-    const feito = await prisma.pedido.findFirst({ where: { tenantId: tenant.id, referencia }, select: { pagamentoId: true } });
+    const feito = await prisma.pedido.findFirst({ where: { tenantId: tenant.id, referencia }, select: { pagamentoId: true, gateway: true } });
     if (feito?.pagamentoId) {
-      return { ...cobrancaDaVitrine(referencia, await provider.consultar(feito.pagamentoId), url), repetida: true };
+      const pagamento = feito.gateway === "pix_manual"
+        ? await consultarPixPorId(tenant.id, feito.pagamentoId)
+        : await recebimento.provider.consultar(feito.pagamentoId);
+      if (!pagamento) throw new ErroApi("pagamento_a_confirmar", "Esta compra já foi recebida e o pagamento está sendo confirmado. Consulte o pedido.", {}, referencia);
+      return { ...cobrancaDaVitrine(referencia, pagamento, url), repetida: true };
     }
     if (await prisma.tentativaCatalogo.findFirst({ where: { tenantId: tenant.id, referencia }, select: { id: true } })) {
       throw new ErroApi("pagamento_a_confirmar", "Esta compra já foi recebida e o pagamento está sendo confirmado. Consulte o pedido.", {}, referencia);
@@ -101,7 +107,7 @@ export async function comprarPelaApi(tenant: Tenant, chave: Pick<ChaveApi, "id">
 
   if (corpo.cupom) exigirTentativaDeCupom(chave.id, request);
 
-  const r = await criarCobranca(tenant, { ...corpo, referencia, ...(totalCentavos != null ? { totalExibido: totalCentavos } : {}) }, { provider, cupomEstrito: true });
+  const r = await criarCobranca(tenant, { ...corpo, referencia, ...(totalCentavos != null ? { totalExibido: totalCentavos } : {}) }, { provider: recebimento.provider, credencial: recebimento.credencial, cupomEstrito: true });
   switch (r.tipo) {
     case "ok":
       // De onde veio: o painel e o suporte precisam saber qual integração criou.

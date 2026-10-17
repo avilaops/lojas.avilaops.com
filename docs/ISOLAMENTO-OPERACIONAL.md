@@ -65,6 +65,7 @@ rejeita e quem chamou decide o que fazer; nenhuma chamada é repetida sozinha.
 | `src/lib/email.ts` | SMTP (tempo-limite do socket) | 20 s |
 | `src/lib/google-entrada.ts` | Entrada com Google | 10 s |
 | `src/lib/sso.ts` | SSO | 8 s |
+| `src/lib/convite-equipe.ts` | Convite da equipe (provisionamento do Auth) | 8 s |
 | `src/lib/indexnow.ts` | IndexNow | 8 s |
 | `src/lib/provisionar.ts` | Cloudflare e API de e-mail (provisionamento) | 15 s |
 | `src/lib/uploads.ts` | Download de imagem por URL | 20 s |
@@ -105,9 +106,9 @@ estouro.
 
 | Rota | No estouro do tempo-limite |
 |---|---|
-| `criarRotaPagamento` (cobrar) | 503 `pagamento_a_confirmar`, com a referência. Antes respondia 502 "Nada foi cobrado", que no estouro não se sabe. Vale também quando a cobrança passou e a gravação (`aoCriarPagamento`) falhou |
+| `criarRotaPagamento` (cobrar) | 503 `pagamento_a_confirmar`, com a referência. Antes respondia 502 "Nada foi cobrado", que no estouro não se sabe. Vale também quando a cobrança passou e a gravação (`aoCriarPagamento`) falhou. Tempo-limite antes de a cobrança começar (catálogo, frete) segue 502 `falha_gateway`: nada foi cobrado |
 | `criarRotaStatus` (consultar) | 502 "Não foi possível consultar o pagamento."; a tela do PIX pergunta de novo |
-| `criarRotaWebhook` (consultar) | 200 `{ recebido: true }` sem atualizar o status. O gateway não reenvia, então a notificação se perde e quem recupera o pedido é a reconciliação |
+| `criarRotaWebhook` (consultar) | 503 sem atualizar o status, para o gateway reenviar a notificação (decisão de 09/10/2026, tarefa 240). Só o tempo-limite da consulta: nada foi gravado e o reenvio repete só a consulta. Qualquer outra falha, inclusive tempo-limite na gravação, segue 200 e quem recupera o pedido é a reconciliação |
 
 ## Idempotência (08/10/2026)
 
@@ -176,6 +177,7 @@ como evento `operacao.alerta` (`src/lib/alertas.ts`), que já chega dizendo:
 | `mensalidade.webhook-falhou` | notificação de mensalidade que não pôde ser processada |
 | `pagamento.sem-pedido` | pagamento aprovado no gateway sem pedido registrado |
 | `rotina.falhando` | a terceira falha seguida de uma rotina |
+| `frete.sem-opcao` | comprador informou um CEP válido e a loja não devolveu forma de entrega nenhuma (um por loja por dia) |
 | `canal.aviso-falhou` | reservado; ainda sem emissor |
 
 Um alerta por fato: a chave é `codigo` + `recurso`, então o gateway reenviando

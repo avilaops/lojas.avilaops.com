@@ -2,7 +2,7 @@ import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { identificarPorEmail } from "@/lib/operadores";
 import { abrirSessao } from "@/lib/sessao";
-import { COOKIE_SSO, configSSO, consultarSSO, urlDeLoginSSO } from "@/lib/sso";
+import { COOKIE_SSO, configSSO, consultarSSO, destinoDaEntradaSSO, podeEntrarComoEquipe, urlDeLoginSSO } from "@/lib/sso";
 import { normalizarHost } from "@/lib/tenant";
 
 export const dynamic = "force-dynamic";
@@ -29,12 +29,16 @@ export async function GET(request: Request) {
   const token = (await cookies()).get(COOKIE_SSO)?.value;
   const r = await consultarSSO(cfg, token);
 
-  if (r.tipo === "sem_sessao") redirect(jaVoltou ? "/entrar?sso=indisponivel" : urlDeLoginSSO(cfg, base));
-  if (r.tipo === "indisponivel") redirect("/entrar?sso=indisponivel");
-  if (r.tipo === "sem_acesso") redirect("/entrar?sso=sem-acesso");
-
-  const quem = await identificarPorEmail(r.email);
-  if (!quem) redirect("/entrar?sso=sem-loja");
+  const quem = r.tipo === "ok" ? await identificarPorEmail(r.email) : null;
+  const destino = destinoDaEntradaSSO(r, {
+    temLoja: !!quem,
+    equipe: !quem && podeEntrarComoEquipe(r),
+    jaVoltou,
+    urlLogin: urlDeLoginSSO(cfg, base),
+  });
+  // Sem loja com este e-mail, `/criar/sso` pergunta antes de criar. Nunca cria
+  // sozinho: o cookie do login único chega de qualquer sistema da Avila Ops.
+  if (destino !== "abrir" || !quem) redirect(destino === "abrir" ? "/entrar?sso=indisponivel" : destino);
 
   await abrirSessao(quem.tenant.slug, quem.operador?.id);
   redirect("/painel");

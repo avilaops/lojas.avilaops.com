@@ -24,7 +24,14 @@ export async function DELETE() {
   const { s, erro } = await exigir("cobranca");
   if (erro) return erro;
   const loja = s.tenant;
-  await cancelarAssinatura(loja);
+  try {
+    await cancelarAssinatura(loja);
+  } catch (erro) {
+    // O Mercado Pago não confirmou: a assinatura continua valendo, e dizer
+    // "cancelada" aqui deixaria o lojista sendo cobrado sem saber.
+    console.error("[assinatura] cancelamento não confirmado", loja.slug, erro);
+    return Response.json({ erro: "O Mercado Pago não confirmou o cancelamento. Nada mudou: tente de novo em instantes." }, { status: 502 });
+  }
   return Response.json({ ok: true });
 }
 
@@ -43,7 +50,10 @@ export async function PATCH(request: Request) {
   if (s.tenant.assinaturaId) {
     return Response.json({ erro: "A assinatura já foi criada no Mercado Pago. Para trocar de plano, fale com o suporte." }, { status: 409 });
   }
-  await prisma.tenant.update({ where: { id: s.tenant.id }, data: { plano: r.data.plano } });
+  // Trocar de plano sai da faixa de preço antiga (o anúncio antigo era daquele
+  // plano): a loja passa a pagar a tabela do plano novo. Escolher o mesmo plano não mexe.
+  const saiDaFaixa = r.data.plano !== s.tenant.plano;
+  await prisma.tenant.update({ where: { id: s.tenant.id }, data: { plano: r.data.plano, ...(saiDaFaixa ? { faixaPreco: null } : {}) } });
   esquecerTenantEmCache(s.tenant.slug);
   return Response.json({ ok: true, plano: r.data.plano });
 }

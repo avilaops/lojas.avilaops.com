@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { posix } from "node:path";
 import type { Tenant } from "@prisma/client";
 import { TemaSchema, VALORES_LAYOUT } from "./tema";
 import { COLUNAS, colunasVisiveis, linhaTecnica } from "./catalogo-tecnico";
@@ -152,16 +153,99 @@ test("a loja publicada e a prévia montam a home pelo mesmo mapa", () => {
 // `?_rsc=` de `/produtos` e `/categoria/<slug>` e a receber 404.
 const COMPONENTES = "src/components";
 const DO_PAINEL = /^(painel|aplicacao)\//;
+const LINK_LOJA = `${COMPONENTES}/LinkLoja.tsx`;
+const CODIGO = /\.(?:[cm]?[jt]s|[jt]sx)$/;
+
+/**
+ * O módulo `next/link` citado como código, em qualquer forma: `import … from`,
+ * `export … from`, `require(…)` e `import(…)`. Entre crases só conta dentro de
+ * `require`/`import`, para comentário que cita o nome não acusar.
+ */
+const citaNextLink = (texto: string) => /["']next\/link["']|\b(?:import|require)\s*\(\s*`next\/link`/.test(texto);
+
+/** Os módulos que um arquivo puxa: import e export estáticos, `import()` e `require()`. */
+function modulosCitados(texto: string): string[] {
+  const achados = texto.matchAll(/\b(?:from|import)\s*["']([^"']+)["']|\b(?:import|require)\s*\(\s*["'`]([^"'`]+)["'`]/g);
+  return [...achados].map((m) => m[1] ?? m[2]);
+}
+
+/**
+ * Tudo o que uma página desenha, seguindo os imports do projeto (`@/…` e
+ * relativos) até o fim. É o que pega o componente da loja criado fora de
+ * `src/components/`: a pasta não importa, importa a prévia alcançar.
+ */
+function alcancados(entrada: string, existe: (caminho: string) => boolean, ler: (caminho: string) => string): string[] {
+  const resolver = (de: string, modulo: string) => {
+    if (!modulo.startsWith("@/") && !modulo.startsWith(".")) return null;
+    const base = modulo.startsWith("@/") ? `src/${modulo.slice(2)}` : posix.join(posix.dirname(de), modulo);
+    const candidatos = [base, ...[".ts", ".tsx", ".js", ".jsx", ".mts", ".mjs"].flatMap((e) => [`${base}${e}`, `${base}/index${e}`])];
+    return candidatos.find((c) => CODIGO.test(c) && existe(c)) ?? null;
+  };
+  const vistos = new Set([entrada]);
+  for (const arquivo of vistos) {
+    for (const modulo of modulosCitados(ler(arquivo))) {
+      const destino = resolver(arquivo, modulo);
+      if (destino) vistos.add(destino);
+    }
+  }
+  return [...vistos];
+}
+
+test("a guarda reconhece o next/link em qualquer forma de import", () => {
+  const proibidos = [
+    'import Link from "next/link";',
+    "import Link from 'next/link'",
+    'import type { LinkProps } from "next/link";',
+    'export { default } from "next/link";',
+    'const Link = require("next/link");',
+    "const Link = require( 'next/link' ).default;",
+    'const Link = dynamic(() => import("next/link"));',
+    "const { default: Link } = await import(`next/link`);",
+    'import Link from\n  "next/link";',
+  ];
+  for (const linha of proibidos) assert.ok(citaNextLink(linha), linha);
+  const permitidos = [
+    'import Link from "@/components/LinkLoja";',
+    'import { useRouter } from "next/navigation";',
+    "// os links de volta são `<a>` e não `next/link` de propósito",
+    'import x from "next/link-de-outra-coisa";',
+  ];
+  for (const linha of permitidos) assert.ok(!citaNextLink(linha), linha);
+});
+
+test("a guarda segue os imports até o componente fora de src/components", () => {
+  const arvore: Record<string, string> = {
+    "src/app/previa/page.tsx": 'import { comporHome } from "@/components/home/composicao";\nconst Tarde = dynamic(() => import("./Tarde"));',
+    "src/components/home/composicao.tsx": 'import Faixa from "@/lib/faixa";\nexport * from "../Selo";\nimport "server-only";',
+    "src/components/Selo.tsx": 'const Extra = require("@/app/_blocos");',
+    "src/lib/faixa.ts": 'const Link = require("next/link");',
+    "src/app/_blocos/index.tsx": 'import Link from "next/link";',
+    "src/app/previa/Tarde.jsx": "const m = import(`next/link`);",
+    "src/app/produtos/page.tsx": 'import Link from "next/link";',
+  };
+  const vistos = alcancados("src/app/previa/page.tsx", (c) => c in arvore, (c) => arvore[c]);
+  assert.deepEqual(vistos.filter((a) => citaNextLink(arvore[a])).sort(), ["src/app/_blocos/index.tsx", "src/app/previa/Tarde.jsx", "src/lib/faixa.ts"]);
+  assert.ok(!vistos.includes("src/app/produtos/page.tsx"), "página que a prévia não desenha fica de fora");
+});
 
 test("componente da loja importa o LinkLoja, não o next/link", () => {
   const arquivos = (readdirSync(COMPONENTES, { recursive: true }) as string[])
     .map((a) => a.replaceAll("\\", "/"))
-    .filter((a) => a.endsWith(".tsx") && !DO_PAINEL.test(a) && a !== "LinkLoja.tsx");
+    .filter((a) => CODIGO.test(a) && !DO_PAINEL.test(a) && `${COMPONENTES}/${a}` !== LINK_LOJA);
   assert.ok(arquivos.length > 30, "a varredura de src/components não achou os componentes da loja");
-  const comNextLink = arquivos.filter((a) => /from\s+["']next\/link["']/.test(fonte(`${COMPONENTES}/${a}`)));
+  const comNextLink = arquivos.filter((a) => citaNextLink(fonte(`${COMPONENTES}/${a}`)));
   assert.deepEqual(comNextLink, [], `troque o import por "@/components/LinkLoja" em: ${comNextLink.map((a) => `${COMPONENTES}/${a}`).join(", ")}`);
   // O único que fala com o Next é o próprio LinkLoja.
-  assert.match(fonte(`${COMPONENTES}/LinkLoja.tsx`), /import Link from "next\/link"/);
+  assert.match(fonte(LINK_LOJA), /import Link from "next\/link"/);
+});
+
+test("nada do que a prévia desenha traz o next/link, em qualquer pasta", () => {
+  const pagina = `${ROTA}/painel/previa/page.tsx`;
+  const desenhados = alcancados(pagina, existsSync, fonte);
+  assert.ok(desenhados.length > 30, "a caminhada pelos imports da prévia parou cedo");
+  assert.ok(desenhados.includes(LINK_LOJA) && desenhados.includes(`${COMPONENTES}/home/composicao.tsx`), "a caminhada não chegou aos componentes da loja");
+  const comNextLink = desenhados.filter((a) => a !== LINK_LOJA && citaNextLink(fonte(a)));
+  assert.deepEqual(comNextLink, [], `a prévia desenha link que pede ?_rsc= de página que não existe no painel; use "@/components/LinkLoja" em: ${comNextLink.join(", ")}`);
 });
 
 test("a prévia desliga o pré-carregamento, e só ela", () => {
@@ -169,7 +253,7 @@ test("a prévia desliga o pré-carregamento, e só ela", () => {
   const usam = ["src/app", COMPONENTES].flatMap((raiz) =>
     (readdirSync(raiz, { recursive: true }) as string[])
       .map((a) => `${raiz}/${a.replaceAll("\\", "/")}`)
-      .filter((a) => a.endsWith(".tsx") && a !== `${COMPONENTES}/LinkLoja.tsx` && /<SemPreCarregamento\b/.test(fonte(a))),
+      .filter((a) => CODIGO.test(a) && a !== LINK_LOJA && /<SemPreCarregamento\b/.test(fonte(a))),
   );
   assert.deepEqual(usam, [`${ROTA}/painel/previa/page.tsx`]);
 });

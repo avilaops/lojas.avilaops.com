@@ -1,6 +1,9 @@
 import { z } from "zod";
 import { sessaoDoPainel } from "@/lib/sessao";
-import { ErroOperador, criarOperador, listarOperadores, permite } from "@/lib/operadores";
+import { CONVITE_DESLIGADO, configConvite, convidarParaAEquipe } from "@/lib/convite-equipe";
+import { ErroOperador, criarOperador, listarOperadores, permite, registrarConvite } from "@/lib/operadores";
+
+const HOST_BASE = (process.env.LOJAS_BASE_DOMAIN ?? "lojas.avilaops.com").toLowerCase();
 
 /**
  * A equipe da loja, administrada pelo próprio lojista.
@@ -13,7 +16,8 @@ export const dynamic = "force-dynamic";
 const Novo = z.object({
   nome: z.string().min(2),
   email: z.string().email(),
-  senha: z.string().min(8),
+  // Em branco, a pessoa recebe o convite por e-mail e cria a senha no login único.
+  senha: z.string().min(8).optional().or(z.literal("").transform(() => undefined)),
   papel: z.enum(["GERENTE", "OPERADOR"]),
 });
 
@@ -38,11 +42,19 @@ export async function POST(request: Request) {
 
   const r = Novo.safeParse(await request.json().catch(() => null));
   if (!r.success) {
-    return Response.json({ erro: "Preencha nome, e-mail, senha (8 caracteres) e o tipo de acesso." }, { status: 400 });
+    return Response.json({ erro: "Preencha nome, e-mail e o tipo de acesso. A senha, se houver, precisa de 8 caracteres." }, { status: 400 });
   }
 
+  // Sem senha e sem convite ligado a pessoa ficaria com um acesso que não abre.
+  const cfg = configConvite();
+  if (!r.data.senha && !cfg) return Response.json({ erro: CONVITE_DESLIGADO }, { status: 400 });
+
   try {
-    return Response.json({ operador: await criarOperador(s.tenant.id, r.data) }, { status: 201 });
+    const operador = await criarOperador(s.tenant.id, r.data);
+    if (r.data.senha) return Response.json({ operador }, { status: 201 });
+
+    const convite = await convidarParaAEquipe(cfg, { email: operador.email, nome: operador.nome, loja: s.tenant.nome, hostBase: HOST_BASE });
+    return Response.json({ operador: await registrarConvite(s.tenant.id, operador.id, convite), convite }, { status: 201 });
   } catch (e) {
     if (e instanceof ErroOperador) return Response.json({ erro: e.message }, { status: 400 });
     throw e;

@@ -1,4 +1,5 @@
 import type { Categoria, Produto, Tenant } from "@prisma/client";
+import type { LookResolvido } from "@/lib/atelie";
 import type { IdentidadeLoja } from "@/lib/identidade";
 import type { Moto } from "@/lib/motos";
 import type { NECESSIDADES } from "@/lib/farmacia";
@@ -17,4 +18,6 @@ export interface DadosHome {
    * filtrados pelo catálogo — ver `necessidadesDaLoja`.
    */
   necessidades?: typeof NECESSIDADES;
+  /** Looks do Ateliê já resolvidos contra o catálogo. As outras homes ignoram. */
+  looks?: LookResolvido[];
 }

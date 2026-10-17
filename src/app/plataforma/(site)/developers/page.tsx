@@ -25,7 +25,7 @@ const EXPLICACAO_DO_ERRO: Record<string, string> = {
 
 function Bloco({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-xl border border-border bg-card p-6">
+    <section className="rounded-xl border border-border bg-card p-6 text-foreground">
       <h2 className="text-xl font-bold">{titulo}</h2>
       {children}
     </section>
@@ -45,7 +45,7 @@ export default function DevelopersPage() {
   const ferramentas = Object.entries(FERRAMENTAS);
 
   return (
-    <div className="container-loja py-16 max-w-4xl">
+    <div className="pl-doc container-loja py-16 max-w-4xl">
       <div className="mb-8">
         <p className="text-xs font-semibold uppercase tracking-widest text-primary">Documentação Técnica</p>
         <h1 className="mt-2 text-3xl sm:text-4xl font-bold tracking-tight">Conector de IA e API</h1>
@@ -68,12 +68,16 @@ export default function DevelopersPage() {
             <code className="font-mono text-xs">mcp:usar</code> e envie no cabeçalho{" "}
             <code className="font-mono text-xs">Authorization: Bearer lojas_sk_…</code>.
           </p>
+          <p className="mt-3 text-sm text-muted-foreground">
+            O que o conector lê, guarda e por quanto tempo:{" "}
+            <Link href="/developers/privacidade" className="underline">privacidade do conector</Link>.
+          </p>
         </Bloco>
 
         <Bloco titulo={`Ferramentas do conector (${ferramentas.length})`}>
           <p className="mt-2 text-sm text-muted-foreground">
-            O assistente só vê as ferramentas que a conexão pode usar. As que alteram a loja vêm marcadas, para ele pedir
-            confirmação antes de agir.
+            O assistente só vê as ferramentas que a conexão pode usar. As que alteram a loja vêm marcadas como destrutivas
+            (sobrescrevem, mudam status ou excluem), para ele pedir confirmação antes de agir.
           </p>
           <div className="mt-4 grid gap-5">
             {AREAS.map((area) => {
@@ -87,7 +91,7 @@ export default function DevelopersPage() {
                         <span>
                           <code className="font-mono text-xs text-foreground">{nome}</code> {f.titulo}
                         </span>
-                        <span className="text-xs">{ehEscrita(f.escopo) ? "altera" : "consulta"}</span>
+                        <span className="text-xs">{!ehEscrita(f.escopo) ? "consulta" : f.aditiva ? "acrescenta" : "altera"}</span>
                       </li>
                     ))}
                   </ul>

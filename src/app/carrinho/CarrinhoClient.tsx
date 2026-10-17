@@ -138,7 +138,7 @@ export default function CarrinhoClient({ loja, vende }: { loja: TenantPublico; v
             Pedido mínimo de <b>{formatarBRL(minimo.minimo)}</b> em produtos. Faltam <b>{formatarBRL(minimo.falta)}</b>.
           </p>
         )}
-        <p className="mt-2 text-xs text-muted-foreground">Frete calculado no próximo passo.</p>
+        <p className="mt-2 text-xs text-muted-foreground">{vende ? "Frete calculado no próximo passo." : "Frete e prazo são combinados no atendimento."}</p>
         {!minimo.atingido && (vende || loja.whatsapp) ? (
           <button type="button" disabled aria-disabled="true" className="btn-primario mt-4 w-full cursor-not-allowed opacity-50">
             {vende ? "Finalizar compra" : "Pedir pelo WhatsApp"}

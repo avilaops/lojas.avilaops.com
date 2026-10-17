@@ -7,6 +7,8 @@ import Fiscal from "@/components/painel/Fiscal";
 import Canais from "@/components/painel/Canais";
 import MelhorEnvio from "@/components/painel/MelhorEnvio";
 import MercadoPago from "@/components/painel/MercadoPago";
+import RecebimentoV2 from "@/components/painel/RecebimentoV2";
+import { dadosDaTela } from "@/lib/recebimento-v2";
 import { CANAIS_CONECTAVEIS, contasDaLoja, provedorDo } from "@/lib/contas-canal";
 import { aplicativoConfigurado as melhorEnvioDisponivel, conectado as melhorEnvioConectado } from "@/lib/melhor-envio-conta";
 import { aplicativoConfigurado as mercadoPagoDisponivel, conectadoPorOAuth as mercadoPagoConectado } from "@/lib/mercado-pago-conta";
@@ -26,7 +28,9 @@ import CamposPersonalizados from "@/components/painel/CamposPersonalizados";
 import { lerDefinicoes } from "@/lib/campos-personalizados";
 import { TIPOS_POLITICA, lerRegrasDevolucao, modeloDePolitica, politicaPublicada } from "@/lib/politicas";
 import { prisma } from "@/lib/db";
+import { recursoAtivo } from "@/lib/recursos";
 import { lojistaAtual, sessaoDoPainel } from "@/lib/sessao";
+import { configConvite } from "@/lib/convite-equipe";
 import { listarOperadores, permite } from "@/lib/operadores";
 import { dadosDoPainel } from "@/lib/painel-dados";
 import { urlDaLoja } from "@/lib/tenant";
@@ -45,7 +49,7 @@ export const dynamic = "force-dynamic";
 
 export default async function Pagina({ params, searchParams }: {
   params: Promise<{ secao: string }>;
-  searchParams: Promise<{ ml?: string; me?: string; mp?: string; canal?: string; r?: string }>;
+  searchParams: Promise<{ ml?: string; me?: string; mp?: string; canal?: string; r?: string; conexao?: string }>;
 }) {
   const { secao } = await params;
   if (secao === "fiscal") {
@@ -80,7 +84,11 @@ export default async function Pagina({ params, searchParams }: {
           papel: o.papel,
           ativo: o.ativo,
           ultimoAcessoEm: o.ultimoAcessoEm?.toISOString() ?? null,
+          conviteSituacao: o.conviteSituacao,
+          conviteDetalhe: o.conviteDetalhe,
+          conviteEm: o.conviteEm?.toISOString() ?? null,
         }))}
+        conviteLigado={configConvite() !== null}
       />
     );
   }
@@ -308,6 +316,16 @@ export default async function Pagina({ params, searchParams }: {
     const [loja, sp] = await Promise.all([lojistaAtual(), searchParams]);
     if (!loja) notFound();
     const porOAuth = mercadoPagoConectado(loja);
+    // Flag recebimento_v2: a tela nova, com escolha de provedor, no lugar do cartão do MP.
+    if (recursoAtivo(loja, "recebimento_v2")) {
+      return (
+        <div className="grid gap-6">
+          {/* Sem o formulário antigo de chaves embaixo: ele repetia "Ainda não
+              recebe" ao lado de um cartão Conectado (revisão do Designer, #98). */}
+          <RecebimentoV2 dados={await dadosDaTela(loja)} retorno={sp.conexao} retornoMp={sp.mp} />
+        </div>
+      );
+    }
     return (
       <div className="grid gap-6">
         {(mercadoPagoDisponivel() || porOAuth || sp.mp) && (

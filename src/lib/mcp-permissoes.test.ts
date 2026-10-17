@@ -3,7 +3,8 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import { ESCOPOS, ESCOPOS_SECRETA, ehEscopo } from "./api-chaves";
 import { alvoDaChamada } from "./mcp-historico";
-import { AREAS, ESCOLHA_PADRAO, ESCOPO_DO_CONECTOR, ESCOPOS_DO_MCP, FERRAMENTAS, anotacoes, escolhaDosEscopos, escoposDaAutorizacao, ferramentaAltera, podeUsar, resumoDoAcesso } from "./mcp-permissoes";
+import { AREAS, ESCOLHA_PADRAO, ESCOPO_DO_CONECTOR, ESCOPOS_DO_MCP, FERRAMENTAS, PERMISSAO_DA_AREA, anotacoes, areasDoTeto, escolhaDosEscopos, escoposDaAutorizacao, escoposQuePode, ferramentaAltera, limitarAoTeto, podeUsar, resumoDoAcesso } from "./mcp-permissoes";
+import { PODE, permite, type Papel } from "./operadores";
 
 /**
  * O que cada conexão do conector pode. Cada teste é um jeito de um assistente
@@ -39,6 +40,32 @@ test("o que altera a loja está marcado como alteração, e o nome não engana",
   // Ferramenta que o mapa não conhece não pode passar por leitura.
   assert.equal(ferramentaAltera("ferramenta_nova"), true);
   assert.equal(anotacoes("ferramenta_nova").readOnlyHint, false);
+});
+
+test("só o que apenas acrescenta escapa de destructiveHint", () => {
+  for (const nome of Object.keys(FERRAMENTAS)) {
+    const { destructiveHint } = anotacoes(nome);
+    if (!ferramentaAltera(nome)) assert.equal(destructiveHint, false, `${nome} só lê`);
+    else assert.equal(destructiveHint, !FERRAMENTAS[nome].aditiva, nome);
+  }
+  // Sobrescrita, remoção, ajuste absoluto, mudança de status e exclusão.
+  for (const nome of [
+    "atualizar_produto",
+    "gerenciar_fotos_produto",
+    "ajustar_estoque",
+    "atualizar_status_pedido",
+    "emitir_etiqueta_envio",
+    "moderar_avaliacao",
+    "atualizar_cupom",
+    "criar_cupom",
+    "atualizar_marca",
+    "atualizar_categoria",
+    "gerar_seo_categoria",
+  ]) {
+    assert.equal(anotacoes(nome).destructiveHint, true, nome);
+  }
+  assert.deepEqual(Object.keys(FERRAMENTAS).filter((n) => FERRAMENTAS[n].aditiva), ["criar_produto"]);
+  assert.equal(anotacoes("ferramenta_nova").destructiveHint, true);
 });
 
 test("só consultar não deixa alterar nada", () => {
@@ -114,4 +141,38 @@ test("a edição no painel abre no que a conexão tem: escopos viram a mesma esc
   }
   assert.deepEqual(escolhaDosEscopos([]).areas, ESCOLHA_PADRAO.areas);
   assert.equal(escoposDaAutorizacao(escolhaDosEscopos([])), null);
+});
+
+const tetoDe = (papel: Papel) => escoposQuePode((o_que) => permite(papel, o_que));
+
+test("o teto do papel: dono e gerente alcançam tudo, o balcão só pedidos", () => {
+  assert.deepEqual(tetoDe("DONO"), [...ESCOPOS_DO_MCP]);
+  assert.deepEqual(tetoDe("GERENTE"), [...ESCOPOS_DO_MCP]);
+
+  const balcao = tetoDe("OPERADOR");
+  assert.deepEqual(balcao, ["pedidos:ler", "pedidos:escrever"]);
+  assert.deepEqual(areasDoTeto(balcao), ["Pedidos"]);
+
+  // Ferramenta por ferramenta: o balcão não vê cliente nem faturamento, e não muda preço, produto, cupom nem marca.
+  for (const [nome, f] of Object.entries(FERRAMENTAS)) {
+    assert.equal(podeUsar(balcao, nome), f.escopo.startsWith("pedidos:"), nome);
+  }
+});
+
+test("toda área aponta para uma permissão do painel que existe, e quem não pode nada não alcança nada", () => {
+  for (const a of AREAS) assert.ok(PERMISSAO_DA_AREA[a.id] in PODE, a.id);
+  assert.deepEqual(escoposQuePode(() => false), []);
+  assert.deepEqual(escoposQuePode(() => true), [...ESCOPOS_DO_MCP]);
+});
+
+test("o teto corta o que foi marcado e nunca acrescenta", () => {
+  const balcao = tetoDe("OPERADOR");
+  const completo = escoposDaAutorizacao({ nivel: "completo" })!;
+  assert.deepEqual(limitarAoTeto(completo, balcao), ["pedidos:ler", "pedidos:escrever"]);
+  assert.deepEqual(limitarAoTeto(escoposDaAutorizacao({ nivel: "leitura" })!, balcao), ["pedidos:ler"]);
+  // Marcou menos que o teto: fica com o que marcou. Marcou só o que não alcança: não sobra nada.
+  assert.deepEqual(limitarAoTeto(["pedidos:ler"], balcao), ["pedidos:ler"]);
+  assert.deepEqual(limitarAoTeto(["catalogo:ler", "catalogo:escrever"], balcao), []);
+  assert.deepEqual(limitarAoTeto(completo, tetoDe("GERENTE")), completo);
+  assert.equal(resumoDoAcesso(limitarAoTeto(completo, balcao)), "Pedidos (altera)");
 });

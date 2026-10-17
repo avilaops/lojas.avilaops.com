@@ -58,6 +58,23 @@ describe("rotas de checkout diante de tempo-limite do gateway", () => {
     assert.equal(aoCriarPagamento.mock.callCount(), 0);
   });
 
+  it("tempo-limite antes da cobrança (frete) não é a confirmar: nada foi cobrado e não há pedido", async (t) => {
+    t.mock.method(console, "error", () => {});
+    const cobrar = mock.fn(async () => PAGO);
+    const rota = criarRotaPagamento({
+      provider: provedor({ cobrar }),
+      catalogo: { ...catalogo, resolverFretes: () => Promise.reject(estouro()) },
+    });
+
+    const r = await rota(pedir(PAYLOAD));
+
+    assert.equal(r.status, 502);
+    const corpo = await lido(r);
+    assert.equal(corpo.codigo, "falha_gateway");
+    assert.equal("referencia" in corpo, false);
+    assert.equal(cobrar.mock.callCount(), 0);
+  });
+
   it("falha ao gravar depois de cobrar também é a confirmar: a cobrança existe", async (t) => {
     t.mock.method(console, "error", () => {});
     const rota = criarRotaPagamento({ provider: provedor(), catalogo, aoCriarPagamento: () => Promise.reject(new Error("banco fora")) });
@@ -100,15 +117,36 @@ describe("rotas de checkout diante de tempo-limite do gateway", () => {
     assert.deepEqual(await lido(r), { erro: "Não foi possível consultar o pagamento." });
   });
 
-  it("webhook: consultar que estoura o tempo responde 200 e não atualiza status", async (t) => {
+  it("webhook: consultar que estoura o tempo responde 503 para o gateway reenviar, sem atualizar status", async (t) => {
     t.mock.method(console, "error", () => {});
     const aoAtualizarStatus = mock.fn(async () => {});
     const rota = criarRotaWebhook({ provider: provedor({ consultar: () => Promise.reject(estouro()) }), catalogo, aoAtualizarStatus });
 
     const r = await rota(new Request("https://loja.test/api/webhooks/mp?id=123", { method: "POST", body: "{}" }));
 
+    assert.equal(r.status, 503);
+    assert.equal(aoAtualizarStatus.mock.callCount(), 0);
+  });
+
+  it("webhook: consulta que falha sem ser por tempo segue 200, para o gateway não reenviar o que vai falhar igual", async (t) => {
+    t.mock.method(console, "error", () => {});
+    const aoAtualizarStatus = mock.fn(async () => {});
+    const rota = criarRotaWebhook({ provider: provedor({ consultar: () => Promise.reject(new Error("MP 404")) }), catalogo, aoAtualizarStatus });
+
+    const r = await rota(new Request("https://loja.test/api/webhooks/mp?id=123", { method: "POST", body: "{}" }));
+
     assert.equal(r.status, 200);
     assert.deepEqual(await lido(r), { recebido: true });
     assert.equal(aoAtualizarStatus.mock.callCount(), 0);
+  });
+
+  it("webhook: tempo-limite na gravação, depois da consulta, segue 200", async (t) => {
+    t.mock.method(console, "error", () => {});
+    const rota = criarRotaWebhook({ provider: provedor(), catalogo, aoAtualizarStatus: () => Promise.reject(estouro()) });
+
+    const r = await rota(new Request("https://loja.test/api/webhooks/mp?id=123", { method: "POST", body: "{}" }));
+
+    assert.equal(r.status, 200);
+    assert.deepEqual(await lido(r), { recebido: true });
   });
 });

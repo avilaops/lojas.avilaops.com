@@ -19,8 +19,10 @@ import { lembrarPixPendente, pedirIndicacoes } from "./avisos-que-esperam";
 import { renovarAcessos as renovarAcessosDoMercadoPago } from "./mercado-pago-conta";
 import { alertar } from "./alertas";
 import { entregarWebhooks } from "./webhooks-entrega";
+import { expirarPixManual } from "./pix-manual";
 import { reconciliarReservas } from "./reservas-reconciliar";
 import { receberNotasPeriodicamente } from "./fiscal-loja";
+import { expurgarHistoricoMcp } from "./mcp-historico";
 
 /** Quantas falhas seguidas de uma rotina viram alerta para gente. */
 export const FALHAS_ATE_ALERTAR = 3;
@@ -48,6 +50,7 @@ const TRABALHOS: Record<NomeDeRotina, () => Promise<unknown>> = {
   // resumo diz isso em vez de parecer que rodou e não achou ninguém.
   "webhooks.entregar": () => entregarWebhooks({ limite: 50 }),
   "reservas.reconciliar": () => reconciliarReservas(),
+  "pix.expirar": () => expirarPixManual(),
   "pix.lembrete": () => lembrarPixPendente(),
   "loja.indicacoes": () => pedirIndicacoes(),
   "carrinhos.verificar": () => verificarCarrinhosAbandonados(),
@@ -55,6 +58,7 @@ const TRABALHOS: Record<NomeDeRotina, () => Promise<unknown>> = {
   "pedidos.verificar": () => reconciliarPagamentosPendentes(),
   "mercadopago.renovar": () => renovarAcessosDoMercadoPago(),
   "seo.categorias": () => processarSeoCategoriasPendentes({ limite: 10 }),
+  "mcp.historico": () => expurgarHistoricoMcp(),
   "cobranca.verificar": () => verificarInadimplencia(),
   "relatorios.semanal": () => emitirRelatoriosSemanais(),
 };

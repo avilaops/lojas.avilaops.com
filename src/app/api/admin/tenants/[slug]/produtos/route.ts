@@ -15,6 +15,33 @@ export async function GET(request: Request, { params }: Ctx) {
   const { slug } = await params;
   const t = await prisma.tenant.findUnique({ where: { slug } });
   if (!t) return Response.json({ erro: "loja não encontrada" }, { status: 404 });
+  // `?resumo=1`: a lista que o painel da Ávila Ops usa para navegar o catálogo.
+  // A resposta completa leva descrição, atributos e todas as imagens de cada
+  // produto — 16 MB e quase 2 s para as 5.634 peças da Vedashow, a cada clique
+  // de filtro. A enxuta leva só o que uma linha de tabela mostra.
+  if (new URL(request.url).searchParams.get("resumo") === "1") {
+    const linhas = await prisma.produto.findMany({
+      where: { tenantId: t.id },
+      select: {
+        id: true, slug: true, nome: true, marca: true, sku: true,
+        precoCentavos: true, precoDeCentavos: true,
+        imagens: true, imagemOrigem: true,
+        destaque: true, ativo: true, disponibilidade: true, estoque: true,
+        atualizadoEm: true, criadoEm: true,
+        categoria: { select: { nome: true, slug: true } },
+      },
+      orderBy: { nome: "asc" },
+    });
+    return Response.json(
+      linhas.map(({ imagens, ...resto }) => ({
+        ...resto,
+        // Só a capa e a contagem: "sem foto" é `fotos === 0`, a mesma regra
+        // de sempre, sem carregar as URLs de todas as fotos.
+        imagem: imagens[0] ?? null,
+        fotos: imagens.length,
+      })),
+    );
+  }
   return Response.json(await prisma.produto.findMany({ where: { tenantId: t.id }, include: { categoria: true }, orderBy: { nome: "asc" } }));
 }
 

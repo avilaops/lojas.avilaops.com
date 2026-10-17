@@ -125,6 +125,15 @@ model Tenant {
   /// aceitar o pedido. Nulo = sem mínimo. Ver `avaliarPedidoMinimo`.
   pedidoMinimoCentavos   Int? // centavos
 
+  /// Recursos ligados para esta loja (flags), ex.: "recebimento_v2",
+  /// "pagamentos_pagbank". Vazio = comportamento de sempre. Ver src/lib/recursos.ts.
+  recursos String[] @default([])
+
+  /// Provedor e credencial que a loja usa para cobrar (src/lib/credenciais.ts).
+  /// Nulo = loja antiga ainda não migrada: vale o Mercado Pago das colunas mp*.
+  provedorPadrao     String?
+  credencialPadraoId String? @unique
+
   // ── Pagamento (tokens cifrados com LOJAS_SECRET) ──────────────────────
   /// Mercado Pago é o único gateway, por decisão de escopo de 31/08/2026.
   /// A conta é do lojista: o dinheiro nunca passa pela Avila Ops.
@@ -256,6 +265,9 @@ model Tenant {
   suspensaEm          DateTime?
   /// Loja da casa (demo, vitrine própria): a rotina diária nunca suspende. Marcado só pela API admin.
   cobrancaIsenta      Boolean   @default(false)
+  /// Faixa de preço antiga (id em src/lib/faixas-antigas.ts): a loja paga o que
+  /// combinou, não a tabela de hoje. Nula = tabela do plano. Só a API admin grava.
+  faixaPreco          String?
   setupPagoEm         DateTime? // R$ 497 — cobrado à parte, marcado pela Avila Ops
 
   faturas          Fatura[]
@@ -280,6 +292,7 @@ model Tenant {
   conexoesMcp    ConexaoMcp[]
   chamadasMcp    ChamadaMcp[]
   webhooksApi    WebhookApi[]
+  credenciaisPagamento CredencialPagamento[]
 
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
@@ -287,6 +300,7 @@ model Tenant {
   categorias        Categoria[]
   produtos          Produto[]
   pedidos           Pedido[]
+  cobrancasPix      CobrancaPixManual[]
   pesquisasCatalogo PesquisaCatalogoExecucao[]
   publicacoes       PublicacaoLoja[]
   sessoesVitrine    SessaoVitrine[]
@@ -514,6 +528,9 @@ model Pedido {
 
   meioPagamento   String // pix | cartao | boleto
   gateway         String  @default("mercadopago")
+  /// Credencial que cobrou este pedido. Webhook e conciliação usam esta, não a
+  /// padrão atual da loja: trocar de provedor não perde pedido em aberto.
+  credencialId    String?
   pagamentoId     String?
   pagamentoStatus String?
   rastreio        String?
@@ -544,13 +561,39 @@ model Pedido {
   tenant    Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   comprador Comprador?     @relation(fields: [compradorId], references: [id], onDelete: SetNull)
   sessao    SessaoVitrine? @relation(fields: [sessaoId], references: [id], onDelete: SetNull)
-  itens     PedidoItem[]
-  postagem  Postagem?
+  itens       PedidoItem[]
+  postagem    Postagem?
+  cobrancaPix CobrancaPixManual?
 
   @@unique([tenantId, canal, canalPedidoId])
   @@index([tenantId, status])
   @@index([pagamentoId])
   @@index([sessaoId])
+}
+
+/// Cobrança do Pix na conta do lojista. O valor pode ter centavos a mais que o
+/// pedido, para dois Pix do mesmo total não ficarem iguais no extrato.
+model CobrancaPixManual {
+  id            String    @id @default(cuid())
+  tenantId      String
+  pedidoId      String?   @unique
+  referencia    String    @unique
+  /// Identificador no BR Code (campo 62-05), já no formato do QR estático.
+  txid          String
+  valorCentavos Int
+  copiaECola    String
+  expiraEm      DateTime
+  /// Quando o comprador apertou "Já paguei". Nulo = ainda não avisou.
+  informadoEm   DateTime?
+  /// Caminho do comprovante, se ele enviou. Não é dado lido do arquivo.
+  comprovante   String?
+  criadoEm      DateTime  @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  pedido Pedido? @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, informadoEm])
+  @@index([expiraEm])
 }
 
 /// Unidade vendável. Produto simples tem uma variante padrao interna.
@@ -1345,6 +1388,13 @@ model OperadorLoja {
   criadoEm       DateTime  @default(now())
   atualizadoEm   DateTime  @updatedAt
 
+  /// Convite por e-mail pedido ao login unico: ENVIADO | FALHOU | PENDENTE, o
+  /// motivo e quando. Nulo para quem recebeu senha combinada. O endereco de
+  /// criar a senha nunca e guardado. Ver src/lib/convite-equipe.ts.
+  conviteSituacao String?
+  conviteDetalhe  String?
+  conviteEm       DateTime?
+
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   /// O mesmo e-mail pode operar em lojas diferentes (contador, agencia), mas
@@ -1616,4 +1666,35 @@ model ChaveApi {
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
+}
+
+/// Conta de um provedor de pagamento de uma loja. Uma por provedor por loja.
+/// Segredos cifrados com LOJAS_SECRET (src/lib/cofre.ts), em JSON.
+/// Mercado Pago com `segredosEnc` nulo = "legado": os segredos seguem nas
+/// colunas mp* do Tenant (OAuth e renovação escrevem lá).
+model CredencialPagamento {
+  id           String    @id @default(cuid())
+  tenantId     String
+  /// ProvedorId: mercadopago | pagbank | pagarme | cielo | pix_manual
+  provedor     String
+  /// oauth | chave | pix_direto
+  tipoConexao  String
+  /// conectado | erro | pendente
+  status       String    @default("pendente")
+  /// Última mensagem do teste, em português, para a tela.
+  mensagem     String?
+  segredosEnc  String?
+  /// O que pode ir à tela ou ao navegador: chave pública, MerchantId, chave Pix mascarada.
+  publicos     Json      @default("{}")
+  /// Segredo aleatório que identifica a credencial na URL do webhook.
+  webhookToken String    @unique
+  /// Como o provedor chama a conta (apelido, e-mail), para a tela.
+  conta        String?
+  testadoEm    DateTime?
+  criadoEm     DateTime  @default(now())
+  atualizadoEm DateTime  @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, provedor])
 }

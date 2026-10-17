@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CheckoutScreen, MercadoPagoCardBrick } from "@avilaops/checkout/ui";
 import { FRETE_RETIRADA_ID, avaliarPedidoMinimo, avisoDePedidoMinimo, type ItemCarrinho, type MeioPagamento, type OpcaoFrete, type ResultadoPagamento } from "@avilaops/checkout";
 import { useCart } from "@/components/cart/CartProvider";
 import { iniciarCheckout } from "@/lib/eventos-loja";
+import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
+import PixNaConta from "@/components/checkout/PixNaConta";
+import { TEXTO_PENDENCIA_NO_CHECKOUT, desfechoDoCheckout, encerraPendencia, esquecerPendencia, guardaDoNavegador, guardarPendencia, lerPendencia, situacaoAposConsulta } from "@/lib/pedido-a-confirmar";
 import type { TenantPublico } from "@/lib/tenant";
 
 /**
@@ -46,6 +49,15 @@ export default function CheckoutClient({ loja, conta }: { loja: TenantPublico; c
   );
   const [resultado, setResultado] = useState<ResultadoPagamento | null>(null);
   const [referencia] = useState(() => novaReferencia(loja.slug));
+  // Referência de uma visita anterior cujo pagamento ficou a confirmar, ou cujo
+  // envio não teve resposta. Enquanto ela não resolver, o formulário não abre:
+  // ele nasceria com referência nova, fora da trava de repetição, e cobraria de
+  // novo com a primeira em aberto.
+  const [anterior, setAnterior] = useState<{ referencia: string; situacao: "conferindo" | "pendente" | "pedido" | "sem_resposta" } | null>(null);
+  const [anteriorLida, setAnteriorLida] = useState(false);
+  // Pagamento desta visita que ficou a confirmar: a tela troca na hora, com o
+  // link à vista, em vez de depender de a navegação acontecer.
+  const [aConfirmar, setAConfirmar] = useState<string | null>(null);
 
   const itensCheckout = useMemo<ItemCarrinho[]>(
     () => itens.map((i) => ({ id: i.id, nome: i.nome, quantidade: i.quantidade, precoUnitario: i.precoCentavos, imagem: i.imagem })),
@@ -61,6 +73,28 @@ export default function CheckoutClient({ loja, conta }: { loja: TenantPublico; c
     iniciarCheckout(itens.map((i) => ({ id: i.id, nome: i.nome, precoCentavos: i.precoCentavos, quantidade: i.quantidade })));
   }, [pronto, itens]);
 
+  const conferirAnterior = useCallback(async (ref: string) => {
+    setAnterior({ referencia: ref, situacao: "conferindo" });
+    const corpo = await fetch(`/api/checkout/pendente?referencia=${encodeURIComponent(ref)}`, { cache: "no-store" }).then((x) => (x.ok ? x.json() : null)).catch(() => null);
+    const situacao = situacaoAposConsulta(corpo);
+    if (situacao === "livre") {
+      esquecerPendencia(guardaDoNavegador(), loja.slug);
+      setAnterior(null);
+    } else {
+      // Consulta que falhou também segura o formulário (na dúvida, não se cobra
+      // de novo), mas com tela própria: não se sabe se o pagamento está pendente.
+      setAnterior({ referencia: ref, situacao });
+    }
+  }, [loja.slug]);
+
+  /* eslint-disable react-hooks/set-state-in-effect -- lê a pendência do armazenamento externo do navegador, como o carrinho */
+  useEffect(() => {
+    const ref = lerPendencia(guardaDoNavegador(), loja.slug);
+    setAnteriorLida(true);
+    if (ref) void conferirAnterior(ref);
+  }, [loja.slug, conferirAnterior]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
   // Polling do PIX: quando cair, vai para a página do pedido.
   useEffect(() => {
     if (!resultado || resultado.status !== "pendente" || resultado.meioPagamento !== "pix") return;
@@ -75,7 +109,65 @@ export default function CheckoutClient({ loja, conta }: { loja: TenantPublico; c
     return () => clearInterval(timer);
   }, [resultado, limpar, referencia, router]);
 
-  if (!pronto) return null;
+  if (!pronto || !anteriorLida) return null;
+
+  if (aConfirmar) {
+    return (
+      <div className="container-loja max-w-lg py-16 text-center">
+        <h1 className="text-xl font-bold">Estamos confirmando o pagamento</h1>
+        <p className="mt-2 text-sm text-muted-foreground">Não pague de novo. A resposta do pagamento ainda não chegou; acompanhe pela página do pedido.</p>
+        <Link href={aConfirmar} className="btn-primario mt-6 w-full">Acompanhar o pedido</Link>
+      </div>
+    );
+  }
+
+  if (anterior && !resultado) {
+    const destino = `/pedido/${encodeURIComponent(anterior.referencia)}`;
+    if (anterior.situacao === "conferindo") {
+      return (
+        <div className="container-loja max-w-lg py-16 text-center">
+          <p className="text-sm text-muted-foreground">Conferindo um pagamento anterior…</p>
+        </div>
+      );
+    }
+    if (anterior.situacao === "pedido") {
+      return (
+        <div className="container-loja max-w-lg py-16 text-center">
+          <h1 className="text-xl font-bold">Sua compra anterior já virou pedido</h1>
+          <p className="mt-2 text-sm text-muted-foreground">O pagamento que estava a confirmar gerou um pedido. Veja o pedido antes de comprar de novo: os itens do carrinho podem ser os mesmos.</p>
+          <Link href={destino} className="btn-primario mt-6 w-full">Ver o pedido</Link>
+          <button type="button" className="btn-secundario mt-2 w-full" onClick={() => { esquecerPendencia(guardaDoNavegador(), loja.slug); setAnterior(null); }}>
+            Fazer outra compra
+          </button>
+        </div>
+      );
+    }
+    const semResposta = anterior.situacao === "sem_resposta";
+    const { titulo, texto, conferir } = TEXTO_PENDENCIA_NO_CHECKOUT[semResposta ? "sem_resposta" : "pendente"];
+    return (
+      <div className="container-loja max-w-lg py-16 text-center">
+        <h1 className="text-xl font-bold">{titulo}</h1>
+        <p className="mt-2 text-sm text-muted-foreground">{texto}</p>
+        {/* Sem resposta, o que resolve é consultar de novo; pendente, é acompanhar o pedido. */}
+        {semResposta ? (
+          <button type="button" className="btn-primario mt-6 w-full" onClick={() => void conferirAnterior(anterior.referencia)}>{conferir}</button>
+        ) : (
+          <Link href={destino} className="btn-primario mt-6 w-full">Acompanhar o pedido</Link>
+        )}
+        {semResposta ? (
+          <Link href={destino} className="btn-secundario mt-2 w-full">Acompanhar o pedido</Link>
+        ) : (
+          <button type="button" className="btn-secundario mt-2 w-full" onClick={() => void conferirAnterior(anterior.referencia)}>{conferir}</button>
+        )}
+        {loja.whatsapp && (
+          <a className="btn-secundario mt-2 w-full" href={linkWhatsApp(loja.whatsapp, `Olá! Sobre o pagamento do pedido ${anterior.referencia}`)} target="_blank" rel="noopener">
+            Falar com a loja
+          </a>
+        )}
+      </div>
+    );
+  }
+
   if (itens.length === 0 && !resultado) {
     return (
       <div className="container-loja py-16 text-center">
@@ -105,6 +197,12 @@ export default function CheckoutClient({ loja, conta }: { loja: TenantPublico; c
   }
 
   async function aoFinalizar(dados: Parameters<NonNullable<React.ComponentProps<typeof CheckoutScreen>["aoFinalizar"]>>[0]) {
+    // A pendência é guardada antes do envio: se a resposta se perder no caminho
+    // (504 do proxy, rede que cai) com a cobrança em curso, recarregar a página
+    // encontra a referência e consulta a situação, em vez de abrir o formulário
+    // com referência nova. Ela só é esquecida quando a resposta é conclusiva.
+    const guarda = guardaDoNavegador();
+    guardarPendencia(guarda, loja.slug, referencia);
     const r = await fetch("/api/checkout", {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -119,17 +217,44 @@ export default function CheckoutClient({ loja, conta }: { loja: TenantPublico; c
         cartao: dados.cartaoToken ? { token: dados.cartaoToken, parcelas: dados.parcelas, bandeira: dados.bandeira } : undefined,
       }),
     });
-    const corpo = await r.json();
-    if (!r.ok) throw new Error(corpo?.erro ?? "Não foi possível processar o pagamento.");
-    const res = corpo as ResultadoPagamento;
+    const corpo = await r.json().catch(() => null);
+    const desfecho = desfechoDoCheckout(r.ok, corpo, referencia);
+    if (encerraPendencia(desfecho)) esquecerPendencia(guarda, loja.slug);
+    if (desfecho.tipo === "erro") throw new Error(desfecho.mensagem);
+    if (desfecho.tipo === "a_confirmar") {
+      // Cobrança que pode ter nascido (ou nasceu, e só a resposta se perdeu) não
+      // reabre o formulário. A referência fica guardada para a próxima visita ao
+      // /checkout, o carrinho também, e a tela troca para um aviso com o link:
+      // se a navegação falhar, o comprador não fica diante de um botão travado.
+      // A promessa não resolve de propósito, para a tela de pagamento (que sai
+      // de cena nesta mesma renderização) não chegar a dizer "nada foi cobrado".
+      guardarPendencia(guarda, loja.slug, desfecho.referencia);
+      setAConfirmar(desfecho.destino);
+      router.push(desfecho.destino);
+      return new Promise<ResultadoPagamento>(() => {});
+    }
+    const res = desfecho.resultado;
     setResultado(res);
     if (res.status === "aprovado") {
       limpar();
       router.push(`/pedido/${referencia}`);
-    } else if (res.meioPagamento === "boleto") {
+    } else if (res.meioPagamento === "boleto" || res.status === "aguardando_confirmacao") {
       limpar();
     }
     return res;
+  }
+
+  if (resultado && resultado.status === "aguardando_confirmacao" && resultado.pix) {
+    const valor = (resultado.valor / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    return (
+      <PixNaConta
+        referencia={referencia}
+        valorFormatado={valor}
+        copiaECola={resultado.pix.copiaECola}
+        qrCodeBase64={resultado.pix.qrCodeBase64}
+        expiraEm={resultado.pix.expiraEm}
+      />
+    );
   }
 
   if (resultado && resultado.status === "pendente" && resultado.pix) {
@@ -169,9 +294,17 @@ export default function CheckoutClient({ loja, conta }: { loja: TenantPublico; c
         itens={itensCheckout}
         fretes={fretes}
         meiosPagamento={loja.meiosPagamento as MeioPagamento[]}
+        rotulosMeio={loja.pixNaConta ? { pix: { titulo: "PIX", sub: "Você paga e a loja confere na conta" } } : undefined}
         clienteInicial={conta ? { nome: conta.nome.split(" ")[0], sobrenome: conta.nome.split(" ").slice(1).join(" "), email: conta.email, telefone: conta.telefone ?? "", documento: conta.documento ?? "" } : undefined}
         enderecoInicial={conta?.endereco ? { ...conta.endereco, complemento: conta.endereco.complemento ?? "" } : undefined}
         aoInformarCep={aoInformarCep}
+        semEntrega={
+          loja.whatsapp ? (
+            <a className="btn-secundario mt-2 w-full" href={linkWhatsApp(loja.whatsapp, "Olá! Quero fechar um pedido e não apareceu forma de entrega para o meu CEP.")} target="_blank" rel="noopener">
+              Combinar a entrega pelo WhatsApp
+            </a>
+          ) : undefined
+        }
         aoIdentificar={(cliente) => { void fetch("/api/checkout/contato", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ referencia, cliente, itens: ids }) }).catch(() => undefined); }}
         aoFinalizar={aoFinalizar}
         desconto={cupom?.desconto ?? 0}

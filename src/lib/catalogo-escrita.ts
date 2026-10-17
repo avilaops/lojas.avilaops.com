@@ -159,12 +159,15 @@ export type ResultadoDoAjuste =
  * `skuEsperado` é para quem chegou à variação por SKU: depois da trava, a
  * variação tem de continuar com esse SKU, senão `SkuMudouDuranteAGravacao`.
  */
-export async function ajustarOfertaNoCatalogo(tenantId: string, varianteId: string, ajuste: AjusteDeOferta, origem: string, skuEsperado?: string): Promise<ResultadoDoAjuste> {
+export async function ajustarOfertaNoCatalogo(tenantId: string, varianteId: string, ajuste: AjusteDeOferta, origem: string, skuEsperado?: string, versaoEsperada?: number): Promise<ResultadoDoAjuste> {
   return prisma.$transaction(async tx => {
     await permitirProjecao(tx);
     const alvo = await tx.variante.findFirst({ where: { id: varianteId, tenantId }, select: { produtoId: true } });
     if (!alvo) throw new ErroCatalogo("Variação não encontrada nesta loja.", 404);
     const p = await travarProduto(tx, tenantId, alvo.produtoId);
+    // Quem editou olhando uma versão só grava sobre ela: conferido com o
+    // produto já travado, então não há janela entre a conferência e a escrita.
+    if (versaoEsperada !== undefined && p.versaoCatalogo !== versaoEsperada) throw new ErroCatalogo("Este produto mudou desde que você abriu o cadastro. Recarregue antes de salvar.", 409);
     // A grade pode ter sido regravada entre a leitura acima e a trava: a
     // variação que existia pode não existir mais.
     const v = p.variantes.find(x => x.id === varianteId);

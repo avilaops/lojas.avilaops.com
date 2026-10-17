@@ -1,6 +1,7 @@
 import type { Tenant } from "@prisma/client";
 import { prisma } from "./db";
-import { escolhaDosEscopos, resumoDoAcesso, type EscolhaDeAcesso } from "./mcp-permissoes";
+import { escolhaDosEscopos, escoposQuePode, limitarAoTeto, resumoDoAcesso, type EscolhaDeAcesso } from "./mcp-permissoes";
+import { permite, type Papel } from "./operadores";
 import {
   gerarSegredo,
   hashDoSegredo,
@@ -133,6 +134,16 @@ export async function revogarPorToken(token: string) {
   if (onde) await prisma.conexaoMcp.updateMany({ where: { ...onde, revogadaEm: null }, data: { revogadaEm: new Date() } });
 }
 
+/**
+ * O máximo que a conexão de alguém com este papel pode: o que a pessoa pode no
+ * painel. O dono não está em `OperadorLoja` (`operadorId` nulo) e pode tudo.
+ */
+export function tetoDoPapel(papel: Papel): string[] {
+  return escoposQuePode((o_que) => permite(papel, o_que));
+}
+
+const papelDoOperador = (papel: string): Papel => (papel === "GERENTE" ? "GERENTE" : "OPERADOR");
+
 /** De quanto em quanto tempo o uso é anotado: escrever a cada chamada seria um UPDATE por ferramenta. */
 const ANOTAR_USO_MS = 5 * 60_000;
 
@@ -141,6 +152,7 @@ export interface AcessoDaConexao {
   conexaoId: string;
   /** Nome do assistente, como ele se registrou. */
   assistente: string;
+  /** O que foi marcado na tela, já cortado pelo papel atual de quem autorizou. */
   escopos: string[];
 }
 
@@ -149,6 +161,10 @@ export interface AcessoDaConexao {
  *
  * Plano e status da loja não são conferidos aqui: quem decide o que cada um
  * significa é `autenticarMcp`, com a mesma regra da chave.
+ *
+ * O papel de quem autorizou é lido a cada chamada, e não copiado na conexão:
+ * gerente que vira balcão perde na chamada seguinte o que o balcão não pode,
+ * e recupera se voltar a gerente, sem conectar de novo.
  */
 export async function conexaoDoAcesso(token: string): Promise<AcessoDaConexao | null> {
   if (!pareceSegredo("acesso", token)) return null;
@@ -159,14 +175,24 @@ export async function conexaoDoAcesso(token: string): Promise<AcessoDaConexao | 
   });
   if (!conexao || conexao.revogadaEm || !conexao.acessoExpiraEm || conexao.acessoExpiraEm.getTime() <= agora) return null;
 
+  let papel: Papel = "DONO";
   if (conexao.operadorId) {
-    const ativo = await prisma.operadorLoja.count({ where: { id: conexao.operadorId, tenantId: conexao.tenantId, ativo: true } });
-    if (!ativo) return null;
+    const operador = await prisma.operadorLoja.findFirst({
+      where: { id: conexao.operadorId, tenantId: conexao.tenantId, ativo: true },
+      select: { papel: true },
+    });
+    if (!operador) return null;
+    papel = papelDoOperador(operador.papel);
   }
   if (!conexao.ultimoUsoEm || agora - conexao.ultimoUsoEm.getTime() > ANOTAR_USO_MS) {
     await prisma.conexaoMcp.updateMany({ where: { id: conexao.id }, data: { ultimoUsoEm: new Date(agora) } });
   }
-  return { tenant: conexao.tenant, conexaoId: conexao.id, assistente: conexao.cliente.nome, escopos: conexao.escopos };
+  return {
+    tenant: conexao.tenant,
+    conexaoId: conexao.id,
+    assistente: conexao.cliente.nome,
+    escopos: limitarAoTeto(conexao.escopos, tetoDoPapel(papel)),
+  };
 }
 
 /** Só a loja do token; para quem não precisa saber o que a conexão pode. */
@@ -179,10 +205,14 @@ export async function lojaDoAcesso(token: string): Promise<Tenant | null> {
 export interface ConexaoDoPainel {
   id: string;
   assistente: string;
-  /** "Só consulta", "Consulta e altera tudo" ou as áreas, por extenso. */
+  /** Quem autorizou: o nome da pessoa da equipe, ou "Dono". */
+  autorizadaPor: string;
+  /** "Só consulta", "Consulta e altera tudo" ou as áreas, por extenso. Já com o teto de quem autorizou. */
   acesso: string;
   /** O mesmo acesso, no formato da tela de escolha, para abrir a edição. */
   escolha: EscolhaDeAcesso;
+  /** O máximo que esta conexão pode, pelo papel de quem autorizou: a edição não oferece mais que isso. */
+  teto: string[];
   conectadaEm: string;
   ultimoUsoEm: string | null;
 }
@@ -192,16 +222,32 @@ export async function conexoesDaLoja(tenantId: string): Promise<ConexaoDoPainel[
   const linhas = await prisma.conexaoMcp.findMany({
     where: { tenantId, revogadaEm: null, renovacaoExpiraEm: { gt: new Date() } },
     orderBy: { criadaEm: "desc" },
-    select: { id: true, criadaEm: true, ultimoUsoEm: true, escopos: true, cliente: { select: { nome: true } } },
+    select: { id: true, operadorId: true, criadaEm: true, ultimoUsoEm: true, escopos: true, cliente: { select: { nome: true } } },
   });
-  return linhas.map((l) => ({
-    id: l.id,
-    assistente: l.cliente.nome,
-    acesso: resumoDoAcesso(l.escopos),
-    escolha: escolhaDosEscopos(l.escopos),
-    conectadaEm: l.criadaEm.toISOString(),
-    ultimoUsoEm: l.ultimoUsoEm?.toISOString() ?? null,
-  }));
+  const idsDeOperador = [...new Set(linhas.flatMap((l) => (l.operadorId ? [l.operadorId] : [])))];
+  const operadores = idsDeOperador.length
+    ? await prisma.operadorLoja.findMany({ where: { tenantId, id: { in: idsDeOperador } }, select: { id: true, nome: true, papel: true, ativo: true } })
+    : [];
+  const porId = new Map(operadores.map((o) => [o.id, o]));
+
+  return linhas.map((l) => {
+    const operador = l.operadorId ? porId.get(l.operadorId) : null;
+    // Operador desligado (ou apagado) não pode nada, mas a conexão continua na
+    // lista: ela volta a valer se ele for religado, e é aqui que se desconecta.
+    const desligado = Boolean(l.operadorId) && !operador?.ativo;
+    const teto = desligado ? [] : tetoDoPapel(operador ? papelDoOperador(operador.papel) : "DONO");
+    const escopos = limitarAoTeto(l.escopos, teto);
+    return {
+      id: l.id,
+      assistente: l.cliente.nome,
+      autorizadaPor: operador ? (desligado ? `${operador.nome} (desligado)` : operador.nome) : l.operadorId ? "Pessoa removida da equipe" : "Dono",
+      acesso: resumoDoAcesso(escopos),
+      escolha: escolhaDosEscopos(escopos),
+      teto,
+      conectadaEm: l.criadaEm.toISOString(),
+      ultimoUsoEm: l.ultimoUsoEm?.toISOString() ?? null,
+    };
+  });
 }
 
 export async function revogarConexao(tenantId: string, id: string): Promise<boolean> {

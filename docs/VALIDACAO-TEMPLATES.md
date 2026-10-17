@@ -1,12 +1,14 @@
 # Validação dos templates
 
 Rotina que abre a prévia do painel (`/painel/previa?t=…`) para cada template e
-mede, em vez de olhar e achar. São **104 casos**: 13 layouts × 2 viewports × 2
-modos × 2 preferências de movimento.
+mede, em vez de olhar e achar. São **112 casos**: 14 layouts × 2 viewports × 2
+modos × 2 preferências de movimento. O Ateliê entra na matriz mesmo com a
+bandeira `LOJAS_TEMPLATE_ATELIE` desligada: a prévia desenha o rascunho que
+recebe, e a loja publicada é que esconde o modelo.
 
 | Eixo | Valores |
 | --- | --- |
-| Layout | os 12 de `VALORES_LAYOUT` (`src/lib/tema.ts`) |
+| Layout | os 14 de `VALORES_LAYOUT` (`src/lib/tema.ts`), incluindo `atelie` |
 | Viewport | `movel` 390×844 e `desktop` 1280×800 |
 | Modo | `claro` e `escuro` (o `modo` do tema, gravado em `data-modo`) |
 | Movimento | `normal` e `reduzido` (`prefers-reduced-motion: reduce`) |
@@ -19,7 +21,8 @@ modos × 2 preferências de movimento.
 
 ## O que cada caso mede
 
-Um caso passa quando nenhuma destas regras dispara:
+Um caso passa quando nenhuma destas regras dispara (o número é o mesmo no nome
+do teste, `regra 1` a `regra 7` em `src/lib/validacao-templates.test.ts`):
 
 1. **Desenhou.** O contêiner `div[data-layout]` existe e traz o layout do caso.
    Rascunho recusado, sessão que caiu e redirecionamento para `/entrar` falham
@@ -44,7 +47,7 @@ Um caso passa quando nenhuma destas regras dispara:
 
 A regra 6 é o que a regra geral de `src/app/globals.css`
 (`[data-layout] *` dentro de `@media (prefers-reduced-motion: reduce)`) atende
-para os onze layouts comuns; o Automotivo Premium tem a sua em `premium.css`.
+para os doze layouts comuns; o Automotivo Premium tem a sua em `premium.css`.
 
 ## Como o script espera e o que ele substitui
 

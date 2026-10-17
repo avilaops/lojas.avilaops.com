@@ -1,17 +1,16 @@
 import { cookies } from "next/headers";
-import { clientePorId, criarCodigo } from "@/lib/mcp-conexoes";
+import { clientePorId, criarCodigo, tetoDoPapel } from "@/lib/mcp-conexoes";
 import { abrirPedido, COOKIE_DO_PEDIDO, emissor, retornoRegistrado, urlDeRetorno } from "@/lib/mcp-oauth";
-import { escoposDaAutorizacao } from "@/lib/mcp-permissoes";
-import { permite } from "@/lib/operadores";
+import { escoposDaAutorizacao, limitarAoTeto } from "@/lib/mcp-permissoes";
 import { sessaoDoPainel } from "@/lib/sessao";
 
 /**
  * A decisão do lojista na tela de autorização do conector.
  *
- * Quem autoriza é quem pode mexer nas configurações da loja (dono ou gerente),
- * a mesma régua de gerar a chave. O pedido vem do cookie assinado, nunca do
- * corpo: a tela mostrou um assistente e um retorno, e é para eles que o código
- * vai.
+ * Qualquer pessoa da equipe conecta o próprio assistente, e ele pode no máximo
+ * o que ela pode no painel (`tetoDoPapel`): o balcão só alcança pedidos. O
+ * pedido vem do cookie assinado, nunca do corpo: a tela mostrou
+ * um assistente e um retorno, e é para eles que o código vai.
  */
 export async function POST(request: Request) {
   const s = await sessaoDoPainel();
@@ -36,11 +35,6 @@ export async function POST(request: Request) {
   }
   if (corpo?.decisao !== "permitir") return Response.json({ erro: "Decisão inválida." }, { status: 400 });
 
-  // Recusar qualquer um da loja pode; conceder, só quem mexe nas configurações.
-  if (!permite(s.papel, "configuracoes")) {
-    return Response.json({ erro: "Seu acesso não permite conectar um assistente. Fale com o dono da loja." }, { status: 403 });
-  }
-
   const loja = s.tenant;
   if (loja.plano !== "LOJA_PRO") {
     return Response.json(
@@ -52,10 +46,12 @@ export async function POST(request: Request) {
     return Response.json({ erro: "A loja precisa estar ativa para conectar um assistente." }, { status: 403 });
   }
 
-  // O que a conexão vai poder é o que foi marcado nesta tela, e fica gravado
-  // nela: o assistente não escolhe nem amplia depois.
-  const escopos = escoposDaAutorizacao({ nivel: corpo.nivel, areas: corpo.areas });
-  if (!escopos) return Response.json({ erro: "Escolha ao menos uma área para o assistente acessar." }, { status: 400 });
+  // O que a conexão vai poder é o que foi marcado nesta tela, cortado pelo que
+  // a pessoa pode no painel, e fica gravado nela: o assistente não escolhe nem
+  // amplia depois. O corte se repete a cada chamada, com o papel daquela hora.
+  const marcados = escoposDaAutorizacao({ nivel: corpo.nivel, areas: corpo.areas });
+  const escopos = marcados ? limitarAoTeto(marcados, tetoDoPapel(s.papel)) : [];
+  if (!escopos.length) return Response.json({ erro: "Escolha ao menos uma área que o seu acesso ao painel alcance." }, { status: 400 });
 
   const codigo = await criarCodigo(loja.id, s.operador?.id ?? null, pedido, escopos);
   store.delete(COOKIE_DO_PEDIDO);

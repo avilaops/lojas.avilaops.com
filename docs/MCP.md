@@ -16,7 +16,7 @@ pedido, criar cupom. Recurso do plano Loja Pro.
 | Credencial | `lojas_at_…`, vale 1 hora e se renova | `lojas_sk_…` com o escopo `mcp:usar` | `lojas_live_<slug>_…` |
 | Onde nasce | Tela `/autorizar`, depois do login no painel | Painel, Chaves da API | Não é mais emitida |
 | Guardada como | sha256 (`ConexaoMcp`) | sha256 (`ChaveApi`) | cifrada (`Tenant.apiKeyEnc`) |
-| O que pode | O que o lojista marcou na tela | O que os escopos dela dizem | Tudo |
+| O que pode | O que foi marcado na tela, até o teto do papel de quem conectou | O que os escopos dela dizem | Tudo |
 | Desligar | Painel, "Desconectar" | Painel, "Revogar" | Painel, "Revogar" (sem volta) |
 
 As três passam por `autenticarMcp` (`src/lib/mcp-auth.ts`) e pela mesma regra:
@@ -35,8 +35,24 @@ entra em `MCP_TOOLS`; o teste recusa ferramenta sem escopo.
   marca fica gravado em `ConexaoMcp.escopos`. Depois ele muda em Painel, IA e
   API ("Mudar acesso"), e vale na chamada seguinte. Só o painel muda isso: o
   assistente não amplia o próprio acesso.
+- **Cada pessoa da equipe conecta o próprio assistente, e ele pode no máximo o
+  que ela pode no painel.** Cada área do conector está presa a uma permissão
+  de `PODE` (`src/lib/operadores.ts`) por `PERMISSAO_DA_AREA`, para ler e para
+  alterar: dono e gerente alcançam tudo; o balcão só pedidos (consulta, status
+  e etiqueta), sem lista de clientes, catálogo nem faturamento. O corte
+  (`tetoDoPapel`) acontece ao gravar a autorização e de novo a cada chamada,
+  com o papel daquela hora (`conexaoDoAcesso`): gerente rebaixado a balcão
+  fica só com pedidos na chamada seguinte, com o mesmo token, e recupera o que
+  estava marcado se voltar a gerente. Quem é promovido não ganha sozinho o que
+  não marcou. Mudar o acesso de uma conexão no painel segue exigindo
+  `configuracoes`, e não fura o teto de quem conectou.
+- Painel, IA e API mostra, por conexão, quem conectou e o acesso que vale
+  agora. Conexão de pessoa desligada aparece sem acesso, para ser desconectada.
 - `tools/list` devolve só o que a credencial pode usar, com `annotations`
-  (`readOnlyHint`) para o assistente saber quando pedir confirmação.
+  (`readOnlyHint` e `destructiveHint`) para o assistente saber quando pedir
+  confirmação. Toda ferramenta que altera é destrutiva, como o protocolo
+  define (sobrescrever, mudar status e excluir contam), salvo as marcadas
+  `aditiva` em `FERRAMENTAS`, que só acrescentam. A privacidade do conector está em `/developers/privacidade`.
   `tools/call` recusa o resto dizendo qual permissão falta.
 - Chave secreta só entra no conector com `mcp:usar`. Chave criada para o ERP
   com `catalogo:escrever` não vira chave do conector sozinha.
@@ -47,8 +63,8 @@ Cada `tools/call` executado vira uma linha em `ChamadaMcp`: quem (assistente
 ou chave), qual ferramenta, se alterou, se deu certo e o identificador do que
 foi tocado. **Sem argumentos e sem resultado**: `alvoDaChamada`
 (`src/lib/mcp-historico.ts`) só aceita o que parece código (SKU, id, número).
-O lojista lê em Painel, IA e API. Retenção de 90 dias, com a faxina feita
-quando a lista é aberta.
+O lojista lê em Painel, IA e API. Retenção de 90 dias: a rotina
+`mcp.historico` apaga de todas as lojas, todo dia às 2h (`docs/ROTINAS.md`).
 
 ## Limites e medição
 
@@ -78,9 +94,10 @@ assistente pelo nome: quem fala MCP com OAuth conecta.
 5. `/autorizar` (plataforma) mostra loja, assistente e **para onde o acesso
    vai**. Sem sessão, o lojista passa por `/entrar`; toda porta de login termina
    em `/painel`, e o painel devolve à autorização quando o cookie existe.
-6. O lojista escolhe o que o assistente pode e decide em
-   `POST /api/painel/mcp/autorizar`. Autorizar exige a permissão
-   `configuracoes` (dono ou gerente). Sai um código de 5 minutos.
+6. A pessoa escolhe o que o assistente pode e decide em
+   `POST /api/painel/mcp/autorizar`. Qualquer um da equipe autoriza; a tela só
+   oferece o que o papel dela alcança e a rota corta pelo mesmo teto. Sai um
+   código de 5 minutos.
 7. `POST /oauth/token` troca código e `code_verifier` por token de acesso (1 h)
    e de renovação (60 dias, renovados a cada uso).
 
@@ -104,9 +121,16 @@ Rotas de máquina ficam na raiz de `src/app` e estão em `PREFIXOS_DA_RAIZ`
 - **O pedido vem do cookie assinado, não do corpo da decisão.** A tela mostrou
   um assistente e um retorno; é para eles que o código vai.
 - **Operador desligado derruba a conexão que ele autorizou.**
+- **A conexão nunca pode mais que a pessoa.** O papel é lido a cada chamada,
+  não copiado na conexão.
 
 ## O que ainda não tem
 
+- O balcão ver e desconectar a própria conexão no painel: a tela de IA e API
+  é de quem tem `configuracoes`. Hoje ele desconecta pelo assistente, ou pede
+  ao dono ou a um gerente.
+- O nome de quem conectou no histórico de chamadas (`ChamadaMcp` guarda o
+  assistente). A conexão guarda a pessoa, e a lista de conexões a mostra.
 - Publicação nos diretórios de conectores do Claude e do ChatGPT.
 - Apagar as colunas `Tenant.apiKeyEnc` e `apiKeyCriadaEm`: só depois que as
   lojas com chave antiga migrarem (duas em 08/10/2026).

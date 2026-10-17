@@ -1,14 +1,17 @@
 # Backup, migração e rollback do Lojas
 
 Como a plataforma sai de uma versão para outra, o que protege o banco no
-caminho e como voltar. O que fala do servidor foi conferido em produção em
-08/10/2026; o que ainda não vale está marcado. O procedimento em si (dump,
-migração, volta ao dump) tem um ensaio que qualquer um roda sem servidor:
-`npm run banco:ensaio`, descrito em "Ensaio".
+caminho e como voltar. Quem faz o deploy, o que ele garante e onde está o dump
+diário foram conferidos no servidor em 08/10/2026. O dump antes de migração
+está instalado nos dois caminhos de deploy (o do Actions desde 09/10/2026),
+mas **ainda não foi visto rodando num deploy de verdade**: o que está provado
+e o que não está fica em "Não conferido em produção". O procedimento em si
+(dump, migração, volta ao dump) tem um ensaio que qualquer um roda sem
+servidor: `npm run banco:ensaio`, descrito em "Ensaio".
 
 | Caminho de deploy | Quem migra | Quem reverte | Onde está o script |
 |---|---|---|---|
-| Pipeline (o normal) | `avila-deploy`, antes de trocar o container | `avila-deploy`, para a imagem anterior, se a saúde falhar | `.github/workflows/deploy-production.yml` aqui; `deploy-container.sh` no repositório `infra` |
+| Pipeline (o normal) | `avila-deploy`, antes de trocar o container e, havendo migração pendente, depois do dump | `avila-deploy`, para a imagem anterior, se a saúde falhar | `.github/workflows/deploy-production.yml` aqui; `deploy-container.sh` no repositório `infra` |
 | Pacote `standalone.tgz` (legado, parado) | o próprio script, antes de extrair a versão nova | o próprio script, para `app.anterior`, se saúde, CSS ou `/uploads` falharem | `deploy/deploy.sh` |
 
 Nos dois, a migração que falha aborta antes da troca, e o rollback devolve o
@@ -72,16 +75,83 @@ aparece no deploy: aparece como 500 na tela que usa a coluna que não existe.
   depois de conferido (gzip íntegro, com conteúdo, com o marcador de fim do
   `pg_dump`). Rotação às 3h40: fica o mais recente de cada família, os outros 7
   dias.
-- **Antes de migração pendente**: `pre-migracao-lojas.avilaops.com-<data>-<hora>.sql.gz`,
-  no mesmo diretório e com a mesma conferência. Só existe quando há o que
-  migrar, e se o dump falhar o deploy para antes de tocar no banco.
-  **Ainda não vale em produção**: está em `avilaops/infra#8`, e o `avila-deploy`
-  instalado no servidor está atrás do repositório. Instalar é decisão do
-  Nicolas, porque o script é o mesmo para dez aplicações.
+- **Antes de migração pendente**: instalado nos dois caminhos de deploy, ainda
+  sem prova em deploy de verdade. Ver abaixo.
 
-Enquanto o dump pré-migração não está instalado, quem sobe migração que mexe em
-dado existente faz o dump à mão antes (regra do `AGENTS.md`). Migração que só
-cria tabela ou coluna nula não precisa: o dump do dia cobre.
+### Dump antes da migração: o que cada caminho faz hoje
+
+Conferido no código do `infra` e nos relatos de instalação da equipe (tarefas
+241 e 247 em 08/10/2026, tarefa 262 em 09/10/2026), não em deploy de verdade:
+ver "Não conferido em produção".
+
+| Caminho | Script no servidor | Dump antes de migração pendente |
+|---|---|---|
+| GitHub Actions (o do dia a dia) | `/usr/local/sbin/avila-deploy` (fonte: `deploy-container.sh`, na pasta `scripts` do `infra`), versão instalada em 09/10/2026 07:30 UTC | instalado; ainda não visto num deploy |
+| Manual, por arquivo de imagem | `/usr/local/sbin/avila-deploy-local` (fonte: `deploy-container-local.sh`, na pasta `scripts` do `infra`), versão instalada em 08/10/2026 | instalado; ainda não visto num deploy |
+
+**Pelo Actions, o `avila-deploy` com o dump está instalado desde 09/10/2026
+07:30 UTC** (tarefa 262 do quadro da equipe). Até essa hora, toda migração do
+Lojas por esse caminho rodou sem dump colado nela: o script era o de
+18/09/2026, anterior ao dump. **O que não está provado é o dump em si**: até a
+última conferência de operações (09/10/2026 13:26 UTC, tarefa 291) nenhum
+deploy do Lojas tinha passado pelo script novo, então a linha `dump conferido`
+e o arquivo `pre-migracao-*` nunca foram vistos em produção por esse caminho.
+Três outras aplicações já publicaram pelo script novo sem falha, nenhuma com
+dump ligado. Em 12/10/2026 18:03 UTC o Lojas publicou pelo script novo pela
+primeira vez (run 38288388707 do Actions): não havia migração pendente e o log
+diz `sem migracao pendente; dump dispensado`. Isso prova o script e o ramo sem
+migração, não o dump. Quem acompanha o primeiro
+deploy do Lojas com migração é a raia de operações (tarefa 305 do quadro).
+Enquanto essa prova não existir, a regra do dump à mão, mais abaixo, continua
+valendo.
+
+**Pelo `avila-deploy-local`** (o caminho do `BUILD-MANUAL.md` do `infra`, para
+quando o Actions não pode construir nem publicar), o dump está ligado para o
+Lojas pela linha `MIGRATE_DUMP_DB=lojas` em
+`/etc/avilaops/deploy/lojas.avilaops.com.conf`. O `deploy-container.sh` do
+Actions liga o dump pela mesma variável e escreve as mesmas mensagens (lido no
+`infra` em 09/10/2026); os passos, pela leitura dos dois scripts:
+
+1. **Conferência do banco, em todo deploy**, com ou sem migração pendente: o
+   nome do banco na `DATABASE_URL` do `.env` tem de ser `lojas`, o mesmo de
+   `MIGRATE_DUMP_DB`. Diferente, ou URL que não dá para ler, o deploy para com
+   `Banco da URL de migracao nao e o de MIGRATE_DUMP_DB; nada foi migrado nem trocado.`
+   Só o nome é conferido: host e porta não. O dump sai sempre do Postgres do
+   próprio servidor.
+2. **Sem migração pendente** (`prisma migrate status` em dia): nenhum arquivo,
+   e o log diz `==> sem migracao pendente; dump dispensado`.
+3. **Com migração pendente**: `pg_dump` do banco `lojas` para
+   `/opt/backups/db/pre-migracao-lojas.avilaops.com-<AAAAMMDD>-<HHMMSS>.sql.gz`
+   (hora em UTC). O arquivo só assume esse nome depois da mesma conferência do
+   diário: gzip íntegro, com conteúdo e com o marcador de fim do `pg_dump`. O
+   log de sucesso é `==> dump conferido: <arquivo> (<bytes> bytes)`, e só
+   depois dele a migração é aplicada.
+4. **Dump que falha, sai incompleto ou não chega ao nome final**: o deploy
+   para antes de migrar. O serviço segue na imagem anterior e nada foi migrado
+   nem trocado.
+
+O que saber sobre esses arquivos:
+
+- **Não vão para o R2.** O envio diário para fora do servidor
+  (`applications/sync-r2.sh`, no `infra`) deixa `pre-migracao-*` de fora de
+  propósito: o dump serve para desfazer a migração nas horas seguintes, e o
+  estado novo do banco sobe no diário. Se o disco do servidor se perder, o
+  `pre-migracao` vai junto.
+- **Rotação**: a mesma do diretório, segundo o `infra`: fica o mais recente da
+  família, os outros 7 dias. Não há teto por quantidade.
+- **Deploy que para na migração obriga a reenviar a imagem.** O
+  `avila-deploy-local` apaga o arquivo da imagem logo depois de carregá-la,
+  antes da migração. Se parar ali (dump que falha, banco que não confere,
+  migração que falha), corrigida a causa é rodar a publicação manual inteira
+  de novo (`publicar-manual.ps1`, no `infra`): build e transferência.
+- **Ainda não existe nenhum `pre-migracao-*`**: até 09/10/2026 não houve deploy
+  do Lojas com migração pendente depois das instalações, por nenhum dos dois
+  caminhos.
+
+Enquanto o dump do deploy não for visto funcionando em produção, **quem sobe
+migração que mexe em dado existente faz o dump à mão antes** (regra do
+`AGENTS.md`). Migração que só cria tabela ou coluna nula não precisa: o dump
+do dia cobre.
 
 O dump à mão, no servidor, com o endereço lido do `.env` como o
 `deploy/deploy.sh` faz (o container fala com `host.docker.internal`; do host é
@@ -152,7 +222,10 @@ tocar em servidor nenhum:
 5. restaura o dump **numa base nova** e compara com o retrato do passo 2. Tem
    de bater em tudo e ter exatamente a última migração pendente;
 6. aplica a migração na base restaurada e confere `prisma migrate status`;
-7. apaga as duas bases, também quando um passo falha.
+7. apaga as duas bases e a pasta temporária, também quando um passo falha ou
+   o ensaio é interrompido (Ctrl+C, `SIGTERM`): ele para entre dois passos,
+   limpa e sai com 130 ou 143. `SIGKILL` não dá para tratar; aí as bases somem
+   com `npm run banco:teste:parar` e sobra `/tmp/lojas-ensaio-*`.
 
 ```bash
 npm run banco:teste          # sobe o lojas-db-test
@@ -162,8 +235,9 @@ npm run banco:teste:parar
 
 Qualquer diferença sai listada (o que divergiu, antes e depois) e o comando
 sai com 1. O script recusa destino que não seja `127.0.0.1`, a porta do
-container de teste e base terminada em `_test`: a regra é `destinoDeEnsaio`,
-em `src/lib/ensaio-banco.ts`, e está presa em `npm test`
+container de teste e base terminada em `_test`, e recusa `TEST_DB_PORT=5432`,
+a porta do Postgres de verdade: as regras são `destinoDeEnsaio` e
+`portaDeEnsaio`, em `src/lib/ensaio-banco.ts`, e estão presas em `npm test`
 (`src/lib/ensaio-banco.test.ts`) junto com duas afirmações deste documento: o
 `deploy/deploy.sh` migra antes de trocar e não engole falha de migração, e
 todo arquivo deste repositório citado aqui existe.
@@ -174,8 +248,13 @@ restaurar", no servidor.
 
 ## Falta
 
-- **Dump automático antes de migração pendente**: escrito em
-  `avilaops/infra#8`, não instalado (ver "Backup do banco").
+- **Prova, em deploy de verdade, do dump antes de migração**: o `avila-deploy`
+  com o dump foi instalado em 09/10/2026 07:30 UTC (tarefa 262 do quadro da
+  equipe) e o `avila-deploy-local` em 08/10/2026, mas nenhum dos dois publicou
+  o Lojas com migração pendente desde então (o deploy de 12/10/2026 passou
+  pelo `avila-deploy` novo sem migração: dump dispensado). Falta ver a linha `dump conferido`
+  e o arquivo `pre-migracao-*` num deploy do Lojas (acompanhamento na tarefa
+  305). Ver "Backup do banco".
 - **Fotos das lojas** (`/opt/lojas/uploads`): `deploy/docker-compose.producao.yml`
   marca o container com `avilaops.backup: "false"` porque o banco é do host, e
   nada neste repositório diz se o volume de fotos é copiado. Pergunta aberta
@@ -193,3 +272,19 @@ falhou no meio", o comando do dump à mão, "Ensaio" e "Falta") vem da leitura
 dos scripts e do ensaio no Postgres descartável, não de acesso ao servidor.
 Em particular: o comando do dump à mão não foi executado em produção, e o
 `prisma migrate resolve` nunca precisou ser usado lá.
+
+O dump antes da migração do `avila-deploy-local` foi instalado em 08/10/2026,
+mas **nunca rodou num deploy de verdade**: a conferência do banco, o arquivo
+`pre-migracao-*` e a linha `dump conferido` foram provados em teste, contra um
+banco descartável. O filtro que tira `pre-migracao-*` do envio ao R2 foi
+provado por listagem, não por um envio. A prova em produção é o primeiro
+deploy do Lojas por esse caminho com migração pendente.
+
+O `avila-deploy` do Actions com o dump foi instalado em 09/10/2026 07:30 UTC
+e **também não rodou num deploy do Lojas**: no acompanhamento de operações do
+mesmo dia (tarefa 291), três aplicações publicaram por ele sem falha (`tms`,
+`app` e `auth`), nenhuma com dump ligado e nenhuma com migração pendente; o
+Lojas não tinha publicado. Nada neste documento afirma que o dump do Actions
+funciona em produção: afirma que está instalado. A prova é o primeiro deploy
+do Lojas pelo Actions, e ela só é completa com migração pendente (linha
+`dump conferido` e arquivo `pre-migracao-*`).

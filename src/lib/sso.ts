@@ -31,6 +31,21 @@ export function configSSO(env: Record<string, string | undefined> = process.env)
   return { url, app };
 }
 
+/**
+ * `/entrar` pula direto para o Auth?
+ *
+ * Só quando a pessoa já tem a sessão do login único (`avila_sso`): aí o Auth
+ * responde na hora e ela cai no painel sem ver tela nenhuma. Sem essa sessão,
+ * a página aparece com as duas portas, a conta Avila Ops e a senha da loja.
+ *
+ * Até 13/10/2026 o pulo era incondicional, e o lojista que se cadastrou em
+ * /criar (conta só no Lojas, senha só aqui) era mandado a uma tela em que a
+ * senha dele não existe: "Login ou senha inválidos", sem saída à vista.
+ */
+export function irDiretoAoAuth(e: { loginUnico: boolean; temSessaoSSO: boolean; sso?: string; google?: string; senha?: string }): boolean {
+  return e.loginUnico && e.temSessaoSSO && !e.sso && !e.google && e.senha !== "1";
+}
+
 /** Caminho, neste app, para onde o Auth devolve a pessoa depois do login. */
 export const CAMINHO_RETORNO = "/api/painel/entrar/sso";
 
@@ -49,8 +64,9 @@ export function urlDeLoginSSO(cfg: ConfigSSO, hostBase: string): string {
 
 export type RespostaSSO =
   | { tipo: "sem_sessao" }
+  | { tipo: "sem_email" }
   | { tipo: "sem_acesso"; email: string }
-  | { tipo: "ok"; email: string; nome: string }
+  | { tipo: "ok"; email: string; nome: string; equipe: boolean }
   | { tipo: "indisponivel" };
 
 /**
@@ -64,14 +80,19 @@ export function lerRespostaSSO(status: number, corpo: unknown): RespostaSSO {
   if (status === 401) return { tipo: "sem_sessao" };
   if (status !== 200 || typeof corpo !== "object" || corpo === null) return { tipo: "indisponivel" };
 
-  const c = corpo as { autenticado?: unknown; permitido?: unknown; sessao?: { email?: unknown; nome?: unknown } };
+  const c = corpo as { autenticado?: unknown; permitido?: unknown; sessao?: { email?: unknown; nome?: unknown; papel?: unknown } };
   if (c.autenticado !== true) return { tipo: "sem_sessao" };
 
   const email = typeof c.sessao?.email === "string" ? c.sessao.email.trim().toLowerCase() : "";
-  if (!email.includes("@")) return { tipo: "indisponivel" };
+  // Login social sem e-mail (GitHub com e-mail privado, Facebook sem e-mail):
+  // a pessoa está logada, mas não há com o que achar ou criar a loja.
+  if (!email.includes("@")) return { tipo: "sem_email" };
   if (c.permitido !== true) return { tipo: "sem_acesso", email };
 
-  return { tipo: "ok", email, nome: typeof c.sessao?.nome === "string" ? c.sessao.nome : "" };
+  // No Auth, `ADMIN` é a equipe da Avila Ops (plataforma e sócio). O dono de
+  // um negócio cliente chega como `CLIENTE`, mesmo sendo "admin" na conta dele.
+  const equipe = c.sessao?.papel === "ADMIN";
+  return { tipo: "ok", email, nome: typeof c.sessao?.nome === "string" ? c.sessao.nome : "", equipe };
 }
 
 /** Três blocos base64url separados por ponto: o formato de um JWT. */
@@ -103,9 +124,51 @@ export async function consultarSSO(
   }
 }
 
+/** Onde a equipe da casa escolhe em qual loja entrar. */
+export const CAMINHO_DA_EQUIPE = "/entrar/equipe";
+
+/**
+ * Esta pessoa pode entrar em qualquer loja, como equipe da Avila Ops?
+ *
+ * Duas condições, as duas obrigatórias quando a lista existe: o Auth dizer que
+ * ela é da casa, e o e-mail estar em `LOJAS_EQUIPE` (separados por vírgula).
+ * Sem a variável, vale só o que o Auth diz: mesmo desenho do `SSO_SUPERADMINS`
+ * de lá. A lista existe para o dia em que a casa tiver gente que não deve
+ * abrir o painel de todo cliente.
+ */
+export function podeEntrarComoEquipe(r: RespostaSSO, env: Record<string, string | undefined> = process.env): r is Extract<RespostaSSO, { tipo: "ok" }> {
+  if (r.tipo !== "ok" || !r.equipe) return false;
+  const lista = (env.LOJAS_EQUIPE ?? "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
+  return lista.length === 0 || lista.includes(r.email);
+}
+
 /** Recados da tela de entrada, pela chave que vem em `?sso=`. */
 export const RECADOS_SSO: Record<string, string> = {
   "sem-loja": "Sua conta Avila Ops não está ligada a nenhuma loja. Entre com o e-mail e a senha da loja, ou peça ao dono para cadastrar este e-mail na equipe.",
   "sem-acesso": "Sua conta Avila Ops ainda não foi liberada para o Lojas. Entre com o e-mail e a senha da loja.",
-  indisponivel: "Não foi possível falar com o login da Avila Ops agora. Entre com o e-mail e a senha da loja.",
+  "sem-email": "A conta com que você entrou não informou um e-mail, e é pelo e-mail que achamos a sua loja. Entre de novo com Google ou Microsoft, ou com uma conta que mostre o e-mail.",
+  indisponivel: "Não foi possível falar com o login da Avila Ops agora. Tente de novo em alguns minutos. Se a sua loja tem senha própria, você também pode entrar com o e-mail e a senha dela.",
 };
+
+/** Onde quem entrou pelo login único e ainda não tem loja confirma a criação. */
+export const CAMINHO_CRIAR_SSO = "/criar/sso";
+
+/**
+ * Para onde vai quem voltou do Auth, depois de procurar o e-mail nas lojas.
+ *
+ * Sem loja, a pessoa é convidada a criar uma (`/criar/sso`), e não deixada
+ * num recado de "sem loja": é por aqui que o cliente novo do login social
+ * chega, e é também onde quem tem loja com outro e-mail recebe a explicação.
+ */
+export function destinoDaEntradaSSO(
+  r: RespostaSSO,
+  e: { temLoja: boolean; equipe: boolean; jaVoltou: boolean; urlLogin: string },
+): "abrir" | string {
+  if (r.tipo === "sem_sessao") return e.jaVoltou ? "/entrar?sso=indisponivel" : e.urlLogin;
+  if (r.tipo === "indisponivel") return "/entrar?sso=indisponivel";
+  if (r.tipo === "sem_acesso") return "/entrar?sso=sem-acesso";
+  if (r.tipo === "sem_email") return "/entrar?sso=sem-email";
+  if (e.temLoja) return "abrir";
+  if (e.equipe) return CAMINHO_DA_EQUIPE;
+  return CAMINHO_CRIAR_SSO;
+}

@@ -60,4 +60,13 @@ certificado válido, cadeia ICP-Brasil confiável no servidor e acesso à SEFAZ.
 - Corrigida a leitura do caminho reescrito na navegação do painel, que causava
   divergência de hidratação ao abrir a configuração diretamente.
 
-Não publicado em produção. Não foi realizada consulta real à SEFAZ.
+## Integração com a main em 16/10/2026
+
+- 1.062 testes unitários aprovados; typecheck e ESLint sem erros.
+- 71 migrações aplicadas em PostgreSQL 18 local isolado.
+- Cinco testes fiscais de integração aprovados, incluindo concorrência,
+  isolamento por loja, intervalo e reversão de falha de armazenamento.
+- Cabeçalho e navegação adaptados à estrutura atual de Configurações.
+
+Publicação acompanhada no PR #105. Consulta real à SEFAZ ainda depende de
+certificado válido do CNPJ e não foi realizada nesta validação local.

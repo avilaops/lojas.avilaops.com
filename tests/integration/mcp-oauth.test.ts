@@ -13,12 +13,13 @@ import {
   renovar,
   revogarConexao,
   revogarPorToken,
+  tetoDoPapel,
   trocarCodigo,
 } from "../../src/lib/mcp-conexoes";
 import { gerarChave } from "../../src/lib/api-chaves";
-import { chamadasDaLoja, registrarChamada, RETENCAO_DIAS } from "../../src/lib/mcp-historico";
+import { chamadasDaLoja, expurgarHistoricoMcp, registrarChamada, RETENCAO_DIAS } from "../../src/lib/mcp-historico";
 import { hashDoSegredo } from "../../src/lib/mcp-oauth";
-import { ESCOPOS_DO_MCP, escoposDaAutorizacao, podeUsar } from "../../src/lib/mcp-permissoes";
+import { ESCOPOS_DO_MCP, escoposDaAutorizacao, limitarAoTeto, podeUsar } from "../../src/lib/mcp-permissoes";
 
 /**
  * O login do conector MCP contra o Postgres de verdade. O que só o banco
@@ -186,6 +187,80 @@ test("operador desligado leva junto a conexão que autorizou", async () => {
   assert.equal(await lojaDoAcesso(tokens.acesso), null);
 });
 
+test("gerente rebaixado a balcão fica só com pedidos, na chamada seguinte e com o mesmo token", async () => {
+  const loja = await lojaPro();
+  const operador = await prisma.operadorLoja.create({
+    data: { tenantId: loja.id, nome: "Gerente QA", email: `g-${sufixo()}@mcp.example`, senhaHash: "x", papel: "GERENTE" },
+  });
+  const { cliente, verificador, codigo } = await conectar(loja.id, operador.id);
+  const tokens = await trocarCodigo({ codigo, clienteId: cliente.id, retorno: RETORNO, verificador });
+  assert.ok("acesso" in tokens);
+
+  const escoposAgora = async () => {
+    const auth = await autenticarMcp(comBearer(tokens.acesso));
+    assert.ok(auth.tipo === "loja");
+    return auth.escopos;
+  };
+  assert.deepEqual([...(await escoposAgora())], [...ESCOPOS_DO_MCP]);
+
+  await prisma.operadorLoja.update({ where: { id: operador.id }, data: { papel: "OPERADOR" } });
+  const rebaixado = await escoposAgora();
+  assert.equal(podeUsar(rebaixado, "atualizar_produto"), false);
+  assert.equal(podeUsar(rebaixado, "criar_cupom"), false);
+  assert.equal(podeUsar(rebaixado, "atualizar_marca"), false);
+  assert.equal(podeUsar(rebaixado, "listar_clientes"), false);
+  assert.equal(podeUsar(rebaixado, "resumo_vendas"), false);
+  assert.equal(podeUsar(rebaixado, "atualizar_status_pedido"), true);
+  assert.equal(podeUsar(rebaixado, "listar_pedidos"), true);
+
+  // O painel mostra o acesso que vale agora, quem conectou e o teto da edição.
+  const [linha] = await conexoesDaLoja(loja.id);
+  assert.equal(linha.autorizadaPor, "Gerente QA");
+  assert.equal(linha.acesso, "Pedidos (altera)");
+  assert.deepEqual(linha.teto, ["pedidos:ler", "pedidos:escrever"]);
+
+  // O gerente tenta devolver tudo pelo painel: grava, mas o teto de quem conectou continua valendo.
+  assert.equal(await alterarAcesso(loja.id, linha.id, ESCOPOS_DO_MCP), true);
+  assert.equal(podeUsar(await escoposAgora(), "atualizar_produto"), false);
+
+  // Voltou a gerente: recupera o que estava marcado, sem conectar de novo.
+  await prisma.operadorLoja.update({ where: { id: operador.id }, data: { papel: "GERENTE" } });
+  assert.deepEqual([...(await escoposAgora())], [...ESCOPOS_DO_MCP]);
+});
+
+test("o balcão conecta o próprio assistente, e ele só alcança pedidos", async () => {
+  const loja = await lojaPro();
+  const balcao = await prisma.operadorLoja.create({
+    data: { tenantId: loja.id, nome: "Balcão QA", email: `b-${sufixo()}@mcp.example`, senhaHash: "x", papel: "OPERADOR" },
+  });
+  // O que a rota de autorização grava para quem pediu "consultar e alterar".
+  const gravado = limitarAoTeto(escoposDaAutorizacao({ nivel: "completo" })!, tetoDoPapel("OPERADOR"));
+  const { cliente, verificador, codigo } = await conectar(loja.id, balcao.id, gravado);
+  const tokens = await trocarCodigo({ codigo, clienteId: cliente.id, retorno: RETORNO, verificador });
+  assert.ok("acesso" in tokens);
+
+  const auth = await autenticarMcp(comBearer(tokens.acesso));
+  assert.ok(auth.tipo === "loja");
+  assert.equal(podeUsar(auth.escopos, "listar_pedidos"), true);
+  assert.equal(podeUsar(auth.escopos, "emitir_etiqueta_envio"), true);
+  assert.equal(podeUsar(auth.escopos, "listar_produtos"), false);
+  assert.equal(podeUsar(auth.escopos, "listar_clientes"), false);
+  assert.equal(podeUsar(auth.escopos, "ajustar_estoque"), false);
+
+  // Promovido depois: não ganha sozinho o que não marcou quando conectou.
+  await prisma.operadorLoja.update({ where: { id: balcao.id }, data: { papel: "GERENTE" } });
+  const promovido = await autenticarMcp(comBearer(tokens.acesso));
+  assert.ok(promovido.tipo === "loja");
+  assert.equal(podeUsar(promovido.escopos, "ajustar_estoque"), false);
+
+  // Desligado: a conexão para, mas segue na lista do painel, sem acesso, para ser desconectada.
+  await prisma.operadorLoja.update({ where: { id: balcao.id }, data: { ativo: false } });
+  assert.equal(await lojaDoAcesso(tokens.acesso), null);
+  const [linha] = await conexoesDaLoja(loja.id);
+  assert.equal(linha.autorizadaPor, "Balcão QA (desligado)");
+  assert.equal(linha.acesso, "Sem acesso");
+});
+
 test("token inventado ou sem credencial é 401; chave de loja inexistente não revela nada", async () => {
   await assert.rejects(autenticarMcp(comBearer(`lojas_at_${"0".repeat(40)}`)), (e) => e instanceof McpAuthError && e.statusCode === 401);
   await assert.rejects(autenticarMcp(new Request("https://lojas.avilaops.com/api/mcp")), (e) => e instanceof McpAuthError && e.statusCode === 401);
@@ -286,18 +361,29 @@ test("o histórico mostra quem fez o quê, sem argumento nenhum, e é de cada lo
   assert.deepEqual((await chamadasDaLoja(outra.id)).map((c) => c.ferramenta), ["obter_loja"]);
 });
 
-test("o histórico some depois da retenção, quando o lojista abre a lista", async () => {
-  const loja = await lojaPro();
+test("a faxina diária apaga o vencido de todas as lojas, e só o vencido", async () => {
+  const lojas = [await lojaPro(), await lojaPro()];
   const origem = { tipo: "chave" as const, id: "chave-qa", nome: "n8n" };
-  await registrarChamada({ tenantId: loja.id, origem, ferramenta: "obter_loja", args: {}, ok: true, duracaoMs: 1 });
-  await registrarChamada({ tenantId: loja.id, origem, ferramenta: "listar_pedidos", args: {}, ok: true, duracaoMs: 1 });
-  await prisma.chamadaMcp.updateMany({
-    where: { tenantId: loja.id, ferramenta: "obter_loja" },
-    data: { criadaEm: new Date(Date.now() - (RETENCAO_DIAS + 1) * 86_400_000) },
-  });
+  const agora = new Date();
+  const diasAtras = (dias: number) => new Date(agora.getTime() - dias * 86_400_000);
+  for (const loja of lojas) {
+    await registrarChamada({ tenantId: loja.id, origem, ferramenta: "obter_loja", args: {}, ok: true, duracaoMs: 1 });
+    await registrarChamada({ tenantId: loja.id, origem, ferramenta: "listar_pedidos", args: {}, ok: true, duracaoMs: 1 });
+    await prisma.chamadaMcp.updateMany({ where: { tenantId: loja.id, ferramenta: "obter_loja" }, data: { criadaEm: diasAtras(RETENCAO_DIAS + 1) } });
+    await prisma.chamadaMcp.updateMany({ where: { tenantId: loja.id, ferramenta: "listar_pedidos" }, data: { criadaEm: diasAtras(RETENCAO_DIAS - 1) } });
+  }
 
-  assert.deepEqual((await chamadasDaLoja(loja.id)).map((c) => c.ferramenta), ["listar_pedidos"]);
-  assert.equal(await prisma.chamadaMcp.count({ where: { tenantId: loja.id } }), 1);
+  // Antes da faxina, a tela já não mostra o vencido, e ler não apaga nada.
+  assert.deepEqual((await chamadasDaLoja(lojas[0].id)).map((c) => c.ferramenta), ["listar_pedidos"]);
+  assert.equal(await prisma.chamadaMcp.count({ where: { tenantId: lojas[0].id } }), 2);
+
+  // A outra loja nunca abriu o painel: a faxina apaga o dela também.
+  const { apagadas } = await expurgarHistoricoMcp(agora);
+  assert.ok(apagadas >= 2);
+  for (const loja of lojas) {
+    const restantes = await prisma.chamadaMcp.findMany({ where: { tenantId: loja.id }, select: { ferramenta: true } });
+    assert.deepEqual(restantes.map((c) => c.ferramenta), ["listar_pedidos"], loja.id);
+  }
 });
 
 test("mudar o acesso no painel vale na chamada seguinte, com o mesmo token, e só na loja dona", async () => {

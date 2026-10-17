@@ -25,6 +25,20 @@ da Ávila Ops:
 5. No `.env` do servidor: `MP_APP_ID` (Client ID), `MP_APP_SECRET` (Client
    Secret) e `MP_APP_WEBHOOK_SECRET` (assinatura secreta).
 
+As três saem da credencial do n8n **"Mercado Pago Lojas Avila Ops - conexão
+das lojas (client id, secret e assinatura do webhook)"** (`httpCustomAuth`,
+corpo com `client_id`, `client_secret` e `webhook_secret`). Colar lá e rodar no
+servidor `applications`:
+
+```bash
+/opt/lojas/sincronizar-apps-do-n8n.sh mercado-pago
+```
+
+O roteiro (`deploy/sincronizar-apps-do-n8n.sh`) grava o `.env`, recria o
+container e confere o Client ID e o Client Secret no Mercado Pago. Em
+13/10/2026 as três ainda não estavam em produção: a tela de Recebimento só
+mostrava o formulário de chaves coladas.
+
 **As três variáveis, ou nenhuma.** Faltando uma, o botão não aparece e a tela
 fica como era. Sem o segredo do webhook a loja conectaria e passaria a confirmar
 pagamento só na verificação de hora em hora, sem que o lojista pudesse resolver.

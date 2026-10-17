@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { compravel, emPromocao, disponibilidadeMerchant, elegivelMerchant, esgotado, estadoDeVenda, estoqueBaixo, publicavel, sobConsulta } from "./produto-regras";
+import { compravel, emPromocao, disponibilidadeMerchant, elegivelMerchant, esgotado, estadoDeVenda, estoqueBaixo, imagensDoSitemap, publicavel, sobConsulta } from "./produto-regras";
 
 /**
  * As cinco perguntas que a vitrine faz a um produto, com o caso que cada
@@ -109,4 +109,18 @@ test("promoção é preço 'de' maior, com foto própria e à venda", () => {
   assert.equal(emPromocao({ ...oferta, estoque: 0 }), false);
   assert.equal(emPromocao({ ...oferta, disponibilidade: "out_of_stock" }), false);
   assert.equal(emPromocao({ ...oferta, ativo: false }), false);
+});
+
+test("o sitemap declara só foto própria, com endereço absoluto e sem repetição", () => {
+  const loja = "https://vedashow.com.br";
+  const fotos = ["https://lojas.avilaops.com/uploads/vedashow/a.webp", "/uploads/vedashow/b.webp", "https://lojas.avilaops.com/uploads/vedashow/a.webp", " ", "data:image/png;base64,AAAA"];
+  assert.deepEqual(imagensDoSitemap({ imagens: fotos, imagemOrigem: "propria" }, loja), [
+    "https://lojas.avilaops.com/uploads/vedashow/a.webp",
+    "https://vedashow.com.br/uploads/vedashow/b.webp",
+  ]);
+  // Foto de série e ilustração se repetem em centenas de produtos: não entram.
+  for (const origem of ["representativa", "ilustracao", null]) {
+    assert.deepEqual(imagensDoSitemap({ imagens: fotos, imagemOrigem: origem }, loja), [], String(origem));
+  }
+  assert.deepEqual(imagensDoSitemap({ imagens: [], imagemOrigem: "propria" }, loja), []);
 });

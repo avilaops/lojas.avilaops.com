@@ -61,10 +61,12 @@ export function criarRotaPagamento({
 
     // A partir da cobrança, o que falha deixa de ser "nada foi cobrado".
     let referencia = "";
+    let iniciouCobranca = false;
     let cobrou = false;
     try {
       const { pedido, total } = await montarPedidoSeguro(payload, catalogo);
       referencia = pedido.referencia;
+      iniciouCobranca = true;
       const resultado = await provider.cobrar(pedido, total);
       cobrou = true;
 
@@ -86,8 +88,10 @@ export function criarRotaPagamento({
       // Tempo-limite do gateway não diz se a cobrança foi criada, e falha em
       // `aoCriarPagamento` acontece com ela já criada. Nos dois casos prometer
       // "nada foi cobrado" faz o cliente pagar duas vezes: quem chama consulta
-      // o pedido pela referência antes de deixar tentar de novo.
-      if (cobrou || estourouOTempo(erro)) {
+      // o pedido pela referência antes de deixar tentar de novo. Tempo-limite
+      // antes da cobrança (catálogo, frete) não entra aqui: nada foi cobrado e
+      // não há pedido para consultar.
+      if (cobrou || (iniciouCobranca && estourouOTempo(erro))) {
         console.error("[checkout] cobrança a confirmar:", referencia, erro);
         return json(
           {
@@ -149,6 +153,11 @@ export function criarRotaStatus({ provider }: Pick<OpcoesRotas, "provider">) {
  *    assinatura seja válida. Gateway que recebe erro reenvia a notificação por
  *    horas; o que precisa ser recusado com 401 é assinatura inválida, não
  *    problema nosso de banco.
+ *
+ * 3. A exceção à regra 2 é o tempo-limite da consulta ao gateway: 503, para a
+ *    notificação voltar. Nada foi gravado, então o reenvio repete só a
+ *    consulta, e a falha é do gateway naquele instante, não de um dado que vai
+ *    falhar igual na próxima vez.
  */
 export function criarRotaWebhook({ provider, aoAtualizarStatus }: OpcoesRotas) {
   return async function POST(request: Request): Promise<Response> {
@@ -173,17 +182,32 @@ export function criarRotaWebhook({ provider, aoAtualizarStatus }: OpcoesRotas) {
       return json({ erro: "Assinatura inválida." }, 401);
     }
 
+    let resultado: Awaited<ReturnType<PaymentProvider["consultar"]>>;
     try {
-      const resultado = await provider.consultar(validado.pagamentoId);
+      resultado = await provider.consultar(validado.pagamentoId);
+    } catch (erro) {
+      if (estourouOTempo(erro)) {
+        console.error("[checkout] webhook: consulta estourou o tempo, gateway reenvia:", validado.pagamentoId, erro);
+        return json({ erro: "Consulta ao gateway indisponível. Reenvie a notificação." }, 503);
+      }
+      // Erro que não é de tempo tende a se repetir igual no reenvio. O 200
+      // abaixo faz o gateway não reenviar, então esta notificação se perde:
+      // quem usa esta rota precisa de uma reconciliação que consulte os
+      // pagamentos pendentes.
+      console.error("[checkout] falha ao processar webhook:", erro);
+      return json({ recebido: true });
+    }
+
+    try {
       await aoAtualizarStatus?.({
         pagamentoId: resultado.id,
         status: resultado.status,
         valorEmCentavos: resultado.valor,
       });
     } catch (erro) {
-      // Inclui o tempo-limite da consulta. O 200 abaixo faz o gateway não
-      // reenviar, então esta notificação se perde: quem usa esta rota precisa
-      // de uma reconciliação que consulte os pagamentos pendentes.
+      // Falha nossa depois da consulta, inclusive tempo-limite do banco: segue
+      // 200, porque a gravação pode ter ficado pela metade e o pacote não sabe
+      // se o `aoAtualizarStatus` de quem o usa aguenta repetição.
       console.error("[checkout] falha ao processar webhook:", erro);
     }
 

@@ -10,25 +10,20 @@ import type { ResumoVendas } from "@/lib/relatorio";
  *
  * O gráfico é SVG na mão de propósito; biblioteca de gráfico custaria mais
  * kilobyte do que a loja inteira.
+ *
+ * A receita do período fica na faixa de números do topo da Visão geral. Este
+ * bloco só existe quando há o que mostrar (venda, fila de espera ou algo a
+ * fazer): sem nada disso ele era um cartão inteiro para dizer "nenhuma venda",
+ * e a Visão geral precisa caber numa tela.
  */
 export default function Vendas({ r, espera, irPara }: { r: ResumoVendas; espera: Array<{ produto: string; pessoas: number }>; irPara: (aba: "Pedidos" | "Produtos") => void }) {
   const maximo = Math.max(...r.serie.map((d) => d.centavos), 1);
   const vendeu = r.pedidos > 0;
 
+  if (!vendeu && espera.length === 0 && r.aSeparar === 0 && r.carrinhosAbertos === 0 && r.aguardandoPagamento === 0) return null;
+
   return (
     <section className="painel-vendas">
-      <header>
-        <div>
-          <small>Últimos 30 dias</small>
-          <strong>{formatarBRL(r.receitaCentavos)}</strong>
-        </div>
-        {r.variacao !== null && (
-          <span className={r.variacao >= 0 ? "variacao-sobe" : "variacao-desce"}>
-            {r.variacao >= 0 ? "▲" : "▼"} {Math.abs(r.variacao)}% vs. 30 dias anteriores
-          </span>
-        )}
-      </header>
-
       {/* Quatro zeros lado a lado ocupavam meia tela para nao dizer nada. Sem
           venda, so entra o que tem valor diferente de zero; sem nenhum, o bloco
           inteiro sai e sobra a frase que explica. */}
@@ -55,7 +50,7 @@ export default function Vendas({ r, espera, irPara }: { r: ResumoVendas; espera:
           </p>
 
           <ol className="painel-top">
-            {r.top.map((p, i) => (
+            {r.top.slice(0, 3).map((p, i) => (
               <li key={p.nome}>
                 <b>{i + 1}</b>
                 <span>{p.nome}</span>
@@ -64,9 +59,7 @@ export default function Vendas({ r, espera, irPara }: { r: ResumoVendas; espera:
             ))}
           </ol>
         </>
-      ) : (
-        <p className="painel-vazio">Nenhuma venda paga ainda. O resumo aparece aqui quando o primeiro pedido cair.</p>
-      )}
+      ) : null}
 
       {espera.length > 0 && (
         <div className="painel-espera">

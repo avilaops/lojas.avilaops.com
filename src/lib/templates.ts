@@ -76,6 +76,7 @@ export const CONTRATOS: Record<TemaLoja["layout"], ContratoTemplate> = {
   vitrine: soHome("vitrine"),
   editorial: soHome("editorial"),
   minimal: soHome("minimal"),
+  atelie: soHome("atelie"),
 };
 
 export function contratoDo(tema: Pick<TemaLoja, "layout">): ContratoTemplate {
