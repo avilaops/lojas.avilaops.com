@@ -21,6 +21,8 @@ test("gerente cuida da loja, mas não da cobrança", () => {
 });
 
 test("gerente não cria acesso", () => {
+  assert.equal(permite("GERENTE", "fiscal"), false);
+  assert.equal(permite("OPERADOR", "fiscal"), false);
   // Quem tem acesso hoje não pode garantir acesso para sempre: seria um jeito
   // de continuar entrando depois de ser desligado.
   assert.equal(permite("GERENTE", "equipe"), false);

@@ -141,7 +141,7 @@ function Rodape({ pathname, aoNavegar, urlLoja }: { pathname: string; aoNavegar?
 }
 
 export default function NavPainel({ nome, urlLoja, aSeparar = 0 }: { nome: string; urlLoja: string; aSeparar?: number }) {
-  const pathname = usePathname();
+  const pathname = usePathname().replace(/^\/plataforma(?=\/|$)/, "");
   const [aberto, setAberto] = useState(false);
   const botaoMenu = useRef<HTMLButtonElement>(null);
   const primeiroItem = useRef<HTMLDivElement>(null);

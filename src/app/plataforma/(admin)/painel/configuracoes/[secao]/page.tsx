@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import PainelLoja, { type SecaoPainel } from "@/components/painel/PainelLoja";
 import Dominio from "@/components/painel/Dominio";
+import Fiscal from "@/components/painel/Fiscal";
 import Canais from "@/components/painel/Canais";
 import MelhorEnvio from "@/components/painel/MelhorEnvio";
 import MercadoPago from "@/components/painel/MercadoPago";
@@ -47,6 +48,12 @@ export default async function Pagina({ params, searchParams }: {
   searchParams: Promise<{ ml?: string; me?: string; mp?: string; canal?: string; r?: string }>;
 }) {
   const { secao } = await params;
+  if (secao === "fiscal") {
+    const s = await sessaoDoPainel();
+    if (!s) notFound();
+    if (!permite(s.papel, "fiscal")) return <p>Só o dono da loja acessa o certificado e as notas fiscais.</p>;
+    return <Fiscal />;
+  }
 
   // Equipe também não é seção do PainelLoja: ela lê a própria tabela e não
   // precisa do catálogo nem dos pedidos.

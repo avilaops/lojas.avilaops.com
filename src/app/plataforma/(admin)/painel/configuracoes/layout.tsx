@@ -6,6 +6,7 @@ import NavConfiguracoes from "@/components/painel/NavConfiguracoes";
 
 /** O nome de cada seção, para o topo dizer onde a pessoa está. */
 const NOME: Record<string, { titulo: string; descricao: string }> = {
+  fiscal: { titulo: "Notas fiscais", descricao: "Certificado digital e documentos fiscais do CNPJ." },
   marca: { titulo: "Marca", descricao: "Direção, identidade visual, vitrine e contato." },
   dominio: { titulo: "Domínio", descricao: "O endereço próprio da sua loja." },
   entrega: { titulo: "Entrega", descricao: "Frete por CEP, prazo de envio e retirada." },
@@ -27,7 +28,7 @@ const NOME: Record<string, { titulo: string; descricao: string }> = {
  * ninguém dizer em que seção ela está.
  */
 export default function ConfiguracoesLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
+  const pathname = usePathname().replace(/^\/plataforma(?=\/|$)/, "");
   const slug = pathname.split("/")[3] ?? "";
   const secao = NOME[slug];
 
