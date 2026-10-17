@@ -71,7 +71,7 @@ export async function GET(request: Request) {
   return new Response(corpo, {
     headers: {
       "content-type": contentType,
-      "content-disposition": `attachment; filename="${loja.slug}-${tipo}-${dia}.${extensao}"`,
+      "content-disposition": `attachment; filename="${modelo ? "modelo-produtos" : `${loja.slug}-${tipo}-${dia}`}.${extensao}"`,
       "cache-control": "no-store",
     },
   });
