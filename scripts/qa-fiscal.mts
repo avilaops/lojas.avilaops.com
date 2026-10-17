@@ -53,6 +53,12 @@ try {
   assert.ok(!("certificadoEnc" in estado.configuracao));
   const bloqueado = await context.request.post(`${base}/api/painel/fiscal?acao=consultar`, { headers: { Origin: "https://outra-origem.example" } });
   assert.equal(bloqueado.status(), 403);
+  const semOrigem = await context.request.post(`${base}/api/painel/fiscal?acao=consultar`);
+  assert.equal(semOrigem.status(), 403);
+  const origemForjada = await context.request.post(`${base}/api/painel/fiscal?acao=consultar`, {
+    headers: { Origin: "https://outra-origem.example", "X-Forwarded-Host": "outra-origem.example", "X-Forwarded-Proto": "https" },
+  });
+  assert.equal(origemForjada.status(), 403);
   await prisma.fiscalLoja.update({ where: { tenantId: loja.id }, data: { proximaConsultaEm: new Date(Date.now() + 3_600_000) } });
   await page.getByRole("button", { name: "Consultar próximo lote" }).click();
   await page.getByRole("alert").filter({ hasText: "intervalo de espera" }).waitFor();
