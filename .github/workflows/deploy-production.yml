@@ -30,7 +30,10 @@ jobs:
       contents: read
     services:
       postgres:
-        image: public.ecr.aws/docker/library/postgres:18-alpine
+        # O espelho público da AWS passou a bloquear o runner por cota antes
+        # de qualquer teste (`toomanyrequests: Data limit exceeded`). A imagem
+        # oficial já é publicada no Docker Hub e mantém a mesma tag.
+        image: postgres:18-alpine
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
