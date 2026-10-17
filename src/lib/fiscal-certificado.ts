@@ -6,6 +6,19 @@ export class ErroFiscal extends Error {}
 
 type CertificadoLido = { titular: string; documento?: string; validoDe: Date; validoAte: Date };
 
+function erroAoAbrirCertificado(erro: unknown): ErroFiscal {
+  const detalhes = erro instanceof Error
+    ? `${erro.message} ${String((erro as Error & { reason?: unknown }).reason ?? "")}`.toLowerCase()
+    : "";
+  if (/mac verify|password|decrypt|bad record mac/.test(detalhes)) {
+    return new ErroFiscal("A senha não corresponde a este arquivo de certificado.");
+  }
+  if (/asn1|header too long|not enough data|nested asn1|wrong tag/.test(detalhes)) {
+    return new ErroFiscal("O arquivo selecionado não é um certificado A1 .pfx ou .p12 válido.");
+  }
+  return new ErroFiscal("Este certificado não pôde ser aberto. Exporte novamente o A1 em formato .pfx ou .p12 e tente de novo.");
+}
+
 function lerCertificadoNativo(pfx: Buffer, senha: string): CertificadoLido {
   const contexto = createSecureContext({ pfx, passphrase: senha });
   const certificadoDer = contexto.context.getCertificate();
@@ -63,8 +76,8 @@ export function lerCertificado(pfx: Buffer, senha: string, cnpj: string) {
   let nativo: CertificadoLido;
   try {
     nativo = lerCertificadoNativo(pfx, senha);
-  } catch {
-    throw new ErroFiscal("Não foi possível abrir o certificado A1. Confira o arquivo e a senha.");
+  } catch (erro) {
+    throw erroAoAbrirCertificado(erro);
   }
   const info = lerCertificadoForge(pfx, senha) ?? nativo;
   if (!cnpj || info.documento !== cnpj) throw new ErroFiscal("O CNPJ do certificado deve ser o mesmo cadastrado nesta loja.");

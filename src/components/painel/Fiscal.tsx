@@ -91,7 +91,7 @@ export default function Fiscal() {
         <ShieldCheck size={17} aria-hidden="true" />
         {ocupado === "certificado" ? "Guardando certificado…" : "Guardar certificado"}
       </button>
-      <p className="text-xs leading-relaxed text-muted-foreground">O arquivo e a senha ficam criptografados. O CNPJ e a UF são obtidos de Dados da empresa.</p>
+      <p className="text-xs leading-relaxed text-muted-foreground">O nome do arquivo não importa. Envie o A1 original em formato .pfx ou .p12; o CNPJ e a UF são conferidos automaticamente com os Dados da empresa. O arquivo e a senha ficam criptografados.</p>
     </form>
   );
 

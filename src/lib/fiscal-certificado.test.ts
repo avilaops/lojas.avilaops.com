@@ -27,11 +27,11 @@ test("lê certificado com chave correspondente e recusa senha, CNPJ e validade i
   cert.sign(chaves.privateKey, forge.md.sha256.create());
   const arquivo = () => Buffer.from(forge.asn1.toDer(forge.pkcs12.toPkcs12Asn1(chaves.privateKey, cert, "senha", { algorithm: "3des" })).getBytes(), "binary");
   assert.equal(lerCertificado(arquivo(), "senha", "12345678000190").titular, "EMPRESA TESTE:12345678000190");
-  assert.throws(() => lerCertificado(arquivo(), "errada", "12345678000190"));
+  assert.throws(() => lerCertificado(arquivo(), "errada", "12345678000190"), /senha não corresponde/);
   assert.throws(() => lerCertificado(arquivo(), "senha", "12345678000270"), /CNPJ/);
   cert.validity.notAfter = new Date(Date.now() - 1000); cert.sign(chaves.privateKey, forge.md.sha256.create());
   assert.throws(() => lerCertificado(arquivo(), "senha", "12345678000190"), /vencido/);
-  assert.throws(() => lerCertificado(Buffer.from("invalido"), "", "12345678000190"));
+  assert.throws(() => lerCertificado(Buffer.from("invalido"), "", "12345678000190"), /não é um certificado A1/);
 });
 
 test("usa o parser nativo quando o node-forge não aceita o PKCS#12", () => {
