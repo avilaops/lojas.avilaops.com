@@ -67,8 +67,12 @@ export default function Fiscal() {
   const vencido = configuracao ? new Date(configuracao.validoAte).getTime() <= agora : false;
   const formulario = (
     <form className="grid min-w-0 gap-4" onSubmit={(e) => { e.preventDefault(); void enviar(e.currentTarget); }}>
+      <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm leading-relaxed text-blue-950">
+        <p className="font-semibold">Não instale o certificado no Windows.</p>
+        <p className="mt-1">Use o arquivo .pfx ou .p12 diretamente aqui. Você só precisa escolher o arquivo e informar a senha.</p>
+      </div>
       <div className="min-w-0">
-        <label htmlFor={arquivoId} className="mb-2 block text-sm font-medium">Arquivo do certificado</label>
+        <label htmlFor={arquivoId} className="mb-2 block text-sm font-medium">1. Escolha o arquivo do certificado</label>
         <label className="relative flex min-h-24 cursor-pointer items-center gap-3 rounded-xl border border-dashed border-border bg-muted/30 p-4 focus-within:ring-2 focus-within:ring-foreground">
           <Upload size={22} aria-hidden="true" className="shrink-0 text-muted-foreground" />
           <span className="min-w-0">
@@ -79,7 +83,7 @@ export default function Fiscal() {
         </label>
       </div>
       <label className="grid gap-2 text-sm font-medium">
-        Senha do certificado
+        2. Digite a senha do certificado
         <input name="senha" type="password" autoComplete="off" maxLength={1024} className={inputClasse} disabled={!!ocupado} />
       </label>
       <div className="rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm">
@@ -89,9 +93,9 @@ export default function Fiscal() {
       </div>
       <button disabled={!!ocupado || !estado?.ufEmpresa} className="btn-primario w-full sm:w-fit">
         <ShieldCheck size={17} aria-hidden="true" />
-        {ocupado === "certificado" ? "Guardando certificado…" : "Guardar certificado"}
+        {ocupado === "certificado" ? "Conectando certificado…" : "Conectar certificado"}
       </button>
-      <p className="text-xs leading-relaxed text-muted-foreground">O nome do arquivo não importa. Envie o A1 original em formato .pfx ou .p12; o CNPJ e a UF são conferidos automaticamente com os Dados da empresa. O arquivo e a senha ficam criptografados.</p>
+      <p className="text-xs leading-relaxed text-muted-foreground">O nome do arquivo não importa. O CNPJ e a UF são conferidos automaticamente com os Dados da empresa. O arquivo e a senha ficam criptografados.</p>
     </form>
   );
 
