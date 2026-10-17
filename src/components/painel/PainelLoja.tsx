@@ -156,6 +156,7 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
   const [importando, setImportando] = useState<{ feitos: number; total: number } | null>(null);
   const [limiteEstoque, setLimiteEstoque] = useState(String(loja.estoqueBaixoEm));
   const [empresa, setEmpresa] = useState({ razaoSocial: loja.razaoSocial ?? "", cnpj: loja.cnpj ?? "" });
+  const [consultandoCnpj, setConsultandoCnpj] = useState(false);
   const [enderecoEmpresa, setEnderecoEmpresa] = useState({
     logradouro: loja.endereco?.logradouro ?? "", numero: loja.endereco?.numero ?? "",
     complemento: loja.endereco?.complemento ?? "", bairro: loja.endereco?.bairro ?? "",
@@ -172,6 +173,33 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
   const [senha, setSenha] = useState({ atual: "", nova: "" });
 
   const centavos = (v: string) => Math.round(Number.parseFloat(v.replace(/[^\d,.-]/g, "").replace(",", ".")) * 100);
+
+  async function buscarDadosDoCnpj() {
+    const cnpj = empresa.cnpj.replace(/\D/g, "");
+    if (cnpj.length !== 14) return;
+    setErro(null); setOk(null); setConsultandoCnpj(true);
+    try {
+      const resposta = await fetch(`/api/painel/cnpj?cnpj=${encodeURIComponent(cnpj)}`);
+      const dados = await resposta.json().catch(() => ({}));
+      if (!resposta.ok) throw new Error(dados?.erro ?? "Não foi possível consultar o CNPJ.");
+      setEmpresa((atual) => ({ ...atual, razaoSocial: dados.razaoSocial || atual.razaoSocial }));
+      setEnderecoEmpresa((atual) => ({
+        ...atual,
+        logradouro: dados.endereco?.logradouro || atual.logradouro,
+        numero: dados.endereco?.numero || atual.numero,
+        complemento: dados.endereco?.complemento || atual.complemento,
+        bairro: dados.endereco?.bairro || atual.bairro,
+        cidade: dados.endereco?.cidade || atual.cidade,
+        uf: dados.endereco?.uf || atual.uf,
+        cep: dados.endereco?.cep || atual.cep,
+      }));
+      setOk("Dados encontrados. Confira e salve.");
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Não foi possível consultar o CNPJ.");
+    } finally {
+      setConsultandoCnpj(false);
+    }
+  }
 
   /**
    * A planilha é lida no servidor, não no navegador: é lá que existe o
@@ -716,9 +744,20 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
           )}
           <div className="grid gap-4 sm:grid-cols-2">
             <Campo label="Razão social" ajuda="O nome que está no cartão CNPJ, não o nome fantasia."><input className={inputClasse} value={empresa.razaoSocial} onChange={(e) => setEmpresa({ ...empresa, razaoSocial: e.target.value })} placeholder="Vedashow Comércio de Vedações Ltda" /></Campo>
-            <Campo label="CNPJ"><input className={inputClasse} value={empresa.cnpj} onChange={(e) => setEmpresa({ ...empresa, cnpj: e.target.value })} placeholder="00.000.000/0001-00" inputMode="numeric" /></Campo>
+            <Campo label="CNPJ" ajuda="Ao sair do campo, buscamos razão social e endereço."><input className={inputClasse} value={empresa.cnpj} onChange={(e) => setEmpresa({ ...empresa, cnpj: e.target.value })} onBlur={buscarDadosDoCnpj} placeholder="00.000.000/0001-00" inputMode="numeric" /></Campo>
           </div>
-          <div><button className="btn-primario" disabled={ocupado} onClick={() => chamar("/api/painel/loja", "PATCH", { razaoSocial: empresa.razaoSocial.trim() || null, cnpj: empresa.cnpj.trim() || null }, "Dados da empresa salvos.")}>Salvar</button></div>
+          <div className="flex flex-wrap gap-3">
+            <button className="btn-secundario" disabled={ocupado || consultandoCnpj || empresa.cnpj.replace(/\D/g, "").length !== 14} onClick={buscarDadosDoCnpj}>{consultandoCnpj ? "Buscando..." : "Buscar dados do CNPJ"}</button>
+            <button className="btn-primario" disabled={ocupado || consultandoCnpj} onClick={() => {
+              const cep = enderecoEmpresa.cep.replace(/\D/g, "");
+              chamar("/api/painel/loja", "PATCH", {
+                razaoSocial: empresa.razaoSocial.trim() || null,
+                cnpj: empresa.cnpj.trim() || null,
+                endereco: { logradouro: enderecoEmpresa.logradouro.trim(), numero: enderecoEmpresa.numero.trim(), complemento: enderecoEmpresa.complemento.trim(), bairro: enderecoEmpresa.bairro.trim(), cidade: enderecoEmpresa.cidade.trim(), uf: enderecoEmpresa.uf.trim().slice(0, 2), ...(cep.length === 8 ? { cep } : {}) },
+                ...(cep.length === 8 ? { cepOrigem: cep } : {}),
+              }, "Dados da empresa salvos.");
+            }}>Salvar</button>
+          </div>
         </Secao>
         <Secao titulo="Endereço da empresa e retirada" descricao="Mantenha o endereço correto para as informações legais, contato e cálculo de frete. O endereço aparece na página de contato quando a opção pública estiver ativa e nas políticas da loja.">
           {loja.retiradaNaLoja && !(enderecoEmpresa.logradouro && enderecoEmpresa.numero && enderecoEmpresa.cidade && enderecoEmpresa.uf && enderecoEmpresa.cep.replace(/\D/g, "").length === 8) && (
