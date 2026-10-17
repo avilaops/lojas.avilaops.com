@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import PainelLoja, { type SecaoPainel } from "@/components/painel/PainelLoja";
 import Dominio from "@/components/painel/Dominio";
 import Fiscal from "@/components/painel/Fiscal";
@@ -54,7 +54,7 @@ export default async function Pagina({ params, searchParams }: {
   const { secao } = await params;
   if (secao === "fiscal") {
     const s = await sessaoDoPainel();
-    if (!s) notFound();
+    if (!s) redirect("/entrar");
     if (!permite(s.papel, "fiscal")) return <p>Só o dono da loja acessa o certificado e as notas fiscais.</p>;
     return <Fiscal />;
   }
@@ -63,7 +63,7 @@ export default async function Pagina({ params, searchParams }: {
   // precisa do catálogo nem dos pedidos.
   if (secao === "equipe") {
     const s = await sessaoDoPainel();
-    if (!s) notFound();
+    if (!s) redirect("/entrar");
     // Só o dono vê e mexe. Gerente criando gerente seria quem tem acesso hoje
     // garantindo acesso para sempre, mesmo depois de desligado.
     if (!permite(s.papel, "equipe")) {
@@ -97,7 +97,7 @@ export default async function Pagina({ params, searchParams }: {
   // e ela precisa do estado da conexão, não do catálogo nem dos pedidos.
   if (secao === "canais") {
     const [loja, sp] = await Promise.all([lojistaAtual(), searchParams]);
-    if (!loja) notFound();
+    if (!loja) redirect("/entrar");
     const [porEstado, candidatos, perguntas, reputacao, pendencias, contas] = await Promise.all([
       prisma.anuncioMercadoLivre.groupBy({
         by: ["estado"],
@@ -219,7 +219,7 @@ export default async function Pagina({ params, searchParams }: {
   // llms.txt, domínio canônico) e a única decisão do lojista, a de treinamento.
   if (secao === "descoberta") {
     const loja = await lojistaAtual();
-    if (!loja) notFound();
+    if (!loja) redirect("/entrar");
     const h = await headers();
     return <div className="grid gap-6"><Descoberta estado={estadoDescoberta(loja, h.get("x-forwarded-host") ?? h.get("host"))} /></div>;
   }
@@ -228,7 +228,7 @@ export default async function Pagina({ params, searchParams }: {
   // Suspense). Não passa pelo PainelLoja: não precisa de catálogo nem pedidos.
   if (secao === "automacoes") {
     const s = await sessaoDoPainel();
-    if (!s) notFound();
+    if (!s) redirect("/entrar");
     return (
       <Suspense fallback={null}>
         <div className="grid gap-6"><Automacoes /></div>
@@ -241,7 +241,7 @@ export default async function Pagina({ params, searchParams }: {
   // catálogo inteiro nem dos pedidos.
   if (secao === "politicas") {
     const loja = await lojistaAtual();
-    if (!loja) notFound();
+    if (!loja) redirect("/entrar");
     const categorias = await prisma.categoria.findMany({
       where: { tenantId: loja.id },
       select: { slug: true, nome: true },
@@ -269,7 +269,7 @@ export default async function Pagina({ params, searchParams }: {
   // Campos personalizados: a loja declara o que pergunta em cada produto.
   if (secao === "campos") {
     const loja = await lojistaAtual();
-    if (!loja) notFound();
+    if (!loja) redirect("/entrar");
     return <CamposPersonalizados iniciais={lerDefinicoes(loja.camposPersonalizados)} />;
   }
 
@@ -277,7 +277,7 @@ export default async function Pagina({ params, searchParams }: {
   // DNS, e não precisa do catálogo nem dos pedidos para desenhar.
   if (secao === "dominio") {
     const loja = await lojistaAtual();
-    if (!loja) notFound();
+    if (!loja) redirect("/entrar");
     return <div className="grid gap-6"><Dominio loja={{ slug: loja.slug, url: urlDaLoja(loja), dominioPrincipal: loja.dominioPrincipal, plano: loja.plano }} /></div>;
   }
 
@@ -289,7 +289,7 @@ export default async function Pagina({ params, searchParams }: {
   // tenant, não do que o PainelLoja carrega.
   if (secao === "entrega") {
     const [loja, sp] = await Promise.all([lojistaAtual(), searchParams]);
-    if (!loja) notFound();
+    if (!loja) redirect("/entrar");
     return (
       <div className="grid gap-6">
         <MelhorEnvio
@@ -314,7 +314,7 @@ export default async function Pagina({ params, searchParams }: {
   // plataforma e sem conexão para mostrar, a tela fica como sempre foi.
   if (secao === "recebimento") {
     const [loja, sp] = await Promise.all([lojistaAtual(), searchParams]);
-    if (!loja) notFound();
+    if (!loja) redirect("/entrar");
     const porOAuth = mercadoPagoConectado(loja);
     // Flag recebimento_v2: a tela nova, com escolha de provedor, no lugar do cartão do MP.
     if (recursoAtivo(loja, "recebimento_v2")) {
