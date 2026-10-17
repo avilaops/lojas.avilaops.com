@@ -157,6 +157,7 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
   const [limiteEstoque, setLimiteEstoque] = useState(String(loja.estoqueBaixoEm));
   const [empresa, setEmpresa] = useState({ razaoSocial: loja.razaoSocial ?? "", cnpj: loja.cnpj ?? "" });
   const [consultandoCnpj, setConsultandoCnpj] = useState(false);
+  const [consultandoCep, setConsultandoCep] = useState(false);
   const [enderecoEmpresa, setEnderecoEmpresa] = useState({
     logradouro: loja.endereco?.logradouro ?? "", numero: loja.endereco?.numero ?? "",
     complemento: loja.endereco?.complemento ?? "", bairro: loja.endereco?.bairro ?? "",
@@ -198,6 +199,29 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
       setErro(e instanceof Error ? e.message : "Não foi possível consultar o CNPJ.");
     } finally {
       setConsultandoCnpj(false);
+    }
+  }
+
+  async function buscarDadosDoCep() {
+    const cep = enderecoEmpresa.cep.replace(/\D/g, "");
+    if (cep.length !== 8) return;
+    setErro(null); setOk(null); setConsultandoCep(true);
+    try {
+      const resposta = await fetch(`/api/cep?cep=${encodeURIComponent(cep)}`);
+      const dados = await resposta.json().catch(() => ({}));
+      if (!resposta.ok) throw new Error(dados?.erro ?? "Não foi possível consultar o CEP.");
+      setEnderecoEmpresa((atual) => ({
+        ...atual,
+        logradouro: dados.logradouro || atual.logradouro,
+        bairro: dados.bairro || atual.bairro,
+        cidade: dados.cidade || atual.cidade,
+        uf: dados.uf || atual.uf,
+      }));
+      setOk("Endereço encontrado. Informe o número e salve.");
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Não foi possível consultar o CEP.");
+    } finally {
+      setConsultandoCep(false);
     }
   }
 
@@ -764,7 +788,7 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
             <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">A retirada está ativa, mas o endereço está incompleto. Preencha rua, número, cidade, UF e CEP para orientar os clientes.</p>
           )}
           <div className="grid gap-4 sm:grid-cols-2">
-            <Campo label="CEP"><input className={inputClasse} inputMode="numeric" value={enderecoEmpresa.cep} onChange={(e) => setEnderecoEmpresa({ ...enderecoEmpresa, cep: e.target.value })} placeholder="00000-000" /></Campo>
+            <Campo label="CEP" ajuda="Ao sair do campo, buscamos rua, bairro, cidade e UF."><input className={inputClasse} inputMode="numeric" value={enderecoEmpresa.cep} onChange={(e) => setEnderecoEmpresa({ ...enderecoEmpresa, cep: e.target.value })} onBlur={buscarDadosDoCep} placeholder="00000-000" /></Campo>
             <Campo label="Logradouro"><input className={inputClasse} value={enderecoEmpresa.logradouro} onChange={(e) => setEnderecoEmpresa({ ...enderecoEmpresa, logradouro: e.target.value })} placeholder="Rua ou avenida" /></Campo>
             <Campo label="Número"><input className={inputClasse} value={enderecoEmpresa.numero} onChange={(e) => setEnderecoEmpresa({ ...enderecoEmpresa, numero: e.target.value })} /></Campo>
             <Campo label="Complemento"><input className={inputClasse} value={enderecoEmpresa.complemento} onChange={(e) => setEnderecoEmpresa({ ...enderecoEmpresa, complemento: e.target.value })} /></Campo>
@@ -773,7 +797,9 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
             <Campo label="UF"><input className={inputClasse} maxLength={2} value={enderecoEmpresa.uf} onChange={(e) => setEnderecoEmpresa({ ...enderecoEmpresa, uf: e.target.value.toUpperCase() })} placeholder="SP" /></Campo>
             <label className="flex min-h-[44px] items-center gap-2 text-sm"><input type="checkbox" className="h-5 w-5" checked={enderecoEmpresa.enderecoPublico || loja.retiradaNaLoja} disabled={loja.retiradaNaLoja} onChange={(e) => setEnderecoEmpresa({ ...enderecoEmpresa, enderecoPublico: e.target.checked })} /> Mostrar endereço na página de contato{loja.retiradaNaLoja && <span className="text-muted-foreground">(obrigatório para retirada)</span>}</label>
           </div>
-          <div><button className="btn-primario" disabled={ocupado} onClick={() => {
+          <div className="flex flex-wrap gap-3">
+            <button className="btn-secundario" disabled={ocupado || consultandoCep || enderecoEmpresa.cep.replace(/\D/g, "").length !== 8} onClick={buscarDadosDoCep}>{consultandoCep ? "Buscando..." : "Buscar endereço"}</button>
+            <button className="btn-primario" disabled={ocupado || consultandoCep} onClick={() => {
             const cep = enderecoEmpresa.cep.replace(/\D/g, "");
             chamar("/api/painel/loja", "PATCH", {
               endereco: { logradouro: enderecoEmpresa.logradouro.trim(), numero: enderecoEmpresa.numero.trim(), complemento: enderecoEmpresa.complemento.trim(), bairro: enderecoEmpresa.bairro.trim(), cidade: enderecoEmpresa.cidade.trim(), uf: enderecoEmpresa.uf.trim().slice(0, 2), ...(cep.length === 8 ? { cep } : {}) },
