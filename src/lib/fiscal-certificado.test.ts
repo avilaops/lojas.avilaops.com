@@ -1,5 +1,10 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { test } from "node:test";
+import { createSecureContext } from "node:tls";
 import forge from "node-forge";
 import { abrirCertificado, lerCertificado, selarCertificado } from "./fiscal-certificado";
 
@@ -51,6 +56,33 @@ test("usa o parser nativo quando o node-forge não aceita o PKCS#12", () => {
     assert.equal(lerCertificado(arquivo, "senha", "12345678000190").titular, "EMPRESA MODERNA:12345678000190");
   } finally {
     forge.pkcs12.pkcs12FromAsn1 = original;
+  }
+});
+
+test("usa o node-forge quando o OpenSSL recusa a criptografia legada do PKCS#12", () => {
+  const pasta = mkdtempSync(join(tmpdir(), "fiscal-pkcs12-legado-"));
+  const chave = join(pasta, "chave.pem");
+  const certificado = join(pasta, "certificado.pem");
+  const arquivo = join(pasta, "certificado.p12");
+
+  try {
+    execFileSync("openssl", [
+      "req", "-x509", "-newkey", "rsa:2048", "-nodes", "-days", "1",
+      "-keyout", chave, "-out", certificado, "-subj", "/CN=EMPRESA LEGADA:12345678000190",
+    ], { stdio: "ignore" });
+    execFileSync("openssl", [
+      "pkcs12", "-export", "-legacy", "-inkey", chave, "-in", certificado,
+      "-out", arquivo, "-passout", "pass:senha",
+    ], { stdio: "ignore" });
+
+    const pfx = readFileSync(arquivo);
+    assert.throws(() => createSecureContext({ pfx, passphrase: "senha" }), /Unsupported PKCS12 PFX data/);
+    assert.equal(
+      lerCertificado(pfx, "senha", "12345678000190").titular,
+      "EMPRESA LEGADA:12345678000190",
+    );
+  } finally {
+    rmSync(pasta, { recursive: true, force: true });
   }
 });
 

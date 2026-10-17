@@ -103,11 +103,21 @@ export async function fecharSessao() {
 
 /** Loja do lojista logado, ou null. */
 export async function lojistaAtual(): Promise<Tenant | null> {
-  const store = await cookies();
-  const dados = lerToken(store.get(COOKIE)?.value);
-  if (!dados) return null;
-  const t = await prisma.tenant.findUnique({ where: { slug: dados.slug } });
-  return t && t.status !== "CANCELADA" ? t : null;
+  return (await sessaoDoPainel())?.tenant ?? null;
+}
+
+type OperadorDaSessao = { id: string; nome: string; email: string; papel: string };
+
+/** Mantém a validação da sessão comum e da sessão com permissões idêntica. */
+export function resolverSessaoDoPainel(tenant: Tenant | null, operadorId: string | undefined, op: OperadorDaSessao | null) {
+  if (!tenant || tenant.status === "CANCELADA") return null;
+  if (!operadorId) return { tenant, papel: "DONO" as const, operador: null };
+  if (!op) return null;
+  return {
+    tenant,
+    papel: op.papel === "GERENTE" ? "GERENTE" as const : "OPERADOR" as const,
+    operador: { id: op.id, nome: op.nome, email: op.email },
+  };
 }
 
 /**
@@ -125,19 +135,11 @@ export async function sessaoDoPainel(): Promise<
   if (!dados) return null;
 
   const tenant = await prisma.tenant.findUnique({ where: { slug: dados.slug } });
-  if (!tenant || tenant.status === "CANCELADA") return null;
-
-  if (!dados.op) return { tenant, papel: "DONO", operador: null };
+  if (!tenant || !dados.op) return resolverSessaoDoPainel(tenant, dados.op, null);
 
   const op = await prisma.operadorLoja.findFirst({
     where: { id: dados.op, tenantId: tenant.id, ativo: true },
     select: { id: true, nome: true, email: true, papel: true },
   });
-  if (!op) return null;
-
-  return {
-    tenant,
-    papel: op.papel === "GERENTE" ? "GERENTE" : "OPERADOR",
-    operador: { id: op.id, nome: op.nome, email: op.email },
-  };
+  return resolverSessaoDoPainel(tenant, dados.op, op);
 }
