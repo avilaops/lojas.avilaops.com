@@ -4,7 +4,7 @@ import * as zlib from "node:zlib";
 import { inflateRawSync } from "node:zlib";
 import { COLUNAS_PRODUTO, lerCsvProdutos, produtosDeLinhas } from "./planilha-produtos";
 import { ErroPlanilha, linhasDeXlsx } from "./xlsx-leitor";
-import { linhaDoProduto, montarPlanilha, type ProdutoDePlanilha } from "./exportar";
+import { linhaDoProduto, modeloDeProdutosEmLinhas, montarPlanilha, type ProdutoDePlanilha } from "./exportar";
 import { letraDaColuna, montarXlsx } from "./xlsx";
 
 /**
@@ -61,6 +61,16 @@ test("o catálogo exportado volta inteiro pela importação", () => {
   assert.equal(p.alturaCm, 1.5);
   assert.equal(p.larguraCm, 5.2);
   assert.equal(p.comprimentoCm, 5.2);
+});
+
+test("o modelo xlsx tem todas as colunas e volta pela importação", () => {
+  const bytes = montarPlanilha(modeloDeProdutosEmLinhas(), "xlsx", "Produtos") as Uint8Array;
+  const { produtos, erros } = produtosDeLinhas(linhasDeXlsx(Buffer.from(bytes)));
+  assert.deepEqual(erros, []);
+  assert.equal(produtos.length, 1);
+  assert.equal(produtos[0].sku, "SKU-001");
+  assert.equal(produtos[0].gtin, "0789123456789");
+  assert.equal(produtos[0].precoCentavos, 4990);
 });
 
 test("preço com ponto e vírgula na descrição não desloca as colunas", () => {

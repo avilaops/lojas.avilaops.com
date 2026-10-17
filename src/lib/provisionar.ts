@@ -152,9 +152,6 @@ async function passoMail(t: Tenant): Promise<string> {
     await mail("/aliases", { domain: apex, alias, target: `contato@${apex}` }).catch(() => undefined);
   }
 
-  // Só preenche quando a loja ainda não tem remetente: rodar o provisionamento
-  // de novo não desfaz a escolha do lojista (a Vedashow assina como vendas@).
-  await prisma.tenant.updateMany({ where: { id: t.id, emailRemetente: null }, data: { emailRemetente: `pedidos@${apex}` } });
   return `ok: contato@${apex} (senha enviada para ${t.emailContato ?? "ninguém, defina emailContato"})`;
 }
 
