@@ -17,7 +17,7 @@ import Anuncios, { type PixelsView } from "./Anuncios";
 import IaEApi from "./IaEApi";
 import CatalogoLista from "./CatalogoLista";
 import SoltarPlanilha from "./SoltarPlanilha";
-import { FileCheck2 } from "lucide-react";
+import { Download, FileCheck2 } from "lucide-react";
 import Inventario from "./Inventario";
 import Pedidos from "./Pedidos";
 import NovoProduto from "./NovoProduto";
@@ -260,7 +260,7 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
       <div className="flex flex-wrap items-center gap-3 text-sm">
         <span className={`rounded-full px-3 py-1 text-xs font-semibold ${loja.status === "ATIVA" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>{STATUS[loja.status] ?? loja.status}</span>
         <span className="text-muted-foreground">Plano {loja.plano.replace("_", " ")}</span>
-        {loja.emailRemetente && <span className="text-muted-foreground">e-mail: {loja.emailRemetente}</span>}
+        {loja.emailContato && <span className="text-muted-foreground">e-mail: {loja.emailContato}</span>}
       </div>
 
       {erro && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{erro}</p>}
@@ -393,6 +393,14 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
           </Secao>
 
           <Secao titulo="Importar planilha" descricao="Produto com o mesmo SKU é atualizado, não duplicado.">
+            <div>
+              <a
+                className="btn-secundario inline-flex h-11 items-center gap-2 px-4 text-sm"
+                href="/api/painel/exportar?tipo=produtos&formato=xlsx&modelo=1"
+              >
+                <Download size={16} aria-hidden="true" /> Exportar modelo de planilha
+              </a>
+            </div>
             <p className="text-xs text-muted-foreground">Colunas: <code>nome, preco, categoria, google_product_category, marca, sku, gtin, mpn, identificadores_estado, preco_de, descricao_curta, descricao, imagem, imagem_origem, imagem_familia, confirmar_imagem_exata, correspondencia_imagem, destaque, peso_kg, altura_cm, largura_cm, comprimento_cm, estoque, ativo</code></p>
             <p className="text-xs text-muted-foreground">Use MPN somente para o código do fabricante. Em <code>google_product_category</code>, informe o ID ou o caminho oficial confirmado. Em atualização por planilha, a célula vazia mantém o valor salvo; escreva <code>auto</code> para remover uma substituição e voltar à classificação automática. Em <code>identificadores_estado</code>, informe <code>desconhecido</code>, <code>informado</code> ou <code>sem_identificador</code>, conforme embalagem ou fornecedor. Em <code>confirmar_imagem_exata</code>, informe <code>sim</code> só depois de conferir que a foto principal mostra exatamente o produto e a apresentação daquele SKU. Em <code>correspondencia_imagem</code>, use <code>confirmada</code> ou <code>rejeitada</code> após conferir a foto principal. A rejeição bloqueia o item do Merchant até substituir a foto e revisar o estado. Em produtos com variantes, a planilha atualiza a apresentação padrão.</p>
             {/* São as mesmas colunas que a exportação do Catálogo grava: o

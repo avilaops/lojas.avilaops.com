@@ -3,6 +3,7 @@ import { filtroDaUrl } from "@/lib/catalogo-filtros";
 import {
   FORMATOS,
   clientesEmLinhas,
+  modeloDeProdutosEmLinhas,
   montarPlanilha,
   pedidosEmLinhas,
   produtosEmLinhas,
@@ -42,8 +43,10 @@ export async function GET(request: Request) {
 
   const formato: Formato = url.searchParams.get("formato") === "xlsx" ? "xlsx" : "csv";
 
-  const linhas =
-    tipo === "produtos"
+  const modelo = tipo === "produtos" && url.searchParams.get("modelo") === "1";
+  const linhas = modelo
+    ? modeloDeProdutosEmLinhas()
+    : tipo === "produtos"
       ? await produtosEmLinhas(loja.id, filtroDaUrl(url))
       : tipo === "pedidos"
         ? await pedidosEmLinhas(loja.id)
@@ -55,7 +58,7 @@ export async function GET(request: Request) {
   return new Response(corpo, {
     headers: {
       "content-type": contentType,
-      "content-disposition": `attachment; filename="${loja.slug}-${tipo}-${dia}.${extensao}"`,
+      "content-disposition": `attachment; filename="${modelo ? "modelo-produtos" : `${loja.slug}-${tipo}-${dia}`}.${extensao}"`,
       "cache-control": "no-store",
     },
   });
