@@ -2,7 +2,31 @@
   "schemaVersion": 1,
   "application": "avila-lojas-avilaops-com",
   "members": [],
-  "tasks": [],
+  "tasks": [
+    {
+      "id": "T-0001",
+      "title": "Facilitar a consulta dos anúncios da Brilhax no Mercado Livre",
+      "objective": "Exibir automaticamente no painel os anúncios ativos, preços, estoque, vínculo com o catálogo e divergências.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "concluida",
+      "acceptanceCriteria": [
+        "A consulta carrega sem exigir clique inicial.",
+        "O cliente consegue buscar por nome, MLB ou SKU.",
+        "O painel resume anúncios ativos, vinculados, reconhecidos e sem vínculo.",
+        "Anúncios reconhecidos mostram diferença de preço em reais e percentual."
+      ],
+      "evidence": [
+        "Ambiente local: ESLint do componente sem erros.",
+        "Ambiente local: TypeScript sem erros.",
+        "Ambiente local: build de produção concluído.",
+        "Ambiente local: 14 testes de adoção do Mercado Livre aprovados.",
+        "Suíte geral: 1074 testes aprovados; os 2 testes fiscais inicialmente bloqueados pelo OpenSSL local foram repetidos com a instalação correta e aprovados."
+      ],
+      "review": "Autorrevisão concluída; consulta permanece somente leitura e vinculação continua exigindo escolha explícita do lojista.",
+      "environment": "local"
+    }
+  ],
   "decisions": [],
   "integrations": []
 }
