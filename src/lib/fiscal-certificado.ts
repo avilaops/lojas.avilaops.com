@@ -77,9 +77,15 @@ export function lerCertificado(pfx: Buffer, senha: string, cnpj: string) {
   try {
     nativo = lerCertificadoNativo(pfx, senha);
   } catch (erro) {
+    const compativel = lerCertificadoForge(pfx, senha);
+    if (compativel) return conferirCertificado(compativel, cnpj);
     throw erroAoAbrirCertificado(erro);
   }
   const info = lerCertificadoForge(pfx, senha) ?? nativo;
+  return conferirCertificado(info, cnpj);
+}
+
+function conferirCertificado(info: CertificadoLido, cnpj: string) {
   if (!cnpj || info.documento !== cnpj) throw new ErroFiscal("O CNPJ do certificado deve ser o mesmo cadastrado nesta loja.");
   const agora = new Date();
   if (info.validoDe > agora || info.validoAte <= agora) {
