@@ -3,6 +3,7 @@ import { exigir } from "@/lib/operadores";
 import { chaveFiscal, ErroFiscal, lerCertificado, selarCertificado } from "@/lib/fiscal-certificado";
 import { UFS_FISCAIS } from "@/lib/fiscal-distribuicao";
 import { RESUMO_FISCAL, sincronizarNotas } from "@/lib/fiscal-loja";
+import { origemFiscalPermitida } from "@/lib/fiscal-origem";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,8 +25,8 @@ export async function GET() {
 export async function POST(request: Request) {
   const { s, erro } = await exigir("fiscal");
   if (erro) return erro;
-  if (request.headers.get("origin") !== new URL(request.url).origin) {
-    return Response.json({ erro: "Origem não permitida." }, { status: 403 });
+  if (!origemFiscalPermitida(request)) {
+    return Response.json({ erro: "Por segurança, o envio foi bloqueado. Reabra o painel e tente novamente." }, { status: 403 });
   }
   try {
     if (new URL(request.url).searchParams.get("acao") === "consultar") {
