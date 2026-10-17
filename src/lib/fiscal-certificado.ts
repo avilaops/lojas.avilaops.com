@@ -1,24 +1,31 @@
-import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
+import { createCipheriv, createDecipheriv, randomBytes, X509Certificate } from "node:crypto";
 import { createSecureContext } from "node:tls";
 import forge from "node-forge";
 
 export class ErroFiscal extends Error {}
 
-export function chaveFiscal(): Buffer {
-  const hex = process.env.LOJAS_CERT_SECRET ?? "";
-  if (!/^[a-f0-9]{64}$/i.test(hex)) throw new ErroFiscal("O cofre fiscal precisa ser configurado pelo suporte.");
-  return Buffer.from(hex, "hex");
+type CertificadoLido = { titular: string; documento?: string; validoDe: Date; validoAte: Date };
+
+function lerCertificadoNativo(pfx: Buffer, senha: string): CertificadoLido {
+  const contexto = createSecureContext({ pfx, passphrase: senha });
+  const certificadoDer = contexto.context.getCertificate();
+  if (!certificadoDer?.length) throw new Error("Certificado ausente no arquivo PKCS#12.");
+  const certificado = new X509Certificate(certificadoDer);
+  const titular = String(certificado.toLegacyObject().subject?.CN ?? "");
+  return {
+    titular,
+    documento: /:([0-9A-Z]{12}\d{2})$/i.exec(titular)?.[1]?.toUpperCase(),
+    validoDe: new Date(certificado.validFrom),
+    validoAte: new Date(certificado.validTo),
+  };
 }
 
-/** Confere a chave privada, a validade e o CNPJ do certificado de cliente. */
-export function lerCertificado(pfx: Buffer, senha: string, cnpj: string) {
-  if (!pfx.length || pfx.length > 64 * 1024) throw new ErroFiscal("Envie um certificado A1 de até 64 KB.");
+function lerCertificadoForge(pfx: Buffer, senha: string): CertificadoLido | null {
   let pacote: forge.pkcs12.Pkcs12Pfx;
   try {
     pacote = forge.pkcs12.pkcs12FromAsn1(forge.asn1.fromDer(pfx.toString("binary")), senha);
-    createSecureContext({ pfx, passphrase: senha });
   } catch {
-    throw new ErroFiscal("Não foi possível abrir o certificado A1. Confira o arquivo e a senha.");
+    return null;
   }
   const chaves = [
     ...(pacote.getBags({ bagType: forge.pki.oids.pkcs8ShroudedKeyBag })[forge.pki.oids.pkcs8ShroudedKeyBag] ?? []),
@@ -41,12 +48,31 @@ export function lerCertificado(pfx: Buffer, senha: string, cnpj: string) {
       documento = String(Array.isArray(valor.value) ? valor.value[0]?.value : valor.value).toUpperCase();
     }
   }
-  if (!cnpj || documento !== cnpj) throw new ErroFiscal("O CNPJ do certificado deve ser o mesmo cadastrado nesta loja.");
+  return { titular, documento, validoDe: certificado.validity.notBefore, validoAte: certificado.validity.notAfter };
+}
+
+export function chaveFiscal(): Buffer {
+  const hex = process.env.LOJAS_CERT_SECRET ?? "";
+  if (!/^[a-f0-9]{64}$/i.test(hex)) throw new ErroFiscal("O cofre fiscal precisa ser configurado pelo suporte.");
+  return Buffer.from(hex, "hex");
+}
+
+/** Confere a chave privada, a validade e o CNPJ do certificado de cliente. */
+export function lerCertificado(pfx: Buffer, senha: string, cnpj: string) {
+  if (!pfx.length || pfx.length > 64 * 1024) throw new ErroFiscal("Envie um certificado A1 de até 64 KB.");
+  let nativo: CertificadoLido;
+  try {
+    nativo = lerCertificadoNativo(pfx, senha);
+  } catch {
+    throw new ErroFiscal("Não foi possível abrir o certificado A1. Confira o arquivo e a senha.");
+  }
+  const info = lerCertificadoForge(pfx, senha) ?? nativo;
+  if (!cnpj || info.documento !== cnpj) throw new ErroFiscal("O CNPJ do certificado deve ser o mesmo cadastrado nesta loja.");
   const agora = new Date();
-  if (certificado.validity.notBefore > agora || certificado.validity.notAfter <= agora) {
+  if (info.validoDe > agora || info.validoAte <= agora) {
     throw new ErroFiscal("O certificado está vencido ou ainda não está em vigor.");
   }
-  return { titular, validoAte: certificado.validity.notAfter };
+  return { titular: info.titular, validoAte: info.validoAte };
 }
 
 export function selarCertificado(pfx: Buffer, senha: string): string {

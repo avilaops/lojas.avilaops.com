@@ -33,3 +33,23 @@ test("lê certificado com chave correspondente e recusa senha, CNPJ e validade i
   assert.throws(() => lerCertificado(arquivo(), "senha", "12345678000190"), /vencido/);
   assert.throws(() => lerCertificado(Buffer.from("invalido"), "", "12345678000190"));
 });
+
+test("usa o parser nativo quando o node-forge não aceita o PKCS#12", () => {
+  const chaves = forge.pki.rsa.generateKeyPair(2048);
+  const cert = forge.pki.createCertificate();
+  cert.publicKey = chaves.publicKey;
+  cert.serialNumber = "02";
+  cert.validity.notBefore = new Date(Date.now() - 86_400_000);
+  cert.validity.notAfter = new Date(Date.now() + 86_400_000);
+  cert.setSubject([{ name: "commonName", value: "EMPRESA MODERNA:12345678000190" }]);
+  cert.setIssuer(cert.subject.attributes);
+  cert.sign(chaves.privateKey, forge.md.sha256.create());
+  const arquivo = Buffer.from(forge.asn1.toDer(forge.pkcs12.toPkcs12Asn1(chaves.privateKey, cert, "senha", { algorithm: "3des" })).getBytes(), "binary");
+  const original = forge.pkcs12.pkcs12FromAsn1;
+  forge.pkcs12.pkcs12FromAsn1 = () => { throw new Error("algoritmo não suportado pelo node-forge"); };
+  try {
+    assert.equal(lerCertificado(arquivo, "senha", "12345678000190").titular, "EMPRESA MODERNA:12345678000190");
+  } finally {
+    forge.pkcs12.pkcs12FromAsn1 = original;
+  }
+});
