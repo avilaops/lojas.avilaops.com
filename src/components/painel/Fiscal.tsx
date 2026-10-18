@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useState } from "react";
 import { Download, FileText, RefreshCw, ShieldCheck, Upload } from "lucide-react";
+import { separarDocumentosFiscais } from "@/lib/fiscal-monitor";
 import { Secao, inputClasse } from "./campos";
 
 type Estado = {
@@ -64,6 +65,7 @@ export default function Fiscal() {
   }
 
   const configuracao = estado?.configuracao;
+  const documentosSeparados = separarDocumentosFiscais(estado?.documentos ?? []);
   const vencido = configuracao ? new Date(configuracao.validoAte).getTime() <= agora : false;
   const formulario = (
     <form className="grid min-w-0 gap-4" onSubmit={(e) => { e.preventDefault(); void enviar(e.currentTarget); }}>
@@ -153,30 +155,35 @@ export default function Fiscal() {
             <p className="mx-auto mt-1 max-w-sm text-sm leading-relaxed text-muted-foreground">{configuracao ? "Consulte o próximo lote para buscar documentos disponíveis." : "Guarde o certificado acima para iniciar a busca."}</p>
           </div>
         ) : (
-          <div className="min-w-0">
-            <p className="mb-3 text-xs text-muted-foreground">Últimos 100 documentos recebidos · {estado.documentos.length} nesta lista</p>
-            <ul className="divide-y divide-border">
-              {estado.documentos.map((doc) => (
-                <li key={doc.id} className="grid min-w-0 gap-3 py-4 first:pt-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold">{tipoDocumento(doc.schema)}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">Recebido em {data(doc.recebidoEm)}</p>
-                    {doc.schema.startsWith("resNFe") && <p className="mt-2 text-xs text-amber-900">Resumo: este arquivo não é a nota completa.</p>}
-                    <details className="mt-2 min-w-0 text-xs text-muted-foreground">
-                      <summary className="cursor-pointer py-1">Identificação do documento</summary>
-                      <dl className="mt-2 grid gap-2">
-                        {doc.chave && <div><dt>Chave de acesso</dt><dd className="break-all text-foreground">{doc.chave}</dd></div>}
-                        <div><dt>NSU</dt><dd className="break-all text-foreground">{doc.nsu}</dd></div>
-                        <div><dt>Formato recebido</dt><dd className="break-all">{doc.schema}</dd></div>
-                      </dl>
-                    </details>
-                  </div>
-                  <a className="btn-secundario w-full sm:w-auto" href={`/api/painel/fiscal/documentos/${doc.id}`}>
-                    <Download size={16} aria-hidden="true" /> Baixar XML
-                  </a>
-                </li>
-              ))}
-            </ul>
+          <div className="grid min-w-0 gap-5">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-xl border border-border bg-muted/30 p-3">
+                <p className="text-xs text-muted-foreground">NF-e encontradas</p>
+                <p className="mt-1 text-2xl font-semibold">{documentosSeparados.notas.length}</p>
+              </div>
+              <div className="rounded-xl border border-border bg-muted/30 p-3">
+                <p className="text-xs text-muted-foreground">Eventos fiscais</p>
+                <p className="mt-1 text-2xl font-semibold">{documentosSeparados.eventos.length}</p>
+              </div>
+            </div>
+            <div className="min-w-0">
+              <h3 className="mb-1 text-sm font-semibold">Notas fiscais</h3>
+              <p className="mb-3 text-xs text-muted-foreground">Resumos e XML completos encontrados entre os últimos 100 documentos.</p>
+              {!documentosSeparados.notas.length ? <p className="rounded-xl border border-border p-4 text-sm text-muted-foreground">Nenhuma NF-e encontrada neste lote.</p> : <ul className="divide-y divide-border">
+                {documentosSeparados.notas.map((doc) => (
+                  <DocumentoFiscal key={doc.id} doc={doc} />
+                ))}
+              </ul>}
+            </div>
+            <details className="min-w-0 border-t border-border pt-4">
+              <summary className="cursor-pointer text-sm font-medium">Eventos e outros documentos ({documentosSeparados.eventos.length + documentosSeparados.outros.length})</summary>
+              <ul className="mt-3 divide-y divide-border">
+                {[...documentosSeparados.eventos, ...documentosSeparados.outros].map((doc) => (
+                  <DocumentoFiscal key={doc.id} doc={doc} />
+                ))}
+              </ul>
+            </details>
+            <p className="text-xs text-muted-foreground">Últimos 100 documentos recebidos · {estado.documentos.length} nesta lista</p>
           </div>
         )}
         <details className="border-t border-border pt-4 text-sm">
@@ -189,5 +196,28 @@ export default function Fiscal() {
         </details>
       </Secao>
     </div>
+  );
+}
+
+function DocumentoFiscal({ doc }: { doc: Estado["documentos"][number] }) {
+  return (
+    <li className="grid min-w-0 gap-3 py-4 first:pt-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
+      <div className="min-w-0">
+        <p className="text-sm font-semibold">{tipoDocumento(doc.schema)}</p>
+        <p className="mt-1 text-xs text-muted-foreground">Recebido em {data(doc.recebidoEm)}</p>
+        {doc.schema.startsWith("resNFe") && <p className="mt-2 text-xs text-amber-900">Resumo: este arquivo não é a nota completa.</p>}
+        <details className="mt-2 min-w-0 text-xs text-muted-foreground">
+          <summary className="cursor-pointer py-1">Identificação do documento</summary>
+          <dl className="mt-2 grid gap-2">
+            {doc.chave && <div><dt>Chave de acesso</dt><dd className="break-all text-foreground">{doc.chave}</dd></div>}
+            <div><dt>NSU</dt><dd className="break-all text-foreground">{doc.nsu}</dd></div>
+            <div><dt>Formato recebido</dt><dd className="break-all">{doc.schema}</dd></div>
+          </dl>
+        </details>
+      </div>
+      <a className="btn-secundario w-full sm:w-auto" href={`/api/painel/fiscal/documentos/${doc.id}`}>
+        <Download size={16} aria-hidden="true" /> Baixar XML
+      </a>
+    </li>
   );
 }
