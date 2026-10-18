@@ -4,16 +4,9 @@ import Consentimento from "@/components/Consentimento";
 import Pixels from "@/components/Pixels";
 import { pixelsDaPlataforma, temRastreio } from "@/lib/pixels";
 import { lojistaAtual } from "@/lib/sessao";
+import MarcaLojas from "@/components/marca/MarcaLojas";
+import "../marca-lojas.css";
 import "../plataforma.css";
-
-function MarcaLojas() {
-  return (
-    <span className="pl-marca">
-      <span className="pl-marca-simbolo" aria-hidden="true"><span /></span>
-      <span className="pl-marca-texto"><strong>Lojas</strong><small>por Avila Ops</small></span>
-    </span>
-  );
-}
 
 export default async function PlataformaLayout({ children }: { children: React.ReactNode }) {
   const lojista = await lojistaAtual();
@@ -61,7 +54,7 @@ export default async function PlataformaLayout({ children }: { children: React.R
         <div className="pl-container pl-footer-grid">
           <div><MarcaLojas /><p>Loja virtual pronta em um dia. Pix na hora, sem comissão.</p></div>
           <div><strong>Produto</strong><Link href="/#recursos">Como funciona</Link><Link href="/#modelos">Layouts</Link><Link href="/#planos">Planos</Link><Link href="/criar">Criar loja</Link></div>
-          <div><strong>Recursos</strong><Link href="/ajuda">Ajuda</Link><Link href="/blog">Blog</Link><Link href="/developers">Desenvolvedores</Link></div>
+          <div><strong>Recursos</strong><Link href="/ajuda">Ajuda</Link><Link href="/blog">Blog</Link><Link href="/developers">Desenvolvedores</Link><Link href="/marca">Marca</Link></div>
           <div><strong>Acesso</strong><Link href="/entrar">Painel do lojista</Link><a href="https://avilaops.com">Avila Ops</a></div>
         </div>
         <div className="pl-container pl-footer-base"><span>© {new Date().getFullYear()} Avila Ops.</span><span>Feito no Brasil para negócios que querem crescer.</span></div>

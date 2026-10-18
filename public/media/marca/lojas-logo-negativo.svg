@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="4 6 170 64" role="img" aria-labelledby="t">
+  <title id="t">Lojas</title>
+  <g transform="translate(0 -3.5)">
+    <path d="M8 16a4 4 0 0 1 4-4h12v14a8 8 0 0 1-16 0Z" fill="#0153FD"/>
+    <path d="M24 12h16v14a8 8 0 0 1-16 0Z" fill="#F72927"/>
+    <path d="M40 12h12a4 4 0 0 1 4 4v10a8 8 0 0 1-16 0Z" fill="#FDC403"/>
+    <path d="M14 40v13a3 3 0 0 0 3 3h30a3 3 0 0 0 3-3V40" fill="none" stroke="#FBF8F4" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M25 56V45a7 7 0 0 1 14 0v11Z" fill="#FBF8F4"/>
+  </g>
+  <g transform="translate(76 15)"><g fill="none" stroke="#FBF8F4" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9v28"/><circle cx="22" cy="28" r="9"/><path d="M41 19v23a8 8 0 0 1-8 8"/><circle cx="60" cy="28" r="9"/><path d="M69 19v18"/><path d="M91 19h-7a4.5 4.5 0 0 0 0 9h2a4.5 4.5 0 0 1 0 9h-7"/></g><circle cx="41" cy="8" r="4" fill="#F72927"/></g>
+</svg>

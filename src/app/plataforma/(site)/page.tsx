@@ -15,6 +15,7 @@ import {
   Truck,
 } from "lucide-react";
 import ModelosInterativos from "@/components/plataforma/ModelosInterativos";
+import MarcaLojas from "@/components/marca/MarcaLojas";
 import { PLANOS } from "@/lib/planos";
 
 export const metadata: Metadata = {
@@ -122,18 +123,6 @@ const OFICIOS = [
     itens: ["Kits e combos", "Cupom de primeira compra", "\"Leve também\" no carrinho"],
   },
 ] as const;
-
-function MarcaLojas({ compacta = false }: { compacta?: boolean }) {
-  return (
-    <span className="pl-marca">
-      <span className="pl-marca-simbolo" aria-hidden="true"><span /></span>
-      <span className="pl-marca-texto">
-        <strong>Lojas</strong>
-        {!compacta && <small>por Avila Ops</small>}
-      </span>
-    </span>
-  );
-}
 
 const JSON_LD = {
   "@context": "https://schema.org",

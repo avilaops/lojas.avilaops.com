@@ -7,6 +7,7 @@ import {
   ArrowLeftRight, BarChart3, Bot, ExternalLink, LayoutDashboard, LogOut, Megaphone, Menu, Package, Settings,
   Search, ShoppingCart, Star, Tags, Ticket, Users, Warehouse, X,
 } from "lucide-react";
+import { LogoLojas } from "@/components/marca/MarcaLojas";
 import { abrirBusca } from "./BuscaPainel";
 
 /**
@@ -147,6 +148,7 @@ function Rodape({ pathname, aoNavegar, urlLoja, podeTrocarLoja }: { pathname: st
           <span>Sair</span>
         </button>
       </form>
+      <LogoLojas mono className="pnav-assinatura" titulo="Lojas por Avila Ops" />
     </div>
   );
 }
