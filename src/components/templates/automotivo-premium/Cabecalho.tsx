@@ -35,7 +35,7 @@ export default function Cabecalho({ loja, logo, logoEscuro, mostrarNome, categor
       {loja.avisoTopo && <p className="ap-aviso">{loja.avisoTopo}</p>}
       <div className="container-loja ap-cabecalho-linha">
         <button className="ap-icone ap-menu-botao" aria-label="Abrir menu" onClick={() => dialog.current?.showModal()}><Menu size={22}/></button>
-        <Link href="/" className="ap-marca" aria-label={`${loja.nome} — início`}>{marca}</Link>
+        <Link href="/" className={`ap-marca${!mostrarNome && logo ? " ap-marca--logo-completa" : ""}`} aria-label={`${loja.nome} — início`}>{marca}</Link>
         <nav className="ap-nav" aria-label="Navegação principal">{links.map(l => l.href === "/produtos" ? <details className="ap-megamenu" key={l.href}><summary>Produtos <ChevronDown size={13}/></summary><div><Link href="/produtos">Ver todos os produtos</Link>{categorias.map(c => <Link key={c.slug} href={`/categoria/${c.slug}`} onClick={e => e.currentTarget.closest("details")?.removeAttribute("open")}>{c.nome}</Link>)}</div></details> : <Link key={l.href} href={l.href} aria-current={caminho === l.href ? "page" : undefined}>{l.nome}</Link>)}</nav>
         <div className="ap-cabecalho-acoes"><button className="ap-icone" onClick={alternar} aria-label={escuro ? "Ativar tema claro" : "Ativar tema escuro"}>{escuro ? <Sun size={18}/> : <Moon size={18}/>}</button>{loja.vende && <><Link href="/conta" className="ap-icone ap-conta" aria-label="Minha conta"><UserRound size={19}/></Link><CartButton/></>}</div>
       </div>

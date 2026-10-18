@@ -64,7 +64,7 @@ export async function dadosDoPainel(secao: SecaoPainel) {
   const p = PRECISA[secao];
   const id = loja.id;
 
-  const [faturas, semEmbalagemTotal, ativosTotal, semFotoTotal, pedidosTotal, cupons, categorias, avaliacoes, vendas, catalogo, espera, postagem] = await Promise.all([
+  const [faturas, semEmbalagemTotal, ativosTotal, semFotoTotal, pedidosTotal, cupons, categorias, avaliacoes, vendas, catalogo, espera, postagem, credencialRecebimento] = await Promise.all([
     prisma.fatura.findMany({ where: { tenantId: id }, orderBy: { criadoEm: "desc" }, take: 24 }),
     // Contagens do catálogo inteiro. O aviso de embalagem dizia "e mais 488"
     // numa loja com 5.591 produtos sem medida, porque contava dentro de uma
@@ -81,6 +81,11 @@ export async function dadosDoPainel(secao: SecaoPainel) {
     p.catalogo ? diagnosticoDoFeed(id) : VAZIO_CATALOGO,
     p.vendas ? filaDeEspera(id) : [],
     p.postagem ? postagemAAcertar(id) : { etiquetas: 0, custoCentavos: 0 },
+    p.contagens
+      ? loja.credencialPadraoId
+        ? prisma.credencialPagamento.findUnique({ where: { id: loja.credencialPadraoId }, select: { status: true, testadoEm: true } })
+        : prisma.credencialPagamento.findUnique({ where: { tenantId_provedor: { tenantId: id, provedor: "mercadopago" } }, select: { status: true, testadoEm: true } })
+      : null,
   ]);
 
   const pecas = secao === "Marca" && templateAtelieLigado()
@@ -122,7 +127,9 @@ export async function dadosDoPainel(secao: SecaoPainel) {
       bannerUrl: loja.bannerUrl,
       mpPublicKey: loja.mpPublicKey,
       // Só o fato de existir credencial; o token cifrado nunca sai daqui.
-      mpConfigurado: Boolean(loja.mpAccessTokenEnc),
+      mpConfigurado: Boolean(loja.credencialPadraoId || loja.mpAccessTokenEnc),
+      recebimentoTestado: credencialRecebimento?.status === "conectado" && Boolean(credencialRecebimento.testadoEm),
+      recebimentoTestadoEm: credencialRecebimento?.testadoEm?.toISOString() ?? null,
       // Só o fato de estar conectado, para o checklist: os tokens não saem daqui.
       melhorEnvioConectado: melhorEnvioConectado(loja),
       cotacaoDaPlataforma: cepCertoConfigurada(),

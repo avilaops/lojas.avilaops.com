@@ -7,6 +7,7 @@ import type { ProdutoPlanilha, TenantEntrada } from "./admin-schemas";
 import { invalidarCatalogo } from "./catalogo-cache";
 import { salvarProdutoNoCatalogo } from "./catalogo-escrita";
 import { ErroCampo, lerDefinicoes, normalizarValor } from "./campos-personalizados";
+import { categoriaDePlanilhaValida } from "./planilha-produtos";
 
 function dadosDoTenant(entrada: Partial<TenantEntrada>): Prisma.TenantUpdateInput {
   const { mercadoPago, tema, identidade, endereco, tabelaFrete, entregaLocal, ...resto } = entrada;
@@ -152,7 +153,11 @@ export async function importarProdutos(tenantId: string, produtos: ProdutoPlanil
     }
 
     let categoriaId: string | null = null;
-    if (p.categoria) {
+    const categoriaValida = categoriaDePlanilhaValida(p.categoria);
+    if (p.categoria && !categoriaValida) {
+      avisos.push(`${p.sku ?? p.nome ?? "Produto"}: categoria ignorada porque contém uma lista, texto corrompido ou mais de 80 caracteres.`);
+    }
+    if (p.categoria && categoriaValida) {
       const cslug = slugificar(p.categoria);
       const categoriaConhecida = categorias.has(cslug);
       categoriaId = categorias.get(cslug) ?? null;
@@ -208,7 +213,7 @@ export async function importarProdutos(tenantId: string, produtos: ProdutoPlanil
       // null aqui tirava da prateleira todo produto de uma carga que só queria
       // atualizar preço ou foto: aconteceu com 872 retentores em 02/09/2026,
       // que sumiram do menu sem erro nenhum aparecer.
-      ...(p.categoria && categoriaId ? { categoriaId } : {}),
+      ...(p.categoria && categoriaValida && categoriaId ? { categoriaId } : {}),
       ...(atributos !== undefined ? { atributos: atributos as Prisma.InputJsonValue } : {}),
       ...(compatibilidade ? { compatibilidade: compatibilidade as unknown as Prisma.InputJsonValue } : {}),
       ...(valoresCampos ? { camposPersonalizados: valoresCampos as unknown as Prisma.InputJsonValue } : {}),

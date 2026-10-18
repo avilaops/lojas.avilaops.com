@@ -33,6 +33,23 @@
 
 /** Ramo por ramo, na ordem em que as regras são testadas. */
 const REGRAS: Array<{ termos: RegExp; id: number; prateleira: string }> = [
+  // Saneantes e produtos para controle de pragas. A taxonomia oficial não
+  // separa inseticida de raticida; ambos ficam em Pesticidas (2869).
+  {
+    termos: /^(?:controle de pragas|controle de roedores|inseticidas?|raticidas?|pesticidas?)$/i,
+    id: 2869,
+    prateleira: "Suprimentos domésticos > Controle de peste > Pesticidas",
+  },
+  {
+    termos: /^herbicidas?$/i,
+    id: 3103,
+    prateleira: "Gramado e jardim > Jardinagem > Herbicidas",
+  },
+  {
+    termos: /^controle de odores$/i,
+    id: 4973,
+    prateleira: "Materiais para limpeza doméstica > Produtos para limpeza doméstica",
+  },
   // Categorias com correspondência direta e exata na taxonomia pt-BR.
   // “Abraçadeiras” mistura tipos de produto na Vedashow, então fica sem
   // categoria Google até confirmar o uso de cada item.

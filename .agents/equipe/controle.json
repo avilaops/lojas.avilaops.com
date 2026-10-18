@@ -174,6 +174,134 @@
       ],
       "review": "O arquivo é gerado dentro da sessão da loja atual; não existe exportação cruzada de dados entre tenants.",
       "environment": "local"
+    },
+    {
+      "id": "T-0009",
+      "title": "Corrigir categorias e classificação Merchant da Domi-Rio",
+      "objective": "Impedir categorias compostas por listas de ERP, classificar o catálogo da Domi-Rio em prateleiras úteis e enviar categorias Google oficiais no feed Merchant.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "em-andamento",
+      "acceptanceCriteria": [
+        "Os produtos da Domi-Rio usam categorias comerciais individuais e legíveis.",
+        "O feed envia google_product_category oficial para pesticidas, herbicidas e controle de odores.",
+        "Uma futura importação ignora e avisa sobre categoria em lista ou texto corrompido.",
+        "A navegação móvel limita defensivamente nomes anormais sem alargar a página.",
+        "A prevenção é publicada em produção e o feed possui ofertas elegíveis."
+      ],
+      "evidence": [
+        "Produção: importação concluiu com 0 produtos criados e 53 atualizados.",
+        "Produção: a vitrine pública passou a expor Controle de Pragas, Herbicidas, Controle de Odores e Controle de Roedores; a categoria-lista antiga não aparece no HTML público.",
+        "Local: 46 testes direcionados aprovados, TypeScript e ESLint sem erros.",
+        "Diagnóstico: o feed Merchant público ainda contém zero itens porque os produtos ativos não possuem imagem, requisito obrigatório do canal.",
+        "Produção: 40 dos 43 produtos ativos receberam imagem oficial da família Isorgan, copiada para URLs estáveis no domínio domiriodistribuidora.com.br, com texto alternativo por produto e fonte oficial registrada.",
+        "Produção: a listagem pública e as páginas individuais retornam as novas imagens, canonical e Product JSON-LD; sitemap.xml lista as páginas dos produtos.",
+        "Produção: ISO980, ISO990 e ISO992 permaneceram sem imagem porque nenhuma fonte oficial verificável foi encontrada; nenhuma imagem de produto diferente foi improvisada.",
+        "Google Search Console: a conta conectada não possui a propriedade domiriodistribuidora.com.br; o sitemap não pôde ser reenviado por API."
+      ],
+      "review": "Os dados da loja e 40 imagens oficiais de família foram publicados ao vivo. A blindagem do importador e os mapeamentos da taxonomia estão validados localmente, mas ainda não foram publicados. As imagens permanecem marcadas como representativas até conferência da embalagem exata; por isso o feed Merchant continua bloqueando essas ofertas corretamente.",
+      "environment": "producao-e-local"
+    },
+    {
+      "id": "T-0010",
+      "title": "Transformar a vitrine da Bereta em referencia no setor",
+      "objective": "Implementar a primeira fase da auditoria da Bereta Rodas: hero responsivo com a imagem correta, marca legivel no mobile, conteudo editorial coerente, estados vazios honestos, navegacao acessivel e validacao da vitrine publicada.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "em-andamento",
+      "acceptanceCriteria": [
+        "Hero usa imagens especificas para desktop e mobile, sem texto incorporado na fotografia e sem distorcao.",
+        "Cabecalho mobile exibe o simbolo oficial com leitura adequada e alvos de toque de no minimo 44 px.",
+        "Categorias e destaques vazios nao geram secoes quebradas ou falsas promessas de catalogo.",
+        "Conteudo editorial representa rodas, pneus e servicos da Bereta e nao exibe rotulos tecnicos ao publico.",
+        "Dependencias de catalogo, estoque, horarios e dominio permanecem documentadas sem dados inventados.",
+        "Lint, verificacao de tipos, testes e validacao visual responsiva sao aprovados.",
+        "A versao publicada e validada na URL ativa da loja."
+      ],
+      "evidence": [
+        "docs/AUDITORIA-BERETA-2026-10-18.md",
+        "output/auditorias/bereta/2026-10-18T19-35-33-424Z/bereta-rodas.md"
+      ],
+      "review": "Em implementacao. O catalogo comercial depende de produtos, precos e estoque reais fornecidos ou cadastrados pelo cliente.",
+      "environment": "local-e-producao"
+    },
+    {
+      "id": "T-0011",
+      "title": "Dar identidade visual à vitrine da Domi-Rio",
+      "objective": "Substituir espaços vazios e capas genéricas por uma campanha visual coerente com a marca e com as categorias da loja.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "concluida",
+      "acceptanceCriteria": [
+        "A home possui banner responsivo sem texto ou rótulos inventados.",
+        "As quatro categorias comerciais possuem capas próprias.",
+        "As imagens usam a paleta azul e laranja da Domi-Rio.",
+        "Banner e capas carregam no domínio público em celular e computador.",
+        "A configuração anterior pode ser recuperada a partir de backup."
+      ],
+      "evidence": [
+        "Produção: banner desktop, banner móvel e quatro capas WebP publicados no diretório da loja.",
+        "Produção: Controle de Pragas, Controle de Odores, Controle de Roedores e Herbicidas exibem as novas capas.",
+        "Produção: validação visual concluída em viewport móvel de 390 x 844 e desktop de 1440 x 900.",
+        "Produção: cache reiniciado após a remoção das URLs intermediárias; HTML atual não contém /branding/ e referencia hero v2 e capas relativas.",
+        "Backup: /opt/lojas/backups/catalogo/domirio-identidade-20261018-170500.json.",
+        "Local: TypeScript e git diff --check concluídos sem erros; 15 testes de regras de produto aprovados."
+      ],
+      "review": "As peças geradas evitam embalagens, rótulos e promessas específicas; funcionam como identidade de categoria e campanha, não como fotografia de produto. A falha inicial de cache e caminhos foi reproduzida, corrigida e revalidada em produção.",
+      "environment": "producao-e-local"
+    },
+    {
+      "id": "T-0012",
+      "title": "Tornar a prontidao comercial do painel verificavel",
+      "objective": "Impedir que credencial apenas salva ou site publicado sejam apresentados como loja pronta para vender sem teste positivo de recebimento.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "em-andamento",
+      "acceptanceCriteria": [
+        "O painel diferencia site publicado de loja pronta para vender.",
+        "Uma credencial apenas salva nao conclui o passo Recebimento.",
+        "O teste da credencial salva persiste resultado, mensagem, conta e data sem gravar segredos em claro.",
+        "Somente teste positivo conclui Recebimento e libera Publicacao no checklist.",
+        "Testes direcionados, lint e TypeScript passam."
+      ],
+      "evidence": [
+        "Linear AVL-230 atualizado com a auditoria completa e movido para In Progress.",
+        "25 testes direcionados do onboarding aprovados.",
+        "ESLint dos cinco arquivos alterados concluido sem erros.",
+        "TypeScript concluido sem erros."
+      ],
+      "review": "Incremento local iniciado. Deploy e teste real do Mercado Pago ainda nao executados.",
+      "environment": "local"
+    },
+    {
+      "id": "T-0013",
+      "title": "Reduzir o esforço de compra na Domi-Rio",
+      "objective": "Corrigir textos de outro segmento, explicitar apresentações, tornar a campanha comercial compreensível e explicar o fluxo de pedido.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "concluida",
+      "acceptanceCriteria": [
+        "A home não usa linguagem de peças ou medidas para a Domi-Rio.",
+        "O banner apresenta proposta comercial e acesso direto ao catálogo.",
+        "Produtos confirmados exibem volume ou peso no nome e na ficha.",
+        "Listas técnicas contaminadas não aparecem na ficha do produto.",
+        "A página explica o que acontece depois de adicionar ao carrinho ou ao pedido.",
+        "A busca encontra produtos também pelo nome da categoria.",
+        "A versão publicada é validada no domínio da Domi-Rio em celular."
+      ],
+      "evidence": [
+        "Produção: 40 produtos tiveram listas técnicas contaminadas removidas com histórico por item.",
+        "Produção: 25 SKUs confirmados passaram a exibir unidade explícita no nome e na apresentação comercial.",
+        "Produção: buscas por baratas e mosquitos retornaram 12 e 3 produtos antes da alteração do mecanismo.",
+        "Backup: /opt/lojas/backups/catalogo/domirio-apresentacoes-20261018.json.",
+        "Local: TypeScript, ESLint e 62 testes direcionados concluídos sem erros.",
+        "GitHub Actions: integração, imagem, deploy e fumaça aprovados no run 39172609660 para o commit 463e445.",
+        "Produção: home exibe a proposta comercial e não contém o texto Encontre a peça certa.",
+        "Produção: busca por controle de odores retorna 12 produtos pelo nome da categoria.",
+        "Produção: ficha do Cypertryne exibe apresentação, outras apresentações e explica a confirmação pelo WhatsApp."
+      ],
+      "review": "Dados, interface e busca publicados e validados no domínio ativo. A automação visual do Chrome não respondeu; a validação funcional foi feita no HTML público após o smoke test do deploy.",
+      "environment": "producao-e-local"
     }
   ],
   "decisions": [],

@@ -20,6 +20,9 @@ export type EntradaChecklist = {
   dominioPrincipal: string | null;
   produtosAtivos: number;
   mpConfigurado: boolean;
+  /** A credencial padrão respondeu ao último teste e o resultado foi persistido. */
+  recebimentoTestado: boolean;
+  recebimentoTestadoEm: string | null;
   cepOrigem: string | null;
   /** A loja conectou a própria conta do Melhor Envio (é ela que cota a transportadora). */
   melhorEnvioConectado: boolean;
@@ -87,11 +90,21 @@ function catalogo(e: EntradaChecklist): PassoChecklist {
 }
 
 function recebimento(e: EntradaChecklist): PassoChecklist {
-  const feito = e.mpConfigurado === true;
+  const feito = e.mpConfigurado === true && e.recebimentoTestado === true;
   const detalhe = feito
-    ? "A conta do Mercado Pago está ligada: o cliente consegue pagar."
-    : "Sem a conta do Mercado Pago, o cliente monta o carrinho e não consegue pagar.";
-  return { id: "recebimento", titulo: "Recebimento", feito, opcional: false, detalhe, href: "/painel/configuracoes/recebimento", acao: "Ligar o Mercado Pago" };
+    ? `A conta de recebimento foi testada${e.recebimentoTestadoEm ? ` em ${new Date(e.recebimentoTestadoEm).toLocaleDateString("pt-BR")}` : ""} e está pronta para cobrar.`
+    : e.mpConfigurado
+      ? "A conta está configurada, mas ainda não passou por um teste positivo. A loja não é considerada pronta para vender."
+      : "Sem uma conta de recebimento, o cliente monta o carrinho e não consegue pagar.";
+  return {
+    id: "recebimento",
+    titulo: "Recebimento",
+    feito,
+    opcional: false,
+    detalhe,
+    href: "/painel/configuracoes/recebimento",
+    acao: e.mpConfigurado ? "Testar o recebimento" : "Ligar o Mercado Pago",
+  };
 }
 
 function entrega(e: EntradaChecklist): PassoChecklist {
