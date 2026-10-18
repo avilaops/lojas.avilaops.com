@@ -80,6 +80,29 @@
       "evidence": [],
       "review": null,
       "environment": "local"
+    },
+    {
+      "id": "T-0005",
+      "title": "Tornar a consulta de CNPJ resiliente",
+      "objective": "Evitar que indisponibilidade da BrasilAPI seja apresentada como CNPJ inexistente.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "concluida",
+      "acceptanceCriteria": [
+        "A BrasilAPI permanece como fonte principal.",
+        "A consulta usa CNPJ.ws quando a fonte principal falha.",
+        "Os dois formatos retornam a mesma estrutura de dados da empresa.",
+        "O CNPJ 67.554.083/0001-31 pode ser localizado por ambas as fontes."
+      ],
+      "evidence": [
+        "BrasilAPI respondeu HTTP 200 para 67.554.083/0001-31 a partir da estação local e do servidor applications.",
+        "CNPJ.ws respondeu com razão social e endereço completos para o mesmo CNPJ.",
+        "Três testes de normalização aprovados.",
+        "Consulta real pela função retornou BRILHAX PRODUTOS PARA ESTETICA AUTOMOTIVA LTDA, Ribeirão Preto/SP.",
+        "TypeScript concluído sem erros."
+      ],
+      "review": "A segunda fonte só é chamada após falha da principal e entrega o mesmo contrato interno, sem mudar o formulário.",
+      "environment": "local"
     }
   ],
   "decisions": [],

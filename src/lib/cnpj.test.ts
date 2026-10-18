@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { normalizarDadosCnpj } from "./cnpj";
+import { normalizarDadosCnpj, normalizarDadosCnpjWs } from "./cnpj";
 
 test("normaliza razão social e endereço retornados pela consulta de CNPJ", () => {
   assert.deepEqual(normalizarDadosCnpj({
@@ -40,4 +40,40 @@ test("campos ausentes viram texto vazio", () => {
   assert.equal(dados.endereco.cep, "");
   assert.equal(dados.endereco.logradouro, "");
   assert.equal(dados.telefone, "");
+});
+
+test("normaliza a fonte de contingência CNPJ.ws", () => {
+  assert.deepEqual(normalizarDadosCnpjWs({
+    razao_social: "BRILHAX PRODUTOS PARA ESTETICA AUTOMOTIVA LTDA",
+    estabelecimento: {
+      cnpj: "67554083000131",
+      nome_fantasia: null,
+      email: "CONTATO@BRILHAX.COM",
+      ddd1: "16",
+      telefone1: "97876884",
+      cep: "14075240",
+      tipo_logradouro: "RUA",
+      logradouro: "HOLANDA",
+      numero: "1200",
+      complemento: null,
+      bairro: "VILA MARIANA",
+      cidade: { nome: "Ribeirão Preto" },
+      estado: { sigla: "SP" },
+    },
+  }), {
+    cnpj: "67554083000131",
+    razaoSocial: "BRILHAX PRODUTOS PARA ESTETICA AUTOMOTIVA LTDA",
+    nomeFantasia: "",
+    email: "contato@brilhax.com",
+    telefone: "1697876884",
+    endereco: {
+      cep: "14075240",
+      logradouro: "RUA HOLANDA",
+      numero: "1200",
+      complemento: "",
+      bairro: "VILA MARIANA",
+      cidade: "Ribeirão Preto",
+      uf: "SP",
+    },
+  });
 });
