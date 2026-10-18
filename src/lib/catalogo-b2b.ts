@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 import type { EntradaCatalogoB2B } from "./catalogo-b2b-schema";
+import { resolverOfertaB2B, type AtribuicaoResolucaoB2B } from "./catalogo-b2b-resolver";
 
 const incluirCatalogo = {
   versoes: {
@@ -159,4 +160,86 @@ export async function aprovarVersaoCatalogoB2B(tenantId: string, catalogoId: str
     await tx.auditoriaCatalogoB2B.create({ data: { tenantId, catalogoId, versaoId: versao.id, acao: "APROVADA", ator, conteudoHash } });
     return tx.versaoCatalogoB2B.findFirstOrThrow({ where: { tenantId, id: versao.id }, include: { atribuicoes: true, itens: { include: { componentes: true } }, auditorias: true } });
   }, { isolationLevel: "Serializable" });
+}
+
+export type EntradaResolverCatalogoB2B = {
+  empresaId: string;
+  unidadeId: string | null;
+  produtoId: string;
+  varianteId: string | null;
+  quantidade: number;
+  agora: Date;
+};
+
+/**
+ * Resolve a condição comercial sem reservar nem baixar estoque. A composição
+ * racional devolvida aqui será consumida pelo checkout/estoque em entregas
+ * posteriores; esta consulta é deliberadamente somente leitura.
+ */
+export async function resolverCatalogoB2B(tenantId: string, entrada: EntradaResolverCatalogoB2B) {
+  const produto = await prisma.produto.findFirst({
+    where: { tenantId, id: entrada.produtoId },
+    select: { id: true, nome: true, sku: true, gtin: true, marca: true, ncm: true, cest: true, atributos: true, precoCentavos: true },
+  });
+  if (!produto) throw new Error("Produto não encontrado.");
+  const variante = entrada.varianteId === null
+    ? null
+    : await prisma.variante.findFirst({
+      where: { tenantId, produtoId: produto.id, id: entrada.varianteId },
+      include: { preco: true },
+    });
+  if (entrada.varianteId !== null && !variante) throw new Error("Variante não encontrada no produto.");
+  const precoBaseCentavos = variante?.preco?.valorCentavos ?? variante?.precoCentavos ?? produto.precoCentavos;
+
+  const versoes = await prisma.versaoCatalogoB2B.findMany({
+    where: {
+      tenantId,
+      estado: "APROVADA",
+      vigenteDesde: { lte: entrada.agora },
+      OR: [{ vigenteAte: null }, { vigenteAte: { gt: entrada.agora } }],
+      atribuicoes: { some: { empresaId: entrada.empresaId, OR: [{ unidadeId: null }, { unidadeId: entrada.unidadeId ?? "" }] } },
+    },
+    include: {
+      atribuicoes: { where: { empresaId: entrada.empresaId, OR: [{ unidadeId: null }, { unidadeId: entrada.unidadeId ?? "" }] } },
+      itens: { where: { produtoId: produto.id }, include: { componentes: true } },
+    },
+  });
+
+  const atribuicoes: AtribuicaoResolucaoB2B[] = versoes.flatMap((versao) => versao.atribuicoes.map((atribuicao) => ({
+    id: atribuicao.id,
+    catalogoVersaoId: versao.id,
+    empresaId: atribuicao.empresaId,
+    unidadeId: atribuicao.unidadeId,
+    prioridade: atribuicao.prioridade,
+    versao: versao.versao,
+    vigenteDesde: versao.vigenteDesde,
+    vigenteAte: versao.vigenteAte,
+    itens: versao.itens.map((item) => ({
+      id: item.id,
+      produtoId: item.produtoId,
+      varianteId: item.varianteId,
+      acao: item.acao,
+      estrategiaPreco: item.estrategiaPreco,
+      precoFixoCentavos: item.precoFixoCentavos,
+      descontoPontosBase: item.descontoPontosBase,
+      quantidadeMinima: item.quantidadeMinima,
+      quantidadeMaxima: item.quantidadeMaxima,
+      multiploVenda: item.multiploVenda,
+      quantidadePorEmbalagem: item.quantidadePorEmbalagem,
+      unidadeComercial: item.unidadeComercial,
+      unidadesBaseNumerador: item.unidadesBaseNumerador,
+      unidadesBaseDenominador: item.unidadesBaseDenominador,
+      componentes: item.componentes.map((componente) => ({
+        varianteId: componente.varianteId,
+        quantidadeBaseNumerador: componente.quantidadeBaseNumerador,
+        quantidadeBaseDenominador: componente.quantidadeBaseDenominador,
+      })),
+    })),
+  })));
+
+  return {
+    produto: { id: produto.id, nome: produto.nome, sku: produto.sku, gtin: produto.gtin, marca: produto.marca, ncm: produto.ncm, cest: produto.cest, atributos: produto.atributos },
+    variante: variante ? { id: variante.id, nome: variante.nome, sku: variante.sku, gtin: variante.gtin, mpn: variante.mpn } : null,
+    oferta: resolverOfertaB2B({ ...entrada, precoBaseCentavos, atribuicoes }),
+  };
 }
