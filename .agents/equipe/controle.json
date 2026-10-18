@@ -271,6 +271,29 @@
       ],
       "review": "Implementação pronta para revisão e CI no GitHub; publicação ainda não realizada.",
       "environment": "local"
+    },
+    {
+      "id": "FISCAL-FLUXOS-20261018",
+      "title": "Conectar documentos recebidos aos fluxos operacionais",
+      "objective": "Reutilizar destinos e fila de webhooks para regras fiscais configuráveis, com revisão e isolamento por loja.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "em_revisao",
+      "acceptanceCriteria": [
+        "Monitor oferece busca paginada, filtros, identificação e seleção de documento.",
+        "Dono seleciona destino existente, eventos, campos e finalidade do fluxo.",
+        "XML, fila e NSU são transacionais e documentos não são encaminhados duas vezes ao mesmo fluxo.",
+        "Não há alterações automáticas em produtos, estoque ou financeiro."
+      ],
+      "evidence": [
+        "PR #125 em rascunho: https://github.com/avilaops/lojas.avilaops.com/pull/125",
+        "1.125 testes unitários, TypeScript, ESLint dos arquivos afetados e build local aprovados.",
+        "CI 39164999972: migrações e 187 testes de integração aprovados em PostgreSQL 18.6 nativo.",
+        "QA Chromium/Next local: formulário, encaminhamento, repetição, permissões, origem e histórico aprovados; layout 1440/390/320 sem overflow.",
+        "Contrato e limitações em docs/FLUXOS-FISCAIS.md; evidências em evidencias/fluxos-fiscais-2026-10-18.md."
+      ],
+      "review": "Autorrevisão e provas de banco concluídas; implantação e compatibilidade do consumidor fiscal n8n permanecem pendentes. Nenhum workflow ativo foi alterado.",
+      "environment": "local e GitHub Actions"
     }
   ],
   "decisions": [

@@ -27,7 +27,7 @@ Regras novas não enviam o histórico automaticamente. **Usar no fluxo → Confi
 
 A FK composta impede associar uma regra a um destino de outro tenant. Todas as leituras/mutações do painel usam tenant da sessão. Mutações fiscais exigem a origem pública configurada. Há no máximo uma regra por tenant/destino/finalidade; edições preservam a identidade e não modificam corpos já enfileirados. Pausar uma regra interrompe novos enfileiramentos; para bloquear também a fila pendente, desligue o destino.
 
-O monitor pesquisa todo o histórico da loja com paginação de 30 documentos, tipo e período de recebimento em horário de São Paulo. O histórico fiscal mostra as últimas 30 entregas, documento, fluxo, destino, IDs, tentativas e falhas, sem expor seu corpo completo. `ENTREGUE` significa aceite HTTP do destino, **não aprovação da conferência**.
+O monitor pesquisa todo o histórico da loja com paginação de 30 documentos, tipo e período de recebimento em horário de São Paulo. O histórico fiscal mostra as últimas 30 entregas, documento, fluxo, destino, IDs, tentativas e falhas, sem expor seu corpo completo. `ENTREGUE` significa aceite HTTP do destino, **não aprovação da conferência**. Destinos com regras fiscais não podem ser apagados ou reativados pelo gerente na API geral de webhooks; essa mutação exige o dono.
 
 ## Contrato para n8n e outros receptores
 
@@ -53,3 +53,9 @@ Nenhum workflow n8n foi alterado, criado ou publicado por esta mudança. Antes d
 Aplicar a migração aditiva `20261018210000_fluxos_fiscais` antes de iniciar o código novo. Ela cria regras vazias e marcadores vazios; não encaminha documentos existentes. Confirmar a rotina `webhooks.entregar` na implantação.
 
 Para retornar ao código anterior, pausar novos fluxos e desligar seus destinos se houver fila pendente. As tabelas/colunas novas podem permanecer sem uso. Não remover a coluna de marcas nem reconstruir destinos como forma de retry: isso perde proteção de deduplicação. O histórico operacional deve ser mantido conforme a retenção vigente.
+
+## Verificação reproduzível
+
+Usar o PostgreSQL isolado definido em `docker-compose.test.yml`; nunca apontar testes ao banco das lojas. `npm run test:integracao` inclui `fiscal-fluxos.test.ts` e a prova de consulta fiscal com rollback do cursor em `fiscal.test.ts`. `npm test`, `npm run typecheck` e `npm run build` verificam a aplicação.
+
+O QA de navegador está em `scripts/qa-fluxos-fiscais.mts`. Executar com `DATABASE_URL` local `:5548` ou `:5588`, banco `*_test`, `LOJAS_SECRET` de teste, `LOJAS_BASE_DOMAIN=localhost` e `ROTINAS_AGENDADOR=0`. Iniciar `next dev -p 3088 -H 127.0.0.1` com as mesmas variáveis e rodar `node --import tsx scripts/qa-fluxos-fiscais.mts`. O script cria e remove suas lojas fictícias, não entrega webhooks reais e salva capturas em `output/fiscal-fluxos-qa`. Opcionalmente usar `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` para um Chromium local.

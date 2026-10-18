@@ -60,6 +60,10 @@ export default function FluxosFiscais({ documento }: { documento: { id: string; 
     setForm((f) => ({ ...f, [campo]: f[campo].includes(valor) ? f[campo].filter((v) => v !== valor) : [...f[campo], valor] }));
   }
   const destino = (id: string) => estado?.destinos.find((d) => d.id === id);
+  const acoes = (f: Fluxo) => <div className="mt-2 flex flex-wrap gap-3 text-xs">
+    <button className="underline" disabled={ocupado || !estado?.podeUsar} onClick={() => { setEditando(f.id); setForm({ nome: f.nome, webhookId: f.webhookId, finalidade: f.finalidade, eventos: f.eventos, campos: f.campos }); }}>Editar</button>
+    <button className="underline" disabled={ocupado} onClick={() => void executar(async () => { await chamar("/api/painel/fiscal/fluxos", "PATCH", { id: f.id, ativo: !f.ativo }); })}>{f.ativo ? "Pausar novos envios" : "Ativar"}</button>
+  </div>;
   const fluxos = estado?.fluxos.filter((f) => (!situacao || (f.ativo ? "ativo" : "pausado") === situacao) && (!finalidade || f.finalidade === finalidade) && `${f.nome} ${destino(f.webhookId)?.nome ?? ""}`.toLocaleLowerCase("pt-BR").includes(busca.toLocaleLowerCase("pt-BR"))) ?? [];
   return (
     <div id="fluxos-fiscais" className="scroll-mt-6">
@@ -98,13 +102,21 @@ export default function FluxosFiscais({ documento }: { documento: { id: string; 
             <label className="grid gap-1 text-xs">Situação<select className={inputClasse} value={situacao} onChange={(e) => setSituacao(e.target.value)}><option value="">Todas</option><option value="ativo">Ativos</option><option value="pausado">Pausados</option></select></label>
             <label className="grid gap-1 text-xs">Processo<select className={inputClasse} value={finalidade} onChange={(e) => setFinalidade(e.target.value)}><option value="">Todos</option>{Object.entries(FINALIDADES_FISCAIS).map(([id, nome]) => <option key={id} value={id}>{nome}</option>)}</select></label>
           </div>
-          <div className="overflow-x-auto rounded-xl border border-border"><table className="w-full text-left text-sm">
+          <ul className="grid gap-3 sm:hidden">{fluxos.map((f) => <li key={f.id} className="min-w-0 rounded-xl border border-border p-3 text-sm">
+            <p className="break-words font-semibold">{f.nome}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{FINALIDADES_FISCAIS[f.finalidade]}</p>
+            <dl className="mt-3 grid gap-2 text-xs"><div><dt className="font-medium">Destino</dt><dd className="break-words text-muted-foreground">{destino(f.webhookId)?.nome} · {destino(f.webhookId)?.ativo ? "Conectado" : "Desligado"}</dd></div>
+              <div><dt className="font-medium">Eventos e dados</dt><dd className="text-muted-foreground">{f.eventos.map((v) => EVENTOS_FISCAIS[v as keyof typeof EVENTOS_FISCAIS]).join(" · ")}</dd><dd className="mt-1 text-muted-foreground">{f.campos.map((v) => CAMPOS_FISCAIS[v as keyof typeof CAMPOS_FISCAIS]).join(" · ")}</dd></div>
+              <div><dt className="font-medium">Situação</dt><dd className="text-muted-foreground">{f.ativo ? "Ativo" : "Pausado para novos envios"}</dd></div>
+            </dl>{acoes(f)}
+          </li>)}{!fluxos.length && <li className="text-sm text-muted-foreground">Nenhum fluxo encontrado.</li>}</ul>
+          <div className="hidden overflow-x-auto rounded-xl border border-border sm:block"><table className="w-full text-left text-sm">
             <thead className="bg-muted/40 text-xs"><tr><th className="p-3">Fluxo / processo</th><th className="p-3">Destino</th><th className="p-3">Eventos e dados</th><th className="p-3">Situação / ações</th></tr></thead>
             <tbody className="divide-y divide-border">{fluxos.map((f) => <tr key={f.id}>
               <td className="p-3"><strong>{f.nome}</strong><p className="text-xs text-muted-foreground">{FINALIDADES_FISCAIS[f.finalidade]}</p></td>
               <td className="p-3">{destino(f.webhookId)?.nome ?? "Destino removido"}<p className="text-xs text-muted-foreground">{destino(f.webhookId)?.ativo ? "Conectado" : "Desligado"}</p></td>
               <td className="p-3 text-xs"><p>{f.eventos.map((v) => EVENTOS_FISCAIS[v as keyof typeof EVENTOS_FISCAIS]).join(" · ")}</p><p className="mt-1 text-muted-foreground">{f.campos.map((v) => CAMPOS_FISCAIS[v as keyof typeof CAMPOS_FISCAIS]).join(" · ")}</p></td>
-              <td className="p-3 text-xs"><p>{f.ativo ? "Ativo" : "Pausado para novos envios"}</p><div className="mt-2 flex gap-2"><button className="underline" disabled={ocupado || !estado.podeUsar} onClick={() => { setEditando(f.id); setForm({ nome: f.nome, webhookId: f.webhookId, finalidade: f.finalidade, eventos: f.eventos, campos: f.campos }); }}>Editar</button><button className="underline" disabled={ocupado} onClick={() => void executar(async () => { await chamar("/api/painel/fiscal/fluxos", "PATCH", { id: f.id, ativo: !f.ativo }); })}>{f.ativo ? "Pausar novos envios" : "Ativar"}</button></div></td>
+              <td className="p-3 text-xs"><p>{f.ativo ? "Ativo" : "Pausado para novos envios"}</p>{acoes(f)}</td>
             </tr>)}{!fluxos.length && <tr><td colSpan={4} className="p-4 text-muted-foreground">Nenhum fluxo encontrado.</td></tr>}</tbody>
           </table></div>
           {documento && estado.podeUsar && <form className="grid gap-3 rounded-xl border border-border p-4" onSubmit={(e) => { e.preventDefault(); void executar(async () => {
