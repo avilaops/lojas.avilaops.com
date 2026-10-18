@@ -246,6 +246,31 @@
       ],
       "review": "Implementação pronta para revisão e CI; autorização operacional continua dependente do fluxo OIDC com access token, documentado no contrato.",
       "environment": "local"
+    },
+    {
+      "id": "AVL-233",
+      "title": "Criar catálogos e preços contratuais por empresa e unidade",
+      "objective": "Versionar catálogo, preço, embalagem, quantidade e kits B2B por empresa ou filial sem alterar o catálogo público B2C.",
+      "assignee": null,
+      "priority": "urgente",
+      "status": "em_revisao",
+      "acceptanceCriteria": [
+        "Catálogos possuem versões rascunho e aprovadas, com vigência, hash e auditoria append-only.",
+        "Atribuições por empresa ou unidade têm precedência total e determinística.",
+        "Preço fixo, desconto em pontos-base, limites, múltiplos, embalagem, exclusão e kits racionais são validados.",
+        "Chaves compostas impedem relações entre tenants, empresas, produtos e variantes.",
+        "Sem regra B2B válida, o preço público B2C permanece inalterado.",
+        "API administrativa oferece escrita, leitura, aprovação, resolução e importação atômica por agregado."
+      ],
+      "evidence": [
+        "Migração 20261018210000 aplicada do zero no PostgreSQL isolado.",
+        "1.113 testes unitários e 181 testes de integração aprovados, incluindo aprovação concorrente com retry serializável, auditoria única e bloqueio de movimentação para versão aprovada.",
+        "Testes cobrem precedência, FKs compostas, imutabilidade, idempotência, aprovação, resolução, kits, fallback B2C e isolamento completo da API.",
+        "TypeScript e ESLint concluídos sem erros; 20 avisos preexistentes permanecem fora do escopo.",
+        "Build de produção concluído com webpack e todas as rotas administrativas de catálogos B2B presentes."
+      ],
+      "review": "Implementação pronta para revisão e CI no GitHub; publicação ainda não realizada.",
+      "environment": "local"
     }
   ],
   "decisions": [
