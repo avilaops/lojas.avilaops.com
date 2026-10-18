@@ -7,12 +7,13 @@ import { Secao, inputClasse } from "./campos";
 
 type Estado = {
   configuracao: { cnpj: string; uf: string; titular: string; validoAte: string; proximaConsultaEm: string; ultimaMensagem: string | null } | null;
-  documentos: Array<{ id: string; nsu: string; schema: string; chave: string | null; recebidoEm: string }>;
+  documentos: Array<{ id: string; nsu: string; schema: string; chave: string | null; recebidoEm: string; fornecedor: string | null; numero: string | null; valorCentavos: number | null; emitidaEm: string | null; situacao: "COMPLETA" | "RESUMO" | "OUTRO" }>;
   ufEmpresa: string;
 };
 const data = (valor: string) => new Date(valor).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
 const dia = (valor: string) => new Date(valor).toLocaleDateString("pt-BR");
 const cnpjFormatado = (cnpj: string) => cnpj.replace(/^(.{2})(.{3})(.{3})(.{4})(.{2})$/, "$1.$2.$3/$4-$5");
+const dinheiro = (centavos: number | null) => centavos == null ? "—" : new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(centavos / 100);
 
 function tipoDocumento(schema: string) {
   if (schema.startsWith("resNFe")) return "Resumo de NF-e";
@@ -169,11 +170,19 @@ export default function Fiscal() {
             <div className="min-w-0">
               <h3 className="mb-1 text-sm font-semibold">Notas fiscais</h3>
               <p className="mb-3 text-xs text-muted-foreground">Resumos e XML completos encontrados entre os últimos 100 documentos.</p>
-              {!documentosSeparados.notas.length ? <p className="rounded-xl border border-border p-4 text-sm text-muted-foreground">Nenhuma NF-e encontrada neste lote.</p> : <ul className="divide-y divide-border">
-                {documentosSeparados.notas.map((doc) => (
-                  <DocumentoFiscal key={doc.id} doc={doc} />
-                ))}
-              </ul>}
+              {!documentosSeparados.notas.length ? <p className="rounded-xl border border-border p-4 text-sm text-muted-foreground">Nenhuma NF-e encontrada neste lote.</p> : (
+                <>
+                  <ul className="divide-y divide-border sm:hidden">
+                    {documentosSeparados.notas.map((doc) => <DocumentoFiscal key={doc.id} doc={doc} />)}
+                  </ul>
+                  <div className="hidden overflow-x-auto rounded-xl border border-border sm:block">
+                    <table className="w-full text-left text-sm">
+                      <thead className="bg-muted/40 text-xs uppercase text-muted-foreground"><tr><th className="px-3 py-3">Recebida</th><th className="px-3 py-3">Fornecedor</th><th className="px-3 py-3">Nota</th><th className="px-3 py-3 text-right">Valor</th><th className="px-3 py-3">Situação</th><th className="px-3 py-3" /></tr></thead>
+                      <tbody className="divide-y divide-border">{documentosSeparados.notas.map((doc) => <LinhaDocumentoFiscal key={doc.id} doc={doc} />)}</tbody>
+                    </table>
+                  </div>
+                </>
+              )}
             </div>
             <details className="min-w-0 border-t border-border pt-4">
               <summary className="cursor-pointer text-sm font-medium">Eventos e outros documentos ({documentosSeparados.eventos.length + documentosSeparados.outros.length})</summary>
@@ -203,8 +212,8 @@ function DocumentoFiscal({ doc }: { doc: Estado["documentos"][number] }) {
   return (
     <li className="grid min-w-0 gap-3 py-4 first:pt-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
       <div className="min-w-0">
-        <p className="text-sm font-semibold">{tipoDocumento(doc.schema)}</p>
-        <p className="mt-1 text-xs text-muted-foreground">Recebido em {data(doc.recebidoEm)}</p>
+        <div className="flex items-start justify-between gap-3"><p className="min-w-0 text-sm font-semibold">{doc.fornecedor ?? tipoDocumento(doc.schema)}</p><strong className="shrink-0 text-sm">{dinheiro(doc.valorCentavos)}</strong></div>
+        <p className="mt-1 text-xs text-muted-foreground">{doc.numero ? `Nota ${doc.numero} · ` : ""}Recebida em {data(doc.recebidoEm)}</p>
         {doc.schema.startsWith("resNFe") && <p className="mt-2 text-xs text-amber-900">Resumo: este arquivo não é a nota completa.</p>}
         <details className="mt-2 min-w-0 text-xs text-muted-foreground">
           <summary className="cursor-pointer py-1">Identificação do documento</summary>
@@ -219,5 +228,19 @@ function DocumentoFiscal({ doc }: { doc: Estado["documentos"][number] }) {
         <Download size={16} aria-hidden="true" /> Baixar XML
       </a>
     </li>
+  );
+}
+
+function LinhaDocumentoFiscal({ doc }: { doc: Estado["documentos"][number] }) {
+  const situacao = doc.situacao === "COMPLETA" ? "Pronta para revisão" : doc.situacao === "RESUMO" ? "Aguardando XML completo" : "Documento recebido";
+  return (
+    <tr>
+      <td className="whitespace-nowrap px-3 py-3 text-xs text-muted-foreground">{dia(doc.recebidoEm)}</td>
+      <td className="max-w-64 px-3 py-3"><span className="block truncate font-medium" title={doc.fornecedor ?? undefined}>{doc.fornecedor ?? "Fornecedor não informado"}</span></td>
+      <td className="whitespace-nowrap px-3 py-3">{doc.numero ?? "—"}</td>
+      <td className="whitespace-nowrap px-3 py-3 text-right font-medium tabular-nums">{dinheiro(doc.valorCentavos)}</td>
+      <td className="px-3 py-3 text-xs text-muted-foreground">{situacao}</td>
+      <td className="px-3 py-3 text-right"><a className="btn-secundario whitespace-nowrap" href={`/api/painel/fiscal/documentos/${doc.id}`}><Download size={15} aria-hidden="true" /> XML</a></td>
+    </tr>
   );
 }

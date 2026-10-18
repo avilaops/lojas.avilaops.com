@@ -103,6 +103,29 @@
       ],
       "review": "A segunda fonte só é chamada após falha da principal e entrega o mesmo contrato interno, sem mudar o formulário.",
       "environment": "local"
+    },
+    {
+      "id": "T-0006",
+      "title": "Listar notas fiscais recebidas em colunas",
+      "objective": "Transformar os XMLs fiscais recebidos em uma lista operacional com fornecedor, número, valor, situação e acesso ao XML.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "concluida",
+      "acceptanceCriteria": [
+        "NF-e recebidas exibem fornecedor, número, valor, data e situação.",
+        "Desktop usa tabela e celular usa lista compacta sem rolagem horizontal.",
+        "XML bruto não é enviado no JSON da tela.",
+        "XML com DTD ou entidade não é interpretado.",
+        "Download do XML permanece disponível."
+      ],
+      "evidence": [
+        "Três testes do resumo fiscal aprovados, incluindo rejeição de XML inseguro.",
+        "ESLint e TypeScript concluídos sem erros.",
+        "Build de produção concluído após uma repetição por falha intermitente do libvips na imagem Open Graph.",
+        "A API resume o XML no servidor e não inclui o conteúdo bruto na resposta da tela."
+      ],
+      "review": "A lista usa tabela no desktop e cartões no celular; automações de estoque, custo, financeiro e n8n continuam fora deste incremento porque ainda não possuem persistência idempotente.",
+      "environment": "local"
     }
   ],
   "decisions": [],

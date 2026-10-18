@@ -4,6 +4,7 @@ import { chaveFiscal, ErroFiscal, lerCertificado, selarCertificado } from "@/lib
 import { UFS_FISCAIS } from "@/lib/fiscal-distribuicao";
 import { RESUMO_FISCAL, sincronizarNotas } from "@/lib/fiscal-loja";
 import { origemFiscalPermitida } from "@/lib/fiscal-origem";
+import { resumirDocumentoFiscal } from "@/lib/fiscal-documento";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,9 +18,13 @@ function ufDaEmpresa(endereco: unknown): string {
 async function estado(tenantId: string, endereco: unknown) {
   const [configuracao, documentos] = await Promise.all([
     prisma.fiscalLoja.findUnique({ where: { tenantId }, select: RESUMO_FISCAL }),
-    prisma.documentoFiscalLoja.findMany({ where: { tenantId }, select: { id: true, cnpj: true, nsu: true, schema: true, chave: true, recebidoEm: true }, orderBy: [{ recebidoEm: "desc" }, { nsu: "desc" }], take: 100 }),
+    prisma.documentoFiscalLoja.findMany({ where: { tenantId }, select: { id: true, cnpj: true, nsu: true, schema: true, chave: true, xml: true, recebidoEm: true }, orderBy: [{ recebidoEm: "desc" }, { nsu: "desc" }], take: 100 }),
   ]);
-  return { configuracao, documentos, ufEmpresa: ufDaEmpresa(endereco) };
+  return {
+    configuracao,
+    documentos: documentos.map(({ xml, ...documento }) => ({ ...documento, ...resumirDocumentoFiscal(xml, documento.schema, documento.chave) })),
+    ufEmpresa: ufDaEmpresa(endereco),
+  };
 }
 
 export async function GET() {
