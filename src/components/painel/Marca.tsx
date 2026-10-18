@@ -334,6 +334,8 @@ export default function Marca({
               ["heroTexto", "Texto do banner"], ["buscaTitulo", "Pergunta da busca"],
               ["buscaExemplo", "Exemplo no campo de busca"], ["editorialTitulo", "Título da seção editorial"],
               ["editorialTexto", "Texto da seção editorial"], ["editorialImagemSecundaria", "Imagem editorial complementar"],
+              ["editorialSecundarioSelo", "Selo editorial complementar"], ["editorialSecundarioTitulo", "Título editorial complementar"],
+              ["editorialSecundarioTexto", "Texto editorial complementar"],
             ] as const).map(([chave, label]) => <Campo key={chave} label={label}><input className={inputClasse} value={tema.premium?.[chave] ?? ""} onChange={e => setTema({ ...tema, premium: { ...tema.premium, [chave]: e.target.value } })}/></Campo>)}
             <Campo label="Imagem editorial" ajuda="Imagem de contexto; não substitui fotos reais dos produtos."><div className="flex gap-2"><input className={inputClasse} value={tema.premium?.editorialImagem ?? ""} onChange={e => setTema({...tema,premium:{...tema.premium,editorialImagem:e.target.value || undefined}})}/><EnviarImagem aoEnviar={url => setTema(v => ({...v,premium:{...v.premium,editorialImagem:url}}))} rotulo="Enviar editorial"/></div></Campo>
             <Campo label="Logo para o modo escuro"><div className="flex gap-2"><input className={inputClasse} value={tema.premium?.logoEscuroUrl ?? ""} onChange={e => setTema({...tema,premium:{...tema.premium,logoEscuroUrl:e.target.value || undefined}})}/><EnviarImagem aoEnviar={url => setTema(v => ({...v,premium:{...v.premium,logoEscuroUrl:url}}))} rotulo="Enviar logo escuro"/></div></Campo>
