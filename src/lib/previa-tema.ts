@@ -183,6 +183,8 @@ function produtoDemo({ categoria, ...p }: ProdutoDemo): Produto {
     comprimentoCm: null,
     atributos: {},
     camposPersonalizados: {},
+    ncm: null,
+    cest: null,
     codigoOriginal: null,
     codigosEquivalentes: [],
     compatibilidade: [],
