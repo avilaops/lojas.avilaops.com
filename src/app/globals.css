@@ -697,9 +697,6 @@ html[data-cookies-respondido] .aviso-cookies { display: none; }
   .categoria-catalogo .capa-categoria-texto { padding: .5rem .75rem; }
   .categoria-catalogo .capa-categoria-texto h1 { font-size: 1.25rem; overflow-wrap: anywhere; }
   .categoria-catalogo .capa-categoria-texto p { font-size: .8125rem; line-height: 1.35; }
-  .cartao-produto-tecnico .cartao-produto-conteudo { flex: initial; gap: .25rem; }
-  .cartao-produto-tecnico .cartao-produto-preco { margin-top: .25rem; padding-top: 0; }
-  .cartao-produto-tecnico .cartao-produto-imagem { aspect-ratio: 4 / 3; }
 }
 
 .capa-categoria-selo {
@@ -1259,7 +1256,8 @@ html[data-cookies-respondido] .aviso-cookies { display: none; }
   .campanhas-hero-conteudo > div { width: 100%; padding: 1rem; }
   .campanhas-hero-conteudo h2 { font-size: 1.35rem; }
   .campanhas-hero-conteudo p { display: none; }
-  .cartao-produto-tecnico .cartao-produto-conteudo { padding: .625rem; }
+  .cartao-produto-tecnico .cartao-produto-conteudo { flex: initial; gap: .25rem; padding: .625rem; }
+  .cartao-produto-tecnico .cartao-produto-preco { margin-top: .25rem; padding-top: 0; }
   .cartao-produto-tecnico .cartao-produto-nome { font-size: .875rem; }
   .cartao-produto-tecnico .cartao-produto-disponibilidade > a { min-height: 44px; display: inline-flex; align-items: center; }
 }
