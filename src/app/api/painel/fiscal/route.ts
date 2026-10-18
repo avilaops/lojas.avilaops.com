@@ -5,6 +5,7 @@ import { UFS_FISCAIS } from "@/lib/fiscal-distribuicao";
 import { RESUMO_FISCAL, sincronizarNotas } from "@/lib/fiscal-loja";
 import { origemFiscalPermitida } from "@/lib/fiscal-origem";
 import { resumirDocumentoFiscal } from "@/lib/fiscal-documento";
+import { filtrosFiscais } from "@/lib/fiscal-filtros";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,22 +16,25 @@ function ufDaEmpresa(endereco: unknown): string {
   return UFS_FISCAIS[uf] ? uf : "";
 }
 
-async function estado(tenantId: string, endereco: unknown) {
-  const [configuracao, documentos] = await Promise.all([
+async function estado(tenantId: string, endereco: unknown, parametros?: URLSearchParams) {
+  const { where, pagina, limite } = filtrosFiscais(tenantId, parametros);
+  const [configuracao, documentos, total] = await Promise.all([
     prisma.fiscalLoja.findUnique({ where: { tenantId }, select: RESUMO_FISCAL }),
-    prisma.documentoFiscalLoja.findMany({ where: { tenantId }, select: { id: true, cnpj: true, nsu: true, schema: true, chave: true, xml: true, recebidoEm: true }, orderBy: [{ recebidoEm: "desc" }, { nsu: "desc" }], take: 100 }),
+    prisma.documentoFiscalLoja.findMany({ where, select: { id: true, cnpj: true, nsu: true, schema: true, chave: true, xml: true, recebidoEm: true }, orderBy: [{ recebidoEm: "desc" }, { nsu: "desc" }, { id: "desc" }], skip: (pagina - 1) * limite, take: limite }),
+    prisma.documentoFiscalLoja.count({ where }),
   ]);
   return {
     configuracao,
     documentos: documentos.map(({ xml, ...documento }) => ({ ...documento, ...resumirDocumentoFiscal(xml, documento.schema, documento.chave) })),
     ufEmpresa: ufDaEmpresa(endereco),
+    pagina, total, paginas: Math.max(1, Math.ceil(total / limite)),
   };
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   const { s, erro } = await exigir("fiscal");
   if (erro) return erro;
-  return Response.json(await estado(s.tenant.id, s.tenant.endereco), { headers: { "Cache-Control": "no-store" } });
+  return Response.json(await estado(s.tenant.id, s.tenant.endereco, new URL(request.url).searchParams), { headers: { "Cache-Control": "no-store" } });
 }
 
 export async function POST(request: Request) {

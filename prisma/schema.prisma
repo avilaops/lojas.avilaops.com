@@ -356,6 +356,7 @@ model Tenant {
   operadores             OperadorLoja[]
   fiscal                 FiscalLoja?
   documentosFiscais      DocumentoFiscalLoja[]
+  fluxosFiscais          FluxoFiscalLoja[]
 
   apiKeyEnc            String?
   apiKeyCriadaEm       DateTime?
@@ -402,9 +403,32 @@ model DocumentoFiscalLoja {
   chave      String?
   xml        String   @db.Text
   recebidoEm DateTime @default(now())
+  /// Marcadores duráveis: a retenção da fila não permite reenviar o mesmo documento ao mesmo fluxo.
+  fluxosEnfileirados String[] @default([])
 
   @@unique([tenantId, cnpj, nsu])
   @@index([tenantId, recebidoEm])
+}
+
+/// Regra fiscal usa um destino já cadastrado e a fila assinada EntregaWebhook.
+model FluxoFiscalLoja {
+  id         String   @id @default(cuid())
+  tenantId   String
+  webhookId  String
+  nome       String
+  finalidade String
+  eventos    String[]
+  campos     String[]
+  ativo      Boolean  @default(true)
+  criadoPor  String
+  criadoEm   DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  tenant  Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  webhook WebhookApi @relation(fields: [tenantId, webhookId], references: [tenantId, id], onDelete: Cascade)
+
+  @@unique([tenantId, webhookId, finalidade])
+  @@index([tenantId, ativo])
 }
 
 model Categoria {
@@ -2087,7 +2111,9 @@ model WebhookApi {
 
   tenant   Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   entregas EntregaWebhook[]
+  fluxosFiscais FluxoFiscalLoja[]
 
+  @@unique([tenantId, id])
   @@index([tenantId])
 }
 
