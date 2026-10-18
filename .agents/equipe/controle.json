@@ -222,6 +222,30 @@
       ],
       "review": "Implementação pronta para revisão técnica; pareceres profissionais e aprovação final dos termos permanecem gates externos antes da cobrança real.",
       "environment": "local"
+    },
+    {
+      "id": "AVL-232",
+      "title": "Modelar empresas, filiais, compradores, papéis e alçadas B2B",
+      "objective": "Separar o cadastro comercial empresarial da identidade e autorização corporativa, com isolamento por tenant, auditoria e integração estável com Auth e CRM.",
+      "assignee": null,
+      "priority": "urgente",
+      "status": "em_revisao",
+      "acceptanceCriteria": [
+        "Empresa, CNPJs, unidades, endereços, contatos e compradores ficam separados.",
+        "Papéis, centros de custo, limites e alçadas suportam múltiplos compradores e unidades.",
+        "Chaves compostas impedem relações entre tenants e toda mutação relevante deixa auditoria.",
+        "Compradores B2C atuais são reutilizados por tenant e e-mail sem duplicação.",
+        "Auth e CRM possuem contratos versionados e sem segredos."
+      ],
+      "evidence": [
+        "Migração 20261018173000 aplicada no PostgreSQL isolado e Prisma validado.",
+        "1.101 testes unitários e 169 testes de integração aprovados no Lojas; Auth com 255 testes gerais e 9 testes corporativos em PostgreSQL.",
+        "TypeScript e ESLint concluídos sem erros; 20 avisos preexistentes permanecem fora do escopo.",
+        "Build de produção concluído com webpack, incluindo as duas novas rotas administrativas.",
+        "Testes cobrem isolamento cruzado, idempotência, lease exclusivo, versões monotônicas por comprador e organização, rollout v1/v2, falha sanitizada do Auth e reconciliação fechada de contexto."
+      ],
+      "review": "Implementação pronta para revisão e CI; autorização operacional continua dependente do fluxo OIDC com access token, documentado no contrato.",
+      "environment": "local"
     }
   ],
   "decisions": [

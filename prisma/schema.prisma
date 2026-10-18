@@ -33,6 +33,39 @@ enum SituacaoContratoComercial {
   ENCERRADO
 }
 
+enum SituacaoEmpresaB2B {
+  ATIVA
+  SUSPENSA
+}
+
+enum SituacaoCompradorB2B {
+  ATIVO
+  SUSPENSO
+  REVOGADO
+}
+
+enum EscopoAutorizacaoB2B {
+  ORGANIZACAO
+  UNIDADE
+}
+
+enum PapelCorporativoB2B {
+  ADMINISTRADOR
+  COMPRADOR
+  APROVADOR
+  FINANCEIRO
+  VENDEDOR
+}
+
+enum SituacaoProvisionamentoB2B {
+  PENDENTE
+  PROCESSANDO
+  SINCRONIZADO
+  FALHOU
+  SUSPENSO
+  REVOGADO
+}
+
 model Tenant {
   id     String       @id @default(cuid())
   /// Identificador estável: vira <slug>.lojas.avilaops.com e o nome do container de dados.
@@ -279,22 +312,27 @@ model Tenant {
   faixaPreco          String?
   setupPagoEm         DateTime? // R$ 497 — cobrado à parte, marcado pela Avila Ops
 
-  faturas             Fatura[]
-  contratosComerciais ContratoComercial[]
-  cobrancaEventos     CobrancaEvento[]
-  cupons              Cupom[]
-  compradores         Comprador[]
-  anunciosMl          AnuncioMercadoLivre[]
-  perguntasMl         PerguntaMercadoLivre[]
-  reputacaoMl         ReputacaoMercadoLivre?
-  contasCanal         ContaCanal[]
-  checkoutsAbertos    CheckoutAberto[]
-  avaliacoes          Avaliacao[]
-  avisosEstoque       AvisoEstoque[]
-  postagens           Postagem[]
-  operadores          OperadorLoja[]
-  fiscal              FiscalLoja?
-  documentosFiscais   DocumentoFiscalLoja[]
+  faturas               Fatura[]
+  contratosComerciais   ContratoComercial[]
+  cobrancaEventos       CobrancaEvento[]
+  cupons                Cupom[]
+  compradores           Comprador[]
+  empresasB2B           EmpresaB2B[]
+  unidadesEmpresaB2B    UnidadeEmpresaB2B[]
+  compradoresEmpresaB2B CompradorEmpresaB2B[]
+  centrosCustoB2B       CentroCustoB2B[]
+  auditoriasB2B         AuditoriaB2B[]
+  anunciosMl            AnuncioMercadoLivre[]
+  perguntasMl           PerguntaMercadoLivre[]
+  reputacaoMl           ReputacaoMercadoLivre?
+  contasCanal           ContaCanal[]
+  checkoutsAbertos      CheckoutAberto[]
+  avaliacoes            Avaliacao[]
+  avisosEstoque         AvisoEstoque[]
+  postagens             Postagem[]
+  operadores            OperadorLoja[]
+  fiscal                FiscalLoja?
+  documentosFiscais     DocumentoFiscalLoja[]
 
   apiKeyEnc            String?
   apiKeyCriadaEm       DateTime?
@@ -1052,11 +1090,257 @@ model Comprador {
   criadoEm     DateTime  @default(now())
   ultimoAcesso DateTime?
 
-  tenant    Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant    Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   enderecos EnderecoComprador[]
   pedidos   Pedido[]
+  empresas  CompradorEmpresaB2B[]
 
   @@unique([tenantId, email])
+  @@unique([tenantId, id])
+}
+
+/// Cliente empresarial de uma loja vendedora. A referência é local; a
+/// integração gera outra referência global com tenantId + id.
+model EmpresaB2B {
+  id                String             @id @default(cuid())
+  tenantId          String
+  referencia        String
+  razaoSocial       String
+  nomeFantasia      String?
+  authOrganizacaoId String?
+  situacao          SituacaoEmpresaB2B @default(ATIVA)
+  versao            Int                @default(1)
+  criadoEm          DateTime           @default(now())
+  atualizadoEm      DateTime           @updatedAt
+
+  tenant       Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  unidades     UnidadeEmpresaB2B[]
+  contatos     ContatoEmpresaB2B[]
+  compradores  CompradorEmpresaB2B[]
+  centrosCusto CentroCustoB2B[]
+  auditorias   AuditoriaB2B[]
+
+  @@unique([tenantId, referencia])
+  @@unique([tenantId, id])
+  @@unique([tenantId, authOrganizacaoId])
+  @@index([tenantId, situacao])
+}
+
+model UnidadeEmpresaB2B {
+  id                String   @id @default(cuid())
+  tenantId          String
+  empresaId         String
+  referencia        String
+  nome              String
+  cnpj              String
+  inscricaoEstadual String?
+  authUnidadeId     String?
+  ativa             Boolean  @default(true)
+  criadoEm          DateTime @default(now())
+  atualizadoEm      DateTime @updatedAt
+
+  tenant                Tenant                      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  empresa               EmpresaB2B                  @relation(fields: [tenantId, empresaId], references: [tenantId, id], onDelete: Cascade)
+  enderecos             EnderecoUnidadeEmpresaB2B[]
+  contatos              ContatoEmpresaB2B[]
+  autorizacoesDesejadas AutorizacaoDesejadaB2B[]
+  escoposComprador      EscopoCompradorB2B[]
+
+  @@unique([tenantId, empresaId, referencia])
+  @@unique([tenantId, cnpj])
+  @@unique([tenantId, authUnidadeId])
+  @@unique([tenantId, id])
+  @@unique([tenantId, empresaId, id])
+  @@index([tenantId, empresaId, ativa])
+}
+
+model EnderecoUnidadeEmpresaB2B {
+  id          String  @id @default(cuid())
+  tenantId    String
+  unidadeId   String
+  tipo        String
+  cep         String
+  logradouro  String
+  numero      String
+  complemento String?
+  bairro      String
+  cidade      String
+  uf          String
+  principal   Boolean @default(false)
+
+  unidade UnidadeEmpresaB2B @relation(fields: [tenantId, unidadeId], references: [tenantId, id], onDelete: Cascade)
+
+  @@index([tenantId, unidadeId])
+}
+
+model ContatoEmpresaB2B {
+  id           String   @id @default(cuid())
+  tenantId     String
+  empresaId    String
+  unidadeId    String?
+  tipo         String
+  nome         String
+  cargo        String?
+  email        String?
+  telefone     String?
+  principal    Boolean  @default(false)
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  empresa EmpresaB2B         @relation(fields: [tenantId, empresaId], references: [tenantId, id], onDelete: Cascade)
+  unidade UnidadeEmpresaB2B? @relation(fields: [tenantId, empresaId, unidadeId], references: [tenantId, empresaId, id], onDelete: Cascade)
+
+  @@index([tenantId, empresaId])
+  @@index([tenantId, unidadeId])
+}
+
+model CompradorEmpresaB2B {
+  id               String               @id @default(cuid())
+  tenantId         String
+  empresaId        String
+  compradorId      String?
+  nome             String
+  emailNormalizado String
+  authVinculoId    String?
+  situacao         SituacaoCompradorB2B @default(ATIVO)
+  criadoEm         DateTime             @default(now())
+  atualizadoEm     DateTime             @updatedAt
+
+  tenant          Tenant                       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  empresa         EmpresaB2B                   @relation(fields: [tenantId, empresaId], references: [tenantId, id], onDelete: Cascade)
+  comprador       Comprador?                   @relation(fields: [tenantId, compradorId], references: [tenantId, id], onDelete: Restrict)
+  autorizacoes    AutorizacaoDesejadaB2B[]
+  provisionamento ProvisionamentoCompradorB2B?
+  escopos         EscopoCompradorB2B[]
+  centrosCusto    CompradorCentroCustoB2B[]
+
+  @@unique([tenantId, empresaId, emailNormalizado])
+  @@unique([tenantId, authVinculoId])
+  @@unique([tenantId, id])
+  @@unique([tenantId, empresaId, id])
+  @@index([tenantId, empresaId, situacao])
+}
+
+model AutorizacaoDesejadaB2B {
+  id                      String               @id @default(cuid())
+  tenantId                String
+  empresaId               String
+  compradorEmpresaId      String
+  versao                  Int
+  papel                   PapelCorporativoB2B
+  escopo                  EscopoAutorizacaoB2B
+  unidadeId               String?
+  limiteAprovacaoCentavos Int?
+  criadoEm                DateTime             @default(now())
+
+  comprador CompradorEmpresaB2B @relation(fields: [tenantId, empresaId, compradorEmpresaId], references: [tenantId, empresaId, id], onDelete: Cascade)
+  unidade   UnidadeEmpresaB2B?  @relation(fields: [tenantId, empresaId, unidadeId], references: [tenantId, empresaId, id], onDelete: Cascade)
+
+  @@unique([tenantId, compradorEmpresaId, versao, papel, escopo, unidadeId])
+  @@index([tenantId, compradorEmpresaId, versao])
+}
+
+model ProvisionamentoCompradorB2B {
+  id                 String                     @id @default(cuid())
+  tenantId           String
+  compradorEmpresaId String                     @unique
+  situacao           SituacaoProvisionamentoB2B @default(PENDENTE)
+  versaoDesejada     Int
+  versaoSincronizada Int?
+  tentativas         Int                        @default(0)
+  correlacaoId       String                     @unique
+  intencaoHash       String
+  leaseId            String?                    @unique
+  ultimoErro         String?
+  ultimaTentativaEm  DateTime?
+  sincronizadoEm     DateTime?
+  criadoEm           DateTime                   @default(now())
+  atualizadoEm       DateTime                   @updatedAt
+
+  comprador CompradorEmpresaB2B @relation(fields: [tenantId, compradorEmpresaId], references: [tenantId, id], onDelete: Cascade)
+
+  @@unique([tenantId, compradorEmpresaId])
+  @@index([situacao, atualizadoEm])
+}
+
+model EscopoCompradorB2B {
+  id                      String               @id @default(cuid())
+  tenantId                String
+  empresaId               String
+  compradorEmpresaId      String
+  papel                   PapelCorporativoB2B
+  escopo                  EscopoAutorizacaoB2B
+  unidadeId               String?
+  limiteAprovacaoCentavos Int?
+  contextoVersao          Int
+  reconciliadoEm          DateTime             @default(now())
+
+  comprador CompradorEmpresaB2B @relation(fields: [tenantId, empresaId, compradorEmpresaId], references: [tenantId, empresaId, id], onDelete: Cascade)
+  unidade   UnidadeEmpresaB2B?  @relation(fields: [tenantId, empresaId, unidadeId], references: [tenantId, empresaId, id], onDelete: Cascade)
+
+  @@unique([tenantId, compradorEmpresaId, papel, escopo, unidadeId])
+  @@index([tenantId, compradorEmpresaId])
+}
+
+model CentroCustoB2B {
+  id                      String   @id @default(cuid())
+  tenantId                String
+  empresaId               String
+  codigo                  String
+  nome                    String
+  orcamentoMensalCentavos Int      @default(0)
+  consumidoMesCentavos    Int      @default(0)
+  periodo                 String   @default("MENSAL")
+  ativo                   Boolean  @default(true)
+  criadoEm                DateTime @default(now())
+  atualizadoEm            DateTime @updatedAt
+
+  tenant      Tenant                    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  empresa     EmpresaB2B                @relation(fields: [tenantId, empresaId], references: [tenantId, id], onDelete: Cascade)
+  compradores CompradorCentroCustoB2B[]
+
+  @@unique([tenantId, empresaId, codigo])
+  @@unique([tenantId, id])
+  @@unique([tenantId, empresaId, id])
+  @@index([tenantId, empresaId, ativo])
+}
+
+model CompradorCentroCustoB2B {
+  tenantId           String
+  empresaId          String
+  compradorEmpresaId String
+  centroCustoId      String
+  criadoEm           DateTime @default(now())
+
+  comprador   CompradorEmpresaB2B @relation(fields: [tenantId, empresaId, compradorEmpresaId], references: [tenantId, empresaId, id], onDelete: Cascade)
+  centroCusto CentroCustoB2B      @relation(fields: [tenantId, empresaId, centroCustoId], references: [tenantId, empresaId, id], onDelete: Cascade)
+
+  @@id([tenantId, compradorEmpresaId, centroCustoId])
+  @@index([tenantId, centroCustoId])
+}
+
+model AuditoriaB2B {
+  id              String   @id @default(cuid())
+  tenantId        String
+  empresaId       String
+  tipoAtor        String
+  atorId          String?
+  atorEmail       String?
+  acao            String
+  entidade        String
+  entidadeId      String
+  resultado       String
+  correlacaoId    String?
+  estadoAnterior  Json?
+  estadoPosterior Json?
+  criadoEm        DateTime @default(now())
+
+  tenant  Tenant     @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  empresa EmpresaB2B @relation(fields: [tenantId, empresaId], references: [tenantId, id], onDelete: Restrict)
+
+  @@index([tenantId, empresaId, criadoEm])
+  @@index([tenantId, entidade, entidadeId])
+  @@index([correlacaoId])
 }
 
 /// Endereço salvo pelo comprador — evita redigitar CEP e rua a cada compra.
