@@ -4,11 +4,15 @@ import { useEffect, useId, useState } from "react";
 import { Download, ExternalLink, FileText, RefreshCw, ShieldCheck, Upload } from "lucide-react";
 import { separarDocumentosFiscais } from "@/lib/fiscal-monitor";
 import { Secao, inputClasse } from "./campos";
+import FluxosFiscais from "./FluxosFiscais";
 
 type Estado = {
   configuracao: { cnpj: string; uf: string; titular: string; validoAte: string; proximaConsultaEm: string; ultimaMensagem: string | null } | null;
   documentos: Array<{ id: string; nsu: string; schema: string; chave: string | null; recebidoEm: string; fornecedor: string | null; numero: string | null; valorCentavos: number | null; emitidaEm: string | null; situacao: "COMPLETA" | "RESUMO" | "OUTRO" }>;
   ufEmpresa: string;
+  pagina: number;
+  paginas: number;
+  total: number;
   erp: { notas: Array<{ id: number; chave: string; numero: number; serie: number; emitida_em: string; valor: number; fornecedor: { documento: string; nome: string; vinculado: boolean; id: number | null }; itens: number; compra_id: number | null }>; painelUrl: string } | { erro: string } | null;
 };
 const data = (valor: string) => new Date(valor).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
@@ -31,16 +35,23 @@ export default function Fiscal() {
   const [ocupado, setOcupado] = useState<"certificado" | "consulta" | null>(null);
   const [arquivoNome, setArquivoNome] = useState("");
   const [agora] = useState(() => Date.now());
+  const [busca, setBusca] = useState("");
+  const [tipo, setTipo] = useState("");
+  const [pagina, setPagina] = useState(1);
+  const [inicio, setInicio] = useState("");
+  const [fim, setFim] = useState("");
+  const [documentoSelecionado, setDocumentoSelecionado] = useState<Estado["documentos"][number] | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
-    fetch("/api/painel/fiscal", { signal: controller.signal }).then(async (r) => {
+    const parametros = new URLSearchParams({ busca, tipo, pagina: String(pagina), inicio, fim });
+    const timer = setTimeout(() => { void fetch(`/api/painel/fiscal?${parametros}`, { signal: controller.signal }).then(async (r) => {
       const dados = await r.json();
       if (!r.ok) throw new Error(dados.erro);
       setEstado(dados);
-    }).catch((e) => { if (e.name !== "AbortError") setErro(e.message); });
-    return () => controller.abort();
-  }, []);
+    }).catch((e) => { if (e.name !== "AbortError") setErro(e.message); }); }, 250);
+    return () => { clearTimeout(timer); controller.abort(); };
+  }, [busca, tipo, pagina, inicio, fim]);
 
   async function enviar(form?: HTMLFormElement) {
     setOcupado(form ? "certificado" : "consulta");
@@ -54,6 +65,7 @@ export default function Fiscal() {
       const dados = await r.json();
       if (!r.ok) throw new Error(dados.erro ?? "Não foi possível concluir a operação.");
       setEstado(dados);
+      setBusca(""); setTipo(""); setPagina(1); setInicio(""); setFim("");
       setMensagem(form ? "Certificado guardado com segurança." : `${dados.resultado.recebidos} documento(s) recebido(s). ${dados.resultado.mensagem}`);
       if (form) {
         form.reset();
@@ -150,6 +162,12 @@ export default function Fiscal() {
             </button>
           </div>
         )}
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <label className="grid gap-1 text-xs">Buscar fornecedor, nota, chave ou NSU<input className={inputClasse} maxLength={100} value={busca} onChange={(e) => { setBusca(e.target.value); setPagina(1); }} /></label>
+          <label className="grid gap-1 text-xs">Tipo de documento<select className={inputClasse} value={tipo} onChange={(e) => { setTipo(e.target.value); setPagina(1); }}><option value="">Todos</option><option value="completa">NF-e completa</option><option value="resumo">Resumo de NF-e</option><option value="evento">Evento fiscal</option></select></label>
+          <label className="grid gap-1 text-xs">Recebido de<input className={inputClasse} type="date" value={inicio} onChange={(e) => { setInicio(e.target.value); setPagina(1); }} /></label>
+          <label className="grid gap-1 text-xs">Recebido até<input className={inputClasse} type="date" value={fim} onChange={(e) => { setFim(e.target.value); setPagina(1); }} /></label>
+        </div>
         {estado?.erp && "erro" in estado.erp && <p role="status" className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">Integração com o ERP: {estado.erp.erro}</p>}
         {estado?.erp && "notas" in estado.erp && (
           <div className="mb-5 grid min-w-0 gap-3 rounded-xl border border-border bg-muted/20 p-4">
@@ -161,7 +179,7 @@ export default function Fiscal() {
         {!estado ? <p role="status" className="text-sm text-muted-foreground">Carregando documentos…</p> : !estado.documentos.length ? (
           <div className="py-4 text-center">
             <FileText size={28} aria-hidden="true" className="mx-auto mb-3 text-muted-foreground" />
-            <p className="text-sm font-medium">Nenhum documento recebido ainda.</p>
+            <p className="text-sm font-medium">Nenhum documento encontrado.</p>
             <p className="mx-auto mt-1 max-w-sm text-sm leading-relaxed text-muted-foreground">{configuracao ? "Consulte o próximo lote para buscar documentos disponíveis." : "Guarde o certificado acima para iniciar a busca."}</p>
           </div>
         ) : (
@@ -178,16 +196,16 @@ export default function Fiscal() {
             </div>
             <div className="min-w-0">
               <h3 className="mb-1 text-sm font-semibold">Notas fiscais</h3>
-              <p className="mb-3 text-xs text-muted-foreground">Resumos e XML completos encontrados entre os últimos 100 documentos.</p>
+              <p className="mb-3 text-xs text-muted-foreground">Resumos e XML completos nesta página.</p>
               {!documentosSeparados.notas.length ? <p className="rounded-xl border border-border p-4 text-sm text-muted-foreground">Nenhuma NF-e encontrada neste lote.</p> : (
                 <>
                   <ul className="divide-y divide-border sm:hidden">
-                    {documentosSeparados.notas.map((doc) => <DocumentoFiscal key={doc.id} doc={doc} />)}
+                    {documentosSeparados.notas.map((doc) => <DocumentoFiscal key={doc.id} doc={doc} selecionar={setDocumentoSelecionado} />)}
                   </ul>
                   <div className="hidden overflow-x-auto rounded-xl border border-border sm:block">
                     <table className="w-full text-left text-sm">
                       <thead className="bg-muted/40 text-xs uppercase text-muted-foreground"><tr><th className="px-3 py-3">Recebida</th><th className="px-3 py-3">Fornecedor</th><th className="px-3 py-3">Nota</th><th className="px-3 py-3 text-right">Valor</th><th className="px-3 py-3">Situação</th><th className="px-3 py-3" /></tr></thead>
-                      <tbody className="divide-y divide-border">{documentosSeparados.notas.map((doc) => <LinhaDocumentoFiscal key={doc.id} doc={doc} />)}</tbody>
+                      <tbody className="divide-y divide-border">{documentosSeparados.notas.map((doc) => <LinhaDocumentoFiscal key={doc.id} doc={doc} selecionar={setDocumentoSelecionado} />)}</tbody>
                     </table>
                   </div>
                 </>
@@ -197,13 +215,14 @@ export default function Fiscal() {
               <summary className="cursor-pointer text-sm font-medium">Eventos e outros documentos ({documentosSeparados.eventos.length + documentosSeparados.outros.length})</summary>
               <ul className="mt-3 divide-y divide-border">
                 {[...documentosSeparados.eventos, ...documentosSeparados.outros].map((doc) => (
-                  <DocumentoFiscal key={doc.id} doc={doc} />
+                  <DocumentoFiscal key={doc.id} doc={doc} selecionar={setDocumentoSelecionado} />
                 ))}
               </ul>
             </details>
-            <p className="text-xs text-muted-foreground">Últimos 100 documentos recebidos · {estado.documentos.length} nesta lista</p>
+            <p className="text-xs text-muted-foreground">{estado.total} documento(s) encontrados · Página {estado.pagina} de {estado.paginas}</p>
           </div>
         )}
+        {estado && estado.paginas > 1 && <div className="flex gap-2"><button className="btn-secundario" disabled={pagina <= 1} onClick={() => setPagina((p) => p - 1)}>Anterior</button><button className="btn-secundario" disabled={pagina >= estado.paginas} onClick={() => setPagina((p) => p + 1)}>Próxima</button></div>}
         <details className="border-t border-border pt-4 text-sm">
           <summary className="cursor-pointer font-medium">Sobre esta consulta</summary>
           <div className="mt-3 grid gap-3 text-sm leading-relaxed text-muted-foreground">
@@ -213,11 +232,12 @@ export default function Fiscal() {
           </div>
         </details>
       </Secao>
+      <FluxosFiscais documento={documentoSelecionado} />
     </div>
   );
 }
 
-function DocumentoFiscal({ doc }: { doc: Estado["documentos"][number] }) {
+function DocumentoFiscal({ doc, selecionar }: { doc: Estado["documentos"][number]; selecionar: (doc: Estado["documentos"][number]) => void }) {
   return (
     <li className="grid min-w-0 gap-3 py-4 first:pt-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
       <div className="min-w-0">
@@ -233,23 +253,23 @@ function DocumentoFiscal({ doc }: { doc: Estado["documentos"][number] }) {
           </dl>
         </details>
       </div>
-      <a className="btn-secundario w-full sm:w-auto" href={`/api/painel/fiscal/documentos/${doc.id}`}>
+      <div className="flex flex-wrap gap-2"><a className="btn-secundario" href="#fluxos-fiscais" onClick={() => selecionar(doc)}>Usar no fluxo</a><a className="btn-secundario w-full sm:w-auto" href={`/api/painel/fiscal/documentos/${doc.id}`}>
         <Download size={16} aria-hidden="true" /> Baixar XML
-      </a>
+      </a></div>
     </li>
   );
 }
 
-function LinhaDocumentoFiscal({ doc }: { doc: Estado["documentos"][number] }) {
+function LinhaDocumentoFiscal({ doc, selecionar }: { doc: Estado["documentos"][number]; selecionar: (doc: Estado["documentos"][number]) => void }) {
   const situacao = doc.situacao === "COMPLETA" ? "Pronta para revisão" : doc.situacao === "RESUMO" ? "Aguardando XML completo" : "Documento recebido";
   return (
     <tr>
       <td className="whitespace-nowrap px-3 py-3 text-xs text-muted-foreground">{dia(doc.recebidoEm)}</td>
       <td className="max-w-64 px-3 py-3"><span className="block truncate font-medium" title={doc.fornecedor ?? undefined}>{doc.fornecedor ?? "Fornecedor não informado"}</span></td>
-      <td className="whitespace-nowrap px-3 py-3">{doc.numero ?? "—"}</td>
+      <td className="px-3 py-3">{doc.numero ?? "—"}<details className="mt-1 text-xs text-muted-foreground"><summary className="cursor-pointer">Identificação</summary><p className="mt-2 break-all">Chave: {doc.chave ?? "Não informada"}</p><p className="mt-1">NSU: {doc.nsu}</p></details></td>
       <td className="whitespace-nowrap px-3 py-3 text-right font-medium tabular-nums">{dinheiro(doc.valorCentavos)}</td>
       <td className="px-3 py-3 text-xs text-muted-foreground">{situacao}</td>
-      <td className="px-3 py-3 text-right"><a className="btn-secundario whitespace-nowrap" href={`/api/painel/fiscal/documentos/${doc.id}`}><Download size={15} aria-hidden="true" /> XML</a></td>
+      <td className="px-3 py-3"><div className="flex flex-wrap justify-end gap-2"><a className="btn-secundario whitespace-nowrap" href="#fluxos-fiscais" onClick={() => selecionar(doc)}>Usar no fluxo</a><a className="btn-secundario whitespace-nowrap" href={`/api/painel/fiscal/documentos/${doc.id}`}><Download size={15} aria-hidden="true" /> XML</a></div></td>
     </tr>
   );
 }

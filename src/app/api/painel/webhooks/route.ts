@@ -2,7 +2,7 @@ import { z } from "zod";
 import { planoPermite } from "@/lib/api-chaves";
 import { cifrar } from "@/lib/cofre";
 import { prisma } from "@/lib/db";
-import { exigir } from "@/lib/operadores";
+import { exigir, permite } from "@/lib/operadores";
 import { EVENTOS_DE_WEBHOOK, eventosValidos, gerarSegredoDeWebhook, motivoDaRecusa } from "@/lib/webhooks-api";
 
 /**
@@ -88,7 +88,8 @@ export async function PATCH(request: Request) {
   const corpo = (await request.json().catch(() => null)) as { id?: unknown } | null;
   const id = typeof corpo?.id === "string" ? corpo.id : "";
   const r = await prisma.webhookApi.updateMany({
-    where: { id, tenantId: s.tenant.id },
+    // Destino usado no fiscal só pode ser reativado por quem pode configurar o fiscal.
+    where: { id, tenantId: s.tenant.id, ...(!permite(s.papel, "fiscal") ? { fluxosFiscais: { none: {} } } : {}) },
     data: { ativo: true, falhasSeguidas: 0, desligadoEm: null, desligadoMotivo: null },
   });
   if (r.count !== 1) return Response.json({ erro: "Webhook não encontrado." }, { status: 404 });
@@ -100,7 +101,8 @@ export async function DELETE(request: Request) {
   const { s, erro } = await exigir("configuracoes");
   if (erro) return erro;
   const id = new URL(request.url).searchParams.get("id") ?? "";
-  const r = await prisma.webhookApi.deleteMany({ where: { id, tenantId: s.tenant.id } });
+  // Não permitir que um gerente apague por cascata uma regra fiscal exclusiva do dono.
+  const r = await prisma.webhookApi.deleteMany({ where: { id, tenantId: s.tenant.id, ...(!permite(s.papel, "fiscal") ? { fluxosFiscais: { none: {} } } : {}) } });
   if (r.count !== 1) return Response.json({ erro: "Webhook não encontrado." }, { status: 404 });
   return Response.json({ sucesso: true });
 }
