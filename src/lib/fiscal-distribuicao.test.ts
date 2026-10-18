@@ -3,8 +3,8 @@ import { test } from "node:test";
 import { gzipSync } from "node:zlib";
 import { envelopeDistribuicao, lerDistribuicao } from "./fiscal-distribuicao";
 
-function resposta(status: string, lote = "", nsu = "000000000000001") {
-  return `<s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope"><s:Body><nfeDistDFeInteresseResponse><nfeDistDFeInteresseResult><retDistDFeInt><cStat>${status}</cStat><xMotivo>Resultado</xMotivo><ultNSU>${nsu}</ultNSU><maxNSU>000000000000002</maxNSU>${lote}</retDistDFeInt></nfeDistDFeInteresseResult></nfeDistDFeInteresseResponse></s:Body></s:Envelope>`;
+function resposta(status: string, lote = "", nsu = "000000000000001", maxNsu = "000000000000002") {
+  return `<s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope"><s:Body><nfeDistDFeInteresseResponse><nfeDistDFeInteresseResult><retDistDFeInt><cStat>${status}</cStat><xMotivo>Resultado</xMotivo><ultNSU>${nsu}</ultNSU><maxNSU>${maxNsu}</maxNSU>${lote}</retDistDFeInt></nfeDistDFeInteresseResult></nfeDistDFeInteresseResponse></s:Body></s:Envelope>`;
 }
 
 test("preserva NSU, chave e conteúdo XML do lote comprimido", () => {
@@ -20,12 +20,14 @@ test("preserva NSU, chave e conteúdo XML do lote comprimido", () => {
 test("aceita fim de consulta e bloqueio sem documentos", () => {
   assert.equal(lerDistribuicao(resposta("137")).documentos.length, 0);
   assert.equal(lerDistribuicao(resposta("656", "", "")).status, "656");
+  assert.equal(lerDistribuicao(resposta("656", "", "000000000000005", "000000000000005")).ultimoNsu, "000000000000005");
 });
 
 test("recusa XML malformado, entidades, NSU inválido e rejeição fiscal", () => {
   assert.throws(() => lerDistribuicao("<erro>"));
   assert.throws(() => lerDistribuicao('<!DOCTYPE a [<!ENTITY b SYSTEM "file:///etc/passwd">]><a>&b;</a>'));
   assert.throws(() => lerDistribuicao(resposta("137", "", "1")));
+  assert.throws(() => lerDistribuicao(resposta("656", "", "1")));
   assert.throws(() => lerDistribuicao(resposta("138")));
   assert.throws(() => lerDistribuicao(resposta("280")), /280/);
 });

@@ -5,6 +5,8 @@ import { UFS_FISCAIS } from "@/lib/fiscal-distribuicao";
 import { RESUMO_FISCAL, sincronizarNotas } from "@/lib/fiscal-loja";
 import { origemFiscalPermitida } from "@/lib/fiscal-origem";
 import { resumirDocumentoFiscal } from "@/lib/fiscal-documento";
+import { totalizarDocumentosFiscais } from "@/lib/fiscal-monitor";
+import type { Prisma } from "@prisma/client";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,14 +17,31 @@ function ufDaEmpresa(endereco: unknown): string {
   return UFS_FISCAIS[uf] ? uf : "";
 }
 
+const filtrosNotas: Prisma.DocumentoFiscalLojaWhereInput[] = [
+  { schema: { startsWith: "resNFe" } },
+  { schema: { startsWith: "procNFe" } },
+];
+const filtroEventos: Prisma.DocumentoFiscalLojaWhereInput = { schema: { contains: "evento", mode: "insensitive" } };
+const selecaoDocumento = { id: true, cnpj: true, nsu: true, schema: true, chave: true, xml: true, recebidoEm: true } as const;
+const ordemDocumentos = [{ recebidoEm: "desc" }, { nsu: "desc" }] as const;
+
 async function estado(tenantId: string, endereco: unknown) {
-  const [configuracao, documentos] = await Promise.all([
+  const [configuracao, notas, eventos, outros, contagens] = await Promise.all([
     prisma.fiscalLoja.findUnique({ where: { tenantId }, select: RESUMO_FISCAL }),
-    prisma.documentoFiscalLoja.findMany({ where: { tenantId }, select: { id: true, cnpj: true, nsu: true, schema: true, chave: true, xml: true, recebidoEm: true }, orderBy: [{ recebidoEm: "desc" }, { nsu: "desc" }], take: 100 }),
+    prisma.documentoFiscalLoja.findMany({ where: { tenantId, OR: filtrosNotas }, select: selecaoDocumento, orderBy: ordemDocumentos, take: 100 }),
+    prisma.documentoFiscalLoja.findMany({ where: { tenantId, ...filtroEventos }, select: selecaoDocumento, orderBy: ordemDocumentos, take: 100 }),
+    prisma.documentoFiscalLoja.findMany({ where: { tenantId, NOT: [{ OR: filtrosNotas }, filtroEventos] }, select: selecaoDocumento, orderBy: ordemDocumentos, take: 25 }),
+    prisma.documentoFiscalLoja.groupBy({ where: { tenantId }, by: ["schema"], _count: { _all: true } }),
   ]);
+  const documentos = [...notas, ...eventos, ...outros].sort((a, b) => {
+    const porData = b.recebidoEm.getTime() - a.recebidoEm.getTime();
+    return porData || b.nsu.localeCompare(a.nsu);
+  });
   return {
     configuracao,
     documentos: documentos.map(({ xml, ...documento }) => ({ ...documento, ...resumirDocumentoFiscal(xml, documento.schema, documento.chave) })),
+    totais: totalizarDocumentosFiscais(contagens.map(({ schema, _count }) => ({ schema, quantidade: _count._all }))),
+    limites: { notas: 100, eventos: 100, outros: 25 },
     ufEmpresa: ufDaEmpresa(endereco),
   };
 }
