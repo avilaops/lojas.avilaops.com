@@ -358,9 +358,10 @@
       ],
       "evidence": [
         "Testes direcionados de estados, precedência, sanitização, isolamento estrutural e navegação.",
-        "Validação TypeScript, ESLint, build e capturas desktop/mobile registradas na revisão da tarefa."
+        "Validação TypeScript, ESLint, build e capturas desktop/mobile registradas na revisão da tarefa.",
+        "Correções pós-review cobrem Mercado Pago legado, validação remota do Melhor Envio, resultado mais recente na saúde e classificação seletiva do cooldown; 1.148 testes locais aprovados."
       ],
-      "review": "Pronto para revisão técnica após os gates locais; nenhum deploy ou publicação faz parte desta tarefa.",
+      "review": "PR principal mesclado; correções pós-review preparadas em branch própria, sem deploy ou publicação.",
       "environment": "local"
     }
   ],

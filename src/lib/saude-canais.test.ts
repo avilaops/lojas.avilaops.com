@@ -3,6 +3,8 @@ import test from "node:test"
 import {
   ErroSaudeCanal,
   avaliarSaudeCanal,
+  ehConflitoDeReserva,
+  erroDoTesteMaisRecente,
   mensagemSegura,
   type EntradaSaudeCanal,
 } from "./saude-canais"
@@ -123,4 +125,19 @@ test("sanitização só devolve códigos conhecidos e ignora segredo em erro, ca
   const seguro = mensagemSegura(bruto)
   assert.deepEqual(seguro, { codigo: "falha_externa", mensagem: "O provedor recusou ou não concluiu o teste. Tente novamente." })
   assert.doesNotMatch(JSON.stringify(seguro), /segredo|senha|access_token|client_secret/)
+})
+
+test("último teste passa a compor a saúde e sucesso limpa o erro anterior", () => {
+  const falha = erroDoTesteMaisRecente({ canal: "mercadolivre", resultado: "erro", codigo: "falha_externa", mensagem: "Teste recusado." })
+  assert.deepEqual(falha, { codigo: "falha_externa", mensagem: "Teste recusado." })
+  assert.equal(erroDoTesteMaisRecente({ canal: "mercadolivre", resultado: "sucesso", codigo: "conexao_confirmada", mensagem: "Conexão confirmada." }, falha), null)
+})
+
+test("somente conflito único da reserva representa cooldown", () => {
+  assert.equal(ehConflitoDeReserva({ code: "P2002", meta: { target: ["dedupeKey"] } }), true)
+  assert.equal(ehConflitoDeReserva({ code: "P2002", meta: { target: "EventoSaudeCanal_dedupeKey_key" } }), true)
+  assert.equal(ehConflitoDeReserva({ code: "P2002" }), false)
+  assert.equal(ehConflitoDeReserva({ code: "P2002", meta: { target: ["tenantId", "canal"] } }), false)
+  assert.equal(ehConflitoDeReserva({ code: "P2021" }), false)
+  assert.equal(ehConflitoDeReserva(new Error("banco indisponível")), false)
 })
