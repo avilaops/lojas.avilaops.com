@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { emitirState, lerState, urlDeAutorizacao } from "./melhor-envio-conta";
+import type { Tenant } from "@prisma/client";
+import { cifrar } from "./cofre";
+import { emitirState, lerState, testarConexaoMelhorEnvio, urlDeAutorizacao } from "./melhor-envio-conta";
 
 // O módulo lê o ambiente na hora da chamada, não na importação.
 process.env.LOJAS_SECRET ??= "0".repeat(64);
@@ -43,4 +45,20 @@ test("a autorização pede só cotação e leitura da conta, e volta para o reto
   assert.equal(url.searchParams.get("redirect_uri"), "https://lojas.avilaops.com/melhor-envio/callback");
   assert.equal(url.searchParams.get("scope"), "shipping-calculate users-read");
   assert.equal(lerState(url.searchParams.get("state")), "brilhax");
+});
+
+test("teste explícito consulta /api/v2/me mesmo com token local ainda válido", async (t) => {
+  const chamadas: string[] = [];
+  t.mock.method(globalThis, "fetch", async (entrada: RequestInfo | URL) => {
+    chamadas.push(String(entrada));
+    return Response.json({ id: 123 }, { status: 200 });
+  });
+  const loja = {
+    melhorEnvioAccessTokenEnc: cifrar("token-valido"),
+    melhorEnvioRefreshTokenEnc: cifrar("refresh-valido"),
+    melhorEnvioExpiraEm: new Date(Date.now() + 10 * 86_400_000),
+  } as Tenant;
+
+  await testarConexaoMelhorEnvio(loja);
+  assert.deepEqual(chamadas, ["https://melhorenvio.com.br/api/v2/me"]);
 });
