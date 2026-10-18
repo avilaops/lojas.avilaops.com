@@ -4,6 +4,27 @@
   "members": [],
   "tasks": [
     {
+      "id": "VITRINES-COMPRA-20261018",
+      "title": "Compactar catálogo mobile e oferecer ajuda contextual",
+      "objective": "Reduzir espaço antes dos produtos nas vitrines e levar a consulta ao WhatsApp da própria loja.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "em_revisao",
+      "acceptanceCriteria": [
+        "Busca e filtros usam URLs GET e preservam valores ativos.",
+        "Busca por medidas aparece antes dos controles comerciais.",
+        "Capa e cards técnicos possuem tratamento compacto no celular.",
+        "Atendimento recebe contexto da consulta somente no canal configurado pela loja."
+      ],
+      "evidence": [
+        "20 testes direcionados aprovados, incluindo 6 testes de renderização HTML.",
+        "TypeScript, ESLint direcionado e build Next aprovados.",
+        "Detalhes e limitações em evidencias/vitrines-compra-2026-10-18.md."
+      ],
+      "review": "Autorrevisão do diff; pendentes validação visual em navegador com tenants de teste, integração, CI e publicação. Dados técnicos de SKUs não foram alterados.",
+      "environment": "local"
+    },
+    {
       "id": "T-0001",
       "title": "Facilitar a consulta dos anúncios da Brilhax no Mercado Livre",
       "objective": "Exibir automaticamente no painel os anúncios ativos, preços, estoque, vínculo com o catálogo e divergências.",

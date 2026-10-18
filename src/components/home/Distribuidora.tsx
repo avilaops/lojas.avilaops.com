@@ -63,7 +63,7 @@ export default function Distribuidora({ t, identidade, categorias, vitrine, temD
               <Link href="/produtos" className="btn-primario">Buscar produtos <Search /></Link>
               {t.whatsapp && <Link href="/contato" className="btn-secundario">Falar com a equipe</Link>}
             </div>
-            <p className="mercado-dica">Encontre por nome, medida ou código do fabricante.</p>
+            <p className="mercado-dica">Busque por nome, código, finalidade ou marca.</p>
           </div>
           {t.bannerUrl && (
             <aside className="distribuidora-arte">
