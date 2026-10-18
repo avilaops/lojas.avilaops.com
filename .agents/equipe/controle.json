@@ -25,6 +25,28 @@
       ],
       "review": "Autorrevisão concluída; consulta permanece somente leitura e vinculação continua exigindo escolha explícita do lojista.",
       "environment": "local"
+    },
+    {
+      "id": "T-0002",
+      "title": "Abrir os detalhes ao clicar na linha do pedido",
+      "objective": "Permitir que o lojista abra um pedido clicando em qualquer área livre da linha no computador, mantendo as ações independentes.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "concluida",
+      "acceptanceCriteria": [
+        "Qualquer área livre da linha abre a tela de detalhes do pedido.",
+        "Botões, links e campos interativos da linha não disparam a navegação da linha.",
+        "A linha pode ser aberta pelo teclado com Enter.",
+        "O comportamento existente no celular permanece inalterado."
+      ],
+      "evidence": [
+        "ESLint do componente ListaDeRegistros concluído sem erros.",
+        "TypeScript concluído sem erros.",
+        "Build otimizado de produção concluído e BUILD_ID gerado.",
+        "A navegação da linha ignora links, botões, campos e controles com role button."
+      ],
+      "review": "Autorrevisão concluída; o comportamento móvel foi preservado e a ação Separar continua independente da navegação da linha.",
+      "environment": "local"
     }
   ],
   "decisions": [],
