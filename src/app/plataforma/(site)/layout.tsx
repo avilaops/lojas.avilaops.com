@@ -3,13 +3,14 @@ import { ArrowRight, Menu } from "lucide-react";
 import Consentimento from "@/components/Consentimento";
 import Pixels from "@/components/Pixels";
 import { pixelsDaPlataforma, temRastreio } from "@/lib/pixels";
-import { lojistaAtual } from "@/lib/sessao";
+import { sessaoDoPainel } from "@/lib/sessao";
 import MarcaLojas from "@/components/marca/MarcaLojas";
 import "../marca-lojas.css";
 import "../plataforma.css";
 
 export default async function PlataformaLayout({ children }: { children: React.ReactNode }) {
-  const lojista = await lojistaAtual();
+  const sessao = await sessaoDoPainel();
+  const lojista = sessao?.tenant ?? null;
   // Só no site público. O painel do lojista tem layout próprio e fica sem tag:
   // ali circulam pedido, cliente e faturamento da loja de outra pessoa.
   const pixels = pixelsDaPlataforma();
@@ -30,6 +31,7 @@ export default async function PlataformaLayout({ children }: { children: React.R
             {lojista ? (
               <>
                 <Link href="/painel" className="pl-header-entrar">Painel · {lojista.nome}</Link>
+                {sessao?.equipe && <Link href="/entrar/equipe" className="pl-header-entrar">Trocar loja</Link>}
                 <form action="/api/painel/sair" method="post"><button className="pl-header-sair">Sair</button></form>
               </>
             ) : (
@@ -43,7 +45,15 @@ export default async function PlataformaLayout({ children }: { children: React.R
             <summary aria-label="Abrir menu"><Menu size={20} /></summary>
             <nav>
               <Link href="/#recursos">Como funciona</Link><Link href="/#modelos">Layouts</Link><Link href="/#planos">Planos</Link><Link href="/blog">Blog</Link><Link href="/ajuda">Ajuda</Link>
-              <Link href="/entrar">Entrar</Link><Link href="/criar">Criar minha loja</Link>
+              {lojista ? (
+                <>
+                  <Link href="/painel">Painel · {lojista.nome}</Link>
+                  {sessao?.equipe && <Link href="/entrar/equipe">Trocar loja</Link>}
+                  <form action="/api/painel/sair" method="post"><button className="pl-menu-sair">Sair</button></form>
+                </>
+              ) : (
+                <><Link href="/entrar">Entrar</Link><Link href="/criar">Criar minha loja</Link></>
+              )}
             </nav>
           </details>
         </div>
