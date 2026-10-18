@@ -8,6 +8,7 @@ import { salvarProdutoNoCatalogo } from "../../src/lib/catalogo-escrita";
 import { resolverItensPadronizados } from "../../src/lib/catalogo-resolver";
 import { criarCobranca, lerCorpoDoCheckout } from "../../src/lib/checkout-cobranca";
 import { reconciliarReservas } from "../../src/lib/reservas-reconciliar";
+import { contratoPadraoAninhado } from "../../src/lib/contratos-comerciais";
 
 /**
  * O checkout de ponta a ponta contra o Postgres, com um gateway de mentira.
@@ -27,12 +28,13 @@ after(() => prisma.$disconnect());
 const sufixo = () => randomUUID().replace(/-/g, "");
 const ENDERECO = { logradouro: "Rua QA", numero: "10", bairro: "Centro", cidade: "Ribeirão Preto", uf: "SP", cep: "14010000" };
 
-async function loja(extras: { meiosPagamento?: string[] } = {}) {
+async function loja(extras: { meiosPagamento?: string[]; comContrato?: boolean } = {}) {
   return prisma.tenant.create({
     data: {
       slug: `qa-ck-${sufixo()}`, nome: "QA Checkout", status: "ATIVA", plano: "LOJA",
       // Retirada na loja: frete sem transportadora, para o teste não sair para a rede.
       retiradaNaLoja: true, enderecoPublico: true, endereco: ENDERECO,
+      ...(extras.comContrato === false ? {} : { contratosComerciais: { create: contratoPadraoAninhado("LOJA") } }),
       ...(extras.meiosPagamento ? { meiosPagamento: extras.meiosPagamento } : {}),
     },
   });
@@ -101,11 +103,24 @@ test("Pix: cobra o preço do catálogo, reserva o estoque e registra o pedido", 
   assert.equal(pedido.tenantId, t.id);
   assert.equal(pedido.totalCentavos, 9980);
   assert.equal(pedido.status, "AGUARDANDO_PAGAMENTO");
+  assert.ok(pedido.contratoComercialId);
   assert.equal(pedido.itens[0].precoUnitarioCentavos, 4990);
   assert.equal(await estadoDa(c.referencia), "COBRANCA_CRIADA");
   // As duas unidades estão reservadas: ninguém mais compra.
   assert.equal(await disponivel(t.id, p.id, 1), false);
   assert.equal(await prisma.automacaoEvento.count({ where: { slug: t.slug, tipo: "pedido.criado" } }), 1);
+});
+
+test("venda sem contrato continua, mas fica sem comissão e abre alerta operacional", async () => {
+  const t = await loja({ comContrato: false });
+  const p = await produto(t.id);
+  const c = corpo(p.id);
+  assert.equal((await cobrar(t, c, gateway().provider)).tipo, "ok");
+  const pedido = await prisma.pedido.findUniqueOrThrow({ where: { referencia: c.referencia } });
+  assert.equal(pedido.contratoComercialId, null);
+  assert.equal(await prisma.automacaoEvento.count({
+    where: { slug: t.slug, tipo: "operacao.alerta", payload: { path: ["codigo"], equals: "contrato.comercial-invalido" } },
+  }), 1);
 });
 
 test("cartão no formato que a tela manda chega ao gateway com token, parcelas e bandeira", async () => {

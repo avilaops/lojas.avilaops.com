@@ -9,6 +9,7 @@ import { marcarConvertido } from "./carrinhos";
 import { COOKIE_SESSAO } from "./atribuicao";
 import { alertar } from "./alertas";
 import { urlDaLoja } from "./tenant";
+import { contratoParaPedido } from "./contratos-comerciais";
 
 
 /**
@@ -22,12 +23,14 @@ export async function registrarPedido(
   // O snapshot usado para cobrar é o que se grava; a reserva já reduziu a oferta pública.
   const pedido = dados.pedidoResolvido ?? (await montarPedidoSeguro(dados.payload, dados.catalogo)).pedido;
   const totais = calcularTotais({ itens: pedido.itens, frete: pedido.frete, desconto: pedido.desconto ?? 0 });
+  const contrato = await contratoParaPedido(t, pedido.referencia);
 
   const salvo = await prisma.pedido.upsert({
     where: { referencia: pedido.referencia, tenantId: t.id },
     update: { pagamentoId: dados.pagamentoId, pagamentoStatus: dados.status, ...(dados.credencial ? { gateway: dados.credencial.provedor, credencialId: dados.credencial.id } : {}) },
     create: {
       tenantId: t.id,
+      contratoComercialId: contrato?.id ?? null,
       referencia: pedido.referencia,
       clienteNome: `${pedido.cliente.nome} ${pedido.cliente.sobrenome}`.trim(),
       clienteEmail: pedido.cliente.email,

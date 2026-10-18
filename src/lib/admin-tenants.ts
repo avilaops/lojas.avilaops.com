@@ -7,6 +7,7 @@ import type { ProdutoPlanilha, TenantEntrada } from "./admin-schemas";
 import { invalidarCatalogo } from "./catalogo-cache";
 import { salvarProdutoNoCatalogo } from "./catalogo-escrita";
 import { ErroCampo, lerDefinicoes, normalizarValor } from "./campos-personalizados";
+import { contratoPadraoAninhado } from "./contratos-comerciais";
 
 function dadosDoTenant(entrada: Partial<TenantEntrada>): Prisma.TenantUpdateInput {
   const { mercadoPago, tema, identidade, endereco, tabelaFrete, entregaLocal, ...resto } = entrada;
@@ -34,6 +35,7 @@ function dadosDoTenant(entrada: Partial<TenantEntrada>): Prisma.TenantUpdateInpu
 
 export async function criarTenant(entrada: TenantEntrada) {
   const dados = dadosDoTenant(entrada);
+  const plano = entrada.plano ?? "LOJA";
   const dominios = new Set(entrada.dominios ?? []);
   if (entrada.dominioPrincipal) {
     const apex = entrada.dominioPrincipal.replace(/^www\./, "");
@@ -41,7 +43,14 @@ export async function criarTenant(entrada: TenantEntrada) {
     dominios.add(`www.${apex}`);
   }
   return prisma.tenant.create({
-    data: { ...(dados as Prisma.TenantCreateInput), slug: entrada.slug, nome: entrada.nome, dominios: Array.from(dominios) },
+    data: {
+      ...(dados as Prisma.TenantCreateInput),
+      slug: entrada.slug,
+      nome: entrada.nome,
+      plano,
+      dominios: Array.from(dominios),
+      contratosComerciais: { create: contratoPadraoAninhado(plano) },
+    },
   });
 }
 

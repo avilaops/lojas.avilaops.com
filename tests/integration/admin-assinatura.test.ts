@@ -107,6 +107,25 @@ test("criar a mensalidade: nasce pendente, com o valor do plano e o link de cart
   assert.equal(await prisma.fatura.count({ where: { tenantId: t.id } }), 0);
 });
 
+test("a mensalidade contratual prevalece sobre a tabela e a faixa legada", async () => {
+  const t = await loja({
+    faixaPreco: null,
+    contratosComerciais: {
+      create: {
+        versao: 1,
+        plano: "LOJA_PRO",
+        mensalidadeCentavos: 35000,
+        comissaoPontosBase: 500,
+        vigenteDesde: new Date(Date.now() - 60_000),
+        origem: "QA",
+      },
+    },
+  });
+  assert.equal((await agir(t.slug, { acao: "iniciar" })).status, 200);
+  const pedido = mp.chamadas.find((c) => c.metodo === "POST")!.corpo as { auto_recurring: { transaction_amount: number } };
+  assert.equal(pedido.auto_recurring.transaction_amount, 350);
+});
+
 test("pedir de novo não cria segunda assinatura: reaproveita a pendente e devolve o mesmo link", async () => {
   const t = await loja();
   const primeira = await agir(t.slug, { acao: "iniciar" });

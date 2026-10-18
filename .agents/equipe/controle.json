@@ -174,8 +174,39 @@
       ],
       "review": "O arquivo é gerado dentro da sessão da loja atual; não existe exportação cruzada de dados entre tenants.",
       "environment": "local"
+    },
+    {
+      "id": "AVL-252",
+      "title": "Cadastrar e validar contratos comerciais vigentes por loja",
+      "objective": "Versionar mensalidade e comissão por loja sem aplicar 5% retroativamente aos clientes existentes.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "em_revisao",
+      "acceptanceCriteria": [
+        "Novos cadastros recebem o plano escolhido mais comissão de 5%.",
+        "Clientes existentes preservam o contrato, com Vedashow em R$ 350 mais 5% e Bereta Rodas em 3%.",
+        "Uma nova versão encerra a anterior sem reescrever o histórico.",
+        "Pedidos novos guardam a versão comercial vigente.",
+        "Ausência ou ambiguidade de contrato não aplica comissão por fallback."
+      ],
+      "evidence": [
+        "Migração 20261018160000 aplicada integralmente no PostgreSQL isolado.",
+        "1.088 testes unitários aprovados.",
+        "24 testes direcionados de cadastro, contratos e mensalidade aprovados.",
+        "13 testes direcionados de checkout e contratos aprovados.",
+        "ESLint sem erros e TypeScript sem erros."
+      ],
+      "review": "Aguardando revisão do pull request e CI; nenhum cálculo ou cobrança de comissão foi incluído neste item.",
+      "environment": "local"
     }
   ],
-  "decisions": [],
+  "decisions": [
+    {
+      "id": "D-0001",
+      "title": "Comissão somente para novos cadastros e exceções formalizadas",
+      "decision": "Cadastros novos usam mensalidade do plano mais 5%; clientes legados ficam em 0%, exceto Vedashow em R$ 350 mais 5% e Bereta Rodas em 3%.",
+      "date": "2026-10-18"
+    }
+  ],
   "integrations": []
 }
