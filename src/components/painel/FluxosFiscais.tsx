@@ -10,7 +10,7 @@ type Estado = {
   podeUsar: boolean;
   fluxos: Fluxo[];
   destinos: Array<{ id: string; nome: string; url: string; ativo: boolean }>;
-  entregas: Array<{ id: string; eventId: string; webhookId: string; tipo: string; status: string; tentativas: number; ultimoErro: string | null; criadaEm: string; fluxoNome: string | null; documento: { id: string; numero: string | null; nsu: string } | null }>;
+  entregas: Array<{ id: string; eventId: string; webhookId: string; tipo: string; status: string; tentativas: number; ultimoErro: string | null; criadaEm: string; fluxoNome: string | null; revisao?: string | null; execucaoN8n?: string | null; documento: { id: string; numero: string | null; nsu: string } | null }>;
 };
 const INICIAL: Configuracao = { nome: "", webhookId: "", finalidade: "compras", eventos: ["fiscal.nfe-recebida"], campos: ["fornecedor", "totais"] };
 const STATUS: Record<string, string> = { PENDENTE: "Na fila", ENVIANDO: "Enviando", ENTREGUE: "Recebido pelo destino", FALHOU: "Falhou" };
@@ -129,7 +129,15 @@ export default function FluxosFiscais({ documento }: { documento: { id: string; 
           </form>}
           <details className="border-t border-border pt-4"><summary className="cursor-pointer text-sm font-medium">Últimas 30 entregas fiscais</summary>
             <div className="mt-3 flex flex-wrap items-end gap-2"><label className="grid gap-1 text-xs">Entrega<select className={inputClasse} value={statusEntrega} onChange={(e) => setStatusEntrega(e.target.value)}><option value="">Todas</option>{Object.entries(STATUS).map(([id, nome]) => <option key={id} value={id}>{nome}</option>)}</select></label><button className="btn-secundario" disabled={ocupado} onClick={() => void executar(async () => {})}>Atualizar histórico</button></div>
-            <ul className="mt-3 divide-y divide-border">{estado.entregas.filter((e) => !statusEntrega || e.status === statusEntrega).map((e) => <li key={e.id} className="grid gap-1 py-3 text-xs"><p>{e.fluxoNome} · {destino(e.webhookId)?.nome} · {STATUS[e.status] ?? e.status} · {e.tentativas} tentativa(s)</p><p>{new Date(e.criadaEm).toLocaleString("pt-BR")} · {EVENTOS_FISCAIS[e.tipo as keyof typeof EVENTOS_FISCAIS]}</p>{e.documento && <a className="underline" href={`/api/painel/fiscal/documentos/${e.documento.id}`}>Documento {e.documento.numero ?? "fiscal"} · NSU {e.documento.nsu}</a>}<p className="break-all text-muted-foreground">Evento {e.eventId} · Entrega {e.id}</p>{e.ultimoErro && <p className="text-red-700">{e.ultimoErro}</p>}</li>)}</ul>
+            <ul className="mt-3 divide-y divide-border">{estado.entregas.filter((e) => !statusEntrega || e.status === statusEntrega).map((e) => <li key={e.id} className="grid gap-1 py-3 text-xs">
+              <p>{e.fluxoNome} · {destino(e.webhookId)?.nome} · {STATUS[e.status] ?? e.status} · {e.tentativas} tentativa(s)</p>
+              <p>{new Date(e.criadaEm).toLocaleString("pt-BR")} · {EVENTOS_FISCAIS[e.tipo as keyof typeof EVENTOS_FISCAIS]}</p>
+              {e.documento && <a className="underline" href={`/api/painel/fiscal/documentos/${e.documento.id}`}>Documento {e.documento.numero ?? "fiscal"} · NSU {e.documento.nsu}</a>}
+              {e.revisao === "PENDENTE" && <p>Recebido no n8n · Aguardando revisão</p>}
+              {e.execucaoN8n && <a className="underline" href={`https://n8n.avilaops.com/workflow/p063mxq8dQijjBDL/executions/${e.execucaoN8n}`} target="_blank" rel="noopener noreferrer">Ver execução no n8n</a>}
+              <p className="break-all text-muted-foreground">Evento {e.eventId} · Entrega {e.id}</p>
+              {e.ultimoErro && <p className="text-red-700">{e.ultimoErro}</p>}
+            </li>)}</ul>
             <p className="mt-2 text-xs text-muted-foreground">O aceite do destino confirma a entrega dos dados. O resultado da conferência e as aprovações são acompanhados no processo de destino. Histórico mantido por 30 dias; documentos já encaminhados continuam protegidos contra repetição.</p>
           </details>
         </>}

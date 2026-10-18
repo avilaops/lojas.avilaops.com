@@ -20,10 +20,15 @@ export async function GET() {
       select: { id: true, webhookId: true, eventId: true, tipo: true, status: true, tentativas: true, ultimoStatus: true, ultimoErro: true, criadaEm: true, entregueEm: true, corpo: true },
     }),
   ]);
+  const recebidas = await prisma.automacaoEvento.findMany({ where: { slug: s.tenant.slug, eventId: { in: entregas.map((e) => e.eventId) }, tipo: { startsWith: "fiscal." }, status: "PROCESSADO" }, select: { eventId: true, detalhe: true, payload: true } });
+  const recepcoes = new Map(recebidas.map((r) => [r.eventId, r]));
   const metadados = z.object({ fluxo: z.object({ nome: z.string() }), dados: z.object({ documento: z.object({ id: z.string(), nsu: z.string(), numero: z.string().nullable() }) }) });
   const historico = entregas.map(({ corpo, ...e }) => {
     const m = metadados.safeParse(corpo);
-    return { ...e, documento: m.success ? m.data.dados.documento : null, fluxoNome: m.success ? m.data.fluxo.nome : null };
+    const recebida = recepcoes.get(e.eventId);
+    const revisao = z.object({ revisao: z.literal("PENDENTE"), execucaoId: z.string().regex(/^\d+$/) }).safeParse(recebida?.payload);
+    return { ...e, documento: m.success ? m.data.dados.documento : null, fluxoNome: m.success ? m.data.fluxo.nome : null,
+      revisao: revisao.success ? "PENDENTE" : null, execucaoN8n: revisao.success ? revisao.data.execucaoId : null };
   });
   return Response.json({ fluxos, destinos, entregas: historico, podeUsar: planoPermite("SECRETA", s.tenant.plano), eventos: EVENTOS_FISCAIS, campos: CAMPOS_FISCAIS, finalidades: FINALIDADES_FISCAIS }, { headers: { "Cache-Control": "no-store" } });
 }

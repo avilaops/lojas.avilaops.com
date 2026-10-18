@@ -19,7 +19,19 @@
 
 O ambiente local não permite iniciar o Postgres nativo como outro usuário. A alternativa PGlite 18.6 aplicou todas as migrações e executou cenários positivos, mas o adaptador de protocolo apresentou erros ao simular violações SQL. Essa execução não é registrada como suíte aprovada; as provas negativas foram confirmadas no PostgreSQL nativo do CI.
 
-## Limites e ativação
+## Continuação autorizada: implantação e consumidor
+
+Após a solicitação para concluir as pendências, a implementação foi conciliada com os PRs #126/#127 (main `9152616`). A origem fiscal canônica do ERP e o bloqueio da coleta SEFAZ duplicada foram preservados.
+
+- Suíte local atualizada: **1.128 testes unitários**, zero falhas.
+- TypeScript e ESLint dos arquivos adicionais aprovados.
+- Novos testes de integração: configuração idempotente e preservação de pausa; recepção HMAC e concorrência; recusa de assinatura falsa/expirada e troca de tenant/evento.
+- Ramo fiscal de três nós acrescentado ao **rascunho** do workflow existente `p063mxq8dQijjBDL`, versão `dbeeca93-f794-4a57-813d-de8f4eff2ff0`. Credencial administrativa existente confirmada. Ramos anteriores e grupos preservados. O aviso de excesso de caixas no canvas refere-se aos nós comerciais anteriores; os dois nós novos de processamento estão agrupados.
+- A recepção persiste somente referências de revisão, com `PENDENTE` e `nenhumaMovimentacao: true`; painel mostra a execução n8n. Configuração administrativa preserva regras existentes e não reenvia histórico.
+
+Os resultados finais de CI, merge, deploy e ensaio em produção serão registrados na conversa do PR #125, incluindo IDs das execuções. Este arquivo não considera o rascunho como publicado nem os testes de produção como concluídos antecipadamente.
+
+## Limites e ativação inicial
 
 O PR está em rascunho. Não houve deploy, migração em produção, uso de certificados reais, movimentação de estoque, transação financeira ou alteração/publicação de workflows n8n. A entrega é um mecanismo configurável de encaminhamento para revisão; não comprova implementação de conferências no sistema de destino.
 

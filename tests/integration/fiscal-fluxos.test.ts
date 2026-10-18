@@ -5,13 +5,18 @@ import { prisma } from "../../src/lib/db";
 import { cifrar } from "../../src/lib/cofre";
 import { enfileirarFluxosFiscais } from "../../src/lib/fiscal-fluxos";
 import { entregarWebhooks } from "../../src/lib/webhooks-entrega";
-import { conferirAssinatura } from "../../src/lib/webhooks-api";
+import { assinar, conferirAssinatura } from "../../src/lib/webhooks-api";
+import { configurarFiscalN8n, receberFiscalNoN8n, DESTINO_FISCAL_N8N } from "../../src/lib/fiscal-n8n";
+import { POST as receberRota } from "../../src/app/api/admin/fiscal/n8n/receber/route";
+import { GET as consultarRota, POST as configurarRota } from "../../src/app/api/admin/fiscal/n8n/route";
 
 const url = new URL(process.env.DATABASE_URL ?? "http://invalid");
 if (!["127.0.0.1", "localhost"].includes(url.hostname) || !["5548", "5588"].includes(url.port) || !url.pathname.endsWith("_test")) throw new Error("Teste exige Postgres local isolado :5548 ou :5588 e base *_test.");
 process.env.LOJAS_SECRET ??= "0".repeat(64);
 const lojas: string[] = [];
 after(async () => {
+  const tenants = await prisma.tenant.findMany({ where: { id: { in: lojas } }, select: { slug: true } });
+  await prisma.automacaoEvento.deleteMany({ where: { slug: { in: tenants.map((t) => t.slug) } } });
   await prisma.tenant.deleteMany({ where: { id: { in: lojas } } });
   await prisma.$disconnect();
 });
@@ -84,4 +89,53 @@ test("falha de transporte mantém mesma identidade e corpo na nova tentativa", a
   const depois = await prisma.entregaWebhook.findUniqueOrThrow({ where: { id: antes.id } });
   assert.equal(depois.status, "PENDENTE"); assert.equal(depois.tentativas, 1);
   assert.equal(depois.eventId, antes.eventId); assert.deepEqual(depois.corpo, antes.corpo);
+});
+
+test("configuração n8n é idempotente e preserva pausas decididas pelo dono", async () => {
+  const { loja } = await preparar();
+  await configurarFiscalN8n([loja.slug]);
+  await configurarFiscalN8n([loja.slug]);
+  assert.equal(await prisma.webhookApi.count({ where: { tenantId: loja.id, url: DESTINO_FISCAL_N8N } }), 1);
+  const regra = await prisma.fluxoFiscalLoja.findFirstOrThrow({ where: { tenantId: loja.id, finalidade: "divergencias" } });
+  await prisma.fluxoFiscalLoja.update({ where: { id: regra.id }, data: { ativo: false } });
+  await configurarFiscalN8n([loja.slug]);
+  assert.equal((await prisma.fluxoFiscalLoja.findUniqueOrThrow({ where: { id: regra.id } })).ativo, false);
+  assert.equal(await prisma.entregaWebhook.count({ where: { tenantId: loja.id } }), 0);
+});
+
+test("rotas de ativação e recepção recusam chamadas sem credencial antes de ler dados", async () => {
+  const request = new Request("https://lojas.example/api/admin/fiscal/n8n", { method: "POST", body: "{}" });
+  assert.equal((await consultarRota(new Request(request.url))).status, 401);
+  assert.equal((await configurarRota(request.clone())).status, 401);
+  assert.equal((await receberRota(request.clone())).status, 401);
+});
+
+test("n8n confere assinatura e registra uma revisão sob reentregas concorrentes", async () => {
+  const { loja, webhook, doc } = await preparar();
+  await prisma.webhookApi.update({ where: { id: webhook.id }, data: { url: DESTINO_FISCAL_N8N } });
+  await prisma.$transaction((tx) => enfileirarFluxosFiscais(tx, loja.id, [doc]));
+  const e = await prisma.entregaWebhook.findFirstOrThrow({ where: { tenantId: loja.id } });
+  const assinatura = assinar("segredo-teste", JSON.stringify(e.corpo));
+  const entrada = { tenantId: loja.id, entregaId: e.id, eventId: e.eventId, assinatura, execucaoId: "123" };
+  const resultados = await Promise.all([receberFiscalNoN8n(entrada), receberFiscalNoN8n(entrada)]);
+  assert.equal(resultados.filter((r) => !r.duplicado).length, 1);
+  const revisoes = await prisma.automacaoEvento.findMany({ where: { slug: loja.slug } });
+  assert.equal(revisoes.length, 1); assert.equal(revisoes[0].status, "PROCESSADO");
+  const p = revisoes[0].payload as Record<string, unknown>;
+  assert.equal(p.revisao, "PENDENTE"); assert.equal(p.nenhumaMovimentacao, true);
+  assert.equal(p.documentoId, doc.id); assert.equal(p.execucaoId, "123");
+  assert.equal(JSON.stringify(p).includes("11222333000144"), false);
+});
+
+test("recepção recusa assinatura falsa, expirada e tenant ou identidade de evento adulterados", async () => {
+  const { loja, webhook, doc } = await preparar();
+  await prisma.webhookApi.update({ where: { id: webhook.id }, data: { url: DESTINO_FISCAL_N8N } });
+  await prisma.$transaction((tx) => enfileirarFluxosFiscais(tx, loja.id, [doc]));
+  const e = await prisma.entregaWebhook.findFirstOrThrow({ where: { tenantId: loja.id } });
+  const entrada = { tenantId: loja.id, entregaId: e.id, eventId: e.eventId, assinatura: assinar("segredo-teste", JSON.stringify(e.corpo)), execucaoId: "124" };
+  await assert.rejects(receberFiscalNoN8n({ ...entrada, assinatura: assinar("segredo-outro", JSON.stringify(e.corpo)) }), { status: 403 });
+  await assert.rejects(receberFiscalNoN8n(entrada, Date.now() + 301000), { status: 403 });
+  await assert.rejects(receberFiscalNoN8n({ ...entrada, tenantId: "outra-loja" }), { status: 404 });
+  await assert.rejects(receberFiscalNoN8n({ ...entrada, eventId: "evt_adulterado" }), { status: 404 });
+  assert.equal(await prisma.automacaoEvento.count({ where: { slug: loja.slug } }), 0);
 });

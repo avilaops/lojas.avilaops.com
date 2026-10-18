@@ -46,7 +46,17 @@ No n8n: validar assinatura e versão → validar tenant e finalidade → reivind
 
 O receptor deve respeitar as aprovações do processo antes de aplicar qualquer alteração. Esta implementação **apenas entrega dados**: não cadastra fornecedor, não altera produto, não movimenta estoque, não cria pagamento e não aprova conciliação. Não fornece credenciais administrativas no corpo nem chama APIs de escrita desses módulos.
 
-Nenhum workflow n8n foi alterado, criado ou publicado por esta mudança. Antes de ativar uma regra operacional, o destino precisa implementar esse contrato e a etapa de revisão. Um endpoint que responde 200 sem persistir não comprova execução do processo.
+### Consumidor fiscal supervisionado
+
+O workflow existente `p063mxq8dQijjBDL` recebe um ramo isolado `Receber Documento Fiscal` → `Validar e Registrar Revisão Fiscal` → `Confirmar Recepção Fiscal`. O webhook `/webhook/lojas-fiscal` usa a credencial administrativa já existente para devolver apenas IDs, assinatura e execução ao endpoint `/api/admin/fiscal/n8n/receber`. Não há segundo workflow operacional, agendador ou credencial. A configuração dos três nós está em `docs/n8n-fiscal-revisao.json`; o workflow vivo continua sendo a fonte canônica.
+
+A plataforma autentica a chamada administrativa, relê o corpo imutável da entrega, verifica HMAC/timestamp e escopo da loja/documento/regra e grava uma referência idempotente em `AutomacaoEvento`. Não confia nos dados fiscais devolvidos pelo chamador. `PROCESSADO` nesse registro significa apenas **recepção persistida**; `payload.revisao: PENDENTE` e o painel indicam que a conferência não foi aprovada. O n8n responde com o status real da API, depois da persistência. Falhas de rede ou banco permitem retry pela fila existente.
+
+`GET /api/admin/fiscal/n8n` fornece resumo de destinos, entregas, revisões e saúde da rotina. `POST` com `acao: configurar` reutiliza ou cria um destino fiscal por loja ativa Loja Pro que já possui monitor/documentos, respeitando o limite de destinos e as pausas existentes. Cria a regra inicial de divergências para revisão; não reenvia histórico. `acao: testar` encaminha no máximo um documento anterior por loja pela mesma trava, somente em ensaio expressamente autorizado. Ambas aceitam `slugs` para restringir o escopo. As rotas exigem autenticação administrativa; o dono continua controlando sua regra pelo painel.
+
+Os PRs #126/#127 foram preservados: quando o ERP está configurado para o CNPJ, a coleta SEFAZ local continua desativada. Esta ativação não busca novamente documentos no SEFAZ nem copia a escrituração remota do ERP. As regras automáticas recebem novos documentos do coletor local de transição; notas já locais podem ser selecionadas manualmente. NF-e operacional, XML/DANFE e conferência das notas mantidas pelo ERP continuam no caminho canônico do ERP.
+
+Publicar o ramo n8n somente após a implantação dos endpoints. Nenhum nó fiscal altera produtos, estoque ou financeiro, nem comunica fornecedores. As decisões operacionais continuam exigindo revisão e as confirmações do processo.
 
 ## Publicação e retorno
 
