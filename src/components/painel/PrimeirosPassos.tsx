@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Campo, inputClasse } from "./campos";
 import { DIAS_DE_TESTE, PLANOS, mensalidade, type IdPlano } from "@/lib/planos";
 
@@ -15,6 +16,7 @@ export default function PrimeirosPassos({ planoInicial, testeAte }: { planoInici
   const [nome, setNome] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [plano, setPlano] = useState<IdPlano>(planoInicial);
+  const [aceitouTermosComerciais, setAceitouTermosComerciais] = useState(false);
   const [erro, setErro] = useState<{ campo?: string; mensagem: string } | null>(null);
   const [ocupado, setOcupado] = useState(false);
 
@@ -23,7 +25,7 @@ export default function PrimeirosPassos({ planoInicial, testeAte }: { planoInici
     setErro(null);
     setOcupado(true);
     try {
-      const r = await fetch("/api/painel/primeiros-passos", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ nome, whatsapp, plano }) });
+      const r = await fetch("/api/painel/primeiros-passos", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ nome, whatsapp, plano, aceitouTermosComerciais }) });
       const d = await r.json().catch(() => null);
       if (!r.ok) {
         setErro({ campo: d?.campo, mensagem: d?.erro ?? "Não foi possível criar a loja agora." });
@@ -74,8 +76,23 @@ export default function PrimeirosPassos({ planoInicial, testeAte }: { planoInici
         <p className="text-xs text-muted-foreground">Até ativar a cobrança, dá para trocar de plano em Configurações → Assinatura.</p>
       </fieldset>
 
+      <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-border bg-card p-5 text-sm">
+        <input
+          type="checkbox"
+          checked={aceitouTermosComerciais}
+          onChange={(e) => setAceitouTermosComerciais(e.target.checked)}
+          className="mt-0.5 h-4 w-4"
+          required
+        />
+        <span>
+          Li e aceito os <Link href="/termos-comerciais" target="_blank" className="font-semibold underline">Termos Comerciais</Link>,
+          incluindo a mensalidade do plano e 5% sobre as vendas realizadas na plataforma.
+        </span>
+      </label>
+
       {erro && !erro.campo && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{erro.mensagem}</p>}
       {erro?.campo === "plano" && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{erro.mensagem}</p>}
+      {erro?.campo === "aceitouTermosComerciais" && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{erro.mensagem}</p>}
       <button className="btn-primario justify-self-start" disabled={ocupado}>{ocupado ? "Criando a loja…" : "Criar minha loja"}</button>
     </form>
   );

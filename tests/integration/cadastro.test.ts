@@ -44,8 +44,8 @@ test("o mesmo e-mail não abre duas contas, nem em dois cliques ao mesmo tempo",
 
 test("primeiros passos põem a loja no ar com endereço que não pisa em outra", async () => {
   const nome = `Padaria QA ${sufixo()}`;
-  const primeira = await concluirPrimeirosPassos((await criarConta({ email: `qa-${sufixo()}@cadastro.example`, senha: null }))!, { nome, whatsapp: "5516999990000", plano: "LOJA" });
-  const segunda = await concluirPrimeirosPassos((await criarConta({ email: `qa-${sufixo()}@cadastro.example`, senha: null }))!, { nome, whatsapp: "5516999990001", plano: "LOJA_PRO" });
+  const primeira = await concluirPrimeirosPassos((await criarConta({ email: `qa-${sufixo()}@cadastro.example`, senha: null }))!, { nome, whatsapp: "5516999990000", plano: "LOJA", aceitouTermosComerciais: true });
+  const segunda = await concluirPrimeirosPassos((await criarConta({ email: `qa-${sufixo()}@cadastro.example`, senha: null }))!, { nome, whatsapp: "5516999990001", plano: "LOJA_PRO", aceitouTermosComerciais: true });
   assert.equal(primeira.status, "ATIVA");
   assert.equal(primeira.nome, nome);
   assert.ok(primeira.slug.startsWith("padaria-qa-"));
@@ -58,6 +58,8 @@ test("primeiros passos põem a loja no ar com endereço que não pisa em outra",
     [contratoPrimeira.plano, contratoPrimeira.mensalidadeCentavos, contratoPrimeira.comissaoPontosBase],
     ["LOJA", 26900, 500],
   );
+  assert.equal(contratoPrimeira.aceiteReferencia, "termos-comerciais-v1:checkbox");
+  assert.ok(contratoPrimeira.aceiteEm);
   assert.deepEqual(
     [contratoSegunda.plano, contratoSegunda.mensalidadeCentavos, contratoSegunda.comissaoPontosBase],
     ["LOJA_PRO", 49700, 500],

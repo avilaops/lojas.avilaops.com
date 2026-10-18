@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://lojas.avilaops.com" },
   openGraph: {
     title: "Lojas Avila Ops | a loja virtual com a cara do seu negócio",
-    description: "Sua marca, suas cores, suas fotos. R$ 269 fixos no mês, sem comissão.",
+    description: "Sua marca, suas cores, suas fotos. Planos mensais mais 5% sobre vendas na plataforma.",
     url: "https://lojas.avilaops.com",
     siteName: "Lojas Avila Ops",
     locale: "pt_BR",
@@ -36,15 +36,15 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Lojas Avila Ops | a loja virtual com a cara do seu negócio",
-    description: "Sua marca, suas cores, suas fotos. R$ 269 fixos no mês, sem comissão.",
+    description: "Sua marca, suas cores, suas fotos. Planos mensais mais 5% sobre vendas na plataforma.",
     images: ["/plataforma/opengraph-image"],
   },
 };
 
 
 const FAQ = [
-  ["Tem comissão sobre as vendas?", "Não. A mensalidade é fixa: venda R$ 500 ou R$ 50 mil no mês, o valor é o mesmo. Plataformas grandes cobram plano mais tarifa por venda; aqui não."],
-  ["O dinheiro passa pela Avila Ops?", "Não. Pix, cartão e boleto caem na conta da sua empresa, na hora. A gente só cobra a mensalidade."],
+  ["Tem comissão sobre as vendas?", "Sim. Novos cadastros pagam a mensalidade do plano mais 5% sobre as vendas realizadas na plataforma. Frete, tributos destacados, juros e taxas do meio de pagamento não entram na base."],
+  ["O dinheiro passa pela Avila Ops?", "Não. Pix, cartão e boleto caem na conta da sua empresa. A mensalidade e a comissão são apuradas depois, conforme os Termos Comerciais."],
   ["A loja fica com a minha cara ou com a de vocês?", "Com a sua. Cor, letra, fotos e o jeito de mostrar os produtos saem do seu negócio. O nome da Avila Ops aparece numa linha discreta no rodapé, só isso."],
   ["Quanto tempo leva para entrar no ar?", "Um dia. Você conta como é o seu negócio em cinco etapas, e domínio, e-mail e loja sobem sozinhos. Os produtos entram um a um ou por planilha, e no setup a gente cadastra junto com você."],
   ["Preciso entender de tecnologia?", "Não. No dia a dia você vê o pedido chegar, separa e marca como enviado. O resto já vai pronto."],
@@ -134,7 +134,7 @@ const JSON_LD = {
       areaServed: "BR",
       url: "https://lojas.avilaops.com",
       description:
-        "Loja virtual com a identidade do próprio comércio: catálogo, carrinho, Pix na hora, cartão e boleto, frete por CEP, WhatsApp e e-mail profissional por mensalidade fixa, sem comissão sobre venda.",
+        "Loja virtual com a identidade do próprio comércio: catálogo, carrinho, Pix, cartão e boleto, frete por CEP, WhatsApp e e-mail profissional por mensalidade mais 5% sobre vendas na plataforma.",
       offers: PLANOS.map((p) => ({ "@type": "Offer", name: `Plano ${p.nome}`, price: p.preco, priceCurrency: "BRL", url: `https://lojas.avilaops.com/criar?plano=${p.id}`, description: p.descricao })),
       provider: { "@type": "Organization", name: "Avila Ops", url: "https://avilaops.com" },
     },
@@ -157,7 +157,7 @@ export default function LandingPlataforma() {
             <h1>A loja com a cara<br />do <span>seu</span> negócio.</h1>
             <p>
               Sua cor, sua letra, suas fotos, e o cliente comprando pelo celular sem
-              perguntar preço. No ar em um dia por <strong>R$ 269 fixos no mês</strong>,
+              perguntar preço. No ar em um dia a partir de <strong>R$ 269 por mês + 5% sobre vendas na plataforma</strong>,
               com o dinheiro caindo na conta da sua empresa.
             </p>
             <div className="pl-acoes">
@@ -165,7 +165,7 @@ export default function LandingPlataforma() {
               <a href="https://demo.lojas.avilaops.com" target="_blank" rel="noopener" className="pl-botao pl-botao-linha">Ver uma loja pronta</a>
             </div>
             <ul className="pl-provas">
-              <li><Banknote size={15} /> Sem comissão sobre venda</li>
+              <li><Banknote size={15} /> Comissão clara de 5%</li>
               <li><QrCode size={15} /> Pix na hora</li>
               <li><Clock3 size={15} /> No ar em um dia</li>
             </ul>
@@ -190,7 +190,7 @@ export default function LandingPlataforma() {
 
       <div className="pl-faixa">
         <div className="pl-container">
-          <span>Tudo dentro da mensalidade</span>
+          <span>Recursos do plano</span>
           <div><Store size={16} /> Catálogo</div><i />
           <div><QrCode size={16} /> Pix, cartão e boleto</div><i />
           <div><Truck size={16} /> Frete por CEP</div><i />
@@ -274,9 +274,9 @@ export default function LandingPlataforma() {
       <section id="planos" className="pl-planos">
         <div className="pl-container">
           <header className="pl-cabecalho pl-planos-cabecalho">
-            <span className="pl-kicker">Três planos, preço fixo</span>
-            <h2>Sem comissão. Sem dólar. Sem surpresa.</h2>
-            <p>Setup único de <strong>R$ 497</strong> · 7 dias de teste, sem cartão · a mensalidade começa quando você ativa a cobrança.</p>
+            <span className="pl-kicker">Três planos, regra transparente</span>
+            <h2>Mensalidade + 5% sobre vendas.</h2>
+            <p>Setup único de <strong>R$ 497</strong> · 7 dias de teste, sem cartão · cobrança apenas após a ativação, conforme os Termos Comerciais.</p>
           </header>
           <div className="pl-planos-grid">
             {PLANOS.map((plano) => (
@@ -295,7 +295,7 @@ export default function LandingPlataforma() {
               </article>
             ))}
           </div>
-          <p className="pl-planos-nota"><ShieldCheck size={15} /> Pix, cartão e boleto caem na conta da sua empresa. O dinheiro não passa pela Avila Ops.</p>
+          <p className="pl-planos-nota"><ShieldCheck size={15} /> Pix, cartão e boleto caem na conta da sua empresa. A comissão de 5% é apurada depois sobre as vendas da plataforma.</p>
         </div>
       </section>
 
@@ -323,8 +323,8 @@ export default function LandingPlataforma() {
             <Link href="/criar" className="pl-botao pl-botao-claro">Criar minha loja <ArrowRight size={17} /></Link>
           </div>
           <dl className="pl-fechamento-numeros">
-            <div><dt>R$ 269</dt><dd>fixos por mês</dd></div>
-            <div><dt>0%</dt><dd>de comissão</dd></div>
+            <div><dt>R$ 269</dt><dd>a partir de, por mês</dd></div>
+            <div><dt>5%</dt><dd>sobre vendas na plataforma</dd></div>
             <div><dt>1 dia</dt><dd>para entrar no ar</dd></div>
           </dl>
         </div>

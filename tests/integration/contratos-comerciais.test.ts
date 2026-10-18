@@ -28,6 +28,9 @@ test("loja criada pelo admin nasce com contrato da tabela e comissão de 5%", as
     [contrato.versao, contrato.plano, contrato.mensalidadeCentavos, contrato.comissaoPontosBase, contrato.situacao],
     [1, "LOJA_PRO", 49700, 500, "ATIVO"],
   );
+  assert.equal(contrato.aceiteEm, null);
+  assert.equal(contrato.aceiteReferencia, null);
+  assert.equal(contrato.origem, "ADMIN");
 });
 
 test("nova versão encerra a anterior, atualiza o plano e preserva o histórico", async () => {

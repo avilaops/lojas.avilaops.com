@@ -34,7 +34,15 @@ async function loja(extras: { meiosPagamento?: string[]; comContrato?: boolean }
       slug: `qa-ck-${sufixo()}`, nome: "QA Checkout", status: "ATIVA", plano: "LOJA",
       // Retirada na loja: frete sem transportadora, para o teste não sair para a rede.
       retiradaNaLoja: true, enderecoPublico: true, endereco: ENDERECO,
-      ...(extras.comContrato === false ? {} : { contratosComerciais: { create: contratoPadraoAninhado("LOJA") } }),
+      ...(extras.comContrato === false ? {} : {
+        contratosComerciais: {
+          create: contratoPadraoAninhado("LOJA", {
+            aceiteEm: null,
+            aceiteReferencia: null,
+            origem: "QA",
+          }),
+        },
+      }),
       ...(extras.meiosPagamento ? { meiosPagamento: extras.meiosPagamento } : {}),
     },
   });

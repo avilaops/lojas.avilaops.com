@@ -41,6 +41,11 @@ export function normalizarEmailDoCadastro(email: string): string {
 }
 
 const PLANOS_VALIDOS = new Set<Plano>(["SITE", "LOJA", "LOJA_PRO"]);
+export const TERMO_COMERCIAL_VERSAO = "termos-comerciais-v1";
+
+export function aceiteComercialValido(valor: unknown): valor is true {
+  return valor === true;
+}
 
 /** O plano que veio da página inicial (/criar?plano=), ou nenhum. É só a sugestão inicial: a escolha é feita no painel. */
 export function planoDoCadastro(valor: unknown): Plano | undefined {
@@ -124,7 +129,11 @@ async function slugLivre(nome: string, idProprio: string): Promise<string> {
  * de e-mail) depende de domínio próprio, que costuma chegar semanas depois, e
  * a loja no subdomínio não espera por ele.
  */
-export async function concluirPrimeirosPassos(t: Tenant, entrada: { nome: string; whatsapp: string; plano: Plano }): Promise<Tenant> {
+export async function concluirPrimeirosPassos(
+  t: Tenant,
+  entrada: { nome: string; whatsapp: string; plano: Plano; aceitouTermosComerciais: true },
+  instante = new Date(),
+): Promise<Tenant> {
   const slug = await slugLivre(entrada.nome, t.id);
   return prisma.tenant.update({
     where: { id: t.id },
@@ -134,7 +143,13 @@ export async function concluirPrimeirosPassos(t: Tenant, entrada: { nome: string
       whatsapp: entrada.whatsapp,
       plano: entrada.plano,
       status: "ATIVA",
-      contratosComerciais: { create: contratoPadraoAninhado(entrada.plano) },
+      contratosComerciais: {
+        create: contratoPadraoAninhado(entrada.plano, {
+          aceiteEm: instante,
+          aceiteReferencia: `${TERMO_COMERCIAL_VERSAO}:checkbox`,
+          origem: "CADASTRO",
+        }, instante),
+      },
     },
   });
 }
