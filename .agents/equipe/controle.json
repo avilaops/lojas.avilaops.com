@@ -341,6 +341,27 @@
       ],
       "review": "Pronto para revisão técnica; nenhuma credencial, execução de workflow, publicação ou alteração remota foi realizada.",
       "environment": "local"
+    },
+    {
+      "id": "OMNI-0.3",
+      "title": "Criar Central de Conexões e Saúde dos Canais",
+      "objective": "Exibir o estado real por loja e canal, com escopos, sincronização, webhooks, histórico e ações seguras de teste e reconexão.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "em_revisao",
+      "acceptanceCriteria": [
+        "A leitura agrega apenas dados canônicos do tenant e não chama provedores externos.",
+        "Todos os marketplaces, Melhor Envio, credenciais de pagamento configuradas e webhooks aparecem na Central.",
+        "Testes exigem permissão de configurações, respeitam cooldown distribuído e registram somente mensagens sanitizadas.",
+        "O histórico é append-only e isolado por tenant.",
+        "A interface funciona em celular e desktop sem promover canais somente conexão a operacionais."
+      ],
+      "evidence": [
+        "Testes direcionados de estados, precedência, sanitização, isolamento estrutural e navegação.",
+        "Validação TypeScript, ESLint, build e capturas desktop/mobile registradas na revisão da tarefa."
+      ],
+      "review": "Pronto para revisão técnica após os gates locais; nenhum deploy ou publicação faz parte desta tarefa.",
+      "environment": "local"
     }
   ],
   "decisions": [

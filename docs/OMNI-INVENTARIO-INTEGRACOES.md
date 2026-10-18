@@ -46,6 +46,12 @@ O Lojas passou a executar internamente rotinas críticas descritas em [`ROTINAS.
 4. Toda lacuna deve permanecer ligada a uma decisão ou dependência.
 5. Revalidar documentação, quotas e ambientes dos provedores antes de implantação.
 
+## Central de Conexões
+
+A rota `/painel/conexoes` consolida, por loja, a conexão, os escopos, a última atividade, a validade da autorização, as rotinas e a situação dos webhooks. A leitura usa apenas o estado canônico já persistido e não consulta provedores externos ao abrir a página.
+
+O botão **Testar** é uma ação explícita, restrita a quem possui a permissão de configurações. Cada teste cria uma reserva imutável por loja, canal e minuto, usa o cliente oficial da integração para preservar tokens rotativos e registra apenas código e mensagem sanitizados. Tokens, URLs, corpos e erros brutos não entram no histórico. Amazon, Shopee e Magalu continuam identificados como **somente conexão** até possuírem operações comerciais homologadas.
+
 ## Evidência e limites
 
 O levantamento combina código e documentação do repositório com consultas somente leitura aos conectores Ávila Ops e n8n em 18/10/2026. Nomes de credenciais foram usados apenas para confirmar existência; nenhum segredo foi lido ou registrado. Não houve execução de workflow, alteração remota, build em servidor, deploy ou publicação. Como este item é documental e não modifica UI, prints não se aplicam.
