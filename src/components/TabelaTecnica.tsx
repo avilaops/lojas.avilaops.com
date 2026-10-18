@@ -7,6 +7,7 @@ import { mensagemDoProduto } from "@/lib/whatsapp-produto";
 import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
 import { urlDaLoja } from "@/lib/tenant";
 import AddToCartButton from "@/components/cart/AddToCartButton";
+import { fichaDoProduto } from "@/lib/ficha";
 
 function celula(linha: LinhaTecnica, coluna: Coluna) {
   if (coluna === "equivalentes") return linha.equivalentes.join(", ") || "—";
@@ -60,7 +61,14 @@ export default function TabelaTecnica({ produtos, vende, titulo, nomeDaLoja, loj
         <tbody>
           {linhas.map(({ produto, linha }) => (
             <tr key={produto.id}>
-              <th scope="row"><Link href={`/produtos/${linha.slug}`}>{linha.nome}</Link></th>
+              <th scope="row">
+                <Link href={`/produtos/${linha.slug}`}>{linha.nome}</Link>
+                <dl className="mt-1 text-xs font-normal text-muted-foreground">
+                  {fichaDoProduto(produto.atributos as Record<string, unknown> | null).filter((item) => ["perfil", "material", "vedacao", "aplicacao", "funcao"].includes(item.chave)).map((item) => (
+                    <div key={item.chave}><dt className="inline">{item.rotulo}: </dt><dd className="inline">{item.valor}</dd></div>
+                  ))}
+                </dl>
+              </th>
               {colunas.map((coluna) => <td key={coluna} className={`ct-${coluna}`}>{celula(linha, coluna)}</td>)}
               <td className="ct-preco">{preco(produto, vende)}</td>
               {loja && (

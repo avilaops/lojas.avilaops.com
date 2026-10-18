@@ -94,6 +94,11 @@ test("catálogo: sem produto ativo fica pendente", () => {
   assert.equal(passo(vazia, "catalogo").feito, false);
 });
 
+test("recebimento: outro provedor configurado não depende de Mercado Pago", () => {
+  assert.equal(passo({ ...vazia, mpConfigurado: false, recebimentoConfigurado: true }, "recebimento").feito, true);
+  assert.equal(passo({ ...vazia, mpConfigurado: true, recebimentoConfigurado: false }, "recebimento").feito, false);
+});
+
 test("recebimento: credencial salva liga o passo", () => {
   const p = passo({ ...vazia, mpConfigurado: true }, "recebimento");
   assert.equal(p.feito, true);

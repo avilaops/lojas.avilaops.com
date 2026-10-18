@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { lojistaAtual } from "@/lib/sessao";
-import { urlDaLoja, temaDo, identidadeDa } from "@/lib/tenant";
+import { urlDaLoja, temaDo, identidadeDa, lojaVende } from "@/lib/tenant";
 import { layoutsOferecidos, templateAtelieLigado } from "@/lib/flags";
 import { NOME_PLANO } from "@/lib/assinatura";
 import { mensalidadeDaLoja } from "@/lib/faixas-antigas";
@@ -125,6 +125,7 @@ export async function dadosDoPainel(secao: SecaoPainel) {
       mpPublicKey: loja.mpPublicKey,
       // Só o fato de existir credencial; o token cifrado nunca sai daqui.
       mpConfigurado: Boolean(loja.mpAccessTokenEnc),
+      recebimentoConfigurado: lojaVende(loja),
       // Só o fato de estar conectado, para o checklist: os tokens não saem daqui.
       melhorEnvioConectado: melhorEnvioConectado(loja),
       cotacaoDaPlataforma: cepCertoConfigurada(),

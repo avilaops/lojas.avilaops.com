@@ -20,6 +20,8 @@ export type EntradaChecklist = {
   dominioPrincipal: string | null;
   produtosAtivos: number;
   mpConfigurado: boolean;
+  /** Regra atual da plataforma, incluindo provedores diferentes do Mercado Pago. */
+  recebimentoConfigurado?: boolean;
   cepOrigem: string | null;
   /** A loja conectou a própria conta do Melhor Envio (é ela que cota a transportadora). */
   melhorEnvioConectado: boolean;
@@ -87,11 +89,13 @@ function catalogo(e: EntradaChecklist): PassoChecklist {
 }
 
 function recebimento(e: EntradaChecklist): PassoChecklist {
-  const feito = e.mpConfigurado === true;
+  const feito = e.recebimentoConfigurado ?? e.mpConfigurado === true;
   const detalhe = feito
-    ? "A conta do Mercado Pago está ligada: o cliente consegue pagar."
-    : "Sem a conta do Mercado Pago, o cliente monta o carrinho e não consegue pagar.";
-  return { id: "recebimento", titulo: "Recebimento", feito, opcional: false, detalhe, href: "/painel/configuracoes/recebimento", acao: "Ligar o Mercado Pago" };
+    ? "O recebimento online está configurado. Valide o pagamento antes de considerar o recebimento homologado."
+    : e.recebimentoConfigurado === undefined
+      ? "Sem a conta do Mercado Pago, o cliente monta o carrinho e não consegue pagar."
+      : "O recebimento online ainda não está disponível. A solicitação pelo carrinho depende do atendimento da loja.";
+  return { id: "recebimento", titulo: "Recebimento", feito, opcional: false, detalhe, href: "/painel/configuracoes/recebimento", acao: "Configurar o recebimento" };
 }
 
 function entrega(e: EntradaChecklist): PassoChecklist {
@@ -124,7 +128,7 @@ const ESTADO_FORA_DO_AR: Record<string, string> = {
 
 function publicacao(e: EntradaChecklist, obrigatorios: PassoChecklist[]): PassoChecklist {
   const pendentes = obrigatorios.filter((p) => !p.feito);
-  const base = { id: "publicacao" as const, titulo: "Publicação", opcional: false };
+  const base = { id: "publicacao" as const, titulo: "Prontidão para vender", opcional: false };
 
   if (e.status !== "ATIVA") {
     const assinatura = e.status === "SUSPENSA" || e.status === "CANCELADA";
@@ -140,12 +144,12 @@ function publicacao(e: EntradaChecklist, obrigatorios: PassoChecklist[]): PassoC
     return {
       ...base,
       feito: false,
-      detalhe: `Para a loja vender ainda falta: ${pendentes.map((p) => p.titulo).join(", ")}.`,
+      detalhe: `A vitrine está no ar. Para concluir a configuração de venda ainda falta: ${pendentes.map((p) => p.titulo).join(", ")}.`,
       href: pendentes[0].href,
       acao: pendentes[0].acao,
     };
   }
-  return { ...base, feito: true, detalhe: `A loja está no ar e pronta para vender em ${e.url}.`, href: e.url, acao: "Abrir a loja" };
+  return { ...base, feito: true, detalhe: `A loja está no ar em ${e.url} e os requisitos de configuração estão preenchidos. Valide o fluxo de compra antes de considerar o recebimento homologado.`, href: e.url, acao: "Abrir a loja" };
 }
 
 /** Sempre seis passos, na ordem do roadmap. */

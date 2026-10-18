@@ -37,7 +37,8 @@ export default function Sugestoes() {
 
   return (
     <section className="mt-8">
-      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Leve também</h2>
+      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Outros produtos do catálogo</h2>
+      <p className="mb-3 text-sm text-muted-foreground">Confira as características de cada produto. Esta lista não confirma compatibilidade entre as peças.</p>
       <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {sugestoes.map((s) => (
           <li key={s.id} className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
