@@ -10,6 +10,7 @@ import type { DadosHome } from "./tipos";
 /** Catálogo denso, direto e muito navegável. Para distribuidores com variedade. */
 export default function Mercado({ t, identidade, categorias, vitrine, temDestaques, vende, moto }: DadosHome) {
   const motopecas = t.segmento === "motopecas";
+  const catalogoTecnico = motopecas || temaDo(t).layout === "catalogo-tecnico";
 
   return (
     <main className="home-mercado">
@@ -27,9 +28,11 @@ export default function Mercado({ t, identidade, categorias, vitrine, temDestaqu
               <Link href="/produtos" className="btn-primario">Buscar produtos <Search /></Link>
               {t.whatsapp && <Link href="/contato" className="btn-secundario">Falar com a equipe</Link>}
             </div>
-            {/* Ensina o gesto que a busca entende. Quem compra peça costuma ter
-                a medida na mão e não imagina que dá para digitá-la. */}
-            <p className="mercado-dica">Encontre por nome, medida ou código do fabricante.</p>
+            <p className="mercado-dica">
+              {catalogoTecnico
+                ? "Encontre por nome, medida ou código do fabricante."
+                : "Encontre por nome, código, finalidade ou marca."}
+            </p>
           </div>
           {/* Sem contagem de categorias e de produtos: ver "5.591 itens" não
               ajuda quem procura uma peça, e entrega o tamanho do estoque a quem

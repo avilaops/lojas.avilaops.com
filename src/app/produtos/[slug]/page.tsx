@@ -271,6 +271,15 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
                 </a>
               </>
             ) : null}
+            {!somenteNaLoja && !estado.esgotado && (estado.acao === "carrinho" || Boolean(t.whatsapp)) && (
+              <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                {estado.acao === "carrinho"
+                  ? "Adicione ao carrinho para informar a entrega e concluir o pagamento no site."
+                  : t.whatsapp
+                    ? "Adicione ao pedido; a loja confirma disponibilidade, entrega e pagamento pelo WhatsApp."
+                    : null}
+              </p>
+            )}
           </div>
 
           {p.opcoes.length === 0 && !estado.esgotado && (
@@ -323,10 +332,17 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
 
       {serie.length > 0 ? (
         <section className="mt-12">
-          <h2 className="mb-1 text-base font-bold">Outras medidas desta série</h2>
-          {/* A ressalva importa: mesma construção não é mesma peça, e quem
-              erra a medida devolve. */}
-          <p className="mb-4 text-xs text-muted-foreground">Mesma construção, dimensões diferentes. Confira a medida antes de pedir.</p>
+          {listaEmTabela(temaDo(t)) ? (
+            <>
+              <h2 className="mb-1 text-base font-bold">Outras medidas desta série</h2>
+              <p className="mb-4 text-xs text-muted-foreground">Mesma construção, dimensões diferentes. Confira a medida antes de pedir.</p>
+            </>
+          ) : (
+            <>
+              <h2 className="mb-1 text-base font-bold">Outras apresentações</h2>
+              <p className="mb-4 text-xs text-muted-foreground">Confira o volume, o peso e os demais detalhes antes de pedir.</p>
+            </>
+          )}
           {listaEmTabela(temaDo(t)) ? (
             <TabelaTecnica produtos={serie} vende={vende} titulo="Outras medidas desta série" nomeDaLoja={t.nome} loja={t} />
           ) : (
