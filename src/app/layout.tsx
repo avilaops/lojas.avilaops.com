@@ -10,7 +10,7 @@ import { headers } from "next/headers";
 import "./globals.css";
 import "@avilaops/checkout/tokens.css";
 import "@avilaops/checkout/checkout.css";
-import { noEnderecoOficial, tenantAtual, tenantPublico, temaDo, urlDaLoja, enderecoDo, formatarCep, identidadeDa } from "@/lib/tenant";
+import { noEnderecoOficial, tenantAtual, tenantPublico, temaDo, urlDaLoja, enderecoDo, formatarCep, identidadeDa, marcaQuadradaDa } from "@/lib/tenant";
 import { descricaoDaLoja } from "@/lib/textos-loja";
 import { listarCategorias, formatarBRL } from "@/lib/catalogo";
 import { cssDoTema } from "@/lib/tema";
@@ -245,7 +245,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           {t.avisoTopo && !cabecalhoProprio && (
             <p className="barra-aviso" role="status">{t.avisoTopo}</p>
           )}
-          {cabecalhoProprio ? <CabecalhoPremium loja={publico} logo={t.logoUrl} logoEscuro={tema.premium?.logoEscuroUrl} mostrarNome={tema.premium?.mostrarNome} categorias={[...categorias].sort((a,b)=>a.ordem-b.ordem).map(c=>({slug:c.slug,nome:c.nome}))} modo={tema.modo}/> : <Header loja={publico} logoUrl={t.logoUrl} mostrarNome={tema.mostrarNomeNoCabecalho} categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} exemploBusca={exemploBusca} mostrarPromocoes={temPromocoes} />}
+          {cabecalhoProprio ? <CabecalhoPremium loja={publico} logo={t.logoUrl} logoCompacta={marcaQuadradaDa(t)} logoEscuro={tema.premium?.logoEscuroUrl} mostrarNome={tema.premium?.mostrarNome} categorias={[...categorias].sort((a,b)=>a.ordem-b.ordem).map(c=>({slug:c.slug,nome:c.nome}))} modo={tema.modo}/> : <Header loja={publico} logoUrl={t.logoUrl} mostrarNome={tema.mostrarNomeNoCabecalho} categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} exemploBusca={exemploBusca} mostrarPromocoes={temPromocoes} />}
           {t.segmento === "motopecas" && <BarraGaragem tenantId={t.id} />}
           {t.pedidoMinimoCentavos != null && t.pedidoMinimoCentavos > 0 && (
             <p className="container-loja py-2 text-sm text-center">
