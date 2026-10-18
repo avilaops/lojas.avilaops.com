@@ -5,6 +5,7 @@ import { UFS_FISCAIS } from "@/lib/fiscal-distribuicao";
 import { RESUMO_FISCAL, sincronizarNotas } from "@/lib/fiscal-loja";
 import { origemFiscalPermitida } from "@/lib/fiscal-origem";
 import { resumirDocumentoFiscal } from "@/lib/fiscal-documento";
+import { buscarFiscalErp } from "@/lib/erp-fiscal";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,14 +17,18 @@ function ufDaEmpresa(endereco: unknown): string {
 }
 
 async function estado(tenantId: string, endereco: unknown) {
-  const [configuracao, documentos] = await Promise.all([
+  const tenant = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { cnpj: true } });
+  const cnpj = tenant?.cnpj?.replace(/[^0-9A-Z]/gi, "").toUpperCase() ?? "";
+  const [configuracao, documentos, erp] = await Promise.all([
     prisma.fiscalLoja.findUnique({ where: { tenantId }, select: RESUMO_FISCAL }),
     prisma.documentoFiscalLoja.findMany({ where: { tenantId }, select: { id: true, cnpj: true, nsu: true, schema: true, chave: true, xml: true, recebidoEm: true }, orderBy: [{ recebidoEm: "desc" }, { nsu: "desc" }], take: 100 }),
+    cnpj ? buscarFiscalErp(cnpj).catch((erro) => ({ erro: erro instanceof Error ? erro.message : "ERP fiscal indisponível." })) : null,
   ]);
   return {
     configuracao,
     documentos: documentos.map(({ xml, ...documento }) => ({ ...documento, ...resumirDocumentoFiscal(xml, documento.schema, documento.chave) })),
     ufEmpresa: ufDaEmpresa(endereco),
+    erp,
   };
 }
 
