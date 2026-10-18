@@ -29,7 +29,7 @@ export default function Industrial({ t, categorias, vitrine, temDestaques, vende
   const whatsapp = t.whatsapp ? `https://wa.me/${t.whatsapp.replace(/\D/g, "")}` : null;
 
   return (
-    <main className="home-industrial">
+    <div className="home-industrial">
       <section className="industrial-topo" aria-labelledby="industrial-titulo">
         {/* Fundo por CSS, e só em tela larga: no celular a foto ficava atrás do
             formulário, a meia opacidade, e custava o maior download da página. */}
@@ -108,6 +108,6 @@ export default function Industrial({ t, categorias, vitrine, temDestaques, vende
           </ul>
         </aside>
       </section>
-    </main>
+    </div>
   );
 }

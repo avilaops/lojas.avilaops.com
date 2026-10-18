@@ -67,6 +67,11 @@ export default async function Produtos({ searchParams }: { searchParams: Promise
         {moto && <> · <Link href="/produtos?moto=todas" className="underline">ver catálogo completo</Link></>}
       </p>
       <FiltrosProdutos categorias={categorias} valores={sp} medidas={temMedida} fabricantes={facetas.fabricantes} perfis={facetas.perfis} />
+      {temMedida.length > 0 && (
+        <p className="mb-4 text-sm text-muted-foreground">
+          Medidas iguais ou próximas não comprovam compatibilidade. Confira perfil, material e aplicação na ficha de cada peça antes de adicionar ao pedido.
+        </p>
+      )}
       {produtos.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
           Nada encontrado com esses filtros. Confira o nome, o código ou a referência do produto, ou reduza os filtros.

@@ -6,6 +6,7 @@ import { prisma } from "./db";
 import { lerTema, type TemaLoja } from "./tema";
 import { lerIdentidade, type IdentidadeLoja } from "./identidade";
 import { retiradaPublicaDisponivel } from "./retirada-publica";
+import { vendaOnlineDisponivel } from "./venda-online";
 export { retiradaPublicaDisponivel } from "./retirada-publica";
 
 /**
@@ -178,12 +179,7 @@ export function urlDaLoja(t: Tenant): string {
  * que é exatamente o que uma loja-demo deve fazer.
  */
 export function lojaVende(t: Tenant): boolean {
-  if (t.status !== "ATIVA" || t.plano === "SITE") return false;
-  // Mercado Pago (ou loja ainda sem padrão): vale o token nas colunas mp*,
-  // como sempre. Outro provedor: vale ter credencial padrão, que só vira
-  // padrão se estiver Conectado (src/lib/credenciais.ts).
-  if (!t.provedorPadrao || t.provedorPadrao === "mercadopago") return Boolean(t.mpAccessTokenEnc);
-  return Boolean(t.credencialPadraoId);
+  return vendaOnlineDisponivel(t);
 }
 
 /** O que o navegador pode saber da loja. Nunca inclui token cifrado. */
