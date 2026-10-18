@@ -3,7 +3,7 @@ import { execFileSync } from "node:child_process";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createSecureContext } from "node:tls";
+import { createSecureContext, type SecureContextOptions } from "node:tls";
 import forge from "node-forge";
 
 export class ErroFiscal extends Error {}
@@ -45,7 +45,7 @@ function infoCertificadoX509(certificado: X509Certificate): CertificadoLido {
  * node-forge não leem. Arquivo e senha vivem num diretório 0700, não aparecem
  * na linha de comando e são apagados antes de a requisição continuar.
  */
-function lerCertificadoOpenSSL(pfx: Buffer, senha: string): CertificadoLido {
+function abrirCertificadoOpenSSL(pfx: Buffer, senha: string): { info: CertificadoLido; cert: string; key: string } {
   const pasta = mkdtempSync(join(tmpdir(), "lojas-certificado-"));
   const arquivo = join(pasta, "certificado.p12");
   const segredo = join(pasta, "senha");
@@ -66,9 +66,22 @@ function lerCertificadoOpenSSL(pfx: Buffer, senha: string): CertificadoLido {
     if (!publicaDaChave.equals(publicaDoCertificado)) {
       throw new ErroFiscal("O certificado não contém a chave privada correspondente.");
     }
-    return infoCertificadoX509(certificado);
+    return { info: infoCertificadoX509(certificado), cert: certificadoPem, key: chavePem };
   } finally {
     rmSync(pasta, { recursive: true, force: true });
+  }
+}
+
+/** Credencial aceita pelo TLS do Node, inclusive quando o PKCS#12 usa cifras legadas. */
+export function credencialTls(pfx: Buffer, senha: string): SecureContextOptions {
+  try {
+    createSecureContext({ pfx, passphrase: senha });
+    return { pfx, passphrase: senha };
+  } catch {
+    const convertido = abrirCertificadoOpenSSL(pfx, senha);
+    const credencial = { cert: convertido.cert, key: convertido.key };
+    createSecureContext(credencial);
+    return credencial;
   }
 }
 
@@ -124,7 +137,7 @@ export function lerCertificado(pfx: Buffer, senha: string, cnpj: string) {
       erroForge = falhaForge;
     }
     try {
-      return conferirCertificado(lerCertificadoOpenSSL(pfx, senha), cnpj);
+      return conferirCertificado(abrirCertificadoOpenSSL(pfx, senha).info, cnpj);
     } catch (erroOpenSSL) {
       const classificadoNativo = erroAoAbrirCertificado(erro);
       if (!/não pôde ser aberto/.test(classificadoNativo.message)) throw classificadoNativo;

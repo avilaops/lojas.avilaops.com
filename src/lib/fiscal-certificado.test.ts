@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { test } from "node:test";
 import { createSecureContext } from "node:tls";
 import forge from "node-forge";
-import { abrirCertificado, lerCertificado, selarCertificado } from "./fiscal-certificado";
+import { abrirCertificado, credencialTls, lerCertificado, selarCertificado } from "./fiscal-certificado";
 
 test("cofre cifra arquivo e senha e detecta alteração", () => {
   process.env.LOJAS_CERT_SECRET = "ab".repeat(32);
@@ -111,6 +111,9 @@ test("abre PKCS#12 legado com chave EC usando o OpenSSL do sistema", () => {
       lerCertificado(readFileSync(arquivo), "senha", "12345678000190").titular,
       "EMPRESA EC:12345678000190",
     );
+    const tls = credencialTls(readFileSync(arquivo), "senha");
+    assert.ok("cert" in tls && "key" in tls);
+    assert.doesNotThrow(() => createSecureContext(tls));
   } finally {
     rmSync(pasta, { recursive: true, force: true });
   }
