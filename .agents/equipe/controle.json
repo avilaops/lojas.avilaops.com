@@ -271,6 +271,30 @@
       ],
       "review": "Implementação pronta para revisão e CI no GitHub; publicação ainda não realizada.",
       "environment": "local"
+    },
+    {
+      "id": "AVL-254",
+      "title": "Integrar NF-e recebida completa com o ERP",
+      "objective": "Apresentar no Lojas o XML, DANFE e estado operacional de fornecedor, produtos, compra e custos mantidos pelo ERP.",
+      "assignee": null,
+      "priority": "urgente",
+      "status": "em_revisao",
+      "acceptanceCriteria": [
+        "A chave do ERP nunca chega ao navegador.",
+        "Cada CNPJ usa somente a chave do próprio tenant no ERP.",
+        "O lojista baixa XML completo e DANFE por proxy autenticado.",
+        "O painel informa fornecedor, itens, compra e custos e abre a conferência no ERP.",
+        "Sem integração configurada, o monitor fiscal atual continua funcionando."
+      ],
+      "evidence": [
+        "Cliente server-to-server e proxy fiscal implementados em worktree isolado.",
+        "Consulta SEFAZ local desativada por CNPJ quando o ERP está configurado, preservando a sequência NSU.",
+        "Três testes do contrato, validação da resposta e isolamento da credencial aprovados.",
+        "TypeScript, ESLint direcionado e 1122 testes unitários concluídos sem erros.",
+        "Capturas desktop e mobile revisadas em docs/revisao-telas/avl-254-nfe-erp."
+      ],
+      "review": "Validação local e telas concluídas; pendente de commit, PR, CI e revisão dos artefatos. Sem publicação autorizada.",
+      "environment": "local"
     }
   ],
   "decisions": [
@@ -279,7 +303,21 @@
       "title": "Comissão somente para novos cadastros e exceções formalizadas",
       "decision": "Cadastros novos usam mensalidade do plano mais 5%; clientes legados ficam em 0%, exceto Vedashow em R$ 350 mais 5% e Bereta Rodas em 3%.",
       "date": "2026-10-18"
+    },
+    {
+      "id": "D-0002",
+      "title": "ERP como fonte da escrituração fiscal recebida",
+      "decision": "O ERP guarda XML, DANFE, fornecedor, produtos, custos, compra e estoque; o Lojas consome a API por tenant e mantém seu coletor atual apenas como compatibilidade de transição.",
+      "date": "2026-10-18"
     }
   ],
-  "integrations": []
+  "integrations": [
+    {
+      "id": "I-ERP-NFE-RECEBIDA",
+      "system": "ERP Ávila Ops",
+      "direction": "ERP -> Lojas",
+      "contract": "GET /api/v1/notas-recebidas e arquivos XML/DANFE com chave de leitura por tenant",
+      "status": "em_revisao"
+    }
+  ]
 }
