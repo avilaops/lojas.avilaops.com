@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
-  BarChart3, Bot, ExternalLink, LayoutDashboard, LogOut, Megaphone, Menu, Package, Settings,
+  ArrowLeftRight, BarChart3, Bot, ExternalLink, LayoutDashboard, LogOut, Megaphone, Menu, Package, Settings,
   Search, ShoppingCart, Star, Tags, Ticket, Users, Warehouse, X,
 } from "lucide-react";
 import { abrirBusca } from "./BuscaPainel";
@@ -120,7 +120,7 @@ function Lista({ pathname, aoNavegar, aSeparar, pixAConferir = 0, secoes }: { pa
   );
 }
 
-function Rodape({ pathname, aoNavegar, urlLoja }: { pathname: string; aoNavegar?: () => void; urlLoja: string }) {
+function Rodape({ pathname, aoNavegar, urlLoja, podeTrocarLoja }: { pathname: string; aoNavegar?: () => void; urlLoja: string; podeTrocarLoja: boolean }) {
   const emConfig = ativo(pathname, "/painel/configuracoes");
   // O nome da loja fica só no topo. Aqui embaixo ficam as três ações que não
   // são seção: configurar, abrir a loja e sair, todas com texto. "Abrir a
@@ -131,6 +131,12 @@ function Rodape({ pathname, aoNavegar, urlLoja }: { pathname: string; aoNavegar?
         <Settings size={16} aria-hidden="true" />
         <span>Configurações</span>
       </Link>
+      {podeTrocarLoja && (
+        <Link href="/entrar/equipe" onClick={aoNavegar} className="pnav-item">
+          <ArrowLeftRight size={16} aria-hidden="true" />
+          <span>Trocar loja</span>
+        </Link>
+      )}
       <a href={urlLoja} target="_blank" rel="noopener" className="pnav-item">
         <ExternalLink size={16} aria-hidden="true" />
         <span>Ver loja</span>
@@ -145,7 +151,7 @@ function Rodape({ pathname, aoNavegar, urlLoja }: { pathname: string; aoNavegar?
   );
 }
 
-export default function NavPainel({ nome, urlLoja, aSeparar = 0, pixManual = false, pixAConferir = 0 }: { nome: string; urlLoja: string; aSeparar?: number; pixManual?: boolean; pixAConferir?: number }) {
+export default function NavPainel({ nome, urlLoja, aSeparar = 0, pixManual = false, pixAConferir = 0, podeTrocarLoja = false }: { nome: string; urlLoja: string; aSeparar?: number; pixManual?: boolean; pixAConferir?: number; podeTrocarLoja?: boolean }) {
   const pathname = usePathname().replace(/^\/plataforma(?=\/|$)/, "");
   const secoes: ItemNav[] = pixManual
     ? SECOES.flatMap((s) => (s.href === "/painel/pedidos" ? [s, { rotulo: "Pix a conferir", href: "/painel/pedidos/pix", icone: "pedidos" }] : [s]))
@@ -196,7 +202,7 @@ export default function NavPainel({ nome, urlLoja, aSeparar = 0, pixManual = fal
           <kbd>⌘K</kbd>
         </button>
         <Lista pathname={pathname} aSeparar={aSeparar} pixAConferir={pixAConferir} secoes={secoes} />
-        <Rodape pathname={pathname} urlLoja={urlLoja} />
+        <Rodape pathname={pathname} urlLoja={urlLoja} podeTrocarLoja={podeTrocarLoja} />
       </aside>
 
       <header className="pnav-barra">
@@ -221,7 +227,7 @@ export default function NavPainel({ nome, urlLoja, aSeparar = 0, pixManual = fal
             <div ref={primeiroItem} className="contents">
               <Lista pathname={pathname} aoNavegar={() => setAberto(false)} aSeparar={aSeparar} pixAConferir={pixAConferir} secoes={secoes} />
             </div>
-            <Rodape pathname={pathname} urlLoja={urlLoja} aoNavegar={() => setAberto(false)} />
+            <Rodape pathname={pathname} urlLoja={urlLoja} podeTrocarLoja={podeTrocarLoja} aoNavegar={() => setAberto(false)} />
           </div>
         </div>
       )}

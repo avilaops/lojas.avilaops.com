@@ -40,6 +40,6 @@ export async function GET(request: Request) {
   // sozinho: o cookie do login único chega de qualquer sistema da Avila Ops.
   if (destino !== "abrir" || !quem) redirect(destino === "abrir" ? "/entrar?sso=indisponivel" : destino);
 
-  await abrirSessao(quem.tenant.slug, quem.operador?.id);
+  await abrirSessao(quem.tenant.slug, quem.operador?.id, { equipe: podeEntrarComoEquipe(r) });
   redirect("/painel");
 }

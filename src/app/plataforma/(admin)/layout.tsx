@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { lojistaAtual } from "@/lib/sessao";
+import { sessaoDoPainel } from "@/lib/sessao";
 import { recursoAtivo } from "@/lib/recursos";
 import { urlDaLoja } from "@/lib/tenant";
 import NavPainel from "@/components/painel/NavPainel";
@@ -27,8 +27,9 @@ export const viewport: Viewport = { width: "device-width", initialScale: 1, view
  * A sessão é conferida uma vez, no layout, e não em cada página.
  */
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const loja = await lojistaAtual();
-  if (!loja) redirect("/entrar");
+  const sessao = await sessaoDoPainel();
+  if (!sessao) redirect("/entrar");
+  const loja = sessao.tenant;
 
   // O pedido pago é o único que cobra ação agora: o dinheiro entrou e o
   // produto ainda não saiu. Uma contagem por navegação é barata e evita que a
@@ -41,7 +42,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="padm">
-      <NavPainel nome={loja.nome} urlLoja={urlDaLoja(loja)} aSeparar={aSeparar} pixManual={pixLigado} pixAConferir={pixAConferir} />
+      <NavPainel nome={loja.nome} urlLoja={urlDaLoja(loja)} aSeparar={aSeparar} pixManual={pixLigado} pixAConferir={pixAConferir} podeTrocarLoja={sessao.equipe} />
       <BuscaPainel />
       <main className="padm-conteudo pl-workspace">{children}</main>
     </div>

@@ -444,24 +444,73 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
             />
           </Secao>
 
-          <Secao titulo="Importar planilha" descricao="Produto com o mesmo SKU é atualizado, não duplicado.">
-            <div>
-              <a
-                className="btn-secundario inline-flex h-11 items-center gap-2 px-4 text-sm"
-                href="/api/painel/exportar?tipo=produtos&formato=xlsx&modelo=1"
-              >
-                <Download size={16} aria-hidden="true" /> Exportar modelo de planilha
-              </a>
-            </div>
-            <p className="text-xs text-muted-foreground">Colunas: <code>nome, preco, categoria, google_product_category, marca, sku, gtin, mpn, identificadores_estado, preco_de, descricao_curta, descricao, imagem, imagem_origem, imagem_familia, confirmar_imagem_exata, correspondencia_imagem, destaque, peso_kg, altura_cm, largura_cm, comprimento_cm, estoque, ativo</code></p>
-            <p className="text-xs text-muted-foreground">Use MPN somente para o código do fabricante. Em <code>google_product_category</code>, informe o ID ou o caminho oficial confirmado. Em atualização por planilha, a célula vazia mantém o valor salvo; escreva <code>auto</code> para remover uma substituição e voltar à classificação automática. Em <code>identificadores_estado</code>, informe <code>desconhecido</code>, <code>informado</code> ou <code>sem_identificador</code>, conforme embalagem ou fornecedor. Em <code>confirmar_imagem_exata</code>, informe <code>sim</code> só depois de conferir que a foto principal mostra exatamente o produto e a apresentação daquele SKU. Em <code>correspondencia_imagem</code>, use <code>confirmada</code> ou <code>rejeitada</code> após conferir a foto principal. A rejeição bloqueia o item do Merchant até substituir a foto e revisar o estado. Em produtos com variantes, a planilha atualiza a apresentação padrão.</p>
-            {/* São as mesmas colunas que a exportação do Catálogo grava: o
-                caminho de corrigir em lote é baixar, mexer e devolver. Coluna
-                que não vier no arquivo não é mexida no produto. */}
-            <p className="text-xs text-muted-foreground">
-              Para atualizar um produto existente, informe o <code>sku</code> e somente as colunas que deseja corrigir. Para cadastrar um produto novo, informe <code>nome</code> e <code>preco</code>. Colunas ausentes e células vazias preservam o valor atual; para limpar a família da imagem, deixe a coluna <code>imagem_familia</code> presente e vazia. Aceita .csv e .xlsx: para corrigir em lote, baixe o catálogo na aba Catálogo, ajuste no Excel e reenvie o mesmo arquivo aqui.
-            </p>
-            <SoltarPlanilha desabilitado={ocupado} onArquivo={(a) => void lerPlanilha(a)} />
+          <Secao
+            titulo="Exportar e importar planilha"
+            descricao="Baixe os produtos desta loja, complete no Google Planilhas e envie o mesmo arquivo de volta."
+          >
+            <ol className="grid gap-3 lg:grid-cols-3">
+              <li className="grid content-start gap-3 rounded-xl border border-border p-4">
+                <div className="flex items-start gap-3">
+                  <span className="grid h-7 w-7 flex-none place-items-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">1</span>
+                  <div className="min-w-0">
+                    <h3 className="font-semibold">Exporte o catálogo preenchido</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      O arquivo traz todos os produtos da loja atual, inclusive SKU, preço, estoque, medidas e descrições.
+                    </p>
+                  </div>
+                </div>
+                <a
+                  className="btn-primario inline-flex min-h-11 w-full items-center justify-center gap-2 px-4 text-center text-sm"
+                  href="/api/painel/exportar?tipo=produtos&formato=xlsx"
+                >
+                  <Download size={16} aria-hidden="true" /> Exportar todos os produtos (.xlsx)
+                </a>
+                <a
+                  className="inline-flex min-h-11 items-center justify-center text-sm font-medium text-primary underline underline-offset-4"
+                  href="/api/painel/exportar?tipo=produtos&formato=xlsx&modelo=1"
+                >
+                  Baixar apenas o modelo vazio
+                </a>
+              </li>
+
+              <li className="grid content-start gap-3 rounded-xl border border-border p-4">
+                <div className="flex items-start gap-3">
+                  <span className="grid h-7 w-7 flex-none place-items-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">2</span>
+                  <div className="min-w-0">
+                    <h3 className="font-semibold">Complete no Google Planilhas</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Use <b>Arquivo → Importar → Fazer upload</b>. Não altere os nomes das colunas nem o SKU. Ao terminar, baixe como <b>Microsoft Excel (.xlsx)</b>.
+                    </p>
+                  </div>
+                </div>
+              </li>
+
+              <li className="grid content-start gap-3 rounded-xl border border-border p-4">
+                <div className="flex items-start gap-3">
+                  <span className="grid h-7 w-7 flex-none place-items-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">3</span>
+                  <div className="min-w-0">
+                    <h3 className="font-semibold">Importe de volta</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Produto com o mesmo SKU é atualizado, não duplicado. Antes de gravar, o painel mostra uma prévia e os erros encontrados.
+                    </p>
+                  </div>
+                </div>
+                <SoltarPlanilha desabilitado={ocupado} onArquivo={(a) => void lerPlanilha(a)} />
+              </li>
+            </ol>
+
+            <details className="rounded-xl border border-border px-4 py-3 text-sm">
+              <summary className="min-h-11 cursor-pointer content-center font-medium">Ver regras e colunas da planilha</summary>
+              <div className="grid gap-3 border-t border-border pt-3 text-xs text-muted-foreground">
+                <p>Colunas: <code>nome, preco, categoria, google_product_category, marca, sku, gtin, mpn, identificadores_estado, preco_de, descricao_curta, descricao, imagem, imagens, atributos_json, imagem_origem, imagem_familia, confirmar_imagem_exata, correspondencia_imagem, destaque, peso_kg, altura_cm, largura_cm, comprimento_cm, estoque, ativo</code></p>
+                <p>Use MPN somente para o código do fabricante. Em <code>google_product_category</code>, informe o ID ou o caminho oficial confirmado. Em atualização por planilha, a célula vazia mantém o valor salvo; escreva <code>auto</code> para remover uma substituição e voltar à classificação automática. Em <code>identificadores_estado</code>, informe <code>desconhecido</code>, <code>informado</code> ou <code>sem_identificador</code>, conforme embalagem ou fornecedor. Em <code>confirmar_imagem_exata</code>, informe <code>sim</code> só depois de conferir que a foto principal mostra exatamente o produto e a apresentação daquele SKU. Em <code>correspondencia_imagem</code>, use <code>confirmada</code> ou <code>rejeitada</code> após conferir a foto principal. A rejeição bloqueia o item do Merchant até substituir a foto e revisar o estado. Em produtos com variantes, a planilha atualiza a apresentação padrão.</p>
+                {/* São as mesmas colunas que a exportação do Catálogo grava:
+                    coluna que não vier no arquivo não é mexida no produto. */}
+                <p>
+                  Para atualizar um produto existente, informe o <code>sku</code> e somente as colunas que deseja corrigir. Para cadastrar um produto novo, informe <code>nome</code> e <code>preco</code>. Colunas ausentes e células vazias preservam o valor atual; para limpar a família da imagem, deixe a coluna <code>imagem_familia</code> presente e vazia. Aceita .csv e .xlsx.
+                </p>
+              </div>
+            </details>
             {csv && (
               <div className="rounded-lg border border-border p-4 text-sm">
                 <p className="flex flex-wrap items-center gap-2">

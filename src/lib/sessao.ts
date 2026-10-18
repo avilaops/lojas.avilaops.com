@@ -49,22 +49,31 @@ function assinar(corpo: string): string {
  * Token antigo não tem esse campo, e por isso `lerToken` trata a ausência como
  * "é o dono": mudar o formato não pode deslogar quem já estava no painel.
  */
-export function emitirToken(slug: string, operadorId?: string | null): string {
+type OpcoesDaSessao = { equipe?: boolean };
+
+export function emitirToken(slug: string, operadorId?: string | null, opcoes: OpcoesDaSessao = {}): string {
   const corpo = Buffer.from(
-    JSON.stringify({ slug, ...(operadorId ? { op: operadorId } : {}), exp: Date.now() + DIAS * 86_400_000 }),
+    JSON.stringify({
+      slug,
+      ...(operadorId ? { op: operadorId } : {}),
+      ...(opcoes.equipe ? { equipe: true } : {}),
+      exp: Date.now() + DIAS * 86_400_000,
+    }),
   ).toString("base64url");
   return `${corpo}.${assinar(corpo)}`;
 }
 
-export function lerToken(token: string | undefined): { slug: string; op?: string } | null {
+export function lerToken(token: string | undefined): { slug: string; op?: string; equipe?: true } | null {
   if (!token) return null;
   const [corpo, assinatura] = token.split(".");
   if (!corpo || !assinatura) return null;
   const esperada = assinar(corpo);
   if (esperada.length !== assinatura.length || !timingSafeEqual(Buffer.from(esperada), Buffer.from(assinatura))) return null;
   try {
-    const dados = JSON.parse(Buffer.from(corpo, "base64url").toString("utf8")) as { slug: string; op?: string; exp: number };
-    return dados.exp > Date.now() ? { slug: dados.slug, op: dados.op } : null;
+    const dados = JSON.parse(Buffer.from(corpo, "base64url").toString("utf8")) as { slug: string; op?: string; equipe?: unknown; exp: number };
+    return dados.exp > Date.now()
+      ? { slug: dados.slug, ...(dados.op ? { op: dados.op } : {}), ...(dados.equipe === true ? { equipe: true as const } : {}) }
+      : null;
   } catch {
     return null;
   }
@@ -85,9 +94,9 @@ async function conexaoSegura(): Promise<boolean> {
   return (h.get("x-forwarded-proto") ?? "").split(",")[0].trim() === "https";
 }
 
-export async function abrirSessao(slug: string, operadorId?: string | null) {
+export async function abrirSessao(slug: string, operadorId?: string | null, opcoes: OpcoesDaSessao = {}) {
   const store = await cookies();
-  store.set(COOKIE, emitirToken(slug, operadorId), {
+  store.set(COOKIE, emitirToken(slug, operadorId, opcoes), {
     httpOnly: true,
     sameSite: "lax",
     secure: await conexaoSegura(),
@@ -128,18 +137,22 @@ export function resolverSessaoDoPainel(tenant: Tenant | null, operadorId: string
  * o acesso na requisição seguinte, sem esperar o cookie vencer.
  */
 export async function sessaoDoPainel(): Promise<
-  { tenant: Tenant; papel: "DONO" | "GERENTE" | "OPERADOR"; operador: { id: string; nome: string; email: string } | null } | null
+  { tenant: Tenant; papel: "DONO" | "GERENTE" | "OPERADOR"; operador: { id: string; nome: string; email: string } | null; equipe: boolean } | null
 > {
   const store = await cookies();
   const dados = lerToken(store.get(COOKIE)?.value);
   if (!dados) return null;
 
   const tenant = await prisma.tenant.findUnique({ where: { slug: dados.slug } });
-  if (!tenant || !dados.op) return resolverSessaoDoPainel(tenant, dados.op, null);
+  if (!tenant || !dados.op) {
+    const sessao = resolverSessaoDoPainel(tenant, dados.op, null);
+    return sessao ? { ...sessao, equipe: dados.equipe === true } : null;
+  }
 
   const op = await prisma.operadorLoja.findFirst({
     where: { id: dados.op, tenantId: tenant.id, ativo: true },
     select: { id: true, nome: true, email: true, papel: true },
   });
-  return resolverSessaoDoPainel(tenant, dados.op, op);
+  const sessao = resolverSessaoDoPainel(tenant, dados.op, op);
+  return sessao ? { ...sessao, equipe: dados.equipe === true } : null;
 }

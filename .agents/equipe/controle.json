@@ -130,6 +130,50 @@
       ],
       "review": "A lista usa tabela no desktop e cartões no celular; automações de estoque, custo, financeiro e n8n continuam fora deste incremento porque ainda não possuem persistência idempotente.",
       "environment": "local"
+    },
+    {
+      "id": "T-0007",
+      "title": "Permitir que a equipe troque de loja pelo painel",
+      "objective": "Exibir uma saída direta para o seletor de lojas quando a sessão foi aberta pela equipe Avila Ops, sem oferecer acesso transversal ao lojista comum.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "concluida",
+      "acceptanceCriteria": [
+        "A sessão assinada registra se a entrada veio da equipe Avila Ops.",
+        "Somente a sessão da equipe exibe a ação Trocar loja.",
+        "A escolha de outra loja continua revalidando o acesso no Auth.",
+        "Sessões antigas e sessões comuns continuam funcionando sem ganhar acesso de equipe."
+      ],
+      "evidence": [
+        "Quatro testes de sessão aprovados, incluindo marcador da equipe e compatibilidade da sessão comum.",
+        "ESLint, TypeScript e build de produção concluídos.",
+        "A rota que efetiva a troca continua consultando o Auth antes de abrir a nova sessão."
+      ],
+      "review": "O marcador assinado controla apenas a visibilidade do atalho; a autorização real é refeita no servidor a cada troca.",
+      "environment": "local"
+    },
+    {
+      "id": "T-0008",
+      "title": "Exportar e reimportar o catálogo preenchido por loja",
+      "objective": "Dar ao lojista um fluxo visível para baixar todos os produtos da loja atual, completar no Google Planilhas e importar o arquivo novamente.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "concluida",
+      "acceptanceCriteria": [
+        "O bloco de planilha oferece o catálogo preenchido em XLSX como ação principal.",
+        "O modelo vazio permanece disponível como ação secundária.",
+        "A tela explica como abrir e baixar o arquivo no Google Planilhas.",
+        "A reimportação atualiza pelo SKU e mostra prévia antes de gravar.",
+        "A exportação usa somente os produtos da loja selecionada."
+      ],
+      "evidence": [
+        "Teste de ida e volta do catálogo XLSX aprovado com SKU, GTIN, preço e estoque preservados.",
+        "Vinte e nove testes direcionados de sessão e planilha aprovados.",
+        "ESLint, TypeScript e build de produção concluídos.",
+        "A suíte geral aprovou 1.083 testes; os dois testes dependentes do OpenSSL local foram repetidos com o binário correto e os seis testes fiscais passaram."
+      ],
+      "review": "O arquivo é gerado dentro da sessão da loja atual; não existe exportação cruzada de dados entre tenants.",
+      "environment": "local"
     }
   ],
   "decisions": [],

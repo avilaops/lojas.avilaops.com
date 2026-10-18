@@ -63,6 +63,17 @@ test("o catálogo exportado volta inteiro pela importação", () => {
   assert.equal(p.comprimentoCm, 5.2);
 });
 
+test("o catálogo exportado em xlsx volta pela mesma importação", () => {
+  const bytes = montarPlanilha([[...COLUNAS_PRODUTO], linhaDoProduto(PRODUTO)], "xlsx", "Produtos") as Uint8Array;
+  const { produtos, erros } = produtosDeLinhas(linhasDeXlsx(Buffer.from(bytes)));
+  assert.deepEqual(erros, []);
+  assert.equal(produtos.length, 1);
+  assert.equal(produtos[0].sku, "ROL6205");
+  assert.equal(produtos[0].gtin, "0789123456789");
+  assert.equal(produtos[0].precoCentavos, 5990);
+  assert.equal(produtos[0].estoque, 12);
+});
+
 test("o modelo xlsx tem todas as colunas e volta pela importação", () => {
   const bytes = montarPlanilha(modeloDeProdutosEmLinhas(), "xlsx", "Produtos") as Uint8Array;
   const { produtos, erros } = produtosDeLinhas(linhasDeXlsx(Buffer.from(bytes)));

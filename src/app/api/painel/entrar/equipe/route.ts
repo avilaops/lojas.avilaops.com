@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     : null;
   if (!loja || loja.status === "CANCELADA") return para(CAMINHO_DA_EQUIPE);
 
-  await abrirSessao(loja.slug);
+  await abrirSessao(loja.slug, null, { equipe: true });
   console.log(JSON.stringify({ evento: "equipe.entrou-na-loja", loja: loja.slug, email: r.email, em: new Date().toISOString() }));
   return para("/painel");
 }
