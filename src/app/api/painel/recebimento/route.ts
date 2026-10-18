@@ -27,7 +27,9 @@ export async function POST(request: Request) {
   // Só persiste o veredito quando o teste usou a credencial já salva. O teste
   // do que ainda está digitado serve como pré-validação e não pode alterar o
   // gate de publicação antes de a credencial ser gravada.
-  const testouCredencialSalva = !corpo?.accessToken?.trim() && !corpo?.publicKey?.trim() && Boolean(loja.mpAccessTokenEnc);
+  const testouCredencialSalva = [corpo?.accessToken, corpo?.publicKey].every(
+    (valor) => valor == null || (typeof valor === "string" && valor.trim() === ""),
+  ) && Boolean(loja.mpAccessTokenEnc);
   if (testouCredencialSalva) {
     const credencial = await garantirCredencialMercadoPago(loja);
     if (credencial) {
