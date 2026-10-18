@@ -150,10 +150,14 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER "VersaoCatalogoB2B_imutavel" BEFORE UPDATE OR DELETE ON "VersaoCatalogoB2B" FOR EACH ROW EXECUTE FUNCTION impedir_mutacao_versao_catalogo_b2b();
 
 CREATE FUNCTION impedir_mutacao_filho_catalogo_b2b() RETURNS trigger AS $$
-DECLARE versao_alvo TEXT;
+DECLARE versao_antiga TEXT; versao_nova TEXT;
 BEGIN
-  versao_alvo := COALESCE(OLD."versaoId", NEW."versaoId");
-  IF EXISTS (SELECT 1 FROM "VersaoCatalogoB2B" v WHERE v."id" = versao_alvo AND v."estado" = 'APROVADA') THEN
+  IF TG_OP <> 'INSERT' THEN versao_antiga := OLD."versaoId"; END IF;
+  IF TG_OP <> 'DELETE' THEN versao_nova := NEW."versaoId"; END IF;
+  IF EXISTS (
+    SELECT 1 FROM "VersaoCatalogoB2B" v
+    WHERE v."id" IN (versao_antiga, versao_nova) AND v."estado" = 'APROVADA'
+  ) THEN
     RAISE EXCEPTION 'VersaoCatalogoB2B aprovada é imutável';
   END IF;
   IF TG_OP = 'DELETE' THEN RETURN OLD; END IF;
@@ -164,11 +168,16 @@ CREATE TRIGGER "AtribuicaoCatalogoB2B_imutavel" BEFORE INSERT OR UPDATE OR DELET
 CREATE TRIGGER "ItemCatalogoB2B_imutavel" BEFORE INSERT OR UPDATE OR DELETE ON "ItemCatalogoB2B" FOR EACH ROW EXECUTE FUNCTION impedir_mutacao_filho_catalogo_b2b();
 
 CREATE FUNCTION impedir_mutacao_componente_catalogo_b2b() RETURNS trigger AS $$
-DECLARE item_alvo TEXT; versao_alvo TEXT;
+DECLARE item_antigo TEXT; item_novo TEXT;
 BEGIN
-  item_alvo := COALESCE(OLD."itemId", NEW."itemId");
-  SELECT i."versaoId" INTO versao_alvo FROM "ItemCatalogoB2B" i WHERE i."id" = item_alvo;
-  IF EXISTS (SELECT 1 FROM "VersaoCatalogoB2B" v WHERE v."id" = versao_alvo AND v."estado" = 'APROVADA') THEN
+  IF TG_OP <> 'INSERT' THEN item_antigo := OLD."itemId"; END IF;
+  IF TG_OP <> 'DELETE' THEN item_novo := NEW."itemId"; END IF;
+  IF EXISTS (
+    SELECT 1
+    FROM "ItemCatalogoB2B" i
+    JOIN "VersaoCatalogoB2B" v ON v."id" = i."versaoId"
+    WHERE i."id" IN (item_antigo, item_novo) AND v."estado" = 'APROVADA'
+  ) THEN
     RAISE EXCEPTION 'VersaoCatalogoB2B aprovada é imutável';
   END IF;
   IF TG_OP = 'DELETE' THEN RETURN OLD; END IF;

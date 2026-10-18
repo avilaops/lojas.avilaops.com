@@ -79,6 +79,21 @@ test("aprovação calcula hash, audita uma vez e torna o snapshot imutável", as
   await assert.rejects(() => prisma.itemCatalogoB2B.deleteMany({ where: { tenantId: tenant.id, versaoId: aprovada.id } }), /imutável/i);
 });
 
+test("aprovações concorrentes convergem para a mesma versão e uma auditoria", async () => {
+  const { tenant } = await contexto();
+  const catalogo = await salvarCatalogoB2B(tenant.id, entrada());
+
+  const [primeira, segunda] = await Promise.all([
+    aprovarVersaoCatalogoB2B(tenant.id, catalogo.id, 1, "qa-1@avilaops.com"),
+    aprovarVersaoCatalogoB2B(tenant.id, catalogo.id, 1, "qa-2@avilaops.com"),
+  ]);
+
+  assert.equal(primeira.estado, "APROVADA");
+  assert.equal(segunda.estado, "APROVADA");
+  assert.equal(segunda.conteudoHash, primeira.conteudoHash);
+  assert.equal(await prisma.auditoriaCatalogoB2B.count({ where: { tenantId: tenant.id, versaoId: primeira.id } }), 1);
+});
+
 test("recusa referência que não pertence ao tenant ou à empresa", async () => {
   const a = await contexto();
   const b = await contexto();

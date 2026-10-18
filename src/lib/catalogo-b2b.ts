@@ -142,8 +142,7 @@ function snapshotDaVersao(versao: Awaited<ReturnType<typeof obterCatalogoB2B>>["
   };
 }
 
-export async function aprovarVersaoCatalogoB2B(tenantId: string, catalogoId: string, numeroVersao: number, ator: string) {
-  return prisma.$transaction(async (tx) => {
+async function aprovarNaTransacao(tx: Prisma.TransactionClient, tenantId: string, catalogoId: string, numeroVersao: number, ator: string) {
     const catalogo = await tx.catalogoB2B.findFirst({ where: { tenantId, id: catalogoId }, include: incluirCatalogo });
     if (!catalogo) throw new Error("Catálogo B2B não encontrado.");
     const versao = catalogo.versoes.find((item) => item.versao === numeroVersao);
@@ -159,7 +158,21 @@ export async function aprovarVersaoCatalogoB2B(tenantId: string, catalogoId: str
     if (alterada.count === 0) return tx.versaoCatalogoB2B.findFirstOrThrow({ where: { tenantId, id: versao.id }, include: { atribuicoes: true, itens: { include: { componentes: true } }, auditorias: true } });
     await tx.auditoriaCatalogoB2B.create({ data: { tenantId, catalogoId, versaoId: versao.id, acao: "APROVADA", ator, conteudoHash } });
     return tx.versaoCatalogoB2B.findFirstOrThrow({ where: { tenantId, id: versao.id }, include: { atribuicoes: true, itens: { include: { componentes: true } }, auditorias: true } });
-  }, { isolationLevel: "Serializable" });
+}
+
+export async function aprovarVersaoCatalogoB2B(tenantId: string, catalogoId: string, numeroVersao: number, ator: string) {
+  for (let tentativa = 1; tentativa <= 3; tentativa++) {
+    try {
+      return await prisma.$transaction(
+        (tx) => aprovarNaTransacao(tx, tenantId, catalogoId, numeroVersao, ator),
+        { isolationLevel: "Serializable" },
+      );
+    } catch (erro) {
+      if (tentativa < 3 && erro instanceof Prisma.PrismaClientKnownRequestError && erro.code === "P2034") continue;
+      throw erro;
+    }
+  }
+  throw new Error("Não foi possível aprovar o catálogo B2B.");
 }
 
 export type EntradaResolverCatalogoB2B = {

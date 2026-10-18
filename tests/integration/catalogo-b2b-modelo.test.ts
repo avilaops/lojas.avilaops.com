@@ -126,6 +126,7 @@ test("catálogo B2B preserva tenant, empresa, produto e variante em chaves compo
 
 test("versão aprovada e auditoria são append-only no banco", async () => {
   const tenant = await loja("Loja imutável");
+  const produtoRascunho = await produto(tenant.id, "Produto do rascunho");
   const catalogo = await prisma.catalogoB2B.create({
     data: {
       tenantId: tenant.id,
@@ -146,6 +147,31 @@ test("versão aprovada e auditoria são append-only no banco", async () => {
   });
   const versao = catalogo.versoes[0];
   await assert.rejects(() => prisma.versaoCatalogoB2B.update({ where: { id: versao.id }, data: { vigenteAte: new Date("2026-11-01") } }), /imutável/i);
+
+  const rascunho = await prisma.versaoCatalogoB2B.create({
+    data: { tenantId: tenant.id, catalogoId: catalogo.id, versao: 2, vigenteDesde: new Date("2026-11-01T00:00:00.000Z") },
+  });
+  const itemRascunho = await prisma.itemCatalogoB2B.create({
+    data: {
+      tenantId: tenant.id,
+      versaoId: rascunho.id,
+      produtoId: produtoRascunho.id,
+      varianteId: produtoRascunho.variantes[0].id,
+      acao: "INCLUIR",
+      estrategiaPreco: "FIXO",
+      precoFixoCentavos: 900,
+      quantidadeMinima: 1,
+      multiploVenda: 1,
+      quantidadePorEmbalagem: 1,
+      unidadeComercial: "UN",
+      unidadesBaseNumerador: 1,
+      unidadesBaseDenominador: 1,
+    },
+  });
+  await assert.rejects(
+    () => prisma.itemCatalogoB2B.update({ where: { id: itemRascunho.id }, data: { versaoId: versao.id } }),
+    /imutável/i,
+  );
 
   const auditoria = await prisma.auditoriaCatalogoB2B.create({
     data: { tenantId: tenant.id, catalogoId: catalogo.id, versaoId: versao.id, acao: "APROVADA", ator: "qa@example.test", conteudoHash: "a".repeat(64) },
