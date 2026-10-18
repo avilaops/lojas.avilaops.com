@@ -295,6 +295,29 @@
       ],
       "review": "Validação local e telas concluídas; pendente de commit, PR, CI e revisão dos artefatos. Sem publicação autorizada.",
       "environment": "local"
+    },
+    {
+      "id": "OMNI-0.2",
+      "title": "Inventariar capacidades e limites das integrações",
+      "objective": "Manter um retrato versionado de consultas, ações, webhooks, paginação, limites, retenção, homologação, dependências e exceções de cada canal do Lojas 360.",
+      "assignee": null,
+      "priority": "urgente",
+      "status": "em_revisao",
+      "acceptanceCriteria": [
+        "Canais de venda, pagamento, logística, fiscal, identidade, comunicação, infraestrutura e automação estão cobertos.",
+        "Cada integração registra consultas, ações, webhooks, paginação, rate limits, retenção, homologação e dependências.",
+        "Conexão OAuth não é apresentada como operação completa.",
+        "Toda lacuna aponta para uma decisão ou dependência.",
+        "O inventário não contém segredos e é protegido por teste de contrato."
+      ],
+      "evidence": [
+        "Inventário JSON versionado em docs/integracoes/lojas-360.v1.json.",
+        "Visão operacional em docs/OMNI-INVENTARIO-INTEGRACOES.md.",
+        "Consulta somente leitura confirmou os workflows n8n ativos Lojas - Operação Completa e MCP - Avila Ops.",
+        "Teste de contrato direcionado aprovado, cobrindo 15 integrações, campos obrigatórios, lacunas e ausência de chaves sensíveis."
+      ],
+      "review": "Pronto para revisão técnica; nenhuma credencial, execução de workflow, publicação ou alteração remota foi realizada.",
+      "environment": "local"
     }
   ],
   "decisions": [
@@ -318,6 +341,20 @@
       "direction": "ERP -> Lojas",
       "contract": "GET /api/v1/notas-recebidas e arquivos XML/DANFE com chave de leitura por tenant",
       "status": "em_revisao"
+    },
+    {
+      "id": "I-N8N-LOJAS-OPERACAO",
+      "system": "n8n Lojas - Operação Completa",
+      "direction": "Lojas <-> n8n <-> provedores",
+      "contract": "Webhook de eventos e rotinas agendadas; requer reconciliação com as rotinas internas do Lojas",
+      "status": "parcial"
+    },
+    {
+      "id": "I-N8N-MCP-AVILAOPS",
+      "system": "n8n MCP - Avila Ops",
+      "direction": "Clientes MCP <-> n8n <-> APIs Avila Ops",
+      "contract": "Ferramentas MCP com autorização por operação e adaptadores por produto",
+      "status": "parcial"
     }
   ]
 }
