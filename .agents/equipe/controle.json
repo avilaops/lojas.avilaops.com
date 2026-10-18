@@ -69,7 +69,7 @@
       "objective": "Unificar a base visual do painel, eliminar rolagem horizontal acidental e tornar navegação, indicadores, formulários e listas legíveis e operáveis no celular.",
       "assignee": null,
       "priority": "alta",
-      "status": "em_andamento",
+      "status": "concluida",
       "acceptanceCriteria": [
         "O painel não apresenta rolagem horizontal acidental em larguras de 360 a 430 px.",
         "Visão geral e Análises reorganizam indicadores, filtros, gráficos e rankings para celular.",
@@ -77,9 +77,13 @@
         "Conteúdo longo de produtos, clientes e empresa não estica a página.",
         "O layout desktop preserva a barra lateral e usa a largura disponível sem sobreposição."
       ],
-      "evidence": [],
-      "review": null,
-      "environment": "local"
+      "evidence": [
+        "Validação ao vivo em /painel: viewport interno de 487 px, largura rolável de 487 px e ausência de rolagem horizontal.",
+        "Validação ao vivo em /painel/analises: viewport interno de 487 px, largura rolável de 468 px e ausência de rolagem horizontal.",
+        "ESLint, TypeScript e build de produção concluídos; navegação lateral desktop preservada."
+      ],
+      "review": "Base visual responsiva aplicada ao painel, com filtros, indicadores, listas e formulários adaptados para toque e conteúdo longo contido.",
+      "environment": "producao"
     },
     {
       "id": "T-0005",
