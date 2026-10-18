@@ -819,14 +819,26 @@
    numa tela (844 px de altura). */
 @media (max-width: 640px) {
   .painel-overview { gap: 12px; }
+  .painel-identidade { display: flex; min-width: 0; align-items: center; gap: 8px; overflow: hidden; white-space: nowrap; }
+  .painel-identidade > span { flex: none; }
+  .painel-identidade > span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
   .painel-metricas { grid-template-columns: repeat(2,minmax(0,1fr)); }
-  .painel-metricas button, .painel-metricas a { padding: 10px 12px; }
+  .painel-metricas button, .painel-metricas a { min-height: 92px; padding: 12px; }
   .painel-metricas strong { font-size: 17px; }
-  .painel-next { padding: 16px !important; }
+  .painel-next { align-items: stretch; flex-direction: column; gap: 14px; padding: 16px !important; }
   .painel-next h3 { font-size: 15px; }
+  .painel-next .btn-secundario { width: 100%; }
   .painel-checklist { padding: 14px; }
   .painel-checklist-detalhe { flex-direction: column; align-items: stretch; gap: 10px; }
   .painel-checklist-acao { text-align: center; white-space: normal; }
+  .painel-vendas { min-width: 0; overflow: hidden; padding: 16px 14px; box-shadow: 0 8px 24px rgba(16,24,40,.05); }
+  .painel-vendas-numeros > div { min-width: 0; }
+  .painel-grafico-legenda { gap: 8px; }
+  .painel-grafico-legenda span:nth-child(2) { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .painel-top li { min-width: 0; }
+  .painel-top small { flex: none; font-size: .72rem; }
+  .painel-acoes-hoje { align-items: stretch; flex-direction: column; }
+  .painel-acoes-hoje .btn-primario { width: 100%; }
 }
 
 /* ==========================================================================

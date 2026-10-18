@@ -17,8 +17,15 @@
   --padm-texto: #e8ecf5;
   --padm-suave: #98a2b8;
   min-height: 100vh;
-  background: #f6f7f9;
+  overflow-x: clip;
+  color: #172033;
+  background: #f4f6f9;
 }
+
+.padm *, .padm *::before, .padm *::after { box-sizing: border-box; }
+.padm img, .padm video { max-width: 100%; height: auto; }
+.padm input, .padm select, .padm textarea { min-width: 0; max-width: 100%; }
+.padm button, .padm a { -webkit-tap-highlight-color: transparent; }
 
 /* ── barra lateral (desktop) ───────────────────────────────────────────── */
 
@@ -122,14 +129,14 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  height: calc(54px + env(safe-area-inset-top));
-  padding: env(safe-area-inset-top) 8px 0;
+  height: calc(58px + env(safe-area-inset-top));
+  padding: env(safe-area-inset-top) 10px 0;
   border-bottom: 1px solid var(--padm-linha);
   background: var(--padm-fundo);
   color: var(--padm-texto);
 }
 
-.pnav-barra strong { flex: 1; font-size: 15px; font-weight: 650; }
+.pnav-barra strong { min-width: 0; flex: 1; overflow: hidden; font-size: 16px; font-weight: 700; white-space: nowrap; text-overflow: ellipsis; }
 
 .pnav-botao {
   display: grid;
@@ -192,7 +199,8 @@
 /* ── área de trabalho ──────────────────────────────────────────────────── */
 
 .padm-conteudo {
-  padding: 18px 16px 64px;
+  width: 100%;
+  padding: 20px 16px calc(72px + env(safe-area-inset-bottom));
   /* Sem isto, um nome de produto longo dentro de qualquer seção estica a área
      inteira e a página rola de lado no celular. Medido em 03/09/2026 na tela de
      produtos da Vedashow: 679px de conteúdo numa tela de 393. `min-width: 0`
@@ -201,14 +209,17 @@
   max-width: 100%;
 }
 
-.padm-cabecalho { margin-bottom: 18px; }
-.padm-cabecalho h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; color: #12172a; }
-.padm-cabecalho p { margin-top: 5px; color: #667085; font-size: 13.5px; }
+.padm-conteudo > * { min-width: 0; max-width: 100%; }
+.padm-conteudo :where(p, h1, h2, h3, dd, dt, li, span) { overflow-wrap: anywhere; }
+
+.padm-cabecalho { min-width: 0; margin-bottom: 18px; }
+.padm-cabecalho h1 { font-size: 24px; font-weight: 750; line-height: 1.15; letter-spacing: -0.035em; color: #12172a; }
+.padm-cabecalho p { max-width: 68ch; margin-top: 6px; color: #667085; font-size: 14px; line-height: 1.5; }
 
 @media (min-width: 1024px) {
   .pnav-lateral { display: flex; }
   .pnav-barra { display: none; }
-  .padm-conteudo { margin-left: var(--padm-lateral); padding: 28px 32px 80px; }
+  .padm-conteudo { width: calc(100% - var(--padm-lateral)); margin-left: var(--padm-lateral); padding: 32px clamp(28px, 4vw, 56px) 88px; }
   .padm-cabecalho h1 { font-size: 26px; }
 }
 
@@ -434,4 +445,37 @@
   .an-grid-principal { grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr); }
   .an-grid-secundario { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .an-bloco { padding: 20px; }
+}
+
+/* Base mobile-first do painel. Conteúdo do cliente precisa encolher sem
+   transformar a página num pergaminho horizontal. */
+@media (max-width: 767px) {
+  .padm-conteudo :where(section, article, form, fieldset, table, ul, ol, dl, div) { min-width: 0; }
+  .padm-conteudo :where(.btn-primario, .btn-secundario) { min-height: 44px; }
+
+  .an-filtros { gap: 10px; margin-bottom: 16px; }
+  .an-filtros nav { margin-inline: -16px; padding-inline: 16px; scroll-padding-inline: 16px; }
+  .an-filtros nav a { min-height: 44px; padding-inline: 16px; }
+  .an-filtros form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
+  .an-filtros label { min-width: 0; }
+  .an-filtros input { width: 100%; min-width: 0; }
+  .an-filtros form button { grid-column: 1 / -1; min-height: 44px; width: 100%; }
+  .an-filtros > p { line-height: 1.45; }
+
+  .an-grid-kpis { gap: 8px; }
+  .an-kpi { padding: 14px 12px; border-radius: 13px; }
+  .an-kpi-titulo { align-items: start; }
+  .an-kpi > strong { font-size: clamp(19px, 6.4vw, 25px); }
+  .an-bloco { padding: 16px 14px; border-radius: 16px; }
+  .an-bloco header { gap: 8px; margin-bottom: 14px; }
+  .an-grafico { height: 150px; }
+  .an-eixo span:nth-child(2) { display: none; }
+  .an-ranking li { grid-template-columns: 24px minmax(0, 1fr); }
+  .an-ranking li > strong { grid-column: 2; justify-self: start; }
+}
+
+@media (max-width: 380px) {
+  .padm-conteudo { padding-inline: 12px; }
+  .an-filtros nav { margin-inline: -12px; padding-inline: 12px; }
+  .an-grid-kpis { grid-template-columns: 1fr; }
 }

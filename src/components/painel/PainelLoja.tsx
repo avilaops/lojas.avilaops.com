@@ -308,8 +308,8 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
   }
 
   return (
-    <div className="grid gap-6">
-      <div className="flex flex-wrap items-center gap-3 text-sm">
+    <div className="grid min-w-0 gap-5 sm:gap-6">
+      <div className="painel-identidade">
         <span className={`rounded-full px-3 py-1 text-xs font-semibold ${loja.status === "ATIVA" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>{STATUS[loja.status] ?? loja.status}</span>
         <span className="text-muted-foreground">Plano {loja.plano.replace("_", " ")}</span>
         {loja.emailContato && <span className="text-muted-foreground">e-mail: {loja.emailContato}</span>}
@@ -767,7 +767,7 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
             </p>
           )}
           <div className="grid gap-4 sm:grid-cols-2">
-            <Campo label="Razão social" ajuda="O nome que está no cartão CNPJ, não o nome fantasia."><input className={inputClasse} value={empresa.razaoSocial} onChange={(e) => setEmpresa({ ...empresa, razaoSocial: e.target.value })} placeholder="Vedashow Comércio de Vedações Ltda" /></Campo>
+            <Campo label="Razão social"><input className={inputClasse} value={empresa.razaoSocial} onChange={(e) => setEmpresa({ ...empresa, razaoSocial: e.target.value })} placeholder="Vedashow Comércio de Vedações Ltda" /></Campo>
             <Campo label="CNPJ" ajuda="Ao sair do campo, buscamos razão social e endereço."><input className={inputClasse} value={empresa.cnpj} onChange={(e) => setEmpresa({ ...empresa, cnpj: e.target.value })} onBlur={buscarDadosDoCnpj} placeholder="00.000.000/0001-00" inputMode="numeric" /></Campo>
           </div>
           <div className="flex flex-wrap gap-3">

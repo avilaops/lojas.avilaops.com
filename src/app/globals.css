@@ -468,7 +468,7 @@ html[data-cookies-respondido] .aviso-cookies { display: none; }
 .painel-top { display: grid; gap: 0.5rem; font-size: 0.875rem; }
 .painel-top li { display: flex; align-items: center; gap: 0.625rem; }
 .painel-top b { display: grid; place-items: center; width: 1.5rem; height: 1.5rem; border-radius: 999px; background: var(--muted); font-size: 0.75rem; }
-.painel-top span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.painel-top span { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .painel-top small { color: var(--muted-foreground); white-space: nowrap; }
 .painel-vazio { font-size: 0.875rem; color: var(--muted-foreground); }
 .painel-acoes-hoje { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; border-top: 1px solid var(--border); padding-top: 1rem; font-size: 0.8125rem; color: var(--muted-foreground); }
@@ -479,6 +479,7 @@ html[data-cookies-respondido] .aviso-cookies { display: none; }
 .painel-espera > p { color: var(--muted-foreground); }
 .painel-espera ul { display: grid; gap: 0.375rem; }
 .painel-espera li { display: flex; justify-content: space-between; gap: 1rem; }
+.painel-espera li > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .painel-espera small { color: var(--muted-foreground); white-space: nowrap; }
 .painel-espera button { justify-self: start; }
 
