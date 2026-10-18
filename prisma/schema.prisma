@@ -66,6 +66,21 @@ enum SituacaoProvisionamentoB2B {
   REVOGADO
 }
 
+enum EstadoVersaoCatalogoB2B {
+  RASCUNHO
+  APROVADA
+}
+
+enum AcaoItemCatalogoB2B {
+  INCLUIR
+  EXCLUIR
+}
+
+enum EstrategiaPrecoCatalogoB2B {
+  FIXO
+  DESCONTO
+}
+
 model Tenant {
   id     String       @id @default(cuid())
   /// Identificador estável: vira <slug>.lojas.avilaops.com e o nome do container de dados.
@@ -236,6 +251,7 @@ model Tenant {
    * /**
    * /**
    * /**
+   * /**
    * Políticas escritas pelo lojista, por tipo ("envio", "devolucao",
    * "privacidade", "termos", "aviso-legal").
    * Chave ausente = a loja publica o modelo da plataforma, que é o
@@ -254,6 +270,7 @@ model Tenant {
 
   // ── Campos personalizados do catálogo ─────────────────────────────────
   /**
+   * /**
    * /**
    * /**
    * /**
@@ -312,27 +329,33 @@ model Tenant {
   faixaPreco          String?
   setupPagoEm         DateTime? // R$ 497 — cobrado à parte, marcado pela Avila Ops
 
-  faturas               Fatura[]
-  contratosComerciais   ContratoComercial[]
-  cobrancaEventos       CobrancaEvento[]
-  cupons                Cupom[]
-  compradores           Comprador[]
-  empresasB2B           EmpresaB2B[]
-  unidadesEmpresaB2B    UnidadeEmpresaB2B[]
-  compradoresEmpresaB2B CompradorEmpresaB2B[]
-  centrosCustoB2B       CentroCustoB2B[]
-  auditoriasB2B         AuditoriaB2B[]
-  anunciosMl            AnuncioMercadoLivre[]
-  perguntasMl           PerguntaMercadoLivre[]
-  reputacaoMl           ReputacaoMercadoLivre?
-  contasCanal           ContaCanal[]
-  checkoutsAbertos      CheckoutAberto[]
-  avaliacoes            Avaliacao[]
-  avisosEstoque         AvisoEstoque[]
-  postagens             Postagem[]
-  operadores            OperadorLoja[]
-  fiscal                FiscalLoja?
-  documentosFiscais     DocumentoFiscalLoja[]
+  faturas                Fatura[]
+  contratosComerciais    ContratoComercial[]
+  cobrancaEventos        CobrancaEvento[]
+  cupons                 Cupom[]
+  compradores            Comprador[]
+  empresasB2B            EmpresaB2B[]
+  unidadesEmpresaB2B     UnidadeEmpresaB2B[]
+  compradoresEmpresaB2B  CompradorEmpresaB2B[]
+  centrosCustoB2B        CentroCustoB2B[]
+  auditoriasB2B          AuditoriaB2B[]
+  catalogosB2B           CatalogoB2B[]
+  versoesCatalogoB2B     VersaoCatalogoB2B[]
+  atribuicoesCatalogoB2B AtribuicaoCatalogoB2B[]
+  itensCatalogoB2B       ItemCatalogoB2B[]
+  componentesCatalogoB2B ComponenteKitCatalogoB2B[]
+  auditoriasCatalogoB2B  AuditoriaCatalogoB2B[]
+  anunciosMl             AnuncioMercadoLivre[]
+  perguntasMl            PerguntaMercadoLivre[]
+  reputacaoMl            ReputacaoMercadoLivre?
+  contasCanal            ContaCanal[]
+  checkoutsAbertos       CheckoutAberto[]
+  avaliacoes             Avaliacao[]
+  avisosEstoque          AvisoEstoque[]
+  postagens              Postagem[]
+  operadores             OperadorLoja[]
+  fiscal                 FiscalLoja?
+  documentosFiscais      DocumentoFiscalLoja[]
 
   apiKeyEnc            String?
   apiKeyCriadaEm       DateTime?
@@ -465,6 +488,9 @@ model Produto {
    * rótulo, e a ficha do produto publica.
    */
   camposPersonalizados  Json     @default("{}")
+  /// Classificação fiscal do cadastro mestre; catálogos B2B apenas referenciam.
+  ncm                   String?
+  cest                  String?
 
   // Peças e acessórios (segmento "motopecas"): a que veículos o item serve.
   // Vazio = universal (capacete, óleo, serviço). Ver src/lib/motos.ts.
@@ -517,6 +543,7 @@ model Produto {
   anunciosMl               AnuncioMercadoLivre[]
   perguntasMl              PerguntaMercadoLivre[]
   correspondenciasPesquisa CorrespondenciaPesquisaProduto[]
+  itensCatalogoB2B         ItemCatalogoB2B[]
 
   @@unique([tenantId, slug])
   @@unique([tenantId, id])
@@ -701,14 +728,16 @@ model Variante {
   ativo                 Boolean @default(true)
   ordem                 Int     @default(0)
 
-  produto     Produto            @relation(fields: [tenantId, produtoId], references: [tenantId, id], onDelete: Cascade)
-  itens       PedidoItem[]
-  preco       PrecoVariante?
-  saldos      SaldoEstoque[]
-  midias      MidiaProduto[]
-  publicacoes PublicacaoCanal[]
-  reservas    ReservaEstoque[]
-  movimentos  MovimentoEstoque[]
+  produto                Produto                    @relation(fields: [tenantId, produtoId], references: [tenantId, id], onDelete: Cascade)
+  itens                  PedidoItem[]
+  preco                  PrecoVariante?
+  saldos                 SaldoEstoque[]
+  midias                 MidiaProduto[]
+  publicacoes            PublicacaoCanal[]
+  reservas               ReservaEstoque[]
+  movimentos             MovimentoEstoque[]
+  itensCatalogoB2B       ItemCatalogoB2B[]
+  componentesCatalogoB2B ComponenteKitCatalogoB2B[]
 
   @@unique([tenantId, id])
   @@unique([tenantId, produtoId, id])
@@ -1113,12 +1142,13 @@ model EmpresaB2B {
   criadoEm          DateTime           @default(now())
   atualizadoEm      DateTime           @updatedAt
 
-  tenant       Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  unidades     UnidadeEmpresaB2B[]
-  contatos     ContatoEmpresaB2B[]
-  compradores  CompradorEmpresaB2B[]
-  centrosCusto CentroCustoB2B[]
-  auditorias   AuditoriaB2B[]
+  tenant                 Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  unidades               UnidadeEmpresaB2B[]
+  contatos               ContatoEmpresaB2B[]
+  compradores            CompradorEmpresaB2B[]
+  centrosCusto           CentroCustoB2B[]
+  auditorias             AuditoriaB2B[]
+  atribuicoesCatalogoB2B AtribuicaoCatalogoB2B[]
 
   @@unique([tenantId, referencia])
   @@unique([tenantId, id])
@@ -1139,12 +1169,13 @@ model UnidadeEmpresaB2B {
   criadoEm          DateTime @default(now())
   atualizadoEm      DateTime @updatedAt
 
-  tenant                Tenant                      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  empresa               EmpresaB2B                  @relation(fields: [tenantId, empresaId], references: [tenantId, id], onDelete: Cascade)
-  enderecos             EnderecoUnidadeEmpresaB2B[]
-  contatos              ContatoEmpresaB2B[]
-  autorizacoesDesejadas AutorizacaoDesejadaB2B[]
-  escoposComprador      EscopoCompradorB2B[]
+  tenant                 Tenant                      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  empresa                EmpresaB2B                  @relation(fields: [tenantId, empresaId], references: [tenantId, id], onDelete: Cascade)
+  enderecos              EnderecoUnidadeEmpresaB2B[]
+  contatos               ContatoEmpresaB2B[]
+  autorizacoesDesejadas  AutorizacaoDesejadaB2B[]
+  escoposComprador       EscopoCompradorB2B[]
+  atribuicoesCatalogoB2B AtribuicaoCatalogoB2B[]
 
   @@unique([tenantId, empresaId, referencia])
   @@unique([tenantId, cnpj])
@@ -1152,6 +1183,131 @@ model UnidadeEmpresaB2B {
   @@unique([tenantId, id])
   @@unique([tenantId, empresaId, id])
   @@index([tenantId, empresaId, ativa])
+}
+
+/// Identidade estável de uma tabela comercial. O conteúdo vive em versões.
+model CatalogoB2B {
+  id           String   @id @default(cuid())
+  tenantId     String
+  referencia   String
+  nome         String
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  tenant     Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  versoes    VersaoCatalogoB2B[]
+  auditorias AuditoriaCatalogoB2B[]
+
+  @@unique([tenantId, referencia])
+  @@unique([tenantId, id])
+}
+
+/// Snapshot comercial. Depois de aprovado, banco e domínio recusam mutação.
+model VersaoCatalogoB2B {
+  id           String                  @id @default(cuid())
+  tenantId     String
+  catalogoId   String
+  versao       Int
+  estado       EstadoVersaoCatalogoB2B @default(RASCUNHO)
+  moeda        String                  @default("BRL")
+  vigenteDesde DateTime
+  vigenteAte   DateTime?
+  aprovadoEm   DateTime?
+  aprovadoPor  String?
+  conteudoHash String?
+  criadoEm     DateTime                @default(now())
+  atualizadoEm DateTime                @updatedAt
+
+  tenant      Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  catalogo    CatalogoB2B             @relation(fields: [tenantId, catalogoId], references: [tenantId, id], onDelete: Cascade)
+  atribuicoes AtribuicaoCatalogoB2B[]
+  itens       ItemCatalogoB2B[]
+  auditorias  AuditoriaCatalogoB2B[]
+
+  @@unique([tenantId, catalogoId, versao])
+  @@unique([tenantId, id])
+  @@index([tenantId, estado, vigenteDesde, vigenteAte])
+}
+
+model AtribuicaoCatalogoB2B {
+  id         String   @id @default(cuid())
+  tenantId   String
+  versaoId   String
+  empresaId  String
+  unidadeId  String?
+  prioridade Int      @default(0)
+  criadoEm   DateTime @default(now())
+
+  tenant  Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  versao  VersaoCatalogoB2B  @relation(fields: [tenantId, versaoId], references: [tenantId, id], onDelete: Cascade)
+  empresa EmpresaB2B         @relation(fields: [tenantId, empresaId], references: [tenantId, id], onDelete: Cascade)
+  unidade UnidadeEmpresaB2B? @relation(fields: [tenantId, empresaId, unidadeId], references: [tenantId, empresaId, id], onDelete: Cascade)
+
+  @@unique([tenantId, id])
+  @@index([tenantId, empresaId, unidadeId, prioridade])
+}
+
+model ItemCatalogoB2B {
+  id                      String                     @id @default(cuid())
+  tenantId                String
+  versaoId                String
+  produtoId               String
+  varianteId              String?
+  acao                    AcaoItemCatalogoB2B
+  estrategiaPreco         EstrategiaPrecoCatalogoB2B
+  precoFixoCentavos       Int?
+  descontoPontosBase      Int?
+  quantidadeMinima        Int
+  quantidadeMaxima        Int?
+  multiploVenda           Int
+  quantidadePorEmbalagem  Int
+  unidadeComercial        String
+  unidadesBaseNumerador   Int
+  unidadesBaseDenominador Int
+  criadoEm                DateTime                   @default(now())
+
+  tenant      Tenant                     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  versao      VersaoCatalogoB2B          @relation(fields: [tenantId, versaoId], references: [tenantId, id], onDelete: Cascade)
+  produto     Produto                    @relation(fields: [tenantId, produtoId], references: [tenantId, id], onDelete: Restrict)
+  variante    Variante?                  @relation(fields: [tenantId, produtoId, varianteId], references: [tenantId, produtoId, id], onDelete: Restrict)
+  componentes ComponenteKitCatalogoB2B[]
+
+  @@unique([tenantId, id])
+  @@index([tenantId, versaoId, produtoId, varianteId])
+}
+
+model ComponenteKitCatalogoB2B {
+  id                        String @id @default(cuid())
+  tenantId                  String
+  itemId                    String
+  varianteId                String
+  quantidadeBaseNumerador   Int
+  quantidadeBaseDenominador Int
+
+  tenant   Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  item     ItemCatalogoB2B @relation(fields: [tenantId, itemId], references: [tenantId, id], onDelete: Cascade)
+  variante Variante        @relation(fields: [tenantId, varianteId], references: [tenantId, id], onDelete: Restrict)
+
+  @@unique([tenantId, itemId, varianteId])
+  @@index([tenantId, varianteId])
+}
+
+model AuditoriaCatalogoB2B {
+  id           String   @id @default(cuid())
+  tenantId     String
+  catalogoId   String
+  versaoId     String
+  acao         String
+  ator         String
+  conteudoHash String
+  criadoEm     DateTime @default(now())
+
+  tenant   Tenant            @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  catalogo CatalogoB2B       @relation(fields: [tenantId, catalogoId], references: [tenantId, id], onDelete: Restrict)
+  versao   VersaoCatalogoB2B @relation(fields: [tenantId, versaoId], references: [tenantId, id], onDelete: Restrict)
+
+  @@index([tenantId, catalogoId, criadoEm])
+  @@index([tenantId, versaoId])
 }
 
 model EnderecoUnidadeEmpresaB2B {
