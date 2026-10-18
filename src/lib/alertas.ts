@@ -29,6 +29,10 @@ export const ALERTAS = {
     oQueQuebrou: "Uma notificação de mensalidade do Mercado Pago chegou e não pôde ser processada. O Mercado Pago não reenvia.",
     oQueFazer: "Rodar a verificação diária de cobrança (POST /api/admin/cobranca/verificar), que relê as cobranças no Mercado Pago, e conferir a aba Assinatura da loja.",
   },
+  "contrato.comercial-invalido": {
+    oQueQuebrou: "A venda não possui uma única versão contratual aplicável. A comissão desta venda NÃO pode ser cobrada.",
+    oQueFazer: "Conferir o histórico comercial da loja e cadastrar uma versão sem lacuna ou sobreposição antes do fechamento da comissão.",
+  },
   "canal.aviso-falhou": {
     oQueQuebrou: "Um aviso do Mercado Livre (pedido, pergunta, anúncio ou envio) não pôde ser processado.",
     oQueFazer: "Abrir Painel, Configurações, Canais e conferir o pedido ou a pergunta no Mercado Livre. O aviso fica na fila como FALHOU e pode ser reenviado.",

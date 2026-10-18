@@ -5,6 +5,7 @@ import { chamarMl } from "./mercadolivre";
 import { baixarEstoqueDoPedido } from "./estoque";
 import { emitir, itensParaTexto, lojista } from "./eventos";
 import type { PedidoStatus } from "@prisma/client";
+import { contratoParaPedido } from "./contratos-comerciais";
 
 /**
  * Venda no Mercado Livre vira pedido da loja.
@@ -375,6 +376,7 @@ export async function registrarPedidoMl(loja: Tenant, ordemId: string) {
     where: { tenantId_canal_canalPedidoId: { tenantId: loja.id, canal: "mercadolivre", canalPedidoId: mapeado.canalPedidoId } },
     select: { id: true, status: true, estoqueBaixado: true, numero: true, referencia: true },
   });
+  const contrato = existente ? null : await contratoParaPedido(loja, `mercadolivre:${mapeado.canalPedidoId}`);
 
   const pedido = existente
     ? await prisma.pedido.update({
@@ -388,6 +390,7 @@ export async function registrarPedidoMl(loja: Tenant, ordemId: string) {
     : await prisma.pedido.create({
         data: {
           tenantId: loja.id,
+          contratoComercialId: contrato?.id ?? null,
           canal: "mercadolivre",
           canalPedidoId: mapeado.canalPedidoId,
           // `/pedido/[referencia]` mostra nome, e-mail, itens e rastreio sem

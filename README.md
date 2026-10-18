@@ -208,6 +208,21 @@ DNS-only (o `*.lojas` tem dois níveis e o Universal SSL da Cloudflare não cobr
 
 Demo: https://demo.lojas.avilaops.com
 
+## Contratos comerciais
+
+Cada loja possui versões imutáveis de `ContratoComercial`, com plano,
+mensalidade em centavos, comissão em pontos-base e período de vigência. Novos
+cadastros recebem o preço vigente do plano mais 5% sobre vendas; contratos
+anteriores permanecem sem comissão, exceto os acordos formalizados de Vedashow
+(R$ 350 + 5%) e Bereta Rodas (3%). O pedido guarda a versão vigente no momento
+da criação, portanto uma renegociação não altera vendas antigas.
+
+A administração consulta o histórico e cria uma nova versão por
+`GET/POST /api/admin/tenants/:slug/contratos`. A faixa antiga continua como
+compatibilidade para registros legados; cobrança e painel preferem o contrato
+vigente quando ele existe. Relatório de migração e recuperação estão em
+`docs/CONTRATOS-COMERCIAIS.md`.
+
 ## Modelo comercial (resumo: detalhe em `docs/PLANOS.md`)
 
 | | Site | **Loja** | Loja Pro |

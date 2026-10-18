@@ -28,6 +28,11 @@ enum TenantStatus {
   CANCELADA // sai do ar; dados ficam 90 dias
 }
 
+enum SituacaoContratoComercial {
+  ATIVO
+  ENCERRADO
+}
+
 model Tenant {
   id     String       @id @default(cuid())
   /// Identificador estável: vira <slug>.lojas.avilaops.com e o nome do container de dados.
@@ -196,6 +201,8 @@ model Tenant {
    * /**
    * /**
    * /**
+   * /**
+   * /**
    * Políticas escritas pelo lojista, por tipo ("envio", "devolucao",
    * "privacidade", "termos", "aviso-legal").
    * Chave ausente = a loja publica o modelo da plataforma, que é o
@@ -214,6 +221,8 @@ model Tenant {
 
   // ── Campos personalizados do catálogo ─────────────────────────────────
   /**
+   * /**
+   * /**
    * /**
    * /**
    * /**
@@ -239,7 +248,7 @@ model Tenant {
   /// Avaliações do Consumidor no pedido pago. Ver src/lib/avaliacoes-google.ts.
   googleMerchantId      String?
   /// Selo do Google Avaliações do Consumidor na vitrine. Escolha da loja.
-  googleSeloAvaliacoes  Boolean @default(false)
+  googleSeloAvaliacoes  Boolean   @default(false)
   /// Conteúdo da meta de verificação (só o valor, não a tag inteira).
   verificacaoGoogle     String?
   verificacaoBing       String?
@@ -250,7 +259,7 @@ model Tenant {
   provisionamento Json @default("{}")
 
   // ── Acesso do lojista ao painel (lojas.avilaops.com/painel) ───────────
-  loginEmail String? @unique
+  loginEmail String?   @unique
   senhaHash  String? // scrypt, ver src/lib/sessao.ts
   /// Fim do período de teste. Nulo nas lojas anteriores ao cadastro por conta,
   /// que seguem com os 14 dias contados de `criadoEm` (ver src/lib/planos.ts).
@@ -270,28 +279,29 @@ model Tenant {
   faixaPreco          String?
   setupPagoEm         DateTime? // R$ 497 — cobrado à parte, marcado pela Avila Ops
 
-  faturas          Fatura[]
-  cobrancaEventos  CobrancaEvento[]
-  cupons           Cupom[]
-  compradores      Comprador[]
-  anunciosMl       AnuncioMercadoLivre[]
-  perguntasMl      PerguntaMercadoLivre[]
-  reputacaoMl      ReputacaoMercadoLivre?
-  contasCanal      ContaCanal[]
-  checkoutsAbertos CheckoutAberto[]
-  avaliacoes       Avaliacao[]
-  avisosEstoque    AvisoEstoque[]
-  postagens        Postagem[]
-  operadores       OperadorLoja[]
-  fiscal           FiscalLoja?
-  documentosFiscais DocumentoFiscalLoja[]
+  faturas             Fatura[]
+  contratosComerciais ContratoComercial[]
+  cobrancaEventos     CobrancaEvento[]
+  cupons              Cupom[]
+  compradores         Comprador[]
+  anunciosMl          AnuncioMercadoLivre[]
+  perguntasMl         PerguntaMercadoLivre[]
+  reputacaoMl         ReputacaoMercadoLivre?
+  contasCanal         ContaCanal[]
+  checkoutsAbertos    CheckoutAberto[]
+  avaliacoes          Avaliacao[]
+  avisosEstoque       AvisoEstoque[]
+  postagens           Postagem[]
+  operadores          OperadorLoja[]
+  fiscal              FiscalLoja?
+  documentosFiscais   DocumentoFiscalLoja[]
 
-  apiKeyEnc      String?
-  apiKeyCriadaEm DateTime?
-  chavesApi      ChaveApi[]
-  conexoesMcp    ConexaoMcp[]
-  chamadasMcp    ChamadaMcp[]
-  webhooksApi    WebhookApi[]
+  apiKeyEnc            String?
+  apiKeyCriadaEm       DateTime?
+  chavesApi            ChaveApi[]
+  conexoesMcp          ConexaoMcp[]
+  chamadasMcp          ChamadaMcp[]
+  webhooksApi          WebhookApi[]
   credenciaisPagamento CredencialPagamento[]
 
   criadoEm     DateTime @default(now())
@@ -309,28 +319,29 @@ model Tenant {
 }
 
 model FiscalLoja {
-  tenantId String @id
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  cnpj String @unique
-  uf String
-  certificadoEnc String
-  titular String
-  validoAte DateTime
-  ultimoNsu String @default("000000000000000")
+  tenantId          String   @id
+  tenant            Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  cnpj              String   @unique
+  uf                String
+  certificadoEnc    String
+  titular           String
+  validoAte         DateTime
+  ultimoNsu         String   @default("000000000000000")
   proximaConsultaEm DateTime @default(now())
-  ultimaMensagem String?
+  ultimaMensagem    String?
 }
 
 model DocumentoFiscalLoja {
-  id String @id @default(cuid())
-  tenantId String
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  cnpj String
-  nsu String
-  schema String
-  chave String?
-  xml String @db.Text
+  id         String   @id @default(cuid())
+  tenantId   String
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  cnpj       String
+  nsu        String
+  schema     String
+  chave      String?
+  xml        String   @db.Text
   recebidoEm DateTime @default(now())
+
   @@unique([tenantId, cnpj, nsu])
   @@index([tenantId, recebidoEm])
 }
@@ -366,22 +377,22 @@ model Categoria {
 }
 
 model Produto {
-  id                   String   @id @default(cuid())
-  tenantId             String
-  categoriaId          String?
-  slug                 String
-  nome                 String
-  marca                String?
-  sku                  String?
-  gtin                 String?
+  id                    String   @id @default(cuid())
+  tenantId              String
+  categoriaId           String?
+  slug                  String
+  nome                  String
+  marca                 String?
+  sku                   String?
+  gtin                  String?
   /// Categoria Google confirmada por item: ID ou caminho da taxonomia oficial.
   googleProductCategory String?
   /// Centavos. Nunca float — ver packages/checkout/src/core/types.ts.
-  precoCentavos        Int
-  precoDeCentavos      Int? // "de R$ X por R$ Y"
-  descricaoCurta       String?
-  descricao            String?
-  imagens              String[] @default([])
+  precoCentavos         Int
+  precoDeCentavos       Int? // "de R$ X por R$ Y"
+  descricaoCurta        String?
+  descricao             String?
+  imagens               String[] @default([])
   /**
    * De onde a imagem veio, e o quanto ela é deste item:
    * `propria`        foto do SKU exato (própria ou do fabricante com código
@@ -394,20 +405,20 @@ model Produto {
    * imagem: gera compra errada, devolução e desconfiança. Quem escreve a
    * imagem declara o que ela é; a vitrine só obedece.
    */
-  imagemOrigem         String   @default("propria")
+  imagemOrigem          String   @default("propria")
   /// Família visual da imagem representativa ("6200", "UCP"), para auditoria:
   /// permite achar todo item que herdou uma foto quando ela for substituída.
-  imagemFamilia        String?
-  destaque             Boolean  @default(false)
-  ativo                Boolean  @default(true)
-  disponibilidade      String   @default("in_stock") // in_stock | out_of_stock | backorder
-  estoque              Int?
+  imagemFamilia         String?
+  destaque              Boolean  @default(false)
+  ativo                 Boolean  @default(true)
+  disponibilidade       String   @default("in_stock") // in_stock | out_of_stock | backorder
+  estoque               Int?
   /// Peso em kg e medidas em cm. Sem eles, o frete usa a caixa padrão do tenant.
-  pesoKg               Float?
-  alturaCm             Float?
-  larguraCm            Float?
-  comprimentoCm        Float?
-  atributos            Json     @default("{}") // livre: { "volumeMl": 500, "cor": "azul" }
+  pesoKg                Float?
+  alturaCm              Float?
+  larguraCm             Float?
+  comprimentoCm         Float?
+  atributos             Json     @default("{}") // livre: { "volumeMl": 500, "cor": "azul" }
   /**
    * Valores dos campos que a loja definiu em `Tenant.camposPersonalizados`,
    * indexados pela chave da definição: { "rendimento-por-litro": "12" }.
@@ -415,7 +426,7 @@ model Produto {
    * importação, que ninguém prometeu exibir; isto aqui tem definição, tipo e
    * rótulo, e a ficha do produto publica.
    */
-  camposPersonalizados Json     @default("{}")
+  camposPersonalizados  Json     @default("{}")
 
   // Peças e acessórios (segmento "motopecas"): a que veículos o item serve.
   // Vazio = universal (capacete, óleo, serviço). Ver src/lib/motos.ts.
@@ -508,23 +519,26 @@ model Pedido {
   numero     Int          @default(autoincrement())
   status     PedidoStatus @default(AGUARDANDO_PAGAMENTO)
 
-  clienteNome      String
-  clienteEmail     String
-  clienteTelefone  String
-  clienteDocumento String
-  entrega          Json? // EnderecoEntrega ou null (retirada)
-  freteNome        String
-  freteCentavos    Int
+  clienteNome         String
+  clienteEmail        String
+  clienteTelefone     String
+  clienteDocumento    String
+  entrega             Json? // EnderecoEntrega ou null (retirada)
+  freteNome           String
+  freteCentavos       Int
   /// Prazo do frete escolhido, em dias úteis. Nulo em pedido anterior a
   /// 06/10/2026 e em pedido de marketplace.
   fretePrazoDiasUteis Int?
-  subtotalCentavos Int
-  descontoCentavos Int     @default(0)
-  cupomCodigo      String?
-  compradorId      String?
+  subtotalCentavos    Int
+  descontoCentavos    Int     @default(0)
+  cupomCodigo         String?
+  compradorId         String?
   /// Estoque já baixado para este pedido (evita baixar duas vezes no webhook).
-  estoqueBaixado   Boolean @default(false)
-  totalCentavos    Int
+  estoqueBaixado      Boolean @default(false)
+  totalCentavos       Int
+  /// Versão comercial aplicável quando o pedido nasceu. Nulo em pedidos
+  /// legados ou quando não havia uma única versão vigente; nunca há fallback.
+  contratoComercialId String?
 
   meioPagamento   String // pix | cartao | boleto
   gateway         String  @default("mercadopago")
@@ -558,17 +572,44 @@ model Pedido {
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
-  tenant    Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  comprador Comprador?     @relation(fields: [compradorId], references: [id], onDelete: SetNull)
-  sessao    SessaoVitrine? @relation(fields: [sessaoId], references: [id], onDelete: SetNull)
-  itens       PedidoItem[]
-  postagem    Postagem?
-  cobrancaPix CobrancaPixManual?
+  tenant            Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  contratoComercial ContratoComercial? @relation(fields: [contratoComercialId], references: [id], onDelete: SetNull)
+  comprador         Comprador?         @relation(fields: [compradorId], references: [id], onDelete: SetNull)
+  sessao            SessaoVitrine?     @relation(fields: [sessaoId], references: [id], onDelete: SetNull)
+  itens             PedidoItem[]
+  postagem          Postagem?
+  cobrancaPix       CobrancaPixManual?
 
   @@unique([tenantId, canal, canalPedidoId])
   @@index([tenantId, status])
   @@index([pagamentoId])
   @@index([sessaoId])
+  @@index([contratoComercialId])
+}
+
+/// Versão da regra comercial entre a Ávila Ops e uma loja.
+/// Valores publicados nunca são reescritos; uma mudança encerra a versão e
+/// cria outra. Comissão em pontos-base: 500 = 5%.
+model ContratoComercial {
+  id                  String                    @id @default(cuid())
+  tenantId            String
+  versao              Int
+  plano               Plano
+  mensalidadeCentavos Int
+  comissaoPontosBase  Int
+  vigenteDesde        DateTime
+  vigenteAte          DateTime?
+  situacao            SituacaoContratoComercial @default(ATIVO)
+  aceiteEm            DateTime?
+  aceiteReferencia    String?
+  origem              String
+  criadoEm            DateTime                  @default(now())
+
+  tenant  Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  pedidos Pedido[]
+
+  @@unique([tenantId, versao])
+  @@index([tenantId, vigenteDesde, vigenteAte])
 }
 
 /// Cobrança do Pix na conta do lojista. O valor pode ter centavos a mais que o
@@ -589,7 +630,7 @@ model CobrancaPixManual {
   comprovante   String?
   criadoEm      DateTime  @default(now())
 
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   pedido Pedido? @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, informadoEm])
@@ -1304,7 +1345,6 @@ model AnuncioMercadoLivre {
   /**
    * Quem criou o anúncio: `propria` (publicamos daqui) ou `adotada` (já
    * existia no Mercado Livre do lojista e foi vinculada).
-   *
    * Decide de quem é o **texto**. Anúncio adotado tem título, fotos e
    * descrição escritos pelo lojista, e a sincronia não os reescreve: ele nos
    * autorizou a cuidar de preço e estoque, não a trocar o anúncio dele. Sem
@@ -1312,10 +1352,10 @@ model AnuncioMercadoLivre {
    * ser adotado guarda o `preparo`, e `conteudoDoAnuncio` então devolve
    * conteúdo em vez de nulo.
    */
-  origem              String    @default("propria")
+  origem    String  @default("propria")
   /// active | paused | closed | under_review
-  statusMl            String?
-  permalink           String?
+  statusMl  String?
+  permalink String?
 
   /// rascunho | publicando | publicado | recusado | pausado
   estado     String  @default("rascunho")
@@ -1586,16 +1626,16 @@ model ChamadaMcp {
 /// Webhook cadastrado pelo lojista: um endereço dele que a plataforma avisa
 /// quando um pedido muda. Regras em src/lib/webhooks-api.ts; ver docs/API.md.
 model WebhookApi {
-  id       String @id @default(cuid())
-  tenantId String
+  id         String   @id @default(cuid())
+  tenantId   String
   /// Rótulo do lojista: "ERP", "Planilha". Só para ele reconhecer.
-  nome     String
-  url      String
+  nome       String
+  url        String
   /// Cifrado (cofre.ts), e não em hash como as chaves: para assinar cada
   /// entrega é preciso o valor. Mostrado ao lojista uma vez, na criação.
   segredoEnc String
   /// Tipos de `EVENTOS_DE_WEBHOOK`.
-  eventos  String[]
+  eventos    String[]
 
   ativo           Boolean   @default(true)
   /// Entregas ESGOTADAS em sequência (não tentativas). Zera na primeira que chega.
@@ -1657,7 +1697,7 @@ model ChaveApi {
   escopos  String[]
   /// Os sites de onde esta chave pode comprar (`https://loja.com.br`). Só vale
   /// para chave com "vitrine:comprar": navegador em outra origem é recusado.
-  origens  String[] @default([])
+  origens  String[]     @default([])
 
   ultimoUsoEm DateTime?
   revogadaEm  DateTime?

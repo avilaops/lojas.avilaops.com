@@ -14,6 +14,7 @@ import { aplicativoConfigurado as mercadoPagoDisponivel, conectadoPorOAuth } fro
 import { conectado as melhorEnvioConectado } from "@/lib/melhor-envio-conta";
 import { cepCertoConfigurada } from "@/lib/cepcerto";
 import type { SecaoPainel } from "@/components/painel/PainelLoja";
+import { contratoVigente } from "@/lib/contratos-comerciais";
 
 /**
  * Os dados que o painel do lojista mostra, por seção.
@@ -64,7 +65,7 @@ export async function dadosDoPainel(secao: SecaoPainel) {
   const p = PRECISA[secao];
   const id = loja.id;
 
-  const [faturas, semEmbalagemTotal, ativosTotal, semFotoTotal, pedidosTotal, cupons, categorias, avaliacoes, vendas, catalogo, espera, postagem] = await Promise.all([
+  const [faturas, semEmbalagemTotal, ativosTotal, semFotoTotal, pedidosTotal, cupons, categorias, avaliacoes, vendas, catalogo, espera, postagem, contrato] = await Promise.all([
     prisma.fatura.findMany({ where: { tenantId: id }, orderBy: { criadoEm: "desc" }, take: 24 }),
     // Contagens do catálogo inteiro. O aviso de embalagem dizia "e mais 488"
     // numa loja com 5.591 produtos sem medida, porque contava dentro de uma
@@ -81,6 +82,7 @@ export async function dadosDoPainel(secao: SecaoPainel) {
     p.catalogo ? diagnosticoDoFeed(id) : VAZIO_CATALOGO,
     p.vendas ? filaDeEspera(id) : [],
     p.postagem ? postagemAAcertar(id) : { etiquetas: 0, custoCentavos: 0 },
+    contratoVigente(id),
   ]);
 
   const pecas = secao === "Marca" && templateAtelieLigado()
@@ -145,7 +147,7 @@ export async function dadosDoPainel(secao: SecaoPainel) {
         plano: loja.plano,
         podeTrocarPlano: !loja.assinaturaId,
         isenta: loja.cobrancaIsenta,
-        precoCentavos: mensalidadeDaLoja(loja),
+        precoCentavos: contrato?.mensalidadeCentavos ?? mensalidadeDaLoja(loja),
         planoNome: NOME_PLANO[loja.plano],
         ultimoPagamentoEm: loja.ultimoPagamentoEm?.toISOString() ?? null,
         setupPagoEm: loja.setupPagoEm?.toISOString() ?? null,

@@ -4,6 +4,7 @@ import { prisma } from "./db";
 import { slugificar } from "./catalogo";
 import { DIAS_DE_TESTE } from "./planos";
 import { gerarHashSenha } from "./sessao";
+import { contratoPadraoAninhado } from "./contratos-comerciais";
 
 /**
  * Cadastro por conta: primeiro a pessoa, depois a loja.
@@ -127,6 +128,13 @@ export async function concluirPrimeirosPassos(t: Tenant, entrada: { nome: string
   const slug = await slugLivre(entrada.nome, t.id);
   return prisma.tenant.update({
     where: { id: t.id },
-    data: { slug, nome: entrada.nome.trim(), whatsapp: entrada.whatsapp, plano: entrada.plano, status: "ATIVA" },
+    data: {
+      slug,
+      nome: entrada.nome.trim(),
+      whatsapp: entrada.whatsapp,
+      plano: entrada.plano,
+      status: "ATIVA",
+      contratosComerciais: { create: contratoPadraoAninhado(entrada.plano) },
+    },
   });
 }
