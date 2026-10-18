@@ -81,15 +81,23 @@ export async function contratoParaPedido(
   }
 }
 
-export function contratoPadraoAninhado(plano: Plano, instante = new Date()): Prisma.ContratoComercialCreateWithoutTenantInput {
+type EvidenciaAceite = {
+  aceiteEm: Date | null;
+  aceiteReferencia: string | null;
+  origem: string;
+};
+
+export function contratoPadraoAninhado(
+  plano: Plano,
+  evidencia: EvidenciaAceite,
+  instante = new Date(),
+): Prisma.ContratoComercialCreateWithoutTenantInput {
   return {
     versao: 1,
     ...dadosDoContratoPadrao(plano),
     vigenteDesde: instante,
     situacao: "ATIVO",
-    aceiteEm: instante,
-    aceiteReferencia: "cadastro-plataforma",
-    origem: "CADASTRO",
+    ...evidencia,
   };
 }
 

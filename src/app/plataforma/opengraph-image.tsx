@@ -28,7 +28,7 @@ export default function OpenGraphImage() {
           <span>do seu negócio.</span>
         </div>
         <div style={{ marginTop: "auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <span style={{ color: "#6A6259", fontSize: 24 }}>Pix na hora, sem comissão · por Avila Ops</span>
+          <span style={{ color: "#6A6259", fontSize: 24 }}>Planos mensais + 5% sobre vendas · por Avila Ops</span>
           <div style={{ display: "flex", gap: 10 }}>
             {TONS.map((cor) => <div key={cor} style={{ width: 34, height: 34, borderRadius: 999, background: cor }} />)}
           </div>

@@ -49,7 +49,13 @@ export async function criarTenant(entrada: TenantEntrada) {
       nome: entrada.nome,
       plano,
       dominios: Array.from(dominios),
-      contratosComerciais: { create: contratoPadraoAninhado(plano) },
+      contratosComerciais: {
+        create: contratoPadraoAninhado(plano, {
+          aceiteEm: null,
+          aceiteReferencia: null,
+          origem: "ADMIN",
+        }),
+      },
     },
   });
 }

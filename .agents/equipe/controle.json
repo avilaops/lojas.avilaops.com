@@ -181,7 +181,7 @@
       "objective": "Versionar mensalidade e comissão por loja sem aplicar 5% retroativamente aos clientes existentes.",
       "assignee": null,
       "priority": "alta",
-      "status": "em_revisao",
+      "status": "concluida",
       "acceptanceCriteria": [
         "Novos cadastros recebem o plano escolhido mais comissão de 5%.",
         "Clientes existentes preservam o contrato, com Vedashow em R$ 350 mais 5% e Bereta Rodas em 3%.",
@@ -196,7 +196,31 @@
         "13 testes direcionados de checkout e contratos aprovados.",
         "ESLint sem erros e TypeScript sem erros."
       ],
-      "review": "Aguardando revisão do pull request e CI; nenhum cálculo ou cobrança de comissão foi incluído neste item.",
+      "review": "PR 119 aprovado pelo CI e integrado ao main no commit 021f236; nenhum cálculo ou cobrança de comissão foi incluído neste item.",
+      "environment": "local"
+    },
+    {
+      "id": "AVL-231",
+      "title": "Formalizar cobrança de 5% e contrato comercial",
+      "objective": "Definir política, matriz, comunicação e evidência de aceite para novos cadastros, sem ativar cobrança real.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "em_revisao",
+      "acceptanceCriteria": [
+        "A base exclui frete, tributos destacados, juros e taxas do meio de pagamento.",
+        "Cancelamento, reembolso, devolução, chargeback, competência, fechamento e contestação estão definidos.",
+        "A comunicação pública informa mensalidade mais 5% e não promete comissão zero.",
+        "Novo cadastro exige aceite explícito, versionado e datado.",
+        "A cobrança permanece bloqueada até os pareceres contábil, fiscal, jurídico e LGPD."
+      ],
+      "evidence": [
+        "1.091 testes unitários aprovados.",
+        "8 testes de integração de cadastro e contratos aprovados no PostgreSQL isolado.",
+        "TypeScript, ESLint e build de produção concluídos sem erros.",
+        "Rota /termos-comerciais respondeu HTTP 200 e renderizou a versão e a regra de 5%.",
+        "Playwright validou termos e planos em 1440 px e 390 px, sem rolagem horizontal."
+      ],
+      "review": "Implementação pronta para revisão técnica; pareceres profissionais e aprovação final dos termos permanecem gates externos antes da cobrança real.",
       "environment": "local"
     }
   ],
