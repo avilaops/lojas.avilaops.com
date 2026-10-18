@@ -190,3 +190,53 @@ test("loja que não conectou o Melhor Envio não chama a transportadora", async 
     assert.equal(opcoes.some((o) => o.id.startsWith("melhorenvio:")), false);
   });
 });
+
+/**
+ * A loja que não conectou o Melhor Envio cota pela CepCerto da plataforma, e
+ * as duas contas nunca se misturam na mesma loja.
+ */
+const CEPCERTO = { status: "sucesso", cotacoes: [{ transportadora: "Correios", servico: "PAC", valor: "21,40", prazo: "até 6 dias" }] };
+
+async function comCepCerto<T>(corpo: () => Promise<T>): Promise<T> {
+  const antes = process.env.CEPCERTO_PUBLIC_KEY;
+  process.env.CEPCERTO_PUBLIC_KEY = "pk_live_0123456789abcdef0123";
+  try {
+    return await corpo();
+  } finally {
+    if (antes === undefined) delete process.env.CEPCERTO_PUBLIC_KEY;
+    else process.env.CEPCERTO_PUBLIC_KEY = antes;
+  }
+}
+
+test("loja sem Melhor Envio cota pela CepCerto da plataforma, com o CEP de origem dela", async () => {
+  await comCepCerto(() =>
+    comMelhorEnvio(CEPCERTO, async (chamadas) => {
+      const opcoes = await cotarFrete(loja({ cepOrigem: "14075-240" }), "01310-100", [item({ quantidade: 1, precoUnitario: 1380 })]);
+      assert.equal(chamadas.length, 1);
+      assert.equal(chamadas[0].cep_remetente, "14075240");
+      assert.equal(chamadas[0].cep_destinatario, "01310100");
+      assert.deepEqual(opcoes.filter((o) => o.id.startsWith("cepcerto:")), [{ id: "cepcerto:pac", nome: "PAC", preco: 2140, prazoDiasUteis: 6 }]);
+    }),
+  );
+});
+
+test("loja com Melhor Envio conectado não cai na CepCerto, nem quando ele não devolve serviço", async () => {
+  // Cotado numa conta e despachado na outra, o frete sai a outro preço.
+  await comCepCerto(() =>
+    comMelhorEnvio([], async (chamadas) => {
+      const opcoes = await cotarFrete(loja({ cepOrigem: "14010100", ...CONECTADA }), "15075170", [item({ quantidade: 1 })]);
+      assert.equal(chamadas.length, 1, "só o Melhor Envio foi chamado");
+      assert.ok("from" in chamadas[0], "a chamada é a do Melhor Envio");
+      assert.equal(opcoes.some((o) => o.id.startsWith("cepcerto:")), false);
+    }),
+  );
+});
+
+test("loja sem CEP de origem não chama a CepCerto", async () => {
+  await comCepCerto(() =>
+    comMelhorEnvio(CEPCERTO, async (chamadas) => {
+      await cotarFrete(loja({ cepOrigem: null }), "01310100", [item({ quantidade: 1 })]);
+      assert.equal(chamadas.length, 0);
+    }),
+  );
+});

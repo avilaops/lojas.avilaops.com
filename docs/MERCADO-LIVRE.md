@@ -40,10 +40,11 @@ Marketplace BR (client id e secret)"** (`httpCustomAuth`, corpo com
 do n8n, e rodar no servidor:
 
 ```bash
-/opt/lojas/sincronizar-ml-do-n8n.sh
+/opt/lojas/sincronizar-apps-do-n8n.sh mercado-livre
 ```
 
-O roteiro (`deploy/sincronizar-ml-do-n8n.sh`) pede ao próprio n8n a credencial
+O roteiro (`deploy/sincronizar-apps-do-n8n.sh`, o mesmo do Melhor Envio e do
+Mercado Pago) pede ao próprio n8n a credencial
 decifrada, recusa chave vazia ou com formato estranho, faz cópia do `.env`,
 grava os dois valores, recria o container e confere as credenciais no Mercado
 Livre. A chave não vai para a saída.

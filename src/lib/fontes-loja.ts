@@ -1,5 +1,6 @@
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
+import localFont from "next/font/local";
 import { Inter, Montserrat, Playfair_Display, Poppins } from "next/font/google";
 import type { TemaLoja } from "./tema";
 import { extrairPreCargas } from "./fontes-pre-carga";
@@ -21,18 +22,39 @@ const inter = Inter({ subsets: ["latin"], weight: ["400", "600", "700", "800"], 
 const poppins = Poppins({ subsets: ["latin"], weight: ["400", "600", "700", "800"], display: "swap", preload: false });
 const montserrat = Montserrat({ subsets: ["latin"], weight: ["400", "600", "700", "800"], display: "swap", preload: false });
 const playfair = Playfair_Display({ subsets: ["latin"], weight: ["400", "700"], display: "swap", preload: false });
+/**
+ * Serifa do Ateliê. Arquivo nosso, licença OFL em `src/fonts/OFL-dm-serif-display.txt`.
+ * Não passa pelo Google nem no build nem no navegador. Archivo continua sendo
+ * a fonte da marca Ávila onde ela já está; aqui só entra a serifa da vitrine.
+ */
+const dmSerif = localFont({
+  src: "../fonts/dm-serif-display-latin-400-normal.woff2",
+  weight: "400",
+  display: "swap",
+  preload: false,
+  adjustFontFallback: "Times New Roman",
+  fallback: ["Georgia", "serif"],
+});
 
 const FAMILIAS: Partial<Record<TemaLoja["fonte"], string>> = {
   inter: inter.style.fontFamily,
   poppins: poppins.style.fontFamily,
   montserrat: montserrat.style.fontFamily,
   playfair: playfair.style.fontFamily,
+  "dm-serif": dmSerif.style.fontFamily,
 };
+
+const SERIFAS = new Set<TemaLoja["fonte"]>(["playfair", "dm-serif"]);
 
 /** `font-family` da fonte do tema já com a reserva ajustada; `undefined` na fonte do sistema. */
 export function familiaHospedada(fonte: TemaLoja["fonte"]): string | undefined {
   const familia = FAMILIAS[fonte];
-  return familia ? `${familia}, ${fonte === "playfair" ? "Georgia, serif" : "system-ui, sans-serif"}` : undefined;
+  return familia ? `${familia}, ${SERIFAS.has(fonte) ? "Georgia, serif" : "system-ui, sans-serif"}` : undefined;
+}
+
+/** Família da serifa do Ateliê, para o título mesmo quando o corpo é outra fonte. */
+export function familiaSerifAtelie(): string {
+  return familiaHospedada("dm-serif") ?? '"DM Serif Display", Georgia, serif';
 }
 
 /**

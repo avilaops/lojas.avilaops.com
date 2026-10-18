@@ -9,7 +9,9 @@ import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
 import EventoCompra from "@/components/EventoCompra";
 import { ConviteAvaliacaoGoogle } from "@/components/AvaliacoesGoogle";
 import { conviteAvaliacao } from "@/lib/avaliacoes-google";
+import PixNaConta from "@/components/checkout/PixNaConta";
 import { TEXTO_SEM_PEDIDO, telaSemPedido } from "@/lib/pedido-a-confirmar";
+import { pixManualLigado, qrPngBase64 } from "@/lib/pix-manual";
 
 export const metadata: Metadata = { title: "Pedido", robots: { index: false } };
 
@@ -57,6 +59,9 @@ export default async function PedidoPage({ params }: { params: Promise<{ referen
     );
   }
   const convite = conviteAvaliacao(t, pedido);
+  const pix = pedido.gateway === "pix_manual" && pedido.status === "AGUARDANDO_PAGAMENTO" && pixManualLigado(t)
+    ? await prisma.cobrancaPixManual.findFirst({ where: { tenantId: t.id, pedidoId: pedido.id } })
+    : null;
 
   return (
     <div className="container-loja max-w-2xl py-10">
@@ -72,12 +77,25 @@ export default async function PedidoPage({ params }: { params: Promise<{ referen
       )}
       {convite && <ConviteAvaliacaoGoogle convite={convite} />}
       <p className="text-xs uppercase tracking-widest text-muted-foreground">Pedido #{pedido.numero}</p>
-      <h1 className="mt-1 text-2xl font-bold">{ROTULO[pedido.status] ?? pedido.status}</h1>
+      <h1 className="mt-1 text-2xl font-bold">{pix ? (pix.informadoEm ? "Pix avisado, em conferência" : "Esperando o seu Pix") : (ROTULO[pedido.status] ?? pedido.status)}</h1>
       <p className="mt-1 text-sm text-muted-foreground">
         {pedido.status === "PAGO"
           ? `Obrigado, ${pedido.clienteNome.split(" ")[0]}! Enviamos a confirmação para ${pedido.clienteEmail}.`
-          : "Assim que o pagamento for confirmado, você recebe um e-mail."}
+          : pix?.informadoEm
+            ? "A loja está conferindo o seu Pix."
+            : pix
+              ? "Pague o Pix abaixo e avise a loja. O pedido segue daí."
+              : "Assim que o pagamento for confirmado, você recebe um e-mail."}
       </p>
+      {pix && !pix.informadoEm && (
+        <PixNaConta
+          referencia={pedido.referencia}
+          valorFormatado={formatarBRL(pix.valorCentavos)}
+          copiaECola={pix.copiaECola}
+          qrCodeBase64={await qrPngBase64(pix.copiaECola)}
+          expiraEm={pix.expiraEm.toISOString()}
+        />
+      )}
 
       <ul className="mt-6 divide-y divide-border rounded-xl border border-border bg-card text-sm">
         {pedido.itens.map((i) => (

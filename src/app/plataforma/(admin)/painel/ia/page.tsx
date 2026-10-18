@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export default async function Pagina() {
   return (
     <>
-      <CabecalhoSecao titulo="IA e API" descricao="Ligue a loja a um assistente de IA ou integre seus sistemas pela API para desenvolvedores." />
+      <CabecalhoSecao titulo="IA e API" />
       <PainelLoja secao="IA" {...(await dadosDoPainel("IA"))} />
     </>
   );

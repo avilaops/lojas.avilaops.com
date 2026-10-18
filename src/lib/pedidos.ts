@@ -17,7 +17,7 @@ import { urlDaLoja } from "./tenant";
  */
 export async function registrarPedido(
   t: Tenant,
-  dados: { referencia: string; pagamentoId: string; status: string; total: number; payload: PayloadCheckout; catalogo: ResolucaoCatalogo; cupomCodigo?: string | null; compradorId?: string | null; pedidoResolvido?: PedidoCheckout },
+  dados: { referencia: string; pagamentoId: string; status: string; total: number; payload: PayloadCheckout; catalogo: ResolucaoCatalogo; cupomCodigo?: string | null; compradorId?: string | null; pedidoResolvido?: PedidoCheckout; credencial?: { id: string; provedor: string } | null },
 ) {
   // O snapshot usado para cobrar é o que se grava; a reserva já reduziu a oferta pública.
   const pedido = dados.pedidoResolvido ?? (await montarPedidoSeguro(dados.payload, dados.catalogo)).pedido;
@@ -25,7 +25,7 @@ export async function registrarPedido(
 
   const salvo = await prisma.pedido.upsert({
     where: { referencia: pedido.referencia, tenantId: t.id },
-    update: { pagamentoId: dados.pagamentoId, pagamentoStatus: dados.status },
+    update: { pagamentoId: dados.pagamentoId, pagamentoStatus: dados.status, ...(dados.credencial ? { gateway: dados.credencial.provedor, credencialId: dados.credencial.id } : {}) },
     create: {
       tenantId: t.id,
       referencia: pedido.referencia,
@@ -44,6 +44,8 @@ export async function registrarPedido(
       compradorId: dados.compradorId ?? null,
       sessaoId: await sessaoDaVitrine(t.id),
       meioPagamento: pedido.meioPagamento,
+      // Sem credencial (chamada antiga, testes): o default da coluna, mercadopago.
+      ...(dados.credencial ? { gateway: dados.credencial.provedor, credencialId: dados.credencial.id } : {}),
       pagamentoId: dados.pagamentoId,
       pagamentoStatus: dados.status,
       status: dados.status === "aprovado" ? "PAGO" : "AGUARDANDO_PAGAMENTO",

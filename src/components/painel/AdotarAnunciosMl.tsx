@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, Check, ExternalLink, Link2, RefreshCw, Search } from "lucide-react";
 import { Secao } from "./campos";
 
@@ -23,6 +23,30 @@ export type AnuncioParaAdotar = {
 
 const brl = (c: number) => (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
+const STATUS: Record<string, string> = {
+  active: "Ativo",
+  paused: "Pausado",
+  closed: "Encerrado",
+  under_review: "Em revisão",
+};
+
+type DadosDosAnuncios = {
+  totalNoMl: number;
+  jaVinculados: number;
+  varridos: number;
+  anuncios: AnuncioParaAdotar[];
+};
+
+const normalizarBusca = (valor: string) =>
+  valor.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("pt-BR").trim();
+
+async function consultarAnuncios(): Promise<DadosDosAnuncios> {
+  const resposta = await fetch("/api/painel/canais/mercadolivre/adotar?limite=200");
+  const dados = await resposta.json();
+  if (!resposta.ok) throw new Error(dados.erro ?? "Não consegui ler seus anúncios.");
+  return dados;
+}
+
 /**
  * Adotar o que o lojista já vende no Mercado Livre.
  *
@@ -36,21 +60,19 @@ const brl = (c: number) => (c / 100).toLocaleString("pt-BR", { style: "currency"
  * muda preço de venda sem ninguém ter pedido.
  */
 export default function AdotarAnunciosMl() {
-  const [dados, setDados] = useState<{ totalNoMl: number; jaVinculados: number; varridos: number; anuncios: AnuncioParaAdotar[] } | null>(null);
+  const [dados, setDados] = useState<DadosDosAnuncios | null>(null);
   const [escolhidos, setEscolhidos] = useState<string[]>([]);
-  const [ocupado, setOcupado] = useState<"buscando" | "vinculando" | null>(null);
+  const [ocupado, setOcupado] = useState<"buscando" | "vinculando" | null>("buscando");
   const [erro, setErro] = useState<string | null>(null);
   const [recado, setRecado] = useState<string | null>(null);
+  const [busca, setBusca] = useState("");
 
   async function procurar() {
     setErro(null);
     setRecado(null);
     setOcupado("buscando");
     try {
-      const r = await fetch("/api/painel/canais/mercadolivre/adotar");
-      const d = await r.json();
-      if (!r.ok) throw new Error(d.erro ?? "Não consegui ler seus anúncios.");
-      setDados(d);
+      setDados(await consultarAnuncios());
       setEscolhidos([]);
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Falha inesperada.");
@@ -58,6 +80,23 @@ export default function AdotarAnunciosMl() {
       setOcupado(null);
     }
   }
+
+  useEffect(() => {
+    let montado = true;
+    void consultarAnuncios()
+      .then((resultado) => {
+        if (montado) setDados(resultado);
+      })
+      .catch((e) => {
+        if (montado) setErro(e instanceof Error ? e.message : "Falha inesperada.");
+      })
+      .finally(() => {
+        if (montado) setOcupado(null);
+      });
+    return () => {
+      montado = false;
+    };
+  }, []);
 
   async function vincular() {
     const pares = (dados?.anuncios ?? [])
@@ -87,8 +126,17 @@ export default function AdotarAnunciosMl() {
     }
   }
 
-  const casados = (dados?.anuncios ?? []).filter((a) => a.casamento);
-  const soltos = (dados?.anuncios ?? []).filter((a) => !a.casamento);
+  const anunciosFiltrados = useMemo(() => {
+    const termo = normalizarBusca(busca);
+    if (!termo) return dados?.anuncios ?? [];
+    return (dados?.anuncios ?? []).filter((a) =>
+      normalizarBusca([a.titulo, a.mlbId, a.produtoNome, ...a.skus].filter(Boolean).join(" ")).includes(termo),
+    );
+  }, [busca, dados]);
+  const casados = anunciosFiltrados.filter((a) => a.casamento);
+  const soltos = anunciosFiltrados.filter((a) => !a.casamento);
+  const totalReconhecidos = (dados?.anuncios ?? []).filter((a) => a.casamento).length;
+  const totalSemVinculo = (dados?.anuncios ?? []).length - totalReconhecidos;
 
   return (
     <Secao
@@ -101,7 +149,7 @@ export default function AdotarAnunciosMl() {
       <div className="flex flex-wrap items-center gap-3">
         <button className="btn-secundario inline-flex h-10 items-center gap-2 px-4 text-sm" disabled={Boolean(ocupado)} onClick={procurar}>
           {ocupado === "buscando" ? <RefreshCw size={15} className="animate-spin" /> : <Search size={15} />}
-          Procurar meus anúncios
+          Atualizar anúncios
         </button>
         {dados && (
           <small className="text-xs text-muted-foreground">
@@ -109,6 +157,39 @@ export default function AdotarAnunciosMl() {
           </small>
         )}
       </div>
+
+      {dados && (
+        <>
+          <div className="grid gap-3 sm:grid-cols-4">
+            {([
+              ["Ativos no Mercado Livre", dados.totalNoMl],
+              ["Já vinculados", dados.jaVinculados],
+              ["Reconhecidos", totalReconhecidos],
+              ["Sem vínculo", totalSemVinculo],
+            ] as const).map(([rotulo, total]) => (
+              <div key={rotulo} className="rounded-lg border border-border p-3">
+                <small className="text-xs text-muted-foreground">{rotulo}</small>
+                <strong className="block text-xl">{total}</strong>
+              </div>
+            ))}
+          </div>
+
+          <label className="grid gap-1 text-sm">
+            <span className="text-xs font-medium text-muted-foreground">Buscar anúncio</span>
+            <input
+              className="h-10 rounded-lg border border-border bg-background px-3"
+              type="search"
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              placeholder="Nome, código MLB ou SKU"
+            />
+          </label>
+
+          {busca && anunciosFiltrados.length === 0 && (
+            <p className="text-sm text-muted-foreground">Nenhum anúncio encontrado para “{busca}”.</p>
+          )}
+        </>
+      )}
 
       {dados && dados.anuncios.length === 0 && (
         // A varredura tem teto, então "todos" só pode ser dito quando ela
@@ -130,6 +211,8 @@ export default function AdotarAnunciosMl() {
           {casados.map((a) => {
             const marcado = escolhidos.includes(a.mlbId);
             const mudaPreco = a.mudaria && !a.temVariacoes && a.mudaria.precoCentavos !== a.precoCentavos;
+            const diferenca = a.mudaria ? a.precoCentavos - a.mudaria.precoCentavos : 0;
+            const percentual = a.mudaria?.precoCentavos ? (diferenca / a.mudaria.precoCentavos) * 100 : 0;
             return (
               <label key={a.mlbId} className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-3 hover:bg-muted/40">
                 <input
@@ -150,6 +233,12 @@ export default function AdotarAnunciosMl() {
                         {" · "}a loja mandaria: <b className={mudaPreco ? "text-amber-700" : ""}>{brl(a.mudaria.precoCentavos)}</b>
                         {`, ${a.mudaria.estoque} un.`}
                       </>
+                    )}
+                  </span>
+                  <span className="mt-1 block text-xs text-muted-foreground">
+                    {STATUS[a.status ?? ""] ?? a.status ?? "Status não informado"} · {a.mlbId}
+                    {mudaPreco && (
+                      <> · diferença: <b className={diferenca < 0 ? "text-red-700" : "text-amber-700"}>{diferenca > 0 ? "+" : ""}{brl(diferenca)} ({percentual > 0 ? "+" : ""}{percentual.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%)</b></>
                     )}
                   </span>
                   {a.temVariacoes && (
@@ -201,6 +290,9 @@ export default function AdotarAnunciosMl() {
                   <span className="text-xs text-muted-foreground">
                     {brl(a.precoCentavos)} · {a.estoque} un.
                     {a.skus.length ? ` · SKU no ML: ${a.skus.join(", ")}` : " · sem SKU no anúncio"}
+                  </span>
+                  <span className="block text-xs text-muted-foreground">
+                    {STATUS[a.status ?? ""] ?? a.status ?? "Status não informado"} · {a.mlbId}
                   </span>
                 </span>
                 {a.permalink && (

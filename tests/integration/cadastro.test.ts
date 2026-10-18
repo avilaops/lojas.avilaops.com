@@ -5,6 +5,7 @@ import { prisma } from "../../src/lib/db";
 import { concluirPrimeirosPassos, criarConta, precisaDosPrimeirosPassos } from "../../src/lib/cadastro";
 import { DIAS_DE_TESTE, fimDoTeste } from "../../src/lib/planos";
 import { conferirSenha } from "../../src/lib/sessao";
+import { autenticar } from "../../src/lib/operadores";
 
 /**
  * Cadastro por conta contra o Postgres de verdade: a conta nasce fora do ar,
@@ -57,4 +58,19 @@ test("loja anterior à coluna segue com 14 dias contados da criação", async ()
   const antiga = await prisma.tenant.create({ data: { slug: `qa-antiga-${sufixo()}`, nome: "QA antiga", status: "ATIVA", criadoEm: new Date(Date.UTC(2026, 8, 1)) } });
   assert.equal(antiga.testeAte, null);
   assert.equal(fimDoTeste(antiga).toISOString(), new Date(Date.UTC(2026, 8, 15)).toISOString());
+});
+
+test("quem se cadastrou sai e entra de novo com a mesma senha, digitando o e-mail como quiser", async () => {
+  // Cadastro, logout e nova entrada: o caminho que a entrada do painel faz
+  // (`/api/painel/entrar` procura a loja pelo e-mail e confere com `autenticar`).
+  const email = `qa-${sufixo()}@cadastro.example`;
+  const conta = await criarConta({ email, senha: "senha-forte-1" });
+  assert.ok(conta);
+  const digitado = `  ${email.toUpperCase()} `;
+  const loja = await prisma.tenant.findUnique({ where: { loginEmail: digitado.trim().toLowerCase() } });
+  assert.ok(loja);
+  const quem = await autenticar(loja, digitado, "senha-forte-1");
+  assert.equal(quem?.papel, "DONO");
+  assert.equal(quem?.tenant.id, conta.id);
+  assert.equal(await autenticar(loja, email, "senha-errada-1"), null);
 });

@@ -21,6 +21,7 @@ const SUB = [
   { slug: "dominio", rotulo: "Domínio" },
   { slug: "entrega", rotulo: "Entrega" },
   { slug: "recebimento", rotulo: "Recebimento" },
+  { slug: "fiscal", rotulo: "Notas fiscais" },
   { slug: "politicas", rotulo: "Políticas" },
   { slug: "campos", rotulo: "Campos do produto" },
   { slug: "canais", rotulo: "Canais" },
@@ -32,7 +33,7 @@ const SUB = [
 ] as const;
 
 export default function NavConfiguracoes() {
-  const pathname = usePathname();
+  const pathname = usePathname().replace(/^\/plataforma(?=\/|$)/, "");
   const atual = SUB.find((s) => pathname === `/painel/configuracoes/${s.slug}`);
 
   return (

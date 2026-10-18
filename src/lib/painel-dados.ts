@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { lojistaAtual } from "@/lib/sessao";
 import { urlDaLoja, temaDo, identidadeDa } from "@/lib/tenant";
+import { layoutsOferecidos, templateAtelieLigado } from "@/lib/flags";
 import { NOME_PLANO } from "@/lib/assinatura";
 import { mensalidadeDaLoja } from "@/lib/faixas-antigas";
 import { fimDoTeste } from "@/lib/planos";
@@ -10,6 +11,8 @@ import { diagnosticoDoFeed, type DiagnosticoFeed } from "@/lib/catalogo";
 import { filaDeEspera } from "@/lib/estoque-avisos";
 import { postagemAAcertar } from "@/lib/postagem";
 import { aplicativoConfigurado as mercadoPagoDisponivel, conectadoPorOAuth } from "@/lib/mercado-pago-conta";
+import { conectado as melhorEnvioConectado } from "@/lib/melhor-envio-conta";
+import { cepCertoConfigurada } from "@/lib/cepcerto";
 import type { SecaoPainel } from "@/components/painel/PainelLoja";
 
 /**
@@ -80,6 +83,15 @@ export async function dadosDoPainel(secao: SecaoPainel) {
     p.postagem ? postagemAAcertar(id) : { etiquetas: 0, custoCentavos: 0 },
   ]);
 
+  const pecas = secao === "Marca" && templateAtelieLigado()
+    ? await prisma.produto.findMany({
+      where: { tenantId: id, ativo: true },
+      select: { slug: true, nome: true },
+      orderBy: { nome: "asc" },
+      take: 300,
+    })
+    : [];
+
   return {
     /** Contagens do catálogo inteiro, para a tela não afirmar número de uma fatia. */
     contagens: { semEmbalagem: semEmbalagemTotal, ativos: ativosTotal, semFoto: semFotoTotal, pedidos: pedidosTotal },
@@ -111,6 +123,9 @@ export async function dadosDoPainel(secao: SecaoPainel) {
       mpPublicKey: loja.mpPublicKey,
       // Só o fato de existir credencial; o token cifrado nunca sai daqui.
       mpConfigurado: Boolean(loja.mpAccessTokenEnc),
+      // Só o fato de estar conectado, para o checklist: os tokens não saem daqui.
+      melhorEnvioConectado: melhorEnvioConectado(loja),
+      cotacaoDaPlataforma: cepCertoConfigurada(),
       // A conexão em si (conta, data) é lida do tenant pela página, como no
       // Melhor Envio; aqui vai só o que muda o formulário das chaves.
       mpPorOAuth: conectadoPorOAuth(loja),
@@ -164,5 +179,7 @@ export async function dadosDoPainel(secao: SecaoPainel) {
     postagem: { etiquetas: postagem.etiquetas, custoCentavos: postagem.custoCentavos, limiteCentavos: loja.limitePostagemCentavos },
     avaliacoes: avaliacoes.map((a) => ({ id: a.id, produtoNome: a.produto.nome, nome: a.nome, nota: a.nota, texto: a.texto, aprovada: a.aprovada, criadoEm: a.criadoEm.toISOString() })),
     cupons: cupons.map((c) => ({ id: c.id, codigo: c.codigo, tipo: c.tipo, valor: c.valor, minimoCentavos: c.minimoCentavos, usosMax: c.usosMax, usos: c.usos, validoAte: c.validoAte?.toISOString() ?? null, ativo: c.ativo })),
+    layouts: layoutsOferecidos(),
+    pecas,
   };
 }

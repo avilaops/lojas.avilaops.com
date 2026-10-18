@@ -1,0 +1,181 @@
+{
+  "schemaVersion": 1,
+  "application": "avila-lojas-avilaops-com",
+  "members": [],
+  "tasks": [
+    {
+      "id": "T-0001",
+      "title": "Facilitar a consulta dos anúncios da Brilhax no Mercado Livre",
+      "objective": "Exibir automaticamente no painel os anúncios ativos, preços, estoque, vínculo com o catálogo e divergências.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "concluida",
+      "acceptanceCriteria": [
+        "A consulta carrega sem exigir clique inicial.",
+        "O cliente consegue buscar por nome, MLB ou SKU.",
+        "O painel resume anúncios ativos, vinculados, reconhecidos e sem vínculo.",
+        "Anúncios reconhecidos mostram diferença de preço em reais e percentual."
+      ],
+      "evidence": [
+        "Ambiente local: ESLint do componente sem erros.",
+        "Ambiente local: TypeScript sem erros.",
+        "Ambiente local: build de produção concluído.",
+        "Ambiente local: 14 testes de adoção do Mercado Livre aprovados.",
+        "Suíte geral: 1074 testes aprovados; os 2 testes fiscais inicialmente bloqueados pelo OpenSSL local foram repetidos com a instalação correta e aprovados."
+      ],
+      "review": "Autorrevisão concluída; consulta permanece somente leitura e vinculação continua exigindo escolha explícita do lojista.",
+      "environment": "local"
+    },
+    {
+      "id": "T-0002",
+      "title": "Abrir os detalhes ao clicar na linha do pedido",
+      "objective": "Permitir que o lojista abra um pedido clicando em qualquer área livre da linha no computador, mantendo as ações independentes.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "concluida",
+      "acceptanceCriteria": [
+        "Qualquer área livre da linha abre a tela de detalhes do pedido.",
+        "Botões, links e campos interativos da linha não disparam a navegação da linha.",
+        "A linha pode ser aberta pelo teclado com Enter.",
+        "O comportamento existente no celular permanece inalterado."
+      ],
+      "evidence": [
+        "ESLint do componente ListaDeRegistros concluído sem erros.",
+        "TypeScript concluído sem erros.",
+        "Build otimizado de produção concluído e BUILD_ID gerado.",
+        "A navegação da linha ignora links, botões, campos e controles com role button."
+      ],
+      "review": "Autorrevisão concluída; o comportamento móvel foi preservado e a ação Separar continua independente da navegação da linha.",
+      "environment": "local"
+    },
+    {
+      "id": "T-0003",
+      "title": "Remover texto auxiliar da razão social",
+      "objective": "Retirar o texto secundário exibido sob o campo Razão social sem alterar os dados da empresa.",
+      "assignee": null,
+      "priority": "normal",
+      "status": "concluida",
+      "acceptanceCriteria": [
+        "O campo Razão social não exibe texto auxiliar.",
+        "Consulta de CNPJ e salvamento da razão social permanecem inalterados."
+      ],
+      "evidence": ["Texto auxiliar removido do componente sem alterar o estado ou a carga enviada pela razão social."],
+      "review": "Alteração visual isolada; consulta de CNPJ e persistência permanecem intactas.",
+      "environment": "local"
+    },
+    {
+      "id": "T-0004",
+      "title": "Redesenhar o painel com prioridade para celular",
+      "objective": "Unificar a base visual do painel, eliminar rolagem horizontal acidental e tornar navegação, indicadores, formulários e listas legíveis e operáveis no celular.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "concluida",
+      "acceptanceCriteria": [
+        "O painel não apresenta rolagem horizontal acidental em larguras de 360 a 430 px.",
+        "Visão geral e Análises reorganizam indicadores, filtros, gráficos e rankings para celular.",
+        "Campos, botões e navegação mantêm alvos de toque de pelo menos 44 px.",
+        "Conteúdo longo de produtos, clientes e empresa não estica a página.",
+        "O layout desktop preserva a barra lateral e usa a largura disponível sem sobreposição."
+      ],
+      "evidence": [
+        "Validação ao vivo em /painel: viewport interno de 487 px, largura rolável de 487 px e ausência de rolagem horizontal.",
+        "Validação ao vivo em /painel/analises: viewport interno de 487 px, largura rolável de 468 px e ausência de rolagem horizontal.",
+        "ESLint, TypeScript e build de produção concluídos; navegação lateral desktop preservada."
+      ],
+      "review": "Base visual responsiva aplicada ao painel, com filtros, indicadores, listas e formulários adaptados para toque e conteúdo longo contido.",
+      "environment": "producao"
+    },
+    {
+      "id": "T-0005",
+      "title": "Tornar a consulta de CNPJ resiliente",
+      "objective": "Evitar que indisponibilidade da BrasilAPI seja apresentada como CNPJ inexistente.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "concluida",
+      "acceptanceCriteria": [
+        "A BrasilAPI permanece como fonte principal.",
+        "A consulta usa CNPJ.ws quando a fonte principal falha.",
+        "Os dois formatos retornam a mesma estrutura de dados da empresa.",
+        "O CNPJ 67.554.083/0001-31 pode ser localizado por ambas as fontes."
+      ],
+      "evidence": [
+        "BrasilAPI respondeu HTTP 200 para 67.554.083/0001-31 a partir da estação local e do servidor applications.",
+        "CNPJ.ws respondeu com razão social e endereço completos para o mesmo CNPJ.",
+        "Três testes de normalização aprovados.",
+        "Consulta real pela função retornou BRILHAX PRODUTOS PARA ESTETICA AUTOMOTIVA LTDA, Ribeirão Preto/SP.",
+        "TypeScript concluído sem erros."
+      ],
+      "review": "A segunda fonte só é chamada após falha da principal e entrega o mesmo contrato interno, sem mudar o formulário.",
+      "environment": "local"
+    },
+    {
+      "id": "T-0006",
+      "title": "Listar notas fiscais recebidas em colunas",
+      "objective": "Transformar os XMLs fiscais recebidos em uma lista operacional com fornecedor, número, valor, situação e acesso ao XML.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "concluida",
+      "acceptanceCriteria": [
+        "NF-e recebidas exibem fornecedor, número, valor, data e situação.",
+        "Desktop usa tabela e celular usa lista compacta sem rolagem horizontal.",
+        "XML bruto não é enviado no JSON da tela.",
+        "XML com DTD ou entidade não é interpretado.",
+        "Download do XML permanece disponível."
+      ],
+      "evidence": [
+        "Três testes do resumo fiscal aprovados, incluindo rejeição de XML inseguro.",
+        "ESLint e TypeScript concluídos sem erros.",
+        "Build de produção concluído após uma repetição por falha intermitente do libvips na imagem Open Graph.",
+        "A API resume o XML no servidor e não inclui o conteúdo bruto na resposta da tela."
+      ],
+      "review": "A lista usa tabela no desktop e cartões no celular; automações de estoque, custo, financeiro e n8n continuam fora deste incremento porque ainda não possuem persistência idempotente.",
+      "environment": "local"
+    },
+    {
+      "id": "T-0007",
+      "title": "Permitir que a equipe troque de loja pelo painel",
+      "objective": "Exibir uma saída direta para o seletor de lojas quando a sessão foi aberta pela equipe Avila Ops, sem oferecer acesso transversal ao lojista comum.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "concluida",
+      "acceptanceCriteria": [
+        "A sessão assinada registra se a entrada veio da equipe Avila Ops.",
+        "Somente a sessão da equipe exibe a ação Trocar loja.",
+        "A escolha de outra loja continua revalidando o acesso no Auth.",
+        "Sessões antigas e sessões comuns continuam funcionando sem ganhar acesso de equipe."
+      ],
+      "evidence": [
+        "Quatro testes de sessão aprovados, incluindo marcador da equipe e compatibilidade da sessão comum.",
+        "ESLint, TypeScript e build de produção concluídos.",
+        "A rota que efetiva a troca continua consultando o Auth antes de abrir a nova sessão."
+      ],
+      "review": "O marcador assinado controla apenas a visibilidade do atalho; a autorização real é refeita no servidor a cada troca.",
+      "environment": "local"
+    },
+    {
+      "id": "T-0008",
+      "title": "Exportar e reimportar o catálogo preenchido por loja",
+      "objective": "Dar ao lojista um fluxo visível para baixar todos os produtos da loja atual, completar no Google Planilhas e importar o arquivo novamente.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "concluida",
+      "acceptanceCriteria": [
+        "O bloco de planilha oferece o catálogo preenchido em XLSX como ação principal.",
+        "O modelo vazio permanece disponível como ação secundária.",
+        "A tela explica como abrir e baixar o arquivo no Google Planilhas.",
+        "A reimportação atualiza pelo SKU e mostra prévia antes de gravar.",
+        "A exportação usa somente os produtos da loja selecionada."
+      ],
+      "evidence": [
+        "Teste de ida e volta do catálogo XLSX aprovado com SKU, GTIN, preço e estoque preservados.",
+        "Vinte e nove testes direcionados de sessão e planilha aprovados.",
+        "ESLint, TypeScript e build de produção concluídos.",
+        "A suíte geral aprovou 1.083 testes; os dois testes dependentes do OpenSSL local foram repetidos com o binário correto e os seis testes fiscais passaram."
+      ],
+      "review": "O arquivo é gerado dentro da sessão da loja atual; não existe exportação cruzada de dados entre tenants.",
+      "environment": "local"
+    }
+  ],
+  "decisions": [],
+  "integrations": []
+}

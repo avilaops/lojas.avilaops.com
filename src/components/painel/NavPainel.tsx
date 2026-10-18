@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
-  BarChart3, Bot, ExternalLink, LayoutDashboard, LogOut, Megaphone, Menu, Package, Settings,
+  ArrowLeftRight, BarChart3, Bot, ExternalLink, LayoutDashboard, LogOut, Megaphone, Menu, Package, Settings,
   Search, ShoppingCart, Star, Tags, Ticket, Users, Warehouse, X,
 } from "lucide-react";
 import { LogoLojas } from "@/components/marca/MarcaLojas";
@@ -79,13 +79,15 @@ export const SECOES: ItemNav[] = [
 /** Ativo por prefixo, para a rota de detalhe acender a seção que a contém. */
 function ativo(pathname: string, href: string): boolean {
   if (href === "/painel") return pathname === "/painel";
+  // A fila do Pix mora embaixo de Pedidos, mas é outra tela.
+  if (href === "/painel/pedidos" && pathname.startsWith("/painel/pedidos/pix")) return false;
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function Lista({ pathname, aoNavegar, aSeparar }: { pathname: string; aoNavegar?: () => void; aSeparar: number }) {
+function Lista({ pathname, aoNavegar, aSeparar, pixAConferir = 0, secoes }: { pathname: string; aoNavegar?: () => void; aSeparar: number; pixAConferir?: number; secoes: ItemNav[] }) {
   return (
     <nav className="pnav-lista" aria-label="Seções do painel">
-      {SECOES.map((s) => {
+      {secoes.map((s) => {
         const Icone = ICONES[s.icone];
         const aberto = ativo(pathname, s.href);
         return (
@@ -95,6 +97,9 @@ function Lista({ pathname, aoNavegar, aSeparar }: { pathname: string; aoNavegar?
               <span>{s.rotulo}</span>
               {/* Só em Pedidos, e só quando existe: selo que aparece sempre vira
                   enfeite e para de ser lido. */}
+              {s.href === "/painel/pedidos/pix" && pixAConferir > 0 && (
+                <b className="pnav-selo" title={`${pixAConferir} Pix esperando conferência no extrato`}>{pixAConferir}</b>
+              )}
               {s.href === "/painel/pedidos" && aSeparar > 0 && (
                 <b className="pnav-selo" title={`${aSeparar} pedido(s) pago(s) esperando separação`}>{aSeparar}</b>
               )}
@@ -116,7 +121,7 @@ function Lista({ pathname, aoNavegar, aSeparar }: { pathname: string; aoNavegar?
   );
 }
 
-function Rodape({ pathname, aoNavegar, urlLoja }: { pathname: string; aoNavegar?: () => void; urlLoja: string }) {
+function Rodape({ pathname, aoNavegar, urlLoja, podeTrocarLoja }: { pathname: string; aoNavegar?: () => void; urlLoja: string; podeTrocarLoja: boolean }) {
   const emConfig = ativo(pathname, "/painel/configuracoes");
   // O nome da loja fica só no topo. Aqui embaixo ficam as três ações que não
   // são seção: configurar, abrir a loja e sair, todas com texto. "Abrir a
@@ -127,6 +132,12 @@ function Rodape({ pathname, aoNavegar, urlLoja }: { pathname: string; aoNavegar?
         <Settings size={16} aria-hidden="true" />
         <span>Configurações</span>
       </Link>
+      {podeTrocarLoja && (
+        <Link href="/entrar/equipe" onClick={aoNavegar} className="pnav-item">
+          <ArrowLeftRight size={16} aria-hidden="true" />
+          <span>Trocar loja</span>
+        </Link>
+      )}
       <a href={urlLoja} target="_blank" rel="noopener" className="pnav-item">
         <ExternalLink size={16} aria-hidden="true" />
         <span>Ver loja</span>
@@ -142,8 +153,11 @@ function Rodape({ pathname, aoNavegar, urlLoja }: { pathname: string; aoNavegar?
   );
 }
 
-export default function NavPainel({ nome, urlLoja, aSeparar = 0 }: { nome: string; urlLoja: string; aSeparar?: number }) {
-  const pathname = usePathname();
+export default function NavPainel({ nome, urlLoja, aSeparar = 0, pixManual = false, pixAConferir = 0, podeTrocarLoja = false }: { nome: string; urlLoja: string; aSeparar?: number; pixManual?: boolean; pixAConferir?: number; podeTrocarLoja?: boolean }) {
+  const pathname = usePathname().replace(/^\/plataforma(?=\/|$)/, "");
+  const secoes: ItemNav[] = pixManual
+    ? SECOES.flatMap((s) => (s.href === "/painel/pedidos" ? [s, { rotulo: "Pix a conferir", href: "/painel/pedidos/pix", icone: "pedidos" }] : [s]))
+    : SECOES;
   const [aberto, setAberto] = useState(false);
   const botaoMenu = useRef<HTMLButtonElement>(null);
   const primeiroItem = useRef<HTMLDivElement>(null);
@@ -174,7 +188,7 @@ export default function NavPainel({ nome, urlLoja, aSeparar = 0 }: { nome: strin
     return () => document.removeEventListener("keydown", aoTeclar);
   }, [aberto]);
 
-  const secaoAtual = [...SECOES].reverse().find((s) => ativo(pathname, s.href))?.rotulo
+  const secaoAtual = [...secoes].reverse().find((s) => ativo(pathname, s.href))?.rotulo
     ?? (ativo(pathname, "/painel/configuracoes") ? "Configurações" : "Painel");
 
   return (
@@ -189,8 +203,8 @@ export default function NavPainel({ nome, urlLoja, aSeparar = 0 }: { nome: strin
           <span>Buscar</span>
           <kbd>⌘K</kbd>
         </button>
-        <Lista pathname={pathname} aSeparar={aSeparar} />
-        <Rodape pathname={pathname} urlLoja={urlLoja} />
+        <Lista pathname={pathname} aSeparar={aSeparar} pixAConferir={pixAConferir} secoes={secoes} />
+        <Rodape pathname={pathname} urlLoja={urlLoja} podeTrocarLoja={podeTrocarLoja} />
       </aside>
 
       <header className="pnav-barra">
@@ -213,9 +227,9 @@ export default function NavPainel({ nome, urlLoja, aSeparar = 0 }: { nome: strin
               <button onClick={() => setAberto(false)} aria-label="Fechar menu" className="pnav-botao pnav-fechar"><X size={18} /></button>
             </div>
             <div ref={primeiroItem} className="contents">
-              <Lista pathname={pathname} aoNavegar={() => setAberto(false)} aSeparar={aSeparar} />
+              <Lista pathname={pathname} aoNavegar={() => setAberto(false)} aSeparar={aSeparar} pixAConferir={pixAConferir} secoes={secoes} />
             </div>
-            <Rodape pathname={pathname} urlLoja={urlLoja} aoNavegar={() => setAberto(false)} />
+            <Rodape pathname={pathname} urlLoja={urlLoja} podeTrocarLoja={podeTrocarLoja} aoNavegar={() => setAberto(false)} />
           </div>
         </div>
       )}

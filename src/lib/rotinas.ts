@@ -62,6 +62,13 @@ export interface DefinicaoRotina {
  * existindo — o endpoint virou o disparo manual, não mais o agendamento.
  */
 export const ROTINAS = {
+  "fiscal.receber": {
+    titulo: "Receber NF-e",
+    descricao: "Consulta documentos fiscais dos CNPJs com certificado A1 configurado",
+    cadencia: { tipo: "intervalo", minutos: 5 },
+    travaMinutos: 5,
+    falhasAteAlerta: 3,
+  },
   "mercadolivre.avisos": {
     titulo: "Vendas do ML",
     descricao: "Fila do Mercado Livre: venda vira pedido e baixa estoque, envio vira rastreio",
@@ -101,6 +108,13 @@ export const ROTINAS = {
     cadencia: { tipo: "intervalo", minutos: 10 },
     travaMinutos: 15,
     falhasAteAlerta: 3,
+  },
+  "pix.expirar": {
+    titulo: "Pix vencido",
+    descricao: "Cancela o Pix na conta que passou do prazo e devolve o estoque",
+    cadencia: { tipo: "intervalo", minutos: 10 },
+    travaMinutos: 10,
+    falhasAteAlerta: 2,
   },
   "pix.lembrete": {
     titulo: "Lembrete de Pix",

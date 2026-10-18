@@ -207,4 +207,4 @@ teste expôs. Em produção, nenhuma pessoa jurídica conseguiria fechar pedido.
 ## Pendente
 
 - [ ] Adaptador do carrinho do Medusa
-- [ ] Segundo provider, para exercitar a interface na prática
+- [x] Segundo provider (PagBank: Pix, cartão cifrado no navegador e boleto), atrás da flag `pagamentos_pagbank`

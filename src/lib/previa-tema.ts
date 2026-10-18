@@ -67,6 +67,14 @@ const ROTULOS: Record<string, string> = {
   "premium.etapas.titulo": "Título",
   "premium.etapas.texto": "Descrição",
   "premium.etapas.icone": "Ícone",
+  atelie: "Ateliê",
+  "atelie.secoes": "Seções",
+  "atelie.heroLink": "Destino do botão",
+  "atelie.sobre": "Texto da seção Sobre",
+  "atelie.looks": "Lookbook",
+  "atelie.looks.titulo": "Nome",
+  "atelie.looks.imagem": "Foto do look",
+  "atelie.looks.produtos": "Peças",
 };
 
 /** Quantos campos a prévia lista; o resto o lojista vê ao corrigir os primeiros. */
@@ -81,7 +89,7 @@ function nomeDoCampo(caminho: (string | number)[]): string {
   const indice = caminho.find((c): c is number => typeof c === "number");
   if (indice === undefined) return rotulo;
   // O formulário numera as campanhas como "Arte 1", "Arte 2".
-  const item = chaves[0] === "campanhasHome" ? "Arte" : "Etapa";
+  const item = chaves[0] === "campanhasHome" ? "Arte" : chaves[0] === "atelie" ? "Look" : "Etapa";
   return `${item} ${indice + 1}: ${rotulo}`;
 }
 
@@ -190,6 +198,18 @@ function produtoDemo({ categoria, ...p }: ProdutoDemo): Produto {
     busca: "",
     ...p,
   };
+}
+
+/** Peça que o look da prévia cita e o catálogo de demonstração não tem. */
+export function produtoParaLookDeDemonstracao(slug: string): Produto {
+  const nome = slug.split("-").filter(Boolean).map((parte) => parte.charAt(0).toUpperCase() + parte.slice(1)).join(" ");
+  return produtoDemo({
+    categoria: "acessorios",
+    slug,
+    nome: nome || slug,
+    precoCentavos: 0,
+    descricaoCurta: "Peça de demonstração da prévia.",
+  });
 }
 
 /**

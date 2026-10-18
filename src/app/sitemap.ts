@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { tenantAtual, temaDo, urlDaLoja } from "@/lib/tenant";
 import { listarCategorias, listarProdutos, produtoPublicavel } from "@/lib/catalogo";
 import { temPromocoes as lojaTemPromocoes } from "@/lib/promocoes";
-import { emPromocao } from "@/lib/produto-regras";
+import { emPromocao, imagensDoSitemap } from "@/lib/produto-regras";
 import { postsPublicados } from "@/lib/blog";
 import { listarPublicadas } from "@/lib/publicacoes-consulta";
 import { politicasPublicadas } from "@/lib/politicas";
@@ -49,7 +49,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Só o que tem foto ou preço. A Vedashow mandava 5.589 produtos ao Google
     // com 2.100 vendáveis: o resto era nome e ficha, sem nada para exibir, e
     // milhares de páginas quase iguais derrubam as boas junto.
-    ...produtos.filter(produtoPublicavel).map((p) => ({ url: `${base}/produtos/${p.slug}`, lastModified: p.atualizadoEm, changeFrequency: "weekly" as const, priority: 0.8 })),
+    // As fotos próprias vão declaradas junto: é por aqui que o Google Imagens
+    // as associa à página do produto sem depender de rastrear a galeria.
+    ...produtos.filter(produtoPublicavel).map((p) => {
+      const images = imagensDoSitemap(p, base);
+      return { url: `${base}/produtos/${p.slug}`, lastModified: p.atualizadoEm, changeFrequency: "weekly" as const, priority: 0.8, ...(images.length ? { images } : {}) };
+    }),
     // As publicações do blog da loja: só as que já estão no ar (rascunho e
     // post agendado não existem para o Google, como não existem na vitrine).
     ...(publicacoes.length ? [{ url: `${base}/blog`, changeFrequency: "weekly" as const, priority: 0.5 }] : []),

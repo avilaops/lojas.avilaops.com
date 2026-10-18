@@ -78,6 +78,34 @@ export function publicavel(p: Pick<ProdutoRegras, "ativo" | "imagens" | "precoCe
   return p.ativo && (p.imagens.length > 0 || p.precoCentavos > 0);
 }
 
+/** Teto de imagens por endereço no protocolo de sitemap. */
+const IMAGENS_POR_ENDERECO = 1000;
+
+/**
+ * As fotos que o sitemap declara para a página do produto.
+ *
+ * Só foto própria: imagem de série e ilustração técnica se repetem em centenas
+ * de produtos (uma só foto servia 562 itens numa loja), e declarar a mesma
+ * imagem em centenas de páginas não põe nenhuma delas no Google Imagens. É a
+ * mesma leitura de `emPromocao`: o que se anuncia é o item que a foto mostra.
+ * Endereço relativo vira absoluto pela base da loja; o que não for http(s) sai.
+ */
+export function imagensDoSitemap(p: { imagens: readonly string[]; imagemOrigem: string | null }, base: string): string[] {
+  if (p.imagemOrigem !== "propria") return [];
+  const vistas = new Set<string>();
+  for (const imagem of p.imagens) {
+    if (!imagem.trim()) continue;
+    let url: URL;
+    try {
+      url = new URL(imagem.trim(), `${base}/`);
+    } catch {
+      continue;
+    }
+    if (url.protocol === "https:" || url.protocol === "http:") vistas.add(url.href);
+  }
+  return [...vistas].slice(0, IMAGENS_POR_ENDERECO);
+}
+
 /** A mesma régua de `publicavel`, como filtro de consulta. Mudou uma, muda a outra. */
 export const CONDICAO_PUBLICAVEL = {
   ativo: true,

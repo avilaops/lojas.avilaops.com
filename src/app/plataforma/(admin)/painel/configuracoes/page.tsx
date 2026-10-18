@@ -26,6 +26,7 @@ export default function Pagina() {
             { href: "/painel/configuracoes/dominio", titulo: "Domínio", descricao: "Endereço próprio da sua loja" },
             { href: "/painel/configuracoes/entrega", titulo: "Entrega", descricao: "Frete por CEP, prazo e retirada" },
             { href: "/painel/configuracoes/recebimento", titulo: "Recebimento", descricao: "Pix, cartão e boleto" },
+            { href: "/painel/configuracoes/fiscal", titulo: "Notas fiscais", descricao: "Certificado A1 e consulta de NF-e do CNPJ" },
           ],
         },
         {

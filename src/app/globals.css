@@ -468,7 +468,7 @@ html[data-cookies-respondido] .aviso-cookies { display: none; }
 .painel-top { display: grid; gap: 0.5rem; font-size: 0.875rem; }
 .painel-top li { display: flex; align-items: center; gap: 0.625rem; }
 .painel-top b { display: grid; place-items: center; width: 1.5rem; height: 1.5rem; border-radius: 999px; background: var(--muted); font-size: 0.75rem; }
-.painel-top span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.painel-top span { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .painel-top small { color: var(--muted-foreground); white-space: nowrap; }
 .painel-vazio { font-size: 0.875rem; color: var(--muted-foreground); }
 .painel-acoes-hoje { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; border-top: 1px solid var(--border); padding-top: 1rem; font-size: 0.8125rem; color: var(--muted-foreground); }
@@ -479,6 +479,7 @@ html[data-cookies-respondido] .aviso-cookies { display: none; }
 .painel-espera > p { color: var(--muted-foreground); }
 .painel-espera ul { display: grid; gap: 0.375rem; }
 .painel-espera li { display: flex; justify-content: space-between; gap: 1rem; }
+.painel-espera li > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .painel-espera small { color: var(--muted-foreground); white-space: nowrap; }
 .painel-espera button { justify-self: start; }
 
@@ -1413,3 +1414,80 @@ body:has(.whatsapp-flutuante) .rodape-loja { padding-bottom: calc(5.5rem + env(s
 .pagina-contato dd address + a svg { grid-row: auto; width: .875rem; height: .875rem; margin: 0; }
 @media (max-width: 760px) { .pagina-contato { grid-template-columns: 1fr; gap: 1.75rem; } }
 .ct-tabela .ct-acao .btn-primario { width: auto; min-height: 2.25rem; padding: .35rem .8rem; font-size: .8125rem; }
+
+/* Ateliê: editorial de moda. O chrome (cabeçalho, card, rodapé) é o da
+   plataforma; o que muda é a home e, por tokens, a cor e a serifa. */
+.home-atelie { padding-bottom: 1rem; }
+.home-atelie .atelie-secao { margin-top: 3.25rem; }
+.home-atelie .atelie-miolo > div:first-child .atelie-secao { margin-top: 1.5rem; }
+.home-atelie h1,
+.home-atelie h2 {
+  font-family: var(--fonte-serif), Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -.03em;
+}
+.home-atelie .atelie-hero-arte { display: block; overflow: hidden; border-radius: var(--radius); background: color-mix(in srgb, var(--primary) 18%, var(--muted)); }
+.home-atelie .atelie-hero-arte img { display: block; width: 100%; height: clamp(11rem, 34vw, 26rem); object-fit: cover; }
+.home-atelie .atelie-hero-copy { max-width: 40rem; margin: 2.5rem auto 0; text-align: center; }
+.home-atelie .atelie-hero-copy .home-selo { color: var(--primary); }
+.home-atelie .atelie-hero-copy h1 { margin-top: .85rem; font-size: clamp(2.6rem, 6vw, 4.6rem); line-height: .98; }
+.home-atelie .atelie-hero-copy p:not(.home-selo) { margin: .9rem auto 0; max-width: 28rem; color: var(--muted-foreground); line-height: 1.5; }
+.home-atelie .atelie-hero-copy .btn-primario {
+  margin-top: 1.35rem;
+  border-radius: var(--radius);
+  padding-inline: 1.6rem;
+  font-size: .75rem;
+  font-weight: 650;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+.home-atelie h2 { font-size: clamp(1.7rem, 3vw, 2.2rem); line-height: 1.1; }
+.atelie-categorias, .atelie-produtos, .atelie-looks { display: grid; gap: 1rem; }
+.atelie-categorias, .atelie-produtos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.atelie-categoria { display: grid; gap: .55rem; color: inherit; }
+.atelie-categoria-foto {
+  display: block;
+  aspect-ratio: 5 / 4;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--primary) 28%, var(--muted));
+}
+.atelie-categorias > :nth-child(4n + 2) .atelie-categoria-foto { background: color-mix(in srgb, var(--primary) 55%, var(--muted)); }
+.atelie-categorias > :nth-child(4n + 3) .atelie-categoria-foto { background: color-mix(in srgb, var(--foreground) 8%, var(--muted)); }
+.atelie-categorias > :nth-child(4n) .atelie-categoria-foto { background: color-mix(in srgb, var(--primary) 78%, var(--foreground)); }
+.atelie-categoria-foto img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.atelie-categoria > span:last-child { font-size: .9rem; }
+.home-atelie .cartao-produto { border: 0; background: transparent; border-radius: var(--radius); box-shadow: none; }
+.home-atelie .cartao-produto-imagem { aspect-ratio: 3 / 4; border-radius: var(--radius); }
+.home-atelie .cartao-produto-imagem img { object-fit: cover; }
+.home-atelie .cartao-produto-imagem .absolute { display: none; }
+.home-atelie .cartao-produto-estoque,
+.home-atelie .cartao-produto-conteudo > a.underline { display: none; }
+.home-atelie .cartao-produto-preco p { font-weight: 500; font-size: 1rem; }
+.home-atelie .cartao-produto .btn-primario,
+.home-atelie .cartao-produto .btn-secundario {
+  width: 100%;
+  border-radius: var(--radius);
+  font-size: .72rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.atelie-look { position: relative; margin: 0; }
+.atelie-look img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--radius); background: var(--muted); }
+.atelie-look figcaption {
+  position: absolute;
+  left: .7rem;
+  bottom: .7rem;
+  max-width: calc(100% - 1.4rem);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--background) 90%, transparent);
+  padding: .3rem .55rem;
+  font-size: .75rem;
+  line-height: 1.35;
+}
+.atelie-look figcaption a { text-decoration: underline; text-underline-offset: 2px; }
+.atelie-sobre p { max-width: 38rem; margin-top: .7rem; color: var(--muted-foreground); line-height: 1.6; }
+@media (min-width: 900px) {
+  .atelie-categorias, .atelie-produtos { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .atelie-looks { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
+}

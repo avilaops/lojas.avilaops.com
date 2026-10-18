@@ -4,12 +4,14 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { PALETA_ATELIE } from "@/lib/atelie";
 import { LAYOUTS, type TemaLoja } from "@/lib/tema";
 import { LIMITE_RASCUNHO, codificarRascunho } from "@/lib/previa-tema";
 import { criarDirecaoVisual, PERSONALIDADES, SEGMENTOS, type IdentidadeLoja } from "@/lib/identidade";
 import { Campo, FONTES, Secao, inputClasse } from "./campos";
 import EnviarImagem from "./EnviarImagem";
 import EditorEtapas from "@/components/templates/automotivo-premium/EditorEtapas";
+import EditorAtelie from "./EditorAtelie";
 import type { LojaView } from "./PainelLoja";
 
 /**
@@ -53,11 +55,16 @@ export default function Marca({
   chamar,
   ocupado,
   categorias,
+  layouts,
+  pecas,
 }: {
   loja: LojaView;
   chamar: (c: string, m: string, b?: unknown, s?: string) => Promise<unknown>;
   ocupado: boolean;
   categorias: {slug: string; nome: string}[];
+  /** Modelos que este ambiente oferece. Ateliê só entra com a bandeira ligada. */
+  layouts: Array<{ valor: TemaLoja["layout"]; rotulo: string; descricao: string }>;
+  pecas: { slug: string; nome: string }[];
 }) {
   const router = useRouter();
   const caminho = usePathname();
@@ -251,8 +258,11 @@ export default function Marca({
         <Secao titulo={BLOCOS.vitrine.titulo} descricao="Como a página inicial se monta.">
           <Campo label="Template da loja" ajuda="O Automotivo Premium personaliza toda a experiência, da navegação ao carrinho.">
             <div className="grid gap-2 sm:grid-cols-2">
-              {LAYOUTS.map((l) => (
-                <button key={l.valor} type="button" aria-pressed={tema.layout === l.valor} onClick={() => setTema({ ...tema, layout: l.valor })} className={`min-h-[44px] rounded-xl border p-3 text-left text-sm ${tema.layout === l.valor ? "border-foreground bg-muted" : "border-border"}`}>
+              {tema.layout === "atelie" && !layouts.some((l) => l.valor === "atelie") && (
+                <p className="rounded-lg bg-muted p-3 text-sm text-muted-foreground">O Ateliê está desligado neste ambiente. A loja publicada usa o Clássico até a bandeira ser ligada. O tema salvo não muda.</p>
+              )}
+              {layouts.map((l) => (
+                <button key={l.valor} type="button" aria-pressed={tema.layout === l.valor} onClick={() => setTema(l.valor === "atelie" && tema.layout !== "atelie" ? { ...tema, ...PALETA_ATELIE, layout: "atelie" } : { ...tema, layout: l.valor })} className={`min-h-[44px] rounded-xl border p-3 text-left text-sm ${tema.layout === l.valor ? "border-foreground bg-muted" : "border-border"}`}>
                   <span className="block font-semibold">{l.rotulo}</span>
                   <span className="text-xs text-muted-foreground">{l.descricao}</span>
                 </button>
@@ -280,6 +290,10 @@ export default function Marca({
                 <EnviarImagem aoEnviar={(url) => setVitrine((v) => ({ ...v, logoUrl: url }))} rotulo="Enviar logo" />
               </div>
             </Campo>
+            <label className="flex items-center gap-2 text-sm sm:col-span-2">
+              <input type="checkbox" checked={tema.mostrarNomeNoCabecalho} onChange={(e) => setTema({ ...tema, mostrarNomeNoCabecalho: e.target.checked })} />
+              Mostrar o nome ao lado da logo
+            </label>
             <Campo label="Banner de reserva" ajuda="Imagem usada quando a loja ainda não tem campanhas no carrossel.">
               <div className="flex items-center gap-2">
                 <input className={inputClasse} value={vitrine.bannerUrl} onChange={(e) => setVitrine({ ...vitrine, bannerUrl: e.target.value })} placeholder="URL ou envie um arquivo" />
@@ -287,7 +301,7 @@ export default function Marca({
               </div>
             </Campo>
           </div>
-          {(tema.layout === "distribuidora" || tema.layout === "automotivo") && <fieldset className="mt-6 grid gap-4 rounded-xl border border-border p-4">
+          {(tema.layout === "distribuidora" || tema.layout === "automotivo" || tema.layout === "atelie") && <fieldset className="mt-6 grid gap-4 rounded-xl border border-border p-4">
             <legend className="px-2 text-sm font-semibold">Carrossel de campanhas em imagem</legend>
             <p className="text-sm text-muted-foreground">A chamada e qualquer condição comercial devem estar dentro da arte. Use apenas preço e desconto aprovados para a campanha.</p>
             {campanhas.map((campanha, indice) => <div key={indice} className="grid gap-3 rounded-lg border border-border p-3 sm:grid-cols-2">
@@ -326,6 +340,7 @@ export default function Marca({
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={tema.premium?.mostrarNome ?? false} onChange={e => setTema({...tema,premium:{...tema.premium,mostrarNome:e.target.checked}})}/> Mostrar o nome ao lado do símbolo</label>
             <EditorEtapas etapas={tema.premium?.etapas ?? []} categorias={categorias} aoAlterar={etapas => setTema({...tema,premium:{...tema.premium,etapas}})}/>
           </fieldset>}
+          {tema.layout === "atelie" && <EditorAtelie tema={tema} categorias={categorias} pecas={pecas} aoMudar={setTema} />}
           {segmento === "farmacia" && (
             <fieldset className="mt-6 grid gap-4 rounded-xl border border-border p-4 sm:grid-cols-2">
               <legend className="px-2 text-sm font-semibold">Responsável técnico</legend>

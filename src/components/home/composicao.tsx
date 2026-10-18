@@ -2,6 +2,7 @@ import { createElement, type ComponentType, type ReactElement } from "react";
 import type { TemaLoja } from "@/lib/tema";
 import { contratoDo } from "@/lib/templates";
 import type { DadosHome } from "./tipos";
+import Atelie from "./Atelie";
 import Automotivo from "./Automotivo";
 import CatalogoTecnico from "./CatalogoTecnico";
 import Classico from "./Classico";
@@ -37,6 +38,7 @@ const HOMES: Record<TemaLoja["layout"], ComponentType<DadosHome>> = {
   editorial: Editorial,
   minimal: Minimal,
   classico: Classico,
+  atelie: Atelie,
 };
 
 /** Template que é a loja inteira traz a própria home; os demais só compõem. */

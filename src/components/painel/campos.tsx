@@ -50,6 +50,7 @@ export const FONTES = [
   { valor: "poppins", rotulo: "Poppins (amigável)" },
   { valor: "montserrat", rotulo: "Montserrat (forte)" },
   { valor: "playfair", rotulo: "Playfair (elegante)" },
+  { valor: "dm-serif", rotulo: "DM Serif (editorial)" },
 ] as const;
 
 export const brl = (c: number) => (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });

@@ -103,7 +103,13 @@ export type StatusPagamento =
   | "aprovado"
   | "recusado"
   | "estornado"
-  | "cancelado";
+  | "cancelado"
+  /**
+   * O comprador diz que pagou, mas ninguém confirmou ainda: é o Pix direto na
+   * conta do lojista, sem API do banco, até o lojista dar baixa. Não libera
+   * pedido nem baixa estoque; para o pedido, segue aguardando pagamento.
+   */
+  | "aguardando_confirmacao";
 
 export interface ResultadoPagamento {
   /** ID do pagamento no gateway, para conciliação e suporte. */

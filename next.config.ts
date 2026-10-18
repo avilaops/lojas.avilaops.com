@@ -9,7 +9,7 @@ import type { NextConfig } from "next";
  */
 // Version skew: quando um deploy acontece com a aba aberta, os IDs de chunk e
 // de Server Action mudam. O deploymentId faz o Next devolver 404 previsível
-// nesses casos (em vez de erro silencioso) e o cliente recarrega , ver
+// nesses casos (em vez de erro silencioso) e o cliente recarrega; ver
 // ErroDeVersao em src/app/layout.tsx.
 const nextConfig: NextConfig = {
   deploymentId: process.env.LOJAS_DEPLOY_ID || undefined,

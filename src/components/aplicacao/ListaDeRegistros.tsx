@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 
 /**
@@ -59,6 +60,8 @@ export default function ListaDeRegistros<T extends { id: string }>({
   vazio?: React.ReactNode;
   carregando?: boolean;
 }) {
+  const router = useRouter();
+
   if (itens.length === 0) return <>{vazio ?? null}</>;
 
   return (
@@ -113,7 +116,26 @@ export default function ListaDeRegistros<T extends { id: string }>({
           </thead>
           <tbody className={carregando ? "opacity-50" : undefined}>
             {itens.map((item) => (
-              <tr key={item.id} className="border-t border-border align-top">
+              <tr
+                key={item.id}
+                className={`border-t border-border align-top ${href ? "cursor-pointer transition-colors hover:bg-muted/40 focus-visible:bg-muted/40 focus-visible:outline-none" : ""}`}
+                role={href ? "link" : undefined}
+                tabIndex={href ? 0 : undefined}
+                onClick={(event) => {
+                  if (!href) return;
+
+                  const alvo = event.target as HTMLElement;
+                  if (alvo.closest("a, button, input, select, textarea, [role='button']")) return;
+
+                  router.push(href(item));
+                }}
+                onKeyDown={(event) => {
+                  if (!href || event.key !== "Enter" || event.target !== event.currentTarget) return;
+
+                  event.preventDefault();
+                  router.push(href(item));
+                }}
+              >
                 {colunas.map((c, i) => (
                   <td key={c.rotulo} className={`py-2.5 pr-4 ${c.numero ? "text-right tabular-nums whitespace-nowrap" : ""}`}>
                     {i === 0 && href ? (

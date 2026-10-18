@@ -32,9 +32,9 @@ export default async function Pagina({ searchParams }: { searchParams: Promise<{
   const [{ nova }, dados] = await Promise.all([searchParams, dadosDoPainel("Visão geral")]);
   return (
     <>
-      {/* A contagem vem do banco, nao da fatia de 500 carregada: a tela dizia
-          "500 produtos ativos" numa loja com 5.591. */}
-      <CabecalhoSecao titulo={dados.loja.nome} descricao={`${dados.contagens.ativos.toLocaleString("pt-BR")} produtos · ${dados.contagens.pedidos.toLocaleString("pt-BR")} pedidos`} />
+      {/* Produtos e pedidos estão na faixa de números logo abaixo (contados no
+          banco, não na fatia de 500 carregada): repetir aqui só gastava altura. */}
+      <CabecalhoSecao titulo={dados.loja.nome} />
       {nova && (
         <p className="mb-5 rounded-lg bg-blue-50 p-3 text-sm text-blue-900">
           Sua loja foi criada. Siga os passos abaixo para ela começar a vender.
