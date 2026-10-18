@@ -26,6 +26,7 @@ html[data-template="automotivo-premium"][data-modo="claro"] {
 .ap-cabecalho-linha { display:flex; height:76px; align-items:center; gap:36px; }
 .ap-marca { display:inline-flex; align-items:center; gap:11px; flex-shrink:0; color:var(--primary); text-decoration:none; font-weight:950; font-size:25px; font-style:italic; letter-spacing:-1px; text-transform:uppercase; }
 .ap-marca-simbolo { display:flex; align-items:center; }
+.ap-logo-compacta { display:none; }
 .ap-marca-simbolo:empty { display:none; }
 .ap-marca-simbolo img { width:43px; height:43px; object-fit:contain; border-radius:50%; }
 .ap-logo-escuro { display:none; }
@@ -80,7 +81,8 @@ html[data-template="automotivo-premium"][data-modo="claro"] {
 .ap-categoria-tudo>span { background:radial-gradient(circle at 50% 35%,color-mix(in srgb,var(--primary) 55%,#161616),#09090b 72%); }
 .ap-hero-area { width:100%; padding:0; }
 .ap-hero { position:relative; isolation:isolate; min-height:clamp(360px,38vw,520px); display:flex; align-items:center; overflow:hidden; border-radius:0; background:#080809; color:#fff; }
-.ap-hero-imagem { object-fit:cover; object-position:center; z-index:-2; }
+.ap-hero-midia { position:absolute; inset:0; z-index:-2; }
+.ap-hero-imagem { object-fit:cover; object-position:center; }
 .ap-hero::after { content:""; position:absolute; inset:0; z-index:-1; background:linear-gradient(90deg,#0007,transparent 75%); pointer-events:none; }
 .ap-hero-conteudo { max-width:620px; width:62%; padding:48px; }
 .ap-selo { margin:0 0 20px; color:#d6c8aa; text-transform:uppercase; letter-spacing:.18em; font-size:10px; font-weight:750; }
@@ -217,23 +219,26 @@ html[data-template="automotivo-premium"][data-modo="claro"] {
   .ap-aviso { font-size:8px; padding:7px 10px; }
   .ap-marca { font-size:21px; gap:8px; flex-shrink:1; min-width:0; }
   .ap-marca>span:not(.ap-marca-simbolo) { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding-right:3px; }
-  .ap-marca-simbolo img { width:34px; height:34px; }
+  .ap-logo-compacta { display:block; width:42px; height:42px; object-fit:contain; }
+  .ap-logo-compacta~.ap-marca-simbolo { display:none; }
+  .ap-marca:has(.ap-logo-compacta)>span:last-child { display:none; }
+  .ap-marca-simbolo img { width:42px; height:42px; object-fit:contain; }
   .ap-cabecalho-acoes { gap:7px; }
-  .ap-cabecalho-acoes .ap-icone { width:36px; height:36px; }
-  .ap-menu-botao { display:inline-flex; width:32px; border:0; }
+  .ap-cabecalho-acoes .ap-icone { width:44px; height:44px; }
+  .ap-menu-botao { display:inline-flex; width:44px; height:44px; border:0; }
   .ap-nav,.ap-conta { display:none; }
   .ap-busca { padding-block:23px; gap:14px; }
   .ap-busca>label { font-size:15px; }
   .ap-busca-form { gap:8px; padding-left:14px; }
   .ap-busca-form input { font-size:16px; }
-  .ap-busca-form button { padding:9px 15px; }
+  .ap-busca-form button { min-width:88px; min-height:44px; padding:9px 15px; }
   .ap-faixa-categorias .ap-categorias-grade { grid-template-columns:repeat(2,minmax(0,1fr)); gap:3px; }
   .ap-faixa-categorias .ap-categoria { aspect-ratio:1/1; font-size:15px; }
   .ap-faixa-categorias .ap-categoria strong { right:12px; bottom:12px; left:12px; font-size:16px; }
   .ap-faixa-categorias .ap-categorias-grade:has(>:nth-child(7):last-child) > :nth-child(7) { grid-column:1/-1; aspect-ratio:2/1; }
   .ap-hero-area { padding:0; }
   .ap-hero { min-height:clamp(340px,105vw,430px); align-items:flex-start; border-radius:0; }
-  .ap-hero-imagem { object-position:66% 100%; }
+  .ap-hero-imagem { object-position:center; }
   .ap-hero::after { background:linear-gradient(180deg,#000e 0%,#0009 44%,#0000 85%); }
   .ap-hero-conteudo { width:100%; padding:31px 25px; }
   .ap-selo { font-size:8px; letter-spacing:.15em; margin-bottom:17px; }
@@ -241,7 +246,7 @@ html[data-template="automotivo-premium"][data-modo="claro"] {
   .ap-hero-conteudo>p:not(.ap-selo) { font-size:12px; line-height:1.65; max-width:360px; }
   .ap-hero-acoes { gap:17px; margin-top:20px; }
   .ap-hero-acoes .btn-primario { font-size:10px; min-height:43px; padding-inline:17px; }
-  .ap-hero-acoes>a:not(.btn-primario) { font-size:9px; }
+  .ap-hero-acoes>a:not(.btn-primario) { min-height:44px; font-size:9px; }
   .ap-secao { padding-block:32px; }
   .ap-secao-titulo { gap:13px; margin-bottom:18px; }
   .ap-secao-titulo h2 { font-size:24px; }
