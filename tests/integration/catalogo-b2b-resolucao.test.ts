@@ -62,7 +62,12 @@ test("variante, exclusão e kit são resolvidos sem mutar SaldoEstoque", async (
     ...entrada(new Date("2026-10-01")),
     referencia: `bloqueio-${chave()}`,
     atribuicoes: [{ empresaReferencia: "cliente", unidadeReferencia: null, prioridade: 100 }],
-    itens: [{ ...e.itens[0], acao: "EXCLUIR", estrategiaPreco: undefined, descontoPontosBase: undefined, componentes: [] }],
+    itens: [{
+      produtoReferencia: "PROD", varianteReferencia: "VAR", acao: "EXCLUIR",
+      quantidadeMinima: 1, quantidadeMaxima: null, multiploVenda: 1,
+      quantidadePorEmbalagem: 1, unidadeComercial: "UN",
+      unidadesBaseNumerador: 1, unidadesBaseDenominador: 1, componentes: [],
+    }],
   };
   const catalogoExclusao = await salvarCatalogoB2B(c.tenant.id, exclusao);
   await aprovarVersaoCatalogoB2B(c.tenant.id, catalogoExclusao.id, 1, "qa");
