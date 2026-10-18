@@ -1,7 +1,7 @@
 import { request } from "node:https";
 import { gunzipSync } from "node:zlib";
 import { XMLParser, XMLValidator } from "fast-xml-parser";
-import { ErroFiscal } from "./fiscal-certificado";
+import { credencialTls, ErroFiscal } from "./fiscal-certificado";
 
 export const UFS_FISCAIS: Record<string, string> = {
   RO: "11", AC: "12", AM: "13", RR: "14", PA: "15", AP: "16", TO: "17",
@@ -68,9 +68,10 @@ export function lerDistribuicao(xml: string) {
 /** Um lote por chamada; nunca desliga a validação TLS nem segue redirecionamento. */
 export async function consultarSefaz(pfx: Buffer, senha: string, cnpj: string, uf: string, nsu: string) {
   const corpo = envelopeDistribuicao(cnpj, uf, nsu);
+  const credencial = credencialTls(pfx, senha);
   const xml = await new Promise<string>((resolve, reject) => {
     const req = request(URL_SEFAZ, {
-      method: "POST", pfx, passphrase: senha,
+      method: "POST", ...credencial,
       headers: { "Content-Type": `application/soap+xml; charset=utf-8; action="${NS}/nfeDistDFeInteresse"`, "Content-Length": Buffer.byteLength(corpo) },
     }, (res) => {
       const partes: Buffer[] = [];
