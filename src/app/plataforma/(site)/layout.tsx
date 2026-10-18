@@ -3,20 +3,14 @@ import { ArrowRight, Menu } from "lucide-react";
 import Consentimento from "@/components/Consentimento";
 import Pixels from "@/components/Pixels";
 import { pixelsDaPlataforma, temRastreio } from "@/lib/pixels";
-import { lojistaAtual } from "@/lib/sessao";
+import { sessaoDoPainel } from "@/lib/sessao";
+import MarcaLojas from "@/components/marca/MarcaLojas";
+import "../marca-lojas.css";
 import "../plataforma.css";
 
-function MarcaLojas() {
-  return (
-    <span className="pl-marca">
-      <span className="pl-marca-simbolo" aria-hidden="true"><span /></span>
-      <span className="pl-marca-texto"><strong>Lojas</strong><small>por Avila Ops</small></span>
-    </span>
-  );
-}
-
 export default async function PlataformaLayout({ children }: { children: React.ReactNode }) {
-  const lojista = await lojistaAtual();
+  const sessao = await sessaoDoPainel();
+  const lojista = sessao?.tenant ?? null;
   // Só no site público. O painel do lojista tem layout próprio e fica sem tag:
   // ali circulam pedido, cliente e faturamento da loja de outra pessoa.
   const pixels = pixelsDaPlataforma();
@@ -37,6 +31,7 @@ export default async function PlataformaLayout({ children }: { children: React.R
             {lojista ? (
               <>
                 <Link href="/painel" className="pl-header-entrar">Painel · {lojista.nome}</Link>
+                {sessao?.equipe && <Link href="/entrar/equipe" className="pl-header-entrar">Trocar loja</Link>}
                 <form action="/api/painel/sair" method="post"><button className="pl-header-sair">Sair</button></form>
               </>
             ) : (
@@ -50,7 +45,15 @@ export default async function PlataformaLayout({ children }: { children: React.R
             <summary aria-label="Abrir menu"><Menu size={20} /></summary>
             <nav>
               <Link href="/#recursos">Como funciona</Link><Link href="/#modelos">Layouts</Link><Link href="/#planos">Planos</Link><Link href="/blog">Blog</Link><Link href="/ajuda">Ajuda</Link>
-              <Link href="/entrar">Entrar</Link><Link href="/criar">Criar minha loja</Link>
+              {lojista ? (
+                <>
+                  <Link href="/painel">Painel · {lojista.nome}</Link>
+                  {sessao?.equipe && <Link href="/entrar/equipe">Trocar loja</Link>}
+                  <form action="/api/painel/sair" method="post"><button className="pl-menu-sair">Sair</button></form>
+                </>
+              ) : (
+                <><Link href="/entrar">Entrar</Link><Link href="/criar">Criar minha loja</Link></>
+              )}
             </nav>
           </details>
         </div>
@@ -59,10 +62,10 @@ export default async function PlataformaLayout({ children }: { children: React.R
       <Consentimento ativo={temRastreio(pixels)} plataforma />
       <footer className="pl-footer">
         <div className="pl-container pl-footer-grid">
-          <div><MarcaLojas /><p>Loja virtual pronta em um dia. Pix na hora, sem comissão.</p></div>
+          <div><MarcaLojas /><p>Loja virtual pronta em um dia. Planos mensais + 5% sobre vendas.</p></div>
           <div><strong>Produto</strong><Link href="/#recursos">Como funciona</Link><Link href="/#modelos">Layouts</Link><Link href="/#planos">Planos</Link><Link href="/criar">Criar loja</Link></div>
-          <div><strong>Recursos</strong><Link href="/ajuda">Ajuda</Link><Link href="/blog">Blog</Link><Link href="/developers">Desenvolvedores</Link></div>
-          <div><strong>Acesso</strong><Link href="/entrar">Painel do lojista</Link><a href="https://avilaops.com">Avila Ops</a></div>
+          <div><strong>Recursos</strong><Link href="/ajuda">Ajuda</Link><Link href="/blog">Blog</Link><Link href="/developers">Desenvolvedores</Link><Link href="/marca">Marca</Link></div>
+          <div><strong>Acesso</strong><Link href="/entrar">Painel do lojista</Link><Link href="/termos-comerciais">Termos comerciais</Link><a href="https://avilaops.com">Avila Ops</a></div>
         </div>
         <div className="pl-container pl-footer-base"><span>© {new Date().getFullYear()} Avila Ops.</span><span>Feito no Brasil para negócios que querem crescer.</span></div>
       </footer>

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { lerTokenDeCadastro, planoDoCadastro, precisaDosPrimeirosPassos, tokenDeCadastro } from "./cadastro";
+import { aceiteComercialValido, lerTokenDeCadastro, planoDoCadastro, precisaDosPrimeirosPassos, tokenDeCadastro } from "./cadastro";
 import { emailDoIdToken } from "./google-entrada";
 import { lerTokenDeRecuperacao, tokenDeRecuperacao } from "./recuperacao";
 
@@ -31,6 +31,13 @@ test("plano estranho no link vira nenhum plano", () => {
   assert.equal(planoDoCadastro("LOJA_PRO"), "LOJA_PRO");
   assert.equal(planoDoCadastro("GRATIS"), undefined);
   assert.equal(planoDoCadastro(3), undefined);
+});
+
+test("aceite comercial só vale quando é booleano true", () => {
+  assert.equal(aceiteComercialValido(true), true);
+  assert.equal(aceiteComercialValido(false), false);
+  assert.equal(aceiteComercialValido("true"), false);
+  assert.equal(aceiteComercialValido(undefined), false);
 });
 
 test("primeiros passos só para a conta que ainda não virou loja", () => {

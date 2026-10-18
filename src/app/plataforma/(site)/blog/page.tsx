@@ -57,7 +57,7 @@ export default function BlogPage() {
       <section className="pl-blog-cta">
         <div>
           <h2>Sua loja no ar hoje</h2>
-          <p>Vitrine, carrinho, frete calculado e Pix caindo direto na sua conta, sem comissão sobre a venda.</p>
+          <p>Vitrine, carrinho, frete calculado e Pix direto na sua conta, com mensalidade mais 5% sobre vendas na plataforma.</p>
         </div>
         <Link href="/criar" className="pl-header-cta">Criar minha loja <ArrowRight size={14} /></Link>
       </section>

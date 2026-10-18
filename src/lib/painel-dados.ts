@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { lojistaAtual } from "@/lib/sessao";
-import { urlDaLoja, temaDo, identidadeDa } from "@/lib/tenant";
+import { urlDaLoja, temaDo, identidadeDa, lojaVende } from "@/lib/tenant";
 import { layoutsOferecidos, templateAtelieLigado } from "@/lib/flags";
 import { NOME_PLANO } from "@/lib/assinatura";
 import { mensalidadeDaLoja } from "@/lib/faixas-antigas";
@@ -14,6 +14,7 @@ import { aplicativoConfigurado as mercadoPagoDisponivel, conectadoPorOAuth } fro
 import { conectado as melhorEnvioConectado } from "@/lib/melhor-envio-conta";
 import { cepCertoConfigurada } from "@/lib/cepcerto";
 import type { SecaoPainel } from "@/components/painel/PainelLoja";
+import { contratoVigente } from "@/lib/contratos-comerciais";
 
 /**
  * Os dados que o painel do lojista mostra, por seção.
@@ -64,7 +65,7 @@ export async function dadosDoPainel(secao: SecaoPainel) {
   const p = PRECISA[secao];
   const id = loja.id;
 
-  const [faturas, semEmbalagemTotal, ativosTotal, semFotoTotal, pedidosTotal, cupons, categorias, avaliacoes, vendas, catalogo, espera, postagem, credencialRecebimento] = await Promise.all([
+  const [faturas, semEmbalagemTotal, ativosTotal, semFotoTotal, pedidosTotal, cupons, categorias, avaliacoes, vendas, catalogo, espera, postagem, credencialRecebimento, contrato] = await Promise.all([
     prisma.fatura.findMany({ where: { tenantId: id }, orderBy: { criadoEm: "desc" }, take: 24 }),
     // Contagens do catálogo inteiro. O aviso de embalagem dizia "e mais 488"
     // numa loja com 5.591 produtos sem medida, porque contava dentro de uma
@@ -86,6 +87,7 @@ export async function dadosDoPainel(secao: SecaoPainel) {
         ? prisma.credencialPagamento.findUnique({ where: { id: loja.credencialPadraoId }, select: { status: true, testadoEm: true } })
         : prisma.credencialPagamento.findUnique({ where: { tenantId_provedor: { tenantId: id, provedor: "mercadopago" } }, select: { status: true, testadoEm: true } })
       : null,
+    contratoVigente(id),
   ]);
 
   const pecas = secao === "Marca" && templateAtelieLigado()
@@ -127,9 +129,10 @@ export async function dadosDoPainel(secao: SecaoPainel) {
       bannerUrl: loja.bannerUrl,
       mpPublicKey: loja.mpPublicKey,
       // Só o fato de existir credencial; o token cifrado nunca sai daqui.
-      mpConfigurado: Boolean(loja.credencialPadraoId || loja.mpAccessTokenEnc),
+      mpConfigurado: Boolean(loja.mpAccessTokenEnc),
       recebimentoTestado: credencialRecebimento?.status === "conectado" && Boolean(credencialRecebimento.testadoEm),
       recebimentoTestadoEm: credencialRecebimento?.testadoEm?.toISOString() ?? null,
+      recebimentoConfigurado: lojaVende(loja),
       // Só o fato de estar conectado, para o checklist: os tokens não saem daqui.
       melhorEnvioConectado: melhorEnvioConectado(loja),
       cotacaoDaPlataforma: cepCertoConfigurada(),
@@ -152,7 +155,7 @@ export async function dadosDoPainel(secao: SecaoPainel) {
         plano: loja.plano,
         podeTrocarPlano: !loja.assinaturaId,
         isenta: loja.cobrancaIsenta,
-        precoCentavos: mensalidadeDaLoja(loja),
+        precoCentavos: contrato?.mensalidadeCentavos ?? mensalidadeDaLoja(loja),
         planoNome: NOME_PLANO[loja.plano],
         ultimoPagamentoEm: loja.ultimoPagamentoEm?.toISOString() ?? null,
         setupPagoEm: loja.setupPagoEm?.toISOString() ?? null,

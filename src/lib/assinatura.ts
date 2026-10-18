@@ -6,6 +6,7 @@ import { fimDoTeste } from "./planos";
 import { alterarPreapproval, atualizarValorPreapproval, buscarCobrancasDaAssinatura, buscarPagamentoAutorizado, buscarPreapproval, criarPreapproval, type PagamentoAutorizado } from "./mercadopago-assinatura";
 import { alertar } from "./alertas";
 import { mensalidadeDaLoja, PRECO_DE_TABELA } from "./faixas-antigas";
+import { contratoVigente } from "./contratos-comerciais";
 
 /**
  * Mensalidade da loja.
@@ -36,13 +37,14 @@ export async function iniciarAssinatura(t: Tenant): Promise<{ status: string; in
     return { status: "PENDENTE", initPoint: t.assinaturaInitPoint };
   }
   if (!t.loginEmail) throw new Error("A loja precisa de um e-mail de login para assinar.");
+  const contrato = await contratoVigente(t.id);
 
   const pre = await criarPreapproval({
     motivo: `Avila Ops · Loja ${t.nome} · plano ${NOME_PLANO[t.plano]}`,
     slug: t.slug,
     payerEmail: t.loginEmail,
-    // Quem fechou por um preço que saiu de tabela paga o que combinou (faixas-antigas.ts).
-    valorCentavos: mensalidadeDaLoja(t),
+    // O contrato é a fonte atual; a faixa antiga só cobre loja ainda não migrada.
+    valorCentavos: contrato?.mensalidadeCentavos ?? mensalidadeDaLoja(t),
     backUrl: `https://${BASE}/painel?assinatura=voltou`,
   });
   await prisma.tenant.update({

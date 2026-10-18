@@ -32,6 +32,7 @@ test("a conta nasce fora do ar, com senha, plano do link e teste de 7 dias", asy
   assert.ok(conferirSenha("senha-forte-1", conta.senhaHash));
   assert.equal(fimDoTeste(conta).getTime() - agora.getTime(), DIAS_DE_TESTE * 86_400_000);
   assert.equal(precisaDosPrimeirosPassos(conta), true);
+  assert.equal(await prisma.contratoComercial.count({ where: { tenantId: conta.id } }), 0);
 });
 
 test("o mesmo e-mail não abre duas contas, nem em dois cliques ao mesmo tempo", async () => {
@@ -43,14 +44,26 @@ test("o mesmo e-mail não abre duas contas, nem em dois cliques ao mesmo tempo",
 
 test("primeiros passos põem a loja no ar com endereço que não pisa em outra", async () => {
   const nome = `Padaria QA ${sufixo()}`;
-  const primeira = await concluirPrimeirosPassos((await criarConta({ email: `qa-${sufixo()}@cadastro.example`, senha: null }))!, { nome, whatsapp: "5516999990000", plano: "LOJA" });
-  const segunda = await concluirPrimeirosPassos((await criarConta({ email: `qa-${sufixo()}@cadastro.example`, senha: null }))!, { nome, whatsapp: "5516999990001", plano: "LOJA_PRO" });
+  const primeira = await concluirPrimeirosPassos((await criarConta({ email: `qa-${sufixo()}@cadastro.example`, senha: null }))!, { nome, whatsapp: "5516999990000", plano: "LOJA", aceitouTermosComerciais: true });
+  const segunda = await concluirPrimeirosPassos((await criarConta({ email: `qa-${sufixo()}@cadastro.example`, senha: null }))!, { nome, whatsapp: "5516999990001", plano: "LOJA_PRO", aceitouTermosComerciais: true });
   assert.equal(primeira.status, "ATIVA");
   assert.equal(primeira.nome, nome);
   assert.ok(primeira.slug.startsWith("padaria-qa-"));
   assert.notEqual(primeira.slug, segunda.slug);
   assert.ok(segunda.slug.startsWith(primeira.slug));
   assert.equal(segunda.plano, "LOJA_PRO");
+  const contratoPrimeira = await prisma.contratoComercial.findFirstOrThrow({ where: { tenantId: primeira.id } });
+  const contratoSegunda = await prisma.contratoComercial.findFirstOrThrow({ where: { tenantId: segunda.id } });
+  assert.deepEqual(
+    [contratoPrimeira.plano, contratoPrimeira.mensalidadeCentavos, contratoPrimeira.comissaoPontosBase],
+    ["LOJA", 26900, 500],
+  );
+  assert.equal(contratoPrimeira.aceiteReferencia, "termos-comerciais-v1:checkbox");
+  assert.ok(contratoPrimeira.aceiteEm);
+  assert.deepEqual(
+    [contratoSegunda.plano, contratoSegunda.mensalidadeCentavos, contratoSegunda.comissaoPontosBase],
+    ["LOJA_PRO", 49700, 500],
+  );
   assert.equal(precisaDosPrimeirosPassos(primeira), false);
 });
 

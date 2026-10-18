@@ -4,6 +4,8 @@ Este documento é para quem vai criar a identidade visual de uma loja da
 plataforma (designer, ChatGPT, agência). Ele diz exatamente **o que dá para
 mudar**, em que formato, e como entregar para entrar no ar sem código.
 
+A marca da própria plataforma (Lojas por Avila Ops) está em [MARCA-LOJAS.md](MARCA-LOJAS.md).
+
 Regra da plataforma: **a estrutura é mantida pelo produto; a direção de marca vira dado.**
 Não existe CSS avulso por loja. Diagnóstico, tokens, textos, imagens e um dos quatro
 layouts são persistidos por tenant, mantendo a loja rápida e consistente em todos os aparelhos.

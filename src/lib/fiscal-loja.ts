@@ -1,6 +1,8 @@
 import { prisma } from "./db";
 import { abrirCertificado, ErroFiscal, lerCertificado } from "./fiscal-certificado";
 import { consultarSefaz } from "./fiscal-distribuicao";
+import { enfileirarFluxosFiscais } from "./fiscal-fluxos";
+import { fiscalErpConfigurado } from "./erp-fiscal";
 
 export const RESUMO_FISCAL = {
   cnpj: true, uf: true, titular: true, validoAte: true,
@@ -10,11 +12,12 @@ export const RESUMO_FISCAL = {
 export async function receberNotasPeriodicamente() {
   const lojas = await prisma.fiscalLoja.findMany({
     where: { proximaConsultaEm: { lte: new Date() }, validoAte: { gt: new Date() }, tenant: { status: "ATIVA" } },
-    orderBy: { proximaConsultaEm: "asc" }, take: 5, select: { tenantId: true },
+    orderBy: { proximaConsultaEm: "asc" }, take: 5, select: { tenantId: true, tenant: { select: { cnpj: true } } },
   });
   let recebidos = 0;
   let falhas = 0;
   for (const loja of lojas) {
+    if (loja.tenant.cnpj && fiscalErpConfigurado(loja.tenant.cnpj)) continue;
     try { recebidos += (await sincronizarNotas(loja.tenantId)).recebidos; }
     catch { falhas++; }
   }
@@ -25,6 +28,9 @@ export async function receberNotasPeriodicamente() {
 export async function sincronizarNotas(tenantId: string, consultar: typeof consultarSefaz = consultarSefaz) {
   const fiscal = await prisma.fiscalLoja.findUnique({ where: { tenantId }, include: { tenant: { select: { cnpj: true, status: true } } } });
   if (!fiscal || fiscal.tenant.status !== "ATIVA") throw new ErroFiscal("Configure o certificado em uma loja ativa.");
+  if (fiscal.tenant.cnpj && fiscalErpConfigurado(fiscal.tenant.cnpj)) {
+    throw new ErroFiscal("A consulta deste CNPJ é feita pelo ERP. Use a conferência operacional para consultar as NF-e.");
+  }
   const agora = new Date();
   // Reserva persistente antes da rede: queda do processo também respeita o intervalo.
   const reserva = await prisma.fiscalLoja.updateMany({
@@ -44,16 +50,18 @@ export async function sincronizarNotas(tenantId: string, consultar: typeof consu
     const resposta = await consultar(pfx, senha, fiscal.cnpj, fiscal.uf, fiscal.ultimoNsu);
     if (resposta.status === "138" && resposta.ultimoNsu <= fiscal.ultimoNsu) throw new ErroFiscal("A SEFAZ não avançou o controle de consulta.");
     const proximaConsultaEm = new Date(Date.now() + (resposta.status === "138" && resposta.ultimoNsu < resposta.maxNsu ? 0 : 3_600_000));
-    await prisma.$transaction(async (tx) => {
-      if (resposta.documentos.length) await tx.documentoFiscalLoja.createMany({
+    const resultado = await prisma.$transaction(async (tx) => {
+      const novos = resposta.documentos.length ? await tx.documentoFiscalLoja.createManyAndReturn({
         data: resposta.documentos.map((d) => ({ ...d, tenantId, cnpj: fiscal.cnpj })), skipDuplicates: true,
-      });
+      }) : [];
+      const enfileirados = await enfileirarFluxosFiscais(tx, tenantId, novos);
       await tx.fiscalLoja.update({ where: { tenantId }, data: {
         ...(resposta.status !== "656" ? { ultimoNsu: resposta.ultimoNsu } : {}),
         proximaConsultaEm, ultimaMensagem: `SEFAZ ${resposta.status}: ${resposta.mensagem}`,
       } });
+      return { recebidos: novos.length, enfileirados };
     });
-    return { recebidos: resposta.documentos.length, mensagem: resposta.mensagem, proximaConsultaEm };
+    return { ...resultado, mensagem: resposta.mensagem, proximaConsultaEm };
   } catch (erro) {
     const mensagem = erro instanceof ErroFiscal ? erro.message : "Não foi possível salvar a consulta fiscal. Tente novamente após o intervalo.";
     await prisma.fiscalLoja.update({ where: { tenantId }, data: { ultimaMensagem: mensagem, proximaConsultaEm: new Date(Date.now() + 3_600_000) } });

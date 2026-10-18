@@ -4,6 +4,7 @@ import { enderecoCompleto, lojaVende } from "@/lib/tenant";
 import { PreferenciasCookies } from "@/components/Consentimento";
 import { pixelsDo, temRastreio } from "@/lib/pixels";
 import { mascararDocumento } from "@avilaops/checkout";
+import { SimboloLojas } from "@/components/marca/MarcaLojas";
 import { AVISO_MEDICAMENTO, lerResponsavel, responsavelCompleto } from "@/lib/farmacia";
 import { politicasPublicadas } from "@/lib/politicas";
 import BandeirasPagamento from "@/components/BandeirasPagamento";
@@ -115,7 +116,9 @@ export default function Footer({ tenant, categorias, temBlog = false }: { tenant
               </>
             )}
           </span>
-          <a href={avila} target="_blank" rel="noopener" className="font-semibold hover:text-foreground">
+          <a href={avila} target="_blank" rel="noopener" className="inline-flex items-center gap-1.5 font-semibold hover:text-foreground">
+            {/* Selo da plataforma: sempre monocromático, na tinta do rodapé da loja. */}
+            <SimboloLojas mono className="h-4 w-4" />
             Loja por Avila Ops
           </a>
         </div>

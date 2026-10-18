@@ -23,6 +23,8 @@ export type EntradaChecklist = {
   /** A credencial padrão respondeu ao último teste e o resultado foi persistido. */
   recebimentoTestado: boolean;
   recebimentoTestadoEm: string | null;
+  /** Regra atual da plataforma, incluindo provedores diferentes do Mercado Pago. */
+  recebimentoConfigurado?: boolean;
   cepOrigem: string | null;
   /** A loja conectou a própria conta do Melhor Envio (é ela que cota a transportadora). */
   melhorEnvioConectado: boolean;
@@ -90,10 +92,11 @@ function catalogo(e: EntradaChecklist): PassoChecklist {
 }
 
 function recebimento(e: EntradaChecklist): PassoChecklist {
-  const feito = e.mpConfigurado === true && e.recebimentoTestado === true;
+  const configurado = e.recebimentoConfigurado ?? e.mpConfigurado === true;
+  const feito = configurado && e.recebimentoTestado === true;
   const detalhe = feito
-    ? `A conta de recebimento foi testada${e.recebimentoTestadoEm ? ` em ${new Date(e.recebimentoTestadoEm).toLocaleDateString("pt-BR")}` : ""} e está pronta para cobrar.`
-    : e.mpConfigurado
+    ? `A conta de recebimento foi testada${e.recebimentoTestadoEm ? ` em ${new Date(e.recebimentoTestadoEm).toLocaleDateString("pt-BR")}` : ""}. O teste de conexão não substitui a homologação do fluxo de compra.`
+    : configurado
       ? "A conta está configurada, mas ainda não passou por um teste positivo. A loja não é considerada pronta para vender."
       : "Sem uma conta de recebimento, o cliente monta o carrinho e não consegue pagar.";
   return {
@@ -103,7 +106,7 @@ function recebimento(e: EntradaChecklist): PassoChecklist {
     opcional: false,
     detalhe,
     href: "/painel/configuracoes/recebimento",
-    acao: e.mpConfigurado ? "Testar o recebimento" : "Ligar o Mercado Pago",
+    acao: configurado ? "Testar o recebimento" : "Configurar o recebimento",
   };
 }
 
@@ -137,7 +140,7 @@ const ESTADO_FORA_DO_AR: Record<string, string> = {
 
 function publicacao(e: EntradaChecklist, obrigatorios: PassoChecklist[]): PassoChecklist {
   const pendentes = obrigatorios.filter((p) => !p.feito);
-  const base = { id: "publicacao" as const, titulo: "Publicação", opcional: false };
+  const base = { id: "publicacao" as const, titulo: "Prontidão para vender", opcional: false };
 
   if (e.status !== "ATIVA") {
     const assinatura = e.status === "SUSPENSA" || e.status === "CANCELADA";
@@ -153,12 +156,12 @@ function publicacao(e: EntradaChecklist, obrigatorios: PassoChecklist[]): PassoC
     return {
       ...base,
       feito: false,
-      detalhe: `Para a loja vender ainda falta: ${pendentes.map((p) => p.titulo).join(", ")}.`,
+      detalhe: `A vitrine está no ar. Para concluir a configuração de venda ainda falta: ${pendentes.map((p) => p.titulo).join(", ")}.`,
       href: pendentes[0].href,
       acao: pendentes[0].acao,
     };
   }
-  return { ...base, feito: true, detalhe: `A loja está no ar e pronta para vender em ${e.url}.`, href: e.url, acao: "Abrir a loja" };
+  return { ...base, feito: true, detalhe: `A loja está no ar em ${e.url} e os requisitos de configuração estão preenchidos. Valide o fluxo de compra antes de considerar o recebimento homologado.`, href: e.url, acao: "Abrir a loja" };
 }
 
 /** Sempre seis passos, na ordem do roadmap. */

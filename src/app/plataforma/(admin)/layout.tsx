@@ -5,6 +5,7 @@ import { recursoAtivo } from "@/lib/recursos";
 import { urlDaLoja } from "@/lib/tenant";
 import NavPainel from "@/components/painel/NavPainel";
 import BuscaPainel from "@/components/painel/BuscaPainel";
+import "../marca-lojas.css";
 import "../plataforma.css";
 import "./painel.css";
 import type { Viewport } from "next";

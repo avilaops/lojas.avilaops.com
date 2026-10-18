@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { TenantEntradaSchema } from "@/lib/admin-schemas";
-import { concluirPrimeirosPassos, precisaDosPrimeirosPassos } from "@/lib/cadastro";
+import { aceiteComercialValido, concluirPrimeirosPassos, precisaDosPrimeirosPassos } from "@/lib/cadastro";
 import { emitir } from "@/lib/eventos";
 import { exigir } from "@/lib/operadores";
 import { anunciarLojaCriada, provisionarLoja } from "@/lib/provisionar";
@@ -19,6 +19,7 @@ const Entrada = z.object({
   // A régua inteira (boas-vindas, pedido pago, cobrança) fala pelo WhatsApp: sem ele a loja nasce muda.
   whatsapp: TenantEntradaSchema.shape.whatsapp.unwrap(),
   plano: z.enum(["SITE", "LOJA", "LOJA_PRO"]),
+  aceitouTermosComerciais: z.unknown().refine(aceiteComercialValido, "Aceite os termos comerciais para criar a loja."),
 });
 
 export async function POST(request: Request) {
@@ -31,11 +32,11 @@ export async function POST(request: Request) {
   if (!r.success) {
     const issue = r.error.issues[0];
     const campo = String(issue?.path[0] ?? "");
-    const mensagem = campo === "whatsapp" ? "Informe DDD + número, por exemplo: (16) 99999-0000." : campo === "plano" ? "Escolha um plano." : (issue?.message ?? "Revise os dados.");
+    const mensagem = campo === "whatsapp" ? "Informe DDD + número, por exemplo: (16) 99999-0000." : campo === "plano" ? "Escolha um plano." : campo === "aceitouTermosComerciais" ? "Aceite os termos comerciais para criar a loja." : (issue?.message ?? "Revise os dados.");
     return Response.json({ erro: mensagem, campo }, { status: 422 });
   }
 
-  const loja = await concluirPrimeirosPassos(s.tenant, r.data);
+  const loja = await concluirPrimeirosPassos(s.tenant, { ...r.data, aceitouTermosComerciais: true });
   esquecerTenantEmCache(s.tenant.slug);
   await abrirSessao(loja.slug);
 

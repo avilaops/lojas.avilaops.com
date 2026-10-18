@@ -12,7 +12,7 @@ import "@avilaops/checkout/tokens.css";
 import "@avilaops/checkout/checkout.css";
 import { noEnderecoOficial, tenantAtual, tenantPublico, temaDo, urlDaLoja, enderecoDo, formatarCep, identidadeDa } from "@/lib/tenant";
 import { descricaoDaLoja } from "@/lib/textos-loja";
-import { listarCategorias } from "@/lib/catalogo";
+import { listarCategorias, formatarBRL } from "@/lib/catalogo";
 import { cssDoTema } from "@/lib/tema";
 import { temaNaVitrine } from "@/lib/flags";
 import { familiaHospedada, familiaSerifAtelie, preCargasDaFonte } from "@/lib/fontes-loja";
@@ -90,9 +90,9 @@ export async function generateMetadata(): Promise<Metadata> {
       title: { default: "Lojas Avila Ops", template: "%s · Lojas Avila Ops" },
       description: "Comércio digital com identidade, operação e futuro.",
       applicationName: "Lojas Avila Ops",
-      // A marca da Avila Ops, só no domínio-base: loja de cliente nunca herda
+      // A marca Lojas, só no domínio-base: loja de cliente nunca herda
       // este ícone, ela usa o próprio `faviconUrl` ou a inicial do `icon.tsx`.
-      ...iconesDa("/media/avilaops", "Lojas Avila Ops"),
+      ...iconesDa("/media/lojas", "Lojas Avila Ops"),
       manifest: "/site.webmanifest",
       robots: PREVIA_CHEIA,
     };
@@ -247,6 +247,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           )}
           {cabecalhoProprio ? <CabecalhoPremium loja={publico} logo={t.logoUrl} logoEscuro={tema.premium?.logoEscuroUrl} mostrarNome={tema.premium?.mostrarNome} categorias={[...categorias].sort((a,b)=>a.ordem-b.ordem).map(c=>({slug:c.slug,nome:c.nome}))} modo={tema.modo}/> : <Header loja={publico} logoUrl={t.logoUrl} mostrarNome={tema.mostrarNomeNoCabecalho} categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} exemploBusca={exemploBusca} mostrarPromocoes={temPromocoes} />}
           {t.segmento === "motopecas" && <BarraGaragem tenantId={t.id} />}
+          {t.pedidoMinimoCentavos != null && t.pedidoMinimoCentavos > 0 && (
+            <p className="container-loja py-2 text-sm text-center">
+              Pedido mínimo de <strong>{formatarBRL(t.pedidoMinimoCentavos)} em produtos</strong>, sem contar o frete.
+            </p>
+          )}
           <main id="conteudo-loja" className="flex-1">{children}</main>
           <Footer tenant={t} categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} temBlog={publicacoes > 0} />
           {carrinhoProprio && <CarrinhoLateral pedidoMinimoCentavos={publico.pedidoMinimoCentavos}/>}

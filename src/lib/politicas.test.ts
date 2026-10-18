@@ -29,11 +29,15 @@ function loja(extra: Partial<Tenant> = {}): Tenant {
   } as unknown as Tenant;
 }
 
-/**
- * A regra que não pode quebrar: art. 49 do CDC dá 7 dias de arrependimento com
- * devolução integral. Se este teste passar a falhar, a plataforma está
- * publicando política ilegal em nome do lojista.
- */
+test("políticas acompanham venda assistida e checkout online", () => {
+  const assistida = loja({ status: "ATIVA", plano: "SITE", mpAccessTokenEnc: null });
+  assert.match(modeloDePolitica(assistida, "envio").join(" "), /confirmados pelo atendimento/);
+  assert.doesNotMatch(modeloDePolitica(assistida, "termos").join(" "), /paga online/);
+  assert.doesNotMatch(modeloDePolitica(assistida, "privacidade").join(" "), /tokenizados/);
+  const online = loja({ status: "ATIVA", plano: "LOJA", provedorPadrao: "mercadopago", mpAccessTokenEnc: "configurada" });
+  assert.match(modeloDePolitica(online, "termos").join(" "), /paga online/);
+});
+
 test("o prazo legal de arrependimento é piso, não configuração", () => {
   // Tentativa de encurtar (por bug, importação ou chamada direta na API).
   assert.equal(lerRegrasDevolucao({ prazoDias: 3 }).prazoDias, PRAZO_LEGAL_DIAS);

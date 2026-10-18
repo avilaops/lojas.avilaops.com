@@ -66,6 +66,7 @@ export interface LojaView {
   mpConfigurado: boolean;
   recebimentoTestado: boolean;
   recebimentoTestadoEm: string | null;
+  recebimentoConfigurado?: boolean;
   melhorEnvioConectado: boolean;
   cotacaoDaPlataforma: boolean;
   /** A credencial veio da conexão por OAuth, e não de chave colada. */
@@ -370,6 +371,7 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
               mpConfigurado: loja.mpConfigurado,
               recebimentoTestado: loja.recebimentoTestado,
               recebimentoTestadoEm: loja.recebimentoTestadoEm,
+              recebimentoConfigurado: loja.recebimentoConfigurado,
               cepOrigem: loja.cepOrigem,
               melhorEnvioConectado: loja.melhorEnvioConectado,
               cotacaoDaPlataforma: loja.cotacaoDaPlataforma,

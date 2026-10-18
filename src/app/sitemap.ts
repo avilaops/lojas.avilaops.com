@@ -24,6 +24,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       { url: `${base}/developers`, changeFrequency: "monthly", priority: 0.5 },
       { url: `${base}/developers/privacidade`, changeFrequency: "yearly", priority: 0.3 },
       { url: `${base}/ajuda`, changeFrequency: "monthly", priority: 0.6 },
+      { url: `${base}/marca`, changeFrequency: "yearly", priority: 0.3 },
+      { url: `${base}/termos-comerciais`, changeFrequency: "yearly", priority: 0.4 },
       { url: `${base}/blog`, changeFrequency: "daily", priority: 0.8 },
       // Só o que já está publicado: post com data futura ainda não existe.
       ...postsPublicados().map((p) => ({
