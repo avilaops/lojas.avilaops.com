@@ -78,11 +78,14 @@ test("falha de transporte preserva NSU e aguarda uma hora a partir da falha", as
 
 test("consumo indevido e fim da fila não provocam nova consulta imediata", async () => {
   const loja = await preparar("32345678000190");
-  for (const status of ["656", "137"]) {
-    await prisma.fiscalLoja.update({ where: { tenantId: loja.id }, data: { proximaConsultaEm: new Date(0) } });
-    await sincronizarNotas(loja.id, async () => ({ status, mensagem: "Aguardar", ultimoNsu: "000000000000000", maxNsu: "000000000000000", documentos: [] }));
-    await assert.rejects(() => sincronizarNotas(loja.id), /intervalo/);
-  }
+  const consumoIndevido = await sincronizarNotas(loja.id, async () => ({ status: "656", mensagem: "Aguardar", ultimoNsu: "000000000000005", maxNsu: "000000000000005", documentos: [] }));
+  assert.equal(consumoIndevido.cursorAjustado, true);
+  assert.equal((await prisma.fiscalLoja.findUniqueOrThrow({ where: { tenantId: loja.id } })).ultimoNsu, "000000000000005");
+  await assert.rejects(() => sincronizarNotas(loja.id), /intervalo/);
+
+  await prisma.fiscalLoja.update({ where: { tenantId: loja.id }, data: { proximaConsultaEm: new Date(0) } });
+  await sincronizarNotas(loja.id, async () => ({ status: "137", mensagem: "Fim da fila", ultimoNsu: "000000000000005", maxNsu: "000000000000005", documentos: [] }));
+  await assert.rejects(() => sincronizarNotas(loja.id), /intervalo/);
 });
 
 test("falha ao gravar o lote reverte documentos e NSU juntos", async () => {

@@ -64,6 +64,8 @@ export interface LojaView {
   entregaLocal: Array<{ prefixos: string[]; nome: string; preco: number; prazoDiasUteis: number; gratisAcima?: number | null }>;
   /** Já tem credencial salva: o checkout aparece na loja. */
   mpConfigurado: boolean;
+  recebimentoTestado: boolean;
+  recebimentoTestadoEm: string | null;
   recebimentoConfigurado?: boolean;
   melhorEnvioConectado: boolean;
   cotacaoDaPlataforma: boolean;
@@ -344,8 +346,8 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
               <span>{contagens.ativos ? "Ver →" : "Cadastrar →"}</span>
             </button>
             <a href={loja.url} target="_blank" rel="noopener">
-              <small>Sua loja</small>
-              <strong>{loja.status === "ATIVA" ? "No ar" : "Em preparação"}</strong>
+              <small>Site da loja</small>
+              <strong>{loja.status === "ATIVA" ? "Publicado" : "Em preparação"}</strong>
               <span>Abrir ↗</span>
             </a>
           </div>
@@ -367,6 +369,8 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
               dominioPrincipal: loja.dominioPrincipal,
               produtosAtivos: contagens.ativos,
               mpConfigurado: loja.mpConfigurado,
+              recebimentoTestado: loja.recebimentoTestado,
+              recebimentoTestadoEm: loja.recebimentoTestadoEm,
               recebimentoConfigurado: loja.recebimentoConfigurado,
               cepOrigem: loja.cepOrigem,
               melhorEnvioConectado: loja.melhorEnvioConectado,

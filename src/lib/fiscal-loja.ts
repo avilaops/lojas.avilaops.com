@@ -50,18 +50,23 @@ export async function sincronizarNotas(tenantId: string, consultar: typeof consu
     const resposta = await consultar(pfx, senha, fiscal.cnpj, fiscal.uf, fiscal.ultimoNsu);
     if (resposta.status === "138" && resposta.ultimoNsu <= fiscal.ultimoNsu) throw new ErroFiscal("A SEFAZ não avançou o controle de consulta.");
     const proximaConsultaEm = new Date(Date.now() + (resposta.status === "138" && resposta.ultimoNsu < resposta.maxNsu ? 0 : 3_600_000));
+    const cursorRecebido = /^\d{15}$/.test(resposta.ultimoNsu) ? resposta.ultimoNsu : null;
+    const cursorAjustado = resposta.status === "656" && cursorRecebido !== null && cursorRecebido !== fiscal.ultimoNsu;
+    const ultimaMensagem = cursorAjustado
+      ? `SEFAZ 656: ${resposta.mensagem} O controle da próxima consulta foi ajustado para o NSU informado pela SEFAZ.`
+      : `SEFAZ ${resposta.status}: ${resposta.mensagem}`;
     const resultado = await prisma.$transaction(async (tx) => {
       const novos = resposta.documentos.length ? await tx.documentoFiscalLoja.createManyAndReturn({
         data: resposta.documentos.map((d) => ({ ...d, tenantId, cnpj: fiscal.cnpj })), skipDuplicates: true,
       }) : [];
       const enfileirados = await enfileirarFluxosFiscais(tx, tenantId, novos);
       await tx.fiscalLoja.update({ where: { tenantId }, data: {
-        ...(resposta.status !== "656" ? { ultimoNsu: resposta.ultimoNsu } : {}),
-        proximaConsultaEm, ultimaMensagem: `SEFAZ ${resposta.status}: ${resposta.mensagem}`,
+        ...(resposta.status !== "656" || cursorRecebido ? { ultimoNsu: cursorRecebido ?? resposta.ultimoNsu } : {}),
+        proximaConsultaEm, ultimaMensagem,
       } });
       return { recebidos: novos.length, enfileirados };
     });
-    return { ...resultado, mensagem: resposta.mensagem, proximaConsultaEm };
+    return { ...resultado, mensagem: resposta.mensagem, proximaConsultaEm, cursorAjustado };
   } catch (erro) {
     const mensagem = erro instanceof ErroFiscal ? erro.message : "Não foi possível salvar a consulta fiscal. Tente novamente após o intervalo.";
     await prisma.fiscalLoja.update({ where: { tenantId }, data: { ultimaMensagem: mensagem, proximaConsultaEm: new Date(Date.now() + 3_600_000) } });

@@ -43,3 +43,13 @@ test('cobertura parcial nunca certifica venda nem aprova revisão não executada
   assert.equal(r.prontidaoComercial, 'NAO_CERTIFICADA');
   assert.equal(r.cobertura.naoTestado, 9);
 });
+
+test('restrições de loja cancelada não viram defeitos de uma loja ativa', () => {
+  const cancelada = validarLoja({ ...loja, statusPlataforma: 'CANCELADA' });
+  const testes = analisarResposta(cancelada, 'merchant', { url: loja.url + '/feed/merchant.xml', status: 404 });
+  assert.equal(testes[0].estado, 'NAO_APLICAVEL');
+  assert.equal(revisoesPendentes(cancelada).length, 0);
+  const r = concluir(cancelada, testes);
+  assert.equal(r.status, 'FORA_DE_OPERACAO');
+  assert.equal(r.cobertura.falhou, 0);
+});

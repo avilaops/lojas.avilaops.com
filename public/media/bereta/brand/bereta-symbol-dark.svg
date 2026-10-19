@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Símbolo Bereta Rodas para fundo escuro</title>
+  <desc id="desc">Letra B branca acompanhada por quatro barras amarelas de velocidade.</desc>
+  <g fill="#F0C014">
+    <path d="M28 70h34l-9 32H19z"/>
+    <path d="M66 70h34l-9 32H57z"/>
+    <path d="M104 70h34l-9 32H95z"/>
+    <path d="M142 70h34l-9 32h-34z"/>
+  </g>
+  <path fill="#F7F6F2" fill-rule="evenodd" transform="translate(70 0) scale(.84 1)" d="M86 64h214c79 0 126 38 126 103 0 39-19 69-57 89 45 17 69 52 69 98 0 76-54 118-146 118H86V64Zm94 86v70h105c38 0 57-12 57-35 0-24-19-35-57-35H180Zm0 156v80h112c41 0 61-13 61-40 0-27-20-40-61-40H180Z"/>
+</svg>

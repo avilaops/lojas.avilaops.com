@@ -9,20 +9,25 @@
       "objective": "Reduzir espaço antes dos produtos nas vitrines e levar a consulta ao WhatsApp da própria loja.",
       "assignee": null,
       "priority": "alta",
-      "status": "em_revisao",
+      "status": "em-revisao",
       "acceptanceCriteria": [
         "Busca e filtros usam URLs GET e preservam valores ativos.",
         "Busca por medidas aparece antes dos controles comerciais.",
         "Capa e cards técnicos possuem tratamento compacto no celular.",
         "Atendimento recebe contexto da consulta somente no canal configurado pela loja."
       ],
-      "evidence": [
-        "20 testes direcionados aprovados, incluindo 6 testes de renderização HTML.",
-        "TypeScript, ESLint direcionado e build Next aprovados.",
-        "Detalhes e limitações em evidencias/vitrines-compra-2026-10-18.md."
-      ],
+      "evidence": "20 testes direcionados aprovados, incluindo 6 testes de renderização HTML.\nTypeScript, ESLint direcionado e build Next aprovados.\nDetalhes e limitações em evidencias/vitrines-compra-2026-10-18.md.",
       "review": "Autorrevisão do diff; pendentes validação visual em navegador com tenants de teste, integração, CI e publicação. Dados técnicos de SKUs não foram alterados.",
-      "environment": "local"
+      "environment": "local",
+      "owner": null,
+      "acceptance": "Busca e filtros usam URLs GET e preservam valores ativos.\nBusca por medidas aparece antes dos controles comerciais.\nCapa e cards técnicos possuem tratamento compacto no celular.\nAtendimento recebe contexto da consulta somente no canal configurado pela loja.",
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-10-18",
+          "note": "Registro preservado na consolidação dos merges."
+        }
+      ]
     },
     {
       "id": "T-0001",
@@ -436,7 +441,6 @@
           "note": "Registro legado normalizado para o contrato central."
         }
       ]
-      "environment": "local"
     },
     {
       "id": "OMNI-0.3",
@@ -444,7 +448,7 @@
       "objective": "Exibir o estado real por loja e canal, com escopos, sincronização, webhooks, histórico e ações seguras de teste e reconexão.",
       "assignee": null,
       "priority": "alta",
-      "status": "em_revisao",
+      "status": "em-revisao",
       "acceptanceCriteria": [
         "A leitura agrega apenas dados canônicos do tenant e não chama provedores externos.",
         "Todos os marketplaces, Melhor Envio, credenciais de pagamento configuradas e webhooks aparecem na Central.",
@@ -452,13 +456,157 @@
         "O histórico é append-only e isolado por tenant.",
         "A interface funciona em celular e desktop sem promover canais somente conexão a operacionais."
       ],
-      "evidence": [
-        "Testes direcionados de estados, precedência, sanitização, isolamento estrutural e navegação.",
-        "Validação TypeScript, ESLint, build e capturas desktop/mobile registradas na revisão da tarefa.",
-        "Correções pós-review cobrem Mercado Pago legado, validação remota do Melhor Envio, resultado mais recente na saúde e classificação seletiva do cooldown; 1.148 testes locais aprovados."
-      ],
+      "evidence": "Testes direcionados de estados, precedência, sanitização, isolamento estrutural e navegação.\nValidação TypeScript, ESLint, build e capturas desktop/mobile registradas na revisão da tarefa.\nCorreções pós-review cobrem Mercado Pago legado, validação remota do Melhor Envio, resultado mais recente na saúde e classificação seletiva do cooldown; 1.148 testes locais aprovados.",
       "review": "PR principal mesclado; correções pós-review preparadas em branch própria, sem deploy ou publicação.",
-      "environment": "local"
+      "environment": "local",
+      "owner": null,
+      "acceptance": "A leitura agrega apenas dados canônicos do tenant e não chama provedores externos.\nTodos os marketplaces, Melhor Envio, credenciais de pagamento configuradas e webhooks aparecem na Central.\nTestes exigem permissão de configurações, respeitam cooldown distribuído e registram somente mensagens sanitizadas.\nO histórico é append-only e isolado por tenant.\nA interface funciona em celular e desktop sem promover canais somente conexão a operacionais.",
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-10-18",
+          "note": "Registro preservado na consolidação dos merges."
+        }
+      ]
+    },
+    {
+      "id": "T-0009",
+      "title": "Corrigir categorias e classificação Merchant da Domi-Rio",
+      "objective": "Impedir categorias compostas por listas de ERP, classificar o catálogo da Domi-Rio em prateleiras úteis e enviar categorias Google oficiais no feed Merchant.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "em-andamento",
+      "acceptanceCriteria": [
+        "Os produtos da Domi-Rio usam categorias comerciais individuais e legíveis.",
+        "O feed envia google_product_category oficial para pesticidas, herbicidas e controle de odores.",
+        "Uma futura importação ignora e avisa sobre categoria em lista ou texto corrompido.",
+        "A navegação móvel limita defensivamente nomes anormais sem alargar a página.",
+        "A prevenção é publicada em produção e o feed possui ofertas elegíveis."
+      ],
+      "evidence": "Produção: importação concluiu com 0 produtos criados e 53 atualizados.\nProdução: a vitrine pública passou a expor Controle de Pragas, Herbicidas, Controle de Odores e Controle de Roedores; a categoria-lista antiga não aparece no HTML público.\nLocal: 46 testes direcionados aprovados, TypeScript e ESLint sem erros.\nDiagnóstico: o feed Merchant público ainda contém zero itens porque os produtos ativos não possuem imagem, requisito obrigatório do canal.\nProdução: 40 dos 43 produtos ativos receberam imagem oficial da família Isorgan, copiada para URLs estáveis no domínio domiriodistribuidora.com.br, com texto alternativo por produto e fonte oficial registrada.\nProdução: a listagem pública e as páginas individuais retornam as novas imagens, canonical e Product JSON-LD; sitemap.xml lista as páginas dos produtos.\nProdução: ISO980, ISO990 e ISO992 permaneceram sem imagem porque nenhuma fonte oficial verificável foi encontrada; nenhuma imagem de produto diferente foi improvisada.\nGoogle Search Console: a conta conectada não possui a propriedade domiriodistribuidora.com.br; o sitemap não pôde ser reenviado por API.",
+      "review": "Os dados da loja e 40 imagens oficiais de família foram publicados ao vivo. A blindagem do importador e os mapeamentos da taxonomia estão validados localmente, mas ainda não foram publicados. As imagens permanecem marcadas como representativas até conferência da embalagem exata; por isso o feed Merchant continua bloqueando essas ofertas corretamente.",
+      "environment": "producao-e-local",
+      "owner": null,
+      "acceptance": "Os produtos da Domi-Rio usam categorias comerciais individuais e legíveis.\nO feed envia google_product_category oficial para pesticidas, herbicidas e controle de odores.\nUma futura importação ignora e avisa sobre categoria em lista ou texto corrompido.\nA navegação móvel limita defensivamente nomes anormais sem alargar a página.\nA prevenção é publicada em produção e o feed possui ofertas elegíveis.",
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-10-18",
+          "note": "Registro preservado na consolidação dos merges."
+        }
+      ]
+    },
+    {
+      "id": "T-0010",
+      "title": "Transformar a vitrine da Bereta em referencia no setor",
+      "objective": "Implementar a primeira fase da auditoria da Bereta Rodas: hero responsivo com a imagem correta, marca legivel no mobile, conteudo editorial coerente, estados vazios honestos, navegacao acessivel e validacao da vitrine publicada.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "em-andamento",
+      "acceptanceCriteria": [
+        "Hero usa imagens especificas para desktop e mobile, sem texto incorporado na fotografia e sem distorcao.",
+        "Cabecalho mobile exibe o simbolo oficial com leitura adequada e alvos de toque de no minimo 44 px.",
+        "Categorias e destaques vazios nao geram secoes quebradas ou falsas promessas de catalogo.",
+        "Conteudo editorial representa rodas, pneus e servicos da Bereta e nao exibe rotulos tecnicos ao publico.",
+        "Dependencias de catalogo, estoque, horarios e dominio permanecem documentadas sem dados inventados.",
+        "Lint, verificacao de tipos, testes e validacao visual responsiva sao aprovados.",
+        "A versao publicada e validada na URL ativa da loja."
+      ],
+      "evidence": "docs/AUDITORIA-BERETA-2026-10-18.md\noutput/auditorias/bereta/2026-10-18T19-35-33-424Z/bereta-rodas.md",
+      "review": "Em implementacao. O catalogo comercial depende de produtos, precos e estoque reais fornecidos ou cadastrados pelo cliente.",
+      "environment": "local-e-producao",
+      "owner": null,
+      "acceptance": "Hero usa imagens especificas para desktop e mobile, sem texto incorporado na fotografia e sem distorcao.\nCabecalho mobile exibe o simbolo oficial com leitura adequada e alvos de toque de no minimo 44 px.\nCategorias e destaques vazios nao geram secoes quebradas ou falsas promessas de catalogo.\nConteudo editorial representa rodas, pneus e servicos da Bereta e nao exibe rotulos tecnicos ao publico.\nDependencias de catalogo, estoque, horarios e dominio permanecem documentadas sem dados inventados.\nLint, verificacao de tipos, testes e validacao visual responsiva sao aprovados.\nA versao publicada e validada na URL ativa da loja.",
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-10-18",
+          "note": "Registro preservado na consolidação dos merges."
+        }
+      ]
+    },
+    {
+      "id": "T-0011",
+      "title": "Dar identidade visual à vitrine da Domi-Rio",
+      "objective": "Substituir espaços vazios e capas genéricas por uma campanha visual coerente com a marca e com as categorias da loja.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "concluida",
+      "acceptanceCriteria": [
+        "A home possui banner responsivo sem texto ou rótulos inventados.",
+        "As quatro categorias comerciais possuem capas próprias.",
+        "As imagens usam a paleta azul e laranja da Domi-Rio.",
+        "Banner e capas carregam no domínio público em celular e computador.",
+        "A configuração anterior pode ser recuperada a partir de backup."
+      ],
+      "evidence": "Produção: banner desktop, banner móvel e quatro capas WebP publicados no diretório da loja.\nProdução: Controle de Pragas, Controle de Odores, Controle de Roedores e Herbicidas exibem as novas capas.\nProdução: validação visual concluída em viewport móvel de 390 x 844 e desktop de 1440 x 900.\nProdução: cache reiniciado após a remoção das URLs intermediárias; HTML atual não contém /branding/ e referencia hero v2 e capas relativas.\nBackup: /opt/lojas/backups/catalogo/domirio-identidade-20261018-170500.json.\nLocal: TypeScript e git diff --check concluídos sem erros; 15 testes de regras de produto aprovados.",
+      "review": "As peças geradas evitam embalagens, rótulos e promessas específicas; funcionam como identidade de categoria e campanha, não como fotografia de produto. A falha inicial de cache e caminhos foi reproduzida, corrigida e revalidada em produção.",
+      "environment": "producao-e-local",
+      "owner": null,
+      "acceptance": "A home possui banner responsivo sem texto ou rótulos inventados.\nAs quatro categorias comerciais possuem capas próprias.\nAs imagens usam a paleta azul e laranja da Domi-Rio.\nBanner e capas carregam no domínio público em celular e computador.\nA configuração anterior pode ser recuperada a partir de backup.",
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-10-18",
+          "note": "Registro preservado na consolidação dos merges."
+        }
+      ]
+    },
+    {
+      "id": "T-0012",
+      "title": "Tornar a prontidao comercial do painel verificavel",
+      "objective": "Impedir que credencial apenas salva ou site publicado sejam apresentados como loja pronta para vender sem teste positivo de recebimento.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "em-andamento",
+      "acceptanceCriteria": [
+        "O painel diferencia site publicado de loja pronta para vender.",
+        "Uma credencial apenas salva nao conclui o passo Recebimento.",
+        "O teste da credencial salva persiste resultado, mensagem, conta e data sem gravar segredos em claro.",
+        "Somente teste positivo conclui Recebimento e libera Publicacao no checklist.",
+        "Testes direcionados, lint e TypeScript passam."
+      ],
+      "evidence": "Linear AVL-230 atualizado com a auditoria completa e movido para In Progress.\n25 testes direcionados do onboarding aprovados.\nESLint dos cinco arquivos alterados concluido sem erros.\nTypeScript concluido sem erros.",
+      "review": "Incremento local iniciado. Deploy e teste real do Mercado Pago ainda nao executados.",
+      "environment": "local",
+      "owner": null,
+      "acceptance": "O painel diferencia site publicado de loja pronta para vender.\nUma credencial apenas salva nao conclui o passo Recebimento.\nO teste da credencial salva persiste resultado, mensagem, conta e data sem gravar segredos em claro.\nSomente teste positivo conclui Recebimento e libera Publicacao no checklist.\nTestes direcionados, lint e TypeScript passam.",
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-10-18",
+          "note": "Registro preservado na consolidação dos merges."
+        }
+      ]
+    },
+    {
+      "id": "T-0013",
+      "title": "Reduzir o esforço de compra na Domi-Rio",
+      "objective": "Corrigir textos de outro segmento, explicitar apresentações, tornar a campanha comercial compreensível e explicar o fluxo de pedido.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "concluida",
+      "acceptanceCriteria": [
+        "A home não usa linguagem de peças ou medidas para a Domi-Rio.",
+        "O banner apresenta proposta comercial e acesso direto ao catálogo.",
+        "Produtos confirmados exibem volume ou peso no nome e na ficha.",
+        "Listas técnicas contaminadas não aparecem na ficha do produto.",
+        "A página explica o que acontece depois de adicionar ao carrinho ou ao pedido.",
+        "A busca encontra produtos também pelo nome da categoria.",
+        "A versão publicada é validada no domínio da Domi-Rio em celular."
+      ],
+      "evidence": "Produção: 40 produtos tiveram listas técnicas contaminadas removidas com histórico por item.\nProdução: 25 SKUs confirmados passaram a exibir unidade explícita no nome e na apresentação comercial.\nProdução: buscas por baratas e mosquitos retornaram 12 e 3 produtos antes da alteração do mecanismo.\nBackup: /opt/lojas/backups/catalogo/domirio-apresentacoes-20261018.json.\nLocal: TypeScript, ESLint e 62 testes direcionados concluídos sem erros.\nGitHub Actions: integração, imagem, deploy e fumaça aprovados no run 39172609660 para o commit 463e445.\nProdução: home exibe a proposta comercial e não contém o texto Encontre a peça certa.\nProdução: busca por controle de odores retorna 12 produtos pelo nome da categoria.\nProdução: ficha do Cypertryne exibe apresentação, outras apresentações e explica a confirmação pelo WhatsApp.",
+      "review": "Dados, interface e busca publicados e validados no domínio ativo. A automação visual do Chrome não respondeu; a validação funcional foi feita no HTML público após o smoke test do deploy.",
+      "environment": "producao-e-local",
+      "owner": null,
+      "acceptance": "A home não usa linguagem de peças ou medidas para a Domi-Rio.\nO banner apresenta proposta comercial e acesso direto ao catálogo.\nProdutos confirmados exibem volume ou peso no nome e na ficha.\nListas técnicas contaminadas não aparecem na ficha do produto.\nA página explica o que acontece depois de adicionar ao carrinho ou ao pedido.\nA busca encontra produtos também pelo nome da categoria.\nA versão publicada é validada no domínio da Domi-Rio em celular.",
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-10-18",
+          "note": "Registro preservado na consolidação dos merges."
+        }
+      ]
     }
   ],
   "decisions": [
@@ -468,8 +616,8 @@
       "decision": "Cadastros novos usam mensalidade do plano mais 5%; clientes legados ficam em 0%, exceto Vedashow em R$ 350 mais 5% e Bereta Rodas em 3%.",
       "date": "2026-10-18",
       "summary": "Comissão somente para novos cadastros e exceções formalizadas",
-      "reason": "Cadastros novos usam mensalidade do plano mais 5%; clientes legados ficam em 0%, exceto Vedashow em R$ 350 mais 5% e Bereta Rodas em 3%.",
-      "evidence": "Data registrada: 2026-10-18"
+      "reason": "Justificativa não recuperada no registro legado; pendente de documentação.",
+      "evidence": "Evidência de suporte não localizada; decisão ainda não verificada."
     },
     {
       "id": "D-0002",
@@ -477,8 +625,8 @@
       "decision": "O ERP guarda XML, DANFE, fornecedor, produtos, custos, compra e estoque; o Lojas consome a API por tenant e mantém seu coletor atual apenas como compatibilidade de transição.",
       "date": "2026-10-18",
       "summary": "ERP como fonte da escrituração fiscal recebida",
-      "reason": "O ERP guarda XML, DANFE, fornecedor, produtos, custos, compra e estoque; o Lojas consome a API por tenant e mantém seu coletor atual apenas como compatibilidade de transição.",
-      "evidence": "Data registrada: 2026-10-18"
+      "reason": "Justificativa não recuperada no registro legado; pendente de documentação.",
+      "evidence": "Evidência de suporte não localizada; decisão ainda não verificada."
     }
   ],
   "integrations": [
@@ -491,7 +639,7 @@
       "name": "ERP Ávila Ops",
       "environment": "Ambiente não informado no registro original",
       "identity": "Identidade não informada no registro original",
-      "evidence": "GET /api/v1/notas-recebidas e arquivos XML/DANFE com chave de leitura por tenant"
+      "evidence": "Acesso não verificado: faltam ambiente, identidade autorizada e resultado de teste."
     },
     {
       "id": "I-N8N-LOJAS-OPERACAO",
@@ -502,7 +650,7 @@
       "name": "n8n Lojas - Operação Completa",
       "environment": "Ambiente não informado no registro original",
       "identity": "Identidade não informada no registro original",
-      "evidence": "Webhook de eventos e rotinas agendadas; requer reconciliação com as rotinas internas do Lojas"
+      "evidence": "Acesso não verificado: faltam ambiente, identidade autorizada e resultado de teste."
     },
     {
       "id": "I-N8N-MCP-AVILAOPS",
@@ -513,7 +661,7 @@
       "name": "n8n MCP - Avila Ops",
       "environment": "Ambiente não informado no registro original",
       "identity": "Identidade não informada no registro original",
-      "evidence": "Ferramentas MCP com autorização por operação e adaptadores por produto"
+      "evidence": "Acesso não verificado: faltam ambiente, identidade autorizada e resultado de teste."
     }
   ]
 }

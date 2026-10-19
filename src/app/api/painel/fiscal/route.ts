@@ -5,6 +5,7 @@ import { UFS_FISCAIS } from "@/lib/fiscal-distribuicao";
 import { RESUMO_FISCAL, sincronizarNotas } from "@/lib/fiscal-loja";
 import { origemFiscalPermitida } from "@/lib/fiscal-origem";
 import { resumirDocumentoFiscal } from "@/lib/fiscal-documento";
+import { totalizarDocumentosFiscais } from "@/lib/fiscal-monitor";
 import { filtrosFiscais } from "@/lib/fiscal-filtros";
 import { buscarFiscalErp } from "@/lib/erp-fiscal";
 
@@ -21,15 +22,17 @@ async function estado(tenantId: string, endereco: unknown, parametros?: URLSearc
   const { where, pagina, limite } = filtrosFiscais(tenantId, parametros);
   const tenant = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { cnpj: true } });
   const cnpj = tenant?.cnpj?.replace(/[^0-9A-Z]/gi, "").toUpperCase() ?? "";
-  const [configuracao, documentos, total, erp] = await Promise.all([
+  const [configuracao, documentos, total, erp, contagens] = await Promise.all([
     prisma.fiscalLoja.findUnique({ where: { tenantId }, select: RESUMO_FISCAL }),
     prisma.documentoFiscalLoja.findMany({ where, select: { id: true, cnpj: true, nsu: true, schema: true, chave: true, xml: true, recebidoEm: true }, orderBy: [{ recebidoEm: "desc" }, { nsu: "desc" }, { id: "desc" }], skip: (pagina - 1) * limite, take: limite }),
     prisma.documentoFiscalLoja.count({ where }),
     cnpj ? buscarFiscalErp(cnpj).catch((erro) => ({ erro: erro instanceof Error ? erro.message : "ERP fiscal indisponível." })) : null,
+    prisma.documentoFiscalLoja.groupBy({ where: { tenantId }, by: ["schema"], _count: { _all: true } }),
   ]);
   return {
     configuracao,
     documentos: documentos.map(({ xml, ...documento }) => ({ ...documento, ...resumirDocumentoFiscal(xml, documento.schema, documento.chave) })),
+    totais: totalizarDocumentosFiscais(contagens.map(({ schema, _count }) => ({ schema, quantidade: _count._all }))),
     ufEmpresa: ufDaEmpresa(endereco),
     pagina, total, paginas: Math.max(1, Math.ceil(total / limite)),
     erp,
