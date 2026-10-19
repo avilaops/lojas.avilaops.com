@@ -27,7 +27,7 @@ export async function GET(request: Request) {
   const host = normalizarHost((await headers()).get("host"));
   if (!cfg || host !== base) return new Response(null, { status: 404 });
 
-  if (!(await entradaEquipeFoiIniciada())) redirect("/entrar?senha=1");
+  if (!(await entradaEquipeFoiIniciada())) redirect("/entrar");
   const jaVoltou = new URL(request.url).searchParams.get("volta") === "1";
   const token = (await cookies()).get(COOKIE_SSO)?.value;
   const r = await consultarSSO(cfg, token);
