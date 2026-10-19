@@ -1,6 +1,7 @@
 import type { Tenant } from "@prisma/client";
 import { PROVEDORES, type ContextoProvedor, type DefinicaoProvedor, type ProvedorId } from "@avilaops/checkout/server";
 import { prisma } from "./db";
+import { aplicativoConfigurado as mercadoPagoOAuthConfigurado } from "./mercado-pago-conta";
 import { credencialParaTela, ehLegadoMercadoPago, garantirCredencialMercadoPago } from "./credenciais";
 import { provedoresDePagamento } from "./provedores-pagamento";
 import { recursoAtivo, type Recurso } from "./recursos";
@@ -32,7 +33,7 @@ export async function dadosDaTela(t: Tenant) {
       capacidades: d.capacidades,
       campos: d.campos,
       guia: d.guia,
-      oauthDisponivel: d.id === "mercadopago" || Boolean(d.oauth),
+      oauthDisponivel: d.id === "mercadopago" ? mercadoPagoOAuthConfigurado() : Boolean(d.oauth),
     })),
     // MP legado reflete as colunas mp*: desconectado lá, não aparece como
     // Conectado aqui (o status da linha é do dia do backfill).
