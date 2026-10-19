@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { gzipSync } from "node:zlib";
-import { envelopeDistribuicao, lerDistribuicao } from "./fiscal-distribuicao";
+import { envelopeDistribuicao, envelopeDistribuicaoPorChave, lerDistribuicao } from "./fiscal-distribuicao";
 
 function resposta(status: string, lote = "", nsu = "000000000000001", maxNsu = "000000000000002") {
   return `<s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope"><s:Body><nfeDistDFeInteresseResponse><nfeDistDFeInteresseResult><retDistDFeInt><cStat>${status}</cStat><xMotivo>Resultado</xMotivo><ultNSU>${nsu}</ultNSU><maxNSU>${maxNsu}</maxNSU>${lote}</retDistDFeInt></nfeDistDFeInteresseResult></nfeDistDFeInteresseResponse></s:Body></s:Envelope>`;
@@ -43,4 +43,13 @@ test("consulta somente produção com CNPJ, UF e NSU validados", () => {
 test("recusa descompressão acima do teto por documento", () => {
   const zip = gzipSync(`<resNFe>${"a".repeat(2 * 1024 * 1024)}</resNFe>`).toString("base64");
   assert.throws(() => lerDistribuicao(resposta("138", `<loteDistDFeInt><docZip NSU="000000000000001" schema="resNFe_v1.01.xsd">${zip}</docZip></loteDistDFeInt>`)));
+});
+
+test("consulta individual por chave sem alterar o cursor incremental", () => {
+  const chave = "3".repeat(44);
+  const xml = envelopeDistribuicaoPorChave("60067738000106", "SP", chave);
+  assert.match(xml, /<consChNFe>/);
+  assert.match(xml, new RegExp(chave));
+  assert.doesNotMatch(xml, /<distNSU>/);
+  assert.throws(() => envelopeDistribuicaoPorChave("60067738000106", "SP", "invalida"));
 });
