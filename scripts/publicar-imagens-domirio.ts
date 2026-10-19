@@ -43,7 +43,7 @@ async function baixarImagem(item: ImagemOficial): Promise<string> {
   if (!tipo.startsWith("image/")) throw new Error(`Resposta de ${origem} não é imagem: ${tipo}`);
   const bytes = Buffer.from(await resposta.arrayBuffer());
   if (bytes.length < 10_000) throw new Error(`Imagem suspeita em ${origem}: ${bytes.length} bytes`);
-  const diretorio = path.join(process.cwd(), "uploads", TENANT_SLUG);
+  const diretorio = path.join(process.env.UPLOADS_DIR || path.join(process.cwd(), "uploads"), TENANT_SLUG);
   await mkdir(diretorio, { recursive: true });
   await writeFile(path.join(diretorio, `${MARCA.toLowerCase()}-${item.slug}.webp`), bytes);
   return origem;
