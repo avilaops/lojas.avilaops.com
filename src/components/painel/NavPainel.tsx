@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeftRight, BarChart3, Bot, ExternalLink, LayoutDashboard, LogOut, Megaphone, Menu, Package, Settings,
-  Search, ShoppingCart, Star, Tags, Ticket, Users, Warehouse, X,
+  PlugZap, Search, ShoppingCart, Star, Tags, Ticket, Users, Warehouse, X,
 } from "lucide-react";
 import { LogoLojas } from "@/components/marca/MarcaLojas";
 import { abrirBusca } from "./BuscaPainel";
@@ -34,6 +34,7 @@ const ICONES = {
   avaliacoes: Star,
   marketing: Megaphone,
   ia: Bot,
+  conexoes: PlugZap,
   categorias: Tags,
   config: Settings,
 } as const;
@@ -74,6 +75,7 @@ export const SECOES: ItemNav[] = [
     ],
   },
   { rotulo: "IA e API", href: "/painel/ia", icone: "ia" },
+  { rotulo: "Conexões", href: "/painel/conexoes", icone: "conexoes" },
 ];
 
 /** Ativo por prefixo, para a rota de detalhe acender a seção que a contém. */

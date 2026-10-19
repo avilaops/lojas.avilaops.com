@@ -365,6 +365,7 @@ model Tenant {
   chamadasMcp          ChamadaMcp[]
   webhooksApi          WebhookApi[]
   credenciaisPagamento CredencialPagamento[]
+  eventosSaudeCanais   EventoSaudeCanal[]
 
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
@@ -2203,4 +2204,25 @@ model CredencialPagamento {
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@unique([tenantId, provedor])
+}
+
+/// Fato imutável da Central de Conexões. Guarda somente códigos e mensagens
+/// sanitizadas; respostas brutas, URLs, tokens e corpos nunca entram aqui.
+model EventoSaudeCanal {
+  id         String   @id @default(cuid())
+  tenantId   String
+  canal      String   @db.VarChar(40)
+  tipo       String   @db.VarChar(40)
+  resultado  String   @db.VarChar(24)
+  codigo     String   @db.VarChar(64)
+  mensagem   String   @db.VarChar(240)
+  ator       String   @db.VarChar(160)
+  /// Reserva de teste no formato tenant:canal:minuto. Nula nos demais fatos.
+  dedupeKey  String?  @unique @db.VarChar(160)
+  ocorridoEm DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, canal, ocorridoEm])
+  @@index([tenantId, ocorridoEm])
 }

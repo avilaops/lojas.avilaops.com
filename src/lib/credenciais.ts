@@ -56,6 +56,9 @@ function descritor(t: Pick<Tenant, "nome">): string {
 }
 
 export function contextoDaCredencial(t: Tenant, c: CredencialPagamento): ContextoProvedor {
+  if (ehLegadoMercadoPago(c) && t.mpAccessTokenEnc) {
+    return { segredos: { accessToken: decifrar(t.mpAccessTokenEnc) }, publicos: publicosDe(c), notificationUrl: urlDoWebhook(c), descritorFatura: descritor(t) };
+  }
   return { segredos: decifrarSegredos(c.segredosEnc), publicos: publicosDe(c), notificationUrl: urlDoWebhook(c), descritorFatura: descritor(t) };
 }
 
