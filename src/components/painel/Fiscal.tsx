@@ -135,6 +135,7 @@ export default function Fiscal() {
       manifestacoesPorChave.set(evento.chave, nomeEvento(evento));
     }
   }
+  const erpPorChave = new Map(estado?.erp && "notas" in estado.erp ? estado.erp.notas.map((nota) => [nota.chave, nota.id] as const) : []);
   const vencido = configuracao ? new Date(configuracao.validoAte).getTime() <= agora : false;
   const formulario = (
     <form className="grid min-w-0 gap-4" onSubmit={(e) => { e.preventDefault(); void enviar(e.currentTarget); }}>
@@ -228,7 +229,7 @@ export default function Fiscal() {
           <div className="mb-5 grid min-w-0 gap-3 rounded-xl border border-border bg-muted/20 p-4">
             <div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="text-sm font-semibold">Conferência operacional no ERP</h3><p className="mt-1 text-xs text-muted-foreground">XML completo, DANFE, fornecedor, produtos, compra, custos e estoque ficam em uma única escrituração.</p></div><a className="btn-secundario" href={estado.erp.painelUrl}><ExternalLink size={15} aria-hidden="true" /> Gerenciar no ERP</a></div>
             <p className="text-xs text-muted-foreground">A consulta à SEFAZ deste CNPJ é feita somente pelo ERP para preservar a sequência NSU.</p>
-            {!estado.erp.notas.length ? <p className="text-sm text-muted-foreground">O ERP ainda não registrou NF-e completa para esta empresa.</p> : <ul className="divide-y divide-border">{estado.erp.notas.map((nota) => <li key={nota.id} className="grid gap-2 py-3 first:pt-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start"><div className="min-w-0"><div className="flex items-start justify-between gap-3"><p className="font-semibold">{nota.fornecedor.nome}</p><strong className="shrink-0 text-sm">{dinheiro(Math.round(nota.valor * 100))}</strong></div><p className="mt-1 text-xs text-muted-foreground">NF-e {nota.numero} · série {nota.serie} · {nota.itens} item(ns) · {data(nota.emitida_em)}</p><p className="mt-1 text-xs text-muted-foreground">{nota.fornecedor.vinculado ? "Fornecedor vinculado" : "Fornecedor pendente"} · {nota.compra_id ? `Compra #${nota.compra_id} criada` : "Compra e custos pendentes"}</p></div><div className="flex flex-wrap gap-2"><a className="btn-secundario" href={`/api/painel/fiscal/erp/documentos/${nota.id}/xml`}><Download size={15} aria-hidden="true" /> XML</a><a className="btn-secundario" href={`/api/painel/fiscal/erp/documentos/${nota.id}/danfe`}><FileText size={15} aria-hidden="true" /> PDF</a></div></li>)}</ul>}
+            {!estado.erp.notas.length ? <p className="text-sm text-muted-foreground">O ERP ainda não registrou NF-e completa para esta empresa.</p> : <ul className="divide-y divide-border">{estado.erp.notas.map((nota) => <li key={nota.id} className="grid gap-2 py-3 first:pt-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start"><div className="min-w-0"><div className="flex items-start justify-between gap-3"><p className="font-semibold">{nota.fornecedor.nome}</p><strong className="shrink-0 text-sm">{dinheiro(Math.round(nota.valor * 100))}</strong></div><p className="mt-1 text-xs text-muted-foreground">NF-e {nota.numero} · série {nota.serie} · {nota.itens} item(ns) · {data(nota.emitida_em)}</p><p className="mt-1 text-xs text-muted-foreground">{nota.fornecedor.vinculado ? "Fornecedor vinculado" : "Fornecedor pendente"} · {nota.compra_id ? `Compra #${nota.compra_id} criada` : "Compra e custos pendentes"}</p></div><div className="flex flex-wrap gap-2"><a className="btn-secundario" href={`/api/painel/fiscal/erp/documentos/${nota.id}/xml`} download><Download size={15} aria-hidden="true" /> XML</a><a className="btn-secundario" href={`/api/painel/fiscal/erp/documentos/${nota.id}/danfe`} download><FileText size={15} aria-hidden="true" /> PDF</a></div></li>)}</ul>}
           </div>
         )}
         {!estado ? <p role="status" className="text-sm text-muted-foreground">Carregando documentos…</p> : !estado.documentos.length ? (
@@ -259,12 +260,12 @@ export default function Fiscal() {
               {!documentosSeparados.notas.length ? <p className="rounded-xl border border-border p-4 text-sm text-muted-foreground">Nenhuma NF-e encontrada neste lote.</p> : (
                 <>
                   <ul className="divide-y divide-border sm:hidden">
-                    {documentosSeparados.notas.map((doc) => <DocumentoFiscal key={doc.id} doc={doc} selecionar={setDocumentoSelecionado} manifestacao={doc.manifestacao ?? (doc.chave ? manifestacoesPorChave.get(doc.chave) : null)} />)}
+                    {documentosSeparados.notas.map((doc) => <DocumentoFiscal key={doc.id} doc={doc} selecionar={setDocumentoSelecionado} erpId={doc.chave ? erpPorChave.get(doc.chave) : undefined} manifestacao={doc.manifestacao ?? (doc.chave ? manifestacoesPorChave.get(doc.chave) : null)} />)}
                   </ul>
                   <div className="hidden overflow-x-auto rounded-xl border border-border sm:block">
                     <table className="w-full text-left text-sm">
                       <thead className="bg-muted/40 text-xs uppercase text-muted-foreground"><tr><th className="px-3 py-3">Recebida</th><th className="px-3 py-3">Fornecedor</th><th className="px-3 py-3">Nota</th><th className="px-3 py-3 text-right">Valor</th><th className="px-3 py-3">Situação</th><th className="px-3 py-3" /></tr></thead>
-                      <tbody className="divide-y divide-border">{documentosSeparados.notas.map((doc) => <LinhaDocumentoFiscal key={doc.id} doc={doc} selecionar={setDocumentoSelecionado} manifestacao={doc.manifestacao ?? (doc.chave ? manifestacoesPorChave.get(doc.chave) : null)} />)}</tbody>
+                      <tbody className="divide-y divide-border">{documentosSeparados.notas.map((doc) => <LinhaDocumentoFiscal key={doc.id} doc={doc} selecionar={setDocumentoSelecionado} erpId={doc.chave ? erpPorChave.get(doc.chave) : undefined} manifestacao={doc.manifestacao ?? (doc.chave ? manifestacoesPorChave.get(doc.chave) : null)} />)}</tbody>
                     </table>
                   </div>
                 </>
@@ -314,8 +315,8 @@ export default function Fiscal() {
   );
 }
 
-function DocumentoFiscal({ doc, manifestacao, selecionar }: { doc: Estado["documentos"][number]; manifestacao?: string | null; selecionar: (doc: Estado["documentos"][number]) => void }) {
-  const rotuloXml = doc.situacao === "COMPLETA" ? "NF-e completa" : doc.situacao === "RESUMO" ? "Resumo XML" : "Baixar XML";
+function DocumentoFiscal({ doc, manifestacao, selecionar, erpId }: { doc: Estado["documentos"][number]; manifestacao?: string | null; erpId?: number; selecionar: (doc: Estado["documentos"][number]) => void }) {
+  const rotuloXml = erpId || doc.situacao === "COMPLETA" ? "XML completo" : doc.situacao === "RESUMO" ? "Resumo XML" : "Baixar XML";
   return (
     <li className="grid min-w-0 gap-3 py-4 first:pt-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
       <div className="min-w-0">
@@ -324,9 +325,9 @@ function DocumentoFiscal({ doc, manifestacao, selecionar }: { doc: Estado["docum
         <p className={`mt-2 text-xs ${doc.situacao === "RESUMO" ? "text-amber-900" : "text-muted-foreground"}`}>{doc.situacao === "RESUMO" ? "Resumo: produtos e impostos ainda não estão neste arquivo." : textoSituacao(doc, manifestacao)}</p>
         <DetalhesDocumentoFiscal doc={doc} manifestacao={manifestacao} />
       </div>
-      <div className="flex flex-wrap gap-2"><a className="btn-secundario" href="#fluxos-fiscais" onClick={() => selecionar(doc)}>Usar no fluxo</a><a className="btn-secundario w-full sm:w-auto" href={`/api/painel/fiscal/documentos/${doc.id}`}>
+      <div className="flex flex-wrap gap-2"><a className="btn-secundario" href="#fluxos-fiscais" onClick={() => selecionar(doc)}>Usar no fluxo</a><a className="btn-secundario w-full sm:w-auto" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/xml` : `/api/painel/fiscal/documentos/${doc.id}`}>
         <Download size={16} aria-hidden="true" /> {rotuloXml}
-      </a></div>
+      </a>{erpId ? <a className="btn-secundario" href={`/api/painel/fiscal/erp/documentos/${erpId}/danfe`}><FileText size={16} aria-hidden="true" /> DANFE PDF</a> : <span className="self-center text-xs text-muted-foreground" title="O PDF exige a NF-e completa e uma fonte de DANFE disponível.">PDF indisponível</span>}</div>
     </li>
   );
 }
@@ -353,7 +354,7 @@ function DetalhesDocumentoFiscal({ doc, manifestacao }: { doc: Estado["documento
   );
 }
 
-function LinhaDocumentoFiscal({ doc, manifestacao, selecionar }: { doc: Estado["documentos"][number]; manifestacao?: string | null; selecionar: (doc: Estado["documentos"][number]) => void }) {
+function LinhaDocumentoFiscal({ doc, manifestacao, selecionar, erpId }: { doc: Estado["documentos"][number]; manifestacao?: string | null; erpId?: number; selecionar: (doc: Estado["documentos"][number]) => void }) {
   return (
     <tr>
       <td className="whitespace-nowrap px-3 py-3 text-xs text-muted-foreground">{dia(doc.recebidoEm)}</td>
@@ -361,7 +362,7 @@ function LinhaDocumentoFiscal({ doc, manifestacao, selecionar }: { doc: Estado["
       <td className="px-3 py-3">{doc.numero ?? "—"}<DetalhesDocumentoFiscal doc={doc} manifestacao={manifestacao} /></td>
       <td className="whitespace-nowrap px-3 py-3 text-right font-medium tabular-nums">{dinheiro(doc.valorCentavos)}</td>
       <td className="px-3 py-3 text-xs"><span className="block font-medium text-foreground">{doc.situacao === "COMPLETA" ? "XML completo" : "Resumo XML"}</span><span className="mt-1 block text-muted-foreground">{textoSituacao(doc, manifestacao)}</span></td>
-      <td className="px-3 py-3 text-right"><div className="flex flex-wrap justify-end gap-2"><a className="btn-secundario" href="#fluxos-fiscais" onClick={() => selecionar(doc)}>Usar no fluxo</a><a className="btn-secundario whitespace-nowrap" href={`/api/painel/fiscal/documentos/${doc.id}`}><Download size={15} aria-hidden="true" /> {doc.situacao === "COMPLETA" ? "NF-e" : "Resumo"}</a></div></td>
+      <td className="px-3 py-3 text-right"><div className="flex flex-wrap justify-end gap-2"><a className="btn-secundario" href="#fluxos-fiscais" onClick={() => selecionar(doc)}>Usar no fluxo</a><a className="btn-secundario whitespace-nowrap" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/xml` : `/api/painel/fiscal/documentos/${doc.id}`}><Download size={15} aria-hidden="true" /> {erpId || doc.situacao === "COMPLETA" ? "XML completo" : "Resumo XML"}</a>{erpId ? <a className="btn-secundario whitespace-nowrap" href={`/api/painel/fiscal/erp/documentos/${erpId}/danfe`}><FileText size={15} aria-hidden="true" /> DANFE PDF</a> : <span className="self-center whitespace-nowrap text-xs text-muted-foreground" title="Aguardando DANFE de uma fonte fiscal integrada.">PDF indisponível</span>}</div></td>
     </tr>
   );
 }
