@@ -21,7 +21,7 @@ const SITUACAO: Record<string, string> = { ATIVA: "Ativa", SUSPENSA: "Suspensa",
  * Loja cancelada fica de fora, como no login de qualquer pessoa.
  */
 export default async function EntrarComoEquipePage() {
-  if (!(await entradaEquipeFoiIniciada())) redirect("/entrar?senha=1");
+  if (!(await entradaEquipeFoiIniciada())) redirect("/entrar");
   const cfg = configSSO();
   if (!cfg) redirect("/entrar");
   const r = await consultarSSO(cfg, (await cookies()).get(COOKIE_SSO)?.value);
@@ -65,7 +65,7 @@ export default async function EntrarComoEquipePage() {
           </ul>
         )}
         <p className="pl-auth-links">
-          <Link href="/entrar?senha=1">Entrar com e-mail e senha de uma loja</Link>
+          <Link href="/entrar">Voltar ao login Ávila Ops</Link>
         </p>
       </div>
     </div>

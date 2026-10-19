@@ -27,7 +27,7 @@ function para(caminho: string): Response {
  * não abre sessão em nome de quem está logado no Auth.
  */
 export async function POST(request: Request) {
-  if (!(await entradaEquipeFoiIniciada())) return para("/entrar?senha=1");
+  if (!(await entradaEquipeFoiIniciada())) return para("/entrar");
   const cfg = configSSO();
   const base = (process.env.LOJAS_BASE_DOMAIN ?? "lojas.avilaops.com").toLowerCase();
   const h = await headers();

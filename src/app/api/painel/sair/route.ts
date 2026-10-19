@@ -11,5 +11,5 @@ import { fecharSessao } from "@/lib/sessao";
  */
 export async function POST() {
   await fecharSessao();
-  return new Response(null, { status: 303, headers: { location: "/" } });
+  return new Response(null, { status: 303, headers: { location: "/entrar" } });
 }
