@@ -1,6 +1,7 @@
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { identificarPorEmail } from "@/lib/operadores";
+import { entradaEquipeFoiIniciada } from "@/lib/entrada-equipe";
 import { abrirSessao } from "@/lib/sessao";
 import { COOKIE_SSO, configSSO, consultarSSO, destinoDaEntradaSSO, podeEntrarComoEquipe, urlDeLoginSSO } from "@/lib/sso";
 import { normalizarHost } from "@/lib/tenant";
@@ -25,6 +26,7 @@ export async function GET(request: Request) {
   const host = normalizarHost((await headers()).get("host"));
   if (!cfg || host !== base) return new Response(null, { status: 404 });
 
+  if (!(await entradaEquipeFoiIniciada())) redirect("/entrar?senha=1");
   const jaVoltou = new URL(request.url).searchParams.get("volta") === "1";
   const token = (await cookies()).get(COOKIE_SSO)?.value;
   const r = await consultarSSO(cfg, token);
