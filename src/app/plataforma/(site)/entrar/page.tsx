@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { lojistaAtual } from "@/lib/sessao";
-import { CAMINHO_RETORNO, COOKIE_SSO, configSSO, irDiretoAoAuth, RECADOS_SSO } from "@/lib/sso";
+import { configSSO, RECADOS_SSO } from "@/lib/sso";
 import EntrarForm from "@/components/painel/EntrarForm";
 import BotaoGoogle from "@/components/painel/BotaoGoogle";
 import { googleConfigurado } from "@/lib/google-entrada";
@@ -21,23 +20,18 @@ export const metadata: Metadata = {
  * Google (`GOOGLE_CLIENT_ID`) vem logo abaixo; e-mail e senha da loja ficam por
  * último. Cada porta só aparece quando está configurada.
  *
- * Quem já tem a sessão do login único vai direto ao Auth, que responde na
- * hora (`irDiretoAoAuth`). Todo o resto vê esta página, com a senha da loja
- * sempre presente: lojista que se cadastrou em /criar tem conta só no Lojas, e
- * mandá-lo direto ao Auth o deixava preso numa tela que não conhece a senha
- * dele. Recado do Auth (`?sso=`), falha do Google (`?google=`) e `?senha=1`
- * sempre mostram a página, e por isso nada aqui vira laço.
+ * A presença de um cookie SSO compartilhado não equivale a uma escolha
+ * explícita de entrar no Lojas. Sempre apresentar a tela de login e só
+ * consultar o Auth quando a pessoa clicar no botão correspondente.
  */
 export default async function EntrarPage({ searchParams }: { searchParams: Promise<{ sso?: string; google?: string; senha?: string }> }) {
   const lojista = await lojistaAtual();
   if (lojista) redirect("/painel");
 
-  const { sso, google, senha } = await searchParams;
+  const { sso, google } = await searchParams;
   const recado = sso ? RECADOS_SSO[sso] : undefined;
   const loginUnico = configSSO() !== null;
   const comGoogle = googleConfigurado();
-  const temSessaoSSO = Boolean((await cookies()).get(COOKIE_SSO)?.value);
-  if (irDiretoAoAuth({ loginUnico, temSessaoSSO, sso, google, senha })) redirect(CAMINHO_RETORNO);
 
   return (
     <div className="pl-site-claro pl-auth-pagina">
@@ -52,7 +46,7 @@ export default async function EntrarPage({ searchParams }: { searchParams: Promi
           <div className="mt-6 grid gap-4">
             {/* `<a>` e não `<Link>`: é uma rota de API que responde com redirecionamento
                 para outro domínio, e o roteador do cliente não navega para isso. */}
-            {loginUnico && <a href={CAMINHO_RETORNO} className="btn-primario w-full justify-center">Entrar com a conta Avila Ops</a>}
+            {loginUnico && <a href="/api/painel/entrar/iniciar-sso" className="btn-primario w-full justify-center">Entrar com a conta Avila Ops</a>}
             {comGoogle && <BotaoGoogle rotulo="Entrar com Google" />}
             <p className="pl-divisor"><span>ou com e-mail e senha</span></p>
           </div>

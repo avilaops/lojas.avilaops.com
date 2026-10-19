@@ -1,5 +1,6 @@
 import { cookies, headers } from "next/headers";
 import { prisma } from "@/lib/db";
+import { entradaEquipeFoiIniciada } from "@/lib/entrada-equipe";
 import { abrirSessao } from "@/lib/sessao";
 import { CAMINHO_DA_EQUIPE, COOKIE_SSO, configSSO, consultarSSO, podeEntrarComoEquipe } from "@/lib/sso";
 import { normalizarHost } from "@/lib/tenant";
@@ -26,6 +27,7 @@ function para(caminho: string): Response {
  * não abre sessão em nome de quem está logado no Auth.
  */
 export async function POST(request: Request) {
+  if (!(await entradaEquipeFoiIniciada())) return para("/entrar?senha=1");
   const cfg = configSSO();
   const base = (process.env.LOJAS_BASE_DOMAIN ?? "lojas.avilaops.com").toLowerCase();
   const h = await headers();
