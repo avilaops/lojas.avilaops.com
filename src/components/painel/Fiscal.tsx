@@ -12,6 +12,7 @@ type Estado = {
   configuracao: { cnpj: string; uf: string; titular: string; validoAte: string; proximaConsultaEm: string; ultimaMensagem: string | null } | null;
   documentos: Array<{
     id: string;
+    completoId?: string | null;
     nsu: string;
     schema: string;
     chave: string | null;
@@ -327,9 +328,9 @@ function DocumentoFiscal({ doc, manifestacao, selecionar, erpId }: { doc: Estado
         <p className={`mt-2 text-xs ${doc.situacao === "RESUMO" ? "text-amber-900" : "text-muted-foreground"}`}>{doc.situacao === "RESUMO" ? "Resumo: produtos e impostos ainda não estão neste arquivo." : textoSituacao(doc, manifestacao)}</p>
         <DetalhesDocumentoFiscal doc={doc} manifestacao={manifestacao} />
       </div>
-      <div className="flex flex-wrap gap-2"><a className="btn-secundario" href="#fluxos-fiscais" onClick={() => selecionar(doc)}>Usar no fluxo</a><a className="btn-secundario w-full sm:w-auto" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/xml` : `/api/painel/fiscal/documentos/${doc.id}`}>
+      <div className="flex flex-wrap gap-2"><a className="btn-secundario" href="#fluxos-fiscais" onClick={() => selecionar(doc)}>Usar no fluxo</a><a className="btn-secundario w-full sm:w-auto" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/xml` : `/api/painel/fiscal/documentos/${doc.completoId ?? doc.id}`}>
         <Download size={16} aria-hidden="true" /> {rotuloXml}
-      </a>{(erpId || doc.situacao === "COMPLETA") ? <a className="btn-secundario" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/danfe` : `/api/painel/fiscal/documentos/${doc.id}/danfe`}><FileText size={16} aria-hidden="true" /> DANFE PDF</a> : <><BuscarXmlFiscal id={doc.id} /><CompletarXmlFiscal id={doc.id} /><span className="self-center text-xs text-muted-foreground">PDF disponível após importar XML completo</span></>}</div>
+      </a>{(erpId || doc.situacao === "COMPLETA") ? <a className="btn-secundario" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/danfe` : `/api/painel/fiscal/documentos/${doc.completoId ?? doc.id}/danfe`}><FileText size={16} aria-hidden="true" /> DANFE PDF</a> : <><BuscarXmlFiscal id={doc.id} /><CompletarXmlFiscal id={doc.id} /><span className="self-center text-xs text-muted-foreground">PDF disponível após importar XML completo</span></>}</div>
     </li>
   );
 }
@@ -364,7 +365,7 @@ function LinhaDocumentoFiscal({ doc, manifestacao, selecionar, erpId }: { doc: E
       <td className="px-3 py-3">{doc.numero ?? "—"}<DetalhesDocumentoFiscal doc={doc} manifestacao={manifestacao} /></td>
       <td className="whitespace-nowrap px-3 py-3 text-right font-medium tabular-nums">{dinheiro(doc.valorCentavos)}</td>
       <td className="px-3 py-3 text-xs"><span className="block font-medium text-foreground">{doc.situacao === "COMPLETA" ? "XML completo" : "Resumo XML"}</span><span className="mt-1 block text-muted-foreground">{textoSituacao(doc, manifestacao)}</span></td>
-      <td className="px-3 py-3 text-right"><div className="flex flex-wrap justify-end gap-2"><a className="btn-secundario" href="#fluxos-fiscais" onClick={() => selecionar(doc)}>Usar no fluxo</a><a className="btn-secundario whitespace-nowrap" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/xml` : `/api/painel/fiscal/documentos/${doc.id}`}><Download size={15} aria-hidden="true" /> {erpId || doc.situacao === "COMPLETA" ? "XML completo" : "Resumo XML"}</a>{(erpId || doc.situacao === "COMPLETA") ? <a className="btn-secundario whitespace-nowrap" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/danfe` : `/api/painel/fiscal/documentos/${doc.id}/danfe`}><FileText size={15} aria-hidden="true" /> DANFE PDF</a> : <><BuscarXmlFiscal id={doc.id} /><CompletarXmlFiscal id={doc.id} /><span className="self-center whitespace-nowrap text-xs text-muted-foreground">Aguardando XML completo</span></>}</div></td>
+      <td className="px-3 py-3 text-right"><div className="flex flex-wrap justify-end gap-2"><a className="btn-secundario" href="#fluxos-fiscais" onClick={() => selecionar(doc)}>Usar no fluxo</a><a className="btn-secundario whitespace-nowrap" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/xml` : `/api/painel/fiscal/documentos/${doc.completoId ?? doc.id}`}><Download size={15} aria-hidden="true" /> {erpId || doc.situacao === "COMPLETA" ? "XML completo" : "Resumo XML"}</a>{(erpId || doc.situacao === "COMPLETA") ? <a className="btn-secundario whitespace-nowrap" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/danfe` : `/api/painel/fiscal/documentos/${doc.completoId ?? doc.id}/danfe`}><FileText size={15} aria-hidden="true" /> DANFE PDF</a> : <><BuscarXmlFiscal id={doc.id} /><CompletarXmlFiscal id={doc.id} /><span className="self-center whitespace-nowrap text-xs text-muted-foreground">Aguardando XML completo</span></>}</div></td>
     </tr>
   );
 }

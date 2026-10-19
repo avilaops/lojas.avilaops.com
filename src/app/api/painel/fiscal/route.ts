@@ -29,9 +29,23 @@ async function estado(tenantId: string, endereco: unknown, parametros?: URLSearc
     cnpj ? buscarFiscalErp(cnpj).catch((erro) => ({ erro: erro instanceof Error ? erro.message : "ERP fiscal indisponível." })) : null,
     prisma.documentoFiscalLoja.groupBy({ where: { tenantId }, by: ["schema"], _count: { _all: true } }),
   ]);
+  // Alguns XMLs completos chegaram em outro NSU: vincular pelo par tenant/chave.
+  const chaves = [...new Set(documentos.filter(d => /^resNFe/.test(d.schema) && d.chave).map(d => d.chave!))];
+  const completos = chaves.length ? await prisma.documentoFiscalLoja.findMany({
+    where: { tenantId, chave: { in: chaves }, schema: { startsWith: "procNFe" } },
+    select: { id: true, chave: true }, orderBy: { recebidoEm: "desc" }, take: 250,
+  }) : [];
+  const completosPorChave = new Map<string, string>();
+  for (const completo of completos) {
+    if (completo.chave && !completosPorChave.has(completo.chave)) completosPorChave.set(completo.chave, completo.id);
+  }
   return {
     configuracao,
-    documentos: documentos.map(({ xml, ...documento }) => ({ ...documento, ...resumirDocumentoFiscal(xml, documento.schema, documento.chave) })),
+    documentos: documentos.map(({ xml, ...documento }) => {
+      const resumo = resumirDocumentoFiscal(xml, documento.schema, documento.chave);
+      const completoId = documento.chave && /^resNFe/.test(documento.schema) ? completosPorChave.get(documento.chave) ?? null : null;
+      return { ...documento, ...resumo, completoId, situacao: completoId ? "COMPLETA" as const : resumo.situacao };
+    }),
     totais: totalizarDocumentosFiscais(contagens.map(({ schema, _count }) => ({ schema, quantidade: _count._all }))),
     ufEmpresa: ufDaEmpresa(endereco),
     pagina, total, paginas: Math.max(1, Math.ceil(total / limite)),
