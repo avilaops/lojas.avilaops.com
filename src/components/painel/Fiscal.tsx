@@ -229,7 +229,7 @@ export default function Fiscal() {
           <div className="mb-5 grid min-w-0 gap-3 rounded-xl border border-border bg-muted/20 p-4">
             <div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="text-sm font-semibold">Conferência operacional no ERP</h3><p className="mt-1 text-xs text-muted-foreground">XML completo, DANFE, fornecedor, produtos, compra, custos e estoque ficam em uma única escrituração.</p></div><a className="btn-secundario" href={estado.erp.painelUrl}><ExternalLink size={15} aria-hidden="true" /> Gerenciar no ERP</a></div>
             <p className="text-xs text-muted-foreground">A consulta à SEFAZ deste CNPJ é feita somente pelo ERP para preservar a sequência NSU.</p>
-            {!estado.erp.notas.length ? <p className="text-sm text-muted-foreground">O ERP ainda não registrou NF-e completa para esta empresa.</p> : <ul className="divide-y divide-border">{estado.erp.notas.map((nota) => <li key={nota.id} className="grid gap-2 py-3 first:pt-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start"><div className="min-w-0"><div className="flex items-start justify-between gap-3"><p className="font-semibold">{nota.fornecedor.nome}</p><strong className="shrink-0 text-sm">{dinheiro(Math.round(nota.valor * 100))}</strong></div><p className="mt-1 text-xs text-muted-foreground">NF-e {nota.numero} · série {nota.serie} · {nota.itens} item(ns) · {data(nota.emitida_em)}</p><p className="mt-1 text-xs text-muted-foreground">{nota.fornecedor.vinculado ? "Fornecedor vinculado" : "Fornecedor pendente"} · {nota.compra_id ? `Compra #${nota.compra_id} criada` : "Compra e custos pendentes"}</p></div><div className="flex flex-wrap gap-2"><a className="btn-secundario" href={`/api/painel/fiscal/erp/documentos/${nota.id}/xml`}><Download size={15} aria-hidden="true" /> XML</a><a className="btn-secundario" href={`/api/painel/fiscal/erp/documentos/${nota.id}/danfe`}><FileText size={15} aria-hidden="true" /> PDF</a></div></li>)}</ul>}
+            {!estado.erp.notas.length ? <p className="text-sm text-muted-foreground">O ERP ainda não registrou NF-e completa para esta empresa.</p> : <ul className="divide-y divide-border">{estado.erp.notas.map((nota) => <li key={nota.id} className="grid gap-2 py-3 first:pt-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start"><div className="min-w-0"><div className="flex items-start justify-between gap-3"><p className="font-semibold">{nota.fornecedor.nome}</p><strong className="shrink-0 text-sm">{dinheiro(Math.round(nota.valor * 100))}</strong></div><p className="mt-1 text-xs text-muted-foreground">NF-e {nota.numero} · série {nota.serie} · {nota.itens} item(ns) · {data(nota.emitida_em)}</p><p className="mt-1 text-xs text-muted-foreground">{nota.fornecedor.vinculado ? "Fornecedor vinculado" : "Fornecedor pendente"} · {nota.compra_id ? `Compra #${nota.compra_id} criada` : "Compra e custos pendentes"}</p></div><div className="flex flex-wrap gap-2"><a className="btn-secundario" href={`/api/painel/fiscal/erp/documentos/${nota.id}/xml`} download><Download size={15} aria-hidden="true" /> XML</a><a className="btn-secundario" href={`/api/painel/fiscal/erp/documentos/${nota.id}/danfe`} download><FileText size={15} aria-hidden="true" /> PDF</a></div></li>)}</ul>}
           </div>
         )}
         {!estado ? <p role="status" className="text-sm text-muted-foreground">Carregando documentos…</p> : !estado.documentos.length ? (
@@ -385,7 +385,7 @@ function EventoFiscal({ doc }: { doc: Estado["documentos"][number] }) {
           </dl>
         </details>
       </div>
-      <a className="btn-secundario w-full" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/xml` : `/api/painel/fiscal/documentos/${doc.id}`}><Download size={16} aria-hidden="true" /> XML do evento</a>
+      <a className="btn-secundario w-full" href={`/api/painel/fiscal/documentos/${doc.id}`}><Download size={16} aria-hidden="true" /> XML do evento</a>
     </li>
   );
 }
@@ -397,7 +397,7 @@ function LinhaEventoFiscal({ doc }: { doc: Estado["documentos"][number] }) {
       <td className="max-w-80 px-3 py-3"><span className="block truncate font-medium" title={nomeEvento(doc)}>{nomeEvento(doc)}</span>{doc.eventoCodigo && <span className="mt-1 block text-xs text-muted-foreground">Código {doc.eventoCodigo}{doc.eventoSequencia != null ? ` · sequência ${doc.eventoSequencia}` : ""}</span>}</td>
       <td className="whitespace-nowrap px-3 py-3">{doc.numero ?? "—"}</td>
       <td className="whitespace-nowrap px-3 py-3 text-xs text-muted-foreground">{doc.protocolo ?? "—"}</td>
-      <td className="px-3 py-3 text-right"><a className="btn-secundario whitespace-nowrap" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/xml` : `/api/painel/fiscal/documentos/${doc.id}`}><Download size={15} aria-hidden="true" /> Evento</a></td>
+      <td className="px-3 py-3 text-right"><a className="btn-secundario whitespace-nowrap" href={`/api/painel/fiscal/documentos/${doc.id}`}><Download size={15} aria-hidden="true" /> Evento</a></td>
     </tr>
   );
 }
