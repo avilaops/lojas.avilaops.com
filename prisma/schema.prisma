@@ -370,6 +370,7 @@ model Tenant {
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
+  acessos           AcessoLoja[]
   categorias        Categoria[]
   produtos          Produto[]
   pedidos           Pedido[]
@@ -2225,4 +2226,18 @@ model EventoSaudeCanal {
 
   @@index([tenantId, canal, ocorridoEm])
   @@index([tenantId, ocorridoEm])
+}
+
+/// Vínculo explícito entre identidade SSO e tenant. Nunca concede acesso por domínio de e-mail.
+model AcessoLoja {
+  id       String  @id @default(cuid())
+  tenantId String
+  email    String
+  papel    String  @default("DONO")
+  ativo    Boolean @default(true)
+  criadoEm DateTime @default(now())
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, email])
+  @@index([email, ativo])
 }

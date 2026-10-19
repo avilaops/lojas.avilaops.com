@@ -135,7 +135,7 @@ function Rodape({ pathname, aoNavegar, urlLoja, podeTrocarLoja }: { pathname: st
         <span>Configurações</span>
       </Link>
       {podeTrocarLoja && (
-        <Link href="/entrar/equipe" onClick={aoNavegar} className="pnav-item">
+        <Link href="/entrar/lojas" onClick={aoNavegar} className="pnav-item">
           <ArrowLeftRight size={16} aria-hidden="true" />
           <span>Trocar loja</span>
         </Link>
