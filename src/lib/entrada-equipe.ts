@@ -1,4 +1,4 @@
-import { createHmac, createHash, timingSafeEqual } from "node:crypto";
+import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 
 const COOKIE = "lojas_equipe_intencao";
@@ -15,9 +15,7 @@ function assinatura(payload: string): string | null {
 }
 
 export async function registrarEntradaEquipe() {
-  const token = (await cookies()).get("avila_sso")?.value ?? "";
-  const vinculo = createHash("sha256").update(token).digest("base64url");
-  const payload = Buffer.from(JSON.stringify({ exp: Date.now() + PRAZO_MS, vinculo })).toString("base64url");
+  const payload = Buffer.from(JSON.stringify({ exp: Date.now() + PRAZO_MS })).toString("base64url");
   const mac = assinatura(payload);
   if (!mac) throw new Error("LOJAS_SECRET ausente para entrada de equipe");
   (await cookies()).set(COOKIE, payload + "." + mac, {
@@ -36,9 +34,7 @@ export async function entradaEquipeFoiIniciada(): Promise<boolean> {
   if (!esperado || mac.length !== esperado.length ||
       !timingSafeEqual(Buffer.from(mac), Buffer.from(esperado))) return false;
   try {
-    const dados = JSON.parse(Buffer.from(payload, "base64url").toString()) as { exp?: number; vinculo?: string };
-    const token = store.get("avila_sso")?.value ?? "";
-    return typeof dados.exp === "number" && dados.exp > Date.now() &&
-      dados.vinculo === createHash("sha256").update(token).digest("base64url");
+    const dados = JSON.parse(Buffer.from(payload, "base64url").toString()) as { exp?: number };
+    return typeof dados.exp === "number" && dados.exp > Date.now();
   } catch { return false; }
 }
