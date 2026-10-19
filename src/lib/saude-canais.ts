@@ -176,7 +176,7 @@ export type EventoSaudeParaTela = {
   ocorridoEm: Date
 }
 
-type ResultadoTesteAnterior = Pick<EventoSaudeParaTela, "canal" | "resultado" | "codigo" | "mensagem" | "ocorridoEm"> | undefined
+type ResultadoTesteAnterior = Pick<EventoSaudeParaTela, "canal" | "resultado" | "codigo" | "mensagem"> | undefined
 
 export function erroDoTesteMaisRecente(evento: ResultadoTesteAnterior, fallback: AlertaSaudeCanal | null = null): AlertaSaudeCanal | null {
   if (!evento) return fallback
