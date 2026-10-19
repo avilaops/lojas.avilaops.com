@@ -85,6 +85,14 @@ export async function atualizarTenant(slug: string, entrada: Partial<TenantEntra
     dados.dominios = Array.from(new Set([...atual.dominios, apex, `www.${apex}`]));
   }
   const t = await prisma.tenant.update({ where: { slug }, data: dados });
+  // O envio de novas credenciais manuais invalida qualquer teste anterior.
+  // Isso também cobre alterações feitas pela rota legada do painel.
+  if (resto.mercadoPago) {
+    await prisma.credencialPagamento.updateMany({
+      where: { tenantId: t.id, provedor: "mercadopago" },
+      data: { status: "pendente", testadoEm: null, mensagem: "Credenciais alteradas; teste novamente." },
+    });
+  }
   esquecerTenantEmCache(slug);
   return t;
 }
