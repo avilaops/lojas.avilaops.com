@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { lojistaAtual } from "@/lib/sessao";
-import { CAMINHO_RETORNO, configSSO, RECADOS_SSO } from "@/lib/sso";
+import { configSSO, RECADOS_SSO } from "@/lib/sso";
 import EntrarForm from "@/components/painel/EntrarForm";
 import BotaoGoogle from "@/components/painel/BotaoGoogle";
 import { googleConfigurado } from "@/lib/google-entrada";
@@ -46,7 +46,7 @@ export default async function EntrarPage({ searchParams }: { searchParams: Promi
           <div className="mt-6 grid gap-4">
             {/* `<a>` e não `<Link>`: é uma rota de API que responde com redirecionamento
                 para outro domínio, e o roteador do cliente não navega para isso. */}
-            {loginUnico && <a href={CAMINHO_RETORNO} className="btn-primario w-full justify-center">Entrar com a conta Avila Ops</a>}
+            {loginUnico && <a href="/api/painel/entrar/iniciar-sso" className="btn-primario w-full justify-center">Entrar com a conta Avila Ops</a>}
             {comGoogle && <BotaoGoogle rotulo="Entrar com Google" />}
             <p className="pl-divisor"><span>ou com e-mail e senha</span></p>
           </div>
