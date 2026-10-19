@@ -176,7 +176,7 @@ export type EventoSaudeParaTela = {
   ocorridoEm: Date
 }
 
-type ResultadoTesteAnterior = Pick<EventoSaudeParaTela, "canal" | "resultado" | "codigo" | "mensagem"> | undefined
+type ResultadoTesteAnterior = Pick<EventoSaudeParaTela, "canal" | "resultado" | "codigo" | "mensagem" | "ocorridoEm"> | undefined
 
 export function erroDoTesteMaisRecente(evento: ResultadoTesteAnterior, fallback: AlertaSaudeCanal | null = null): AlertaSaudeCanal | null {
   if (!evento) return fallback
@@ -232,11 +232,13 @@ export async function saudeDosCanais(tenantId: string, agora = new Date()): Prom
       where: { tenantId, tipo: "teste" },
       orderBy: { ocorridoEm: "desc" },
       distinct: ["canal"],
-      select: { canal: true, resultado: true, codigo: true, mensagem: true },
+      select: { canal: true, resultado: true, codigo: true, mensagem: true, ocorridoEm: true },
     }),
   ])
-  const erroTestado = (canal: string, fallback: AlertaSaudeCanal | null = null) =>
-    erroDoTesteMaisRecente(ultimosTestes.find((evento) => evento.canal === canal), fallback)
+  const erroTestado = (canal: string, conectadoEm: Date | null, fallback: AlertaSaudeCanal | null = null) => {
+    const evento = ultimosTestes.find((item) => item.canal === canal && (!conectadoEm || item.ocorridoEm >= conectadoEm));
+    return erroDoTesteMaisRecente(evento, fallback);
+  }
   const rotina = (nome: string) => {
     const item = rotinas.find((r) => r.nome === nome)
     return item ? { ultimaEm: item.ultimaEm, falhasSeguidas: item.falhasSeguidas, ultimoErro: item.ultimoErro } : null
@@ -250,7 +252,7 @@ export async function saudeDosCanais(tenantId: string, agora = new Date()): Prom
       conta: tenant.mlNickname ?? tenant.mlUserId, autenticacao: "OAuth 2.0", escopos: ["vendas", "anúncios", "perguntas"],
       conectadoEm: tenant.mlConectadoEm, expiraEm: tenant.mlExpiraEm, refreshExpiraEm: null,
       ultimaAtividadeEm: ultimaMl, cadenciaEsperadaMs: DUAS_HORAS, possuiCargaOperacional: anuncios.length > 0,
-      rotina: rotina("mercadolivre.rodar"), erro: erroTestado("mercadolivre"), webhooks: [],
+      rotina: rotina("mercadolivre.rodar"), erro: erroTestado("mercadolivre", tenant.mlConectadoEm), webhooks: [],
     },
     ...(["amazon", "shopee", "magalu"] as const).map((id): EntradaSaudeCanal => {
       const conta = porCanal.get(id)
@@ -260,7 +262,7 @@ export async function saudeDosCanais(tenantId: string, agora = new Date()): Prom
         conta: conta?.contaNome ?? conta?.contaId ?? null, autenticacao: "OAuth", escopos: ["conexão da conta"],
         conectadoEm: conta?.conectadoEm ?? null, expiraEm: conta?.expiraEm ?? null,
         refreshExpiraEm: conta?.refreshExpiraEm ?? null, ultimaAtividadeEm: null, cadenciaEsperadaMs: null,
-        possuiCargaOperacional: false, erro: erroTestado(id), webhooks: [],
+        possuiCargaOperacional: false, erro: erroTestado(id, conta?.conectadoEm ?? null), webhooks: [],
       }
     }),
     {
@@ -269,7 +271,7 @@ export async function saudeDosCanais(tenantId: string, agora = new Date()): Prom
       conta: tenant.melhorEnvioConta, autenticacao: "OAuth 2.0", escopos: ["cálculo de frete", "leitura da conta"],
       conectadoEm: tenant.melhorEnvioConectadoEm, expiraEm: tenant.melhorEnvioExpiraEm, refreshExpiraEm: null,
       ultimaAtividadeEm: null, cadenciaEsperadaMs: UM_DIA, possuiCargaOperacional: false,
-      erro: erroTestado("melhor-envio"), webhooks: [],
+      erro: erroTestado("melhor-envio", tenant.melhorEnvioConectadoEm), webhooks: [],
     },
     ...credenciais.map((c): EntradaSaudeCanal => ({
       id: `pagamento:${c.provedor}`, nome: `Pagamento · ${c.provedor}`, disponivel: provedoresDePagamento.tem(c.provedor),
@@ -278,7 +280,7 @@ export async function saudeDosCanais(tenantId: string, agora = new Date()): Prom
       expiraEm: c.provedor === "mercadopago" ? tenant.mpExpiraEm : null, refreshExpiraEm: null,
       ultimaAtividadeEm: c.testadoEm, cadenciaEsperadaMs: null, possuiCargaOperacional: false,
       rotina: c.provedor === "mercadopago" ? rotina("mercadopago.renovar") : null,
-      erro: erroTestado(`pagamento:${c.provedor}`, c.status === "erro" ? { codigo: "falha_externa", mensagem: "A credencial precisa ser testada novamente." } : null),
+      erro: erroTestado(`pagamento:${c.provedor}`, c.criadoEm, c.status === "erro" ? { codigo: "falha_externa", mensagem: "A credencial precisa ser testada novamente." } : null),
       webhooks: [],
     })),
     {
