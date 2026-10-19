@@ -28,7 +28,7 @@ export default async function EntrarPage({ searchParams }: { searchParams: Promi
   const lojista = await lojistaAtual();
   if (lojista) redirect("/painel");
 
-  const { sso, google, senha } = await searchParams;
+  const { sso, google } = await searchParams;
   const recado = sso ? RECADOS_SSO[sso] : undefined;
   const loginUnico = configSSO() !== null;
   const comGoogle = googleConfigurado();
