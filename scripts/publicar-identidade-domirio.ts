@@ -2,7 +2,7 @@ import { prisma } from "../src/lib/db";
 
 const APLICAR = process.argv.includes("--apply");
 const EXPORTAR = process.argv.includes("--export");
-const BASE = "/uploads/domi-rio";
+const BASE = "/media/domirio";
 
 const capas: Record<string, string> = {
   "Controle de Pragas": `${BASE}/categoria-controle-de-pragas.webp`,
