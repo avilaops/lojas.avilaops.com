@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { lojistaAtual } from "@/lib/sessao";
-import { CAMINHO_RETORNO, configSSO, RECADOS_SSO } from "@/lib/sso";
+import { configSSO, RECADOS_SSO } from "@/lib/sso";
 import EntrarForm from "@/components/painel/EntrarForm";
 import BotaoGoogle from "@/components/painel/BotaoGoogle";
 import { googleConfigurado } from "@/lib/google-entrada";
