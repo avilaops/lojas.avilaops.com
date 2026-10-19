@@ -5,8 +5,6 @@ import { Download, ExternalLink, FileText, RefreshCw, ShieldCheck, Upload } from
 import { separarDocumentosFiscais } from "@/lib/fiscal-monitor";
 import { Secao, inputClasse } from "./campos";
 import FluxosFiscais from "./FluxosFiscais";
-import CompletarXmlFiscal from "./CompletarXmlFiscal";
-import BuscarXmlFiscal from "./BuscarXmlFiscal";
 
 type Estado = {
   configuracao: { cnpj: string; uf: string; titular: string; validoAte: string; proximaConsultaEm: string; ultimaMensagem: string | null } | null;
@@ -88,7 +86,7 @@ export default function Fiscal() {
   const [arquivoNome, setArquivoNome] = useState("");
   const [agora] = useState(() => Date.now());
   const [busca, setBusca] = useState("");
-  const [tipo, setTipo] = useState("");
+  const [tipo, setTipo] = useState("nfe-recebidas");
   const [pagina, setPagina] = useState(1);
   const [inicio, setInicio] = useState("");
   const [fim, setFim] = useState("");
@@ -117,7 +115,7 @@ export default function Fiscal() {
       const dados = await r.json();
       if (!r.ok) throw new Error(dados.erro ?? "Não foi possível concluir a operação.");
       setEstado(dados);
-      setBusca(""); setTipo(""); setPagina(1); setInicio(""); setFim("");
+      setBusca(""); setTipo("nfe-recebidas"); setPagina(1); setInicio(""); setFim("");
       setMensagem(form ? "Certificado guardado com segurança." : `${dados.resultado.recebidos} documento(s) recebido(s). ${dados.resultado.mensagem}`);
       if (form) {
         form.reset();
@@ -204,7 +202,7 @@ export default function Fiscal() {
         )}
       </Secao>
 
-      <Secao titulo="Notas fiscais do CNPJ" descricao="Documentos recebidos da SEFAZ para esta empresa.">
+      <Secao titulo="Monitor fiscal do CNPJ" descricao="Notas fiscais organizadas por categoria. Sincronização automática pela SEFAZ.">
         {configuracao && !(estado?.erp && "notas" in estado.erp) && (
           <div className="grid gap-3 border-b border-border pb-4">
             <div className="flex items-start gap-2 text-sm">
@@ -217,13 +215,13 @@ export default function Fiscal() {
             {configuracao.ultimaMensagem && <p className="break-words text-sm text-muted-foreground">{configuracao.ultimaMensagem}</p>}
             <button onClick={() => void enviar()} disabled={!!ocupado || vencido} className="btn-secundario w-full sm:w-fit">
               <RefreshCw size={16} aria-hidden="true" className={ocupado === "consulta" ? "animate-spin motion-reduce:animate-none" : ""} />
-              {ocupado === "consulta" ? "Consultando…" : "Consultar próximo lote"}
+              {ocupado === "consulta" ? "Consultando…" : "Sincronizar CNPJ"}
             </button>
           </div>
         )}
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <label className="grid gap-1 text-xs">Buscar fornecedor, nota, chave ou NSU<input className={inputClasse} maxLength={100} value={busca} onChange={(e) => { setBusca(e.target.value); setPagina(1); }} /></label>
-          <label className="grid gap-1 text-xs">Tipo de documento<select className={inputClasse} value={tipo} onChange={(e) => { setTipo(e.target.value); setPagina(1); }}><option value="">Todos</option><option value="completa">NF-e completa</option><option value="resumo">Resumo de NF-e</option><option value="evento">Evento fiscal</option></select></label>
+          <label className="grid gap-1 text-xs">Categoria<select className={inputClasse} value={tipo} onChange={(e) => { setTipo(e.target.value); setPagina(1); }}><optgroup label="NF-e"><option value="nfe-recebidas">Recebidas</option><option value="nfe-enviadas" disabled>Enviadas — integração pendente</option><option value="nfe-citadas" disabled>Citadas — integração pendente</option></optgroup><optgroup label="CT-e"><option value="cte-recebedor" disabled>Como recebedor — integração pendente</option><option value="cte-tomador" disabled>Como tomador — integração pendente</option><option value="cte-remetente" disabled>Como remetente — integração pendente</option><option value="cte-emitidos" disabled>Emitidos — integração pendente</option></optgroup></select></label>
           <label className="grid gap-1 text-xs">Recebido de<input className={inputClasse} type="date" value={inicio} onChange={(e) => { setInicio(e.target.value); setPagina(1); }} /></label>
           <label className="grid gap-1 text-xs">Recebido até<input className={inputClasse} type="date" value={fim} onChange={(e) => { setFim(e.target.value); setPagina(1); }} /></label>
         </div>
@@ -245,7 +243,7 @@ export default function Fiscal() {
           <div className="grid min-w-0 gap-5">
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               <div className="rounded-xl border border-border bg-muted/30 p-3">
-                <p className="text-xs text-muted-foreground">NF-e encontradas</p>
+                <p className="text-xs text-muted-foreground">NF-e no histórico</p>
                 <p className="mt-1 text-2xl font-semibold">{estado.totais.notas}</p>
               </div>
               <div className="rounded-xl border border-border bg-muted/30 p-3">
@@ -259,7 +257,7 @@ export default function Fiscal() {
             </div>
             <div className="min-w-0">
               <h3 className="mb-1 text-sm font-semibold">Notas fiscais</h3>
-              <p className="mb-3 text-xs text-muted-foreground">Resumos e XML completos nesta página. Use o filtro de tipo para consultar somente NF-e.</p>
+              <p className="mb-3 text-xs text-muted-foreground">Documentos fiscais por categoria. XML e PDF ficam disponíveis quando recebidos integralmente.</p>
               {!documentosSeparados.notas.length ? <p className="rounded-xl border border-border p-4 text-sm text-muted-foreground">Nenhuma NF-e encontrada neste lote.</p> : (
                 <>
                   <ul className="divide-y divide-border sm:hidden">
@@ -274,8 +272,8 @@ export default function Fiscal() {
                 </>
               )}
             </div>
-            <div className="min-w-0 border-t border-border pt-4">
-              <h3 className="mb-1 text-sm font-semibold">Eventos fiscais</h3>
+            <details className="min-w-0 border-t border-border pt-4">
+              <summary className="cursor-pointer mb-1 text-sm font-semibold">Histórico técnico de eventos fiscais</summary>
               <p className="mb-3 text-xs text-muted-foreground">Eventos desta página, com tipo, NF-e e protocolo. Use o filtro de tipo para consultar somente eventos.</p>
               {!documentosSeparados.eventos.length ? <p className="rounded-xl border border-border p-4 text-sm text-muted-foreground">Nenhum evento fiscal recebido.</p> : (
                 <>
@@ -290,7 +288,7 @@ export default function Fiscal() {
                   </div>
                 </>
               )}
-            </div>
+            </details>
             {!!documentosSeparados.outros.length && (
               <details className="min-w-0 border-t border-border pt-4">
                 <summary className="cursor-pointer text-sm font-medium">Outros documentos ({estado.totais.outros})</summary>
@@ -307,7 +305,7 @@ export default function Fiscal() {
           <summary className="cursor-pointer font-medium">Sobre esta consulta</summary>
           <div className="mt-3 grid gap-3 text-sm leading-relaxed text-muted-foreground">
             <p>A SEFAZ limita o período e os documentos disponíveis. Esta consulta não recupera todo o histórico do CNPJ e não inclui NFS-e ou NFC-e.</p>
-            <p>“Resumo XML” contém apenas identificação, valor, datas, protocolo e situação. Produtos, impostos, pagamentos e transporte só aparecem quando a SEFAZ disponibiliza a NF-e completa.</p>
+            <p>A identificação da NF-e pode anteceder a entrega do XML completo pela SEFAZ. O sistema não disponibiliza arquivo parcial para download.</p>
             <p>A manifestação do destinatário é uma declaração fiscal. Esta tela identifica as manifestações já recebidas, mas não envia nenhuma decisão automaticamente.</p>
             <p>Se outro programa consulta este CNPJ, coordene o uso com o suporte antes de ativar para evitar bloqueios da SEFAZ.</p>
           </div>
@@ -319,18 +317,18 @@ export default function Fiscal() {
 }
 
 function DocumentoFiscal({ doc, manifestacao, selecionar, erpId }: { doc: Estado["documentos"][number]; manifestacao?: string | null; erpId?: number; selecionar: (doc: Estado["documentos"][number]) => void }) {
-  const rotuloXml = erpId || doc.situacao === "COMPLETA" ? "XML completo" : doc.situacao === "RESUMO" ? "Resumo XML" : "Baixar XML";
+  const rotuloXml = "XML";
   return (
     <li className="grid min-w-0 gap-3 py-4 first:pt-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
       <div className="min-w-0">
         <div className="flex items-start justify-between gap-3"><p className="min-w-0 text-sm font-semibold">{doc.fornecedor ?? tipoDocumento(doc.schema)}</p><strong className="shrink-0 text-sm">{dinheiro(doc.valorCentavos)}</strong></div>
         <p className="mt-1 text-xs text-muted-foreground">{doc.numero ? `Nota ${doc.numero} · ` : ""}Recebida em {data(doc.recebidoEm)}</p>
-        <p className={`mt-2 text-xs ${doc.situacao === "RESUMO" ? "text-amber-900" : "text-muted-foreground"}`}>{doc.situacao === "RESUMO" ? "Resumo: produtos e impostos ainda não estão neste arquivo." : textoSituacao(doc, manifestacao)}</p>
+        <p className={`mt-2 text-xs ${doc.situacao === "RESUMO" ? "text-amber-900" : "text-muted-foreground"}`}>{doc.situacao === "RESUMO" ? "XML e PDF aguardando disponibilização pela SEFAZ." : textoSituacao(doc, manifestacao)}</p>
         <DetalhesDocumentoFiscal doc={doc} manifestacao={manifestacao} />
       </div>
-      <div className="flex flex-wrap gap-2"><a className="btn-secundario" href="#fluxos-fiscais" onClick={() => selecionar(doc)}>Usar no fluxo</a><a className="btn-secundario w-full sm:w-auto" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/xml` : `/api/painel/fiscal/documentos/${doc.completoId ?? doc.id}`}>
+      <div className="flex flex-wrap gap-2"><a className="btn-secundario" href="#fluxos-fiscais" onClick={() => selecionar(doc)}>Usar no fluxo</a>{(erpId || doc.situacao === "COMPLETA") && <a className="btn-secundario w-full sm:w-auto" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/xml` : `/api/painel/fiscal/documentos/${doc.completoId ?? doc.id}`}>
         <Download size={16} aria-hidden="true" /> {rotuloXml}
-      </a>{(erpId || doc.situacao === "COMPLETA") ? <a className="btn-secundario" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/danfe` : `/api/painel/fiscal/documentos/${doc.completoId ?? doc.id}/danfe`}><FileText size={16} aria-hidden="true" /> DANFE PDF</a> : <><BuscarXmlFiscal id={doc.id} /><CompletarXmlFiscal id={doc.id} /><span className="self-center text-xs text-muted-foreground">PDF disponível após importar XML completo</span></>}</div>
+      </a>}{(erpId || doc.situacao === "COMPLETA") ? <a className="btn-secundario" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/danfe` : `/api/painel/fiscal/documentos/${doc.completoId ?? doc.id}/danfe`}><FileText size={16} aria-hidden="true" /> DANFE PDF</a> : <span className="self-center text-xs text-muted-foreground">XML e PDF pendentes</span>}</div>
     </li>
   );
 }
@@ -364,8 +362,8 @@ function LinhaDocumentoFiscal({ doc, manifestacao, selecionar, erpId }: { doc: E
       <td className="max-w-64 px-3 py-3"><span className="block truncate font-medium" title={doc.fornecedor ?? undefined}>{doc.fornecedor ?? "Fornecedor não informado"}</span>{doc.documentoFornecedor && <span className="mt-1 block text-xs text-muted-foreground">{documentoFormatado(doc.documentoFornecedor)}</span>}</td>
       <td className="px-3 py-3">{doc.numero ?? "—"}<DetalhesDocumentoFiscal doc={doc} manifestacao={manifestacao} /></td>
       <td className="whitespace-nowrap px-3 py-3 text-right font-medium tabular-nums">{dinheiro(doc.valorCentavos)}</td>
-      <td className="px-3 py-3 text-xs"><span className="block font-medium text-foreground">{doc.situacao === "COMPLETA" ? "XML completo" : "Resumo XML"}</span><span className="mt-1 block text-muted-foreground">{textoSituacao(doc, manifestacao)}</span></td>
-      <td className="px-3 py-3 text-right"><div className="flex flex-wrap justify-end gap-2"><a className="btn-secundario" href="#fluxos-fiscais" onClick={() => selecionar(doc)}>Usar no fluxo</a><a className="btn-secundario whitespace-nowrap" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/xml` : `/api/painel/fiscal/documentos/${doc.completoId ?? doc.id}`}><Download size={15} aria-hidden="true" /> {erpId || doc.situacao === "COMPLETA" ? "XML completo" : "Resumo XML"}</a>{(erpId || doc.situacao === "COMPLETA") ? <a className="btn-secundario whitespace-nowrap" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/danfe` : `/api/painel/fiscal/documentos/${doc.completoId ?? doc.id}/danfe`}><FileText size={15} aria-hidden="true" /> DANFE PDF</a> : <><BuscarXmlFiscal id={doc.id} /><CompletarXmlFiscal id={doc.id} /><span className="self-center whitespace-nowrap text-xs text-muted-foreground">Aguardando XML completo</span></>}</div></td>
+      <td className="px-3 py-3 text-xs"><span className="block font-medium text-foreground">{doc.situacao === "COMPLETA" ? "Arquivos disponíveis" : "Arquivos pendentes"}</span><span className="mt-1 block text-muted-foreground">{textoSituacao(doc, manifestacao)}</span></td>
+      <td className="px-3 py-3 text-right"><div className="flex flex-wrap justify-end gap-2"><a className="btn-secundario" href="#fluxos-fiscais" onClick={() => selecionar(doc)}>Usar no fluxo</a>{(erpId || doc.situacao === "COMPLETA") && <a className="btn-secundario whitespace-nowrap" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/xml` : `/api/painel/fiscal/documentos/${doc.completoId ?? doc.id}`}><Download size={15} aria-hidden="true" /> XML</a>}{(erpId || doc.situacao === "COMPLETA") ? <a className="btn-secundario whitespace-nowrap" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/danfe` : `/api/painel/fiscal/documentos/${doc.completoId ?? doc.id}/danfe`}><FileText size={15} aria-hidden="true" /> DANFE PDF</a> : <span className="self-center whitespace-nowrap text-xs text-muted-foreground">XML e PDF pendentes</span>}</div></td>
     </tr>
   );
 }
