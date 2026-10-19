@@ -14,6 +14,6 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     const arquivo = await gerarDanfeCompartilhado(fiscal.xml);
     if (!arquivo) return Response.json({ erro: "Serviço compartilhado de DANFE não configurado." }, { status: 503 });
     const nome = /^\d{44}$/.test(fiscal.chave ?? "") ? fiscal.chave : fiscal.nsu;
-    return new Response(arquivo, { headers: { "Content-Type": "application/pdf", "Content-Disposition": `attachment; filename="DANFE-${nome}.pdf"`, "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" } });
+    return new Response(new Uint8Array(arquivo), { headers: { "Content-Type": "application/pdf", "Content-Disposition": `attachment; filename="DANFE-${nome}.pdf"`, "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" } });
   } catch { return Response.json({ erro: "Falha ao gerar DANFE no serviço fiscal compartilhado." }, { status: 502 }); }
 }
