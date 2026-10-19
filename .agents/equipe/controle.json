@@ -616,8 +616,8 @@
       "decision": "Cadastros novos usam mensalidade do plano mais 5%; clientes legados ficam em 0%, exceto Vedashow em R$ 350 mais 5% e Bereta Rodas em 3%.",
       "date": "2026-10-18",
       "summary": "Comissão somente para novos cadastros e exceções formalizadas",
-      "reason": "Cadastros novos usam mensalidade do plano mais 5%; clientes legados ficam em 0%, exceto Vedashow em R$ 350 mais 5% e Bereta Rodas em 3%.",
-      "evidence": "Data registrada: 2026-10-18"
+      "reason": "Justificativa não recuperada no registro legado; pendente de documentação.",
+      "evidence": "Evidência de suporte não localizada; decisão ainda não verificada."
     },
     {
       "id": "D-0002",
@@ -625,8 +625,8 @@
       "decision": "O ERP guarda XML, DANFE, fornecedor, produtos, custos, compra e estoque; o Lojas consome a API por tenant e mantém seu coletor atual apenas como compatibilidade de transição.",
       "date": "2026-10-18",
       "summary": "ERP como fonte da escrituração fiscal recebida",
-      "reason": "O ERP guarda XML, DANFE, fornecedor, produtos, custos, compra e estoque; o Lojas consome a API por tenant e mantém seu coletor atual apenas como compatibilidade de transição.",
-      "evidence": "Data registrada: 2026-10-18"
+      "reason": "Justificativa não recuperada no registro legado; pendente de documentação.",
+      "evidence": "Evidência de suporte não localizada; decisão ainda não verificada."
     }
   ],
   "integrations": [
@@ -639,7 +639,7 @@
       "name": "ERP Ávila Ops",
       "environment": "Ambiente não informado no registro original",
       "identity": "Identidade não informada no registro original",
-      "evidence": "GET /api/v1/notas-recebidas e arquivos XML/DANFE com chave de leitura por tenant"
+      "evidence": "Acesso não verificado: faltam ambiente, identidade autorizada e resultado de teste."
     },
     {
       "id": "I-N8N-LOJAS-OPERACAO",
@@ -650,7 +650,7 @@
       "name": "n8n Lojas - Operação Completa",
       "environment": "Ambiente não informado no registro original",
       "identity": "Identidade não informada no registro original",
-      "evidence": "Webhook de eventos e rotinas agendadas; requer reconciliação com as rotinas internas do Lojas"
+      "evidence": "Acesso não verificado: faltam ambiente, identidade autorizada e resultado de teste."
     },
     {
       "id": "I-N8N-MCP-AVILAOPS",
@@ -661,7 +661,7 @@
       "name": "n8n MCP - Avila Ops",
       "environment": "Ambiente não informado no registro original",
       "identity": "Identidade não informada no registro original",
-      "evidence": "Ferramentas MCP com autorização por operação e adaptadores por produto"
+      "evidence": "Acesso não verificado: faltam ambiente, identidade autorizada e resultado de teste."
     }
   ]
 }
