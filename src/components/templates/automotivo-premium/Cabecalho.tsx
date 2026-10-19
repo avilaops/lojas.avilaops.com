@@ -28,7 +28,7 @@ export default function Cabecalho({ loja, logo, logoCompacta, logoEscuro, mostra
   const marca = <><span className="ap-marca-simbolo">{logo && <>
     <Image unoptimized className={logoEscuro ? "ap-logo-claro" : undefined} src={logo} alt={mostrarNome ? "" : loja.nome} width={48} height={48}/>
     {logoEscuro && <Image unoptimized className="ap-logo-escuro" src={logoEscuro} alt={mostrarNome ? "" : loja.nome} width={48} height={48}/>}</>}</span>{(mostrarNome || !logo) && <span>{loja.nome}</span>}</>;
-  const marcaCompacta = logoCompacta && <Image unoptimized className="ap-logo-compacta" src={logoCompacta} alt="" width={48} height={48}/>;
+  const marcaCompacta = logoCompacta && logoCompacta !== logo && <Image unoptimized className="ap-logo-compacta" src={logoCompacta} alt="" width={48} height={48}/>;
   const links = [{href:"/", nome:"Início"}, {href:"/produtos", nome:"Produtos"}, {href:"/sobre", nome:"Sobre"}, {href:"/contato", nome:"Contato"}];
   return <>
     <a href="#conteudo-loja" className="ap-pular">Pular para o conteúdo</a>
