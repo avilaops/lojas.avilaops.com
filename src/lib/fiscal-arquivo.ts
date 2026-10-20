@@ -6,17 +6,18 @@ export async function arquivarXmlFiscal() {
   if (!arquivoFiscalR2Configurado()) return { configurado: false, arquivados: 0, falhas: 0 };
   let arquivados = 0;
   let falhas = 0;
-  for (let lote = 0; lote < 20; lote++) {
+  const prazo = Date.now() + 20 * 60_000;
+  for (let lote = 0; lote < 50 && Date.now() < prazo; lote++) {
     const pendentes = await prisma.documentoFiscalLoja.findMany({
       where: { arquivadoEm: null, schema: { startsWith: "procNFe" }, chave: { not: null } },
       select: { id: true, cnpj: true, chave: true, xml: true },
-      orderBy: [{ recebidoEm: "asc" }, { id: "asc" }], take: 25,
+      orderBy: [{ recebidoEm: "asc" }, { id: "asc" }], take: 100,
     });
     if (!pendentes.length) break;
-    // Máximo de cinco uploads simultâneos; não saturar conexões de banco ou R2.
+    // Máximo de dez uploads simultâneos; não saturar conexões de banco ou R2.
     const resultado: PromiseSettledResult<void>[] = [];
-    for (let i = 0; i < pendentes.length; i += 5) {
-      const parcela = pendentes.slice(i, i + 5);
+    for (let i = 0; i < pendentes.length; i += 10) {
+      const parcela = pendentes.slice(i, i + 10);
       resultado.push(...await Promise.allSettled(parcela.map(async (doc) => {
       if (!/^\d{14}$/.test(doc.cnpj) || !/^\d{44}$/.test(doc.chave ?? "")) throw new Error("Identificação fiscal inválida.");
       const copiado = await guardarArquivoFiscal(doc.cnpj, doc.chave!, "xml", new TextEncoder().encode(doc.xml));
