@@ -63,7 +63,7 @@ export interface DefinicaoRotina {
  */
 export const ROTINAS = {
   "fiscal.receber": {
-    titulo: "Monitor fiscal por CNPJ",
+    titulo: "Monitor por CNPJ",
     descricao: "Sincroniza documentos fiscais dos CNPJs com certificado A1 configurado a cada hora",
     cadencia: { tipo: "intervalo", minutos: 60 },
     travaMinutos: 30,
