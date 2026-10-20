@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { entradaEquipeFoiIniciada } from "@/lib/entrada-equipe";
@@ -65,7 +64,7 @@ export default async function EntrarComoEquipePage() {
           </ul>
         )}
         <p className="pl-auth-links">
-          <Link href="/entrar">Voltar ao login Ávila Ops</Link>
+          <a href="https://avilaops.com">Voltar ao site Ávila Ops</a>
         </p>
       </div>
     </div>
