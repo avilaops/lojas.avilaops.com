@@ -6,6 +6,7 @@ import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3
 // O banco PostgreSQL continua sendo o índice e a origem autorizadora.
 const BUCKET_PADRAO = "avilaops-fiscal-acervo";
 type Ambiente = Record<string, string | undefined>;
+let clienteAtual: { assinatura: string; cliente: S3Client; bucket: string } | null = null;
 
 function configuracao(env: Ambiente) {
   const id = env.CLOUDFLARE_ACCOUNT_ID;
@@ -26,11 +27,14 @@ function configuracao(env: Ambiente) {
   }
   const bucket = env.FISCAL_R2_BUCKET ?? BUCKET_PADRAO;
   if (!id || !/^[a-f0-9]{32}$/.test(id) || !accessKeyId || !secretAccessKey || !/^[a-z0-9-]{3,64}$/.test(bucket)) return null;
-  return {
-    bucket,
-    cliente: new S3Client({ region: "auto", endpoint: `https://${id}.r2.cloudflarestorage.com`,
-      credentials: { accessKeyId, secretAccessKey, ...(sessionToken ? { sessionToken } : {}) }, maxAttempts: 3 }),
-  };
+  // Cliente reaproveitado entre milhares de uploads; troca quando o token diário gira.
+  const assinatura = createHash("sha256").update([id, bucket, accessKeyId, secretAccessKey, sessionToken ?? ""].join("|"), "utf8").digest("hex");
+  if (clienteAtual?.assinatura === assinatura) return clienteAtual;
+  clienteAtual?.cliente.destroy();
+  const cliente = new S3Client({ region: "auto", endpoint: `https://${id}.r2.cloudflarestorage.com`,
+    credentials: { accessKeyId, secretAccessKey, ...(sessionToken ? { sessionToken } : {}) }, maxAttempts: 3 });
+  clienteAtual = { assinatura, cliente, bucket };
+  return clienteAtual;
 }
 
 export function arquivoFiscalChave(cnpj: string, chave: string, formato: "xml" | "pdf") {
