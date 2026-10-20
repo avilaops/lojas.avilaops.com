@@ -45,16 +45,14 @@ export async function POST(request: Request) {
     return Response.json({ erro: "Preencha nome, e-mail e o tipo de acesso. A senha, se houver, precisa de 8 caracteres." }, { status: 400 });
   }
 
-  // Sem senha e sem convite ligado a pessoa ficaria com um acesso que não abre.
-  const cfg = configConvite();
-  if (!r.data.senha && !cfg) return Response.json({ erro: CONVITE_DESLIGADO }, { status: 400 });
+  // O provisionamento é feito em fila persistente, fora da requisição HTTP.
+  // Não aceitar senha local: a autenticação deste produto é centralizada no Auth.
+  if (r.data.senha) return Response.json({ erro: "O funcionário cria sua senha no Auth por convite; não cadastre senha de terceiros." }, { status: 400 });
 
   try {
     const operador = await criarOperador(s.tenant.id, r.data);
-    if (r.data.senha) return Response.json({ operador }, { status: 201 });
-
-    const convite = await convidarParaAEquipe(cfg, { email: operador.email, nome: operador.nome, loja: s.tenant.nome, hostBase: HOST_BASE });
-    return Response.json({ operador: await registrarConvite(s.tenant.id, operador.id, convite), convite }, { status: 201 });
+    const convite = { situacao: "PENDENTE" as const, detalhe: "Convite enfileirado para provisionamento automático no Auth." };
+    return Response.json({ operador: await registrarConvite(s.tenant.id, operador.id, convite), convite }, { status: 202 });
   } catch (e) {
     if (e instanceof ErroOperador) return Response.json({ erro: e.message }, { status: 400 });
     throw e;
