@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
 // Arquivo fiscal privado, sem URLs públicas nem acesso direto pelo navegador.
@@ -8,14 +9,27 @@ type Ambiente = Record<string, string | undefined>;
 
 function configuracao(env: Ambiente) {
   const id = env.CLOUDFLARE_ACCOUNT_ID;
-  const accessKeyId = env.FISCAL_R2_ACCESS_KEY_ID;
-  const secretAccessKey = env.FISCAL_R2_SECRET_ACCESS_KEY;
+  let accessKeyId = env.FISCAL_R2_ACCESS_KEY_ID;
+  let secretAccessKey = env.FISCAL_R2_SECRET_ACCESS_KEY;
+  let sessionToken: string | undefined;
+  if (env.FISCAL_R2_CREDENTIALS_FILE) {
+    // Credenciais TEMPORÁRIAS restritas ao bucket; o segredo principal fica no host.
+    if (!env.FISCAL_R2_CREDENTIALS_FILE.startsWith("/run/secrets/fiscal/")) return null;
+    try {
+      const lido = JSON.parse(readFileSync(env.FISCAL_R2_CREDENTIALS_FILE, "utf8")) as Record<string, unknown>;
+      if (typeof lido.expiresAt !== "number" || lido.expiresAt < Date.now() + 60_000) return null;
+      if (typeof lido.accessKeyId !== "string" || typeof lido.secretAccessKey !== "string" || typeof lido.sessionToken !== "string") return null;
+      accessKeyId = lido.accessKeyId;
+      secretAccessKey = lido.secretAccessKey;
+      sessionToken = lido.sessionToken;
+    } catch { return null; }
+  }
   const bucket = env.FISCAL_R2_BUCKET ?? BUCKET_PADRAO;
   if (!id || !/^[a-f0-9]{32}$/.test(id) || !accessKeyId || !secretAccessKey || !/^[a-z0-9-]{3,64}$/.test(bucket)) return null;
   return {
     bucket,
     cliente: new S3Client({ region: "auto", endpoint: `https://${id}.r2.cloudflarestorage.com`,
-      credentials: { accessKeyId, secretAccessKey }, maxAttempts: 3 }),
+      credentials: { accessKeyId, secretAccessKey, ...(sessionToken ? { sessionToken } : {}) }, maxAttempts: 3 }),
   };
 }
 
