@@ -10,14 +10,15 @@ export default async function EntrarPage({ searchParams }: { searchParams: Promi
   const cfg = configSSO();
   if (cfg && !sso) redirect("/api/painel/entrar/iniciar-sso");
 
-  const recado = sso ? RECADOS_SSO[sso] ?? "Não foi possível concluir o acesso." : "Autenticação Ávila Ops indisponível. Contate o suporte.";
+  const saiu = sso === "saiu";
+  const recado = saiu ? "Sessão do Lojas encerrada." : sso ? RECADOS_SSO[sso] ?? "Não foi possível concluir o acesso." : "Autenticação Ávila Ops indisponível. Contate o suporte.";
   return <main className="pl-site-claro pl-auth-pagina"><div className="pl-auth-simples">
-    <span>Acesso Ávila Ops</span><h1>Não foi possível entrar.</h1>
+    <span>Acesso Ávila Ops</span><h1>{saiu ? "Você saiu do Lojas." : "Não foi possível entrar."}</h1>
     <p role="alert" className="mt-5 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">{recado}</p>
     {cfg && <div className="mt-6 grid gap-3">
       <a href="/api/painel/entrar/iniciar-sso" className="btn-primario w-full justify-center">Tentar novamente</a>
       <form action={`${cfg.url}/api/auth/logout`} method="post">
-        <button type="submit" className="min-h-11 w-full rounded-lg border border-neutral-300 text-sm">Entrar com outra conta Ávila Ops</button>
+        <button type="submit" className="min-h-11 w-full rounded-lg border border-neutral-300 text-sm">Encerrar sessão Ávila Ops para trocar de conta</button>
       </form>
     </div>}
   </div></main>;
