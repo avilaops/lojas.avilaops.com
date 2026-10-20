@@ -1,0 +1,11 @@
+# Monitor fiscal — cadência e acervo privado
+
+- O relógio pode examinar rotinas a cada minuto, mas `fiscal.receber` consulta a SEFAZ uma vez por hora por CNPJ. Dentro de uma execução vencida, consome sequencialmente os NSUs pendentes em lotes de até 50, com orçamento global máximo de 7 minutos e 120 lotes por CNPJ.
+- `FiscalLoja.ultimoNsu` é persistido **na mesma transação que os novos documentos**; em falhas a passagem fica aguardando novo horário. A SEFAZ define disponibilidade, intervalo e retorno dos documentos; não existe garantia de recuperar todo o histórico retroativo.
+- O banco PostgreSQL é a fonte dos índices, permissões, controle por tenant e conteúdo original. A rota de listagem usa `Cache-Control: no-store` e paginação. Não há cache público de nota fiscal nem consulta à SEFAZ ao navegar.
+- Bucket R2 privado: `avilaops-fiscal-acervo`; `r2.dev` deve permanecer desligado. A chave segue `v1/{cnpj}/nfe/{dois-primeiros-digitos-da-chave}/{chave}.xml` ou `.pdf`.
+- `fiscal.arquivar` copia apenas XMLs **completos** para o R2, em lotes de até 500 por execução horária e com até 5 envios simultâneos; marca `arquivadoEm` só depois do upload. Tentativas falhas não apagam o XML do banco.
+- DANFE é produzido pela API fiscal compartilhada; a primeira geração é gravada em R2, e downloads seguintes consultam o PDF persistido. Se o R2 estiver temporariamente indisponível, o banco e o gerador permanecem disponíveis.
+- A autorização dos downloads é sempre feita pelo tenant antes de buscar qualquer objeto. Nunca se deve divulgar URL pública, token R2 ou certificado digital.
+- Ativação exige `CLOUDFLARE_ACCOUNT_ID`, `FISCAL_R2_BUCKET`, `FISCAL_R2_ACCESS_KEY_ID`, `FISCAL_R2_SECRET_ACCESS_KEY`, com permissão **Object Read & Write** restrita apenas ao bucket fiscal. **Não utilizar credenciais R2 globais de backup**. Sem essas variáveis, a funcionalidade continua operando com PostgreSQL/geração sob demanda, e a cópia ao R2 fica inativa.
+- Para 1 milhão de documentos, monitorar atraso do cursor NSU, filas, espaço do banco, tempo de lote e falhas de arquivamento. Necessárias políticas adicionais de retenção e recuperação de desastre antes de remover XML do banco.

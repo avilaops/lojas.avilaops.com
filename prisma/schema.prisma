@@ -405,11 +405,15 @@ model DocumentoFiscalLoja {
   chave      String?
   xml        String   @db.Text
   recebidoEm DateTime @default(now())
+  arquivadoEm DateTime? // XML completo já copiado ao R2 privado
   /// Marcadores duráveis: a retenção da fila não permite reenviar o mesmo documento ao mesmo fluxo.
   fluxosEnfileirados String[] @default([])
 
   @@unique([tenantId, cnpj, nsu])
   @@index([tenantId, recebidoEm])
+  @@index([arquivadoEm, recebidoEm])
+  @@index([tenantId, chave])
+  @@index([tenantId, schema, recebidoEm])
 }
 
 /// Regra fiscal usa um destino já cadastrado e a fila assinada EntregaWebhook.

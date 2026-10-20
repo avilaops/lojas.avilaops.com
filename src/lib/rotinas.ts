@@ -69,6 +69,13 @@ export const ROTINAS = {
     travaMinutos: 30,
     falhasAteAlerta: 3,
   },
+  "fiscal.arquivar": {
+    titulo: "Arquivar XML fiscal",
+    descricao: "Copia XMLs completos para o acervo R2 privado, em lotes, sem consultar a SEFAZ",
+    cadencia: { tipo: "intervalo", minutos: 60 },
+    travaMinutos: 45,
+    falhasAteAlerta: 3,
+  },
   "mercadolivre.avisos": {
     titulo: "Vendas do ML",
     descricao: "Fila do Mercado Livre: venda vira pedido e baixa estoque, envio vira rastreio",

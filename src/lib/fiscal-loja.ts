@@ -12,14 +12,24 @@ export const RESUMO_FISCAL = {
 export async function receberNotasPeriodicamente() {
   const lojas = await prisma.fiscalLoja.findMany({
     where: { proximaConsultaEm: { lte: new Date() }, validoAte: { gt: new Date() }, tenant: { status: "ATIVA" } },
-    orderBy: { proximaConsultaEm: "asc" }, take: 5, select: { tenantId: true, tenant: { select: { cnpj: true } } },
+    orderBy: { proximaConsultaEm: "asc" }, take: 25, select: { tenantId: true, tenant: { select: { cnpj: true } } },
   });
   let recebidos = 0;
   let falhas = 0;
+  const limiteGeral = Date.now() + 7 * 60_000;
   for (const loja of lojas) {
+    if (Date.now() >= limiteGeral) break;
     if (loja.tenant.cnpj && fiscalErpConfigurado(loja.tenant.cnpj)) continue;
-    try { recebidos += (await sincronizarNotas(loja.tenantId)).recebidos; }
-    catch { falhas++; }
+    try {
+      // Um disparo por hora, mas drena os NSUs pendentes em lotes contínuos.
+      // Limite de tempo e de lotes para não monopolizar o servidor.
+      const limiteAte = limiteGeral;
+      for (let lote = 0; lote < 120 && Date.now() < limiteAte; lote++) {
+        const resultado = await sincronizarNotas(loja.tenantId);
+        recebidos += resultado.recebidos;
+        if (!resultado.haMaisNsu) break;
+      }
+    } catch { falhas++; }
   }
   if (falhas) throw new ErroFiscal(`${falhas} consulta(s) fiscal(is) falharam. Confira a mensagem na configuração fiscal de cada loja.`);
   return { lojas: lojas.length, recebidos };
@@ -66,7 +76,7 @@ export async function sincronizarNotas(tenantId: string, consultar: typeof consu
       } });
       return { recebidos: novos.length, enfileirados };
     });
-    return { ...resultado, mensagem: resposta.mensagem, proximaConsultaEm, cursorAjustado };
+    return { ...resultado, mensagem: resposta.mensagem, proximaConsultaEm, cursorAjustado, haMaisNsu: resposta.status === "138" && resposta.ultimoNsu < resposta.maxNsu };
   } catch (erro) {
     const mensagem = erro instanceof ErroFiscal ? erro.message : "Não foi possível salvar a consulta fiscal. Tente novamente após o intervalo.";
     await prisma.fiscalLoja.update({ where: { tenantId }, data: { ultimaMensagem: mensagem, proximaConsultaEm: new Date(Date.now() + 3_600_000) } });
