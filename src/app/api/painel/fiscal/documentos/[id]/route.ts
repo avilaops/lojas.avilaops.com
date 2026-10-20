@@ -13,7 +13,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     try { conteudo = await lerArquivoFiscal(documento.cnpj, documento.chave!, "xml") ?? documento.xml; }
     catch { console.error("[fiscal] cache XML indisponível; usando banco"); }
   }
-  return new Response(conteudo, { headers: {
+  return new Response(typeof conteudo === "string" ? conteudo : new Uint8Array(conteudo), { headers: {
     "Content-Type": "application/xml; charset=utf-8",
     "Content-Disposition": `attachment; filename="${documento.nsu}.xml"`,
     "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff",
