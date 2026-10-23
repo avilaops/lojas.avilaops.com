@@ -18,7 +18,9 @@
 
   /* Texto */
   --ck-fg: #18181b;
-  --ck-fg-muted: #71717a;
+  /* Mantém pelo menos 4,5:1 também sobre `--ck-accent-soft`, usado na opção
+     selecionada. #71717a ficava em 4,19:1 sobre o azul-claro padrão. */
+  --ck-fg-muted: #62626b;
 
   /* Marca , é isto que cada cliente troca */
   --ck-accent: #2563eb;

@@ -1,0 +1,61 @@
+{
+  "tenant": {
+    "id": "cmvlgci2q0000pbpja0od1zh0",
+    "slug": "vedashow-qa-1792789109266"
+  },
+  "produto": {
+    "id": "cmvlgci3k0004pbpjhg4yedta",
+    "nome": "Retentor QA 25 × 40 × 7 mm"
+  },
+  "pedido": {
+    "id": "cmvlgcrc7000xpbc2n9itfda4",
+    "status": "AGUARDANDO_PAGAMENTO",
+    "pagamentoStatus": "aguardando_confirmacao",
+    "totalCentavos": 4590,
+    "gateway": "pix_manual"
+  },
+  "verificacoes": {
+    "buscaPorSku": true,
+    "filtroDisponibilidade": true,
+    "retornoPreservaConsulta": true,
+    "carrinhoPersistiuAposReload": true,
+    "errosDeFormularioExibidos": true,
+    "freteRetiradaSelecionado": true,
+    "pixGeradoSemPagamentoReal": true,
+    "confirmacaoEnviadaParaConferencia": true,
+    "carrinhoLimpoAposPedido": true
+  },
+  "telas": [
+    {
+      "etapa": "busca-e-filtro",
+      "url": "http://vedashow-qa-1792789109266.localhost:3080/produtos?q=RET-QA-254007&ordem=relevancia&fabricante=&categoria=&min=&max=&porPagina=48&disponivel=1&di_de=&di_ate=&de_de=&de_ate=&alt_de=&alt_ate=",
+      "overflowHorizontal": false,
+      "falhasAcessibilidadeSerias": []
+    },
+    {
+      "etapa": "carrinho-persistente",
+      "url": "http://vedashow-qa-1792789109266.localhost:3080/carrinho",
+      "overflowHorizontal": false,
+      "falhasAcessibilidadeSerias": []
+    },
+    {
+      "etapa": "frete-e-pagamento",
+      "url": "http://vedashow-qa-1792789109266.localhost:3080/checkout",
+      "overflowHorizontal": false,
+      "falhasAcessibilidadeSerias": []
+    },
+    {
+      "etapa": "pix-gerado",
+      "url": "http://vedashow-qa-1792789109266.localhost:3080/checkout",
+      "overflowHorizontal": false,
+      "falhasAcessibilidadeSerias": []
+    },
+    {
+      "etapa": "confirmacao-enviada",
+      "url": "http://vedashow-qa-1792789109266.localhost:3080/checkout",
+      "overflowHorizontal": false,
+      "falhasAcessibilidadeSerias": []
+    }
+  ],
+  "errosDoNavegador": []
+}

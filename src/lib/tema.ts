@@ -194,7 +194,9 @@ export function cssDoTema(tema: TemaLoja, familia?: string): string {
   const superficie = escuro ? "#141416" : "#ffffff";
   const suave = escuro ? "#1c1c1f" : "#f6f6f7";
   const borda = escuro ? "#2a2a2e" : "#e4e4e7";
-  const textoSuave = escuro ? "#a1a1aa" : "#71717a";
+  // O texto secundário também aparece sobre a seleção azul-clara do checkout.
+  // #71717a ficava em 4,19:1 nessa superfície; o novo valor preserva WCAG AA.
+  const textoSuave = escuro ? "#a1a1aa" : "#62626b";
   const raio = RAIOS[tema.raio];
   // `familia` é a fonte hospedada pelo site (`fontes-loja.ts`). Sem ela vale o
   // nome da família, que o navegador só resolve se a folha já estiver na página.

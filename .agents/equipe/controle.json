@@ -607,6 +607,35 @@
           "note": "Registro preservado na consolidação dos merges."
         }
       ]
+    },
+    {
+      "id": "T-0014",
+      "title": "Validar a jornada móvel de compra da VedaShow",
+      "objective": "Comprovar no tenant VedaShow a jornada da busca técnica até a confirmação de Pix sem executar pagamento real.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "concluida",
+      "acceptanceCriteria": [
+        "A busca por referência e o filtro de disponibilidade retornam o produto correto.",
+        "A ficha técnica explicita as medidas cadastradas e preserva o retorno ao catálogo.",
+        "O carrinho persiste após recarregar a página.",
+        "O checkout valida campos obrigatórios e permite escolher retirada ou frete.",
+        "O Pix manual é gerado e o aviso de pagamento não marca o pedido como pago.",
+        "As telas críticas não apresentam vazamento horizontal nem violações Axe sérias ou críticas.",
+        "Testes, TypeScript, ESLint e build de produção passam."
+      ],
+      "evidence": "E2E móvel executado em PostgreSQL de teste isolado com tenant efêmero da VedaShow e compra sem pagamento real.\nBusca por SKU, filtro de disponibilidade, ficha técnica, retorno ao catálogo, carrinho persistente, validação do formulário, retirada, Pix e confirmação foram aprovados.\nCinco telas verificadas sem vazamento horizontal e sem violações Axe sérias ou críticas.\n1.223 testes aprovados; TypeScript, ESLint, build de produção e git diff --check concluídos sem erros.\nArtefatos: output/vedashow-avl-265/jornada-compra/.",
+      "review": "A validação identificou e corrigiu contraste insuficiente em controles móveis e checkout, além de nomes acessíveis ausentes nos links de sugestão e nos campos Pix. O pedido permaneceu aguardando confirmação; nenhum pagamento real foi realizado.",
+      "environment": "local-isolado",
+      "owner": null,
+      "acceptance": "A jornada móvel da VedaShow funciona da busca técnica à confirmação de Pix, preserva estado e não cria falsa confirmação de pagamento.",
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-10-23",
+          "note": "Validação reproduzível adicionada em scripts/qa-jornada-compra.mts."
+        }
+      ]
     }
   ],
   "decisions": [

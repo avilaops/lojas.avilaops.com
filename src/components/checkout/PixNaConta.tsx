@@ -71,7 +71,7 @@ export default function PixNaConta({
         // eslint-disable-next-line @next/next/no-img-element
         <img src={`data:image/png;base64,${qrCodeBase64}`} alt="QR Code do Pix" className="mx-auto mt-6 h-56 w-56 rounded-lg border border-border bg-white p-2" />
       )}
-      <textarea readOnly value={copiaECola} className="mt-4 h-24 w-full rounded-lg border border-border bg-card p-2 text-xs" onFocus={(e) => e.currentTarget.select()} />
+      <textarea aria-label="Código Pix copia e cola" readOnly value={copiaECola} className="mt-4 h-24 w-full rounded-lg border border-border bg-card p-2 text-xs" onFocus={(e) => e.currentTarget.select()} />
       <button type="button" className="btn-secundario mt-2 w-full" onClick={() => navigator.clipboard?.writeText(copiaECola)}>
         Copiar código
       </button>

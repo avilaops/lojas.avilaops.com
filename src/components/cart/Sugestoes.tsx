@@ -42,7 +42,7 @@ export default function Sugestoes() {
       <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {sugestoes.map((s) => (
           <li key={s.id} className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
-            <a href={`/produtos/${s.slug}`} className="block aspect-square bg-muted">
+            <a href={`/produtos/${s.slug}`} className="block aspect-square bg-muted" aria-label={`Ver ${s.nome}`}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               {s.imagem && <img src={s.imagem} alt="" className="h-full w-full object-cover" loading="lazy" />}
             </a>
