@@ -1,24 +1,31 @@
-export const VERSAO = '1.0.0';
+export const VERSAO = '1.0.1';
+
+function partesHttps(texto) {
+  const m = typeof texto === 'string' ? texto.match(/^https:\/\/([a-z0-9.-]+)(\/[^\s?#]*)?(?:[?#][^\s]*)?$/i) : null;
+  if (!m || m[1].split('.').some(label => !/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/i.test(label))) return null;
+  return { origem: 'https://' + m[1].toLowerCase(), host: m[1].toLowerCase(), caminho: m[2] || '/' };
+}
 
 export function validarLoja(entrada) {
   if (!entrada || !/^[a-z0-9][a-z0-9-]{0,79}$/.test(entrada.slug ?? '')) {
     throw new Error('Loja precisa de slug válido.');
   }
-  const url = new URL(entrada.url);
-  if (url.protocol !== 'https:' || url.username || url.password || url.port
-    || url.search || url.hash || url.pathname !== '/') {
+  const url = partesHttps(entrada.url);
+  if (!url || /[?#]/.test(entrada.url) || url.caminho !== '/') {
     throw new Error('Use a origem HTTPS pública, sem caminho, porta ou credenciais.');
   }
-  if (!/^[a-z0-9-]+(?:\.[a-z0-9-]+)+$/i.test(url.hostname)
-    || /(?:^|\.)(?:localhost|local|internal|test|invalid)$/.test(url.hostname)
-    || /^\d+(?:\.\d+){3}$/.test(url.hostname)) {
+  if (!/^[a-z0-9-]+(?:\.[a-z0-9-]+)+$/i.test(url.host)
+    || /(?:^|\.)(?:localhost|local|internal|test|invalid)$/.test(url.host)
+    || /^\d+(?:\.\d+){3}$/.test(url.host)) {
     throw new Error('Domínio público inválido.');
   }
   const objetivo = entrada.objetivo ?? 'nao-definido';
   if (!['compra-online', 'pedido-assistido', 'nao-definido'].includes(objetivo)) {
     throw new Error('Objetivo comercial inválido.');
   }
-  return { slug: entrada.slug, url: url.origin, objetivo, segmento: entrada.segmento ?? 'geral' };
+  const statusPlataforma = ['ATIVA', 'CANCELADA', 'SUSPENSA', 'PROVISIONANDO'].includes(entrada.statusPlataforma)
+    ? entrada.statusPlataforma : null;
+  return { slug: entrada.slug, url: url.origem, objetivo, segmento: entrada.segmento ?? 'geral', statusPlataforma };
 }
 
 export function atributos(tag) {
@@ -58,12 +65,9 @@ export function urlsDoSitemap(xml, origem) {
   const urls = [];
   let externas = 0;
   for (const m of xml.matchAll(/<loc>\s*([^<]+)\s*<\/loc>/gi)) {
-    try {
-      const url = new URL(m[1].trim().replace(/&amp;/g, '&'));
-      if (url.origin !== origem) { externas++; continue; }
-      url.search = ''; url.hash = '';
-      urls.push(url.href);
-    } catch { externas++; }
+    const url = partesHttps(m[1].trim().replace(/&amp;/g, '&'));
+    if (!url || url.origem !== origem) { externas++; continue; }
+    urls.push(url.origem + url.caminho);
   }
   return { urls: [...new Set(urls)], externas, indice: /<sitemapindex\b/i.test(xml) };
 }
@@ -74,6 +78,11 @@ export function verificacao(id, estado, prioridade, url, esperado, observado) {
 
 export function analisarResposta(loja, recurso, resposta) {
   const { url, status, corpo = '', erro } = resposta;
+  if (loja.statusPlataforma && loja.statusPlataforma !== 'ATIVA') {
+    return [verificacao(`${recurso}.fora-operacao`, 'NAO_APLICAVEL', 'P2', url,
+      'Não cobrar publicação comercial de loja fora de operação',
+      `Cadastro ${loja.statusPlataforma}; HTTP ${status ?? 'indisponível'}. ${erro ?? 'Sem certificação comercial.'}`)];
+  }
   if (erro) return [verificacao(`${recurso}.http`, 'BLOQUEADO', 'P1', url,
     'Resposta HTTP verificável', erro)];
   const saida = [verificacao(`${recurso}.http`, status === 200 ? 'PASSOU' : 'FALHOU',
@@ -85,8 +94,7 @@ export function analisarResposta(loja, recurso, resposta) {
       'Title preenchido', p.titulo || 'Ausente'));
     saida.push(verificacao(`${recurso}.descricao`, p.descricao ? 'PASSOU' : 'FALHOU', 'P2', url,
       'Meta description preenchida', p.descricao || 'Ausente'));
-    let canonicalCorreto = false;
-    try { canonicalCorreto = new URL(p.canonical).origin === loja.url; } catch { /* ausente ou inválido */ }
+    const canonicalCorreto = partesHttps(p.canonical)?.origem === loja.url;
     saida.push(verificacao(`${recurso}.canonical`, canonicalCorreto ? 'PASSOU' : 'FALHOU', 'P1', url,
       'Canonical no domínio auditado', p.canonical || 'Ausente'));
     saida.push(verificacao(`${recurso}.indexavel`, /noindex/i.test(p.robots) ? 'FALHOU' : 'PASSOU', 'P1', url,
@@ -140,17 +148,20 @@ export function concluir(loja, testes) {
   const bloqueados = testes.filter(t => ['BLOQUEADO', 'NAO_TESTADO'].includes(t.estado));
   return {
     versao: VERSAO, executadoEm: new Date().toISOString(), loja,
-    status: falhas.some(t => t.prioridade === 'P0') ? 'FALHA_CRITICA'
+    status: loja.statusPlataforma && loja.statusPlataforma !== 'ATIVA' ? 'FORA_DE_OPERACAO'
+      : falhas.some(t => t.prioridade === 'P0') ? 'FALHA_CRITICA'
       : falhas.length ? 'COM_PENDENCIAS' : bloqueados.length ? 'PARCIAL' : 'VERIFICADO',
     prontidaoComercial: 'NAO_CERTIFICADA',
     cobertura: { passou: testes.filter(t => t.estado === 'PASSOU').length, falhou: falhas.length,
       bloqueado: testes.filter(t => t.estado === 'BLOQUEADO').length,
-      naoTestado: testes.filter(t => t.estado === 'NAO_TESTADO').length },
+      naoTestado: testes.filter(t => t.estado === 'NAO_TESTADO').length,
+      naoAplicavel: testes.filter(t => t.estado === 'NAO_APLICAVEL').length },
     testes,
   };
 }
 
 export function revisoesPendentes(loja) {
+  if (loja.statusPlataforma && loja.statusPlataforma !== 'ATIVA') return [];
   return [
     ['visual.desktop', 'Revisar hierarquia, legibilidade, contraste, fotos e navegação desktop'],
     ['visual.mobile', 'Revisar menu, busca, produto e carrinho mobile com capturas'],

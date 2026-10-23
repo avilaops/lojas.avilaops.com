@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import * as zlib from "node:zlib";
 import { inflateRawSync } from "node:zlib";
-import { COLUNAS_PRODUTO, lerCsvProdutos, produtosDeLinhas } from "./planilha-produtos";
+import { categoriaDePlanilhaValida, COLUNAS_PRODUTO, lerCsvProdutos, produtosDeLinhas } from "./planilha-produtos";
 import { ErroPlanilha, linhasDeXlsx } from "./xlsx-leitor";
 import { linhaDoProduto, modeloDeProdutosEmLinhas, montarPlanilha, type ProdutoDePlanilha } from "./exportar";
 import { letraDaColuna, montarXlsx } from "./xlsx";
@@ -34,6 +34,14 @@ const PRODUTO: ProdutoDePlanilha = {
   categoria: { nome: "Rolamentos" },
   correspondenciaImagem: "nao_confirmada",
 };
+
+test("recusa lista e texto corrompido como nome de categoria", () => {
+  assert.equal(categoriaDePlanilhaValida("Controle de Pragas"), true);
+  assert.equal(categoriaDePlanilhaValida("Casa, Mesa e Banho"), true);
+  assert.equal(categoriaDePlanilhaValida("SANEANTES,DOMISSANEANTES,AGRÍCOLAS,LIMPEZA"), false);
+  assert.equal(categoriaDePlanilhaValida("AGR�COLAS"), false);
+  assert.equal(categoriaDePlanilhaValida("Inseticidas|Herbicidas"), false);
+});
 
 function planilhaDe(produtos: ProdutoDePlanilha[]): string {
   return montarPlanilha([[...COLUNAS_PRODUTO], ...produtos.map(linhaDoProduto)], "csv", "Produtos") as string;

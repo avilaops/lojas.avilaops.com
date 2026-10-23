@@ -20,6 +20,9 @@ export type EntradaChecklist = {
   dominioPrincipal: string | null;
   produtosAtivos: number;
   mpConfigurado: boolean;
+  /** A credencial padrão respondeu ao último teste e o resultado foi persistido. */
+  recebimentoTestado: boolean;
+  recebimentoTestadoEm: string | null;
   /** Regra atual da plataforma, incluindo provedores diferentes do Mercado Pago. */
   recebimentoConfigurado?: boolean;
   cepOrigem: string | null;
@@ -89,13 +92,22 @@ function catalogo(e: EntradaChecklist): PassoChecklist {
 }
 
 function recebimento(e: EntradaChecklist): PassoChecklist {
-  const feito = e.recebimentoConfigurado ?? e.mpConfigurado === true;
+  const configurado = e.recebimentoConfigurado ?? e.mpConfigurado === true;
+  const feito = configurado && e.recebimentoTestado === true;
   const detalhe = feito
-    ? "O recebimento online está configurado. Valide o pagamento antes de considerar o recebimento homologado."
-    : e.recebimentoConfigurado === undefined
-      ? "Sem a conta do Mercado Pago, o cliente monta o carrinho e não consegue pagar."
-      : "O recebimento online ainda não está disponível. A solicitação pelo carrinho depende do atendimento da loja.";
-  return { id: "recebimento", titulo: "Recebimento", feito, opcional: false, detalhe, href: "/painel/configuracoes/recebimento", acao: "Configurar o recebimento" };
+    ? `A conta de recebimento foi testada${e.recebimentoTestadoEm ? ` em ${new Date(e.recebimentoTestadoEm).toLocaleDateString("pt-BR")}` : ""}. O teste de conexão não substitui a homologação do fluxo de compra.`
+    : configurado
+      ? "A conta está configurada, mas ainda não passou por um teste positivo. A loja não é considerada pronta para vender."
+      : "Sem uma conta de recebimento, o cliente monta o carrinho e não consegue pagar.";
+  return {
+    id: "recebimento",
+    titulo: "Recebimento",
+    feito,
+    opcional: false,
+    detalhe,
+    href: "/painel/configuracoes/recebimento",
+    acao: configurado ? "Testar o recebimento" : "Configurar o recebimento",
+  };
 }
 
 function entrega(e: EntradaChecklist): PassoChecklist {

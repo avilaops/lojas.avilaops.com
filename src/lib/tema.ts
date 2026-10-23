@@ -49,6 +49,9 @@ export const TemaSchema = z.object({
     editorialImagemSecundaria: z.string().max(1000).regex(/^(https:\/\/|\/(?!\/))[^<>"\\]*$/).optional(),
     editorialTitulo: z.string().max(120).optional(),
     editorialTexto: z.string().max(400).optional(),
+    editorialSecundarioSelo: z.string().max(90).optional(),
+    editorialSecundarioTitulo: z.string().max(120).optional(),
+    editorialSecundarioTexto: z.string().max(400).optional(),
     logoEscuroUrl: z.string().max(1000).regex(/^(https:\/\/|\/(?!\/))[^<>"\\]*$/).optional(),
     mostrarNome: z.boolean().optional(),
     etapas: z.array(z.object({

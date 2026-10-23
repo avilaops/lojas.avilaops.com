@@ -104,7 +104,7 @@ export default async function PreviaDoTema({ searchParams }: { searchParams: Pro
         <SemPreCarregamento>
           <CartProvider slug={`previa-${loja.slug}`}>
             {usaBlocoProprio(tema, "cabecalho")
-              ? <CabecalhoPremium loja={publico} logo={previa.logoUrl} logoEscuro={tema.premium?.logoEscuroUrl} mostrarNome={tema.premium?.mostrarNome} categorias={menu} modo={tema.modo} />
+              ? <CabecalhoPremium loja={publico} logo={previa.logoUrl} logoCompacta={previa.faviconUrl} logoEscuro={tema.premium?.logoEscuroUrl} mostrarNome={tema.premium?.mostrarNome} categorias={menu} modo={tema.modo} />
               : <Header loja={publico} logoUrl={previa.logoUrl} mostrarNome={tema.mostrarNomeNoCabecalho} categorias={menu} mostrarPromocoes={campanhasDaLoja(tema).length > 0} />}
             <main className="flex-1">
               {comporHome(tema, { t: previa, identidade, categorias, vitrine, temDestaques: vitrine.some((p) => p.destaque), vende: lojaVende(previa), looks })}

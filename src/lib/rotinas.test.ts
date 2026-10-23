@@ -126,3 +126,9 @@ test("a fila do Mercado Livre é a mais frequente do catálogo", () => {
   assert.equal(ml.tipo, "intervalo");
   assert.ok(ml.tipo === "intervalo" && ml.minutos <= 5);
 });
+
+test("monitor fiscal tem cadência horária, independente do agendador por minuto", () => {
+  assert.deepEqual(ROTINAS["fiscal.receber"].cadencia, { tipo: "intervalo", minutos: 60 });
+  const inicio = new Date("2026-10-19T12:00:00.000Z");
+  assert.equal(proximaExecucao(ROTINAS["fiscal.receber"].cadencia, inicio).toISOString(), "2026-10-19T13:00:00.000Z");
+});

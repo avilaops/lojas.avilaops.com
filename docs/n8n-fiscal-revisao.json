@@ -1,0 +1,92 @@
+{
+  "workflowId": "p063mxq8dQijjBDL",
+  "nota": "Ramo isolado; publicar após endpoints. Credenciais apenas por referência. Fonte canônica: workflow vivo.",
+  "nodes": [
+    {
+      "name": "Receber Documento Fiscal",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        5100
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lojas-fiscal",
+        "authentication": "none",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "notes": "Assinatura HMAC de cada loja validada na plataforma antes de persistir; sem ações de estoque/financeiro."
+    },
+    {
+      "name": "Validar e Registrar Revisão Fiscal",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        260,
+        5100
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "BIftJgoyPwxr2d55",
+          "name": "Lojas Admin Token"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://lojas.avilaops.com/api/admin/fiscal/n8n/receber",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ entregaId: $json.headers['x-lojas-entrega'], eventId: $json.body?.id, tenantId: $json.body?.tenantId, assinatura: $json.headers['x-lojas-assinatura'], execucaoId: String($execution.id) }) }}",
+        "options": {
+          "timeout": 5000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "notes": "Persiste referência de revisão no outbox existente e devolve duplicado. Nunca recebe segredo fiscal, nem executa escritas operacionais."
+    },
+    {
+      "name": "Confirmar Recepção Fiscal",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        540,
+        5100
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.body }}",
+        "options": {
+          "responseCode": "={{ $json.statusCode }}",
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "connections": [
+    [
+      "Receber Documento Fiscal",
+      "Validar e Registrar Revisão Fiscal"
+    ],
+    [
+      "Validar e Registrar Revisão Fiscal",
+      "Confirmar Recepção Fiscal"
+    ]
+  ]
+}

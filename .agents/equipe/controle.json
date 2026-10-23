@@ -4,6 +4,32 @@
   "members": [],
   "tasks": [
     {
+      "id": "VITRINES-COMPRA-20261018",
+      "title": "Compactar catálogo mobile e oferecer ajuda contextual",
+      "objective": "Reduzir espaço antes dos produtos nas vitrines e levar a consulta ao WhatsApp da própria loja.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "Busca e filtros usam URLs GET e preservam valores ativos.",
+        "Busca por medidas aparece antes dos controles comerciais.",
+        "Capa e cards técnicos possuem tratamento compacto no celular.",
+        "Atendimento recebe contexto da consulta somente no canal configurado pela loja."
+      ],
+      "evidence": "20 testes direcionados aprovados, incluindo 6 testes de renderização HTML.\nTypeScript, ESLint direcionado e build Next aprovados.\nDetalhes e limitações em evidencias/vitrines-compra-2026-10-18.md.",
+      "review": "Autorrevisão do diff; pendentes validação visual em navegador com tenants de teste, integração, CI e publicação. Dados técnicos de SKUs não foram alterados.",
+      "environment": "local",
+      "owner": null,
+      "acceptance": "Busca e filtros usam URLs GET e preservam valores ativos.\nBusca por medidas aparece antes dos controles comerciais.\nCapa e cards técnicos possuem tratamento compacto no celular.\nAtendimento recebe contexto da consulta somente no canal configurado pela loja.",
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-10-18",
+          "note": "Registro preservado na consolidação dos merges."
+        }
+      ]
+    },
+    {
       "id": "T-0001",
       "title": "Facilitar a consulta dos anúncios da Brilhax no Mercado Livre",
       "objective": "Exibir automaticamente no painel os anúncios ativos, preços, estoque, vínculo com o catálogo e divergências.",
@@ -16,15 +42,19 @@
         "O painel resume anúncios ativos, vinculados, reconhecidos e sem vínculo.",
         "Anúncios reconhecidos mostram diferença de preço em reais e percentual."
       ],
-      "evidence": [
-        "Ambiente local: ESLint do componente sem erros.",
-        "Ambiente local: TypeScript sem erros.",
-        "Ambiente local: build de produção concluído.",
-        "Ambiente local: 14 testes de adoção do Mercado Livre aprovados.",
-        "Suíte geral: 1074 testes aprovados; os 2 testes fiscais inicialmente bloqueados pelo OpenSSL local foram repetidos com a instalação correta e aprovados."
-      ],
+      "evidence": "Ambiente local: ESLint do componente sem erros.\nAmbiente local: TypeScript sem erros.\nAmbiente local: build de produção concluído.\nAmbiente local: 14 testes de adoção do Mercado Livre aprovados.\nSuíte geral: 1074 testes aprovados; os 2 testes fiscais inicialmente bloqueados pelo OpenSSL local foram repetidos com a instalação correta e aprovados.",
       "review": "Autorrevisão concluída; consulta permanece somente leitura e vinculação continua exigindo escolha explícita do lojista.",
-      "environment": "local"
+      "environment": "local",
+      "owner": null,
+      "acceptance": "A consulta carrega sem exigir clique inicial.\nO cliente consegue buscar por nome, MLB ou SKU.\nO painel resume anúncios ativos, vinculados, reconhecidos e sem vínculo.\nAnúncios reconhecidos mostram diferença de preço em reais e percentual.",
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-10-18",
+          "status": "concluida",
+          "note": "Registro legado normalizado para o contrato central."
+        }
+      ]
     },
     {
       "id": "T-0002",
@@ -39,14 +69,19 @@
         "A linha pode ser aberta pelo teclado com Enter.",
         "O comportamento existente no celular permanece inalterado."
       ],
-      "evidence": [
-        "ESLint do componente ListaDeRegistros concluído sem erros.",
-        "TypeScript concluído sem erros.",
-        "Build otimizado de produção concluído e BUILD_ID gerado.",
-        "A navegação da linha ignora links, botões, campos e controles com role button."
-      ],
+      "evidence": "ESLint do componente ListaDeRegistros concluído sem erros.\nTypeScript concluído sem erros.\nBuild otimizado de produção concluído e BUILD_ID gerado.\nA navegação da linha ignora links, botões, campos e controles com role button.",
       "review": "Autorrevisão concluída; o comportamento móvel foi preservado e a ação Separar continua independente da navegação da linha.",
-      "environment": "local"
+      "environment": "local",
+      "owner": null,
+      "acceptance": "Qualquer área livre da linha abre a tela de detalhes do pedido.\nBotões, links e campos interativos da linha não disparam a navegação da linha.\nA linha pode ser aberta pelo teclado com Enter.\nO comportamento existente no celular permanece inalterado.",
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-10-18",
+          "status": "concluida",
+          "note": "Registro legado normalizado para o contrato central."
+        }
+      ]
     },
     {
       "id": "T-0003",
@@ -59,9 +94,19 @@
         "O campo Razão social não exibe texto auxiliar.",
         "Consulta de CNPJ e salvamento da razão social permanecem inalterados."
       ],
-      "evidence": ["Texto auxiliar removido do componente sem alterar o estado ou a carga enviada pela razão social."],
+      "evidence": "Texto auxiliar removido do componente sem alterar o estado ou a carga enviada pela razão social.",
       "review": "Alteração visual isolada; consulta de CNPJ e persistência permanecem intactas.",
-      "environment": "local"
+      "environment": "local",
+      "owner": null,
+      "acceptance": "O campo Razão social não exibe texto auxiliar.\nConsulta de CNPJ e salvamento da razão social permanecem inalterados.",
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-10-18",
+          "status": "concluida",
+          "note": "Registro legado normalizado para o contrato central."
+        }
+      ]
     },
     {
       "id": "T-0004",
@@ -77,13 +122,19 @@
         "Conteúdo longo de produtos, clientes e empresa não estica a página.",
         "O layout desktop preserva a barra lateral e usa a largura disponível sem sobreposição."
       ],
-      "evidence": [
-        "Validação ao vivo em /painel: viewport interno de 487 px, largura rolável de 487 px e ausência de rolagem horizontal.",
-        "Validação ao vivo em /painel/analises: viewport interno de 487 px, largura rolável de 468 px e ausência de rolagem horizontal.",
-        "ESLint, TypeScript e build de produção concluídos; navegação lateral desktop preservada."
-      ],
+      "evidence": "Validação ao vivo em /painel: viewport interno de 487 px, largura rolável de 487 px e ausência de rolagem horizontal.\nValidação ao vivo em /painel/analises: viewport interno de 487 px, largura rolável de 468 px e ausência de rolagem horizontal.\nESLint, TypeScript e build de produção concluídos; navegação lateral desktop preservada.",
       "review": "Base visual responsiva aplicada ao painel, com filtros, indicadores, listas e formulários adaptados para toque e conteúdo longo contido.",
-      "environment": "producao"
+      "environment": "producao",
+      "owner": null,
+      "acceptance": "O painel não apresenta rolagem horizontal acidental em larguras de 360 a 430 px.\nVisão geral e Análises reorganizam indicadores, filtros, gráficos e rankings para celular.\nCampos, botões e navegação mantêm alvos de toque de pelo menos 44 px.\nConteúdo longo de produtos, clientes e empresa não estica a página.\nO layout desktop preserva a barra lateral e usa a largura disponível sem sobreposição.",
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-10-18",
+          "status": "concluida",
+          "note": "Registro legado normalizado para o contrato central."
+        }
+      ]
     },
     {
       "id": "T-0005",
@@ -98,15 +149,19 @@
         "Os dois formatos retornam a mesma estrutura de dados da empresa.",
         "O CNPJ 67.554.083/0001-31 pode ser localizado por ambas as fontes."
       ],
-      "evidence": [
-        "BrasilAPI respondeu HTTP 200 para 67.554.083/0001-31 a partir da estação local e do servidor applications.",
-        "CNPJ.ws respondeu com razão social e endereço completos para o mesmo CNPJ.",
-        "Três testes de normalização aprovados.",
-        "Consulta real pela função retornou BRILHAX PRODUTOS PARA ESTETICA AUTOMOTIVA LTDA, Ribeirão Preto/SP.",
-        "TypeScript concluído sem erros."
-      ],
+      "evidence": "BrasilAPI respondeu HTTP 200 para 67.554.083/0001-31 a partir da estação local e do servidor applications.\nCNPJ.ws respondeu com razão social e endereço completos para o mesmo CNPJ.\nTrês testes de normalização aprovados.\nConsulta real pela função retornou BRILHAX PRODUTOS PARA ESTETICA AUTOMOTIVA LTDA, Ribeirão Preto/SP.\nTypeScript concluído sem erros.",
       "review": "A segunda fonte só é chamada após falha da principal e entrega o mesmo contrato interno, sem mudar o formulário.",
-      "environment": "local"
+      "environment": "local",
+      "owner": null,
+      "acceptance": "A BrasilAPI permanece como fonte principal.\nA consulta usa CNPJ.ws quando a fonte principal falha.\nOs dois formatos retornam a mesma estrutura de dados da empresa.\nO CNPJ 67.554.083/0001-31 pode ser localizado por ambas as fontes.",
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-10-18",
+          "status": "concluida",
+          "note": "Registro legado normalizado para o contrato central."
+        }
+      ]
     },
     {
       "id": "T-0006",
@@ -122,14 +177,19 @@
         "XML com DTD ou entidade não é interpretado.",
         "Download do XML permanece disponível."
       ],
-      "evidence": [
-        "Três testes do resumo fiscal aprovados, incluindo rejeição de XML inseguro.",
-        "ESLint e TypeScript concluídos sem erros.",
-        "Build de produção concluído após uma repetição por falha intermitente do libvips na imagem Open Graph.",
-        "A API resume o XML no servidor e não inclui o conteúdo bruto na resposta da tela."
-      ],
+      "evidence": "Três testes do resumo fiscal aprovados, incluindo rejeição de XML inseguro.\nESLint e TypeScript concluídos sem erros.\nBuild de produção concluído após uma repetição por falha intermitente do libvips na imagem Open Graph.\nA API resume o XML no servidor e não inclui o conteúdo bruto na resposta da tela.",
       "review": "A lista usa tabela no desktop e cartões no celular; automações de estoque, custo, financeiro e n8n continuam fora deste incremento porque ainda não possuem persistência idempotente.",
-      "environment": "local"
+      "environment": "local",
+      "owner": null,
+      "acceptance": "NF-e recebidas exibem fornecedor, número, valor, data e situação.\nDesktop usa tabela e celular usa lista compacta sem rolagem horizontal.\nXML bruto não é enviado no JSON da tela.\nXML com DTD ou entidade não é interpretado.\nDownload do XML permanece disponível.",
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-10-18",
+          "status": "concluida",
+          "note": "Registro legado normalizado para o contrato central."
+        }
+      ]
     },
     {
       "id": "T-0007",
@@ -144,13 +204,19 @@
         "A escolha de outra loja continua revalidando o acesso no Auth.",
         "Sessões antigas e sessões comuns continuam funcionando sem ganhar acesso de equipe."
       ],
-      "evidence": [
-        "Quatro testes de sessão aprovados, incluindo marcador da equipe e compatibilidade da sessão comum.",
-        "ESLint, TypeScript e build de produção concluídos.",
-        "A rota que efetiva a troca continua consultando o Auth antes de abrir a nova sessão."
-      ],
+      "evidence": "Quatro testes de sessão aprovados, incluindo marcador da equipe e compatibilidade da sessão comum.\nESLint, TypeScript e build de produção concluídos.\nA rota que efetiva a troca continua consultando o Auth antes de abrir a nova sessão.",
       "review": "O marcador assinado controla apenas a visibilidade do atalho; a autorização real é refeita no servidor a cada troca.",
-      "environment": "local"
+      "environment": "local",
+      "owner": null,
+      "acceptance": "A sessão assinada registra se a entrada veio da equipe Avila Ops.\nSomente a sessão da equipe exibe a ação Trocar loja.\nA escolha de outra loja continua revalidando o acesso no Auth.\nSessões antigas e sessões comuns continuam funcionando sem ganhar acesso de equipe.",
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-10-18",
+          "status": "concluida",
+          "note": "Registro legado normalizado para o contrato central."
+        }
+      ]
     },
     {
       "id": "T-0008",
@@ -166,14 +232,19 @@
         "A reimportação atualiza pelo SKU e mostra prévia antes de gravar.",
         "A exportação usa somente os produtos da loja selecionada."
       ],
-      "evidence": [
-        "Teste de ida e volta do catálogo XLSX aprovado com SKU, GTIN, preço e estoque preservados.",
-        "Vinte e nove testes direcionados de sessão e planilha aprovados.",
-        "ESLint, TypeScript e build de produção concluídos.",
-        "A suíte geral aprovou 1.083 testes; os dois testes dependentes do OpenSSL local foram repetidos com o binário correto e os seis testes fiscais passaram."
-      ],
+      "evidence": "Teste de ida e volta do catálogo XLSX aprovado com SKU, GTIN, preço e estoque preservados.\nVinte e nove testes direcionados de sessão e planilha aprovados.\nESLint, TypeScript e build de produção concluídos.\nA suíte geral aprovou 1.083 testes; os dois testes dependentes do OpenSSL local foram repetidos com o binário correto e os seis testes fiscais passaram.",
       "review": "O arquivo é gerado dentro da sessão da loja atual; não existe exportação cruzada de dados entre tenants.",
-      "environment": "local"
+      "environment": "local",
+      "owner": null,
+      "acceptance": "O bloco de planilha oferece o catálogo preenchido em XLSX como ação principal.\nO modelo vazio permanece disponível como ação secundária.\nA tela explica como abrir e baixar o arquivo no Google Planilhas.\nA reimportação atualiza pelo SKU e mostra prévia antes de gravar.\nA exportação usa somente os produtos da loja selecionada.",
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-10-18",
+          "status": "concluida",
+          "note": "Registro legado normalizado para o contrato central."
+        }
+      ]
     },
     {
       "id": "AVL-252",
@@ -189,15 +260,19 @@
         "Pedidos novos guardam a versão comercial vigente.",
         "Ausência ou ambiguidade de contrato não aplica comissão por fallback."
       ],
-      "evidence": [
-        "Migração 20261018160000 aplicada integralmente no PostgreSQL isolado.",
-        "1.088 testes unitários aprovados.",
-        "24 testes direcionados de cadastro, contratos e mensalidade aprovados.",
-        "13 testes direcionados de checkout e contratos aprovados.",
-        "ESLint sem erros e TypeScript sem erros."
-      ],
+      "evidence": "Migração 20261018160000 aplicada integralmente no PostgreSQL isolado.\n1.088 testes unitários aprovados.\n24 testes direcionados de cadastro, contratos e mensalidade aprovados.\n13 testes direcionados de checkout e contratos aprovados.\nESLint sem erros e TypeScript sem erros.",
       "review": "PR 119 aprovado pelo CI e integrado ao main no commit 021f236; nenhum cálculo ou cobrança de comissão foi incluído neste item.",
-      "environment": "local"
+      "environment": "local",
+      "owner": null,
+      "acceptance": "Novos cadastros recebem o plano escolhido mais comissão de 5%.\nClientes existentes preservam o contrato, com Vedashow em R$ 350 mais 5% e Bereta Rodas em 3%.\nUma nova versão encerra a anterior sem reescrever o histórico.\nPedidos novos guardam a versão comercial vigente.\nAusência ou ambiguidade de contrato não aplica comissão por fallback.",
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-10-18",
+          "status": "concluida",
+          "note": "Registro legado normalizado para o contrato central."
+        }
+      ]
     },
     {
       "id": "AVL-231",
@@ -205,7 +280,7 @@
       "objective": "Definir política, matriz, comunicação e evidência de aceite para novos cadastros, sem ativar cobrança real.",
       "assignee": null,
       "priority": "alta",
-      "status": "em_revisao",
+      "status": "em-revisao",
       "acceptanceCriteria": [
         "A base exclui frete, tributos destacados, juros e taxas do meio de pagamento.",
         "Cancelamento, reembolso, devolução, chargeback, competência, fechamento e contestação estão definidos.",
@@ -213,15 +288,19 @@
         "Novo cadastro exige aceite explícito, versionado e datado.",
         "A cobrança permanece bloqueada até os pareceres contábil, fiscal, jurídico e LGPD."
       ],
-      "evidence": [
-        "1.091 testes unitários aprovados.",
-        "8 testes de integração de cadastro e contratos aprovados no PostgreSQL isolado.",
-        "TypeScript, ESLint e build de produção concluídos sem erros.",
-        "Rota /termos-comerciais respondeu HTTP 200 e renderizou a versão e a regra de 5%.",
-        "Playwright validou termos e planos em 1440 px e 390 px, sem rolagem horizontal."
-      ],
+      "evidence": "1.091 testes unitários aprovados.\n8 testes de integração de cadastro e contratos aprovados no PostgreSQL isolado.\nTypeScript, ESLint e build de produção concluídos sem erros.\nRota /termos-comerciais respondeu HTTP 200 e renderizou a versão e a regra de 5%.\nPlaywright validou termos e planos em 1440 px e 390 px, sem rolagem horizontal.",
       "review": "Implementação pronta para revisão técnica; pareceres profissionais e aprovação final dos termos permanecem gates externos antes da cobrança real.",
-      "environment": "local"
+      "environment": "local",
+      "owner": null,
+      "acceptance": "A base exclui frete, tributos destacados, juros e taxas do meio de pagamento.\nCancelamento, reembolso, devolução, chargeback, competência, fechamento e contestação estão definidos.\nA comunicação pública informa mensalidade mais 5% e não promete comissão zero.\nNovo cadastro exige aceite explícito, versionado e datado.\nA cobrança permanece bloqueada até os pareceres contábil, fiscal, jurídico e LGPD.",
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-10-18",
+          "status": "em-revisao",
+          "note": "Registro legado normalizado para o contrato central."
+        }
+      ]
     },
     {
       "id": "AVL-232",
@@ -229,7 +308,7 @@
       "objective": "Separar o cadastro comercial empresarial da identidade e autorização corporativa, com isolamento por tenant, auditoria e integração estável com Auth e CRM.",
       "assignee": null,
       "priority": "urgente",
-      "status": "em_revisao",
+      "status": "em-revisao",
       "acceptanceCriteria": [
         "Empresa, CNPJs, unidades, endereços, contatos e compradores ficam separados.",
         "Papéis, centros de custo, limites e alçadas suportam múltiplos compradores e unidades.",
@@ -237,15 +316,19 @@
         "Compradores B2C atuais são reutilizados por tenant e e-mail sem duplicação.",
         "Auth e CRM possuem contratos versionados e sem segredos."
       ],
-      "evidence": [
-        "Migração 20261018173000 aplicada no PostgreSQL isolado e Prisma validado.",
-        "1.101 testes unitários e 169 testes de integração aprovados no Lojas; Auth com 255 testes gerais e 9 testes corporativos em PostgreSQL.",
-        "TypeScript e ESLint concluídos sem erros; 20 avisos preexistentes permanecem fora do escopo.",
-        "Build de produção concluído com webpack, incluindo as duas novas rotas administrativas.",
-        "Testes cobrem isolamento cruzado, idempotência, lease exclusivo, versões monotônicas por comprador e organização, rollout v1/v2, falha sanitizada do Auth e reconciliação fechada de contexto."
-      ],
+      "evidence": "Migração 20261018173000 aplicada no PostgreSQL isolado e Prisma validado.\n1.101 testes unitários e 169 testes de integração aprovados no Lojas; Auth com 255 testes gerais e 9 testes corporativos em PostgreSQL.\nTypeScript e ESLint concluídos sem erros; 20 avisos preexistentes permanecem fora do escopo.\nBuild de produção concluído com webpack, incluindo as duas novas rotas administrativas.\nTestes cobrem isolamento cruzado, idempotência, lease exclusivo, versões monotônicas por comprador e organização, rollout v1/v2, falha sanitizada do Auth e reconciliação fechada de contexto.",
       "review": "Implementação pronta para revisão e CI; autorização operacional continua dependente do fluxo OIDC com access token, documentado no contrato.",
-      "environment": "local"
+      "environment": "local",
+      "owner": null,
+      "acceptance": "Empresa, CNPJs, unidades, endereços, contatos e compradores ficam separados.\nPapéis, centros de custo, limites e alçadas suportam múltiplos compradores e unidades.\nChaves compostas impedem relações entre tenants e toda mutação relevante deixa auditoria.\nCompradores B2C atuais são reutilizados por tenant e e-mail sem duplicação.\nAuth e CRM possuem contratos versionados e sem segredos.",
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-10-18",
+          "status": "em-revisao",
+          "note": "Registro legado normalizado para o contrato central."
+        }
+      ]
     },
     {
       "id": "AVL-233",
@@ -253,7 +336,7 @@
       "objective": "Versionar catálogo, preço, embalagem, quantidade e kits B2B por empresa ou filial sem alterar o catálogo público B2C.",
       "assignee": null,
       "priority": "urgente",
-      "status": "em_revisao",
+      "status": "em-revisao",
       "acceptanceCriteria": [
         "Catálogos possuem versões rascunho e aprovadas, com vigência, hash e auditoria append-only.",
         "Atribuições por empresa ou unidade têm precedência total e determinística.",
@@ -262,15 +345,46 @@
         "Sem regra B2B válida, o preço público B2C permanece inalterado.",
         "API administrativa oferece escrita, leitura, aprovação, resolução e importação atômica por agregado."
       ],
-      "evidence": [
-        "Migração 20261018210000 aplicada do zero no PostgreSQL isolado.",
-        "1.113 testes unitários e 181 testes de integração aprovados, incluindo aprovação concorrente com retry serializável, auditoria única e bloqueio de movimentação para versão aprovada.",
-        "Testes cobrem precedência, FKs compostas, imutabilidade, idempotência, aprovação, resolução, kits, fallback B2C e isolamento completo da API.",
-        "TypeScript e ESLint concluídos sem erros; 20 avisos preexistentes permanecem fora do escopo.",
-        "Build de produção concluído com webpack e todas as rotas administrativas de catálogos B2B presentes."
-      ],
+      "evidence": "Migração 20261018210000 aplicada do zero no PostgreSQL isolado.\n1.113 testes unitários e 181 testes de integração aprovados, incluindo aprovação concorrente com retry serializável, auditoria única e bloqueio de movimentação para versão aprovada.\nTestes cobrem precedência, FKs compostas, imutabilidade, idempotência, aprovação, resolução, kits, fallback B2C e isolamento completo da API.\nTypeScript e ESLint concluídos sem erros; 20 avisos preexistentes permanecem fora do escopo.\nBuild de produção concluído com webpack e todas as rotas administrativas de catálogos B2B presentes.",
       "review": "Implementação pronta para revisão e CI no GitHub; publicação ainda não realizada.",
-      "environment": "local"
+      "environment": "local",
+      "owner": null,
+      "acceptance": "Catálogos possuem versões rascunho e aprovadas, com vigência, hash e auditoria append-only.\nAtribuições por empresa ou unidade têm precedência total e determinística.\nPreço fixo, desconto em pontos-base, limites, múltiplos, embalagem, exclusão e kits racionais são validados.\nChaves compostas impedem relações entre tenants, empresas, produtos e variantes.\nSem regra B2B válida, o preço público B2C permanece inalterado.\nAPI administrativa oferece escrita, leitura, aprovação, resolução e importação atômica por agregado.",
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-10-18",
+          "status": "em-revisao",
+          "note": "Registro legado normalizado para o contrato central."
+        }
+      ]
+    },
+    {
+      "id": "FISCAL-FLUXOS-20261018",
+      "title": "Conectar documentos recebidos aos fluxos operacionais",
+      "objective": "Reutilizar destinos e fila de webhooks para regras fiscais configuráveis, com revisão e isolamento por loja.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "Monitor oferece busca paginada, filtros, identificação e seleção de documento.",
+        "Dono seleciona destino existente, eventos, campos e finalidade do fluxo.",
+        "XML, fila e NSU são transacionais e documentos não são encaminhados duas vezes ao mesmo fluxo.",
+        "Não há alterações automáticas em produtos, estoque ou financeiro."
+      ],
+      "evidence": "PR #125 em rascunho: https://github.com/avilaops/lojas.avilaops.com/pull/125\n1.125 testes unitários, TypeScript, ESLint dos arquivos afetados e build local aprovados.\nCI 39164999972: migrações e 187 testes de integração aprovados em PostgreSQL 18.6 nativo.\nQA Chromium/Next local: formulário, encaminhamento, repetição, permissões, origem e histórico aprovados; layout 1440/390/320 sem overflow.\nContrato e limitações em docs/FLUXOS-FISCAIS.md; evidências em evidencias/fluxos-fiscais-2026-10-18.md.",
+      "review": "Continuação autorizada pelo usuário: consumidor fiscal supervisionado implementado no ramo isolado do workflow existente, com HMAC e revisão idempotente. Publicação e ensaio acompanhados no PR #125; origem canônica ERP preservada.",
+      "environment": "local e GitHub Actions",
+      "owner": null,
+      "acceptance": "Monitor oferece busca paginada, filtros, identificação e seleção de documento.\nDono seleciona destino existente, eventos, campos e finalidade do fluxo.\nXML, fila e NSU são transacionais e documentos não são encaminhados duas vezes ao mesmo fluxo.\nNão há alterações automáticas em produtos, estoque ou financeiro.",
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-10-18",
+          "status": "em-revisao",
+          "note": "Registro legado normalizado para o contrato central."
+        }
+      ]
     },
     {
       "id": "AVL-254",
@@ -278,7 +392,7 @@
       "objective": "Apresentar no Lojas o XML, DANFE e estado operacional de fornecedor, produtos, compra e custos mantidos pelo ERP.",
       "assignee": null,
       "priority": "urgente",
-      "status": "em_revisao",
+      "status": "em-revisao",
       "acceptanceCriteria": [
         "A chave do ERP nunca chega ao navegador.",
         "Cada CNPJ usa somente a chave do próprio tenant no ERP.",
@@ -286,15 +400,19 @@
         "O painel informa fornecedor, itens, compra e custos e abre a conferência no ERP.",
         "Sem integração configurada, o monitor fiscal atual continua funcionando."
       ],
-      "evidence": [
-        "Cliente server-to-server e proxy fiscal implementados em worktree isolado.",
-        "Consulta SEFAZ local desativada por CNPJ quando o ERP está configurado, preservando a sequência NSU.",
-        "Três testes do contrato, validação da resposta e isolamento da credencial aprovados.",
-        "TypeScript, ESLint direcionado e 1122 testes unitários concluídos sem erros.",
-        "Capturas desktop e mobile revisadas em docs/revisao-telas/avl-254-nfe-erp."
-      ],
+      "evidence": "Cliente server-to-server e proxy fiscal implementados em worktree isolado.\nConsulta SEFAZ local desativada por CNPJ quando o ERP está configurado, preservando a sequência NSU.\nTrês testes do contrato, validação da resposta e isolamento da credencial aprovados.\nTypeScript, ESLint direcionado e 1122 testes unitários concluídos sem erros.\nCapturas desktop e mobile revisadas em docs/revisao-telas/avl-254-nfe-erp.",
       "review": "Validação local e telas concluídas; pendente de commit, PR, CI e revisão dos artefatos. Sem publicação autorizada.",
-      "environment": "local"
+      "environment": "local",
+      "owner": null,
+      "acceptance": "A chave do ERP nunca chega ao navegador.\nCada CNPJ usa somente a chave do próprio tenant no ERP.\nO lojista baixa XML completo e DANFE por proxy autenticado.\nO painel informa fornecedor, itens, compra e custos e abre a conferência no ERP.\nSem integração configurada, o monitor fiscal atual continua funcionando.",
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-10-18",
+          "status": "em-revisao",
+          "note": "Registro legado normalizado para o contrato central."
+        }
+      ]
     },
     {
       "id": "AVL-234",
@@ -323,6 +441,200 @@
       ],
       "review": "Implementação local em andamento; a integração PostgreSQL isolada e a revisão final após essa prova ainda estão pendentes. Sem commit, push ou publicação.",
       "environment": "local"
+    },
+    {
+      "id": "OMNI-0.2",
+      "title": "Inventariar capacidades e limites das integrações",
+      "objective": "Manter um retrato versionado de consultas, ações, webhooks, paginação, limites, retenção, homologação, dependências e exceções de cada canal do Lojas 360.",
+      "assignee": null,
+      "priority": "urgente",
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "Canais de venda, pagamento, logística, fiscal, identidade, comunicação, infraestrutura e automação estão cobertos.",
+        "Cada integração registra consultas, ações, webhooks, paginação, rate limits, retenção, homologação e dependências.",
+        "Conexão OAuth não é apresentada como operação completa.",
+        "Toda lacuna aponta para uma decisão ou dependência.",
+        "O inventário não contém segredos e é protegido por teste de contrato."
+      ],
+      "evidence": "Inventário JSON versionado em docs/integracoes/lojas-360.v1.json.\nVisão operacional em docs/OMNI-INVENTARIO-INTEGRACOES.md.\nConsulta somente leitura confirmou os workflows n8n ativos Lojas - Operação Completa e MCP - Avila Ops.\nTeste de contrato direcionado aprovado, cobrindo 15 integrações, campos obrigatórios, lacunas e ausência de chaves sensíveis.",
+      "review": "Pronto para revisão técnica; nenhuma credencial, execução de workflow, publicação ou alteração remota foi realizada.",
+      "environment": "local",
+      "owner": null,
+      "acceptance": "Canais de venda, pagamento, logística, fiscal, identidade, comunicação, infraestrutura e automação estão cobertos.\nCada integração registra consultas, ações, webhooks, paginação, rate limits, retenção, homologação e dependências.\nConexão OAuth não é apresentada como operação completa.\nToda lacuna aponta para uma decisão ou dependência.\nO inventário não contém segredos e é protegido por teste de contrato.",
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-10-18",
+          "status": "em-revisao",
+          "note": "Registro legado normalizado para o contrato central."
+        }
+      ]
+    },
+    {
+      "id": "OMNI-0.3",
+      "title": "Criar Central de Conexões e Saúde dos Canais",
+      "objective": "Exibir o estado real por loja e canal, com escopos, sincronização, webhooks, histórico e ações seguras de teste e reconexão.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "A leitura agrega apenas dados canônicos do tenant e não chama provedores externos.",
+        "Todos os marketplaces, Melhor Envio, credenciais de pagamento configuradas e webhooks aparecem na Central.",
+        "Testes exigem permissão de configurações, respeitam cooldown distribuído e registram somente mensagens sanitizadas.",
+        "O histórico é append-only e isolado por tenant.",
+        "A interface funciona em celular e desktop sem promover canais somente conexão a operacionais."
+      ],
+      "evidence": "Testes direcionados de estados, precedência, sanitização, isolamento estrutural e navegação.\nValidação TypeScript, ESLint, build e capturas desktop/mobile registradas na revisão da tarefa.\nCorreções pós-review cobrem Mercado Pago legado, validação remota do Melhor Envio, resultado mais recente na saúde e classificação seletiva do cooldown; 1.148 testes locais aprovados.",
+      "review": "PR principal mesclado; correções pós-review preparadas em branch própria, sem deploy ou publicação.",
+      "environment": "local",
+      "owner": null,
+      "acceptance": "A leitura agrega apenas dados canônicos do tenant e não chama provedores externos.\nTodos os marketplaces, Melhor Envio, credenciais de pagamento configuradas e webhooks aparecem na Central.\nTestes exigem permissão de configurações, respeitam cooldown distribuído e registram somente mensagens sanitizadas.\nO histórico é append-only e isolado por tenant.\nA interface funciona em celular e desktop sem promover canais somente conexão a operacionais.",
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-10-18",
+          "note": "Registro preservado na consolidação dos merges."
+        }
+      ]
+    },
+    {
+      "id": "T-0009",
+      "title": "Corrigir categorias e classificação Merchant da Domi-Rio",
+      "objective": "Impedir categorias compostas por listas de ERP, classificar o catálogo da Domi-Rio em prateleiras úteis e enviar categorias Google oficiais no feed Merchant.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "em-andamento",
+      "acceptanceCriteria": [
+        "Os produtos da Domi-Rio usam categorias comerciais individuais e legíveis.",
+        "O feed envia google_product_category oficial para pesticidas, herbicidas e controle de odores.",
+        "Uma futura importação ignora e avisa sobre categoria em lista ou texto corrompido.",
+        "A navegação móvel limita defensivamente nomes anormais sem alargar a página.",
+        "A prevenção é publicada em produção e o feed possui ofertas elegíveis."
+      ],
+      "evidence": "Produção: importação concluiu com 0 produtos criados e 53 atualizados.\nProdução: a vitrine pública passou a expor Controle de Pragas, Herbicidas, Controle de Odores e Controle de Roedores; a categoria-lista antiga não aparece no HTML público.\nLocal: 46 testes direcionados aprovados, TypeScript e ESLint sem erros.\nDiagnóstico: o feed Merchant público ainda contém zero itens porque os produtos ativos não possuem imagem, requisito obrigatório do canal.\nProdução: 40 dos 43 produtos ativos receberam imagem oficial da família Isorgan, copiada para URLs estáveis no domínio domiriodistribuidora.com.br, com texto alternativo por produto e fonte oficial registrada.\nProdução: a listagem pública e as páginas individuais retornam as novas imagens, canonical e Product JSON-LD; sitemap.xml lista as páginas dos produtos.\nProdução: ISO980, ISO990 e ISO992 permaneceram sem imagem porque nenhuma fonte oficial verificável foi encontrada; nenhuma imagem de produto diferente foi improvisada.\nGoogle Search Console: a conta conectada não possui a propriedade domiriodistribuidora.com.br; o sitemap não pôde ser reenviado por API.",
+      "review": "Os dados da loja e 40 imagens oficiais de família foram publicados ao vivo. A blindagem do importador e os mapeamentos da taxonomia estão validados localmente, mas ainda não foram publicados. As imagens permanecem marcadas como representativas até conferência da embalagem exata; por isso o feed Merchant continua bloqueando essas ofertas corretamente.",
+      "environment": "producao-e-local",
+      "owner": null,
+      "acceptance": "Os produtos da Domi-Rio usam categorias comerciais individuais e legíveis.\nO feed envia google_product_category oficial para pesticidas, herbicidas e controle de odores.\nUma futura importação ignora e avisa sobre categoria em lista ou texto corrompido.\nA navegação móvel limita defensivamente nomes anormais sem alargar a página.\nA prevenção é publicada em produção e o feed possui ofertas elegíveis.",
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-10-18",
+          "note": "Registro preservado na consolidação dos merges."
+        }
+      ]
+    },
+    {
+      "id": "T-0010",
+      "title": "Transformar a vitrine da Bereta em referencia no setor",
+      "objective": "Implementar a primeira fase da auditoria da Bereta Rodas: hero responsivo com a imagem correta, marca legivel no mobile, conteudo editorial coerente, estados vazios honestos, navegacao acessivel e validacao da vitrine publicada.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "em-andamento",
+      "acceptanceCriteria": [
+        "Hero usa imagens especificas para desktop e mobile, sem texto incorporado na fotografia e sem distorcao.",
+        "Cabecalho mobile exibe o simbolo oficial com leitura adequada e alvos de toque de no minimo 44 px.",
+        "Categorias e destaques vazios nao geram secoes quebradas ou falsas promessas de catalogo.",
+        "Conteudo editorial representa rodas, pneus e servicos da Bereta e nao exibe rotulos tecnicos ao publico.",
+        "Dependencias de catalogo, estoque, horarios e dominio permanecem documentadas sem dados inventados.",
+        "Lint, verificacao de tipos, testes e validacao visual responsiva sao aprovados.",
+        "A versao publicada e validada na URL ativa da loja."
+      ],
+      "evidence": "docs/AUDITORIA-BERETA-2026-10-18.md\noutput/auditorias/bereta/2026-10-18T19-35-33-424Z/bereta-rodas.md",
+      "review": "Em implementacao. O catalogo comercial depende de produtos, precos e estoque reais fornecidos ou cadastrados pelo cliente.",
+      "environment": "local-e-producao",
+      "owner": null,
+      "acceptance": "Hero usa imagens especificas para desktop e mobile, sem texto incorporado na fotografia e sem distorcao.\nCabecalho mobile exibe o simbolo oficial com leitura adequada e alvos de toque de no minimo 44 px.\nCategorias e destaques vazios nao geram secoes quebradas ou falsas promessas de catalogo.\nConteudo editorial representa rodas, pneus e servicos da Bereta e nao exibe rotulos tecnicos ao publico.\nDependencias de catalogo, estoque, horarios e dominio permanecem documentadas sem dados inventados.\nLint, verificacao de tipos, testes e validacao visual responsiva sao aprovados.\nA versao publicada e validada na URL ativa da loja.",
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-10-18",
+          "note": "Registro preservado na consolidação dos merges."
+        }
+      ]
+    },
+    {
+      "id": "T-0011",
+      "title": "Dar identidade visual à vitrine da Domi-Rio",
+      "objective": "Substituir espaços vazios e capas genéricas por uma campanha visual coerente com a marca e com as categorias da loja.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "concluida",
+      "acceptanceCriteria": [
+        "A home possui banner responsivo sem texto ou rótulos inventados.",
+        "As quatro categorias comerciais possuem capas próprias.",
+        "As imagens usam a paleta azul e laranja da Domi-Rio.",
+        "Banner e capas carregam no domínio público em celular e computador.",
+        "A configuração anterior pode ser recuperada a partir de backup."
+      ],
+      "evidence": "Produção: banner desktop, banner móvel e quatro capas WebP publicados no diretório da loja.\nProdução: Controle de Pragas, Controle de Odores, Controle de Roedores e Herbicidas exibem as novas capas.\nProdução: validação visual concluída em viewport móvel de 390 x 844 e desktop de 1440 x 900.\nProdução: cache reiniciado após a remoção das URLs intermediárias; HTML atual não contém /branding/ e referencia hero v2 e capas relativas.\nBackup: /opt/lojas/backups/catalogo/domirio-identidade-20261018-170500.json.\nLocal: TypeScript e git diff --check concluídos sem erros; 15 testes de regras de produto aprovados.",
+      "review": "As peças geradas evitam embalagens, rótulos e promessas específicas; funcionam como identidade de categoria e campanha, não como fotografia de produto. A falha inicial de cache e caminhos foi reproduzida, corrigida e revalidada em produção.",
+      "environment": "producao-e-local",
+      "owner": null,
+      "acceptance": "A home possui banner responsivo sem texto ou rótulos inventados.\nAs quatro categorias comerciais possuem capas próprias.\nAs imagens usam a paleta azul e laranja da Domi-Rio.\nBanner e capas carregam no domínio público em celular e computador.\nA configuração anterior pode ser recuperada a partir de backup.",
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-10-18",
+          "note": "Registro preservado na consolidação dos merges."
+        }
+      ]
+    },
+    {
+      "id": "T-0012",
+      "title": "Tornar a prontidao comercial do painel verificavel",
+      "objective": "Impedir que credencial apenas salva ou site publicado sejam apresentados como loja pronta para vender sem teste positivo de recebimento.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "em-andamento",
+      "acceptanceCriteria": [
+        "O painel diferencia site publicado de loja pronta para vender.",
+        "Uma credencial apenas salva nao conclui o passo Recebimento.",
+        "O teste da credencial salva persiste resultado, mensagem, conta e data sem gravar segredos em claro.",
+        "Somente teste positivo conclui Recebimento e libera Publicacao no checklist.",
+        "Testes direcionados, lint e TypeScript passam."
+      ],
+      "evidence": "Linear AVL-230 atualizado com a auditoria completa e movido para In Progress.\n25 testes direcionados do onboarding aprovados.\nESLint dos cinco arquivos alterados concluido sem erros.\nTypeScript concluido sem erros.",
+      "review": "Incremento local iniciado. Deploy e teste real do Mercado Pago ainda nao executados.",
+      "environment": "local",
+      "owner": null,
+      "acceptance": "O painel diferencia site publicado de loja pronta para vender.\nUma credencial apenas salva nao conclui o passo Recebimento.\nO teste da credencial salva persiste resultado, mensagem, conta e data sem gravar segredos em claro.\nSomente teste positivo conclui Recebimento e libera Publicacao no checklist.\nTestes direcionados, lint e TypeScript passam.",
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-10-18",
+          "note": "Registro preservado na consolidação dos merges."
+        }
+      ]
+    },
+    {
+      "id": "T-0013",
+      "title": "Reduzir o esforço de compra na Domi-Rio",
+      "objective": "Corrigir textos de outro segmento, explicitar apresentações, tornar a campanha comercial compreensível e explicar o fluxo de pedido.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "concluida",
+      "acceptanceCriteria": [
+        "A home não usa linguagem de peças ou medidas para a Domi-Rio.",
+        "O banner apresenta proposta comercial e acesso direto ao catálogo.",
+        "Produtos confirmados exibem volume ou peso no nome e na ficha.",
+        "Listas técnicas contaminadas não aparecem na ficha do produto.",
+        "A página explica o que acontece depois de adicionar ao carrinho ou ao pedido.",
+        "A busca encontra produtos também pelo nome da categoria.",
+        "A versão publicada é validada no domínio da Domi-Rio em celular."
+      ],
+      "evidence": "Produção: 40 produtos tiveram listas técnicas contaminadas removidas com histórico por item.\nProdução: 25 SKUs confirmados passaram a exibir unidade explícita no nome e na apresentação comercial.\nProdução: buscas por baratas e mosquitos retornaram 12 e 3 produtos antes da alteração do mecanismo.\nBackup: /opt/lojas/backups/catalogo/domirio-apresentacoes-20261018.json.\nLocal: TypeScript, ESLint e 62 testes direcionados concluídos sem erros.\nGitHub Actions: integração, imagem, deploy e fumaça aprovados no run 39172609660 para o commit 463e445.\nProdução: home exibe a proposta comercial e não contém o texto Encontre a peça certa.\nProdução: busca por controle de odores retorna 12 produtos pelo nome da categoria.\nProdução: ficha do Cypertryne exibe apresentação, outras apresentações e explica a confirmação pelo WhatsApp.",
+      "review": "Dados, interface e busca publicados e validados no domínio ativo. A automação visual do Chrome não respondeu; a validação funcional foi feita no HTML público após o smoke test do deploy.",
+      "environment": "producao-e-local",
+      "owner": null,
+      "acceptance": "A home não usa linguagem de peças ou medidas para a Domi-Rio.\nO banner apresenta proposta comercial e acesso direto ao catálogo.\nProdutos confirmados exibem volume ou peso no nome e na ficha.\nListas técnicas contaminadas não aparecem na ficha do produto.\nA página explica o que acontece depois de adicionar ao carrinho ou ao pedido.\nA busca encontra produtos também pelo nome da categoria.\nA versão publicada é validada no domínio da Domi-Rio em celular.",
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-10-18",
+          "note": "Registro preservado na consolidação dos merges."
+        }
+      ]
     }
   ],
   "decisions": [
@@ -330,13 +642,19 @@
       "id": "D-0001",
       "title": "Comissão somente para novos cadastros e exceções formalizadas",
       "decision": "Cadastros novos usam mensalidade do plano mais 5%; clientes legados ficam em 0%, exceto Vedashow em R$ 350 mais 5% e Bereta Rodas em 3%.",
-      "date": "2026-10-18"
+      "date": "2026-10-18",
+      "summary": "Comissão somente para novos cadastros e exceções formalizadas",
+      "reason": "Justificativa não recuperada no registro legado; pendente de documentação.",
+      "evidence": "Evidência de suporte não localizada; decisão ainda não verificada."
     },
     {
       "id": "D-0002",
       "title": "ERP como fonte da escrituração fiscal recebida",
       "decision": "O ERP guarda XML, DANFE, fornecedor, produtos, custos, compra e estoque; o Lojas consome a API por tenant e mantém seu coletor atual apenas como compatibilidade de transição.",
-      "date": "2026-10-18"
+      "date": "2026-10-18",
+      "summary": "ERP como fonte da escrituração fiscal recebida",
+      "reason": "Justificativa não recuperada no registro legado; pendente de documentação.",
+      "evidence": "Evidência de suporte não localizada; decisão ainda não verificada."
     }
   ],
   "integrations": [
@@ -345,7 +663,33 @@
       "system": "ERP Ávila Ops",
       "direction": "ERP -> Lojas",
       "contract": "GET /api/v1/notas-recebidas e arquivos XML/DANFE com chave de leitura por tenant",
-      "status": "em_revisao"
+      "status": "em_revisao",
+      "name": "ERP Ávila Ops",
+      "environment": "Ambiente não informado no registro original",
+      "identity": "Identidade não informada no registro original",
+      "evidence": "Acesso não verificado: faltam ambiente, identidade autorizada e resultado de teste."
+    },
+    {
+      "id": "I-N8N-LOJAS-OPERACAO",
+      "system": "n8n Lojas - Operação Completa",
+      "direction": "Lojas <-> n8n <-> provedores",
+      "contract": "Webhook de eventos e rotinas agendadas; requer reconciliação com as rotinas internas do Lojas",
+      "status": "parcial",
+      "name": "n8n Lojas - Operação Completa",
+      "environment": "Ambiente não informado no registro original",
+      "identity": "Identidade não informada no registro original",
+      "evidence": "Acesso não verificado: faltam ambiente, identidade autorizada e resultado de teste."
+    },
+    {
+      "id": "I-N8N-MCP-AVILAOPS",
+      "system": "n8n MCP - Avila Ops",
+      "direction": "Clientes MCP <-> n8n <-> APIs Avila Ops",
+      "contract": "Ferramentas MCP com autorização por operação e adaptadores por produto",
+      "status": "parcial",
+      "name": "n8n MCP - Avila Ops",
+      "environment": "Ambiente não informado no registro original",
+      "identity": "Identidade não informada no registro original",
+      "evidence": "Acesso não verificado: faltam ambiente, identidade autorizada e resultado de teste."
     }
   ]
 }
