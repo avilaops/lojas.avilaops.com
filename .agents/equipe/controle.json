@@ -633,7 +633,7 @@
       "history": [
         {
           "at": "2026-10-23",
-          "note": "Validação reproduzível adicionada em scripts/qa-jornada-compra.mts."
+          "note": "Validação executada no tenant efêmero vedashow-qa e registrada com relatório e capturas."
         }
       ]
     }
