@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
+import { entradaEquipeFoiIniciada } from "@/lib/entrada-equipe";
 import { CAMINHO_RETORNO, COOKIE_SSO, configSSO, consultarSSO, podeEntrarComoEquipe } from "@/lib/sso";
 
 export const dynamic = "force-dynamic";
@@ -20,6 +20,7 @@ const SITUACAO: Record<string, string> = { ATIVA: "Ativa", SUSPENSA: "Suspensa",
  * Loja cancelada fica de fora, como no login de qualquer pessoa.
  */
 export default async function EntrarComoEquipePage() {
+  if (!(await entradaEquipeFoiIniciada())) redirect("/entrar");
   const cfg = configSSO();
   if (!cfg) redirect("/entrar");
   const r = await consultarSSO(cfg, (await cookies()).get(COOKIE_SSO)?.value);
@@ -63,7 +64,7 @@ export default async function EntrarComoEquipePage() {
           </ul>
         )}
         <p className="pl-auth-links">
-          <Link href="/entrar?senha=1">Entrar com e-mail e senha de uma loja</Link>
+          <a href="https://avilaops.com">Voltar ao site Ávila Ops</a>
         </p>
       </div>
     </div>

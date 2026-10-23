@@ -96,6 +96,9 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
    640px a gaveta deixa de existir e os campos voltam para a linha. */
 .filtros-gaveta { display: none; }
 .filtros-abrir { display: none; }
+.ajuda-catalogo { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .25rem 1rem; align-items: center; min-height: 44px; margin-top: 1rem; padding: .75rem; border: 1px solid var(--border); border-radius: var(--radius); font-size: .875rem; font-weight: 600; }
+.ajuda-catalogo span { color: var(--primary); text-decoration: underline; text-underline-offset: 3px; }
+.ajuda-catalogo:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
 @media (max-width: 639px) {
   /* A caixa fica invisível, mas não `display: none`: sumida de vez, ela saía
      da ordem do Tab e quem navega pelo teclado não abria a gaveta. */
@@ -104,6 +107,13 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
   .filtros-abrir { display: block; cursor: pointer; border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); border-radius: var(--radius); padding: .5rem .75rem; font-size: .875rem; font-weight: 500; }
   .filtros-gaveta:not(:checked) ~ .filtros-campos { display: none; }
   .filtros-campos { display: grid; gap: .5rem; margin-top: .5rem; }
+  .filtros-linha { grid-template-columns: minmax(0, 1fr) auto; align-items: start; }
+  .filtros-linha > input[type="search"] { grid-column: 1 / -1; min-width: 0; min-height: 44px; }
+  .filtros-linha > .filtros-abrir { grid-column: 1; min-height: 44px; display: flex; align-items: center; }
+  .filtros-linha > .filtros-aplicar { grid-column: 2; grid-row: 2; min-height: 44px; }
+  .filtros-linha > .filtros-campos { grid-column: 1 / -1; grid-row: 3; }
+  .filtros-produtos > div:has(.filtros-ajuda):not(:has(a)) { display: none; }
+  .filtros-medidas summary { min-height: 44px; }
 }
 
 /* Ampliação da foto na ficha (GaleriaProduto). O zoom de mouse continua; o
@@ -680,6 +690,15 @@ html[data-cookies-respondido] .aviso-cookies { display: none; }
 .capa-categoria-texto h1 { font-size: clamp(1.6rem, 3.5vw, 2.3rem); font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; }
 .capa-categoria-texto p { max-width: 60ch; color: var(--muted-foreground); font-size: 0.95rem; line-height: 1.6; }
 
+@media (max-width: 639px) {
+  .categoria-catalogo { padding-top: .75rem; }
+  .categoria-catalogo .capa-categoria { grid-template-columns: 56px minmax(0, 1fr); margin-bottom: .5rem; }
+  .categoria-catalogo .capa-categoria-imagem { min-height: 56px; }
+  .categoria-catalogo .capa-categoria-texto { padding: .5rem .75rem; }
+  .categoria-catalogo .capa-categoria-texto h1 { font-size: 1.25rem; overflow-wrap: anywhere; }
+  .categoria-catalogo .capa-categoria-texto p { font-size: .8125rem; line-height: 1.35; }
+}
+
 .capa-categoria-selo {
   align-self: flex-start;
   padding: 4px 11px;
@@ -789,9 +808,11 @@ html[data-cookies-respondido] .aviso-cookies { display: none; }
     /* Nome longo de categoria industrial ("Aço de baixo e médio teor de
        carbono") vira uma tira sem fim. Corta com reticências e o toque continua
        inteiro. */
-    /* Sem `max-width`: cortar "Aço de baixo e médio teor de carbono" em "Aço de"
-       entrega uma aba que não diz nada. A tira rola, então o nome vai inteiro e
-       quem procura reconhece o que procura. */
+    /* Uma categoria válida continua legível; uma importação defeituosa não
+       transforma a navegação inteira numa faixa de texto sem fim. */
+    max-width: min(78vw, 24rem);
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
   }
   .nav-loja a:first-child { background: color-mix(in srgb, var(--primary) 12%, transparent); }
@@ -1197,6 +1218,12 @@ html[data-cookies-respondido] .aviso-cookies { display: none; }
 @media (max-width: 639px) { .campanhas-busca { flex-direction: column; align-items: stretch; } .cartao-produto > div:last-child { padding: .75rem; } .campanhas-produtos > header > a { min-height: 44px; } }
 
 .home-campanhas .atalhos-cat-foto { width: min(4rem, 100%); height: auto; aspect-ratio: 1; }
+.campanhas-hero { position: relative; }
+.campanhas-hero-conteudo { position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; pointer-events: none; }
+.campanhas-hero-conteudo > div { width: min(31rem, 48%); padding: 1.5rem; border-radius: 14px; background: color-mix(in srgb, var(--background) 92%, transparent); box-shadow: 0 16px 40px rgb(0 0 0 / .14); }
+.campanhas-hero-conteudo h2 { font-size: clamp(1.5rem, 3vw, 2.6rem); font-weight: 800; line-height: 1.05; letter-spacing: -.03em; }
+.campanhas-hero-conteudo p { margin-top: .65rem; color: var(--muted-foreground); line-height: 1.55; }
+.campanhas-hero-conteudo .btn-primario { display: inline-flex; margin-top: 1rem; gap: .4rem; pointer-events: auto; }
 
 /* Catálogo técnico: nome e medidas primeiro; referências de ERP ficam na ficha. */
 .cartao-produto-tecnico .cartao-produto-imagem { aspect-ratio: 4 / 3; background: #fff; }
@@ -1225,7 +1252,12 @@ html[data-cookies-respondido] .aviso-cookies { display: none; }
   [data-layout="distribuidora"] .marca-loja img { height: 60px; max-width: 170px; }
   [data-layout="distribuidora"] .banner-campanha picture { aspect-ratio: auto; height: min(calc(100vw * 5 / 4), 42svh); min-height: 0; }
   [data-layout="distribuidora"] .home-campanhas { gap: 1.25rem; }
-  .cartao-produto-tecnico .cartao-produto-conteudo { padding: .625rem; }
+  .campanhas-hero-conteudo { align-items: end; padding-bottom: .75rem; }
+  .campanhas-hero-conteudo > div { width: 100%; padding: 1rem; }
+  .campanhas-hero-conteudo h2 { font-size: 1.35rem; }
+  .campanhas-hero-conteudo p { display: none; }
+  .cartao-produto-tecnico .cartao-produto-conteudo { flex: initial; gap: .25rem; padding: .625rem; }
+  .cartao-produto-tecnico .cartao-produto-preco { margin-top: .25rem; padding-top: 0; }
   .cartao-produto-tecnico .cartao-produto-nome { font-size: .875rem; }
   .cartao-produto-tecnico .cartao-produto-disponibilidade > a { min-height: 44px; display: inline-flex; align-items: center; }
 }

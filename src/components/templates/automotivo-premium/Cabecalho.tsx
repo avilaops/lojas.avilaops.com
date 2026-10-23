@@ -14,7 +14,7 @@ function observarModo(avisar: () => void) {
   return () => observer.disconnect();
 }
 
-export default function Cabecalho({ loja, logo, logoEscuro, mostrarNome, categorias, modo }: { loja: TenantPublico; logo: string | null; logoEscuro?: string; mostrarNome?: boolean; categorias: {nome: string; slug: string}[]; modo: "claro" | "escuro" }) {
+export default function Cabecalho({ loja, logo, logoCompacta, logoEscuro, mostrarNome, categorias, modo }: { loja: TenantPublico; logo: string | null; logoCompacta?: string | null; logoEscuro?: string; mostrarNome?: boolean; categorias: {nome: string; slug: string}[]; modo: "claro" | "escuro" }) {
   const caminho = usePathname();
   const dialog = useRef<HTMLDialogElement>(null);
   const escuro = useSyncExternalStore(observarModo, () => document.documentElement.dataset.modo === "escuro", () => modo === "escuro");
@@ -28,6 +28,7 @@ export default function Cabecalho({ loja, logo, logoEscuro, mostrarNome, categor
   const marca = <><span className="ap-marca-simbolo">{logo && <>
     <Image unoptimized className={logoEscuro ? "ap-logo-claro" : undefined} src={logo} alt={mostrarNome ? "" : loja.nome} width={48} height={48}/>
     {logoEscuro && <Image unoptimized className="ap-logo-escuro" src={logoEscuro} alt={mostrarNome ? "" : loja.nome} width={48} height={48}/>}</>}</span>{(mostrarNome || !logo) && <span>{loja.nome}</span>}</>;
+  const marcaCompacta = logoCompacta && logoCompacta !== logo && <Image unoptimized className="ap-logo-compacta" src={logoCompacta} alt="" width={48} height={48}/>;
   const links = [{href:"/", nome:"Início"}, {href:"/produtos", nome:"Produtos"}, {href:"/sobre", nome:"Sobre"}, {href:"/contato", nome:"Contato"}];
   return <>
     <a href="#conteudo-loja" className="ap-pular">Pular para o conteúdo</a>
@@ -35,7 +36,7 @@ export default function Cabecalho({ loja, logo, logoEscuro, mostrarNome, categor
       {loja.avisoTopo && <p className="ap-aviso">{loja.avisoTopo}</p>}
       <div className="container-loja ap-cabecalho-linha">
         <button className="ap-icone ap-menu-botao" aria-label="Abrir menu" onClick={() => dialog.current?.showModal()}><Menu size={22}/></button>
-        <Link href="/" className="ap-marca" aria-label={`${loja.nome} — início`}>{marca}</Link>
+        <Link href="/" className={`ap-marca${!mostrarNome && logo ? " ap-marca--logo-completa" : ""}`} aria-label={`${loja.nome} — início`}>{marcaCompacta}{marca}</Link>
         <nav className="ap-nav" aria-label="Navegação principal">{links.map(l => l.href === "/produtos" ? <details className="ap-megamenu" key={l.href}><summary>Produtos <ChevronDown size={13}/></summary><div><Link href="/produtos">Ver todos os produtos</Link>{categorias.map(c => <Link key={c.slug} href={`/categoria/${c.slug}`} onClick={e => e.currentTarget.closest("details")?.removeAttribute("open")}>{c.nome}</Link>)}</div></details> : <Link key={l.href} href={l.href} aria-current={caminho === l.href ? "page" : undefined}>{l.nome}</Link>)}</nav>
         <div className="ap-cabecalho-acoes"><button className="ap-icone" onClick={alternar} aria-label={escuro ? "Ativar tema claro" : "Ativar tema escuro"}>{escuro ? <Sun size={18}/> : <Moon size={18}/>}</button>{loja.vende && <><Link href="/conta" className="ap-icone ap-conta" aria-label="Minha conta"><UserRound size={19}/></Link><CartButton/></>}</div>
       </div>

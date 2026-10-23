@@ -180,3 +180,14 @@ export async function tokenDaLoja(t: Tenant): Promise<string | null> {
     return null;
   }
 }
+
+/** Confirma a autorização com uma leitura sem efeito no próprio provedor. */
+export async function testarConexaoMelhorEnvio(t: Tenant): Promise<void> {
+  const token = await tokenDaLoja(t);
+  if (!token) throw new Error("Melhor Envio sem token válido.");
+  const r = await fetch(`${baseDoMelhorEnvio()}/api/v2/me`, {
+    headers: cabecalhosDoMelhorEnvio(token),
+    signal: AbortSignal.timeout(15_000),
+  });
+  if (!r.ok) throw new Error(`Melhor Envio recusou o teste (${r.status}).`);
+}

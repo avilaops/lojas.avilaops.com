@@ -310,7 +310,17 @@ function condicaoProdutos(tenantId: string, filtro?: FiltroCatalogo): Prisma.Pro
       // Cada condição composta entra no AND: duas regras com `OR` próprio
       // espalhadas no mesmo objeto se sobrescreveriam em silêncio.
       ...(termos.length || filtro?.somenteDisponiveis
-        ? { AND: [...termos.map((t) => ({ busca: { contains: t } })), ...(filtro?.somenteDisponiveis ? [WHERE_EM_ESTOQUE] : [])] }
+        ? {
+            AND: [
+              ...termos.map((t) => ({
+                OR: [
+                  { busca: { contains: t } },
+                  { categoria: { nome: { contains: t, mode: "insensitive" as const } } },
+                ],
+              })),
+              ...(filtro?.somenteDisponiveis ? [WHERE_EM_ESTOQUE] : []),
+            ],
+          }
         : {}),
       ...(filtro?.perfil ? { atributos: { path: ["perfil"], equals: filtro.perfil } } : {}),
     };

@@ -19,7 +19,7 @@
 
 /** A frase inteira, para onde há espaço: a galeria da página do produto. */
 export const AVISO_IMAGEM: Record<string, string> = {
-  representativa: "Imagem representativa da série. Confira as medidas e especificações deste produto.",
+  representativa: "Imagem representativa da série. Confira as características e a apresentação deste produto.",
   ilustracao: "Ilustração técnica gerada a partir das medidas cadastradas, não é foto do produto.",
 };
 

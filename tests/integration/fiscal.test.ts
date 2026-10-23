@@ -5,6 +5,7 @@ import forge from "node-forge";
 import { prisma } from "../../src/lib/db";
 import { selarCertificado } from "../../src/lib/fiscal-certificado";
 import { sincronizarNotas } from "../../src/lib/fiscal-loja";
+import { cifrar } from "../../src/lib/cofre";
 
 const url = new URL(process.env.DATABASE_URL ?? "http://invalid");
 if (!["127.0.0.1", "localhost"].includes(url.hostname) || !["5548", "5588"].includes(url.port) || !url.pathname.endsWith("_test")) {
@@ -13,6 +14,7 @@ if (!["127.0.0.1", "localhost"].includes(url.hostname) || !["5548", "5588"].incl
 process.env.LOJAS_CERT_SECRET = "cd".repeat(32);
 const lojas: string[] = [];
 after(async () => {
+  await prisma.webhookApi.deleteMany({ where: { tenantId: { in: lojas } } });
   await prisma.documentoFiscalLoja.deleteMany({ where: { tenantId: { in: lojas } } });
   await prisma.fiscalLoja.deleteMany({ where: { tenantId: { in: lojas } } });
   await prisma.tenant.deleteMany({ where: { id: { in: lojas } } });
@@ -76,11 +78,14 @@ test("falha de transporte preserva NSU e aguarda uma hora a partir da falha", as
 
 test("consumo indevido e fim da fila não provocam nova consulta imediata", async () => {
   const loja = await preparar("32345678000190");
-  for (const status of ["656", "137"]) {
-    await prisma.fiscalLoja.update({ where: { tenantId: loja.id }, data: { proximaConsultaEm: new Date(0) } });
-    await sincronizarNotas(loja.id, async () => ({ status, mensagem: "Aguardar", ultimoNsu: "000000000000000", maxNsu: "000000000000000", documentos: [] }));
-    await assert.rejects(() => sincronizarNotas(loja.id), /intervalo/);
-  }
+  const consumoIndevido = await sincronizarNotas(loja.id, async () => ({ status: "656", mensagem: "Aguardar", ultimoNsu: "000000000000005", maxNsu: "000000000000005", documentos: [] }));
+  assert.equal(consumoIndevido.cursorAjustado, true);
+  assert.equal((await prisma.fiscalLoja.findUniqueOrThrow({ where: { tenantId: loja.id } })).ultimoNsu, "000000000000005");
+  await assert.rejects(() => sincronizarNotas(loja.id), /intervalo/);
+
+  await prisma.fiscalLoja.update({ where: { tenantId: loja.id }, data: { proximaConsultaEm: new Date(0) } });
+  await sincronizarNotas(loja.id, async () => ({ status: "137", mensagem: "Fim da fila", ultimoNsu: "000000000000005", maxNsu: "000000000000005", documentos: [] }));
+  await assert.rejects(() => sincronizarNotas(loja.id), /intervalo/);
 });
 
 test("falha ao gravar o lote reverte documentos e NSU juntos", async () => {
@@ -106,4 +111,31 @@ test("mudança de CNPJ bloqueia consulta sem chamar a SEFAZ", async () => {
   let chamado = false;
   await assert.rejects(() => sincronizarNotas(loja.id, async () => { chamado = true; throw new Error(); }), /CNPJ da loja mudou/);
   assert.equal(chamado, false);
+});
+
+test("consulta enfileira somente novos documentos e falha do cursor também reverte a entrega", async () => {
+  process.env.LOJAS_SECRET ??= "0".repeat(64);
+  const loja = await preparar("62345678000190");
+  await prisma.tenant.update({ where: { id: loja.id }, data: { plano: "LOJA_PRO" } });
+  const webhook = await prisma.webhookApi.create({ data: { tenantId: loja.id, nome: "Fiscal QA", url: "https://n8n.example/webhook/fiscal", eventos: [], segredoEnc: cifrar("teste") } });
+  await prisma.fluxoFiscalLoja.create({ data: { tenantId: loja.id, webhookId: webhook.id, nome: "Revisão QA", finalidade: "compras", eventos: ["fiscal.nfe-resumo"], campos: ["totais"], criadoPor: "DONO" } });
+  const doc = { nsu: "000000000000001", schema: "resNFe.xsd", chave: null, xml: "<resNFe><vNF>19.90</vNF></resNFe>" };
+  const consultar = async () => ({ status: "138", mensagem: "Lote", ultimoNsu: "000000000000001", maxNsu: "000000000000001", documentos: [doc] });
+  await prisma.$executeRawUnsafe(`CREATE FUNCTION qa_fiscal_fluxos_recusar() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW."cnpj" = '62345678000190' AND NEW."ultimoNsu" <> OLD."ultimoNsu" THEN RAISE EXCEPTION 'Falha fiscal simulada'; END IF; RETURN NEW; END; $$`);
+  await prisma.$executeRawUnsafe(`CREATE TRIGGER qa_fiscal_fluxos_cursor BEFORE UPDATE ON "FiscalLoja" FOR EACH ROW EXECUTE FUNCTION qa_fiscal_fluxos_recusar()`);
+  try { await assert.rejects(() => sincronizarNotas(loja.id, consultar)); }
+  finally {
+    await prisma.$executeRawUnsafe(`DROP TRIGGER qa_fiscal_fluxos_cursor ON "FiscalLoja"`);
+    await prisma.$executeRawUnsafe(`DROP FUNCTION qa_fiscal_fluxos_recusar()`);
+  }
+  assert.equal(await prisma.documentoFiscalLoja.count({ where: { tenantId: loja.id } }), 0);
+  assert.equal(await prisma.entregaWebhook.count({ where: { tenantId: loja.id } }), 0);
+  assert.equal((await prisma.fiscalLoja.findUniqueOrThrow({ where: { tenantId: loja.id } })).ultimoNsu, "000000000000000");
+  await prisma.fiscalLoja.update({ where: { tenantId: loja.id }, data: { proximaConsultaEm: new Date(0) } });
+  const recebido = await sincronizarNotas(loja.id, consultar);
+  assert.equal(recebido.recebidos, 1); assert.equal(recebido.enfileirados, 1);
+  await prisma.fiscalLoja.update({ where: { tenantId: loja.id }, data: { proximaConsultaEm: new Date(0) } });
+  const repetido = await sincronizarNotas(loja.id, async () => ({ ...await consultar(), ultimoNsu: "000000000000002", maxNsu: "000000000000002" }));
+  assert.equal(repetido.recebidos, 0); assert.equal(repetido.enfileirados, 0);
+  assert.equal(await prisma.entregaWebhook.count({ where: { tenantId: loja.id } }), 1);
 });

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { runInNewContext } from 'node:vm';
+import { runInNewContext, compileFunction, createContext } from 'node:vm';
 
 const nodes = new Map();
 const chain = { add() { return this; }, to() { return this; }, group() { return this; } };
@@ -13,13 +13,13 @@ runInNewContext(source.replace('export default ', 'globalThis.result = '), {
 
 function executar(nome, entrada, json = {}, anterior = {}) {
   const codigo = nodes.get(nome).config.parameters.jsCode;
-  const fn = new Function('$input', '$json', '$', codigo);
+  const fn = compileFunction(codigo, ['$input', '$json', '$'], { parsingContext: createContext({}) });
   return fn({ all: () => entrada }, json, () => ({ item: { json: anterior } }));
 }
 
 test('workflow consulta apenas GET e não leva credencial aos domínios públicos', () => {
   const http = [...nodes.values()].filter(n => n.type === 'n8n-nodes-base.httpRequest');
-  assert.equal(http.length, 2);
+  assert.equal(http.length, 3);
   assert.ok(http.every(n => n.config.parameters.method === 'GET'));
   assert.equal(nodes.get('Consultar paginas publicas').config.credentials, undefined);
   assert.equal(nodes.get('Listar lojas autorizadas').config.credentials.httpBearerAuth.id, 'BIftJgoyPwxr2d55');

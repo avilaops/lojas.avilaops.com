@@ -1,5 +1,7 @@
 import { exigir } from "@/lib/operadores";
 import { testarRecebimento } from "@/lib/recebimento";
+import { garantirCredencialMercadoPago } from "@/lib/credenciais";
+import { prisma } from "@/lib/db";
 
 /**
  * POST: testa a credencial do Mercado Pago da loja.
@@ -21,6 +23,31 @@ export async function POST(request: Request) {
     accessToken: typeof corpo?.accessToken === "string" ? corpo.accessToken : undefined,
     publicKey: typeof corpo?.publicKey === "string" ? corpo.publicKey : undefined,
   });
+
+  // Só persiste o veredito quando o teste usou a credencial já salva. O teste
+  // do que ainda está digitado serve como pré-validação e não pode alterar o
+  // gate de publicação antes de a credencial ser gravada.
+  const tokenInformado = corpo?.accessToken?.trim();
+  const chaveInformada = corpo?.publicKey?.trim();
+  const testouCredencialSalva = !tokenInformado
+    && (!chaveInformada || chaveInformada === loja.mpPublicKey?.trim())
+    && Boolean(loja.mpAccessTokenEnc);
+  if (testouCredencialSalva) {
+    const credencial = await garantirCredencialMercadoPago(loja);
+    if (credencial) {
+      await prisma.credencialPagamento.update({
+        where: { id: credencial.id },
+        data: {
+          status: diagnostico.ok ? "conectado" : "erro",
+          mensagem: diagnostico.mensagem,
+          conta: diagnostico.ok
+            ? (diagnostico.conta?.apelido ?? diagnostico.conta?.email ?? credencial.conta)
+            : credencial.conta,
+          testadoEm: new Date(),
+        },
+      });
+    }
+  }
 
   return Response.json(diagnostico);
 }

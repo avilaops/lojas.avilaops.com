@@ -49,7 +49,7 @@ function assinar(corpo: string): string {
  * Token antigo não tem esse campo, e por isso `lerToken` trata a ausência como
  * "é o dono": mudar o formato não pode deslogar quem já estava no painel.
  */
-type OpcoesDaSessao = { equipe?: boolean };
+type OpcoesDaSessao = { equipe?: boolean; identidadeEmail?: string };
 
 export function emitirToken(slug: string, operadorId?: string | null, opcoes: OpcoesDaSessao = {}): string {
   const corpo = Buffer.from(
@@ -57,22 +57,23 @@ export function emitirToken(slug: string, operadorId?: string | null, opcoes: Op
       slug,
       ...(operadorId ? { op: operadorId } : {}),
       ...(opcoes.equipe ? { equipe: true } : {}),
+      ...(opcoes.identidadeEmail ? { identidadeEmail: opcoes.identidadeEmail.trim().toLowerCase() } : {}),
       exp: Date.now() + DIAS * 86_400_000,
     }),
   ).toString("base64url");
   return `${corpo}.${assinar(corpo)}`;
 }
 
-export function lerToken(token: string | undefined): { slug: string; op?: string; equipe?: true } | null {
+export function lerToken(token: string | undefined): { slug: string; op?: string; equipe?: true; identidadeEmail?: string } | null {
   if (!token) return null;
   const [corpo, assinatura] = token.split(".");
   if (!corpo || !assinatura) return null;
   const esperada = assinar(corpo);
   if (esperada.length !== assinatura.length || !timingSafeEqual(Buffer.from(esperada), Buffer.from(assinatura))) return null;
   try {
-    const dados = JSON.parse(Buffer.from(corpo, "base64url").toString("utf8")) as { slug: string; op?: string; equipe?: unknown; exp: number };
+    const dados = JSON.parse(Buffer.from(corpo, "base64url").toString("utf8")) as { slug: string; op?: string; equipe?: unknown; identidadeEmail?: unknown; exp: number };
     return dados.exp > Date.now()
-      ? { slug: dados.slug, ...(dados.op ? { op: dados.op } : {}), ...(dados.equipe === true ? { equipe: true as const } : {}) }
+      ? { slug: dados.slug, ...(dados.op ? { op: dados.op } : {}), ...(dados.equipe === true ? { equipe: true as const } : {}), ...(typeof dados.identidadeEmail === "string" && dados.identidadeEmail.includes("@") ? { identidadeEmail: dados.identidadeEmail } : {}) }
       : null;
   } catch {
     return null;
@@ -144,6 +145,11 @@ export async function sessaoDoPainel(): Promise<
   if (!dados) return null;
 
   const tenant = await prisma.tenant.findUnique({ where: { slug: dados.slug } });
+  if (dados.identidadeEmail && !dados.equipe) {
+    if (!tenant) return null;
+    const { possuiLoja } = await import("./acessos-loja");
+    if (!(await possuiLoja(dados.identidadeEmail, tenant.id))) return null;
+  }
   if (!tenant || !dados.op) {
     const sessao = resolverSessaoDoPainel(tenant, dados.op, null);
     return sessao ? { ...sessao, equipe: dados.equipe === true } : null;

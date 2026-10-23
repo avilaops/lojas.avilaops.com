@@ -356,6 +356,7 @@ model Tenant {
   operadores             OperadorLoja[]
   fiscal                 FiscalLoja?
   documentosFiscais      DocumentoFiscalLoja[]
+  fluxosFiscais          FluxoFiscalLoja[]
 
   apiKeyEnc            String?
   apiKeyCriadaEm       DateTime?
@@ -364,10 +365,12 @@ model Tenant {
   chamadasMcp          ChamadaMcp[]
   webhooksApi          WebhookApi[]
   credenciaisPagamento CredencialPagamento[]
+  eventosSaudeCanais   EventoSaudeCanal[]
 
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
+  acessos           AcessoLoja[]
   categorias        Categoria[]
   produtos          Produto[]
   pedidos           Pedido[]
@@ -402,9 +405,36 @@ model DocumentoFiscalLoja {
   chave      String?
   xml        String   @db.Text
   recebidoEm DateTime @default(now())
+  arquivadoEm DateTime? // XML completo já copiado ao R2 privado
+  /// Marcadores duráveis: a retenção da fila não permite reenviar o mesmo documento ao mesmo fluxo.
+  fluxosEnfileirados String[] @default([])
 
   @@unique([tenantId, cnpj, nsu])
   @@index([tenantId, recebidoEm])
+  @@index([arquivadoEm, recebidoEm])
+  @@index([tenantId, chave])
+  @@index([tenantId, schema, recebidoEm])
+}
+
+/// Regra fiscal usa um destino já cadastrado e a fila assinada EntregaWebhook.
+model FluxoFiscalLoja {
+  id         String   @id @default(cuid())
+  tenantId   String
+  webhookId  String
+  nome       String
+  finalidade String
+  eventos    String[]
+  campos     String[]
+  ativo      Boolean  @default(true)
+  criadoPor  String
+  criadoEm   DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  tenant  Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  webhook WebhookApi @relation(fields: [tenantId, webhookId], references: [tenantId, id], onDelete: Cascade)
+
+  @@unique([tenantId, webhookId, finalidade])
+  @@index([tenantId, ativo])
 }
 
 model Categoria {
@@ -2087,7 +2117,9 @@ model WebhookApi {
 
   tenant   Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   entregas EntregaWebhook[]
+  fluxosFiscais FluxoFiscalLoja[]
 
+  @@unique([tenantId, id])
   @@index([tenantId])
 }
 
@@ -2177,4 +2209,39 @@ model CredencialPagamento {
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@unique([tenantId, provedor])
+}
+
+/// Fato imutável da Central de Conexões. Guarda somente códigos e mensagens
+/// sanitizadas; respostas brutas, URLs, tokens e corpos nunca entram aqui.
+model EventoSaudeCanal {
+  id         String   @id @default(cuid())
+  tenantId   String
+  canal      String   @db.VarChar(40)
+  tipo       String   @db.VarChar(40)
+  resultado  String   @db.VarChar(24)
+  codigo     String   @db.VarChar(64)
+  mensagem   String   @db.VarChar(240)
+  ator       String   @db.VarChar(160)
+  /// Reserva de teste no formato tenant:canal:minuto. Nula nos demais fatos.
+  dedupeKey  String?  @unique @db.VarChar(160)
+  ocorridoEm DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, canal, ocorridoEm])
+  @@index([tenantId, ocorridoEm])
+}
+
+/// Vínculo explícito entre identidade SSO e tenant. Nunca concede acesso por domínio de e-mail.
+model AcessoLoja {
+  id       String  @id @default(cuid())
+  tenantId String
+  email    String
+  papel    String  @default("DONO")
+  ativo    Boolean @default(true)
+  criadoEm DateTime @default(now())
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, email])
+  @@index([email, ativo])
 }

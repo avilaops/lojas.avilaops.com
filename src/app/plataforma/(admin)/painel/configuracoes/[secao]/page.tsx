@@ -328,8 +328,7 @@ export default async function Pagina({ params, searchParams }: {
     }
     return (
       <div className="grid gap-6">
-        {(mercadoPagoDisponivel() || porOAuth || sp.mp) && (
-          <MercadoPago
+        <MercadoPago
             conexao={{
               porOAuth,
               porChaves: Boolean(loja.mpAccessTokenEnc) && !porOAuth,
@@ -338,11 +337,7 @@ export default async function Pagina({ params, searchParams }: {
             }}
             integracaoDisponivel={mercadoPagoDisponivel()}
             retorno={sp.mp}
-          />
-        )}
-        <Suspense fallback={null}>
-          <PainelLoja secao={alvo} {...(await dadosDoPainel(alvo))} />
-        </Suspense>
+        />
       </div>
     );
   }
