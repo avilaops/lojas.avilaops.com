@@ -72,8 +72,8 @@ export default function FiltrosProdutos({
             0,95 tela). Aqui eles vão para uma gaveta que só existe no celular:
             a partir de 640px o CSS a dissolve e os campos voltam para a linha.
             A busca continua sempre visível, que é por onde a maioria chega. */}
-        <input type="checkbox" id="filtros-mais" className="filtros-gaveta" defaultChecked={filtroSecundarioAtivo} />
-        <label htmlFor="filtros-mais" className="filtros-abrir">Filtrar</label>
+        <input type="checkbox" id="filtros-mais" className="filtros-gaveta" aria-controls="filtros-campos" defaultChecked={filtroSecundarioAtivo} />
+        <label htmlFor="filtros-mais" className="filtros-abrir">Filtros e ordem{filtroSecundarioAtivo ? " · ativos" : ""}</label>
         {/* A ordenação fica fora da gaveta: no celular ela divide a linha com
             "Filtrar"; no desktop ocupa uma célula normal da mesma grade. É um
             único campo, portanto a URL nunca recebe duas ordens concorrentes. */}
@@ -84,7 +84,7 @@ export default function FiltrosProdutos({
           <option value="recentes">Novidades</option>
           <option value="nome">Nome A–Z</option>
         </select>
-        <div className="filtros-campos contents">
+        <div id="filtros-campos" className="filtros-campos contents">
           {perfis.length > 0 && <select name="perfil" aria-label="Perfil" defaultValue={valores.perfil ?? ""} className="h-11 rounded-lg border border-border bg-background px-3 text-sm"><option value="">Todos os perfis cadastrados</option>{perfis.map(p => <option key={p}>{p}</option>)}</select>}
           {fabricantes.length > 0 && <select name="fabricante" aria-label="Marca do produto" defaultValue={valores.fabricante ?? ""} className="h-11 rounded-lg border border-border bg-background px-3 text-sm"><option value="">Todas as marcas</option>{fabricantes.map(m => <option key={m.nome} value={m.nome}>{m.nome} ({m.itens})</option>)}</select>}
           {!categoriaFixa && (
