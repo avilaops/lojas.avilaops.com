@@ -46,7 +46,7 @@ async function estado(tenantId: string, endereco: unknown, parametros?: URLSearc
       const completoId = documento.chave && /^resNFe/.test(documento.schema) ? completosPorChave.get(documento.chave) ?? null : null;
       return { ...documento, ...resumo, completoId, situacao: completoId ? "COMPLETA" as const : resumo.situacao };
     }),
-    totais: totalizarDocumentosFiscais(contagens.map(({ schema, _count }) => ({ schema, quantidade: _count._all }))),
+    totais: { ...totalizarDocumentosFiscais(contagens.map(({ schema, _count }) => ({ schema, quantidade: _count._all }))), completas: contagens.filter(({ schema }) => /^procNFe/i.test(schema)).reduce((total, { _count }) => total + _count._all, 0) },
     ufEmpresa: ufDaEmpresa(endereco),
     pagina, total, paginas: Math.max(1, Math.ceil(total / limite)),
     erp,
