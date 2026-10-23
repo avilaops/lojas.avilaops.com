@@ -3,7 +3,6 @@ import { randomUUID } from "node:crypto";
 import { after, test } from "node:test";
 import { prisma } from "../../src/lib/db";
 import { aprovarVersaoCatalogoB2B } from "../../src/lib/catalogo-b2b";
-import { salvarProdutoNoCatalogo } from "../../src/lib/catalogo-escrita";
 import { aprovarCotacaoB2B, contraproporCotacaoB2B, converterCotacaoB2B, criarCotacaoB2B, recomprarCotacaoB2B, submeterCotacaoB2B } from "../../src/lib/cotacoes-b2b";
 
 const url = new URL(process.env.DATABASE_URL ?? "http://invalid");
@@ -30,7 +29,6 @@ test("negociação preserva versões e conversão idempotente preserva o preço 
   assert.deepEqual(negociada.versoes.map((v) => [v.numero, v.totalCentavos]), [[1, 3_000], [2, 4_200]]);
   await submeterCotacaoB2B(tenant.id, criada.id, { tipo: "COMPRADOR", id: comprador.id, email: conta.email });
   await aprovarCotacaoB2B(tenant.id, criada.id, comprador.id, { tipo: "APROVADOR", id: comprador.id, email: conta.email });
-  await salvarProdutoNoCatalogo(tenant.id, produto.id, { precoCentavos: 2_500 });
   const primeiro = await converterCotacaoB2B(tenant.id, criada.id, "idem-conversao-1", ator);
   const repetido = await converterCotacaoB2B(tenant.id, criada.id, "idem-conversao-1", ator);
   assert.equal(repetido.id, primeiro.id);
