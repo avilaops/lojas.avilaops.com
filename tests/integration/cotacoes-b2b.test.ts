@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { after, test } from "node:test";
 import { prisma } from "../../src/lib/db";
 import { aprovarVersaoCatalogoB2B } from "../../src/lib/catalogo-b2b";
+import { salvarProdutoNoCatalogo } from "../../src/lib/catalogo-escrita";
 import { aprovarCotacaoB2B, contraproporCotacaoB2B, converterCotacaoB2B, criarCotacaoB2B, recomprarCotacaoB2B, submeterCotacaoB2B } from "../../src/lib/cotacoes-b2b";
 
 const url = new URL(process.env.DATABASE_URL ?? "http://invalid");
@@ -19,7 +20,8 @@ test("negociação preserva versões e conversão idempotente preserva o preço 
   await prisma.escopoCompradorB2B.create({ data: { tenantId: tenant.id, empresaId: empresa.id, compradorEmpresaId: comprador.id, papel: "APROVADOR", escopo: "UNIDADE", unidadeId: unidade.id, limiteAprovacaoCentavos: 100_000, contextoVersao: 1 } });
   await prisma.escopoCompradorB2B.create({ data: { tenantId: tenant.id, empresaId: empresa.id, compradorEmpresaId: comprador.id, papel: "ADMINISTRADOR", escopo: "ORGANIZACAO", limiteAprovacaoCentavos: null, contextoVersao: 1 } });
   const centroCusto = await prisma.centroCustoB2B.create({ data: { tenantId: tenant.id, empresaId: empresa.id, codigo: "COMPRAS", nome: "Compras" } });
-  const produto = await prisma.produto.create({ data: { tenantId: tenant.id, slug: `p-${chave()}`, nome: "Rolamento", sku: `P-${chave()}`, precoCentavos: 2_000, variantes: { create: { padrao: true, valores: {}, nome: "Padrão", precoCentavos: 2_000, saldos: { create: { fisico: 20 } } } } }, include: { variantes: true } });
+  const produtoCriado = await salvarProdutoNoCatalogo(tenant.id, null, { nome: "Rolamento", slug: `p-${chave()}`, sku: `P-${chave()}`, precoCentavos: 2_000, estoque: 20, imagens: ["https://example.com/rolamento.webp"] });
+  const produto = await prisma.produto.findUniqueOrThrow({ where: { id: produtoCriado.id }, include: { variantes: true } });
   const catalogo = await prisma.catalogoB2B.create({ data: { tenantId: tenant.id, referencia: `cat-${chave()}`, nome: "Contrato", versoes: { create: { versao: 1, vigenteDesde: new Date(Date.now() - 1_000), atribuicoes: { create: { empresaId: empresa.id, unidadeId: unidade.id } }, itens: { create: { produtoId: produto.id, varianteId: produto.variantes[0].id, acao: "INCLUIR", estrategiaPreco: "FIXO", precoFixoCentavos: 1_500, quantidadeMinima: 1, multiploVenda: 1, quantidadePorEmbalagem: 1, unidadeComercial: "UN", unidadesBaseNumerador: 1, unidadesBaseDenominador: 1 } } } } } });
   assert.ok(catalogo.id);
   await aprovarVersaoCatalogoB2B(tenant.id, catalogo.id, 1, "qa");
