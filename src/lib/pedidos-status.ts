@@ -38,12 +38,13 @@ export interface MudancaDeStatus {
 export type ProgressoItemPedido = { id: string; quantidadePaga?: number; quantidadeExpedida?: number; quantidadeCancelada?: number; quantidadeDevolvida?: number };
 
 async function transacaoSerializavel<T>(executar: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T> {
-  for (let tentativa = 1; tentativa <= 3; tentativa++) {
+  for (let tentativa = 1; tentativa <= 5; tentativa++) {
     try {
       return await prisma.$transaction(executar, { isolationLevel: "Serializable" });
     } catch (erro) {
       const codigo = typeof erro === "object" && erro !== null && "code" in erro ? String(erro.code) : null;
-      if (codigo !== "P2034" || tentativa === 3) throw erro;
+      if (codigo !== "P2034" || tentativa === 5) throw erro;
+      await new Promise((resolver) => setTimeout(resolver, tentativa * 15));
     }
   }
   throw new Error("Falha inesperada ao concluir a transação do pedido.");
