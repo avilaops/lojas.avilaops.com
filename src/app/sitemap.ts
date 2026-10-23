@@ -1,13 +1,14 @@
 import type { MetadataRoute } from "next";
 import { headers } from "next/headers";
 import { tenantAtual, temaDo, urlDaLoja } from "@/lib/tenant";
-import { listarCategorias, listarProdutos, produtoPublicavel } from "@/lib/catalogo";
+import { listarCategorias } from "@/lib/catalogo";
 import { temPromocoes as lojaTemPromocoes } from "@/lib/promocoes";
 import { emPromocao, imagensDoSitemap } from "@/lib/produto-regras";
 import { postsPublicados } from "@/lib/blog";
 import { listarPublicadas } from "@/lib/publicacoes-consulta";
 import { politicasPublicadas } from "@/lib/politicas";
 import { visivelNaBusca } from "@/lib/descoberta";
+import { listarProdutosDoSitemap } from "@/lib/sitemap-produtos";
 
 export const dynamic = "force-dynamic";
 
@@ -39,7 +40,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const t = await tenantAtual();
   if (!t || !visivelNaBusca(t)) return [];
   const base = urlDaLoja(t);
-  const [categorias, produtos, publicacoes] = await Promise.all([listarCategorias(t.id), listarProdutos(t.id), listarPublicadas(t.id, 500)]);
+  const [categorias, produtos, publicacoes] = await Promise.all([listarCategorias(t.id), listarProdutosDoSitemap(t.id), listarPublicadas(t.id, 500)]);
   // A mesma regra do menu e da página: ver `src/lib/promocoes.ts`.
   const temPromocoes = lojaTemPromocoes(temaDo(t), produtos.some(emPromocao));
   return [
@@ -52,7 +53,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // milhares de páginas quase iguais derrubam as boas junto.
     // As fotos próprias vão declaradas junto: é por aqui que o Google Imagens
     // as associa à página do produto sem depender de rastrear a galeria.
-    ...produtos.filter(produtoPublicavel).map((p) => {
+    ...produtos.map((p) => {
       const images = imagensDoSitemap(p, base);
       return { url: `${base}/produtos/${p.slug}`, lastModified: p.atualizadoEm, changeFrequency: "weekly" as const, priority: 0.8, ...(images.length ? { images } : {}) };
     }),

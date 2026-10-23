@@ -4,6 +4,39 @@
   "members": [],
   "tasks": [
     {
+      "id": "SEO-INDEXACAO-20261023",
+      "title": "Corrigir sitemap grande e completar dados estruturados das lojas",
+      "objective": "Remover a falha do sitemap da Bereta Rodas e reforçar sinais de indexação e políticas comerciais sem publicar dados inventados.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "O sitemap consulta produtos publicáveis em páginas e somente com os campos necessários.",
+        "Um catálogo com 8426 produtos é percorrido sem perda nem repetição.",
+        "As ofertas referenciam de forma inequívoca a política global de devolução.",
+        "Frete e avaliações só são declarados quando existem dados reais.",
+        "Testes, TypeScript, lint e build local são aprovados antes do envio ao GitHub."
+      ],
+      "evidence": "Diagnóstico em produção: o sitemap da Bereta retornava HTTP 500 e o PostgreSQL registrava 54001 stack depth limit exceeded na consulta completa de produtos. Teste de regressão aprovado com 8426 produtos. Suíte com 1244 testes, TypeScript, ESLint sem erros e build Next.js aprovados. Evidência detalhada em evidencias/seo-indexacao-2026-10-23.md.",
+      "review": "Autorrevisão do diff concluída. Mudança sem interface visual; screenshots não se aplicam. Permanecem apenas avisos preexistentes de lint e build fora do escopo.",
+      "environment": "local",
+      "owner": null,
+      "acceptance": "Sitemap paginado e enxuto; política global referenciada nas ofertas; dados opcionais somente quando comprovados.",
+      "blocker": "A integração MCP do Search Console é deliberadamente somente leitura e não oferece cadastro de propriedade, envio de sitemap ou solicitação manual de indexação.",
+      "history": [
+        {
+          "at": "2026-10-23",
+          "status": "em-andamento",
+          "note": "Causa raiz reproduzida; teste vermelho criado antes da implementação e aprovado após a correção."
+        },
+        {
+          "at": "2026-10-23",
+          "status": "em-revisao",
+          "note": "Suíte completa, TypeScript, lint e build aprovados; entrega pronta para revisão no GitHub."
+        }
+      ]
+    },
+    {
       "id": "VITRINES-COMPRA-20261018",
       "title": "Compactar catálogo mobile e oferecer ajuda contextual",
       "objective": "Reduzir espaço antes dos produtos nas vitrines e levar a consulta ao WhatsApp da própria loja.",
