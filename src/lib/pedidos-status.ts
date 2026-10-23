@@ -43,7 +43,12 @@ async function transacaoSerializavel<T>(executar: (tx: Prisma.TransactionClient)
       return await prisma.$transaction(executar, { isolationLevel: "Serializable" });
     } catch (erro) {
       const codigo = typeof erro === "object" && erro !== null && "code" in erro ? String(erro.code) : null;
-      if (codigo !== "P2034" || tentativa === 5) throw erro;
+      const meta = typeof erro === "object" && erro !== null && "meta" in erro && typeof erro.meta === "object" && erro.meta !== null
+        ? erro.meta as Record<string, unknown>
+        : null;
+      const codigoBanco = meta?.code ? String(meta.code) : null;
+      const conflito = codigo === "P2034" || (codigo === "P2010" && ["40001", "40P01"].includes(codigoBanco ?? ""));
+      if (!conflito || tentativa === 5) throw erro;
       await new Promise((resolver) => setTimeout(resolver, tentativa * 15));
     }
   }
