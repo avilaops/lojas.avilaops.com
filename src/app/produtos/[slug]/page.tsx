@@ -35,6 +35,7 @@ import { envioSchema } from "@/lib/envio-declarado";
 import { usaBlocoProprio } from "@/lib/templates";
 import { LinkContatoMedido } from "@/components/EventoFunil";
 import { retornoSeguroDoCatalogo } from "@/lib/retorno-catalogo";
+import { referenciaPoliticaDevolucao } from "@/lib/politicas";
 
 const MEIOS: Record<string, string> = { pix: "Pix", cartao: "Cartão", boleto: "Boleto" };
 
@@ -109,6 +110,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
   ]);
   const compat = lerCompatibilidade(p.compatibilidade);
   const ficha = fichaDoProduto((p.atributos as Record<string, unknown>) ?? {});
+  const politicaDevolucao = referenciaPoliticaDevolucao(`${urlDaLoja(t)}/politicas/devolucao`);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -150,6 +152,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
       itemCondition: "https://schema.org/NewCondition",
       availability: somenteNaLoja ? "https://schema.org/InStoreOnly" : `https://schema.org/${regras.disponibilidadeSchema(p)}`,
       seller: { "@id": `${urlDaLoja(t)}/#organization` },
+      hasMerchantReturnPolicy: politicaDevolucao,
       // Só quando o frete não depende do CEP. Ver lib/envio-declarado.
       ...(!somenteNaLoja && envioSchema(t, p.precoCentavos) ? { shippingDetails: envioSchema(t, p.precoCentavos) } : {}),
     } : ofertas.some(v=>v.precoCentavos>0) ? {
@@ -163,6 +166,9 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
         url:`${urlDaLoja(t)}/produtos/${p.slug}?variante=${encodeURIComponent(v.id)}`,
         priceCurrency:"BRL",price:(v.precoCentavos/100).toFixed(2),itemCondition:"https://schema.org/NewCondition",
         availability:`https://schema.org/${regras.disponibilidadeSchema({...p,...v})}`,
+        seller: { "@id": `${urlDaLoja(t)}/#organization` },
+        hasMerchantReturnPolicy: politicaDevolucao,
+        ...(!somenteNaLoja && envioSchema(t, v.precoCentavos) ? { shippingDetails: envioSchema(t, v.precoCentavos) } : {}),
       })),
     } : undefined,
   };

@@ -130,6 +130,7 @@ test("CNPJ e razão social entram nos modelos quando a loja os tem", () => {
 test("política no JSON-LD: prazo legal é devolução grátis; cortesia paga pelo cliente não afirma frete", () => {
   const url = "https://loja.com.br/politicas/devolucao";
   const legal = politicaDevolucaoSchema(lerRegrasDevolucao({}), url);
+  assert.equal(legal["@id"], `${url}#policy`);
   assert.equal(legal.merchantReturnDays, PRAZO_LEGAL_DIAS);
   assert.equal(legal.returnFees, "https://schema.org/FreeReturn");
   assert.equal(legal.applicableCountry, "BR");

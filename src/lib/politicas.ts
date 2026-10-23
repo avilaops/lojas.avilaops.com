@@ -124,6 +124,7 @@ export function lerRegrasDevolucao(bruto: unknown): RegrasDevolucao {
 export function politicaDevolucaoSchema(regras: RegrasDevolucao, url: string) {
   const gratis = regras.prazoDias <= PRAZO_LEGAL_DIAS || regras.freteRetornoCortesia === "loja";
   return {
+    "@id": `${url}#policy`,
     "@type": "MerchantReturnPolicy",
     applicableCountry: "BR",
     returnPolicyCountry: "BR",
@@ -132,6 +133,11 @@ export function politicaDevolucaoSchema(regras: RegrasDevolucao, url: string) {
     ...(gratis && regras.taxaReposicaoPct === 0 ? { returnFees: "https://schema.org/FreeReturn" } : {}),
     merchantReturnLink: url,
   };
+}
+
+/** Referência inequívoca à política global declarada no JSON-LD da loja. */
+export function referenciaPoliticaDevolucao(url: string) {
+  return { "@id": `${url}#policy` };
 }
 
 export interface PoliticaEscrita {
