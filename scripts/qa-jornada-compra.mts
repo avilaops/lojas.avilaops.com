@@ -1,8 +1,6 @@
-var __defProp = Object.defineProperty;
-var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 import assert from "node:assert/strict";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { chromium } from "playwright";
+import { chromium, type Page } from "playwright";
 import { prisma } from "../src/lib/db";
 import { salvarProdutoNoCatalogo } from "../src/lib/catalogo-escrita";
 import { definirPadrao, salvarCredencial } from "../src/lib/credenciais";
@@ -16,18 +14,27 @@ const destino = "output/vedashow-avl-265/jornada-compra";
 const slug = `vedashow-qa-${Date.now()}`;
 const origem = `http://${slug}.localhost:3080`;
 const nomeProduto = "Retentor QA 25 \xD7 40 \xD7 7 mm";
-const errosDoNavegador = [];
-async function acessibilidade(page, etapa) {
+const errosDoNavegador: string[] = [];
+type NoAxe = { target: string[]; failureSummary?: string };
+type ViolacaoAxe = { id: string; impact: string | null; nodes: NoAxe[] };
+type EvidenciaTela = {
+  etapa: string;
+  url: string;
+  overflowHorizontal: boolean;
+  falhasAcessibilidadeSerias: Array<{ id: string; alvos: string[][]; resumo: string[] }>;
+};
+async function acessibilidade(page: Page, etapa: string): Promise<EvidenciaTela> {
   const axe = await readFile("node_modules/axe-core/axe.min.js", "utf8");
   await page.addScriptTag({ content: axe });
   const resultado = await page.evaluate(async () => {
-    const axeNoNavegador = window.axe;
+    const axeNoNavegador = (window as unknown as {
+      axe: { run: (contexto: Document, opcoes: { resultTypes: string[] }) => Promise<{ violations: ViolacaoAxe[] }> };
+    }).axe;
     const auditoria = await axeNoNavegador.run(document, { resultTypes: ["violations"] });
     return { overflowHorizontal: document.documentElement.scrollWidth > document.documentElement.clientWidth, falhasAcessibilidadeSerias: auditoria.violations.filter((violacao) => violacao.impact === "critical" || violacao.impact === "serious").map((violacao) => ({ id: violacao.id, alvos: violacao.nodes.map((node) => node.target), resumo: violacao.nodes.map((node) => node.failureSummary ?? "") })) };
   });
   return { etapa, url: page.url(), ...resultado };
 }
-__name(acessibilidade, "acessibilidade");
 async function prepararTenant() {
   const tenant = await prisma.tenant.create({ data: { slug, nome: "VedaShow \xB7 ensaio local", status: "ATIVA", plano: "LOJA", recursos: ["pagamentos_pix_manual", "recebimento_v2"], retiradaNaLoja: true, enderecoPublico: true, endereco: { logradouro: "Rua do Ensaio", numero: "100", bairro: "Centro", cidade: "Ribeir\xE3o Preto", uf: "SP", cep: "14010000" }, whatsapp: "5516999999999", identidade: { tituloHero: "Encontre a pe\xE7a pela medida ou refer\xEAncia", subtituloHero: "Cat\xE1logo t\xE9cnico para manuten\xE7\xE3o industrial." } } });
   const categoria = await prisma.categoria.create({ data: { tenantId: tenant.id, slug: "retentores", nome: "Retentores", ordem: 1 } });
@@ -41,7 +48,6 @@ async function prepararTenant() {
   await definirPadrao(tenant, credencial.id);
   return { tenant, produto };
 }
-__name(prepararTenant, "prepararTenant");
 async function main() {
   await mkdir(destino, { recursive: true });
   const { tenant, produto } = await prepararTenant();
@@ -124,5 +130,4 @@ async function main() {
   await browser.close();
   console.log(JSON.stringify(evidencia, null, 2));
 }
-__name(main, "main");
 main().finally(() => prisma.$disconnect());
