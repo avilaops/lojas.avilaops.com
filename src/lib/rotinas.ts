@@ -91,6 +91,13 @@ export const ROTINAS = {
     travaMinutos: 30,
     falhasAteAlerta: 3,
   },
+  "equipe.convites": {
+    titulo: "Convites da equipe",
+    descricao: "Provisiona contas de funcionários no Auth em lotes, com reenvio e deduplicação",
+    cadencia: { tipo: "intervalo", minutos: 1 },
+    travaMinutos: 10,
+    falhasAteAlerta: 2,
+  },
   "automacoes.eventos": {
     titulo: "Fila de eventos",
     descricao: "Executa os eventos que a plataforma mesma resolve, hoje os que viram e-mail",

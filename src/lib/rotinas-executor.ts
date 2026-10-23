@@ -1,4 +1,5 @@
 import { Prisma } from "@prisma/client";
+import { processarConvitesPendentes } from "./convites-fila";
 import { prisma } from "./db";
 import {
   ROTINAS,
@@ -38,6 +39,7 @@ export const FALHAS_ATE_ALERTAR = 3;
  * Todas as funções já existiam — o que mudou foi quem chama.
  */
 const TRABALHOS: Record<NomeDeRotina, () => Promise<unknown>> = {
+  "equipe.convites": () => processarConvitesPendentes(50),
   "fiscal.receber": () => receberNotasPeriodicamente(),
   "fiscal.arquivar": () => arquivarXmlFiscal(),
   // 100 por passada, e não o padrão de 50: a cada 5 min dá 1.200 avisos por
