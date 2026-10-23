@@ -14,5 +14,5 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   catch { return Response.json({ erro: "O ERP fiscal está temporariamente indisponível." }, { status: 502 }); }
   if (!upstream) return Response.json({ erro: "Integração fiscal com o ERP não configurada." }, { status: 404 });
   if (!upstream.ok || !upstream.body) return Response.json({ erro: "O ERP não entregou o arquivo fiscal." }, { status: upstream.status >= 400 && upstream.status < 600 ? upstream.status : 502 });
-  return new Response(upstream.body, { status: 200, headers: { "Content-Type": formato === "xml" ? "application/xml; charset=utf-8" : "application/pdf", "Content-Disposition": `${formato === "xml" ? "attachment" : "inline"}; filename="NF-e-${id}.${formato === "xml" ? "xml" : "pdf"}"`, "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" } });
+  return new Response(upstream.body, { status: 200, headers: { "Content-Type": formato === "xml" ? "application/xml; charset=utf-8" : "application/pdf", "Content-Disposition": `attachment; filename="NF-e-${id}.${formato === "xml" ? "xml" : "pdf"}"`, "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" } });
 }

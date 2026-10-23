@@ -11,6 +11,7 @@ import ProductCard from "@/components/ProductCard";
 import TabelaTecnica from "@/components/TabelaTecnica";
 import { listaEmTabela } from "@/lib/templates";
 import FiltrosProdutos from "@/components/FiltrosProdutos";
+import AjudaCatalogo from "@/components/AjudaCatalogo";
 import { minhaMoto } from "@/lib/minha-moto";
 import { nomeDaMoto } from "@/lib/motos";
 import { usaBlocoProprio } from "@/lib/templates";
@@ -90,6 +91,7 @@ export default async function Produtos({ searchParams }: { searchParams: Promise
         </div>
       )}
       <PaginacaoLoja base="/produtos" sp={sp} pagina={pagina} temProxima={temProxima} total={lote.total} porPagina={porPagina} />
+      <AjudaCatalogo whatsapp={t.whatsapp} categoria={categoriaAtual?.nome} valores={sp} tecnico={temMedida.length > 0 || facetas.perfis.length > 0} />
     </div>
   );
 }

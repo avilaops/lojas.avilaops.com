@@ -370,6 +370,7 @@ model Tenant {
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
+  acessos           AcessoLoja[]
   categorias        Categoria[]
   produtos          Produto[]
   pedidos           Pedido[]
@@ -404,11 +405,15 @@ model DocumentoFiscalLoja {
   chave      String?
   xml        String   @db.Text
   recebidoEm DateTime @default(now())
+  arquivadoEm DateTime? // XML completo já copiado ao R2 privado
   /// Marcadores duráveis: a retenção da fila não permite reenviar o mesmo documento ao mesmo fluxo.
   fluxosEnfileirados String[] @default([])
 
   @@unique([tenantId, cnpj, nsu])
   @@index([tenantId, recebidoEm])
+  @@index([arquivadoEm, recebidoEm])
+  @@index([tenantId, chave])
+  @@index([tenantId, schema, recebidoEm])
 }
 
 /// Regra fiscal usa um destino já cadastrado e a fila assinada EntregaWebhook.
@@ -2225,4 +2230,18 @@ model EventoSaudeCanal {
 
   @@index([tenantId, canal, ocorridoEm])
   @@index([tenantId, ocorridoEm])
+}
+
+/// Vínculo explícito entre identidade SSO e tenant. Nunca concede acesso por domínio de e-mail.
+model AcessoLoja {
+  id       String  @id @default(cuid())
+  tenantId String
+  email    String
+  papel    String  @default("DONO")
+  ativo    Boolean @default(true)
+  criadoEm DateTime @default(now())
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, email])
+  @@index([email, ativo])
 }

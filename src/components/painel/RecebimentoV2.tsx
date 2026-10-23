@@ -105,13 +105,13 @@ function CartaoProvedor({ provedor, credencial, aoUsarComoPadrao, aoSalvar }: { 
       )}
 
       <div className="mt-3 flex flex-wrap gap-2">
-        {provedor.tipoConexao === "oauth" ? (
+        {provedor.id === "mercadopago" || provedor.tipoConexao === "oauth" ? (
           provedor.oauthDisponivel ? (
             <a className="btn-primario inline-flex h-9 items-center px-3 text-sm" href={`/api/painel/recebimento/v2/conectar/${provedor.id}`}>
               {credencial ? `Conectar de novo com ${provedor.nome}` : `Conectar com ${provedor.nome}`}
             </a>
           ) : (
-            <span className="text-sm text-slate-600">Conexão com {provedor.nome} em breve.</span>
+            <span className="text-sm text-slate-600">Conexão OAuth aguardando ativação na plataforma Ávila Ops. Os recebimentos existentes permanecem ativos.</span>
           )
         ) : (
           <button className="btn-secundario inline-flex h-9 items-center px-3 text-sm" onClick={() => setAberto((v) => !v)}>

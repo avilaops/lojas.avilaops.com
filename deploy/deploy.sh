@@ -115,6 +115,8 @@ docker compose up -d --force-recreate
 # Odoo; o container das lojas está na bridge padrão (para alcançar o Postgres
 # do host). Sem esta ligação o nome não resolve e "Tratar com IA" fica fora.
 docker network connect odoo-avilaops_default lojas-avilaops 2>/dev/null || true
+# Fiscal compartilhado: acesso apenas pela rede Docker privada edge.
+docker network connect edge lojas-avilaops 2>/dev/null || true
 
 # `/api/health` responde 200 com o pacote sem `.next/static`: em 02/09/2026 a
 # loja ficou no ar sem CSS nenhum e o deploy declarou sucesso. Então, antes de

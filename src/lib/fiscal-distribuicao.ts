@@ -26,6 +26,14 @@ export function envelopeDistribuicao(cnpj: string, uf: string, nsu: string): str
   return `<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope"><soap:Body><nfeDistDFeInteresse xmlns="${NS}"><nfeDadosMsg><distDFeInt xmlns="http://www.portalfiscal.inf.br/nfe" versao="1.01"><tpAmb>1</tpAmb><cUFAutor>${UFS_FISCAIS[uf]}</cUFAutor><CNPJ>${cnpj}</CNPJ><distNSU><ultNSU>${nsu}</ultNSU></distNSU></distDFeInt></nfeDadosMsg></nfeDistDFeInteresse></soap:Body></soap:Envelope>`;
 }
 
+
+export function envelopeDistribuicaoPorChave(cnpj: string, uf: string, chave: string): string {
+  if (!/^[0-9A-Z]{12}\d{2}$/.test(cnpj) || !UFS_FISCAIS[uf] || !/^\d{44}$/.test(chave)) {
+    throw new ErroFiscal("CNPJ, UF ou chave fiscal inválidos.");
+  }
+  return `<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope"><soap:Body><nfeDistDFeInteresse xmlns="${NS}"><nfeDadosMsg><distDFeInt xmlns="http://www.portalfiscal.inf.br/nfe" versao="1.01"><tpAmb>1</tpAmb><cUFAutor>${UFS_FISCAIS[uf]}</cUFAutor><CNPJ>${cnpj}</CNPJ><consChNFe><chNFe>${chave}</chNFe></consChNFe></distDFeInt></nfeDadosMsg></nfeDistDFeInteresse></soap:Body></soap:Envelope>`;
+}
+
 export function lerDistribuicao(xml: string) {
   validarXml(xml);
   const body = parser.parse(xml).Envelope?.Body;
@@ -43,7 +51,12 @@ export function lerDistribuicao(xml: string) {
   if (!["137", "138", "656"].includes(status)) throw new ErroFiscal(`SEFAZ ${status}: ${mensagem}`);
   const ultimoNsu = String(retorno.ultNSU ?? "");
   const maxNsu = String(retorno.maxNSU ?? "");
-  if (status !== "656" && (!/^\d{15}$/.test(ultimoNsu) || !/^\d{15}$/.test(maxNsu) || ultimoNsu > maxNsu)) {
+  const controleObrigatorioInvalido = status !== "656" && (!/^\d{15}$/.test(ultimoNsu) || !/^\d{15}$/.test(maxNsu));
+  const controleOpcionalInvalido = status === "656" && (
+    (!!ultimoNsu && !/^\d{15}$/.test(ultimoNsu))
+    || (!!maxNsu && !/^\d{15}$/.test(maxNsu))
+  );
+  if (controleObrigatorioInvalido || controleOpcionalInvalido || (ultimoNsu && maxNsu && ultimoNsu > maxNsu)) {
     throw new ErroFiscal("A SEFAZ devolveu um controle de consulta inválido.");
   }
   const lote = retorno.loteDistDFeInt?.docZip;
@@ -68,6 +81,14 @@ export function lerDistribuicao(xml: string) {
 /** Um lote por chamada; nunca desliga a validação TLS nem segue redirecionamento. */
 export async function consultarSefaz(pfx: Buffer, senha: string, cnpj: string, uf: string, nsu: string) {
   const corpo = envelopeDistribuicao(cnpj, uf, nsu);
+  return enviarDistribuicaoFiscal(pfx, senha, corpo);
+}
+
+export async function consultarSefazPorChave(pfx: Buffer, senha: string, cnpj: string, uf: string, chave: string) {
+  return enviarDistribuicaoFiscal(pfx, senha, envelopeDistribuicaoPorChave(cnpj, uf, chave));
+}
+
+async function enviarDistribuicaoFiscal(pfx: Buffer, senha: string, corpo: string) {
   const credencial = credencialTls(pfx, senha);
   const xml = await new Promise<string>((resolve, reject) => {
     const req = request(URL_SEFAZ, {

@@ -29,6 +29,7 @@ html[data-template="automotivo-premium"][data-modo="claro"] {
 .ap-logo-compacta { display:none; }
 .ap-marca-simbolo:empty { display:none; }
 .ap-marca-simbolo img { width:43px; height:43px; object-fit:contain; border-radius:50%; }
+.ap-marca--logo-completa .ap-marca-simbolo img { width:auto; max-width:180px; border-radius:0; }
 .ap-logo-escuro { display:none; }
 [data-modo="escuro"] .ap-logo-claro { display:none; }
 [data-modo="escuro"] .ap-logo-escuro { display:block; }
@@ -223,6 +224,7 @@ html[data-template="automotivo-premium"][data-modo="claro"] {
   .ap-logo-compacta~.ap-marca-simbolo { display:none; }
   .ap-marca:has(.ap-logo-compacta)>span:last-child { display:none; }
   .ap-marca-simbolo img { width:42px; height:42px; object-fit:contain; }
+  .ap-marca--logo-completa .ap-marca-simbolo img { width:auto; max-width:130px; }
   .ap-cabecalho-acoes { gap:7px; }
   .ap-cabecalho-acoes .ap-icone { width:44px; height:44px; }
   .ap-menu-botao { display:inline-flex; width:44px; height:44px; border:0; }

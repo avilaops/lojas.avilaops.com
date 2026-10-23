@@ -63,10 +63,17 @@ export interface DefinicaoRotina {
  */
 export const ROTINAS = {
   "fiscal.receber": {
-    titulo: "Receber NF-e",
-    descricao: "Consulta documentos fiscais dos CNPJs com certificado A1 configurado",
-    cadencia: { tipo: "intervalo", minutos: 5 },
-    travaMinutos: 5,
+    titulo: "Monitor por CNPJ",
+    descricao: "Sincroniza documentos fiscais dos CNPJs com certificado A1 configurado a cada hora",
+    cadencia: { tipo: "intervalo", minutos: 60 },
+    travaMinutos: 30,
+    falhasAteAlerta: 3,
+  },
+  "fiscal.arquivar": {
+    titulo: "Arquivar XML fiscal",
+    descricao: "Copia XMLs completos para o acervo R2 privado, em lotes, sem consultar a SEFAZ",
+    cadencia: { tipo: "intervalo", minutos: 60 },
+    travaMinutos: 45,
     falhasAteAlerta: 3,
   },
   "mercadolivre.avisos": {
@@ -83,6 +90,13 @@ export const ROTINAS = {
     cadencia: { tipo: "intervalo", minutos: 60 },
     travaMinutos: 30,
     falhasAteAlerta: 3,
+  },
+  "equipe.convites": {
+    titulo: "Convites da equipe",
+    descricao: "Provisiona contas de funcionários no Auth em lotes, com reenvio e deduplicação",
+    cadencia: { tipo: "intervalo", minutos: 1 },
+    travaMinutos: 10,
+    falhasAteAlerta: 2,
   },
   "automacoes.eventos": {
     titulo: "Fila de eventos",

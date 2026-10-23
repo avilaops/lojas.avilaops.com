@@ -13,6 +13,8 @@ const vazia: EntradaChecklist = {
   dominioPrincipal: null,
   produtosAtivos: 0,
   mpConfigurado: false,
+  recebimentoTestado: false,
+  recebimentoTestadoEm: null,
   cepOrigem: null,
   melhorEnvioConectado: false,
   cotacaoDaPlataforma: false,
@@ -30,6 +32,8 @@ const completa: EntradaChecklist = {
   whatsapp: "5516999990000",
   produtosAtivos: 3,
   mpConfigurado: true,
+  recebimentoTestado: true,
+  recebimentoTestadoEm: "2026-10-18T12:00:00.000Z",
   cepOrigem: "14010-000",
   melhorEnvioConectado: true,
 };
@@ -95,14 +99,22 @@ test("catálogo: sem produto ativo fica pendente", () => {
 });
 
 test("recebimento: outro provedor configurado não depende de Mercado Pago", () => {
-  assert.equal(passo({ ...vazia, mpConfigurado: false, recebimentoConfigurado: true }, "recebimento").feito, true);
+  assert.equal(passo({ ...vazia, mpConfigurado: false, recebimentoConfigurado: true, recebimentoTestado: true }, "recebimento").feito, true);
   assert.equal(passo({ ...vazia, mpConfigurado: true, recebimentoConfigurado: false }, "recebimento").feito, false);
 });
 
-test("recebimento: credencial salva liga o passo", () => {
-  const p = passo({ ...vazia, mpConfigurado: true }, "recebimento");
+test("recebimento: credencial testada com sucesso liga o passo", () => {
+  const p = passo({ ...vazia, mpConfigurado: true, recebimentoTestado: true, recebimentoTestadoEm: "2026-10-18T12:00:00.000Z" }, "recebimento");
   assert.equal(p.feito, true);
   assert.equal(p.href, "/painel/configuracoes/recebimento");
+  assert.match(p.detalhe, /foi testada/);
+});
+
+test("recebimento: credencial apenas salva continua pendente até teste positivo", () => {
+  const p = passo({ ...vazia, mpConfigurado: true }, "recebimento");
+  assert.equal(p.feito, false);
+  assert.equal(p.acao, "Testar o recebimento");
+  assert.match(p.detalhe, /ainda não passou por um teste positivo/);
 });
 
 test("recebimento: sem credencial fica pendente e diz a consequência", () => {

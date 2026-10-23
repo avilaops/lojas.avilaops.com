@@ -176,6 +176,21 @@ export type EventoSaudeParaTela = {
   ocorridoEm: Date
 }
 
+type ResultadoTesteAnterior = Pick<EventoSaudeParaTela, "canal" | "resultado" | "codigo" | "mensagem"> | undefined
+
+export function erroDoTesteMaisRecente(evento: ResultadoTesteAnterior, fallback: AlertaSaudeCanal | null = null): AlertaSaudeCanal | null {
+  if (!evento) return fallback
+  return evento.resultado === "erro" ? { codigo: evento.codigo, mensagem: evento.mensagem } : null
+}
+
+export function ehConflitoDeReserva(erro: unknown): boolean {
+  if (!erro || typeof erro !== "object" || !("code" in erro) || (erro as { code?: unknown }).code !== "P2002") return false
+  const target = (erro as { meta?: { target?: unknown } }).meta?.target
+  return target === "EventoSaudeCanal_dedupeKey_key"
+    || target === "dedupeKey"
+    || (Array.isArray(target) && target.length === 1 && target[0] === "dedupeKey")
+}
+
 export type CentralSaudeCanais = {
   canais: RetratoSaudeCanal[]
   historico: EventoSaudeParaTela[]
@@ -194,7 +209,7 @@ export async function saudeDosCanais(tenantId: string, agora = new Date()): Prom
   const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } })
   if (!tenant) return { canais: [], historico: [], atualizadoEm: agora }
 
-  const [contas, credenciais, anuncios, webhooks, entregasAgregadas, rotinas, historico] = await Promise.all([
+  const [contas, credenciais, anuncios, webhooks, entregasAgregadas, rotinas, historico, ultimosTestes] = await Promise.all([
     prisma.contaCanal.findMany({ where: { tenantId } }),
     prisma.credencialPagamento.findMany({ where: { tenantId }, orderBy: { provedor: "asc" } }),
     prisma.anuncioMercadoLivre.findMany({
@@ -213,7 +228,17 @@ export async function saudeDosCanais(tenantId: string, agora = new Date()): Prom
       take: 50,
       select: { id: true, canal: true, tipo: true, resultado: true, codigo: true, mensagem: true, ator: true, ocorridoEm: true },
     }),
+    prisma.eventoSaudeCanal.findMany({
+      where: { tenantId, tipo: "teste" },
+      orderBy: { ocorridoEm: "desc" },
+      distinct: ["canal"],
+      select: { canal: true, resultado: true, codigo: true, mensagem: true, ocorridoEm: true },
+    }),
   ])
+  const erroTestado = (canal: string, conectadoEm: Date | null, fallback: AlertaSaudeCanal | null = null) => {
+    const evento = ultimosTestes.find((item) => item.canal === canal && (!conectadoEm || item.ocorridoEm >= conectadoEm));
+    return erroDoTesteMaisRecente(evento, fallback);
+  }
   const rotina = (nome: string) => {
     const item = rotinas.find((r) => r.nome === nome)
     return item ? { ultimaEm: item.ultimaEm, falhasSeguidas: item.falhasSeguidas, ultimoErro: item.ultimoErro } : null
@@ -227,7 +252,7 @@ export async function saudeDosCanais(tenantId: string, agora = new Date()): Prom
       conta: tenant.mlNickname ?? tenant.mlUserId, autenticacao: "OAuth 2.0", escopos: ["vendas", "anúncios", "perguntas"],
       conectadoEm: tenant.mlConectadoEm, expiraEm: tenant.mlExpiraEm, refreshExpiraEm: null,
       ultimaAtividadeEm: ultimaMl, cadenciaEsperadaMs: DUAS_HORAS, possuiCargaOperacional: anuncios.length > 0,
-      rotina: rotina("mercadolivre.rodar"), webhooks: [],
+      rotina: rotina("mercadolivre.rodar"), erro: erroTestado("mercadolivre", tenant.mlConectadoEm), webhooks: [],
     },
     ...(["amazon", "shopee", "magalu"] as const).map((id): EntradaSaudeCanal => {
       const conta = porCanal.get(id)
@@ -237,7 +262,7 @@ export async function saudeDosCanais(tenantId: string, agora = new Date()): Prom
         conta: conta?.contaNome ?? conta?.contaId ?? null, autenticacao: "OAuth", escopos: ["conexão da conta"],
         conectadoEm: conta?.conectadoEm ?? null, expiraEm: conta?.expiraEm ?? null,
         refreshExpiraEm: conta?.refreshExpiraEm ?? null, ultimaAtividadeEm: null, cadenciaEsperadaMs: null,
-        possuiCargaOperacional: false, webhooks: [],
+        possuiCargaOperacional: false, erro: erroTestado(id, conta?.conectadoEm ?? null), webhooks: [],
       }
     }),
     {
@@ -245,7 +270,8 @@ export async function saudeDosCanais(tenantId: string, agora = new Date()): Prom
       conectado: Boolean(tenant.melhorEnvioAccessTokenEnc && tenant.melhorEnvioRefreshTokenEnc), capacidade: "operacional",
       conta: tenant.melhorEnvioConta, autenticacao: "OAuth 2.0", escopos: ["cálculo de frete", "leitura da conta"],
       conectadoEm: tenant.melhorEnvioConectadoEm, expiraEm: tenant.melhorEnvioExpiraEm, refreshExpiraEm: null,
-      ultimaAtividadeEm: null, cadenciaEsperadaMs: UM_DIA, possuiCargaOperacional: false, webhooks: [],
+      ultimaAtividadeEm: null, cadenciaEsperadaMs: UM_DIA, possuiCargaOperacional: false,
+      erro: erroTestado("melhor-envio", tenant.melhorEnvioConectadoEm), webhooks: [],
     },
     ...credenciais.map((c): EntradaSaudeCanal => ({
       id: `pagamento:${c.provedor}`, nome: `Pagamento · ${c.provedor}`, disponivel: provedoresDePagamento.tem(c.provedor),
@@ -254,7 +280,7 @@ export async function saudeDosCanais(tenantId: string, agora = new Date()): Prom
       expiraEm: c.provedor === "mercadopago" ? tenant.mpExpiraEm : null, refreshExpiraEm: null,
       ultimaAtividadeEm: c.testadoEm, cadenciaEsperadaMs: null, possuiCargaOperacional: false,
       rotina: c.provedor === "mercadopago" ? rotina("mercadopago.renovar") : null,
-      erro: c.status === "erro" ? { codigo: "falha_externa", mensagem: "A credencial precisa ser testada novamente." } : null,
+      erro: erroTestado(`pagamento:${c.provedor}`, c.criadoEm, c.status === "erro" ? { codigo: "falha_externa", mensagem: "A credencial precisa ser testada novamente." } : null),
       webhooks: [],
     })),
     {
@@ -295,7 +321,10 @@ export async function testarCanal(tenantId: string, canal: string, ator: string,
   const dedupeKey = `${tenantId}:${canal}:${Math.floor(agora.getTime() / 60_000)}`
   try {
     await prisma.eventoSaudeCanal.create({ data: { tenantId, canal, tipo: "reserva", resultado: "iniciado", codigo: "teste_iniciado", mensagem: "Teste iniciado.", ator: ator.slice(0, 160), dedupeKey } })
-  } catch { throw new ErroSaudeCanal("limite_temporario") }
+  } catch (erro) {
+    if (ehConflitoDeReserva(erro)) throw new ErroSaudeCanal("limite_temporario")
+    throw erro
+  }
 
   let resultado: { codigo: CodigoSeguroSaude; mensagem: string } = { codigo: "falha_externa", mensagem: MENSAGENS_SEGURAS.falha_externa }
   try {
@@ -304,8 +333,8 @@ export async function testarCanal(tenantId: string, canal: string, ator: string,
         const { chamarMl } = await import("./mercadolivre")
         await chamarMl(tenant, "/users/me")
       } else if (canal === "melhor-envio") {
-        const { tokenDaLoja } = await import("./melhor-envio-conta")
-        if (!await tokenDaLoja(tenant)) throw new ErroSaudeCanal("reconexao_necessaria")
+        const { testarConexaoMelhorEnvio } = await import("./melhor-envio-conta")
+        await testarConexaoMelhorEnvio(tenant)
       } else if (CANAIS_TESTAVEIS.has(canal)) {
         const { tokenDoCanal } = await import("./contas-canal")
         await tokenDoCanal(tenantId, canal as "amazon" | "shopee" | "magalu")

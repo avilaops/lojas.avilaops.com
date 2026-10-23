@@ -1,4 +1,5 @@
 import { Prisma } from "@prisma/client";
+import { processarConvitesPendentes } from "./convites-fila";
 import { prisma } from "./db";
 import {
   ROTINAS,
@@ -22,6 +23,7 @@ import { entregarWebhooks } from "./webhooks-entrega";
 import { expirarPixManual } from "./pix-manual";
 import { reconciliarReservas } from "./reservas-reconciliar";
 import { receberNotasPeriodicamente } from "./fiscal-loja";
+import { arquivarXmlFiscal } from "./fiscal-arquivo";
 import { expurgarHistoricoMcp } from "./mcp-historico";
 
 /** Quantas falhas seguidas de uma rotina viram alerta para gente. */
@@ -37,7 +39,9 @@ export const FALHAS_ATE_ALERTAR = 3;
  * Todas as funções já existiam — o que mudou foi quem chama.
  */
 const TRABALHOS: Record<NomeDeRotina, () => Promise<unknown>> = {
+  "equipe.convites": () => processarConvitesPendentes(50),
   "fiscal.receber": () => receberNotasPeriodicamente(),
+  "fiscal.arquivar": () => arquivarXmlFiscal(),
   // 100 por passada, e não o padrão de 50: a cada 5 min dá 1.200 avisos por
   // hora de folga, o suficiente para absorver uma rajada de vendas sem a
   // fila crescer mais rápido do que é esvaziada.
