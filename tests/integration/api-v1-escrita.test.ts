@@ -32,11 +32,11 @@ async function chave(tenantId: string, escopos: string[]) {
 }
 
 type Rota<P> = (r: Request, s: { params: Promise<P> }) => Promise<Response>;
-async function mandar<P>(rota: Rota<P>, metodo: string, caminho: string, chaveApi: string, corpo?: unknown, params?: P) {
+async function mandar<P>(rota: Rota<P>, metodo: string, caminho: string, chaveApi: string, corpo?: unknown, params?: P, cabecalhos?: Record<string, string>) {
   const r = await rota(
     new Request(`https://lojas.avilaops.com${caminho}`, {
       method: metodo,
-      headers: { authorization: `Bearer ${chaveApi}`, "content-type": "application/json" },
+      headers: { authorization: `Bearer ${chaveApi}`, "content-type": "application/json", ...cabecalhos },
       ...(corpo === undefined ? {} : { body: JSON.stringify(corpo) }),
     }),
     { params: Promise.resolve((params ?? {}) as P) },
@@ -178,6 +178,7 @@ test("avançar pedido: envia com rastreio, avisa o comprador uma vez, e reenviar
   const t = await loja();
   const k = await chave(t.id, ["pedidos:ler", "pedidos:escrever"]);
   const pedido = await pedidoPago(t.id);
+  assert.equal((await mandar(patchPedido, "PATCH", `/api/v1/pedidos/${pedido.referencia}`, k, { status: "EM_SEPARACAO" }, { id: pedido.referencia })).status, 200);
   const enviar = () => mandar(patchPedido, "PATCH", `/api/v1/pedidos/${pedido.referencia}`, k, { status: "ENVIADO", rastreio: "BR123456789BR" }, { id: pedido.referencia });
 
   const primeira = await enviar();
@@ -203,11 +204,36 @@ test("duas integrações marcando enviado ao mesmo tempo avisam o comprador uma 
   const t = await loja();
   const k = await chave(t.id, ["pedidos:escrever"]);
   const pedido = await pedidoPago(t.id);
+  assert.equal((await mandar(patchPedido, "PATCH", `/api/v1/pedidos/${pedido.id}`, k, { status: "EM_SEPARACAO" }, { id: pedido.id })).status, 200);
   const enviar = () => mandar(patchPedido, "PATCH", `/api/v1/pedidos/${pedido.id}`, k, { status: "ENVIADO" }, { id: pedido.id });
 
   const respostas = await Promise.all([enviar(), enviar(), enviar()]);
   assert.ok(respostas.every((r) => r.status === 200));
   assert.equal(await eventos(t.slug, "pedido.enviado"), 1);
+});
+
+test("progresso parcial por item é idempotente e preserva a auditoria", async () => {
+  const t = await loja();
+  const k = await chave(t.id, ["pedidos:ler", "pedidos:escrever"]);
+  const pedido = await prisma.pedido.create({
+    data: {
+      tenantId: t.id, referencia: sufixo(), clienteNome: "QA", clienteEmail: "qa@example.test", clienteTelefone: "5511999999999",
+      clienteDocumento: "00000000000", freteNome: "Transportadora QA", freteCentavos: 0, subtotalCentavos: 14970, totalCentavos: 14970,
+      meioPagamento: "pix", status: "EM_SEPARACAO",
+      itens: { create: { nome: "Caixa QA", quantidade: 3, quantidadePaga: 3, precoUnitarioCentavos: 4990 } },
+    },
+    include: { itens: true },
+  });
+  const corpo = { itens: [{ id: pedido.itens[0].id, quantidadeExpedida: 2, quantidadeCancelada: 1 }] };
+  const enviar = () => mandar(patchPedido, "PATCH", `/api/v1/pedidos/${pedido.id}`, k, corpo, { id: pedido.id }, { "idempotency-key": "progresso-parcial-qa" });
+
+  const [a, b] = await Promise.all([enviar(), enviar()]);
+  assert.equal(a.status, 200, JSON.stringify(a.corpo));
+  assert.equal(b.status, 200, JSON.stringify(b.corpo));
+  const item = await prisma.pedidoItem.findUniqueOrThrow({ where: { id: pedido.itens[0].id } });
+  assert.equal(item.quantidadeExpedida, 2);
+  assert.equal(item.quantidadeCancelada, 1);
+  assert.equal(await prisma.eventoPedido.count({ where: { pedidoId: pedido.id, tipo: "ITENS_ATUALIZADOS" } }), 1);
 });
 
 test("pedido que não foi pago só pode ser cancelado; pagamento não muda por aqui", async () => {

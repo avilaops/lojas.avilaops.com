@@ -155,7 +155,10 @@ tradução dos erros ficam em `src/lib/api-produtos.ts`.
 ## Pedido (`GET` e `PATCH /api/v1/pedidos/{id}`)
 
 `{id}` aceita o id ou a referência. O `PATCH` avança o pedido: `status`
-(`EM_SEPARACAO`, `ENVIADO`, `ENTREGUE`, `CANCELADO`) e `rastreio`.
+(`EM_SEPARACAO`, `ENVIADO`, `ENTREGUE`, `CANCELADO`), `rastreio` e progresso
+parcial por item (`quantidadePaga`, `quantidadeExpedida`,
+`quantidadeCancelada`, `quantidadeDevolvida`). Alterações de itens exigem o
+cabeçalho `Idempotency-Key`.
 
 - É a mesma função do painel e do conector MCP (`mudarStatusDoPedido`,
   `src/lib/pedidos-status.ts`): mesma regra, mesmo aviso ao comprador.
@@ -163,6 +166,11 @@ tradução dos erros ficam em `src/lib/api-produtos.ts`.
   "enviado" ao mesmo tempo. A resposta traz `mudou: false` quando o pedido já
   estava naquele status.
 - Pedido que não foi pago só pode ser cancelado (`conflito`, 409, nos outros).
+- O pedido não pula etapas: pago, separação, envio e entrega são transições
+  distintas. Cada comando registra origem, autoria e estado anterior no
+  histórico operacional.
+- Quantidades expedidas e canceladas não podem superar a quantidade do item;
+  quantidade devolvida não pode superar a expedida.
 - **Pagamento não muda por aqui.** `PAGO` e `ESTORNADO` vêm do gateway.
 
 ## Compra pela chave publicável

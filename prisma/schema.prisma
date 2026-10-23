@@ -389,6 +389,7 @@ model Tenant {
   categorias        Categoria[]
   produtos          Produto[]
   pedidos           Pedido[]
+  eventosPedido     EventoPedido[]
   cobrancasPix      CobrancaPixManual[]
   pesquisasCatalogo PesquisaCatalogoExecucao[]
   publicacoes       PublicacaoLoja[]
@@ -612,6 +613,8 @@ model Produto {
 }
 
 enum PedidoStatus {
+  COTADO
+  APROVADO
   AGUARDANDO_PAGAMENTO
   PAGO
   EM_SEPARACAO
@@ -670,8 +673,10 @@ model Pedido {
   /// De onde o pedido entrou quando não foi pelo checkout da vitrine:
   /// "api:<id da chave>". Nulo = checkout da própria loja.
   origem           String?
+  vendedorEmail    String?
   pedidoCompra        String?
   empresaB2BId        String?
+  unidadeB2BId        String?
   centroCustoB2BId    String?
   cotacaoVersao       Int?
   condicoesComerciais Json?
@@ -692,10 +697,12 @@ model Pedido {
   comprador         Comprador?         @relation(fields: [compradorId], references: [id], onDelete: SetNull)
   sessao            SessaoVitrine?     @relation(fields: [sessaoId], references: [id], onDelete: SetNull)
   itens             PedidoItem[]
+  eventos           EventoPedido[]
   postagem          Postagem?
   cobrancaPix       CobrancaPixManual?
   cotacaoOrigem     CotacaoB2B?
   empresaB2B        EmpresaB2B?        @relation(fields: [tenantId, empresaB2BId], references: [tenantId, id], onDelete: Restrict)
+  unidadeB2B        UnidadeEmpresaB2B? @relation(fields: [tenantId, empresaB2BId, unidadeB2BId], references: [tenantId, empresaId, id], onDelete: Restrict)
   centroCustoB2B    CentroCustoB2B?    @relation(fields: [tenantId, empresaB2BId, centroCustoB2BId], references: [tenantId, empresaId, id], onDelete: Restrict)
 
   @@unique([tenantId, id])
@@ -1112,6 +1119,10 @@ model PedidoItem {
   nome                  String
   sku                   String?
   quantidade            Int
+  quantidadePaga        Int     @default(0)
+  quantidadeExpedida    Int     @default(0)
+  quantidadeCancelada   Int     @default(0)
+  quantidadeDevolvida   Int     @default(0)
   precoUnitarioCentavos Int
   varianteId            String?
   varianteNome          String?
@@ -1119,6 +1130,31 @@ model PedidoItem {
   pedido   Pedido    @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
   produto  Produto?  @relation(fields: [produtoId], references: [id], onDelete: SetNull)
   variante Variante? @relation(fields: [varianteId], references: [id], onDelete: SetNull)
+}
+
+/// Linha do tempo imutável do pedido. `idempotencia` identifica o comando que
+/// produziu o evento e impede que webhook, API ou clique repetido duplique o
+/// efeito operacional.
+model EventoPedido {
+  id           String        @id @default(cuid())
+  tenantId     String
+  pedidoId     String
+  tipo         String
+  deStatus     PedidoStatus?
+  paraStatus   PedidoStatus?
+  atorTipo     String
+  atorId       String?
+  atorEmail    String?
+  origem       String
+  idempotencia String
+  dados        Json          @default("{}")
+  criadoEm     DateTime      @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  pedido Pedido @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, idempotencia])
+  @@index([tenantId, pedidoId, criadoEm])
 }
 
 /// Checkout iniciado (a pessoa se identificou) mas ainda sem pedido. É a
@@ -1234,6 +1270,7 @@ model UnidadeEmpresaB2B {
   escoposComprador       EscopoCompradorB2B[]
   atribuicoesCatalogoB2B AtribuicaoCatalogoB2B[]
   cotacoes               CotacaoB2B[]
+  pedidos                Pedido[]
 
   @@unique([tenantId, empresaId, referencia])
   @@unique([tenantId, cnpj])

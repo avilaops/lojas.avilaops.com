@@ -8,6 +8,8 @@ import FichaPedido from "./FichaPedido";
 import type { PedidoView } from "./PainelLoja";
 
 const PEDIDO: Record<string, string> = {
+  COTADO: "Cotado",
+  APROVADO: "Aprovado",
   AGUARDANDO_PAGAMENTO: "Aguardando pagamento",
   PAGO: "Pago, separar",
   EM_SEPARACAO: "Em separação",
@@ -18,6 +20,8 @@ const PEDIDO: Record<string, string> = {
 };
 
 const COR: Record<string, string> = {
+  COTADO: "bg-slate-100 text-slate-800",
+  APROVADO: "bg-violet-100 text-violet-800",
   AGUARDANDO_PAGAMENTO: "bg-amber-100 text-amber-800",
   PAGO: "bg-blue-100 text-blue-800",
   EM_SEPARACAO: "bg-blue-100 text-blue-800",
@@ -48,7 +52,9 @@ export default function PedidoDetalhe({ pedido, loja }: {
   async function chamar(caminho: string, method: string, body?: unknown, sucesso = "Salvo.") {
     setErro(null); setOk(null); setOcupado(true);
     try {
-      const r = await fetch(caminho, { method, headers: body ? { "content-type": "application/json" } : undefined, body: body ? JSON.stringify(body) : undefined });
+      const headers: Record<string, string> = { "idempotency-key": crypto.randomUUID() };
+      if (body) headers["content-type"] = "application/json";
+      const r = await fetch(caminho, { method, headers, body: body ? JSON.stringify(body) : undefined });
       const d = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(d?.erro ?? "Falha.");
       setOk(sucesso);
@@ -135,6 +141,16 @@ export default function PedidoDetalhe({ pedido, loja }: {
       )}
 
       <div className="grid gap-6 lg:grid-cols-2">
+        <Secao titulo="Operação" descricao="Origem e responsáveis deste pedido.">
+          <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
+            <dt className="text-muted-foreground">Canal</dt><dd className="font-medium">{pedido.canal ?? "Loja"}</dd>
+            <dt className="text-muted-foreground">Origem</dt><dd>{pedido.origem ?? "Checkout"}</dd>
+            <dt className="text-muted-foreground">Empresa</dt><dd>{pedido.empresa ?? "Consumidor final"}</dd>
+            <dt className="text-muted-foreground">Unidade</dt><dd>{pedido.unidade ?? "Não informada"}</dd>
+            <dt className="text-muted-foreground">Vendedor</dt><dd>{pedido.vendedorEmail ?? "Sem vendedor atribuído"}</dd>
+          </dl>
+        </Secao>
+
         <Secao titulo="Comprador">
           <p className="font-semibold">{pedido.clienteNome}</p>
           <p className="text-sm">
@@ -173,10 +189,10 @@ export default function PedidoDetalhe({ pedido, loja }: {
       </div>
 
       <Secao titulo={`Itens (${pedido.itens.reduce((s, i) => s + i.quantidade, 0)})`}>
-        <div className="overflow-x-auto">
+        <div className="hidden overflow-x-auto sm:block">
           <table className="w-full text-sm">
             <thead className="text-left text-xs uppercase text-muted-foreground">
-              <tr><th className="py-2">Item</th><th>SKU</th><th>Qtd</th><th className="text-right">Valor</th></tr>
+              <tr><th className="py-2">Item</th><th>SKU</th><th>Qtd</th><th>Progresso</th><th className="text-right">Valor</th></tr>
             </thead>
             <tbody>
               {pedido.itens.map((i, n) => (
@@ -184,11 +200,32 @@ export default function PedidoDetalhe({ pedido, loja }: {
                   <td className="py-2">{i.nome}</td>
                   <td className="text-muted-foreground">{i.sku ?? "-"}</td>
                   <td>{i.quantidade}</td>
+                  <td className="text-xs text-muted-foreground">
+                    Pago {i.quantidadePaga ?? 0} · Expedido {i.quantidadeExpedida ?? 0}<br />
+                    Cancelado {i.quantidadeCancelada ?? 0} · Devolvido {i.quantidadeDevolvida ?? 0}
+                  </td>
                   <td className="whitespace-nowrap text-right">{brl(i.precoUnitarioCentavos * i.quantidade)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
+        </div>
+        <div className="grid gap-3 sm:hidden">
+          {pedido.itens.map((i, n) => (
+            <article key={`${i.sku ?? i.nome}-${n}`} className="rounded-xl border border-border p-3 text-sm">
+              <div className="flex items-start justify-between gap-3">
+                <div><p className="font-medium">{i.nome}</p><p className="text-xs text-muted-foreground">SKU {i.sku ?? "não informado"}</p></div>
+                <p className="whitespace-nowrap font-medium">{brl(i.precoUnitarioCentavos * i.quantidade)}</p>
+              </div>
+              <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                <div><dt className="text-muted-foreground">Quantidade</dt><dd>{i.quantidade}</dd></div>
+                <div><dt className="text-muted-foreground">Paga</dt><dd>{i.quantidadePaga ?? 0}</dd></div>
+                <div><dt className="text-muted-foreground">Expedida</dt><dd>{i.quantidadeExpedida ?? 0}</dd></div>
+                <div><dt className="text-muted-foreground">Cancelada</dt><dd>{i.quantidadeCancelada ?? 0}</dd></div>
+                <div><dt className="text-muted-foreground">Devolvida</dt><dd>{i.quantidadeDevolvida ?? 0}</dd></div>
+              </dl>
+            </article>
+          ))}
         </div>
         <dl className="ml-auto grid w-full max-w-xs gap-1 text-sm sm:w-64">
           <div className="flex justify-between"><dt className="text-muted-foreground">Subtotal</dt><dd>{brl(pedido.subtotalCentavos)}</dd></div>
@@ -200,6 +237,21 @@ export default function PedidoDetalhe({ pedido, loja }: {
           <div className="flex justify-between text-xs text-muted-foreground"><dt>Pago com</dt><dd>{pedido.meioPagamento}</dd></div>
           <div className="flex justify-between text-xs text-muted-foreground"><dt>Referência</dt><dd>{pedido.referencia}</dd></div>
         </dl>
+      </Secao>
+
+      <Secao titulo="Histórico" descricao="Ações, origem e autoria registradas em ordem cronológica.">
+        {pedido.eventos?.length ? (
+          <ol className="grid gap-3">
+            {pedido.eventos.map((evento) => (
+              <li key={evento.id} className="border-l-2 border-border pl-3 text-sm">
+                <p className="font-medium">{evento.paraStatus ? `${PEDIDO[evento.paraStatus] ?? evento.paraStatus}` : evento.tipo.replaceAll("_", " ").toLowerCase()}</p>
+                <p className="text-xs text-muted-foreground">
+                  {new Date(evento.criadoEm).toLocaleString("pt-BR")} · {evento.origem} · {evento.atorEmail ?? evento.atorTipo}
+                </p>
+              </li>
+            ))}
+          </ol>
+        ) : <p className="text-sm text-muted-foreground">Nenhum evento registrado antes da ativação do histórico.</p>}
       </Secao>
     </div>
   );

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { lojistaAtual } from "@/lib/sessao";
 import { mudarStatusDoPedido, MudancaDeStatusRecusada } from "@/lib/pedidos-status";
 import { filtroDePedidos, paginaValida, POR_PAGINA_PEDIDOS } from "@/lib/pedidos-painel";
+import { exigir } from "@/lib/operadores";
 
 const Entrada = z.object({
   id: z.string(),
@@ -62,19 +63,25 @@ export async function GET(request: Request) {
 
 /** PATCH — o lojista avança o pedido. Pagamento só muda pelo webhook. */
 export async function PATCH(request: Request) {
-  const loja = await lojistaAtual();
-  if (!loja) return Response.json({ erro: "Sessão expirada." }, { status: 401 });
+  const { s, erro } = await exigir("pedidos");
+  if (erro) return erro;
   const r = Entrada.safeParse(await request.json().catch(() => null));
   if (!r.success) return Response.json({ erro: "Dados inválidos." }, { status: 422 });
 
   let a;
   try {
-    ({ pedido: a } = await mudarStatusDoPedido(loja, r.data.id, { status: r.data.status, rastreio: r.data.rastreio }));
+    ({ pedido: a } = await mudarStatusDoPedido(s.tenant, r.data.id, {
+      status: r.data.status,
+      rastreio: r.data.rastreio,
+      ator: { tipo: s.papel, id: s.operador?.id, email: s.operador?.email ?? s.tenant.loginEmail },
+      origem: "painel",
+      idempotencia: request.headers.get("idempotency-key")?.trim() || undefined,
+    }));
   } catch (e) {
     if (!(e instanceof MudancaDeStatusRecusada)) throw e;
     return e.motivo === "nao_encontrado"
       ? Response.json({ erro: "Pedido não encontrado." }, { status: 404 })
-      : Response.json({ erro: "Pedido ainda não foi pago." }, { status: 409 });
+      : Response.json({ erro: e.message }, { status: 409 });
   }
 
   return Response.json({ id: a.id, status: a.status, rastreio: a.rastreio });

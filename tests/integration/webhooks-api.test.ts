@@ -51,6 +51,11 @@ function destino(responder: (url: string) => number | Error = () => 200) {
 /** Só as entregas desta loja: a fila é da plataforma inteira, e outros testes também a enchem. */
 const daLoja = (tenantId: string) => prisma.entregaWebhook.findMany({ where: { tenantId }, orderBy: { criadaEm: "asc" } });
 
+async function enviarPedido(t: Awaited<ReturnType<typeof loja>>, pedidoId: string, rastreio?: string) {
+  await mudarStatusDoPedido(t, pedidoId, { status: "EM_SEPARACAO" });
+  await mudarStatusDoPedido(t, pedidoId, { status: "ENVIADO", ...(rastreio ? { rastreio } : {}) });
+}
+
 test("pedido enviado entra na fila de quem assinou, com o pedido da API e sem contato do lojista", async () => {
   const t = await prisma.tenant.update({ where: { id: (await loja()).id }, data: { whatsapp: "5516988887777", loginEmail: `dono-${sufixo()}@segredo.example` } });
   const assinou = await webhook(t.id, ["pedido.enviado"]);
@@ -58,7 +63,7 @@ test("pedido enviado entra na fila de quem assinou, com o pedido da API e sem co
   await webhook(t.id, ["pedido.enviado"], { ativo: false });
   const p = await pedido(t.id);
 
-  await mudarStatusDoPedido(t, p.id, { status: "ENVIADO", rastreio: "BR123456789BR" });
+  await enviarPedido(t, p.id, "BR123456789BR");
 
   const fila = await daLoja(t.id);
   assert.equal(fila.length, 1);
@@ -78,6 +83,7 @@ test("o mesmo fato emitido de novo não entra duas vezes na fila", async () => {
   const t = await loja();
   await webhook(t.id, ["pedido.enviado"]);
   const p = await pedido(t.id);
+  await mudarStatusDoPedido(t, p.id, { status: "EM_SEPARACAO" });
 
   await Promise.all([
     mudarStatusDoPedido(t, p.id, { status: "ENVIADO" }),
@@ -109,7 +115,7 @@ test("entrega com sucesso: assinatura confere, cabeçalhos certos, e não envia 
   const t = await loja();
   const w = await webhook(t.id, ["pedido.enviado"]);
   const p = await pedido(t.id);
-  await mudarStatusDoPedido(t, p.id, { status: "ENVIADO" });
+  await enviarPedido(t, p.id);
   const d = destino();
 
   await entregarWebhooks({ enviar: d.enviar });
@@ -132,7 +138,7 @@ test("entrega com sucesso: assinatura confere, cabeçalhos certos, e não envia 
 test("duas passadas ao mesmo tempo enviam a entrega uma vez", async () => {
   const t = await loja();
   const w = await webhook(t.id, ["pedido.enviado"]);
-  await mudarStatusDoPedido(t, (await pedido(t.id)).id, { status: "ENVIADO" });
+  await enviarPedido(t, (await pedido(t.id)).id);
   const d = destino();
 
   await Promise.all([entregarWebhooks({ enviar: d.enviar }), entregarWebhooks({ enviar: d.enviar }), entregarWebhooks({ enviar: d.enviar })]);
@@ -142,7 +148,7 @@ test("duas passadas ao mesmo tempo enviam a entrega uma vez", async () => {
 test("destino fora do ar: adia com o erro anotado, tenta de novo no prazo e entrega quando volta", async () => {
   const t = await loja();
   const w = await webhook(t.id, ["pedido.enviado"]);
-  await mudarStatusDoPedido(t, (await pedido(t.id)).id, { status: "ENVIADO" });
+  await enviarPedido(t, (await pedido(t.id)).id);
   let noAr = false;
   const d = destino((u) => (u !== w.url ? 200 : noAr ? 204 : 503));
   const agora = new Date();
@@ -170,7 +176,7 @@ test("destino fora do ar: adia com o erro anotado, tenta de novo no prazo e entr
 test("destino que nunca responde: a entrega esgota, e o webhook é desligado depois de muitas", async () => {
   const t = await loja();
   const w = await webhook(t.id, ["pedido.enviado"]);
-  await mudarStatusDoPedido(t, (await pedido(t.id)).id, { status: "ENVIADO" });
+  await enviarPedido(t, (await pedido(t.id)).id);
   const d = destino((u) => (u === w.url ? new Error("connect ECONNREFUSED") : 200));
 
   let agora = new Date();

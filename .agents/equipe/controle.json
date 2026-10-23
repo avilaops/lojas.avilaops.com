@@ -697,6 +697,33 @@
           "note": "Implementação e QA móvel concluídos com cinco capturas e relatório estruturado."
         }
       ]
+    },
+    {
+      "id": "AVL-235",
+      "title": "Unificar o ciclo operacional dos pedidos",
+      "objective": "Representar pedidos B2B, checkout e marketplace com estados válidos, progresso parcial, idempotência e histórico auditável.",
+      "assignee": null,
+      "priority": "urgente",
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "Canal, origem, empresa, comprador, vendedor e unidade ficam visíveis.",
+        "O ciclo impede saltos e regressões de estado.",
+        "Pagamento, expedição, cancelamento e devolução aceitam quantidades parciais por item.",
+        "Comandos concorrentes são idempotentes e registram autoria e origem.",
+        "Pedidos de marketplace não duplicam cobrança nem baixa de estoque."
+      ],
+      "evidence": "Schema Prisma válido, TypeScript e ESLint direcionado aprovados. Suíte completa: 1.245 testes aprovados. Integração PostgreSQL adicionada para progresso parcial concorrente; execução local bloqueada porque Docker não existe neste ambiente. Validação visual real pendente do ambiente publicado pelo GitHub.",
+      "review": "Autorrevisão concluída; alterações permanecem sem responsável humano porque o cadastro de equipe está vazio.",
+      "environment": "local",
+      "owner": null,
+      "acceptance": "Ciclo unificado, auditável e idempotente para pedidos próprios e externos.",
+      "blocker": "Captura visual e teste PostgreSQL dependem do pipeline ou ambiente com banco.",
+      "history": [
+        {
+          "at": "2026-10-23",
+          "note": "Implementação concluída localmente; aguardando CI, revisão e publicação via GitHub."
+        }
+      ]
     }
   ],
   "decisions": [

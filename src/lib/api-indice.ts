@@ -20,7 +20,7 @@ export const ROTAS = [
   { metodo: "PATCH", caminho: "/api/v1/ofertas", escopo: "catalogo:escrever", descricao: "Preço e estoque por SKU, em lote de até 100. Valores absolutos em centavos; reenviar o mesmo lote não muda nada." },
   { metodo: "GET", caminho: "/api/v1/pedidos", escopo: "pedidos:ler", descricao: "Pedidos. Filtros: status, canal, criadoDesde, atualizadoDesde." },
   { metodo: "GET", caminho: "/api/v1/pedidos/{id}", escopo: "pedidos:ler", descricao: "Um pedido (id ou referência) com os itens." },
-  { metodo: "PATCH", caminho: "/api/v1/pedidos/{id}", escopo: "pedidos:escrever", descricao: "Avança o pedido: status (EM_SEPARACAO, ENVIADO, ENTREGUE, CANCELADO) e rastreio. Avisa o comprador uma vez por virada; pagamento não muda por aqui." },
+  { metodo: "PATCH", caminho: "/api/v1/pedidos/{id}", escopo: "pedidos:escrever", descricao: "Avança o pedido e registra progresso parcial por item. Exige Idempotency-Key para alterar quantidades; pagamento não muda por aqui." },
   { metodo: "GET", caminho: "/api/v1/vitrine/loja", escopo: "vitrine:ler", descricao: "Dados públicos da loja, para um front próprio. Aceita chamada do navegador." },
   { metodo: "GET", caminho: "/api/v1/vitrine/produtos", escopo: "vitrine:ler", descricao: "Produtos ativos, como a vitrine mostra. Filtros: busca, categoria, destaque, ordem." },
   { metodo: "GET", caminho: "/api/v1/vitrine/produtos/{id}", escopo: "vitrine:ler", descricao: "Um produto ativo (id ou slug) com a descrição e as variações. O id de cada variação é o que vai no carrinho." },
