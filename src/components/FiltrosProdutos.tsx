@@ -2,6 +2,8 @@ import { TAMANHOS_PAGINA, porPaginaDaUrl } from "@/components/PaginacaoLoja";
 import type { Categoria } from "@prisma/client";
 import { dicaDeMedidas, type ChaveDeMedida, type FacetaMarca } from "@/lib/catalogo";
 import { temFiltroAtivo, temFiltroSecundarioAtivo } from "@/lib/filtros-url";
+import type { AtributoBuscaTecnica, ConfiguracaoBuscaTecnica } from "@/lib/busca-tecnica-familia";
+import SeletorTecnicoFamilia from "@/components/SeletorTecnicoFamilia";
 
 /** Uma medida que a loja usa, com a faixa real do catálogo. */
 export type MedidaDisponivel = { campo: ChaveDeMedida; rotulo: string; min: number; max: number; itens: number };
@@ -13,6 +15,8 @@ const PREFIXO: Record<ChaveDeMedida, string> = {
   alturaMm: "alt",
   espessuraMm: "esp",
   secaoMm: "sec",
+  larguraMm: "larg",
+  comprimentoMm: "comp",
 };
 
 /** Arredonda para o mm cheio, só no texto de ajuda. */
@@ -37,6 +41,8 @@ export default function FiltrosProdutos({
   perfis = [],
   acao = "/produtos",
   categoriaFixa = false,
+  buscaTecnica,
+  facetasAtributos = {},
 }: {
   categorias: Categoria[];
   valores: Record<string, string | undefined>;
@@ -47,6 +53,8 @@ export default function FiltrosProdutos({
   acao?: string;
   /** Página de categoria: a rota já escolheu a categoria. */
   categoriaFixa?: boolean;
+  buscaTecnica?: ConfiguracaoBuscaTecnica | null;
+  facetasAtributos?: Partial<Record<Exclude<AtributoBuscaTecnica, "perfil">, string[]>>;
 }) {
   // A frase sai das medidas que a loja cadastrou: loja que só tem espessura
   // e seção não mede "interno × externo × altura".
@@ -66,7 +74,7 @@ export default function FiltrosProdutos({
           </>
         )}
         {valores.moto === "todas" && <input type="hidden" name="moto" value="todas" />}
-        <input name="q" type="search" aria-label="Buscar produtos" defaultValue={valores.q ?? ""} placeholder="Nome, código, referência ou marca" className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
+        <input name="q" type="search" aria-label="Buscar produtos" defaultValue={valores.q ?? ""} placeholder={buscaTecnica ? "Código, referência ou aplicação" : "Nome, código, referência ou marca"} className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
         {/* Categoria, preço e ordem empilhavam no celular e empurravam o
             primeiro produto para quase uma tela inteira de rolagem (medido em
             0,95 tela). Aqui eles vão para uma gaveta que só existe no celular:
@@ -85,7 +93,7 @@ export default function FiltrosProdutos({
           <option value="nome">Nome A–Z</option>
         </select>
         <div id="filtros-campos" className="filtros-campos contents">
-          {perfis.length > 0 && <select name="perfil" aria-label="Perfil" defaultValue={valores.perfil ?? ""} className="h-11 rounded-lg border border-border bg-background px-3 text-sm"><option value="">Todos os perfis cadastrados</option>{perfis.map(p => <option key={p}>{p}</option>)}</select>}
+          {!buscaTecnica && perfis.length > 0 && <select name="perfil" aria-label="Perfil" defaultValue={valores.perfil ?? ""} className="h-11 rounded-lg border border-border bg-background px-3 text-sm"><option value="">Todos os perfis cadastrados</option>{perfis.map(p => <option key={p}>{p}</option>)}</select>}
           {fabricantes.length > 0 && <select name="fabricante" aria-label="Marca do produto" defaultValue={valores.fabricante ?? ""} className="h-11 rounded-lg border border-border bg-background px-3 text-sm"><option value="">Todas as marcas</option>{fabricantes.map(m => <option key={m.nome} value={m.nome}>{m.nome} ({m.itens})</option>)}</select>}
           {!categoriaFixa && (
             <select name="categoria" aria-label="Categoria" defaultValue={valores.categoria ?? ""} className="h-11 rounded-lg border border-border bg-background px-3 text-sm">
@@ -117,7 +125,8 @@ export default function FiltrosProdutos({
           </span>
         )}
       </div>
-      {medidas.length > 0 && (
+      {buscaTecnica && <SeletorTecnicoFamilia configuracao={buscaTecnica} medidas={medidas} valores={valores} facetas={facetasAtributos} perfis={perfis} />}
+      {!buscaTecnica && medidas.length > 0 && (
         // `open` quando já há medida na URL: quem chegou por um link filtrado
         // precisa ver o que está filtrando, senão a lista parece curta sem motivo.
         <details open={usandoMedida} className="rounded-lg border border-border/70 bg-background/40">

@@ -13,10 +13,14 @@ export default function AjudaCatalogo({ whatsapp, categoria, valores, tecnico }:
     valores.q?.trim() && `Busca: ${valores.q.trim()}`,
     valores.fabricante && `Marca: ${valores.fabricante}`,
     valores.perfil && `Perfil: ${valores.perfil}`,
+    valores.material && `Material: ${valores.material}`,
+    valores.dureza && `Dureza: ${valores.dureza}`,
+    valores.vedacao && `Vedação: ${valores.vedacao}`,
   ].filter(Boolean);
   const medidas = [
     ["di", "Diâmetro interno"], ["de", "Diâmetro externo"],
     ["alt", "Altura"], ["esp", "Espessura"], ["sec", "Seção"],
+    ["larg", "Largura"], ["comp", "Comprimento"],
   ].flatMap(([campo, rotulo]) => [
     valores[`${campo}_de`] && `${rotulo} mínimo: ${valores[`${campo}_de`]} mm`,
     valores[`${campo}_ate`] && `${rotulo} máximo: ${valores[`${campo}_ate`]} mm`,
