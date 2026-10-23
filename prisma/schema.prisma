@@ -81,6 +81,17 @@ enum EstrategiaPrecoCatalogoB2B {
   DESCONTO
 }
 
+enum EstadoCotacaoB2B {
+  RASCUNHO
+  EM_NEGOCIACAO
+  AGUARDANDO_APROVACAO
+  APROVADA
+  RECUSADA
+  EXPIRADA
+  CANCELADA
+  CONVERTIDA
+}
+
 model Tenant {
   id     String       @id @default(cuid())
   /// Identificador estável: vira <slug>.lojas.avilaops.com e o nome do container de dados.
@@ -345,6 +356,10 @@ model Tenant {
   itensCatalogoB2B       ItemCatalogoB2B[]
   componentesCatalogoB2B ComponenteKitCatalogoB2B[]
   auditoriasCatalogoB2B  AuditoriaCatalogoB2B[]
+  cotacoesB2B            CotacaoB2B[]
+  versoesCotacaoB2B      VersaoCotacaoB2B[]
+  eventosCotacaoB2B      EventoCotacaoB2B[]
+  anexosCotacaoB2B       AnexoCotacaoB2B[]
   anunciosMl             AnuncioMercadoLivre[]
   perguntasMl            PerguntaMercadoLivre[]
   reputacaoMl            ReputacaoMercadoLivre?
@@ -617,14 +632,19 @@ model Pedido {
   /// De onde veio a venda: "loja" (checkout próprio) ou "mercadolivre".
   /// Não é condição por loja — é fato do pedido, e o painel, o relatório e o
   /// n8n precisam distinguir: quem compra no ML fala com o ML, não com a loja.
-  canal         String  @default("loja")
+  canal            String  @default("loja")
   /// Id do pedido no canal externo (`order.id` do ML). É o que torna a
   /// ingestão idempotente: a notificação do ML chega mais de uma vez, e o
   /// mesmo pedido não pode virar dois.
-  canalPedidoId String?
+  canalPedidoId    String?
   /// De onde o pedido entrou quando não foi pelo checkout da vitrine:
   /// "api:<id da chave>". Nulo = checkout da própria loja.
-  origem        String?
+  origem           String?
+  pedidoCompra        String?
+  empresaB2BId        String?
+  centroCustoB2BId    String?
+  cotacaoVersao       Int?
+  condicoesComerciais Json?
 
   /**
    * Sessão da vitrine em que a compra foi fechada. Nulo em pedido anterior à
@@ -644,12 +664,17 @@ model Pedido {
   itens             PedidoItem[]
   postagem          Postagem?
   cobrancaPix       CobrancaPixManual?
+  cotacaoOrigem     CotacaoB2B?
+  empresaB2B        EmpresaB2B?        @relation(fields: [tenantId, empresaB2BId], references: [tenantId, id], onDelete: Restrict)
+  centroCustoB2B    CentroCustoB2B?    @relation(fields: [tenantId, empresaB2BId, centroCustoB2BId], references: [tenantId, empresaId, id], onDelete: Restrict)
 
+  @@unique([tenantId, id])
   @@unique([tenantId, canal, canalPedidoId])
   @@index([tenantId, status])
   @@index([pagamentoId])
   @@index([sessaoId])
   @@index([contratoComercialId])
+  @@index([tenantId, empresaB2BId, centroCustoB2BId])
 }
 
 /// Versão da regra comercial entre a Ávila Ops e uma loja.
@@ -1149,6 +1174,8 @@ model EmpresaB2B {
   centrosCusto           CentroCustoB2B[]
   auditorias             AuditoriaB2B[]
   atribuicoesCatalogoB2B AtribuicaoCatalogoB2B[]
+  cotacoes               CotacaoB2B[]
+  pedidos                Pedido[]
 
   @@unique([tenantId, referencia])
   @@unique([tenantId, id])
@@ -1176,6 +1203,7 @@ model UnidadeEmpresaB2B {
   autorizacoesDesejadas  AutorizacaoDesejadaB2B[]
   escoposComprador       EscopoCompradorB2B[]
   atribuicoesCatalogoB2B AtribuicaoCatalogoB2B[]
+  cotacoes               CotacaoB2B[]
 
   @@unique([tenantId, empresaId, referencia])
   @@unique([tenantId, cnpj])
@@ -1369,6 +1397,7 @@ model CompradorEmpresaB2B {
   provisionamento ProvisionamentoCompradorB2B?
   escopos         EscopoCompradorB2B[]
   centrosCusto    CompradorCentroCustoB2B[]
+  cotacoes        CotacaoB2B[]
 
   @@unique([tenantId, empresaId, emailNormalizado])
   @@unique([tenantId, authVinculoId])
@@ -1454,6 +1483,8 @@ model CentroCustoB2B {
   tenant      Tenant                    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   empresa     EmpresaB2B                @relation(fields: [tenantId, empresaId], references: [tenantId, id], onDelete: Cascade)
   compradores CompradorCentroCustoB2B[]
+  cotacoes    CotacaoB2B[]
+  pedidos     Pedido[]
 
   @@unique([tenantId, empresaId, codigo])
   @@unique([tenantId, id])
@@ -1497,6 +1528,105 @@ model AuditoriaB2B {
   @@index([tenantId, empresaId, criadoEm])
   @@index([tenantId, entidade, entidadeId])
   @@index([correlacaoId])
+}
+
+model CotacaoB2B {
+  id                     String           @id @default(cuid())
+  tenantId               String
+  empresaId              String
+  unidadeId              String?
+  compradorEmpresaId     String?
+  centroCustoId          String?
+  pedidoCompra           String?
+  referencia             String
+  estado                 EstadoCotacaoB2B @default(RASCUNHO)
+  versaoAtual            Int              @default(1)
+  versaoAprovada         Int?
+  aprovadaEm             DateTime?
+  aprovadaPor            String?
+  aprovacaoExcecao       Boolean          @default(false)
+  aprovacaoJustificativa String?
+  responsavelEmail       String
+  validaAte              DateTime
+  pedidoId               String?
+  chaveConversao         String?
+  criadoEm               DateTime         @default(now())
+  atualizadoEm           DateTime         @updatedAt
+
+  tenant           Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  empresa          EmpresaB2B           @relation(fields: [tenantId, empresaId], references: [tenantId, id], onDelete: Restrict)
+  unidade          UnidadeEmpresaB2B?   @relation(fields: [tenantId, empresaId, unidadeId], references: [tenantId, empresaId, id], onDelete: Restrict)
+  compradorEmpresa CompradorEmpresaB2B? @relation(fields: [tenantId, empresaId, compradorEmpresaId], references: [tenantId, empresaId, id], onDelete: Restrict)
+  centroCusto      CentroCustoB2B?      @relation(fields: [tenantId, empresaId, centroCustoId], references: [tenantId, empresaId, id], onDelete: Restrict)
+  pedido           Pedido?              @relation(fields: [tenantId, pedidoId], references: [tenantId, id], onDelete: Restrict)
+  versoes          VersaoCotacaoB2B[]
+  eventos          EventoCotacaoB2B[]
+  anexos           AnexoCotacaoB2B[]
+
+  @@unique([tenantId, referencia])
+  @@unique([tenantId, id])
+  @@unique([tenantId, pedidoId])
+  @@unique([tenantId, chaveConversao])
+  @@index([tenantId, empresaId, estado, criadoEm])
+}
+
+model VersaoCotacaoB2B {
+  id               String    @id @default(cuid())
+  tenantId         String
+  cotacaoId        String
+  numero           Int
+  autorTipo        String
+  autorId          String?
+  autorEmail       String?
+  itens            Json
+  subtotalCentavos Int
+  descontoCentavos Int       @default(0)
+  freteCentavos    Int       @default(0)
+  totalCentavos    Int
+  condicoes        Json      @default("{}")
+  justificativa    String?
+  excecaoComercial Boolean   @default(false)
+  criadoEm         DateTime  @default(now())
+
+  tenant  Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  cotacao CotacaoB2B @relation(fields: [tenantId, cotacaoId], references: [tenantId, id], onDelete: Cascade)
+
+  @@unique([tenantId, cotacaoId, numero])
+  @@unique([tenantId, id])
+  @@index([tenantId, cotacaoId])
+}
+
+model EventoCotacaoB2B {
+  id        String   @id @default(cuid())
+  tenantId  String
+  cotacaoId String
+  tipo      String
+  atorTipo  String
+  atorId    String?
+  atorEmail String?
+  dados     Json     @default("{}")
+  criadoEm  DateTime @default(now())
+
+  tenant  Tenant     @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  cotacao CotacaoB2B @relation(fields: [tenantId, cotacaoId], references: [tenantId, id], onDelete: Restrict)
+
+  @@index([tenantId, cotacaoId, criadoEm])
+}
+
+model AnexoCotacaoB2B {
+  id           String   @id @default(cuid())
+  tenantId     String
+  cotacaoId    String
+  nome         String
+  url          String
+  tipoMime     String
+  tamanhoBytes Int
+  criadoEm     DateTime @default(now())
+
+  tenant  Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  cotacao CotacaoB2B @relation(fields: [tenantId, cotacaoId], references: [tenantId, id], onDelete: Cascade)
+
+  @@index([tenantId, cotacaoId])
 }
 
 /// Endereço salvo pelo comprador — evita redigitar CEP e rua a cada compra.

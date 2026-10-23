@@ -17,7 +17,7 @@ async function projetarComEvento(tx: Tx, tenantId: string, ids: string[]) {
 }
 
 /** Reserva antes da cobrança, na mesma ordem de locks usada na edição. */
-export async function reservarEstoque(tenantId: string, referencia: string, itens: ItemCarrinho[]) {
+export async function reservarEstoque(tenantId: string, referencia: string, itens: ItemCarrinho[], opcoes: { validarPreco?: boolean } = {}) {
   if (!referencia || referencia.length>120 || !itens.length) throw new ErroCatalogo("Referência de checkout inválida.");
   const hash = createHash("sha256").update(JSON.stringify(itens.map(i=>[i.id,i.quantidade,i.precoUnitario]).sort())).digest("hex");
   try {
@@ -41,7 +41,7 @@ export async function reservarEstoque(tenantId: string, referencia: string, iten
         const original = p?.variantes.find(v=>v.id===varianteId);
         const v = original && ofertaDaVariante(original);
         if (p && !dispensavelADistancia(p)) throw new ErroCatalogo("Este medicamento é de controle especial e só pode ser dispensado presencialmente.",422);
-        if (!p?.ativo || !v?.compravel || v.precoCentavos!==item.preco || (v.estoque!=null && v.estoque<item.quantidade)) throw new ErroCatalogo("Preço ou estoque mudou. Revise o carrinho antes de pagar.",409);
+        if (!p?.ativo || !v?.compravel || (opcoes.validarPreco !== false && v.precoCentavos!==item.preco) || (v.estoque!=null && v.estoque<item.quantidade)) throw new ErroCatalogo("Preço ou estoque mudou. Revise o carrinho antes de pagar.",409);
         const saldo = v.saldos.find(s=>s.local==="principal");
         if (!saldo) throw new ErroCatalogo("Estoque da apresentação não cadastrado.");
         if (saldo.fisico!=null) {

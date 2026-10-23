@@ -295,6 +295,34 @@
       ],
       "review": "Validação local e telas concluídas; pendente de commit, PR, CI e revisão dos artefatos. Sem publicação autorizada.",
       "environment": "local"
+    },
+    {
+      "id": "AVL-234",
+      "title": "Implementar cotação, negociação, aprovação e conversão em pedido",
+      "objective": "Entregar cotações B2B versionadas com aprovação por alçada, conversão idempotente e recompra pelos preços vigentes.",
+      "assignee": null,
+      "priority": "urgente",
+      "status": "em_andamento",
+      "acceptanceCriteria": [
+        "Cotações preservam validade, versões, responsável, anexos e histórico append-only.",
+        "Contrapropostas não sobrescrevem versões e exceções comerciais exigem justificativa e administrador.",
+        "A aprovação respeita papel, escopo, unidade e alçada do comprador autenticado.",
+        "A conversão cria no máximo um pedido e preserva versão, preços, condições, empresa, centro de custo e pedido de compra.",
+        "Cotação não reserva estoque antes da conversão e expiração ou cancelamento não deixam reserva.",
+        "Equipe da loja e comprador possuem APIs autenticadas e isoladas por tenant para operar o fluxo.",
+        "A recompra só parte de cotação convertida e recalcula os preços comerciais vigentes."
+      ],
+      "evidence": [
+        "Prisma validado e cliente regenerado após a modelagem.",
+        "Três testes unitários direcionados aprovados para totais, alçadas, exceção comercial e estados.",
+        "Suíte geral concluída com 1.125 testes aprovados e nenhuma falha.",
+        "TypeScript concluído sem erros após as correções de contrato.",
+        "ESLint concluído sem erros; 20 avisos preexistentes permanecem fora do escopo.",
+        "Build de produção concluído e listou todas as rotas administrativas, do painel e da conta para cotações B2B.",
+        "Testes de integração dependem do PostgreSQL descartável local na porta 5548; Docker não está instalado neste host."
+      ],
+      "review": "Implementação local em andamento; a integração PostgreSQL isolada e a revisão final após essa prova ainda estão pendentes. Sem commit, push ou publicação.",
+      "environment": "local"
     }
   ],
   "decisions": [
