@@ -56,11 +56,17 @@ export async function registrarPedido(
         create: pedido.itens.map((i) => {
           const [produtoId, varianteId] = i.id.split(":");
           const [, varianteNome] = varianteId ? i.nome.split(/ [·—] /) : [null, null];
-          return { produtoId, varianteId: varianteId ?? null, varianteNome: varianteNome ?? null, nome: i.nome, sku: i.sku, quantidade: i.quantidade, precoUnitarioCentavos: i.precoUnitario };
+          return { produtoId, varianteId: varianteId ?? null, varianteNome: varianteNome ?? null, nome: i.nome, sku: i.sku, quantidade: i.quantidade, quantidadePaga: dados.status === "aprovado" ? i.quantidade : 0, precoUnitarioCentavos: i.precoUnitario };
         }),
       },
     },
   });
+
+  await prisma.eventoPedido.createMany({ data: [{
+    tenantId: t.id, pedidoId: salvo.id, tipo: "CRIADO", deStatus: null, paraStatus: salvo.status,
+    atorTipo: "COMPRADOR", atorId: dados.compradorId ?? null, atorEmail: pedido.cliente.email,
+    origem: "checkout", idempotencia: `pedido-criado:${salvo.referencia}`, dados: { canal: salvo.canal },
+  }], skipDuplicates: true });
 
   if (dados.status === "aprovado") await baixarEstoqueDoPedido(salvo.id);
   if (["recusado", "cancelado"].includes(dados.status)) await liberarReservas(t.id, pedido.referencia);
@@ -151,6 +157,12 @@ export async function atualizarStatusPagamento(
     where: { id: pedido.id },
     data: { pagamentoStatus: status, ...(novo && (avancaDeAguardando || novo === "ESTORNADO") ? { status: novo } : {}) },
   });
+  if (novo && (avancaDeAguardando || novo === "ESTORNADO")) {
+    await prisma.eventoPedido.createMany({ data: [{ tenantId: t.id, pedidoId: pedido.id, tipo: "PAGAMENTO_ATUALIZADO", deStatus: pedido.status, paraStatus: novo, atorTipo: "CANAL", origem: `pagamento:${pedido.gateway}`, idempotencia: `pagamento:${pedido.gateway}:${pagamentoId}:${status}`, dados: { pagamentoId, status, valorEmCentavos: valorEmCentavos ?? null } }], skipDuplicates: true });
+    if (novo === "PAGO") {
+      for (const item of pedido.itens) await prisma.pedidoItem.update({ where: { id: item.id }, data: { quantidadePaga: item.quantidade } });
+    }
+  }
 
   if (novo === "PAGO" && !pedido.estoqueBaixado) {
     try {

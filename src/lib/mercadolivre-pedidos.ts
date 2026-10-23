@@ -385,7 +385,7 @@ export async function registrarPedidoMl(loja: Tenant, ordemId: string) {
         // status do aviso sem olhar o atual, o pedido que a loja já tinha
         // enviado voltava a "pago" a cada aviso.
         data: { status: statusDepoisDoAviso(existente.status, mapeado.status), pagamentoStatus: mapeado.pagamentoStatus, pagamentoId: mapeado.pagamentoId },
-        select: { id: true, numero: true, referencia: true, estoqueBaixado: true },
+        select: { id: true, numero: true, referencia: true, status: true, estoqueBaixado: true },
       })
     : await prisma.pedido.create({
         data: {
@@ -421,12 +421,33 @@ export async function registrarPedidoMl(loja: Tenant, ordemId: string) {
               nome: i.nome,
               sku: i.sku,
               quantidade: i.quantidade,
+              quantidadePaga: mapeado.status === "PAGO" ? i.quantidade : 0,
               precoUnitarioCentavos: i.precoUnitarioCentavos,
             })),
           },
         },
-        select: { id: true, numero: true, referencia: true, estoqueBaixado: true },
+        select: { id: true, numero: true, referencia: true, status: true, estoqueBaixado: true },
       });
+
+  await prisma.eventoPedido.createMany({
+    data: [{
+      tenantId: loja.id,
+      pedidoId: pedido.id,
+      tipo: existente ? "CANAL_ATUALIZADO" : "CRIADO",
+      deStatus: existente?.status ?? null,
+      paraStatus: pedido.status,
+      atorTipo: "CANAL",
+      origem: "mercadolivre",
+      idempotencia: `mercadolivre:${mapeado.canalPedidoId}:${mapeado.pagamentoStatus ?? mapeado.status}`,
+      dados: { canalPedidoId: mapeado.canalPedidoId },
+    }],
+    skipDuplicates: true,
+  });
+
+  if (mapeado.status === "PAGO") {
+    const itens = await prisma.pedidoItem.findMany({ where: { pedidoId: pedido.id }, select: { id: true, quantidade: true } });
+    for (const item of itens) await prisma.pedidoItem.update({ where: { id: item.id }, data: { quantidadePaga: item.quantidade } });
+  }
 
   // Estoque só sai quando o ML confirma o pagamento, e uma vez só: o próprio
   // `baixarEstoqueDoPedido` desiste quando já baixou.

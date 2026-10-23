@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { autorizado, naoAutorizado } from "@/lib/admin-auth";
+import { mudarStatusDoPedido, MudancaDeStatusRecusada } from "@/lib/pedidos-status";
 
 type Ctx = { params: Promise<{ slug: string; id: string }> };
 
@@ -20,12 +21,13 @@ export async function PATCH(request: Request, { params }: Ctx) {
   const r = Entrada.safeParse(await request.json().catch(() => null));
   if (!r.success) return Response.json({ erro: "dados inválidos", detalhes: r.error.flatten() }, { status: 422 });
 
-  const pedido = await prisma.pedido.findFirst({ where: { id, tenant: { slug } } });
-  if (!pedido) return Response.json({ erro: "pedido não encontrado" }, { status: 404 });
-  if (pedido.status === "AGUARDANDO_PAGAMENTO" && r.data.status && r.data.status !== "CANCELADO") {
-    return Response.json({ erro: "pedido ainda não foi pago" }, { status: 409 });
+  const loja = await prisma.tenant.findUnique({ where: { slug } });
+  if (!loja) return Response.json({ erro: "loja não encontrada" }, { status: 404 });
+  try {
+    const { pedido } = await mudarStatusDoPedido(loja, id, { ...r.data, ator: { tipo: "SISTEMA" }, origem: "admin", idempotencia: request.headers.get("idempotency-key")?.trim() || undefined });
+    return Response.json({ id: pedido.id, status: pedido.status, rastreio: pedido.rastreio });
+  } catch (erro) {
+    if (!(erro instanceof MudancaDeStatusRecusada)) throw erro;
+    return Response.json({ erro: erro.message }, { status: erro.motivo === "nao_encontrado" ? 404 : 409 });
   }
-
-  const atualizado = await prisma.pedido.update({ where: { id }, data: { ...(r.data.status ? { status: r.data.status } : {}), ...(r.data.rastreio !== undefined ? { rastreio: r.data.rastreio } : {}) } });
-  return Response.json({ id: atualizado.id, status: atualizado.status, rastreio: atualizado.rastreio });
 }
