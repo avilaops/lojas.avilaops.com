@@ -652,8 +652,8 @@
         "As telas críticas não apresentam vazamento horizontal nem violações Axe sérias ou críticas.",
         "Testes, TypeScript, ESLint e build de produção passam."
       ],
-      "evidence": "E2E móvel executado em PostgreSQL de teste isolado com tenant efêmero da VedaShow e compra sem pagamento real.\nBusca por SKU, filtro de disponibilidade, ficha técnica, retorno ao catálogo, carrinho persistente, validação do formulário, retirada, Pix e confirmação foram aprovados.\nCinco telas verificadas sem vazamento horizontal e sem violações Axe sérias ou críticas.\n1.223 testes aprovados; TypeScript, ESLint, build de produção e git diff --check concluídos sem erros.\nArtefatos: output/vedashow-avl-265/jornada-compra/.",
-      "review": "A validação identificou e corrigiu contraste insuficiente em controles móveis e checkout, além de nomes acessíveis ausentes nos links de sugestão e nos campos Pix. O pedido permaneceu aguardando confirmação; nenhum pagamento real foi realizado.",
+      "evidence": "E2E móvel executado em PostgreSQL de teste isolado com tenant efêmero da VedaShow e compra sem pagamento real.\nBusca por SKU, filtro de disponibilidade, ficha técnica, retorno ao catálogo, carrinho persistente, validação do formulário, retirada, Pix e confirmação foram aprovados.\nCinco telas verificadas sem vazamento horizontal e sem violações Axe sérias ou críticas.\n1.226 testes aprovados após conciliação com a main; TypeScript, ESLint, build de produção e git diff --check concluídos sem erros.\nArtefatos: output/vedashow-avl-265/jornada-compra/.",
+      "review": "A validação identificou e corrigiu contraste insuficiente em controles móveis e checkout, nomes acessíveis ausentes, banner vazio após swipe, descarte de eventos após navegação cliente e filter_apply inflado por parâmetros de campanha. O pedido permaneceu aguardando confirmação; nenhum pagamento real foi realizado.",
       "environment": "local-isolado",
       "owner": null,
       "acceptance": "A jornada móvel da VedaShow funciona da busca técnica à confirmação de Pix, preserva estado e não cria falsa confirmação de pagamento.",
@@ -662,6 +662,10 @@
         {
           "at": "2026-10-23",
           "note": "Validação executada no tenant efêmero vedashow-qa e registrada com relatório e capturas."
+        },
+        {
+          "at": "2026-10-23",
+          "note": "Três apontamentos do code review do PR 153 foram reproduzidos, corrigidos e cobertos por 12 testes direcionados."
         }
       ]
     }

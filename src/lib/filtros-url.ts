@@ -107,3 +107,9 @@ export function temFiltroSecundarioAtivo(sp: ParametrosDaVitrine): boolean {
 export function temFiltroAtivo(sp: ParametrosDaVitrine): boolean {
   return Boolean(sp.q?.trim()) || temFiltroSecundarioAtivo(sp);
 }
+
+/** Estado que realmente restringe ou reordena o catálogo; ignora busca e campanha. */
+export function temFiltroCatalogoAplicado(sp: ParametrosDaVitrine): boolean {
+  return temFiltroSecundarioAtivo(sp)
+    || Boolean(sp.categoria || sp.marca || sp.modelo || sp.ano || (sp.moto && sp.moto !== "todas"));
+}
