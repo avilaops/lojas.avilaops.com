@@ -6,10 +6,11 @@ const ENV = { NODE_ENV: "production", ERP_API_URL: "https://erp.exemplo.test/", 
 
 test("consulta fiscal do ERP usa a chave apenas no servidor e devolve o endereço operacional", async () => {
   let authorization = "";
-  const fetcher = (async (_url: string | URL | Request, init?: RequestInit) => { authorization = new Headers(init?.headers).get("authorization") ?? ""; return Response.json({ notas: [{ id: 7, chave: "1".repeat(44), numero: 12, serie: 1, emitida_em: "2026-10-18T12:00:00-03:00", valor: 99.9, itens: 2, compra_id: null, fornecedor: { documento: "123", nome: "Fornecedor", vinculado: false, id: null } }] }); }) as typeof fetch;
+  const fetcher = (async (_url: string | URL | Request, init?: RequestInit) => { authorization = new Headers(init?.headers).get("authorization") ?? ""; return Response.json({ notas: [{ id: 7, chave: "A".repeat(44), numero: 12, serie: 1, emitida_em: "2026-10-18T12:00:00-03:00", valor: 99.9, itens: 2, compra_id: null, fornecedor: { documento: "123", nome: "Fornecedor", vinculado: false, id: null } }], pendencias: [{ nsu: "000000000000001", chave: "B".repeat(44), emitida_em: "2026-10-18T11:00:00-03:00", valor: 88, situacao: "1", fornecedor: { documento: "456", nome: "Fornecedor pendente" } }] }); }) as typeof fetch;
   const result = await buscarFiscalErp("60067738000106", fetcher, ENV);
   assert.equal(authorization, "Bearer segredo");
   assert.deepEqual([result?.notas[0].id, result?.painelUrl], [7, "https://erp.exemplo.test/fiscal?ver=recebidas"]);
+  assert.deepEqual(result?.pendencias.map((item) => [item.nsu, item.fornecedor.nome]), [["000000000000001", "Fornecedor pendente"]]);
 });
 
 test("identifica configuração por CNPJ e rejeita resposta fiscal incompleta", async () => {

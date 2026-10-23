@@ -9,7 +9,7 @@ type Estado = {
   configuracao: { cnpj: string; uf: string; titular: string; validoAte: string; proximaConsultaEm: string; ultimaMensagem: string | null } | null;
   documentos: Array<{ id: string; nsu: string; schema: string; chave: string | null; recebidoEm: string; fornecedor: string | null; numero: string | null; valorCentavos: number | null; emitidaEm: string | null; situacao: "COMPLETA" | "RESUMO" | "OUTRO" }>;
   ufEmpresa: string;
-  erp: { notas: Array<{ id: number; chave: string; numero: number; serie: number; emitida_em: string; valor: number; fornecedor: { documento: string; nome: string; vinculado: boolean; id: number | null }; itens: number; compra_id: number | null }>; painelUrl: string } | { erro: string } | null;
+  erp: { notas: Array<{ id: number; chave: string; numero: number; serie: number; emitida_em: string; valor: number; fornecedor: { documento: string; nome: string; vinculado: boolean; id: number | null }; itens: number; compra_id: number | null }>; pendencias: Array<{ nsu: string; chave: string; emitida_em: string; valor: number; situacao: string; fornecedor: { documento: string; nome: string } }>; painelUrl: string } | { erro: string } | null;
 };
 const data = (valor: string) => new Date(valor).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
 const dia = (valor: string) => new Date(valor).toLocaleDateString("pt-BR");
@@ -155,10 +155,11 @@ export default function Fiscal() {
           <div className="mb-5 grid min-w-0 gap-3 rounded-xl border border-border bg-muted/20 p-4">
             <div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="text-sm font-semibold">Conferência operacional no ERP</h3><p className="mt-1 text-xs text-muted-foreground">XML completo, DANFE, fornecedor, produtos, compra, custos e estoque ficam em uma única escrituração.</p></div><a className="btn-secundario" href={estado.erp.painelUrl}><ExternalLink size={15} aria-hidden="true" /> Gerenciar no ERP</a></div>
             <p className="text-xs text-muted-foreground">A consulta à SEFAZ deste CNPJ é feita somente pelo ERP para preservar a sequência NSU.</p>
+            {estado.erp.pendencias.length > 0 && <div className="rounded-xl border border-amber-200 bg-amber-50 p-3"><p className="text-sm font-medium text-amber-950">{estado.erp.pendencias.length} NF-e aguardando XML completo</p><ul className="mt-2 divide-y divide-amber-200">{estado.erp.pendencias.map((item) => <li key={item.nsu} className="flex items-start justify-between gap-3 py-2 text-sm"><span className="min-w-0"><strong className="block truncate">{item.fornecedor.nome}</strong><span className="text-xs text-amber-900">Resumo NSU {item.nsu} · {data(item.emitida_em)}</span></span><strong className="shrink-0">{dinheiro(Math.round(item.valor * 100))}</strong></li>)}</ul><p className="mt-2 text-xs text-amber-900">Use “Gerenciar no ERP” para manifestar ciência e solicitar o XML completo. Resumo não é disponibilizado como nota completa.</p></div>}
             {!estado.erp.notas.length ? <p className="text-sm text-muted-foreground">O ERP ainda não registrou NF-e completa para esta empresa.</p> : <ul className="divide-y divide-border">{estado.erp.notas.map((nota) => <li key={nota.id} className="grid gap-2 py-3 first:pt-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start"><div className="min-w-0"><div className="flex items-start justify-between gap-3"><p className="font-semibold">{nota.fornecedor.nome}</p><strong className="shrink-0 text-sm">{dinheiro(Math.round(nota.valor * 100))}</strong></div><p className="mt-1 text-xs text-muted-foreground">NF-e {nota.numero} · série {nota.serie} · {nota.itens} item(ns) · {data(nota.emitida_em)}</p><p className="mt-1 text-xs text-muted-foreground">{nota.fornecedor.vinculado ? "Fornecedor vinculado" : "Fornecedor pendente"} · {nota.compra_id ? `Compra #${nota.compra_id} criada` : "Compra e custos pendentes"}</p></div><div className="flex flex-wrap gap-2"><a className="btn-secundario" href={`/api/painel/fiscal/erp/documentos/${nota.id}/xml`}><Download size={15} aria-hidden="true" /> XML</a><a className="btn-secundario" href={`/api/painel/fiscal/erp/documentos/${nota.id}/danfe`}><FileText size={15} aria-hidden="true" /> PDF</a></div></li>)}</ul>}
           </div>
         )}
-        {!estado ? <p role="status" className="text-sm text-muted-foreground">Carregando documentos…</p> : !estado.documentos.length ? (
+        {!(estado?.erp && "notas" in estado.erp) && (!estado ? <p role="status" className="text-sm text-muted-foreground">Carregando documentos…</p> : !estado.documentos.length ? (
           <div className="py-4 text-center">
             <FileText size={28} aria-hidden="true" className="mx-auto mb-3 text-muted-foreground" />
             <p className="text-sm font-medium">Nenhum documento recebido ainda.</p>
@@ -203,7 +204,7 @@ export default function Fiscal() {
             </details>
             <p className="text-xs text-muted-foreground">Últimos 100 documentos recebidos · {estado.documentos.length} nesta lista</p>
           </div>
-        )}
+        ))}
         <details className="border-t border-border pt-4 text-sm">
           <summary className="cursor-pointer font-medium">Sobre esta consulta</summary>
           <div className="mt-3 grid gap-3 text-sm leading-relaxed text-muted-foreground">
