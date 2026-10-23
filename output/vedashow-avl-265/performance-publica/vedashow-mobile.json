@@ -1,0 +1,87 @@
+{
+  "origem": "https://vedashow.com.br/",
+  "medidoEm": "2026-10-23T20:31:26.261Z",
+  "natureza": "baseline de produção; não valida alterações locais não publicadas",
+  "condicoes": {
+    "viewport": "390x844 @3x",
+    "rede": "1,6 Mbps down / 750 Kbps up / 150 ms RTT",
+    "cpu": "4x slowdown",
+    "cache": "contexto novo por repetição",
+    "esperaAposLoadMs": 5000,
+    "inp": "não medido: exige interação humana representativa"
+  },
+  "repeticoes": 1,
+  "mediana": {
+    "ttfbMs": 224,
+    "domContentLoadedMs": 2368,
+    "loadMs": 11375,
+    "lcpMs": 9076,
+    "cls": 0.0471
+  },
+  "amostras": [
+    {
+      "repeticao": 1,
+      "status": 200,
+      "ttfbMs": 224,
+      "domContentLoadedMs": 2368,
+      "loadMs": 11375,
+      "lcpMs": 9076,
+      "cls": 0.0471,
+      "recursos": 67,
+      "bytesTransferidos": 1052153,
+      "elementoLcp": "img",
+      "urlLcp": "https://vedashow.com.br/media/vedashow/campanha-geral-v3-mobile.svg",
+      "tamanhoLcp": 138060,
+      "maioresTransferencias": [
+        {
+          "nome": "https://vedashow.com.br/media/vedashow/campanha-rolamentos-mobile-v1.webp",
+          "tipo": "img",
+          "bytes": 211714,
+          "duracaoMs": 7600
+        },
+        {
+          "nome": "https://vedashow.com.br/media/vedashow/campanha-geral-v3-mobile.svg",
+          "tipo": "img",
+          "bytes": 208148,
+          "duracaoMs": 8532
+        },
+        {
+          "nome": "https://vedashow.com.br/media/vedashow/campanha-orings-mobile-v1.webp",
+          "tipo": "img",
+          "bytes": 198378,
+          "duracaoMs": 7462
+        },
+        {
+          "nome": "https://vedashow.com.br/_next/static/chunks/0lc-5cr9pq5qk.js?dpl=40870a0a07e97a527a8b812e4eb3612b365252bc",
+          "tipo": "script",
+          "bytes": 83353,
+          "duracaoMs": 5786
+        },
+        {
+          "nome": "https://vedashow.com.br/_next/static/chunks/0t1cupau1mtgy.js?dpl=40870a0a07e97a527a8b812e4eb3612b365252bc",
+          "tipo": "script",
+          "bytes": 71096,
+          "duracaoMs": 4991
+        },
+        {
+          "nome": "https://vedashow.com.br/_next/static/media/83afe278b6a6bb3c-s.2bn3s6zvc0dyp.woff2?dpl=40870a0a07e97a527a8b812e4eb3612b365252bc",
+          "tipo": "css",
+          "bytes": 48732,
+          "duracaoMs": 4237
+        },
+        {
+          "nome": "https://vedashow.com.br/_next/static/chunks/2z3meh_fz9bll.js?dpl=40870a0a07e97a527a8b812e4eb3612b365252bc",
+          "tipo": "script",
+          "bytes": 39007,
+          "duracaoMs": 2043
+        },
+        {
+          "nome": "https://vedashow.com.br/_next/static/chunks/0dumkj-wj5n3w.css?dpl=40870a0a07e97a527a8b812e4eb3612b365252bc",
+          "tipo": "link",
+          "bytes": 26966,
+          "duracaoMs": 1247
+        }
+      ]
+    }
+  ]
+}

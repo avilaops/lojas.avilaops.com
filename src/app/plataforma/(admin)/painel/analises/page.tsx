@@ -37,7 +37,7 @@ export default async function PaginaAnalises({ searchParams }: { searchParams: P
 
   return (
     <>
-      <CabecalhoSecao titulo="Análises" descricao="Visão geral do desempenho da sua loja" />
+      <CabecalhoSecao titulo="Análises" descricao="Visão geral do desempenho da sua loja" acao={{ rotulo: "Ver funil", href: "/painel/analises/funil" }} />
 
       <section className="an-filtros" aria-label="Período da análise">
         <nav aria-label="Períodos rápidos">

@@ -1,5 +1,6 @@
-import { NextResponse, type NextRequest } from "next/server";import { ehRetornoDeAutorizacao, ficaNaRaiz } from "@/lib/rotas-da-raiz";
-
+import { NextResponse, type NextRequest } from "next/server";
+import { destinoLegado } from "@/lib/redirects-legados";
+import { ehRetornoDeAutorizacao, ficaNaRaiz } from "@/lib/rotas-da-raiz";
 
 /**
  * Um servidor, dois "sites":
@@ -15,7 +16,9 @@ import { NextResponse, type NextRequest } from "next/server";import { ehRetornoD
 const BASE = (process.env.LOJAS_BASE_DOMAIN ?? "lojas.avilaops.com").toLowerCase();
 
 export function proxy(request: NextRequest) {
-  const host = (request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? "").toLowerCase().replace(/:\d+$/, "");
+  const host = (request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? request.nextUrl.host)
+    .toLowerCase()
+    .replace(/:\d+$/, "");
   const { pathname } = request.nextUrl;
 
   // O que foi combinado com alguém de fora fica na raiz de src/app: retorno de
@@ -34,6 +37,23 @@ export function proxy(request: NextRequest) {
   // Loja tentando abrir rotas da plataforma pelo próprio domínio: não existe.
   if (host !== BASE && pathname.startsWith("/plataforma")) {
     return NextResponse.rewrite(new URL("/nao-encontrado", request.url));
+  }
+
+  // URLs verificadas da antiga VedaShow chegam ao destino atual em um único
+  // salto, inclusive quando o link antigo aponta para www. Parâmetros de
+  // campanha são preservados; a busca definida pelo destino tem precedência.
+  const destino = destinoLegado(host, pathname);
+  if (host !== BASE && destino) {
+    const url = new URL(destino, request.url);
+    url.host = host.startsWith("www.") ? host.slice(4) : host;
+    url.protocol = "https:";
+    url.port = "";
+
+    for (const [chave, valor] of request.nextUrl.searchParams) {
+      if (!url.searchParams.has(chave)) url.searchParams.append(chave, valor);
+    }
+
+    return NextResponse.redirect(url, 308);
   }
 
   // www.loja.com.br → loja.com.br, em 308.

@@ -10,16 +10,28 @@ export default function BannerCarousel({ campanhas }: { campanhas: Campanha[] })
   const trilho = useRef<HTMLDivElement>(null);
   const [ativa, setAtiva] = useState(0);
   const [pausado, setPausado] = useState(false);
+  // Carrossel horizontal conta como "perto da tela" para o lazy-loading do
+  // navegador. Sem este controle, as três artes da VedaShow eram baixadas em
+  // paralelo e a primeira, que é o LCP, esperava as outras duas na rede móvel.
+  const [carregadas, setCarregadas] = useState<Set<number>>(() => new Set([0]));
+
+  function carregar(indice: number) {
+    setCarregadas((atuais) => atuais.has(indice) ? atuais : new Set([...atuais, indice]));
+  }
 
   useEffect(() => {
     if (campanhas.length < 2 || pausado || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const temporizador = window.setInterval(() => {
+    const destino = ativa >= campanhas.length - 1 ? 0 : ativa + 1;
+    const preCarregamento = window.setTimeout(() => carregar(destino), 3500);
+    const temporizador = window.setTimeout(() => {
       const elemento = trilho.current;
       if (!elemento) return;
-      const destino = ativa >= campanhas.length - 1 ? 0 : ativa + 1;
       elemento.scrollTo({ left: elemento.clientWidth * destino });
     }, 6000);
-    return () => window.clearInterval(temporizador);
+    return () => {
+      window.clearTimeout(preCarregamento);
+      window.clearTimeout(temporizador);
+    };
   }, [ativa, campanhas.length, pausado]);
 
   if (!campanhas.length) return null;
@@ -28,6 +40,7 @@ export default function BannerCarousel({ campanhas }: { campanhas: Campanha[] })
     const elemento = trilho.current;
     if (!elemento) return;
     const destino = Math.max(0, Math.min(campanhas.length - 1, ativa + direcao));
+    carregar(destino);
     elemento.scrollTo({ left: elemento.clientWidth * destino });
   }
 
@@ -56,14 +69,15 @@ export default function BannerCarousel({ campanhas }: { campanhas: Campanha[] })
           return (
           <Link className="banner-campanha" key={`${campanha.imagemUrl}-${indice}`} href={campanha.link}>
             <picture>
-              {campanha.imagemMobileUrl && <source media="(max-width: 640px)" srcSet={campanha.imagemMobileUrl} />}
+              {campanha.imagemMobileUrl && carregadas.has(indice) && <source media="(max-width: 640px)" srcSet={campanha.imagemMobileUrl} />}
               <img
-                src={campanha.imagemUrl}
+                src={carregadas.has(indice) ? campanha.imagemUrl : undefined}
                 alt={campanha.alt}
                 width={1600}
                 height={900}
                 fetchPriority={indice === 0 ? "high" : "auto"}
                 loading={indice === 0 ? "eager" : "lazy"}
+                data-carregada={carregadas.has(indice) ? "true" : "false"}
               />
             </picture>
           </Link>
@@ -84,7 +98,10 @@ export default function BannerCarousel({ campanhas }: { campanhas: Campanha[] })
               type="button"
               aria-label={`Mostrar campanha ${indice + 1}`}
               aria-current={ativa === indice ? "true" : undefined}
-              onClick={() => trilho.current?.scrollTo({ left: (trilho.current?.clientWidth ?? 0) * indice })}
+              onClick={() => {
+                carregar(indice);
+                trilho.current?.scrollTo({ left: (trilho.current?.clientWidth ?? 0) * indice });
+              }}
             />
           ))}
         </div>

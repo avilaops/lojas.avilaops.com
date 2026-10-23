@@ -1,6 +1,7 @@
 import Link from "@/components/LinkLoja";
 import type { Tenant } from "@prisma/client";
-import { enderecoCompleto, lojaVende } from "@/lib/tenant";
+import { lojaVende } from "@/lib/tenant";
+import { identidadePublica } from "@/lib/identidade-publica";
 import { PreferenciasCookies } from "@/components/Consentimento";
 import { pixelsDo, temRastreio } from "@/lib/pixels";
 import { mascararDocumento } from "@avilaops/checkout";
@@ -20,8 +21,9 @@ export default function Footer({ tenant, categorias, temBlog = false }: { tenant
   // Loja só online não expõe onde fica o estoque no bloco de visita: endereço
   // é opt-in ali. Na linha de identificação abaixo ele aparece sempre, porque
   // o Decreto 7.962/2013 exige endereço físico de quem vende pela internet.
-  const endereco = tenant.enderecoPublico ? enderecoCompleto(tenant) : "";
-  const enderecoLegal = enderecoCompleto(tenant);
+  const identidade = identidadePublica(tenant);
+  const endereco = identidade.enderecoVisita?.texto ?? "";
+  const enderecoLegal = identidade.enderecoLegal?.texto ?? "";
   const politicas = politicasPublicadas(tenant);
   /**
    * Farmácia virtual não é uma loja com produtos de farmácia: é um
@@ -37,10 +39,10 @@ export default function Footer({ tenant, categorias, temBlog = false }: { tenant
   const responsavel = lerResponsavel(tenant);
 
   const identificacao = [
-    tenant.razaoSocial ?? tenant.nome,
-    tenant.cnpj ? `CNPJ ${mascararDocumento(tenant.cnpj)}` : "",
+    identidade.razaoSocial ?? identidade.nome,
+    identidade.cnpj ? `CNPJ ${mascararDocumento(identidade.cnpj)}` : "",
     enderecoLegal,
-    tenant.emailContato ?? "",
+    identidade.email ?? "",
   ].filter(Boolean);
   return (
     <footer className="rodape-loja mt-20 border-t border-border bg-muted/50">
@@ -49,8 +51,8 @@ export default function Footer({ tenant, categorias, temBlog = false }: { tenant
           <p className="text-xl font-bold tracking-tight">{tenant.nome}</p>
           {tenant.slogan && <p className="mt-1 text-muted-foreground">{tenant.slogan}</p>}
           {endereco && <p className="mt-3 text-muted-foreground">{endereco}</p>}
-          {tenant.horario && <p className="text-muted-foreground">{tenant.horario}</p>}
-          {tenant.telefone && <p className="text-muted-foreground">{tenant.telefone}</p>}
+          {identidade.horario && <p className="text-muted-foreground">{identidade.horario}</p>}
+          {identidade.telefone && <p className="text-muted-foreground">{identidade.telefone.exibicao}</p>}
         </div>
         {categorias.length > 0 && <div>
           <p className="mb-2 font-semibold">Categorias</p>

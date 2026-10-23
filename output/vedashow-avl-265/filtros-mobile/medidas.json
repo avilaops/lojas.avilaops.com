@@ -1,0 +1,80 @@
+{
+  "vazio": [
+    {
+      "largura": 360,
+      "cabecalhoPx": 164,
+      "primeiroProdutoPx": 495,
+      "primeiroProdutoEmTelas": 0.59,
+      "filtrarAlturaPx": 44,
+      "ordenarAlturaPx": 44,
+      "mesmaLinha": true,
+      "categoriasRolaveis": true,
+      "menorCategoriaPx": 44,
+      "verTodas": true,
+      "categoriasNoMenu": 10,
+      "overflowHorizontal": false,
+      "whatsappOcultoNoCatalogo": true,
+      "barraSobrepoeProduto": false,
+      "falhasAcessibilidadeSerias": []
+    },
+    {
+      "largura": 390,
+      "cabecalhoPx": 164,
+      "primeiroProdutoPx": 495,
+      "primeiroProdutoEmTelas": 0.59,
+      "filtrarAlturaPx": 44,
+      "ordenarAlturaPx": 44,
+      "mesmaLinha": true,
+      "categoriasRolaveis": true,
+      "menorCategoriaPx": 44,
+      "verTodas": true,
+      "categoriasNoMenu": 10,
+      "overflowHorizontal": false,
+      "whatsappOcultoNoCatalogo": true,
+      "barraSobrepoeProduto": false,
+      "falhasAcessibilidadeSerias": []
+    },
+    {
+      "largura": 430,
+      "cabecalhoPx": 164,
+      "primeiroProdutoPx": 495,
+      "primeiroProdutoEmTelas": 0.59,
+      "filtrarAlturaPx": 44,
+      "ordenarAlturaPx": 44,
+      "mesmaLinha": true,
+      "categoriasRolaveis": true,
+      "menorCategoriaPx": 44,
+      "verTodas": true,
+      "categoriasNoMenu": 10,
+      "overflowHorizontal": false,
+      "whatsappOcultoNoCatalogo": true,
+      "barraSobrepoeProduto": false,
+      "falhasAcessibilidadeSerias": []
+    }
+  ],
+  "ativo": {
+    "gavetaAberta": true,
+    "seloVisivel": true,
+    "limparVisivel": true,
+    "overflowHorizontal": false
+  },
+  "fixos": {
+    "whatsappVisivelDuranteCookies": false,
+    "whatsappVisivelAposConsentimento": true,
+    "barraWhatsappSobrepostos": false,
+    "barraCookiesSobrepostos": false,
+    "whatsappCookiesSobrepostos": false,
+    "barraAlturaPx": 56,
+    "whatsappAlvoAposConsentimentoPx": [
+      56,
+      56
+    ]
+  },
+  "domiRio": {
+    "identidadeCorreta": true,
+    "primeiroProdutoEmTelas": 0.59,
+    "overflowHorizontal": false,
+    "whatsappOcultoNoCatalogo": true,
+    "falhasAcessibilidadeSerias": []
+  }
+}

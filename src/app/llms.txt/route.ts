@@ -1,8 +1,9 @@
 import { headers } from "next/headers";
-import { tenantAtual, urlDaLoja, identidadeDa, enderecoCompleto, lojaVende, prazoDeDespacho, retiradaPublicaDisponivel } from "@/lib/tenant";
+import { tenantAtual, urlDaLoja, identidadeDa, lojaVende, prazoDeDespacho, retiradaPublicaDisponivel } from "@/lib/tenant";
 import { listarCategorias, listarProdutos, formatarBRL } from "@/lib/catalogo";
 import { descricaoDaLoja } from "@/lib/textos-loja";
 import { avaliarPedidoMinimo } from "@avilaops/checkout";
+import { identidadePublica } from "@/lib/identidade-publica";
 import { visivelNaBusca } from "@/lib/descoberta";
 
 /**
@@ -66,7 +67,7 @@ políticas dela. Este arquivo descreve a plataforma, não uma loja.
     listarCategorias(t.id),
     listarProdutos(t.id, { destaque: true, limite: 12 }),
   ]);
-  const endereco = t.enderecoPublico ? enderecoCompleto(t) : "";
+  const identidadeComercial = identidadePublica(t);
   const vende = lojaVende(t);
   const pedidoMinimo = avaliarPedidoMinimo(0, t.pedidoMinimoCentavos).minimo;
 
@@ -97,12 +98,12 @@ políticas dela. Este arquivo descreve a plataforma, não uma loja.
     vende && pedidoMinimo != null ? `- Pedido mínimo de ${formatarBRL(pedidoMinimo)} em produtos` : "",
     "",
     "## Contato",
-    t.whatsapp ? `- WhatsApp: https://wa.me/${t.whatsapp}` : "",
-    t.telefone ? `- Telefone: ${t.telefone}` : "",
-    t.emailContato ? `- E-mail: ${t.emailContato}` : "",
-    endereco ? `- Endereço: ${endereco}` : "",
-    t.horario ? `- Horário: ${t.horario}` : "",
-    t.razaoSocial ? `- Razão social: ${t.razaoSocial}` : "",
+    identidadeComercial.whatsapp ? `- WhatsApp: ${identidadeComercial.whatsapp.url}` : "",
+    identidadeComercial.telefone ? `- Telefone: ${identidadeComercial.telefone.exibicao}` : "",
+    identidadeComercial.email ? `- E-mail: ${identidadeComercial.email}` : "",
+    identidadeComercial.enderecoVisita ? `- Endereço: ${identidadeComercial.enderecoVisita.texto}` : "",
+    identidadeComercial.horario ? `- Horário: ${identidadeComercial.horario}` : "",
+    identidadeComercial.razaoSocial ? `- Razão social: ${identidadeComercial.razaoSocial}` : "",
     "",
     "## Categorias principais",
     ...categorias.slice(0, 30).map((c) => `- [${c.nome}](${base}/categoria/${c.slug})${c.seoDescription ?? c.descricao ? `: ${(c.seoDescription ?? c.descricao ?? "").slice(0, 120)}` : ""}`),

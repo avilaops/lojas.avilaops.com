@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { autorizado, naoAutorizado } from "@/lib/admin-auth";
-import { slugificar } from "@/lib/catalogo";
+import { chaveCanonicaDaCategoria } from "@/lib/categorias-canonicas";
 
 const Entrada = z.object({
   movimentos: z.array(z.object({
@@ -41,8 +41,8 @@ export async function POST(request: Request, { params }: Ctx) {
   for (const movimento of movimentos) {
     const origem = porId.get(movimento.origemId)!;
     const destino = porId.get(movimento.destinoId)!;
-    if (origem.id === destino.id || slugificar(origem.nome) !== slugificar(destino.nome)) {
-      return Response.json({ erro: "Só é permitido consolidar categorias com o mesmo nome." }, { status: 422 });
+    if (origem.id === destino.id || chaveCanonicaDaCategoria(origem.nome) !== chaveCanonicaDaCategoria(destino.nome)) {
+      return Response.json({ erro: "Só é permitido consolidar categorias equivalentes." }, { status: 422 });
     }
   }
 

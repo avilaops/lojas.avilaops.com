@@ -10,7 +10,8 @@ import { headers } from "next/headers";
 import "./globals.css";
 import "@avilaops/checkout/tokens.css";
 import "@avilaops/checkout/checkout.css";
-import { noEnderecoOficial, tenantAtual, tenantPublico, temaDo, urlDaLoja, enderecoDo, formatarCep, identidadeDa, marcaQuadradaDa } from "@/lib/tenant";
+import { noEnderecoOficial, tenantAtual, tenantPublico, temaDo, urlDaLoja, identidadeDa, marcaQuadradaDa } from "@/lib/tenant";
+import { identidadePublica, schemaDaIdentidadePublica } from "@/lib/identidade-publica";
 import { descricaoDaLoja } from "@/lib/textos-loja";
 import { listarCategorias, formatarBRL } from "@/lib/catalogo";
 import { cssDoTema } from "@/lib/tema";
@@ -186,20 +187,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const exemploBusca = exemplo?.nome.split(" - ")[0].trim().slice(0, 32) ?? null;
   const publico = tenantPublico(t);
   const pixels = pixelsDo(t);
-  const endereco = enderecoDo(t);
-
+  const identidadeComercial = identidadePublica(t);
   const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Store",
-    "@id": `${urlDaLoja(t)}/#organization`,
-    name: t.nome,
-    url: urlDaLoja(t),
-    ...(t.logoUrl ? { logo: t.logoUrl } : {}),
-    ...(identidade.diferencial ? { description: identidade.diferencial } : {}),
-    ...(t.telefone ? { telephone: t.telefone } : {}),
-    ...(t.enderecoPublico && endereco.cidade
-      ? { address: { "@type": "PostalAddress", streetAddress: [endereco.logradouro, endereco.numero].filter(Boolean).join(", "), addressLocality: endereco.cidade, addressRegion: endereco.uf, postalCode: formatarCep(endereco.cep), addressCountry: "BR" } }
-      : {}),
+    ...schemaDaIdentidadePublica(identidadeComercial, {
+      url: urlDaLoja(t),
+      logo: t.logoUrl,
+      descricao: identidade.diferencial,
+    }),
     hasMerchantReturnPolicy: politicaDevolucaoSchema(lerRegrasDevolucao(t.regrasDevolucao), `${urlDaLoja(t)}/politicas/devolucao`),
   };
 
@@ -248,7 +242,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           {cabecalhoProprio ? <CabecalhoPremium loja={publico} logo={t.logoUrl} logoCompacta={marcaQuadradaDa(t)} logoEscuro={tema.premium?.logoEscuroUrl} mostrarNome={tema.premium?.mostrarNome} categorias={[...categorias].sort((a,b)=>a.ordem-b.ordem).map(c=>({slug:c.slug,nome:c.nome}))} modo={tema.modo}/> : <Header loja={publico} logoUrl={t.logoUrl} mostrarNome={tema.mostrarNomeNoCabecalho} categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} exemploBusca={exemploBusca} mostrarPromocoes={temPromocoes} />}
           {t.segmento === "motopecas" && <BarraGaragem tenantId={t.id} />}
           {t.pedidoMinimoCentavos != null && t.pedidoMinimoCentavos > 0 && (
-            <p className="container-loja py-2 text-sm text-center">
+            <p className="container-loja py-2 text-center text-sm">
               Pedido mínimo de <strong>{formatarBRL(t.pedidoMinimoCentavos)} em produtos</strong>, sem contar o frete.
             </p>
           )}

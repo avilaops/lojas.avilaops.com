@@ -15,6 +15,8 @@ import AjudaCatalogo from "@/components/AjudaCatalogo";
 import { minhaMoto } from "@/lib/minha-moto";
 import { nomeDaMoto } from "@/lib/motos";
 import { usaBlocoProprio } from "@/lib/templates";
+import { EventoFunil } from "@/components/EventoFunil";
+import { retornoDaListagem } from "@/lib/retorno-catalogo";
 
 type SP = Record<string, string | undefined>;
 
@@ -57,9 +59,18 @@ export default async function Produtos({ searchParams }: { searchParams: Promise
   const vende = lojaVende(t);
   const categoriaAtual = categorias.find((c) => c.slug === sp.categoria);
   const titulo = sp.q ? `Resultados para “${sp.q}”` : categoriaAtual ? categoriaAtual.nome : moto ? `Peças para ${nomeDaMoto(moto)}` : "Todos os produtos";
+  const buscou = Boolean(sp.q?.trim());
+  const filtrou = Object.entries(sp).some(([chave, valor]) => Boolean(valor) && !["q", "pagina", "porPagina"].includes(chave));
+  const eventos = [
+    ...(buscou ? ["search" as const] : []),
+    ...(buscou && lote.total === 0 ? ["search_no_results" as const] : []),
+    ...(filtrou ? ["filter_apply" as const] : []),
+  ];
+  const retorno = retornoDaListagem("/produtos", sp);
 
   return (
     <div className="container-loja py-8 ap-catalogo">
+      <EventoFunil eventos={eventos} />
       {premium && <CategoriasPremium categorias={[...categorias].sort((a,b)=>a.ordem-b.ordem)} atual={sp.categoria ?? "todas"}/>}
       <h1 className="mb-1 text-2xl font-bold">{titulo}</h1>
       <p className="mb-4 text-sm text-muted-foreground">
@@ -86,7 +97,7 @@ export default async function Produtos({ searchParams }: { searchParams: Promise
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {produtos.map((p) => (
-            <ProductCard loja={t} key={p.id} produto={p} vende={vende} whatsapp={t.whatsapp} moto={moto} />
+            <ProductCard loja={t} key={p.id} produto={p} vende={vende} whatsapp={t.whatsapp} moto={moto} retorno={retorno} />
           ))}
         </div>
       )}

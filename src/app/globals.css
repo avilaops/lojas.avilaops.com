@@ -100,20 +100,17 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
 .ajuda-catalogo span { color: var(--primary); text-decoration: underline; text-underline-offset: 3px; }
 .ajuda-catalogo:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
 @media (max-width: 639px) {
+  .filtros-grade { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .filtros-grade > input[type="search"] { grid-column: 1 / -1; }
   /* A caixa fica invisível, mas não `display: none`: sumida de vez, ela saía
      da ordem do Tab e quem navega pelo teclado não abria a gaveta. */
   .filtros-gaveta { display: block; position: absolute; width: 1px; height: 1px; opacity: 0; }
   .filtros-gaveta:focus-visible + .filtros-abrir { outline: 2px solid var(--ring); outline-offset: 3px; }
-  .filtros-abrir { display: block; cursor: pointer; border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); border-radius: var(--radius); padding: .5rem .75rem; font-size: .875rem; font-weight: 500; }
+  .filtros-abrir { display: flex; min-height: 44px; cursor: pointer; align-items: center; justify-content: center; border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); border-radius: var(--radius); padding: .5rem .75rem; font-size: .875rem; font-weight: 650; }
+  .filtros-ordem-principal { min-width: 0; width: 100%; }
   .filtros-gaveta:not(:checked) ~ .filtros-campos { display: none; }
-  .filtros-campos { display: grid; gap: .5rem; margin-top: .5rem; }
-  .filtros-linha { grid-template-columns: minmax(0, 1fr) auto; align-items: start; }
-  .filtros-linha > input[type="search"] { grid-column: 1 / -1; min-width: 0; min-height: 44px; }
-  .filtros-linha > .filtros-abrir { grid-column: 1; min-height: 44px; display: flex; align-items: center; }
-  .filtros-linha > .filtros-aplicar { grid-column: 2; grid-row: 2; min-height: 44px; }
-  .filtros-linha > .filtros-campos { grid-column: 1 / -1; grid-row: 3; }
-  .filtros-produtos > div:has(.filtros-ajuda):not(:has(a)) { display: none; }
-  .filtros-medidas summary { min-height: 44px; }
+  .filtros-campos { display: grid; grid-column: 1 / -1; gap: .5rem; margin-top: .5rem; }
+  .filtros-grade > button[type="submit"], .filtros-grade > button:not([type]) { grid-column: 1 / -1; }
 }
 
 /* Ampliação da foto na ficha (GaleriaProduto). O zoom de mouse continua; o
@@ -690,15 +687,6 @@ html[data-cookies-respondido] .aviso-cookies { display: none; }
 .capa-categoria-texto h1 { font-size: clamp(1.6rem, 3.5vw, 2.3rem); font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; }
 .capa-categoria-texto p { max-width: 60ch; color: var(--muted-foreground); font-size: 0.95rem; line-height: 1.6; }
 
-@media (max-width: 639px) {
-  .categoria-catalogo { padding-top: .75rem; }
-  .categoria-catalogo .capa-categoria { grid-template-columns: 56px minmax(0, 1fr); margin-bottom: .5rem; }
-  .categoria-catalogo .capa-categoria-imagem { min-height: 56px; }
-  .categoria-catalogo .capa-categoria-texto { padding: .5rem .75rem; }
-  .categoria-catalogo .capa-categoria-texto h1 { font-size: 1.25rem; overflow-wrap: anywhere; }
-  .categoria-catalogo .capa-categoria-texto p { font-size: .8125rem; line-height: 1.35; }
-}
-
 .capa-categoria-selo {
   align-self: flex-start;
   padding: 4px 11px;
@@ -808,11 +796,9 @@ html[data-cookies-respondido] .aviso-cookies { display: none; }
     /* Nome longo de categoria industrial ("Aço de baixo e médio teor de
        carbono") vira uma tira sem fim. Corta com reticências e o toque continua
        inteiro. */
-    /* Uma categoria válida continua legível; uma importação defeituosa não
-       transforma a navegação inteira numa faixa de texto sem fim. */
-    max-width: min(78vw, 24rem);
-    overflow: hidden;
-    text-overflow: ellipsis;
+    /* Sem `max-width`: cortar "Aço de baixo e médio teor de carbono" em "Aço de"
+       entrega uma aba que não diz nada. A tira rola, então o nome vai inteiro e
+       quem procura reconhece o que procura. */
     white-space: nowrap;
   }
   .nav-loja a:first-child { background: color-mix(in srgb, var(--primary) 12%, transparent); }
@@ -1218,12 +1204,6 @@ html[data-cookies-respondido] .aviso-cookies { display: none; }
 @media (max-width: 639px) { .campanhas-busca { flex-direction: column; align-items: stretch; } .cartao-produto > div:last-child { padding: .75rem; } .campanhas-produtos > header > a { min-height: 44px; } }
 
 .home-campanhas .atalhos-cat-foto { width: min(4rem, 100%); height: auto; aspect-ratio: 1; }
-.campanhas-hero { position: relative; }
-.campanhas-hero-conteudo { position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; pointer-events: none; }
-.campanhas-hero-conteudo > div { width: min(31rem, 48%); padding: 1.5rem; border-radius: 14px; background: color-mix(in srgb, var(--background) 92%, transparent); box-shadow: 0 16px 40px rgb(0 0 0 / .14); }
-.campanhas-hero-conteudo h2 { font-size: clamp(1.5rem, 3vw, 2.6rem); font-weight: 800; line-height: 1.05; letter-spacing: -.03em; }
-.campanhas-hero-conteudo p { margin-top: .65rem; color: var(--muted-foreground); line-height: 1.55; }
-.campanhas-hero-conteudo .btn-primario { display: inline-flex; margin-top: 1rem; gap: .4rem; pointer-events: auto; }
 
 /* Catálogo técnico: nome e medidas primeiro; referências de ERP ficam na ficha. */
 .cartao-produto-tecnico .cartao-produto-imagem { aspect-ratio: 4 / 3; background: #fff; }
@@ -1252,12 +1232,7 @@ html[data-cookies-respondido] .aviso-cookies { display: none; }
   [data-layout="distribuidora"] .marca-loja img { height: 60px; max-width: 170px; }
   [data-layout="distribuidora"] .banner-campanha picture { aspect-ratio: auto; height: min(calc(100vw * 5 / 4), 42svh); min-height: 0; }
   [data-layout="distribuidora"] .home-campanhas { gap: 1.25rem; }
-  .campanhas-hero-conteudo { align-items: end; padding-bottom: .75rem; }
-  .campanhas-hero-conteudo > div { width: 100%; padding: 1rem; }
-  .campanhas-hero-conteudo h2 { font-size: 1.35rem; }
-  .campanhas-hero-conteudo p { display: none; }
-  .cartao-produto-tecnico .cartao-produto-conteudo { flex: initial; gap: .25rem; padding: .625rem; }
-  .cartao-produto-tecnico .cartao-produto-preco { margin-top: .25rem; padding-top: 0; }
+  .cartao-produto-tecnico .cartao-produto-conteudo { padding: .625rem; }
   .cartao-produto-tecnico .cartao-produto-nome { font-size: .875rem; }
   .cartao-produto-tecnico .cartao-produto-disponibilidade > a { min-height: 44px; display: inline-flex; align-items: center; }
 }
@@ -1277,6 +1252,11 @@ html[data-cookies-respondido] .aviso-cookies { display: none; }
    pedido do último card atrapalha exatamente o que ele quer facilitar. Nas
    demais páginas, o rodapé ganha folga para nada ficar embaixo dele. */
 body:has(.cartao-produto, .ap-produto-info, .acao-whatsapp) .whatsapp-flutuante { display: none; }
+/* O aviso pede uma decisão antes da navegação normal e pode variar de altura
+   conforme a largura e o texto. Enquanto ele existe, o WhatsApp sai em vez de
+   ficar atrás do diálogo ou cobrir uma das escolhas. Após a resposta, o React
+   remove o aviso e o atalho volta normalmente. */
+body:has(.aviso-cookies) .whatsapp-flutuante { display: none; }
 body:has(.whatsapp-flutuante) .rodape-loja { padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)); }
 @media (max-width: 640px) {
   /* Card estreito: o selo ("Esgotado") ocupa a faixa, e o aviso de foto sai. */
@@ -1341,7 +1321,19 @@ body:has(.whatsapp-flutuante) .rodape-loja { padding-bottom: calc(5.5rem + env(s
 .industrial-topo-atalho { margin-top: 1rem; color: rgba(255,255,255,.75); font-size: .9rem; }
 .industrial-topo-atalho a { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
 
-.industrial-medida { margin-top: 1.75rem; padding: 1rem; border-radius: .9rem; background: #fff; color: var(--foreground); box-shadow: 0 18px 40px -18px rgba(0,0,0,.55); }
+.industrial-identificador { margin-top: 1.75rem; max-width: 44rem; padding: clamp(.9rem, 2vw, 1.25rem); border: 1px solid rgba(255,255,255,.2); border-radius: 1rem; background: color-mix(in srgb, var(--ind-escuro) 88%, transparent); box-shadow: 0 24px 55px -28px #000; backdrop-filter: blur(8px); }
+.industrial-busca-livre > label { display: block; margin-bottom: .45rem; color: #fff; font-size: .82rem; font-weight: 650; }
+.industrial-busca-livre > div { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; min-height: 3.25rem; overflow: hidden; border-radius: .65rem; background: #fff; color: var(--foreground); }
+.industrial-busca-livre svg { width: 1.15rem; height: 1.15rem; margin-left: .9rem; color: var(--muted-foreground); }
+.industrial-busca-livre input { min-width: 0; height: 3.25rem; padding-inline: .7rem; border: 0; background: transparent; font-size: .95rem; outline: none; }
+.industrial-busca-livre > div:focus-within { box-shadow: 0 0 0 3px color-mix(in srgb, var(--ind-apoio) 55%, transparent); }
+.industrial-busca-livre button { align-self: stretch; padding-inline: 1.15rem; background: var(--ind-apoio); color: var(--ind-escuro); font-weight: 750; }
+.industrial-busca-livre button:hover { filter: brightness(1.08); }
+.industrial-busca-livre button:focus-visible { outline: 3px solid #fff; outline-offset: -5px; }
+.industrial-identificador-divisor { display: flex; align-items: center; gap: .75rem; margin-block: .9rem; color: rgba(255,255,255,.7); font-size: .75rem; }
+.industrial-identificador-divisor::before, .industrial-identificador-divisor::after { content: ""; flex: 1; height: 1px; background: rgba(255,255,255,.18); }
+
+.industrial-medida { padding: 1rem; border-radius: .75rem; background: #fff; color: var(--foreground); }
 .industrial-medida-campos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; align-items: end; }
 .industrial-medida label { display: grid; gap: .35rem; font-size: .8rem; font-weight: 600; }
 .industrial-medida-entrada { display: flex; align-items: center; border: 1.5px solid var(--border); border-radius: .6rem; background: #fff; }
@@ -1357,6 +1349,7 @@ body:has(.whatsapp-flutuante) .rodape-loja { padding-bottom: calc(5.5rem + env(s
 .industrial-linhas ul { margin-top: 1.25rem; display: grid; gap: 0 2.5rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr)); }
 .industrial-linhas li { border-top: 1px solid var(--border); }
 .industrial-linhas a { display: grid; grid-template-columns: 6.5rem 1fr; gap: 1.1rem; align-items: center; padding-block: 1.1rem; }
+.industrial-linhas a.industrial-linha-sem-imagem { grid-template-columns: 1fr; }
 .industrial-linhas img { width: 6.5rem; height: 6.5rem; border-radius: .75rem; object-fit: cover; background: var(--muted); }
 .industrial-linha-texto { display: grid; gap: .3rem; }
 .industrial-linha-texto strong { font-size: 1.1rem; font-weight: 700; }
@@ -1364,6 +1357,12 @@ body:has(.whatsapp-flutuante) .rodape-loja { padding-bottom: calc(5.5rem + env(s
 .industrial-linha-texto em { color: var(--primary); font-size: .875rem; font-style: normal; font-weight: 600; }
 .industrial-linhas a:hover strong, .industrial-linhas a:hover em { text-decoration: underline; text-underline-offset: 3px; }
 .industrial-linhas a:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; border-radius: .5rem; }
+
+.industrial-marcas { display: grid; grid-template-columns: minmax(12rem, .65fr) minmax(0, 1.35fr); gap: 1.5rem 3rem; align-items: start; }
+.industrial-marcas > div p { margin-top: .5rem; max-width: 24rem; color: var(--muted-foreground); font-size: .9rem; line-height: 1.5; }
+.industrial-marcas ul { display: flex; flex-wrap: wrap; gap: .65rem; }
+.industrial-marcas li { padding: .65rem .9rem; border: 1px solid var(--border); border-radius: .45rem; background: var(--card); font-size: .9rem; font-weight: 700; }
+.industrial-beneficios { margin-top: -1.25rem; }
 
 .industrial-produtos > header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .5rem 1.5rem; margin-bottom: 1.25rem; }
 .industrial-produtos > header a { color: var(--primary); font-size: .95rem; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
@@ -1394,15 +1393,18 @@ body:has(.whatsapp-flutuante) .rodape-loja { padding-bottom: calc(5.5rem + env(s
      formulário inteiro (deslocamento de layout de 0,18 no PageSpeed). */
   .industrial-topo-conteudo { display: flex; flex-direction: column; }
   .industrial-topo h1 { min-height: 2.16em; }
-  .industrial-medida { order: 1; margin-top: 1.25rem; }
+  .industrial-identificador { order: 1; margin-top: 1.25rem; }
   .industrial-topo-texto { order: 2; margin-top: 1.25rem; }
   .industrial-topo-atalho { order: 3; }
+  .industrial-busca-livre > div { grid-template-columns: auto minmax(0, 1fr); }
+  .industrial-busca-livre button { grid-column: 1 / -1; min-height: 2.9rem; }
   .industrial-medida-campos { gap: .5rem; }
   .industrial-medida label { font-size: .72rem; }
   .industrial-medida-entrada input { height: 2.85rem; padding-left: .55rem; font-size: 1.05rem; }
   .industrial-medida-entrada abbr { padding-right: .45rem; font-size: .7rem; }
   .industrial-linhas a { grid-template-columns: 5rem 1fr; gap: .9rem; }
   .industrial-linhas img { width: 5rem; height: 5rem; }
+  .industrial-marcas { grid-template-columns: 1fr; }
   .industrial-empresa { grid-template-columns: 1fr; }
 }
 .cartao-produto-foto-cheia .cartao-produto-imagem { aspect-ratio: 1 / 1; background: var(--muted); }

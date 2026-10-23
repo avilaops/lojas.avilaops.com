@@ -6,6 +6,7 @@ import { Check, ShoppingBag } from "lucide-react";
 import { useCart } from "@/components/cart/CartProvider";
 import { adicionarAoCarrinho } from "@/lib/eventos-loja";
 import { formatarBRL } from "@/lib/catalogo";
+import { hrefDaVariante } from "@/lib/retorno-catalogo";
 
 export interface VarianteView { id: string; nome: string; valores: Record<string, string>; precoCentavos: number | null; estoque: number | null; imagem: string | null; disponivel?: boolean }
 
@@ -14,7 +15,7 @@ export interface VarianteView { id: string; nome: string; valores: Record<string
  * (Tamanho, Cor…). Combinação sem estoque fica desabilitada; o preço e a
  * foto seguem a variação escolhida. O carrinho recebe `<produtoId>:<varianteId>`.
  */
-export default function SeletorVariante({ produto, opcoes, variantes, vende, varianteInicial }: { varianteInicial?:string; produto: { id: string; slug: string; nome: string; precoCentavos: number; imagem?: string }; opcoes: string[]; variantes: VarianteView[]; vende: boolean }) {
+export default function SeletorVariante({ produto, opcoes, variantes, vende, varianteInicial, retorno = null }: { varianteInicial?:string; retorno?: string | null; produto: { id: string; slug: string; nome: string; precoCentavos: number; imagem?: string }; opcoes: string[]; variantes: VarianteView[]; vende: boolean }) {
   const { adicionar } = useCart();
   const router = useRouter();
   const [escolha, setEscolha] = useState<Record<string, string>>(variantes.find(v=>v.id===varianteInicial)?.valores??{});
@@ -46,7 +47,7 @@ export default function SeletorVariante({ produto, opcoes, variantes, vende, var
               const ativo = escolha[o] === valor;
               const pode = valorDisponivel(o, valor);
               return (
-                <button key={valor} type="button" disabled={!pode} onClick={() => { const nova={...escolha,[o]:valor}; setEscolha(nova); const v=variantes.find(v=>opcoes.every(k=>v.valores[k]===nova[k])); if(v)router.replace(`/produtos/${produto.slug}?variante=${encodeURIComponent(v.id)}`,{scroll:false}); }}
+                <button key={valor} type="button" disabled={!pode} onClick={() => { const nova={...escolha,[o]:valor}; setEscolha(nova); const v=variantes.find(v=>opcoes.every(k=>v.valores[k]===nova[k])); if(v)router.replace(hrefDaVariante(produto.slug, v.id, retorno),{scroll:false}); }}
                   className={`h-10 min-w-10 rounded-lg border px-3 text-sm ${ativo ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card"} ${pode ? "" : "opacity-40 line-through"}`}>
                   {valor}
                 </button>

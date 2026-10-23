@@ -1,0 +1,8 @@
+ALTER TABLE "SessaoVitrine"
+  ADD COLUMN "buscou" BOOLEAN NOT NULL DEFAULT false,
+  ADD COLUMN "buscaSemResultado" BOOLEAN NOT NULL DEFAULT false,
+  ADD COLUMN "filtrou" BOOLEAN NOT NULL DEFAULT false,
+  ADD COLUMN "contatoTecnico" BOOLEAN NOT NULL DEFAULT false,
+  ADD COLUMN "adicionouCarrinho" BOOLEAN NOT NULL DEFAULT false,
+  ADD COLUMN "abriuCarrinho" BOOLEAN NOT NULL DEFAULT false;
+

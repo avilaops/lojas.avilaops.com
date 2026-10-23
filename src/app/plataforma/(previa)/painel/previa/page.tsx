@@ -14,6 +14,7 @@ import { SemPreCarregamento } from "@/components/LinkLoja";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CabecalhoPremium from "@/components/templates/automotivo-premium/Cabecalho";
+import { identidadePublica } from "@/lib/identidade-publica";
 
 /**
  * Prévia do tema: a home como ficaria com o rascunho que o lojista ainda não
@@ -107,7 +108,17 @@ export default async function PreviaDoTema({ searchParams }: { searchParams: Pro
               ? <CabecalhoPremium loja={publico} logo={previa.logoUrl} logoCompacta={previa.faviconUrl} logoEscuro={tema.premium?.logoEscuroUrl} mostrarNome={tema.premium?.mostrarNome} categorias={menu} modo={tema.modo} />
               : <Header loja={publico} logoUrl={previa.logoUrl} mostrarNome={tema.mostrarNomeNoCabecalho} categorias={menu} mostrarPromocoes={campanhasDaLoja(tema).length > 0} />}
             <main className="flex-1">
-              {comporHome(tema, { t: previa, identidade, categorias, vitrine, temDestaques: vitrine.some((p) => p.destaque), vende: lojaVende(previa), looks })}
+              {comporHome(tema, {
+                t: previa,
+                identidade,
+                identidadePublica: identidadePublica(previa),
+                categorias,
+                marcas: ["SKF", "Sabó", "Corteco", "Freudenberg"],
+                vitrine,
+                temDestaques: vitrine.some((p) => p.destaque),
+                vende: lojaVende(previa),
+                looks,
+              })}
             </main>
             <Footer tenant={previa} categorias={menu} />
           </CartProvider>

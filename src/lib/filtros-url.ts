@@ -91,8 +91,19 @@ export function porPaginaDaUrl(sp: ParametrosDaVitrine): number {
   return TAMANHOS_PAGINA.some((t) => t === n) ? n : 48;
 }
 
-/** Algum filtro além da página? Decide se a gaveta de filtros abre sozinha. */
-export function temFiltroAtivo(sp: ParametrosDaVitrine): boolean {
-  return ["q", "perfil", "fabricante", "min", "max", "disponivel", "di_de", "di_ate", "de_de", "de_ate", "alt_de", "alt_ate", "esp_de", "esp_ate", "sec_de", "sec_ate"].some((k) => Boolean(sp[k]))
+const FILTROS_SECUNDARIOS = [
+  "perfil", "fabricante", "min", "max", "disponivel",
+  "di_de", "di_ate", "de_de", "de_ate", "alt_de", "alt_ate",
+  "esp_de", "esp_ate", "sec_de", "sec_ate",
+] as const;
+
+/** Filtro que mora na gaveta mobile; busca livre não deve abri-la sozinha. */
+export function temFiltroSecundarioAtivo(sp: ParametrosDaVitrine): boolean {
+  return FILTROS_SECUNDARIOS.some((chave) => Boolean(sp[chave]?.trim()))
     || Boolean(sp.ordem && sp.ordem !== "relevancia");
+}
+
+/** Algum filtro além da página? Usado para explicar uma listagem vazia. */
+export function temFiltroAtivo(sp: ParametrosDaVitrine): boolean {
+  return Boolean(sp.q?.trim()) || temFiltroSecundarioAtivo(sp);
 }

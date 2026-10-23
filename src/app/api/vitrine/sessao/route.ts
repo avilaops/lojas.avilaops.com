@@ -58,7 +58,8 @@ export async function POST(request: Request) {
   const podeLigarVisitas = corpo.consentimento === "aceito";
   const caminho = corpo.caminho.slice(0, 300);
   const emProduto = caminho.startsWith("/produtos/");
-  const emCheckout = caminho.startsWith("/checkout") || caminho.startsWith("/carrinho");
+  const emCarrinho = caminho.startsWith("/carrinho");
+  const emCheckout = caminho.startsWith("/checkout");
 
   const chaveAtual = jar.get(COOKIE_SESSAO)?.value;
   const limite = new Date(Date.now() - SEGUNDOS_DE_SESSAO * 1000);
@@ -75,6 +76,7 @@ export async function POST(request: Request) {
         // `||` e não atribuição direta: quem viu um produto e voltou para a
         // home continua tendo visto um produto nesta sessão.
         ...(emProduto && !existente.viuProduto ? { viuProduto: true } : {}),
+        ...(emCarrinho && !existente.abriuCarrinho ? { abriuCarrinho: true } : {}),
         ...(emCheckout && !existente.iniciouCheckout ? { iniciouCheckout: true } : {}),
       },
     });
@@ -109,6 +111,7 @@ export async function POST(request: Request) {
       entrada: caminho,
       dispositivo: classificarDispositivo(userAgent),
       viuProduto: emProduto,
+      abriuCarrinho: emCarrinho,
       iniciouCheckout: emCheckout,
     },
   });

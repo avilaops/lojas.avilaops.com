@@ -1,15 +1,19 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { registrarEventoFunil } from "@/lib/eventos-loja";
 import { CAMPOS_MEDIDA as CAMPOS, prepararBuscaMedida } from "@/lib/busca-medida";
 
 /**
- * Localiza candidatos pelas dimensões cadastradas em milímetros.
- * A faixa de busca não representa tolerância de fabricação ou de montagem.
+ * Busca pela medida da peça, que é como vedação se compra: diâmetro interno,
+ * diâmetro externo e altura, em milímetros, medidos no alojamento.
+ *
+ * Cada campo preenchido vira uma faixa de meio milímetro para cada lado nos
+ * filtros que o catálogo já tem (`di_de`/`di_ate` etc.): paquímetro e peça
+ * usada não dão o número do catálogo, e busca exata devolveria lista vazia
+ * para quem mediu 50,7 numa peça de 50,8.
  */
 export default function BuscaPorMedida() {
-  const router = useRouter();
   const [valores, setValores] = useState<Record<string, string>>({ di: "", de: "", alt: "" });
   const [aviso, setAviso] = useState("");
   const [campoInvalido, setCampoInvalido] = useState<string>();
@@ -22,7 +26,8 @@ export default function BuscaPorMedida() {
       setCampoInvalido(resultado.campo);
       return;
     }
-    router.push(`/produtos?${resultado.query}`);
+    registrarEventoFunil("filter_apply");
+    window.location.assign(`/produtos?${resultado.query}`);
   }
 
   return (

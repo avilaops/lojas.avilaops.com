@@ -3,6 +3,9 @@ import { temaDo } from "@/lib/tenant";
 import ProductCard from "@/components/ProductCard";
 import { paragrafosDaDescricao } from "@/lib/descricao-produto";
 import BuscaPorMedida from "./BuscaPorMedida";
+import BuscaTecnica from "./BuscaTecnica";
+import BeneficiosBarra from "./BeneficiosBarra";
+import { LinkContatoMedido } from "@/components/EventoFunil";
 import type { DadosHome } from "./tipos";
 
 /** Imagem enviada à plataforma sai na largura pedida (`?w=`); as de fora ficam como estão. */
@@ -19,14 +22,14 @@ function reduzida(url: string, largura: 320 | 1200): string {
  * os diferenciais da loja e o contato comercial. Tudo é dado da loja: foto do
  * topo e diferenciais em `tema.industrial`, o resto no catálogo e no cadastro.
  */
-export default function Industrial({ t, categorias, vitrine, temDestaques, vende, moto }: DadosHome) {
+export default function Industrial({ t, identidadePublica, categorias, marcas = [], vitrine, temDestaques, vende, moto }: DadosHome) {
   const tema = temaDo(t);
   const foto = tema.industrial?.heroImagem;
   const diferenciais = tema.industrial?.diferenciais ?? [];
   const titulo = tema.heroTitulo || t.slogan || t.nome;
   const texto = tema.heroTexto || paragrafosDaDescricao(t.sobre ?? "")[0] || "";
   const sobre = paragrafosDaDescricao(t.sobre ?? "").slice(0, 3);
-  const whatsapp = t.whatsapp ? `https://wa.me/${t.whatsapp.replace(/\D/g, "")}` : null;
+  const contato = identidadePublica;
 
   return (
     <div className="home-industrial">
@@ -39,10 +42,11 @@ export default function Industrial({ t, categorias, vitrine, temDestaques, vende
           <p className="industrial-topo-marca">{t.nome}</p>
           <h1 id="industrial-titulo">{titulo}</h1>
           {texto && <p className="industrial-topo-texto">{texto}</p>}
-          <BuscaPorMedida />
-          <p className="industrial-topo-atalho">
-            Tem o código ou a referência da peça? <Link href="/produtos">Busque no catálogo completo</Link>.
-          </p>
+          <div className="industrial-identificador" aria-label="Identificação da peça">
+            <BuscaTecnica />
+            <div className="industrial-identificador-divisor"><span>ou use as medidas</span></div>
+            <BuscaPorMedida />
+          </div>
         </div>
       </section>
 
@@ -52,7 +56,7 @@ export default function Industrial({ t, categorias, vitrine, temDestaques, vende
           <ul>
             {categorias.map((c) => (
               <li key={c.id}>
-                <Link href={`/categoria/${c.slug}`}>
+                <Link href={`/categoria/${c.slug}`} className={c.imagemUrl ? undefined : "industrial-linha-sem-imagem"}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   {c.imagemUrl && <img src={reduzida(c.imagemUrl, 320)} alt="" loading="lazy" decoding="async" width={320} height={320} />}
                   <span className="industrial-linha-texto">
@@ -66,6 +70,18 @@ export default function Industrial({ t, categorias, vitrine, temDestaques, vende
           </ul>
         </section>
       )}
+
+      {marcas.length > 0 && (
+        <section className="container-loja industrial-marcas" aria-labelledby="industrial-marcas-titulo">
+          <div>
+            <h2 id="industrial-marcas-titulo">Marcas disponíveis</h2>
+            <p>Fabricantes encontrados nos produtos ativos do catálogo.</p>
+          </div>
+          <ul>{marcas.map((marca) => <li key={marca}>{marca}</li>)}</ul>
+        </section>
+      )}
+
+      <div className="container-loja industrial-beneficios"><BeneficiosBarra t={t} /></div>
 
       {vitrine.length > 0 && (
         <section className="container-loja industrial-produtos" aria-labelledby="industrial-produtos-titulo">
@@ -101,10 +117,10 @@ export default function Industrial({ t, categorias, vitrine, temDestaques, vende
         <aside aria-label="Atendimento comercial">
           <h3>Fale com o comercial</h3>
           <p>Envie a medida, o código ou a referência da peça e receba a cotação.</p>
-          {whatsapp && <a className="industrial-contato-botao" href={whatsapp} target="_blank" rel="noopener noreferrer">Pedir cotação pelo WhatsApp</a>}
+          {contato?.whatsapp && <LinkContatoMedido className="industrial-contato-botao" href={contato.whatsapp.url} target="_blank" rel="noopener noreferrer">Pedir cotação pelo WhatsApp</LinkContatoMedido>}
           <ul>
-            {t.telefone && <li><span>Telefone</span><a href={`tel:${t.telefone.replace(/[^\d+]/g, "")}`}>{t.telefone}</a></li>}
-            {t.emailContato && <li><span>E-mail</span><a href={`mailto:${t.emailContato}`}>{t.emailContato}</a></li>}
+            {contato?.telefone && <li><span>Telefone</span><a href={`tel:${contato.telefone.uri}`}>{contato.telefone.exibicao}</a></li>}
+            {contato?.email && <li><span>E-mail</span><a href={`mailto:${contato.email}`}>{contato.email}</a></li>}
           </ul>
         </aside>
       </section>
