@@ -117,7 +117,7 @@ export default function ProductCard({ produto, loja, vende, whatsapp, moto = nul
             </span>
           )}
           {estoqueBaixo && (
-            <span className="rounded-md bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">
+            <span className="rounded-md bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-zinc-950 shadow-sm">
               Últimas {produto.estoque} un.
             </span>
           )}

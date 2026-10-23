@@ -1,9 +1,10 @@
 const PARAMETROS_DA_LISTAGEM = new Set([
   "q", "categoria", "marca", "modelo", "ano", "moto",
-  "perfil", "fabricante", "min", "max", "ordem", "porPagina",
+  "perfil", "material", "dureza", "vedacao", "fabricante", "min", "max", "ordem", "porPagina",
   "disponivel", "pagina",
   "di_de", "di_ate", "de_de", "de_ate", "alt_de", "alt_ate",
   "esp_de", "esp_ate", "sec_de", "sec_ate",
+  "larg_de", "larg_ate", "comp_de", "comp_ate",
 ]);
 
 function basePermitida(caminho: string) {

@@ -6,7 +6,7 @@ import PaginacaoLoja, { paginaDaUrl, porPaginaDaUrl } from "@/components/Paginac
 import { exigirTenant, lojaVende, temaDo } from "@/lib/tenant";
 import CategoriasPremium from "@/components/templates/automotivo-premium/Categorias";
 import { listarCategorias, paginaDeProdutos, facetasTecnicas, grafiasDaMarca, medidasDaLoja } from "@/lib/catalogo";
-import { filtroDaUrl, temFiltroCatalogoAplicado } from "@/lib/filtros-url";
+import { filtroDaUrl, temConsultaTecnica, temFiltroCatalogoAplicado } from "@/lib/filtros-url";
 import ProductCard from "@/components/ProductCard";
 import TabelaTecnica from "@/components/TabelaTecnica";
 import { listaEmTabela } from "@/lib/templates";
@@ -17,6 +17,7 @@ import { nomeDaMoto } from "@/lib/motos";
 import { usaBlocoProprio } from "@/lib/templates";
 import { EventoFunil } from "@/components/EventoFunil";
 import { retornoDaListagem } from "@/lib/retorno-catalogo";
+import { configuracaoBuscaTecnica } from "@/lib/busca-tecnica-familia";
 
 type SP = Record<string, string | undefined>;
 
@@ -58,12 +59,13 @@ export default async function Produtos({ searchParams }: { searchParams: Promise
   if (produtos.length === 0 && pagina > 1) notFound();
   const vende = lojaVende(t);
   const categoriaAtual = categorias.find((c) => c.slug === sp.categoria);
+  const buscaTecnica = categoriaAtual ? configuracaoBuscaTecnica(categoriaAtual.nome) : null;
   const titulo = sp.q ? `Resultados para “${sp.q}”` : categoriaAtual ? categoriaAtual.nome : moto ? `Peças para ${nomeDaMoto(moto)}` : "Todos os produtos";
   const buscou = Boolean(sp.q?.trim());
   const filtrou = temFiltroCatalogoAplicado(sp);
   const eventos = [
     ...(buscou ? ["search" as const] : []),
-    ...(buscou && lote.total === 0 ? ["search_no_results" as const] : []),
+    ...(temConsultaTecnica(sp) && lote.total === 0 ? ["search_no_results" as const] : []),
     ...(filtrou ? ["filter_apply" as const] : []),
   ];
   const retorno = retornoDaListagem("/produtos", sp);
@@ -78,7 +80,7 @@ export default async function Produtos({ searchParams }: { searchParams: Promise
         {moto && (sp.q || categoriaAtual) && <>Mostrando o que serve na {nomeDaMoto(moto)}</>}
         {moto && <> · <Link href="/produtos?moto=todas" className="underline">ver catálogo completo</Link></>}
       </p>
-      <FiltrosProdutos categorias={categorias} valores={sp} medidas={temMedida} fabricantes={facetas.fabricantes} perfis={facetas.perfis} />
+      <FiltrosProdutos categorias={categorias} valores={sp} medidas={temMedida} fabricantes={facetas.fabricantes} perfis={facetas.perfis} buscaTecnica={buscaTecnica} facetasAtributos={facetas.atributos} />
       {temMedida.length > 0 && (
         <p className="mb-4 text-sm text-muted-foreground">
           Medidas iguais ou próximas não comprovam compatibilidade. Confira perfil, material e aplicação na ficha de cada peça antes de adicionar ao pedido.

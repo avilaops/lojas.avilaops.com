@@ -3,6 +3,7 @@ import type { Prisma, Produto, Categoria } from "@prisma/client";
 import type { ItemCarrinho } from "@avilaops/checkout";
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
+import { facetasTecnicasCadastradas } from "./busca-tecnica-familia";
 import { prisma } from "./db";
 import { INCLUIR_CATALOGO } from "./catalogo-qualidade";
 import { marcaConfirmada } from "./marca-confirmada";
@@ -81,6 +82,7 @@ export interface FiltroCatalogo {
   categoriaSlug?: string;
   busca?: string;
   perfil?: string;
+  atributos?: Partial<Record<"material" | "dureza" | "vedacao", string>>;
   /** Marca, ou todas as grafias dela (ver `agruparMarcas`). */
   fabricante?: string | string[];
   destaque?: boolean;
@@ -123,6 +125,8 @@ export const MEDIDAS_FILTRAVEIS = {
   alturaMm: "Altura",
   espessuraMm: "Espessura",
   secaoMm: "Seção do cordão",
+  larguraMm: "Largura",
+  comprimentoMm: "Comprimento",
 } as const;
 
 export type ChaveDeMedida = keyof typeof MEDIDAS_FILTRAVEIS;
@@ -149,6 +153,8 @@ const ABREVIACAO: Record<ChaveDeMedida, string> = {
   alturaMm: "alt.",
   espessuraMm: "esp.",
   secaoMm: "seção",
+  larguraMm: "larg.",
+  comprimentoMm: "comp.",
 };
 
 /**
@@ -287,13 +293,20 @@ function singular(t: string): string {
   return cortado.length >= 4 ? cortado : t;
 }
 
-function condicaoProdutos(tenantId: string, filtro?: FiltroCatalogo): Prisma.ProdutoWhereInput {
+export function condicaoProdutos(tenantId: string, filtro?: FiltroCatalogo): Prisma.ProdutoWhereInput {
   const dimensional = filtro?.busca ? consultaDimensional(filtro.busca) : null;
   const par = !dimensional && filtro?.busca ? consultaParDeMedidas(filtro.busca) : null;
   // O índice textual usa a grafia original (8,5 ou 8.50) e não indexa todos
   // os atributos. Medidas são conferidas no JSON, sem um pré-filtro textual
   // que descartaria valores numericamente equivalentes.
   const termos = termosDeBusca(dimensional?.texto ?? par?.texto ?? filtro?.busca ?? "");
+  const atributos = {
+    ...(filtro?.perfil ? { perfil: filtro.perfil } : {}),
+    ...filtro?.atributos,
+  };
+  const condicoesDeAtributo: Prisma.ProdutoWhereInput[] = Object.entries(atributos).map(([campo, valor]) => ({
+    atributos: { path: [campo], equals: valor },
+  }));
   return {
       tenantId,
       ativo: true,
@@ -309,7 +322,7 @@ function condicaoProdutos(tenantId: string, filtro?: FiltroCatalogo): Prisma.Pro
         : {}),
       // Cada condição composta entra no AND: duas regras com `OR` próprio
       // espalhadas no mesmo objeto se sobrescreveriam em silêncio.
-      ...(termos.length || filtro?.somenteDisponiveis
+      ...(termos.length || filtro?.somenteDisponiveis || condicoesDeAtributo.length
         ? {
             AND: [
               ...termos.map((t) => ({
@@ -319,10 +332,10 @@ function condicaoProdutos(tenantId: string, filtro?: FiltroCatalogo): Prisma.Pro
                 ],
               })),
               ...(filtro?.somenteDisponiveis ? [WHERE_EM_ESTOQUE] : []),
+              ...condicoesDeAtributo,
             ],
           }
         : {}),
-      ...(filtro?.perfil ? { atributos: { path: ["perfil"], equals: filtro.perfil } } : {}),
     };
 }
 
@@ -801,7 +814,8 @@ export async function facetasTecnicas(tenantId: string, categoriaSlug?: string) 
   });
   const fabricantes = agruparMarcas(linhas.map(p => p.marca));
   const perfis = categoriaSlug ? [...new Set(linhas.map(p => (p.atributos as Record<string, unknown> | null)?.perfil).filter((p): p is string => typeof p === "string" && !!p.trim()))].sort() : [];
-  return { fabricantes, perfis };
+  const atributos = categoriaSlug ? facetasTecnicasCadastradas(linhas.map((p) => p.atributos as Record<string, unknown> | null)) : { material: [], dureza: [], vedacao: [] };
+  return { fabricantes, perfis, atributos };
 }
 
 /** Contagem no banco para os filtros simples; os demais contam após comparar atributos. */

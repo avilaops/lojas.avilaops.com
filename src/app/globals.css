@@ -97,6 +97,10 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
 .filtros-gaveta { display: none; }
 .filtros-abrir { display: none; }
 .filtros-selo-ativo { color: color-mix(in srgb, var(--primary) 78%, var(--foreground)); }
+.busca-tecnica-familia { grid-column: 1 / -1; }
+.busca-tecnica-desenho { display: grid; align-content: start; gap: .35rem; color: var(--primary); }
+.busca-tecnica-desenho svg { width: 100%; max-width: 180px; height: auto; margin-inline: auto; }
+.busca-tecnica-desenho figcaption { color: var(--muted-foreground); font-size: .75rem; line-height: 1.35; text-align: center; }
 .ajuda-catalogo { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .25rem 1rem; align-items: center; min-height: 44px; margin-top: 1rem; padding: .75rem; border: 1px solid var(--border); border-radius: var(--radius); font-size: .875rem; font-weight: 600; }
 .ajuda-catalogo span { color: var(--primary); text-decoration: underline; text-underline-offset: 3px; }
 .ajuda-catalogo:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }

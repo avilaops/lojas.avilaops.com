@@ -55,6 +55,8 @@ export function faixasDaUrl(sp: ParametrosDaVitrine): FiltroCatalogo["medidas"] 
     ["alturaMm", "alt"],
     ["espessuraMm", "esp"],
     ["secaoMm", "sec"],
+    ["larguraMm", "larg"],
+    ["comprimentoMm", "comp"],
   ];
   const fora: Partial<Record<ChaveDeMedida, { de?: number; ate?: number }>> = {};
   for (const [campo, prefixo] of campos) {
@@ -70,6 +72,11 @@ export function filtroDaUrl(sp: ParametrosDaVitrine, categoriaSlug?: string): Fi
   return {
     busca: sp.q?.trim() || undefined,
     perfil: sp.perfil || undefined,
+    atributos: {
+      ...(sp.material?.trim() ? { material: sp.material.trim() } : {}),
+      ...(sp.dureza?.trim() ? { dureza: sp.dureza.trim() } : {}),
+      ...(sp.vedacao?.trim() ? { vedacao: sp.vedacao.trim() } : {}),
+    },
     fabricante: sp.fabricante?.trim() || undefined,
     categoriaSlug: categoriaSlug ?? (sp.categoria || undefined),
     ordem: ordemDaUrl(sp),
@@ -92,9 +99,10 @@ export function porPaginaDaUrl(sp: ParametrosDaVitrine): number {
 }
 
 const FILTROS_SECUNDARIOS = [
-  "perfil", "fabricante", "min", "max", "disponivel",
+  "perfil", "material", "dureza", "vedacao", "fabricante", "min", "max", "disponivel",
   "di_de", "di_ate", "de_de", "de_ate", "alt_de", "alt_ate",
   "esp_de", "esp_ate", "sec_de", "sec_ate",
+  "larg_de", "larg_ate", "comp_de", "comp_ate",
 ] as const;
 
 /** Filtro que mora na gaveta mobile; busca livre não deve abri-la sozinha. */
@@ -112,4 +120,14 @@ export function temFiltroAtivo(sp: ParametrosDaVitrine): boolean {
 export function temFiltroCatalogoAplicado(sp: ParametrosDaVitrine): boolean {
   return temFiltroSecundarioAtivo(sp)
     || Boolean(sp.categoria || sp.marca || sp.modelo || sp.ano || (sp.moto && sp.moto !== "todas"));
+}
+
+const CAMPOS_DA_CONSULTA_TECNICA = [
+  "di_de", "di_ate", "de_de", "de_ate", "alt_de", "alt_ate",
+  "esp_de", "esp_ate", "sec_de", "sec_ate", "larg_de", "larg_ate", "comp_de", "comp_ate",
+  "perfil", "material", "dureza", "vedacao",
+] as const;
+
+export function temConsultaTecnica(sp: ParametrosDaVitrine): boolean {
+  return Boolean(sp.q?.trim()) || CAMPOS_DA_CONSULTA_TECNICA.some((campo) => Boolean(sp[campo]?.trim()));
 }

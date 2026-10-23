@@ -668,6 +668,35 @@
           "note": "Três apontamentos do code review do PR 153 foram reproduzidos, corrigidos e cobertos por 12 testes direcionados."
         }
       ]
+    },
+    {
+      "id": "T-0015",
+      "title": "Desenvolver seletores técnicos por família para a VedaShow",
+      "objective": "Permitir que o cliente filtre peças por medidas e atributos próprios de cada família sem prometer compatibilidade apenas pela dimensão.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "concluida",
+      "acceptanceCriteria": [
+        "Retentores, O-rings, rolamentos, correias e vedações hidráulicas têm campos próprios.",
+        "Medidas aceitam vírgula ou ponto e exibem a unidade em milímetros.",
+        "Somente atributos validados no catálogo são oferecidos como opções.",
+        "O desenho e o texto explicam como medir e que dimensão não confirma compatibilidade.",
+        "Busca sem resultado preserva o contexto no atendimento técnico e gera métrica.",
+        "Consultas conhecidas funcionam no celular sem overflow nem violações graves de acessibilidade.",
+        "Testes, TypeScript, ESLint e build de produção passam."
+      ],
+      "evidence": "QA móvel executado nas cinco famílias em tenant efêmero e PostgreSQL isolado. Cada consulta por medida encontrou o SKU conhecido. As cinco telas ficaram sem overflow e sem violações Axe sérias ou críticas. 1.242 testes, TypeScript, ESLint, build de produção e git diff --check passaram. Artefatos: output/vedashow-avl-269/seletores-tecnicos/.",
+      "review": "A validação encontrou e corrigiu o reconhecimento do plural Vedações Hidráulicas, nomes acessíveis ausentes nos seletores e contraste insuficiente no texto de unidade e no selo de estoque baixo.",
+      "environment": "local-isolado",
+      "owner": null,
+      "acceptance": "As cinco famílias prioritárias oferecem seleção técnica específica, baseada apenas em dados cadastrados e sem alegar compatibilidade automática.",
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-10-23",
+          "note": "Implementação e QA móvel concluídos com cinco capturas e relatório estruturado."
+        }
+      ]
     }
   ],
   "decisions": [

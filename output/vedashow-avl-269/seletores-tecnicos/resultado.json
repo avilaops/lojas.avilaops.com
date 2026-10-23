@@ -1,0 +1,71 @@
+{
+  "tenant": "vedashow-seletores-1792790798978",
+  "resultados": [
+    {
+      "familia": "Retentores",
+      "url": "http://vedashow-seletores-1792790798978.localhost:3080/categoria/retentores?q=&ordem=relevancia&min=&max=&porPagina=48&di_de=25&di_ate=&de_de=&de_ate=&alt_de=&alt_ate=&perfil=&material=",
+      "campos": [
+        "Diâmetro interno mínimo em mm",
+        "Diâmetro externo mínimo em mm",
+        "Altura mínimo em mm",
+        "Perfil",
+        "Material"
+      ],
+      "produto": "Retentor QA TC",
+      "overflow": false,
+      "violacoes": []
+    },
+    {
+      "familia": "O-Rings",
+      "url": "http://vedashow-seletores-1792790798978.localhost:3080/categoria/o-rings?q=&ordem=relevancia&min=&max=&porPagina=48&di_de=18%2C2&di_ate=&sec_de=&sec_ate=&material=&dureza=",
+      "campos": [
+        "Diâmetro interno mínimo em mm",
+        "Seção do cordão mínimo em mm",
+        "Material",
+        "Dureza"
+      ],
+      "produto": "O-Ring QA NBR",
+      "overflow": false,
+      "violacoes": []
+    },
+    {
+      "familia": "Rolamentos",
+      "url": "http://vedashow-seletores-1792790798978.localhost:3080/categoria/rolamentos?q=&ordem=relevancia&min=&max=&porPagina=48&di_de=20&di_ate=&de_de=&de_ate=&alt_de=&alt_ate=&vedacao=",
+      "campos": [
+        "Diâmetro interno mínimo em mm",
+        "Diâmetro externo mínimo em mm",
+        "Altura mínimo em mm",
+        "Tipo de vedação"
+      ],
+      "produto": "Rolamento QA 6204 2RS",
+      "overflow": false,
+      "violacoes": []
+    },
+    {
+      "familia": "Correias",
+      "url": "http://vedashow-seletores-1792790798978.localhost:3080/categoria/correias?q=&ordem=relevancia&min=&max=&porPagina=48&comp_de=762&comp_ate=&perfil=",
+      "campos": [
+        "Comprimento mínimo em mm",
+        "Perfil"
+      ],
+      "produto": "Correia QA 3L300",
+      "overflow": false,
+      "violacoes": []
+    },
+    {
+      "familia": "Vedações Hidráulicas",
+      "url": "http://vedashow-seletores-1792790798978.localhost:3080/categoria/vedacoes-hidraulicas?q=&ordem=relevancia&min=&max=&porPagina=48&di_de=50%2C8&di_ate=&de_de=&de_ate=&alt_de=&alt_ate=&perfil=&material=",
+      "campos": [
+        "Diâmetro interno mínimo em mm",
+        "Diâmetro externo mínimo em mm",
+        "Altura mínimo em mm",
+        "Perfil",
+        "Material"
+      ],
+      "produto": "Gaxeta QA PU",
+      "overflow": false,
+      "violacoes": []
+    }
+  ],
+  "erros": []
+}

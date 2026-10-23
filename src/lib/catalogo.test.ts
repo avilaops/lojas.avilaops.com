@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { dicaDeMedidas, medidaResumida, ordenarPorMedida, termosDeBusca } from "./catalogo";
+import { condicaoProdutos, dicaDeMedidas, medidaResumida, ordenarPorMedida, termosDeBusca } from "./catalogo";
 import type { ChaveDeMedida } from "./catalogo";
 
 /**
@@ -12,6 +12,15 @@ import type { ChaveDeMedida } from "./catalogo";
 
 test("palavra solta continua como estava", () => {
   assert.deepEqual(termosDeBusca("valvula pressao"), ["valvula", "pressao"]);
+});
+
+test("atributos técnicos viram condições independentes no JSON do produto", () => {
+  const where = condicaoProdutos("tenant-1", { perfil: "TC", atributos: { material: "NBR", dureza: "70 Shore A" } });
+  assert.deepEqual(where.AND, [
+    { atributos: { path: ["perfil"], equals: "TC" } },
+    { atributos: { path: ["material"], equals: "NBR" } },
+    { atributos: { path: ["dureza"], equals: "70 Shore A" } },
+  ]);
 });
 
 test("acento sai, para quem digita sem no celular", () => {

@@ -6,7 +6,7 @@ import { exigirTenant, lojaVende, urlDaLoja, temaDo } from "@/lib/tenant";
 import { facetasTecnicas, grafiasDaMarca, listarCategorias, medidasDaLoja, paginaDeProdutos } from "@/lib/catalogo";
 import FiltrosProdutos from "@/components/FiltrosProdutos";
 import AjudaCatalogo from "@/components/AjudaCatalogo";
-import { filtroDaUrl, temFiltroAtivo, temFiltroCatalogoAplicado } from "@/lib/filtros-url";
+import { filtroDaUrl, temConsultaTecnica, temFiltroAtivo, temFiltroCatalogoAplicado } from "@/lib/filtros-url";
 import CategoriasPremium from "@/components/templates/automotivo-premium/Categorias";
 import PaginacaoLoja, { paginaDaUrl, porPaginaDaUrl } from "@/components/PaginacaoLoja";
 import ProductCard from "@/components/ProductCard";
@@ -21,6 +21,7 @@ import { usaBlocoProprio } from "@/lib/templates";
 import { chaveCanonicaDaCategoria } from "@/lib/categorias-canonicas";
 import { EventoFunil } from "@/components/EventoFunil";
 import { retornoDaListagem } from "@/lib/retorno-catalogo";
+import { configuracaoBuscaTecnica } from "@/lib/busca-tecnica-familia";
 
 async function resolverCategoria(t: Awaited<ReturnType<typeof exigirTenant>>, slug: string) {
   const ativas = await listarCategorias(t.id);
@@ -109,10 +110,11 @@ export default async function Categoria({ params, searchParams }: Props) {
   const aplicouFiltro = temFiltroCatalogoAplicado(sp);
   const eventos = [
     ...(buscou ? ["search" as const] : []),
-    ...(buscou && lote.total === 0 ? ["search_no_results" as const] : []),
+    ...(temConsultaTecnica(sp) && lote.total === 0 ? ["search_no_results" as const] : []),
     ...(aplicouFiltro ? ["filter_apply" as const] : []),
   ];
   const retorno = retornoDaListagem(`/categoria/${categoria.slug}`, sp);
+  const buscaTecnica = configuracaoBuscaTecnica(categoria.nome);
 
   return (
     <div className="container-loja py-8 ap-catalogo categoria-catalogo">
@@ -137,7 +139,7 @@ export default async function Categoria({ params, searchParams }: Props) {
         ) : null}
       </p>
 
-      <FiltrosProdutos categorias={categorias} valores={sp} medidas={medidas} fabricantes={facetas.fabricantes} perfis={facetas.perfis} acao={`/categoria/${categoria.slug}`} categoriaFixa />
+      <FiltrosProdutos categorias={categorias} valores={sp} medidas={medidas} fabricantes={facetas.fabricantes} perfis={facetas.perfis} buscaTecnica={buscaTecnica} facetasAtributos={facetas.atributos} acao={`/categoria/${categoria.slug}`} categoriaFixa />
       {produtos.length === 0 ? (
         <section className="rounded-xl border border-dashed border-border bg-card p-8 text-center" aria-labelledby="categoria-vazia-titulo">
           <h2 id="categoria-vazia-titulo" className="font-semibold">Nenhum produto encontrado</h2>

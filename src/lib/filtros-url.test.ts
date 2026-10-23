@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { faixasDaUrl, filtroDaUrl, porPaginaDaUrl, reaisDaUrl, temFiltroAtivo, temFiltroCatalogoAplicado, temFiltroSecundarioAtivo } from "./filtros-url";
+import { faixasDaUrl, filtroDaUrl, porPaginaDaUrl, reaisDaUrl, temConsultaTecnica, temFiltroAtivo, temFiltroCatalogoAplicado, temFiltroSecundarioAtivo } from "./filtros-url";
 import { agruparMarcas, grafiasDaMarca } from "./catalogo";
 
 test("categoria da rota vence a da URL", () => {
@@ -70,4 +70,18 @@ test("medida tem que ser número: lixo na URL não filtra", () => {
   assert.equal(faixasDaUrl({ di_de: "-5" }), undefined);
   assert.equal(faixasDaUrl({ di_de: "", di_ate: "" }), undefined);
   assert.deepEqual(faixasDaUrl({ di_de: " 20,5 " }), { diametroInternoMm: { de: 20.5, ate: undefined } });
+  assert.deepEqual(faixasDaUrl({ comp_de: "762,5", comp_ate: "763.5" }), { comprimentoMm: { de: 762.5, ate: 763.5 } });
+});
+
+test("atributos técnicos aceitam apenas a allowlist pública", () => {
+  const f = filtroDaUrl({ material: "NBR", dureza: "70 Shore A", vedacao: "2RS", segredo: "não" });
+  assert.deepEqual(f.atributos, { material: "NBR", dureza: "70 Shore A", vedacao: "2RS" });
+});
+
+test("busca sem resultado mede texto, dimensão e atributo técnico", () => {
+  assert.equal(temConsultaTecnica({ q: "6204" }), true);
+  assert.equal(temConsultaTecnica({ di_de: "20" }), true);
+  assert.equal(temConsultaTecnica({ material: "NBR" }), true);
+  assert.equal(temConsultaTecnica({ fabricante: "SKF" }), false);
+  assert.equal(temConsultaTecnica({ utm_source: "google" }), false);
 });

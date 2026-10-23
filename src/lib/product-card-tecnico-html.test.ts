@@ -67,3 +67,14 @@ test("card técnico não inventa unidade ausente", () => {
   assert.match(html, /Dureza<\/dt><dd>70 Shore A<\/dd>/);
   assert.doesNotMatch(html, /Venda:/);
 });
+
+test("selo de estoque baixo usa texto escuro sobre o âmbar", () => {
+  const html = renderToStaticMarkup(createElement(ProductCard, {
+    produto: { ...produto({}), disponibilidade: "in_stock", estoque: 2 },
+    loja,
+    vende: false,
+    whatsapp: null,
+  }));
+  assert.match(html, /bg-amber-500[^\"]*text-zinc-950/);
+  assert.doesNotMatch(html, /bg-amber-500[^\"]*text-white/);
+});
