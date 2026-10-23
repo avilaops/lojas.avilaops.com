@@ -1,7 +1,7 @@
 import { TAMANHOS_PAGINA, porPaginaDaUrl } from "@/components/PaginacaoLoja";
 import type { Categoria } from "@prisma/client";
 import { dicaDeMedidas, type ChaveDeMedida, type FacetaMarca } from "@/lib/catalogo";
-import { temFiltroAtivo } from "@/lib/filtros-url";
+import { temFiltroAtivo, temFiltroSecundarioAtivo } from "@/lib/filtros-url";
 
 /** Uma medida que a loja usa, com a faixa real do catálogo. */
 export type MedidaDisponivel = { campo: ChaveDeMedida; rotulo: string; min: number; max: number; itens: number };
@@ -52,9 +52,12 @@ export default function FiltrosProdutos({
   // e seção não mede "interno × externo × altura".
   const dica = dicaDeMedidas(medidas);
   const usandoMedida = medidas.some((m) => valores[`${PREFIXO[m.campo]}_de`] || valores[`${PREFIXO[m.campo]}_ate`]);
+  const filtroSecundarioAtivo = Boolean(valores.categoria) || temFiltroSecundarioAtivo(valores);
+  const temEstadoAtivo = temFiltroAtivo(valores)
+    || Boolean(valores.categoria || valores.marca || valores.modelo || valores.ano || valores.moto);
   return (
     <form action={acao} className="filtros-produtos mb-6 grid gap-2 rounded-xl border border-border bg-card p-3">
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="filtros-grade grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
         {valores.marca && valores.modelo && (
           <>
             <input type="hidden" name="marca" value={valores.marca} />
@@ -63,48 +66,56 @@ export default function FiltrosProdutos({
           </>
         )}
         {valores.moto === "todas" && <input type="hidden" name="moto" value="todas" />}
-        <input name="q" type="search" aria-label="Buscar produtos" defaultValue={valores.q ?? ""} placeholder="Nome, código, referência ou marca" className="h-10 rounded-lg border border-border bg-background px-3 text-sm" />
+        <input name="q" type="search" aria-label="Buscar produtos" defaultValue={valores.q ?? ""} placeholder="Nome, código, referência ou marca" className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
         {/* Categoria, preço e ordem empilhavam no celular e empurravam o
             primeiro produto para quase uma tela inteira de rolagem (medido em
             0,95 tela). Aqui eles vão para uma gaveta que só existe no celular:
             a partir de 640px o CSS a dissolve e os campos voltam para a linha.
             A busca continua sempre visível, que é por onde a maioria chega. */}
-        <input type="checkbox" id="filtros-mais" className="filtros-gaveta" defaultChecked={Boolean(valores.categoria) || temFiltroAtivo(valores)} />
-        <label htmlFor="filtros-mais" className="filtros-abrir">{categoriaFixa ? "Marca, preço e ordem" : "Categoria, preço e ordem"}</label>
+        <input type="checkbox" id="filtros-mais" className="filtros-gaveta" defaultChecked={filtroSecundarioAtivo} />
+        <label htmlFor="filtros-mais" className="filtros-abrir">Filtrar</label>
+        {/* A ordenação fica fora da gaveta: no celular ela divide a linha com
+            "Filtrar"; no desktop ocupa uma célula normal da mesma grade. É um
+            único campo, portanto a URL nunca recebe duas ordens concorrentes. */}
+        <select name="ordem" aria-label="Ordenar por" defaultValue={valores.ordem ?? "relevancia"} className="filtros-ordem-principal h-11 rounded-lg border border-border bg-background px-3 text-sm">
+          <option value="relevancia">Ordenar</option>
+          <option value="menor-preco">Menor preço</option>
+          <option value="maior-preco">Maior preço</option>
+          <option value="recentes">Novidades</option>
+          <option value="nome">Nome A–Z</option>
+        </select>
         <div className="filtros-campos contents">
-          {perfis.length > 0 && <select name="perfil" aria-label="Perfil" defaultValue={valores.perfil ?? ""} className="h-10 rounded-lg border border-border bg-background px-3 text-sm"><option value="">Todos os perfis cadastrados</option>{perfis.map(p => <option key={p}>{p}</option>)}</select>}
-          {fabricantes.length > 0 && <select name="fabricante" aria-label="Marca do produto" defaultValue={valores.fabricante ?? ""} className="h-10 rounded-lg border border-border bg-background px-3 text-sm"><option value="">Todas as marcas</option>{fabricantes.map(m => <option key={m.nome} value={m.nome}>{m.nome} ({m.itens})</option>)}</select>}
+          {perfis.length > 0 && <select name="perfil" aria-label="Perfil" defaultValue={valores.perfil ?? ""} className="h-11 rounded-lg border border-border bg-background px-3 text-sm"><option value="">Todos os perfis cadastrados</option>{perfis.map(p => <option key={p}>{p}</option>)}</select>}
+          {fabricantes.length > 0 && <select name="fabricante" aria-label="Marca do produto" defaultValue={valores.fabricante ?? ""} className="h-11 rounded-lg border border-border bg-background px-3 text-sm"><option value="">Todas as marcas</option>{fabricantes.map(m => <option key={m.nome} value={m.nome}>{m.nome} ({m.itens})</option>)}</select>}
           {!categoriaFixa && (
-            <select name="categoria" aria-label="Categoria" defaultValue={valores.categoria ?? ""} className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
+            <select name="categoria" aria-label="Categoria" defaultValue={valores.categoria ?? ""} className="h-11 rounded-lg border border-border bg-background px-3 text-sm">
               <option value="">Todas as categorias</option>
               {categorias.map((c) => <option key={c.id} value={c.slug}>{c.nome}</option>)}
             </select>
           )}
-          <input name="min" defaultValue={valores.min ?? ""} aria-label="Preço mínimo" placeholder="R$ mín." inputMode="decimal" className="h-10 min-w-0 rounded-lg border border-border bg-background px-3 text-sm" />
-          <input name="max" defaultValue={valores.max ?? ""} aria-label="Preço máximo" placeholder="R$ máx." inputMode="decimal" className="h-10 min-w-0 rounded-lg border border-border bg-background px-3 text-sm" />
-          <select name="ordem" aria-label="Ordenar por" defaultValue={valores.ordem ?? "relevancia"} className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
-            <option value="relevancia">Relevância</option>
-            <option value="menor-preco">Menor preço</option>
-            <option value="maior-preco">Maior preço</option>
-            <option value="recentes">Novidades</option>
-            <option value="nome">Nome A–Z</option>
-          </select>
-          <select name="porPagina" aria-label="Produtos por página" defaultValue={String(porPaginaDaUrl(valores))} className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
+          <input name="min" defaultValue={valores.min ?? ""} aria-label="Preço mínimo" placeholder="R$ mín." inputMode="decimal" className="h-11 min-w-0 rounded-lg border border-border bg-background px-3 text-sm" />
+          <input name="max" defaultValue={valores.max ?? ""} aria-label="Preço máximo" placeholder="R$ máx." inputMode="decimal" className="h-11 min-w-0 rounded-lg border border-border bg-background px-3 text-sm" />
+          <select name="porPagina" aria-label="Produtos por página" defaultValue={String(porPaginaDaUrl(valores))} className="h-11 rounded-lg border border-border bg-background px-3 text-sm">
             {TAMANHOS_PAGINA.map((n) => <option key={n} value={n}>{n} por página</option>)}
           </select>
-          <label className="filtro-disponivel flex h-10 items-center gap-2 rounded-lg border border-border bg-background px-3 text-sm">
+          <label className="filtro-disponivel flex h-11 items-center gap-2 rounded-lg border border-border bg-background px-3 text-sm">
             <input type="checkbox" name="disponivel" value="1" defaultChecked={valores.disponivel === "1"} />
             Só disponíveis
           </label>
         </div>
-        <button className="btn-primario h-10 px-4 text-xs">Filtrar</button>
+        <button className="btn-primario h-11 px-4 text-xs">Aplicar</button>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
         <p className="filtros-ajuda">{dica ? `${dica} ${categoriaFixa ? "Só entram produtos com a medida cadastrada." : "Selecione a categoria para ver os atributos cadastrados."}` : "Combine categoria, marca e preço para encontrar o produto."}</p>
-        {/* A navegação completa também limpa campos ainda não enviados. O Link
-            reutilizava selects não controlados e mantinha a seleção anterior. */}
-        <a href={acao} className="inline-flex min-h-11 items-center underline">Limpar busca e filtros</a>
+        {temEstadoAtivo && (
+          <span className="flex min-h-11 items-center gap-2">
+            {filtroSecundarioAtivo && <span className="rounded-full bg-primary/10 px-2 py-1 font-medium text-primary">Filtros ativos</span>}
+            {/* A navegação completa também limpa campos ainda não enviados. O
+                Link reutilizava selects não controlados e mantinha a seleção anterior. */}
+            <a href={acao} className="inline-flex min-h-11 items-center underline">Limpar busca e filtros</a>
+          </span>
+        )}
       </div>
       {medidas.length > 0 && (
         // `open` quando já há medida na URL: quem chegou por um link filtrado

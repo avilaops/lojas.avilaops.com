@@ -8,6 +8,8 @@ import * as regrasProduto from "@/lib/produto-regras";
 import Garagem from "@/components/home/Garagem";
 import ProvaSocial from "@/components/home/ProvaSocial";
 import { comporHome } from "@/components/home/composicao";
+import { identidadePublica } from "@/lib/identidade-publica";
+import { dadosDaHomeIndustrial } from "@/lib/home-industrial";
 
 /**
  * Página inicial: um dos layouts fixos (Tenant.tema.layout), todos
@@ -43,7 +45,7 @@ export default async function Home() {
     listarProdutos(t.id, { destaque: true, moto, limite: 12, ...(campanhaVisual ? { imagemOrigem: "propria" as const, compraveis: true } : {}) }),
     campanhaVisual ? { media: null, total: 0, avaliacoes: [] } : provaSocialDa(t.id),
     motopecas ? motosDaLoja(t.id) : null,
-    motopecas ? marcasDaLoja(t.id) : [],
+    motopecas || layoutAtual === "industrial" ? marcasDaLoja(t.id) : [],
     t.segmento === "farmacia" ? necessidadesDaLoja(t.id) : undefined,
   ]);
   const vitrine = campanhaVisual
@@ -67,7 +69,20 @@ export default async function Home() {
     ? await prisma.produto.findMany({ where: { tenantId: t.id, ativo: true, slug: { in: slugs } } })
     : [];
   const looks = publicado.layout === "atelie" ? resolverLooks(tema, pecasDoLook) : [];
-  const dados = { t, identidade: identidadeDa(t), categorias, vitrine, temDestaques: destaques.length > 0, vende: lojaVende(t), moto, necessidades, looks };
+  const industrial = dadosDaHomeIndustrial(categorias, marcas);
+  const dados = {
+    t,
+    identidade: identidadeDa(t),
+    identidadePublica: identidadePublica(t),
+    categorias: layoutAtual === "industrial" ? industrial.categorias : categorias,
+    marcas: industrial.marcas,
+    vitrine,
+    temDestaques: destaques.length > 0,
+    vende: lojaVende(t),
+    moto,
+    necessidades,
+    looks,
+  };
 
   return (
     <>

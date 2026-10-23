@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { contatoConfigurado, enderecoCompleto, exigirTenant, temaDo } from "@/lib/tenant";
+import { exigirTenant, temaDo } from "@/lib/tenant";
+import { identidadePublica } from "@/lib/identidade-publica";
 import { mascararDocumento } from "@avilaops/checkout";
 import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
 import { ArrowUpRight, Building2, Clock3, MapPin, MessageCircle, Phone, Mail } from "lucide-react";
@@ -14,7 +15,8 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function Contato() {
   const t = await exigirTenant();
-  const endereco = t.enderecoPublico ? enderecoCompleto(t) : "";
+  const identidade = identidadePublica(t);
+  const endereco = identidade.enderecoVisita?.texto ?? "";
 
   // Cada campo é opcional, e com todos vazios esta página servia um <h1> e uma
   // lista sem itens: nove caracteres de conteúdo. É o pior estado possível,
@@ -22,12 +24,12 @@ export default async function Contato() {
   // mandam o comprador para cá justamente quando ele precisa de alguém.
   // Enquanto o lojista não preenche, a página diz o que sabe (quem é a
   // empresa) e admite o que falta, em vez de fingir uma resposta.
-  if (!contatoConfigurado(t)) return (
+  if (!identidade.whatsapp && !identidade.telefone && !identidade.email && !identidade.enderecoVisita) return (
     <div className="container-loja max-w-2xl py-10">
       <h1 className="text-2xl font-bold">Contato</h1>
       <p className="mt-4 text-sm text-muted-foreground">
-        {t.razaoSocial ?? t.nome}
-        {t.cnpj ? ` · CNPJ ${mascararDocumento(t.cnpj)}` : ""}
+        {identidade.razaoSocial ?? identidade.nome}
+        {identidade.cnpj ? ` · CNPJ ${mascararDocumento(identidade.cnpj)}` : ""}
       </p>
       <p className="mt-4 text-sm">
         Os canais de atendimento desta loja ainda não foram publicados. Se você
@@ -43,13 +45,13 @@ export default async function Contato() {
         <p className="ap-selo">Converse com a gente</p>
         <h1>Seu próximo cuidado começa com uma boa conversa.</h1>
         <p>Dúvidas sobre um produto, uma aplicação ou seu pedido? Escolha como prefere falar com a equipe {t.nome}.</p>
-        {t.whatsapp && <a className="btn-primario" href={linkWhatsApp(t.whatsapp, "Olá! Vim pelo site e gostaria de uma orientação.")} target="_blank" rel="noopener noreferrer"><MessageCircle size={20}/> Conversar no WhatsApp <ArrowUpRight size={18}/></a>}
+        {identidade.whatsapp && <a className="btn-primario" href={linkWhatsApp(identidade.whatsapp.numero, "Olá! Vim pelo site e gostaria de uma orientação.")} target="_blank" rel="noopener noreferrer"><MessageCircle size={20}/> Conversar no WhatsApp <ArrowUpRight size={18}/></a>}
       </div>
       <dl className="ap-contato-dados">
         {endereco && <div><MapPin aria-hidden="true"/><dt>Visite a loja</dt><dd><address>{endereco}</address><a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${t.nome} ${endereco}`)}`} target="_blank" rel="noopener noreferrer">Ver como chegar <ArrowUpRight size={15}/></a></dd></div>}
-        {t.horario && <div><Clock3 aria-hidden="true"/><dt>Horário de atendimento</dt><dd>{t.horario}</dd></div>}
-        {t.telefone && <div><Phone aria-hidden="true"/><dt>Telefone</dt><dd><a href={`tel:${t.telefone.replace(/[^+\d]/g, "")}`}>{t.telefone}</a></dd></div>}
-        {t.emailContato && <div><Mail aria-hidden="true"/><dt>E-mail</dt><dd><a href={`mailto:${t.emailContato}`}>{t.emailContato}</a></dd></div>}
+        {identidade.horario && <div><Clock3 aria-hidden="true"/><dt>Horário de atendimento</dt><dd>{identidade.horario}</dd></div>}
+        {identidade.telefone && <div><Phone aria-hidden="true"/><dt>Telefone</dt><dd><a href={`tel:${identidade.telefone.uri}`}>{identidade.telefone.exibicao}</a></dd></div>}
+        {identidade.email && <div><Mail aria-hidden="true"/><dt>E-mail</dt><dd><a href={`mailto:${identidade.email}`}>{identidade.email}</a></dd></div>}
       </dl>
     </section>
   );
@@ -62,18 +64,18 @@ export default async function Contato() {
       <div>
         <h1>Fale com a {t.nome}</h1>
         <p>Envie a medida, o código ou a referência do que você procura. Respondemos pelo canal que você escolher.</p>
-        {t.whatsapp && (
-          <a className="btn-primario" href={linkWhatsApp(t.whatsapp, "Olá! Vim pelo site.")} target="_blank" rel="noopener noreferrer">
+        {identidade.whatsapp && (
+          <a className="btn-primario" href={linkWhatsApp(identidade.whatsapp.numero, "Olá! Vim pelo site.")} target="_blank" rel="noopener noreferrer">
             <MessageCircle size={20} aria-hidden="true" /> Conversar no WhatsApp
           </a>
         )}
       </div>
       <dl>
-        {t.telefone && <div><Phone aria-hidden="true" /><dt>Telefone</dt><dd><a href={`tel:${t.telefone.replace(/[^+\d]/g, "")}`}>{t.telefone}</a></dd></div>}
-        {t.emailContato && <div><Mail aria-hidden="true" /><dt>E-mail</dt><dd><a href={`mailto:${t.emailContato}`}>{t.emailContato}</a></dd></div>}
+        {identidade.telefone && <div><Phone aria-hidden="true" /><dt>Telefone</dt><dd><a href={`tel:${identidade.telefone.uri}`}>{identidade.telefone.exibicao}</a></dd></div>}
+        {identidade.email && <div><Mail aria-hidden="true" /><dt>E-mail</dt><dd><a href={`mailto:${identidade.email}`}>{identidade.email}</a></dd></div>}
         {endereco && <div><MapPin aria-hidden="true" /><dt>Endereço</dt><dd><address>{endereco}</address>{mapa && <a href={mapa} target="_blank" rel="noopener noreferrer">Abrir no mapa <ArrowUpRight size={14} aria-hidden="true" /></a>}</dd></div>}
-        {t.horario && <div><Clock3 aria-hidden="true" /><dt>Horário de atendimento</dt><dd>{t.horario}</dd></div>}
-        {(t.razaoSocial || t.cnpj) && <div><Building2 aria-hidden="true" /><dt>Empresa</dt><dd>{t.razaoSocial ?? t.nome}{t.cnpj ? <><br />CNPJ {mascararDocumento(t.cnpj)}</> : null}</dd></div>}
+        {identidade.horario && <div><Clock3 aria-hidden="true" /><dt>Horário de atendimento</dt><dd>{identidade.horario}</dd></div>}
+        {(identidade.razaoSocial || identidade.cnpj) && <div><Building2 aria-hidden="true" /><dt>Empresa</dt><dd>{identidade.razaoSocial ?? identidade.nome}{identidade.cnpj ? <><br />CNPJ {mascararDocumento(identidade.cnpj)}</> : null}</dd></div>}
       </dl>
     </div>
   );

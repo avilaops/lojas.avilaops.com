@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { useCart } from "@/components/cart/CartProvider";
 import { avaliarPedidoMinimo } from "@avilaops/checkout";
@@ -9,12 +9,21 @@ import { formatarBRL } from "@/lib/catalogo";
 import type { TenantPublico } from "@/lib/tenant";
 import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
 import Sugestoes from "@/components/cart/Sugestoes";
+import { LinkContatoMedido } from "@/components/EventoFunil";
+import { registrarEventoFunil } from "@/lib/eventos-loja";
 
 export default function CarrinhoClient({ loja, vende }: { loja: TenantPublico; vende: boolean }) {
   const { itens, subtotal, alterar, remover, pronto, cupom, aplicarCupom } = useCart();
   const [codigo, setCodigo] = useState("");
   const [erroCupom, setErroCupom] = useState<string | null>(null);
   const [aplicando, setAplicando] = useState(false);
+  const mediuCarrinho = useRef(false);
+
+  useEffect(() => {
+    if (!pronto || itens.length === 0 || mediuCarrinho.current) return;
+    mediuCarrinho.current = true;
+    registrarEventoFunil("view_cart");
+  }, [pronto, itens.length]);
 
   async function aplicar() {
     setErroCupom(null);
@@ -148,9 +157,9 @@ export default function CarrinhoClient({ loja, vende }: { loja: TenantPublico; v
             Finalizar compra
           </Link>
         ) : loja.whatsapp ? (
-          <a href={linkWhatsApp(loja.whatsapp, `Olá! Quero fazer um pedido:\n${resumo}`)} target="_blank" rel="noopener" className="btn-primario mt-4 w-full">
+          <LinkContatoMedido href={linkWhatsApp(loja.whatsapp, `Olá! Quero fazer um pedido:\n${resumo}`)} target="_blank" rel="noopener" className="btn-primario mt-4 w-full">
             Pedir pelo WhatsApp
-          </a>
+          </LinkContatoMedido>
         ) : null}
         <Link href="/produtos" className="btn-secundario mt-2 w-full">
           Continuar comprando

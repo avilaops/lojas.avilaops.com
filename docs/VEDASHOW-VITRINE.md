@@ -20,6 +20,20 @@ segue no ar.
 Isso muda as notas, não a direção. **A tese central continua valendo**: em
 catálogo técnico, achar a peça certa vale mais que encher a tela de promoção.
 
+### Inventário de compatibilidade
+
+As duas URLs antigas verificadas agora possuem redirecionamento permanente,
+restrito ao domínio da VedaShow e sem cadeia intermediária pelo `www`:
+
+| URL antiga | Destino atual | Motivo |
+|---|---|---|
+| `/detalhe-produto/2408-uc209-rolamento` | `/produtos?q=UC209` | A busca atual retorna as opções cadastradas sem inventar marca ou SKU. |
+| `/loja-grupo-produtos/3` | `/produtos` | O grupo antigo era amplo demais para apontar com segurança para uma família atual. |
+
+Parâmetros de campanha são preservados quando não conflitam com a busca do
+destino. Nenhuma categoria ou produto de produção é alterado por essa regra:
+a consolidação dos dados continua sendo uma ação administrativa explícita.
+
 ## O que já existia na plataforma
 
 Boa parte do "falta" já estava construído, e o comparativo não teria como saber:

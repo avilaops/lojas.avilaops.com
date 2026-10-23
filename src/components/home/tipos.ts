@@ -3,12 +3,15 @@ import type { LookResolvido } from "@/lib/atelie";
 import type { IdentidadeLoja } from "@/lib/identidade";
 import type { Moto } from "@/lib/motos";
 import type { NECESSIDADES } from "@/lib/farmacia";
+import type { IdentidadePublica } from "@/lib/identidade-publica";
 
 /** Os mesmos dados alimentam todos os layouts; só a composição muda. */
 export interface DadosHome {
   t: Tenant;
   identidade: IdentidadeLoja;
+  identidadePublica?: IdentidadePublica;
   categorias: Categoria[];
+  marcas?: string[];
   vitrine: Produto[];
   temDestaques: boolean;
   vende: boolean;

@@ -33,10 +33,12 @@ import { paragrafosDaDescricao } from "@/lib/descricao-produto";
 import { marcaConfirmada } from "@/lib/marca-confirmada";
 import { envioSchema } from "@/lib/envio-declarado";
 import { usaBlocoProprio } from "@/lib/templates";
+import { LinkContatoMedido } from "@/components/EventoFunil";
+import { retornoSeguroDoCatalogo } from "@/lib/retorno-catalogo";
 
 const MEIOS: Record<string, string> = { pix: "Pix", cartao: "Cartão", boleto: "Boleto" };
 
-type Props = { params: Promise<{ slug: string }>; searchParams:Promise<{variante?:string}> };
+type Props = { params: Promise<{ slug: string }>; searchParams:Promise<{variante?:string;voltar?:string}> };
 
 export async function generateMetadata({ params }: Props) {
   const t = await exigirTenant();
@@ -67,7 +69,8 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
     if (destino) permanentRedirect(`/produtos/${destino}`);
     notFound();
   }
-  const {variante:varianteId}=await searchParams;
+  const {variante:varianteId,voltar}=await searchParams;
+  const retorno = retornoSeguroDoCatalogo(voltar);
   const ofertas=p.variantes.filter(v=>v.ativo).map(ofertaDaVariante);
   const escolhida=ofertas.find(v=>v.id===varianteId)??ofertas.find(v=>v.padrao);
   if(varianteId&&!ofertas.some(v=>v.id===varianteId))notFound();
@@ -203,6 +206,11 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
           </>
         )}
       </nav>
+      {retorno && (
+        <Link href={retorno} className="mb-4 inline-flex min-h-11 items-center text-sm font-medium text-primary underline underline-offset-4">
+          ← Voltar aos resultados
+        </Link>
+      )}
 
       <div className="grid items-start gap-8 md:grid-cols-2 ap-produto-grade">
         {usaBlocoProprio(temaDo(t), "produto") ? <GaleriaPremium imagens={p.imagens} alt={p.nome} origem={p.imagemOrigem}/> : <GaleriaProduto imagens={p.imagens} alt={p.nome} origem={p.imagemOrigem} />}
@@ -222,6 +230,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
                 opcoes={p.opcoes}
                 variantes={ofertas.filter(v=>!v.padrao).map((v) => ({ id: v.id, nome: v.nome, valores: v.valores as Record<string, string>, precoCentavos: v.precoCentavos, estoque: v.estoque, imagem: v.imagem, disponivel:v.compravel }))}
                 vende={vende && !somenteNaLoja}
+                retorno={retorno}
               />
             </div>
           ) : (
@@ -257,18 +266,18 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
               <AvisoEstoque produtoId={p.id} />
             ) : estado.acao === "consulta-preco" ? (
               t.whatsapp ? (
-                <a className="btn-primario acao-whatsapp w-full" href={linkWhatsApp(t.whatsapp, mensagemDoProduto(p, urlDaLoja(t), true))} target="_blank" rel="noopener">
+                <LinkContatoMedido className="btn-primario acao-whatsapp w-full" href={linkWhatsApp(t.whatsapp, mensagemDoProduto(p, urlDaLoja(t), true))} target="_blank" rel="noopener">
                   Consultar preço
-                </a>
+                </LinkContatoMedido>
               ) : null
             ) : estado.acao === "carrinho" ? (
               <AddToCartButton item={{ id: escolhida?`${p.id}:${escolhida.id}`:p.id, slug: p.slug, nome: p.nome, precoCentavos: p.precoCentavos, imagem: p.imagens[0] }} disponivel irParaCarrinho />
             ) : t.whatsapp ? (
               <>
                 <AddToCartButton pedido item={{ id: p.id, slug: p.slug, nome: p.nome, precoCentavos: p.precoCentavos, imagem: p.imagens[0] }} disponivel />
-                <a className="btn-secundario acao-whatsapp mt-2 w-full" href={linkWhatsApp(t.whatsapp, mensagemDoProduto(p, urlDaLoja(t)))} target="_blank" rel="noopener">
+                <LinkContatoMedido className="btn-secundario acao-whatsapp mt-2 w-full" href={linkWhatsApp(t.whatsapp, mensagemDoProduto(p, urlDaLoja(t)))} target="_blank" rel="noopener">
                   Pedir só este item pelo WhatsApp
-                </a>
+                </LinkContatoMedido>
               </>
             ) : null}
           </div>
@@ -295,7 +304,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
             {/* O WhatsApp flutuante some na ficha (cobria o botão de compra).
                 Onde a ação principal não é o WhatsApp, a dúvida sobre o produto
                 precisa de outro caminho, já com o nome e o link dele. */}
-            {duvidaNoWhatsApp && t.whatsapp && <a className="underline underline-offset-4" href={linkWhatsApp(t.whatsapp, `Olá! Tenho uma dúvida sobre ${p.nome}: ${urlDaLoja(t)}/produtos/${p.slug}`)} target="_blank" rel="noopener">Tirar dúvida sobre o produto</a>}
+            {duvidaNoWhatsApp && t.whatsapp && <LinkContatoMedido className="underline underline-offset-4" href={linkWhatsApp(t.whatsapp, `Olá! Tenho uma dúvida sobre ${p.nome}: ${urlDaLoja(t)}/produtos/${p.slug}`)} target="_blank" rel="noopener">Tirar dúvida sobre o produto</LinkContatoMedido>}
           </nav>
 
           <FichaTecnica

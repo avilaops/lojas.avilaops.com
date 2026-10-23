@@ -1950,13 +1950,18 @@ model SessaoVitrine {
   /// celular | tablet | computador. Classificado do user-agent, sem guardá-lo.
   dispositivo String @default("computador")
 
-  /// Contadores da sessão. Ficam aqui, e não numa tabela de eventos, porque a
-  /// pergunta do painel é por sessão: quantas entraram, quantas viram produto,
-  /// quantas compraram. Guardar um registro por clique custaria muito mais
-  /// para responder exatamente a mesma coisa.
-  paginas         Int     @default(1)
-  viuProduto      Boolean @default(false)
-  iniciouCheckout Boolean @default(false)
+  /// Marcos agregados da sessão. Ficam aqui, e não numa tabela de cliques,
+  /// porque o painel responde quantas sessões avançaram em cada etapa. Isso
+  /// também torna a repetição do mesmo evento naturalmente idempotente.
+  paginas             Int     @default(1)
+  buscou              Boolean @default(false)
+  buscaSemResultado   Boolean @default(false)
+  filtrou             Boolean @default(false)
+  viuProduto          Boolean @default(false)
+  contatoTecnico      Boolean @default(false)
+  adicionouCarrinho   Boolean @default(false)
+  abriuCarrinho       Boolean @default(false)
+  iniciouCheckout     Boolean @default(false)
 
   criadoEm DateTime @default(now())
   ultimoEm DateTime @default(now())

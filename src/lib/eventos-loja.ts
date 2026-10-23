@@ -1,5 +1,7 @@
 "use client";
 
+import type { EventoFunil } from "./funil-analytics";
+
 /**
  * Eventos de e-commerce disparados no navegador do comprador.
  *
@@ -31,6 +33,33 @@ const reais = (centavos: number) => Number((centavos / 100).toFixed(2));
 
 function janela(): Janela | null {
   return typeof window === "undefined" ? null : (window as Janela);
+}
+
+const esperar = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+/** Envio first-party. 202 significa que a criação da sessão ainda está em voo. */
+export async function enviarEventoFunil(
+  event: EventoFunil,
+  buscar: typeof fetch = fetch,
+  aguardar: (ms: number) => Promise<void> = esperar,
+) {
+  const enviar = () => buscar("/api/vitrine/evento", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    keepalive: true,
+    body: JSON.stringify({ event }),
+  });
+  const primeira = await enviar();
+  if (primeira.status === 202) {
+    await aguardar(350);
+    await enviar();
+  }
+}
+
+export function registrarEventoFunil(evento: EventoFunil) {
+  const w = janela();
+  if (!w || typeof w.fetch !== "function") return;
+  void enviarEventoFunil(evento, w.fetch.bind(w)).catch(() => {});
 }
 
 export function paraGa4(itens: ItemEvento[]) {
@@ -105,9 +134,9 @@ function disparar(nomes: { ga4: string; meta: string; tiktok: string }, itens: I
   }
 }
 
-export const verProduto = (item: ItemEvento) => disparar({ ga4: "view_item", meta: "ViewContent", tiktok: "ViewContent" }, [item]);
-export const adicionarAoCarrinho = (item: ItemEvento) => disparar({ ga4: "add_to_cart", meta: "AddToCart", tiktok: "AddToCart" }, [item]);
-export const iniciarCheckout = (itens: ItemEvento[]) => disparar({ ga4: "begin_checkout", meta: "InitiateCheckout", tiktok: "InitiateCheckout" }, itens);
+export const verProduto = (item: ItemEvento) => { registrarEventoFunil("view_item"); disparar({ ga4: "view_item", meta: "ViewContent", tiktok: "ViewContent" }, [item]); };
+export const adicionarAoCarrinho = (item: ItemEvento) => { registrarEventoFunil("add_to_cart"); disparar({ ga4: "add_to_cart", meta: "AddToCart", tiktok: "AddToCart" }, [item]); };
+export const iniciarCheckout = (itens: ItemEvento[]) => { registrarEventoFunil("begin_checkout"); disparar({ ga4: "begin_checkout", meta: "InitiateCheckout", tiktok: "InitiateCheckout" }, itens); };
 
 /**
  * O `value` da compra é a receita dos itens, com desconto, sem frete: é o que

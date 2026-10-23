@@ -1,7 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { registrarEventoFunil } from "@/lib/eventos-loja";
+import { numeroEmMilimetros, urlDaBuscaPorMedida } from "@/lib/home-industrial";
 
 /**
  * Busca pela medida da peça, que é como vedação se compra: diâmetro interno,
@@ -18,32 +19,21 @@ const CAMPOS = [
   { prefixo: "alt", rotulo: "Altura" },
 ] as const;
 
-const FOLGA_MM = 0.5;
-
-export function paraMilimetros(texto: string): number | null {
-  const n = Number(texto.trim().replace(",", "."));
-  return texto.trim() !== "" && Number.isFinite(n) && n > 0 && n < 10000 ? n : null;
-}
+export const paraMilimetros = numeroEmMilimetros;
 
 export default function BuscaPorMedida() {
-  const router = useRouter();
   const [valores, setValores] = useState<Record<string, string>>({ di: "", de: "", alt: "" });
   const [aviso, setAviso] = useState("");
 
   function buscar(e: FormEvent) {
     e.preventDefault();
-    const params = new URLSearchParams();
-    for (const { prefixo } of CAMPOS) {
-      const mm = paraMilimetros(valores[prefixo]);
-      if (mm == null) continue;
-      params.set(`${prefixo}_de`, String(Math.max(0, +(mm - FOLGA_MM).toFixed(2))));
-      params.set(`${prefixo}_ate`, String(+(mm + FOLGA_MM).toFixed(2)));
-    }
-    if ([...params.keys()].length === 0) {
+    const destino = urlDaBuscaPorMedida(valores as Record<"di" | "de" | "alt", string>);
+    if (!destino) {
       setAviso("Informe ao menos uma medida, em milímetros.");
       return;
     }
-    router.push(`/produtos?${params.toString()}`);
+    registrarEventoFunil("filter_apply");
+    window.location.assign(destino);
   }
 
   return (

@@ -222,7 +222,9 @@
 .padm-conteudo > * { min-width: 0; max-width: 100%; }
 .padm-conteudo :where(p, h1, h2, h3, dd, dt, li, span) { overflow-wrap: anywhere; }
 
-.padm-cabecalho { min-width: 0; margin-bottom: 18px; }
+.padm-cabecalho { display: flex; min-width: 0; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+.padm-cabecalho > div { min-width: 0; }
+.padm-cabecalho > a { flex: 0 0 auto; }
 .padm-cabecalho h1 { font-size: 24px; font-weight: 750; line-height: 1.15; letter-spacing: -0.035em; color: #12172a; }
 .padm-cabecalho p { max-width: 68ch; margin-top: 6px; color: #667085; font-size: 14px; line-height: 1.5; }
 
@@ -445,6 +447,17 @@
 .an-vazio p { max-width: 620px; margin: 7px 0 15px; color: #667085; font-size: 13px; }
 .an-vazio a { display: inline-flex; min-height: 40px; align-items: center; padding: 8px 13px; border-radius: 9px; background: var(--lj-azul-forte); color: white; font-size: 12px; font-weight: 650; }
 
+.an-funil ol { display: grid; gap: 14px; }
+.an-funil li { display: grid; gap: 6px; }
+.an-funil li > div:first-child { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; align-items: center; gap: 8px; color: #344054; font-size: 12px; }
+.an-funil li > div:first-child span { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 7px; background: var(--lj-azul-suave); color: var(--lj-azul-forte); font-size: 10px; font-weight: 750; }
+.an-funil li > div:first-child strong { color: #101828; font-size: 14px; }
+.an-funil-barra { height: 8px; overflow: hidden; border-radius: 999px; background: #eef1f5; }
+.an-funil-barra i { display: block; width: var(--largura); height: 100%; border-radius: inherit; background: var(--lj-azul); }
+.an-funil li > small, .an-funil-diagnosticos .an-kpi > small { color: #667085; font-size: 10px; line-height: 1.45; }
+.an-funil-diagnosticos { margin-top: 12px; }
+.an-funil-diagnosticos .an-kpi > small { display: block; margin-top: 5px; }
+
 @media (min-width: 768px) {
   .an-filtros { grid-template-columns: auto 1fr; align-items: end; }
   .an-filtros form { justify-content: end; }
@@ -462,6 +475,8 @@
 @media (max-width: 767px) {
   .padm-conteudo :where(section, article, form, fieldset, table, ul, ol, dl, div) { min-width: 0; }
   .padm-conteudo :where(.btn-primario, .btn-secundario) { min-height: 44px; }
+  .padm-cabecalho { align-items: stretch; flex-direction: column; }
+  .padm-cabecalho > a { align-self: flex-start; }
 
   .an-filtros { gap: 10px; margin-bottom: 16px; }
   .an-filtros nav { margin-inline: -16px; padding-inline: 16px; scroll-padding-inline: 16px; }

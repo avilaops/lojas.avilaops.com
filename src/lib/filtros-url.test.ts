@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { faixasDaUrl, filtroDaUrl, porPaginaDaUrl, reaisDaUrl, temFiltroAtivo } from "./filtros-url";
+import { faixasDaUrl, filtroDaUrl, porPaginaDaUrl, reaisDaUrl, temFiltroAtivo, temFiltroSecundarioAtivo } from "./filtros-url";
 import { agruparMarcas, grafiasDaMarca } from "./catalogo";
 
 test("categoria da rota vence a da URL", () => {
@@ -24,6 +24,13 @@ test("página e ordem padrão não contam como filtro ativo", () => {
   assert.equal(temFiltroAtivo({ pagina: "3", ordem: "relevancia" }), false);
   assert.equal(temFiltroAtivo({ alt_ate: "2" }), true);
   assert.equal(temFiltroAtivo({ disponivel: "1" }), true);
+});
+
+test("busca não abre a gaveta, mas filtros secundários abrem", () => {
+  assert.equal(temFiltroAtivo({ q: "6204" }), true);
+  assert.equal(temFiltroSecundarioAtivo({ q: "6204" }), false);
+  assert.equal(temFiltroSecundarioAtivo({ q: "6204", fabricante: "SKF" }), true);
+  assert.equal(temFiltroSecundarioAtivo({ ordem: "menor-preco" }), true);
 });
 
 test("marcas: grafias do ERP viram uma entrada, com contagem somada", () => {

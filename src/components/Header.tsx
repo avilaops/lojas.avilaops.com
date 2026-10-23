@@ -61,7 +61,7 @@ export default function Header({ loja, logoUrl, categorias, exemploBusca, mostra
           vertical está travada; `overscroll-x-contain` impede o gesto de
           arrastar a página junto quando a tira chega ao fim. */}
       {categorias.length > 0 && (
-        <nav className="nav-loja border-t border-border">
+        <nav className="nav-loja border-t border-border" aria-label="Categorias de produtos">
           <div className="container-loja nav-loja-tira flex gap-6 overflow-x-auto overflow-y-hidden overscroll-x-contain text-[13px]">
             <Link href="/produtos" className="nav-loja-item font-semibold text-foreground">
               Todos

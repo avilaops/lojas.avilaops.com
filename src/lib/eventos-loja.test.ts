@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import vm from "node:vm";
-import { comprar, entradasDoDataLayer, paraGa4, receitaDosItens, verProduto } from "./eventos-loja";
+import { comprar, entradasDoDataLayer, enviarEventoFunil, paraGa4, receitaDosItens, verProduto } from "./eventos-loja";
 import { scriptInicialDoGoogle } from "./pixels";
 
 const itens = [
@@ -73,6 +73,19 @@ function lidoDoDataLayer(dataLayer: unknown[]) {
 }
 
 const produto = { id: "p1", nome: "Shampoo 1,5 L", precoCentavos: 4990 };
+
+test("evento first-party repete uma vez quando a sessão ainda está sendo criada", async () => {
+  const chamadas: Array<{ url: string; corpo: unknown }> = [];
+  const respostas = [202, 204];
+  await enviarEventoFunil("search", async (url, init) => {
+    chamadas.push({ url: String(url), corpo: JSON.parse(String(init?.body)) });
+    return new Response(null, { status: respostas.shift() });
+  }, async () => {});
+  assert.deepEqual(chamadas, [
+    { url: "/api/vitrine/evento", corpo: { event: "search" } },
+    { url: "/api/vitrine/evento", corpo: { event: "search" } },
+  ]);
+});
 
 test("view_item na hidratação já encontra o marcador: loja com GTM recebe no dataLayer, depois do consent default", (t) => {
   t.after(() => void delete (globalThis as { window?: unknown }).window);

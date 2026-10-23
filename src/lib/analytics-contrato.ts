@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const TIPOS_EVENTO_ANALYTICS = [
-  "session_start", "page_view", "view_home", "view_category", "search", "view_item",
+  "session_start", "page_view", "view_home", "view_category", "search", "search_no_results", "filter_apply", "view_item", "technical_contact",
   "add_to_cart", "remove_from_cart", "view_cart", "coupon_apply", "begin_checkout",
   "checkout_contact", "checkout_shipping", "checkout_payment", "order_created",
   "payment_approved", "payment_refused", "purchase", "cart_abandoned",
@@ -28,3 +28,8 @@ export const eventoAnalyticsV1 = z.object({
 }).strict();
 
 export type EventoAnalyticsV1 = z.infer<typeof eventoAnalyticsV1>;
+
+/** Entrada mínima da vitrine: identidade, sessão e tenant são resolvidos no servidor. */
+export const eventoFunilDaVitrine = z.object({
+  event: z.enum(["search", "search_no_results", "filter_apply", "view_item", "technical_contact", "add_to_cart", "view_cart", "begin_checkout"]),
+}).strict();

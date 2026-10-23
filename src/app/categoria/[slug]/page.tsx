@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import CapaCategoria from "@/components/CapaCategoria";
 import { exigirTenant, lojaVende, urlDaLoja, temaDo } from "@/lib/tenant";
-import { facetasTecnicas, grafiasDaMarca, listarCategorias, medidasDaLoja, paginaDeProdutos, slugificar } from "@/lib/catalogo";
+import { facetasTecnicas, grafiasDaMarca, listarCategorias, medidasDaLoja, paginaDeProdutos } from "@/lib/catalogo";
 import FiltrosProdutos from "@/components/FiltrosProdutos";
 import { filtroDaUrl, temFiltroAtivo } from "@/lib/filtros-url";
 import CategoriasPremium from "@/components/templates/automotivo-premium/Categorias";
@@ -17,6 +17,9 @@ import { buscarCategoriaPublica } from "@/lib/categorias";
 import Trilha from "@/components/Trilha";
 import { metadataDeListagem } from "@/lib/seo-listagem";
 import { usaBlocoProprio } from "@/lib/templates";
+import { chaveCanonicaDaCategoria } from "@/lib/categorias-canonicas";
+import { EventoFunil } from "@/components/EventoFunil";
+import { retornoDaListagem } from "@/lib/retorno-catalogo";
 
 async function resolverCategoria(t: Awaited<ReturnType<typeof exigirTenant>>, slug: string) {
   const ativas = await listarCategorias(t.id);
@@ -26,21 +29,16 @@ async function resolverCategoria(t: Awaited<ReturnType<typeof exigirTenant>>, sl
     // produtos. Só redirecionamos a origem depois que a consolidação a esvazia.
     if (ativas.some((categoria) => categoria.slug === direta.slug)) return direta;
     const mesmaCategoriaAtiva = ativas
-      .filter((categoria) => slugificar(categoria.nome) === slugificar(direta.nome))
+      .filter((categoria) => chaveCanonicaDaCategoria(categoria.nome) === chaveCanonicaDaCategoria(direta.nome))
       .sort((a, b) => b._count.produtos - a._count.produtos || a.ordem - b.ordem)[0];
     if (mesmaCategoriaAtiva) return mesmaCategoriaAtiva;
     return direta;
   }
-  // O slug sem acento do nome é a rota canônica em lojas que usam nomes
-  // regulares. Ex.: /categoria/o-rings resolve para /categoria/anel-o-ring
-  // somente se houver uma única categoria correspondente.
-  const aliases: Record<string, string> = { "o-rings": "anel-o-ring" };
-  const slugAlternativo = aliases[slug];
-  if (slugAlternativo) {
-    const canonica = ativas.find((categoria) => categoria.slug === slugAlternativo);
-    if (canonica) return canonica;
-  }
-  const candidatas = ativas.filter((categoria) => slugificar(categoria.nome) === slug);
+  // O alias histórico só aponta para uma categoria ativa. Categoria duplicada
+  // com produtos continua acessível acima; a troca de destino só acontece
+  // depois da consolidação explícita esvaziar a origem.
+  const chave = chaveCanonicaDaCategoria(slug);
+  const candidatas = ativas.filter((categoria) => chaveCanonicaDaCategoria(categoria.nome) === chave);
   if (candidatas.length === 1) return candidatas[0];
   return candidatas.sort((a, b) => b._count.produtos - a._count.produtos || a.ordem - b.ordem)[0] ?? null;
 }
@@ -106,9 +104,18 @@ export default async function Categoria({ params, searchParams }: Props) {
   // ?pagina=999999 vira uma URL válida a mais para o Google guardar.
   if (produtos.length === 0 && pagina > 1) notFound();
   const vende = lojaVende(t);
+  const buscou = Boolean(sp.q?.trim());
+  const aplicouFiltro = Object.entries(sp).some(([chave, valor]) => Boolean(valor) && !["q", "pagina", "porPagina"].includes(chave));
+  const eventos = [
+    ...(buscou ? ["search" as const] : []),
+    ...(buscou && lote.total === 0 ? ["search_no_results" as const] : []),
+    ...(aplicouFiltro ? ["filter_apply" as const] : []),
+  ];
+  const retorno = retornoDaListagem(`/categoria/${categoria.slug}`, sp);
 
   return (
     <div className="container-loja py-8 ap-catalogo">
+      <EventoFunil eventos={eventos} />
       {usaBlocoProprio(temaDo(t), "categorias") && <CategoriasPremium categorias={[...categorias].sort((a,b)=>a.ordem-b.ordem)} atual={categoria.slug}/>}
       <Trilha base={urlDaLoja(t)} itens={[{ nome: "Produtos", href: "/produtos" }, { nome: categoria.nome }]} />
       <CapaCategoria
@@ -151,7 +158,7 @@ export default async function Categoria({ params, searchParams }: Props) {
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {produtos.map((produto) => (
-            <ProductCard loja={t} key={produto.id} produto={produto} vende={vende} whatsapp={t.whatsapp} moto={moto} />
+            <ProductCard loja={t} key={produto.id} produto={produto} vende={vende} whatsapp={t.whatsapp} moto={moto} retorno={retorno} />
           ))}
         </div>
       )}

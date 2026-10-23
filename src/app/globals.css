@@ -97,13 +97,17 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
 .filtros-gaveta { display: none; }
 .filtros-abrir { display: none; }
 @media (max-width: 639px) {
+  .filtros-grade { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .filtros-grade > input[type="search"] { grid-column: 1 / -1; }
   /* A caixa fica invisível, mas não `display: none`: sumida de vez, ela saía
      da ordem do Tab e quem navega pelo teclado não abria a gaveta. */
   .filtros-gaveta { display: block; position: absolute; width: 1px; height: 1px; opacity: 0; }
   .filtros-gaveta:focus-visible + .filtros-abrir { outline: 2px solid var(--ring); outline-offset: 3px; }
-  .filtros-abrir { display: block; cursor: pointer; border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); border-radius: var(--radius); padding: .5rem .75rem; font-size: .875rem; font-weight: 500; }
+  .filtros-abrir { display: flex; min-height: 44px; cursor: pointer; align-items: center; justify-content: center; border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); border-radius: var(--radius); padding: .5rem .75rem; font-size: .875rem; font-weight: 650; }
+  .filtros-ordem-principal { min-width: 0; width: 100%; }
   .filtros-gaveta:not(:checked) ~ .filtros-campos { display: none; }
-  .filtros-campos { display: grid; gap: .5rem; margin-top: .5rem; }
+  .filtros-campos { display: grid; grid-column: 1 / -1; gap: .5rem; margin-top: .5rem; }
+  .filtros-grade > button[type="submit"], .filtros-grade > button:not([type]) { grid-column: 1 / -1; }
 }
 
 /* Ampliação da foto na ficha (GaleriaProduto). O zoom de mouse continua; o
@@ -1245,6 +1249,11 @@ html[data-cookies-respondido] .aviso-cookies { display: none; }
    pedido do último card atrapalha exatamente o que ele quer facilitar. Nas
    demais páginas, o rodapé ganha folga para nada ficar embaixo dele. */
 body:has(.cartao-produto, .ap-produto-info, .acao-whatsapp) .whatsapp-flutuante { display: none; }
+/* O aviso pede uma decisão antes da navegação normal e pode variar de altura
+   conforme a largura e o texto. Enquanto ele existe, o WhatsApp sai em vez de
+   ficar atrás do diálogo ou cobrir uma das escolhas. Após a resposta, o React
+   remove o aviso e o atalho volta normalmente. */
+body:has(.aviso-cookies) .whatsapp-flutuante { display: none; }
 body:has(.whatsapp-flutuante) .rodape-loja { padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)); }
 @media (max-width: 640px) {
   /* Card estreito: o selo ("Esgotado") ocupa a faixa, e o aviso de foto sai. */
@@ -1309,7 +1318,19 @@ body:has(.whatsapp-flutuante) .rodape-loja { padding-bottom: calc(5.5rem + env(s
 .industrial-topo-atalho { margin-top: 1rem; color: rgba(255,255,255,.75); font-size: .9rem; }
 .industrial-topo-atalho a { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
 
-.industrial-medida { margin-top: 1.75rem; padding: 1rem; border-radius: .9rem; background: #fff; color: var(--foreground); box-shadow: 0 18px 40px -18px rgba(0,0,0,.55); }
+.industrial-identificador { margin-top: 1.75rem; max-width: 44rem; padding: clamp(.9rem, 2vw, 1.25rem); border: 1px solid rgba(255,255,255,.2); border-radius: 1rem; background: color-mix(in srgb, var(--ind-escuro) 88%, transparent); box-shadow: 0 24px 55px -28px #000; backdrop-filter: blur(8px); }
+.industrial-busca-livre > label { display: block; margin-bottom: .45rem; color: #fff; font-size: .82rem; font-weight: 650; }
+.industrial-busca-livre > div { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; min-height: 3.25rem; overflow: hidden; border-radius: .65rem; background: #fff; color: var(--foreground); }
+.industrial-busca-livre svg { width: 1.15rem; height: 1.15rem; margin-left: .9rem; color: var(--muted-foreground); }
+.industrial-busca-livre input { min-width: 0; height: 3.25rem; padding-inline: .7rem; border: 0; background: transparent; font-size: .95rem; outline: none; }
+.industrial-busca-livre > div:focus-within { box-shadow: 0 0 0 3px color-mix(in srgb, var(--ind-apoio) 55%, transparent); }
+.industrial-busca-livre button { align-self: stretch; padding-inline: 1.15rem; background: var(--ind-apoio); color: var(--ind-escuro); font-weight: 750; }
+.industrial-busca-livre button:hover { filter: brightness(1.08); }
+.industrial-busca-livre button:focus-visible { outline: 3px solid #fff; outline-offset: -5px; }
+.industrial-identificador-divisor { display: flex; align-items: center; gap: .75rem; margin-block: .9rem; color: rgba(255,255,255,.7); font-size: .75rem; }
+.industrial-identificador-divisor::before, .industrial-identificador-divisor::after { content: ""; flex: 1; height: 1px; background: rgba(255,255,255,.18); }
+
+.industrial-medida { padding: 1rem; border-radius: .75rem; background: #fff; color: var(--foreground); }
 .industrial-medida-campos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; align-items: end; }
 .industrial-medida label { display: grid; gap: .35rem; font-size: .8rem; font-weight: 600; }
 .industrial-medida-entrada { display: flex; align-items: center; border: 1.5px solid var(--border); border-radius: .6rem; background: #fff; }
@@ -1325,6 +1346,7 @@ body:has(.whatsapp-flutuante) .rodape-loja { padding-bottom: calc(5.5rem + env(s
 .industrial-linhas ul { margin-top: 1.25rem; display: grid; gap: 0 2.5rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr)); }
 .industrial-linhas li { border-top: 1px solid var(--border); }
 .industrial-linhas a { display: grid; grid-template-columns: 6.5rem 1fr; gap: 1.1rem; align-items: center; padding-block: 1.1rem; }
+.industrial-linhas a.industrial-linha-sem-imagem { grid-template-columns: 1fr; }
 .industrial-linhas img { width: 6.5rem; height: 6.5rem; border-radius: .75rem; object-fit: cover; background: var(--muted); }
 .industrial-linha-texto { display: grid; gap: .3rem; }
 .industrial-linha-texto strong { font-size: 1.1rem; font-weight: 700; }
@@ -1332,6 +1354,12 @@ body:has(.whatsapp-flutuante) .rodape-loja { padding-bottom: calc(5.5rem + env(s
 .industrial-linha-texto em { color: var(--primary); font-size: .875rem; font-style: normal; font-weight: 600; }
 .industrial-linhas a:hover strong, .industrial-linhas a:hover em { text-decoration: underline; text-underline-offset: 3px; }
 .industrial-linhas a:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; border-radius: .5rem; }
+
+.industrial-marcas { display: grid; grid-template-columns: minmax(12rem, .65fr) minmax(0, 1.35fr); gap: 1.5rem 3rem; align-items: start; }
+.industrial-marcas > div p { margin-top: .5rem; max-width: 24rem; color: var(--muted-foreground); font-size: .9rem; line-height: 1.5; }
+.industrial-marcas ul { display: flex; flex-wrap: wrap; gap: .65rem; }
+.industrial-marcas li { padding: .65rem .9rem; border: 1px solid var(--border); border-radius: .45rem; background: var(--card); font-size: .9rem; font-weight: 700; }
+.industrial-beneficios { margin-top: -1.25rem; }
 
 .industrial-produtos > header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .5rem 1.5rem; margin-bottom: 1.25rem; }
 .industrial-produtos > header a { color: var(--primary); font-size: .95rem; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
@@ -1362,15 +1390,18 @@ body:has(.whatsapp-flutuante) .rodape-loja { padding-bottom: calc(5.5rem + env(s
      formulário inteiro (deslocamento de layout de 0,18 no PageSpeed). */
   .industrial-topo-conteudo { display: flex; flex-direction: column; }
   .industrial-topo h1 { min-height: 2.16em; }
-  .industrial-medida { order: 1; margin-top: 1.25rem; }
+  .industrial-identificador { order: 1; margin-top: 1.25rem; }
   .industrial-topo-texto { order: 2; margin-top: 1.25rem; }
   .industrial-topo-atalho { order: 3; }
+  .industrial-busca-livre > div { grid-template-columns: auto minmax(0, 1fr); }
+  .industrial-busca-livre button { grid-column: 1 / -1; min-height: 2.9rem; }
   .industrial-medida-campos { gap: .5rem; }
   .industrial-medida label { font-size: .72rem; }
   .industrial-medida-entrada input { height: 2.85rem; padding-left: .55rem; font-size: 1.05rem; }
   .industrial-medida-entrada abbr { padding-right: .45rem; font-size: .7rem; }
   .industrial-linhas a { grid-template-columns: 5rem 1fr; gap: .9rem; }
   .industrial-linhas img { width: 5rem; height: 5rem; }
+  .industrial-marcas { grid-template-columns: 1fr; }
   .industrial-empresa { grid-template-columns: 1fr; }
 }
 .cartao-produto-foto-cheia .cartao-produto-imagem { aspect-ratio: 1 / 1; background: var(--muted); }

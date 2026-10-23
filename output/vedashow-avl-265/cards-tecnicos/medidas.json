@@ -1,0 +1,16 @@
+[
+  {
+    "viewport": "mobile-390",
+    "overflowHorizontal": false,
+    "cards": 4,
+    "unidades": 4,
+    "menorCtaPx": 52
+  },
+  {
+    "viewport": "desktop-1280",
+    "overflowHorizontal": false,
+    "cards": 4,
+    "unidades": 4,
+    "menorCtaPx": 44
+  }
+]

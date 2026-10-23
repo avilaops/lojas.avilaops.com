@@ -271,6 +271,150 @@
       ],
       "review": "Implementação pronta para revisão e CI no GitHub; publicação ainda não realizada.",
       "environment": "local"
+    },
+    {
+      "id": "T-0009",
+      "title": "Consolidar taxonomia e redirecionar URLs legadas da VedaShow",
+      "objective": "Dar uma chave canônica às categorias equivalentes e preservar URLs antigas verificadas sem afetar outras lojas.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "em_revisao",
+      "acceptanceCriteria": [
+        "Categorias equivalentes usam uma regra canônica única e testada.",
+        "Categoria duplicada com produtos continua acessível até consolidação explícita.",
+        "URLs legadas verificadas redirecionam direto para o destino atual.",
+        "Redirects da VedaShow não afetam outros tenants e preservam a query.",
+        "Sitemap não passa a listar aliases vazios ou URLs legadas."
+      ],
+      "evidence": [
+        "Baseline local: 1.113 testes aprovados e nenhuma falha antes das alterações.",
+        "1.119 testes aprovados após a implementação, incluindo taxonomia, isolamento por tenant e redirect direto de www para o destino final.",
+        "TypeScript concluído sem erros.",
+        "ESLint concluído sem erros e com 20 avisos preexistentes fora do escopo.",
+        "Build de produção concluído; permaneceu apenas o aviso preexistente de rastreamento NFT do Turbopack.",
+        "Prints não aplicáveis: o incremento altera regras de roteamento e equivalência, sem interface visual."
+      ],
+      "review": "Autorrevisão concluída; aliases com produtos continuam acessíveis, redirects são limitados à VedaShow e nenhuma mutação de dados de produção foi executada.",
+      "environment": "local"
+    },
+    {
+      "id": "T-0010",
+      "title": "Validar identidade pública e canais da VedaShow",
+      "objective": "Publicar somente identidade comercial, canais e endereço completos e confirmados, com a mesma projeção em todas as superfícies públicas.",
+      "assignee": null,
+      "priority": "urgente",
+      "status": "em_revisao",
+      "acceptanceCriteria": [
+        "WhatsApp, telefone, e-mail e CNPJ malformados não são publicados.",
+        "Contato, rodapé, llms.txt e JSON-LD usam a mesma identidade validada.",
+        "Endereço incompleto não é publicado e convite de visita exige autorização explícita.",
+        "Endereço legal completo permanece na identificação obrigatória e nos dados estruturados.",
+        "Nenhum dado de produção é alterado."
+      ],
+      "evidence": [
+        "6 testes direcionados da identidade pública aprovados.",
+        "Suíte geral: 1.125 testes aprovados e nenhuma falha.",
+        "TypeScript concluído sem erros.",
+        "ESLint concluído sem erros e com 20 avisos preexistentes fora do escopo.",
+        "Build otimizado de produção concluído; permaneceu apenas o aviso preexistente de rastreamento NFT do Turbopack.",
+        "Prints não aplicáveis: a identidade confirmada já era visualmente exibida; o incremento centraliza validação, normalização e dados estruturados sem alteração material do layout."
+      ],
+      "review": "Autorrevisão concluída; os canais são normalizados por uma fronteira pura, campos inválidos são omitidos e endereço de visita continua separado da identificação legal.",
+      "environment": "local"
+    },
+    {
+      "id": "T-0011",
+      "title": "Implantar governança mínima de qualidade do catálogo da VedaShow",
+      "objective": "Gerar relatório completo por SKU, com campos obrigatórios, regras técnicas por família, duplicidades, conflitos de preço e cobertura mensurável.",
+      "assignee": null,
+      "priority": "urgente",
+      "status": "em_revisao",
+      "acceptanceCriteria": [
+        "Cada SKU ativo possui uma linha auditável com campos e ocorrências.",
+        "Retentores, O-rings e rolamentos exigem as medidas próprias da família.",
+        "SKUs equivalentes após normalização são detectados entre produtos distintos.",
+        "Preços diferentes para o mesmo SKU são destacados.",
+        "Cobertura total, por campo e por família é calculada.",
+        "A rota administrativa consulta todo o catálogo de um único tenant e é somente leitura."
+      ],
+      "evidence": [
+        "9 testes direcionados de governança e contrato da API aprovados.",
+        "Suíte geral: 1.134 testes aprovados e nenhuma falha.",
+        "TypeScript concluído sem erros.",
+        "ESLint concluído sem erros e com 20 avisos preexistentes fora do escopo.",
+        "Build otimizado de produção concluído com a nova rota /api/admin/tenants/[slug]/catalogo/qualidade.",
+        "Prints não aplicáveis: incremento de análise e API administrativa, sem interface visual."
+      ],
+      "review": "Autorrevisão concluída; NCM e medidas malformados não inflam a cobertura, e nenhuma escrita no catálogo ou em produção foi implementada.",
+      "environment": "local"
+    },
+    {
+      "id": "T-0012",
+      "title": "Instrumentar o funil de catálogo e compra da VedaShow",
+      "objective": "Medir descoberta, intenção, checkout, pagamento e recompra por sessão, com privacidade e dashboard acionável no Lojas.",
+      "assignee": null,
+      "priority": "urgente",
+      "status": "em_revisao",
+      "acceptanceCriteria": [
+        "Busca, busca sem resultado, filtro, produto, contato técnico, carrinho e checkout possuem eventos first-party.",
+        "Pedido, pagamento aprovado e recompra vêm da fonte comercial do servidor.",
+        "O navegador não envia tenant, identidade, termo pesquisado ou conteúdo de mensagem.",
+        "O dashboard explicita denominadores e não exibe zero quando a taxa é indisponível.",
+        "Desktop e celular são verificados sem publicação automática."
+      ],
+      "evidence": [
+        "15 testes direcionados de contrato, ingestão, eventos e agregação aprovados.",
+        "Suíte geral: 1.143 testes aprovados e nenhuma falha.",
+        "TypeScript concluído sem erros.",
+        "ESLint concluído sem erros e com 20 avisos preexistentes fora do escopo.",
+        "Build otimizado de produção concluído com /api/vitrine/evento e /plataforma/painel/analises/funil.",
+        "Playwright gerou e a revisão visual aprovou capturas em 1440 x 1000 e 390 x 844."
+      ],
+      "review": "Autorrevisão concluída; o funil agrega sessões idempotentes, pagamento não é declarado pelo navegador, recompra não expõe e-mail e nenhuma publicação foi realizada.",
+      "environment": "local"
+    },
+    {
+      "id": "T-0013",
+      "title": "Redesenhar homepage da VedaShow em torno da busca técnica",
+      "objective": "Priorizar a identificação da peça por código, referência, aplicação ou medidas usando somente dados reais do tenant e do catálogo.",
+      "assignee": null,
+      "priority": "urgente",
+      "status": "em_andamento",
+      "acceptanceCriteria": [
+        "Busca livre e dimensional aparecem no primeiro bloco e alimentam o funil existente.",
+        "Famílias prioritárias, marcas, logística e diferenciais são derivados de dados reais.",
+        "Canais comerciais passam pela identidade pública validada.",
+        "Layout é genérico para tenants industriais, acessível e responsivo.",
+        "Desktop e celular são verificados sem publicação automática."
+      ],
+      "evidence": [
+        "5 testes direcionados de projeção, saneamento de marcas e busca dimensional aprovados.",
+        "Suíte geral: 1.148 testes aprovados e nenhuma falha.",
+        "TypeScript e ESLint direcionado concluídos sem erros.",
+        "Build otimizado de produção concluído; permaneceu apenas o aviso preexistente de rastreamento NFT do Turbopack.",
+        "Playwright gerou e a revisão visual aprovou capturas em 1440 x 1050 e 390 x 844.",
+        "Filtro mobile isolado validado em 360, 390 e 430 px: Filtrar e Ordenar na mesma linha, alvos de 44 px e sem overflow.",
+        "2 testes de HTML protegem a barra compacta e impedem parâmetros de ordenação duplicados.",
+        "5 testes protegem o retorno à listagem, a lista de parâmetros permitidos, a rejeição de destinos externos e a preservação do contexto ao trocar de variante.",
+        "Suíte geral atualizada: 1.155 testes aprovados e nenhuma falha; build otimizado concluído após o incremento.",
+        "7 testes direcionados protegem especificações compactas de retentores, O-rings, rolamentos e correias, incluindo vedação, dureza e unidade somente quando cadastradas.",
+        "Suíte geral atualizada: 1.162 testes aprovados e nenhuma falha; TypeScript, ESLint direcionado e build otimizado aprovados.",
+        "Revisão visual dos cards em 390 e 1280 px: quatro famílias, sem overflow, unidade visível nos quatro exemplos e CTAs com mínimo de 44 px.",
+        "Busca simples não abre a gaveta de filtros; filtro secundário abre, anuncia o estado e oferece limpeza. Estado vazio não exibe ação inútil.",
+        "Com o Header real, a grade começa a 0,59 tela em 360, 390 e 430 px; cabeçalho mede 164 px e não há overflow da página.",
+        "Faixa de categorias é rolável, tem desvanecimento de continuação, Ver todas e alvos de 44 px; menu móvel conserva acesso às 10 categorias do cenário.",
+        "Navegação de categorias recebeu rótulo acessível próprio e 2 testes de HTML protegem o limite da faixa e o acesso completo pelo menu.",
+        "Suíte geral atualizada: 1.167 testes aprovados e nenhuma falha; TypeScript, ESLint direcionado e build otimizado aprovados.",
+        "Elementos fixos validados com componentes reais em 360, 390 e 430 px: barra inferior não cobre produto, WhatsApp sai no catálogo e durante a decisão de cookies, volta depois com alvo de 56 px e não há sobreposição.",
+        "Axe-core não encontrou violações sérias ou críticas no catálogo mobile nas três larguras; o script de QA agora falha automaticamente se acessibilidade, overflow ou sobreposição regredirem.",
+        "Suíte geral atualizada: 1.168 testes aprovados e nenhuma falha; TypeScript aprovado após a nova regressão de elementos fixos.",
+        "Regressão local Domi-Rio em 390 px com componentes compartilhados: identidade isolada, primeiro produto a 0,59 tela, sem overflow, WhatsApp sem cobrir cards e zero violações axe sérias ou críticas.",
+        "Baseline público mobile da VedaShow em três amostras frias, rede controlada e CPU 4x: TTFB mediano 203 ms, LCP 9.064 ms e CLS 0,0015. O LCP foi a arte campanha-geral-v3-mobile.svg; as outras duas campanhas consumiam 410.092 bytes em paralelo.",
+        "BannerCarousel agora entrega somente a primeira campanha no HTML e pré-carrega a próxima depois; 1 teste de SSR impede regressão do download inicial. A melhora do LCP precisa ser medida após publicação.",
+        "Suíte geral atualizada: 1.169 testes aprovados e nenhuma falha; TypeScript, ESLint direcionado, build otimizado e git diff --check aprovados."
+      ],
+      "review": "Autorrevisão concluída; a inspeção visual encontrou e corrigiu a coluna vazia de categorias sem imagem, o rótulo de ordenação cortado e a sobreposição entre WhatsApp e aviso de cookies no celular. A navegação produto-variante preserva o retorno seguro à busca, categoria, filtros, ordenação e página. Cards técnicos agora expõem apenas medidas e atributos de escolha cadastrados, além da unidade de venda validada. Nenhuma condição específica por tenant foi adicionada.",
+      "environment": "local"
     }
   ],
   "decisions": [

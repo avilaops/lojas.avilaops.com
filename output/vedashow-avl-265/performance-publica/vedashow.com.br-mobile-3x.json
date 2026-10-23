@@ -1,0 +1,215 @@
+{
+  "origem": "https://vedashow.com.br/",
+  "medidoEm": "2026-10-23T20:35:30.559Z",
+  "natureza": "baseline de produção; não valida alterações locais não publicadas",
+  "condicoes": {
+    "viewport": "390x844 @3x",
+    "rede": "1,6 Mbps down / 750 Kbps up / 150 ms RTT",
+    "cpu": "4x slowdown",
+    "cache": "contexto novo por repetição",
+    "esperaAposLoadMs": 5000,
+    "inp": "não medido: exige interação humana representativa"
+  },
+  "repeticoes": 3,
+  "mediana": {
+    "ttfbMs": 203,
+    "domContentLoadedMs": 2003,
+    "loadMs": 11089,
+    "lcpMs": 9064,
+    "cls": 0.0015
+  },
+  "amostras": [
+    {
+      "repeticao": 1,
+      "status": 200,
+      "ttfbMs": 204,
+      "domContentLoadedMs": 2012,
+      "loadMs": 10962,
+      "lcpMs": 9068,
+      "cls": 0.0015,
+      "recursos": 66,
+      "bytesTransferidos": 1050519,
+      "elementoLcp": "img",
+      "urlLcp": "https://vedashow.com.br/media/vedashow/campanha-geral-v3-mobile.svg",
+      "tamanhoLcp": 138060,
+      "maioresTransferencias": [
+        {
+          "nome": "https://vedashow.com.br/media/vedashow/campanha-rolamentos-mobile-v1.webp",
+          "tipo": "img",
+          "bytes": 211714,
+          "duracaoMs": 7580
+        },
+        {
+          "nome": "https://vedashow.com.br/media/vedashow/campanha-geral-v3-mobile.svg",
+          "tipo": "img",
+          "bytes": 208148,
+          "duracaoMs": 8691
+        },
+        {
+          "nome": "https://vedashow.com.br/media/vedashow/campanha-orings-mobile-v1.webp",
+          "tipo": "img",
+          "bytes": 198378,
+          "duracaoMs": 7506
+        },
+        {
+          "nome": "https://vedashow.com.br/_next/static/chunks/0lc-5cr9pq5qk.js?dpl=40870a0a07e97a527a8b812e4eb3612b365252bc",
+          "tipo": "script",
+          "bytes": 83353,
+          "duracaoMs": 5573
+        },
+        {
+          "nome": "https://vedashow.com.br/_next/static/chunks/0t1cupau1mtgy.js?dpl=40870a0a07e97a527a8b812e4eb3612b365252bc",
+          "tipo": "script",
+          "bytes": 71096,
+          "duracaoMs": 4711
+        },
+        {
+          "nome": "https://vedashow.com.br/_next/static/media/83afe278b6a6bb3c-s.2bn3s6zvc0dyp.woff2?dpl=40870a0a07e97a527a8b812e4eb3612b365252bc",
+          "tipo": "css",
+          "bytes": 48732,
+          "duracaoMs": 4357
+        },
+        {
+          "nome": "https://vedashow.com.br/_next/static/chunks/2z3meh_fz9bll.js?dpl=40870a0a07e97a527a8b812e4eb3612b365252bc",
+          "tipo": "script",
+          "bytes": 39007,
+          "duracaoMs": 1794
+        },
+        {
+          "nome": "https://vedashow.com.br/_next/static/chunks/0dumkj-wj5n3w.css?dpl=40870a0a07e97a527a8b812e4eb3612b365252bc",
+          "tipo": "link",
+          "bytes": 26966,
+          "duracaoMs": 1421
+        }
+      ]
+    },
+    {
+      "repeticao": 2,
+      "status": 200,
+      "ttfbMs": 196,
+      "domContentLoadedMs": 2003,
+      "loadMs": 11089,
+      "lcpMs": 9060,
+      "cls": 0.0015,
+      "recursos": 67,
+      "bytesTransferidos": 1052305,
+      "elementoLcp": "img",
+      "urlLcp": "https://vedashow.com.br/media/vedashow/campanha-geral-v3-mobile.svg",
+      "tamanhoLcp": 138060,
+      "maioresTransferencias": [
+        {
+          "nome": "https://vedashow.com.br/media/vedashow/campanha-rolamentos-mobile-v1.webp",
+          "tipo": "img",
+          "bytes": 211714,
+          "duracaoMs": 7574
+        },
+        {
+          "nome": "https://vedashow.com.br/media/vedashow/campanha-geral-v3-mobile.svg",
+          "tipo": "img",
+          "bytes": 208148,
+          "duracaoMs": 8703
+        },
+        {
+          "nome": "https://vedashow.com.br/media/vedashow/campanha-orings-mobile-v1.webp",
+          "tipo": "img",
+          "bytes": 198378,
+          "duracaoMs": 7503
+        },
+        {
+          "nome": "https://vedashow.com.br/_next/static/chunks/0lc-5cr9pq5qk.js?dpl=40870a0a07e97a527a8b812e4eb3612b365252bc",
+          "tipo": "script",
+          "bytes": 83353,
+          "duracaoMs": 5217
+        },
+        {
+          "nome": "https://vedashow.com.br/_next/static/chunks/0t1cupau1mtgy.js?dpl=40870a0a07e97a527a8b812e4eb3612b365252bc",
+          "tipo": "script",
+          "bytes": 71096,
+          "duracaoMs": 4351
+        },
+        {
+          "nome": "https://vedashow.com.br/_next/static/media/83afe278b6a6bb3c-s.2bn3s6zvc0dyp.woff2?dpl=40870a0a07e97a527a8b812e4eb3612b365252bc",
+          "tipo": "css",
+          "bytes": 48732,
+          "duracaoMs": 4250
+        },
+        {
+          "nome": "https://vedashow.com.br/_next/static/chunks/2z3meh_fz9bll.js?dpl=40870a0a07e97a527a8b812e4eb3612b365252bc",
+          "tipo": "script",
+          "bytes": 39007,
+          "duracaoMs": 1808
+        },
+        {
+          "nome": "https://vedashow.com.br/_next/static/chunks/0dumkj-wj5n3w.css?dpl=40870a0a07e97a527a8b812e4eb3612b365252bc",
+          "tipo": "link",
+          "bytes": 26966,
+          "duracaoMs": 1450
+        }
+      ]
+    },
+    {
+      "repeticao": 3,
+      "status": 200,
+      "ttfbMs": 203,
+      "domContentLoadedMs": 1952,
+      "loadMs": 11159,
+      "lcpMs": 9064,
+      "cls": 0.0018,
+      "recursos": 67,
+      "bytesTransferidos": 1052304,
+      "elementoLcp": "img",
+      "urlLcp": "https://vedashow.com.br/media/vedashow/campanha-geral-v3-mobile.svg",
+      "tamanhoLcp": 138060,
+      "maioresTransferencias": [
+        {
+          "nome": "https://vedashow.com.br/media/vedashow/campanha-rolamentos-mobile-v1.webp",
+          "tipo": "img",
+          "bytes": 211714,
+          "duracaoMs": 7688
+        },
+        {
+          "nome": "https://vedashow.com.br/media/vedashow/campanha-geral-v3-mobile.svg",
+          "tipo": "img",
+          "bytes": 208148,
+          "duracaoMs": 8666
+        },
+        {
+          "nome": "https://vedashow.com.br/media/vedashow/campanha-orings-mobile-v1.webp",
+          "tipo": "img",
+          "bytes": 198378,
+          "duracaoMs": 7545
+        },
+        {
+          "nome": "https://vedashow.com.br/_next/static/chunks/0lc-5cr9pq5qk.js?dpl=40870a0a07e97a527a8b812e4eb3612b365252bc",
+          "tipo": "script",
+          "bytes": 83353,
+          "duracaoMs": 5734
+        },
+        {
+          "nome": "https://vedashow.com.br/_next/static/chunks/0t1cupau1mtgy.js?dpl=40870a0a07e97a527a8b812e4eb3612b365252bc",
+          "tipo": "script",
+          "bytes": 71096,
+          "duracaoMs": 4963
+        },
+        {
+          "nome": "https://vedashow.com.br/_next/static/media/83afe278b6a6bb3c-s.2bn3s6zvc0dyp.woff2?dpl=40870a0a07e97a527a8b812e4eb3612b365252bc",
+          "tipo": "css",
+          "bytes": 48732,
+          "duracaoMs": 4387
+        },
+        {
+          "nome": "https://vedashow.com.br/_next/static/chunks/2z3meh_fz9bll.js?dpl=40870a0a07e97a527a8b812e4eb3612b365252bc",
+          "tipo": "script",
+          "bytes": 39007,
+          "duracaoMs": 2061
+        },
+        {
+          "nome": "https://vedashow.com.br/_next/static/chunks/0dumkj-wj5n3w.css?dpl=40870a0a07e97a527a8b812e4eb3612b365252bc",
+          "tipo": "link",
+          "bytes": 26966,
+          "duracaoMs": 1422
+        }
+      ]
+    }
+  ]
+}
