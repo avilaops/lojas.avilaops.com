@@ -20,13 +20,24 @@ export default function Distribuidora({ t, identidade, categorias, vitrine, temD
     return (
       <main className="home-mercado home-distribuidora home-campanhas">
         <h1 className="sr-only">{t.nome} — {t.slogan || "Catálogo de produtos"}</h1>
-        <BannerCarousel campanhas={banners} />
+        <div className="campanhas-hero">
+          <BannerCarousel campanhas={banners} />
+          {(tema.heroTitulo || tema.heroTexto) && (
+            <div className="container-loja campanhas-hero-conteudo">
+              <div>
+                {tema.heroTitulo && <h2>{tema.heroTitulo}</h2>}
+                {tema.heroTexto && <p>{tema.heroTexto}</p>}
+                <Link href="/produtos" className="btn-primario">Ver produtos <ArrowRight size={18} /></Link>
+              </div>
+            </div>
+          )}
+        </div>
         <section className="campanhas-categorias" aria-labelledby="categorias-titulo">
           <div className="container-loja"><h2 id="categorias-titulo">Compre por categoria</h2></div>
           <AtalhosCategorias categorias={categorias} semImagem={tema.categoriaSemImagem} />
         </section>
         <section className="container-loja campanhas-busca" aria-label="Busca no catálogo">
-          <div><h2>Encontre a peça certa</h2><p>Busque por nome, código, referência ou marca. Para medidas, use diâmetro interno × externo × altura, em mm.</p></div>
+          <div><h2>Encontre o produto certo</h2><p>Busque por nome, código, finalidade ou marca.</p></div>
           <Link href="/produtos" className="btn-secundario">Buscar e filtrar produtos <Search size={18} /></Link>
         </section>
         <section className="container-loja campanhas-produtos" aria-labelledby="produtos-titulo">
@@ -52,7 +63,7 @@ export default function Distribuidora({ t, identidade, categorias, vitrine, temD
               <Link href="/produtos" className="btn-primario">Buscar produtos <Search /></Link>
               {t.whatsapp && <Link href="/contato" className="btn-secundario">Falar com a equipe</Link>}
             </div>
-            <p className="mercado-dica">Encontre por nome, medida ou código do fabricante.</p>
+            <p className="mercado-dica">Busque por nome, código, finalidade ou marca.</p>
           </div>
           {t.bannerUrl && (
             <aside className="distribuidora-arte">

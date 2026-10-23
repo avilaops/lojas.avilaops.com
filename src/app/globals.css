@@ -96,6 +96,9 @@ body:has(.atalhos-cat) .nav-loja { display: none; }
    640px a gaveta deixa de existir e os campos voltam para a linha. */
 .filtros-gaveta { display: none; }
 .filtros-abrir { display: none; }
+.ajuda-catalogo { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .25rem 1rem; align-items: center; min-height: 44px; margin-top: 1rem; padding: .75rem; border: 1px solid var(--border); border-radius: var(--radius); font-size: .875rem; font-weight: 600; }
+.ajuda-catalogo span { color: var(--primary); text-decoration: underline; text-underline-offset: 3px; }
+.ajuda-catalogo:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
 @media (max-width: 639px) {
   .filtros-grade { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .filtros-grade > input[type="search"] { grid-column: 1 / -1; }

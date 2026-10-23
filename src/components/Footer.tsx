@@ -54,7 +54,7 @@ export default function Footer({ tenant, categorias, temBlog = false }: { tenant
           {identidade.horario && <p className="text-muted-foreground">{identidade.horario}</p>}
           {identidade.telefone && <p className="text-muted-foreground">{identidade.telefone.exibicao}</p>}
         </div>
-        <div>
+        {categorias.length > 0 && <div>
           <p className="mb-2 font-semibold">Categorias</p>
           <ul className="space-y-1 text-muted-foreground">
             {categorias.slice(0, 8).map((c) => (
@@ -63,7 +63,7 @@ export default function Footer({ tenant, categorias, temBlog = false }: { tenant
               </li>
             ))}
           </ul>
-        </div>
+        </div>}
         <div>
           <p className="mb-2 font-semibold">A loja</p>
           <ul className="space-y-1 text-muted-foreground">

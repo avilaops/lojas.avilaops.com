@@ -28,7 +28,14 @@ import { dadosDaHomeIndustrial } from "@/lib/home-industrial";
  * A URL absoluta sai do `metadataBase` do layout, que já é o endereço público
  * da loja.
  */
-export const metadata = { alternates: { canonical: "/" } };
+export async function generateMetadata() {
+  const t = await exigirTenant();
+  if (temaNaVitrine(temaDo(t)).layout !== "industrial") return { alternates: { canonical: "/" } };
+  const categorias = await listarCategorias(t.id);
+  const familias = categorias.slice(0, 3).map((categoria) => categoria.nome).join(", ");
+  const description = `${t.nome}: ${familias ? `catálogo de ${familias}. ` : "Catálogo de peças industriais. "}Busque por código ou medidas e confira a ficha técnica de cada produto.`;
+  return { alternates: { canonical: "/" }, description };
+}
 
 export default async function Home() {
   const t = await exigirTenant();

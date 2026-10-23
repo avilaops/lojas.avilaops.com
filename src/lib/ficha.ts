@@ -89,6 +89,8 @@ const ROTULOS: Record<string, string> = {
   volume: "Volume",
   volumeMl: "Volume (ml)",
   volumeTotal: "Volume total",
+  apresentacao: "Apresentação",
+  apresentacaoComercial: "Apresentação",
   funcao: "Função",
   aplicacao: "Aplicação",
   aplicacaoVeicular: "Aplicação veicular",

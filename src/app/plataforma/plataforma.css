@@ -812,10 +812,18 @@
 /* Painel enxuto no celular: os quatro números em duas colunas e o passo
    aberto do checklist com o botão embaixo do texto. A Visão geral tem de caber
    numa tela (844 px de altura). */
+.painel-identidade {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.painel-identidade > span { flex: none; }
+
 @media (max-width: 640px) {
   .painel-overview { gap: 12px; }
-  .painel-identidade { display: flex; min-width: 0; align-items: center; gap: 8px; overflow: hidden; white-space: nowrap; }
-  .painel-identidade > span { flex: none; }
+  .painel-identidade { flex-wrap: nowrap; overflow: hidden; white-space: nowrap; }
   .painel-identidade > span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
   .painel-metricas { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .painel-metricas button, .painel-metricas a { min-height: 92px; padding: 12px; }

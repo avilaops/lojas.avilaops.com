@@ -32,7 +32,7 @@ export default function Industrial({ t, identidadePublica, categorias, marcas = 
   const contato = identidadePublica;
 
   return (
-    <main className="home-industrial">
+    <div className="home-industrial">
       <section className="industrial-topo" aria-labelledby="industrial-titulo">
         {/* Fundo por CSS, e só em tela larga: no celular a foto ficava atrás do
             formulário, a meia opacidade, e custava o maior download da página. */}
@@ -124,6 +124,6 @@ export default function Industrial({ t, identidadePublica, categorias, marcas = 
           </ul>
         </aside>
       </section>
-    </main>
+    </div>
   );
 }

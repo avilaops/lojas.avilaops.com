@@ -5,6 +5,7 @@ import CapaCategoria from "@/components/CapaCategoria";
 import { exigirTenant, lojaVende, urlDaLoja, temaDo } from "@/lib/tenant";
 import { facetasTecnicas, grafiasDaMarca, listarCategorias, medidasDaLoja, paginaDeProdutos } from "@/lib/catalogo";
 import FiltrosProdutos from "@/components/FiltrosProdutos";
+import AjudaCatalogo from "@/components/AjudaCatalogo";
 import { filtroDaUrl, temFiltroAtivo } from "@/lib/filtros-url";
 import CategoriasPremium from "@/components/templates/automotivo-premium/Categorias";
 import PaginacaoLoja, { paginaDaUrl, porPaginaDaUrl } from "@/components/PaginacaoLoja";
@@ -114,7 +115,7 @@ export default async function Categoria({ params, searchParams }: Props) {
   const retorno = retornoDaListagem(`/categoria/${categoria.slug}`, sp);
 
   return (
-    <div className="container-loja py-8 ap-catalogo">
+    <div className="container-loja py-8 ap-catalogo categoria-catalogo">
       <EventoFunil eventos={eventos} />
       {usaBlocoProprio(temaDo(t), "categorias") && <CategoriasPremium categorias={[...categorias].sort((a,b)=>a.ordem-b.ordem)} atual={categoria.slug}/>}
       <Trilha base={urlDaLoja(t)} itens={[{ nome: "Produtos", href: "/produtos" }, { nome: categoria.nome }]} />
@@ -163,6 +164,7 @@ export default async function Categoria({ params, searchParams }: Props) {
         </div>
       )}
       <PaginacaoLoja base={`/categoria/${categoria.slug}`} sp={sp} pagina={pagina} temProxima={temProxima} total={lote.total} porPagina={porPagina} />
+      <AjudaCatalogo whatsapp={t.whatsapp} categoria={categoria.nome} valores={sp} tecnico={medidas.length > 0 || facetas.perfis.length > 0} />
     </div>
   );
 }

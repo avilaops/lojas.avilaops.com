@@ -131,6 +131,23 @@ const SIM = /^(1|sim|s|true|x|ativo)$/i;
 const NAO = /^(0|nao|n|false|inativo)$/i;
 
 /**
+ * Uma célula de categoria representa uma única prateleira da loja.
+ *
+ * ERPs costumam exportar a árvore inteira como uma lista separada por vírgula
+ * ("SANEANTES,DOMISSANEANTES,AGRÍCOLAS,LIMPEZA"). Aceitar isso cria uma única
+ * categoria monstruosa, quebra a navegação no celular e envia um `product_type`
+ * inútil ao Merchant. Caractere de substituição também denuncia texto já
+ * corrompido na origem. A linha ainda pode ser importada; só a categoria ruim
+ * deve ser ignorada e avisada por `importarProdutos`.
+ */
+export function categoriaDePlanilhaValida(categoria: string | null | undefined): boolean {
+  if (!categoria) return true;
+  const valor = categoria.trim();
+  if (!valor || valor.length > 80 || valor.includes("\uFFFD") || /[|;\r\n]/.test(valor)) return false;
+  return valor.split(",").filter((parte) => parte.trim()).length <= 2;
+}
+
+/**
  * Uma linha da planilha, já dividida em células de texto.
  *
  * Célula vazia é string vazia e coluna ausente é `undefined`: a diferença

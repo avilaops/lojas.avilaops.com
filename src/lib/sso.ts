@@ -144,6 +144,7 @@ export function podeEntrarComoEquipe(r: RespostaSSO, env: Record<string, string 
 
 /** Recados da tela de entrada, pela chave que vem em `?sso=`. */
 export const RECADOS_SSO: Record<string, string> = {
+  saiu: "Sessão do Lojas encerrada. Você pode iniciar uma nova autenticação quando quiser.",
   "sem-loja": "Sua conta Avila Ops não está ligada a nenhuma loja. Entre com o e-mail e a senha da loja, ou peça ao dono para cadastrar este e-mail na equipe.",
   "sem-acesso": "Sua conta Avila Ops ainda não foi liberada para o Lojas. Entre com o e-mail e a senha da loja.",
   "sem-email": "A conta com que você entrou não informou um e-mail, e é pelo e-mail que achamos a sua loja. Entre de novo com Google ou Microsoft, ou com uma conta que mostre o e-mail.",

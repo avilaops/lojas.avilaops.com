@@ -1,6 +1,7 @@
 import type { Tenant } from "@prisma/client";
 import type { Endereco } from "./tenant";
 import { retiradaPublicaDisponivel } from "./retirada-publica";
+import { vendaOnlineDisponivel } from "./venda-online";
 import { porOndeFalarCom, prazoDeDespacho } from "./textos-loja";
 import { avaliarPedidoMinimo, formatarBRL, mascararDocumento } from "@avilaops/checkout";
 
@@ -177,13 +178,14 @@ export function modeloDePolitica(t: Tenant, tipo: TipoPolitica): string[] {
   const contato = porOndeFalarCom(t);
   const regras = lerRegrasDevolucao(t.regrasDevolucao);
   const pedidoMinimo = avaliarPedidoMinimo(0, t.pedidoMinimoCentavos).minimo;
+  const vendeOnline = vendaOnlineDisponivel(t);
 
   switch (tipo) {
     case "envio":
       return [
         `${t.despachoDiasUteis === 0
           ? "Pedidos pagos durante o expediente em dia útil são despachados no mesmo dia; confirmações fora do expediente seguem no próximo dia útil."
-          : `Os pedidos são despachados ${prazoDeDespacho(t.despachoDiasUteis)} após a confirmação do pagamento.`} O prazo de entrega é o informado na cotação de frete no momento da compra e depende da transportadora e do CEP de destino.`,
+          : `Os pedidos são despachados ${prazoDeDespacho(t.despachoDiasUteis)} após a confirmação do pagamento.`} ${vendeOnline ? "O prazo de entrega é o informado na cotação de frete no momento da compra e depende da transportadora e do CEP de destino." : "Frete, transportadora e prazo de entrega são confirmados pelo atendimento antes de fechar o pedido."}`,
         retiradaPublicaDisponivel(t)
           ? `Você pode retirar o pedido sem custo em ${cidade}, a partir do próximo dia útil após a confirmação. Aguarde o aviso de "pedido separado" antes de ir até a loja.`
           : "Esta loja não oferece retirada no balcão.",
@@ -199,7 +201,9 @@ export function modeloDePolitica(t: Tenant, tipo: TipoPolitica): string[] {
     case "privacidade":
       return [
         `A ${vendedor(t)} é a controladora dos seus dados e coleta apenas os necessários para processar o pedido: nome, CPF/CNPJ, e-mail, telefone e endereço de entrega. Eles são usados para emitir a cobrança, entregar o produto e prestar atendimento, nos termos da Lei 13.709/2018 (LGPD).`,
-        "Dados de cartão não passam por nossos servidores: são tokenizados pelo provedor de pagamento no seu navegador.",
+        vendeOnline
+          ? "Dados de cartão não passam por nossos servidores: são tokenizados pelo provedor de pagamento no seu navegador."
+          : "Nesta vitrine, o carrinho prepara sua solicitação para o atendimento. Os meios e as condições de pagamento são confirmados diretamente com a loja.",
         `Você pode solicitar acesso, correção ou exclusão dos seus dados a qualquer momento ${contato}. Os dados de pedidos são mantidos pelo prazo exigido pela legislação fiscal.`,
         "Esta loja usa cookies estritamente necessários para o funcionamento do carrinho e, quando configurado, ferramentas de medição de audiência.",
       ];
@@ -207,7 +211,9 @@ export function modeloDePolitica(t: Tenant, tipo: TipoPolitica): string[] {
     case "termos":
       return [
         `Estes termos valem para o uso da loja da ${vendedor(t)}. Navegar e comprar significa concordar com eles.`,
-        "A loja apresenta os produtos, o preço e as condições de entrega, e a compra é feita aqui mesmo: você monta o carrinho, escolhe o frete e paga online. O contrato de venda se forma quando o pagamento é confirmado pelo provedor de pagamento.",
+        vendeOnline
+          ? "A loja apresenta os produtos, o preço e as condições de entrega, e a compra é feita aqui mesmo: você monta o carrinho, escolhe o frete e paga online. O contrato de venda se forma quando o pagamento é confirmado pelo provedor de pagamento."
+          : "A loja apresenta o catálogo e permite montar uma solicitação no carrinho. A compra é combinada com o atendimento: disponibilidade, pagamento, frete e prazo de entrega são confirmados antes de fechar o pedido.",
         "Preço, disponibilidade e prazo são os exibidos no momento da compra. Erros evidentes de cadastro (preço incompatível com o produto, por exemplo) não obrigam a loja à venda: nesse caso o pedido é cancelado e o valor devolvido integralmente.",
         "As imagens são ilustrativas do produto anunciado. Embalagem, rótulo e apresentação podem mudar por conta do fabricante sem aviso prévio.",
         "Use os produtos conforme a orientação do fabricante no rótulo. Quando a instrução do rótulo divergir de qualquer texto desta loja, é o rótulo que vale.",

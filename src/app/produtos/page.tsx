@@ -11,6 +11,7 @@ import ProductCard from "@/components/ProductCard";
 import TabelaTecnica from "@/components/TabelaTecnica";
 import { listaEmTabela } from "@/lib/templates";
 import FiltrosProdutos from "@/components/FiltrosProdutos";
+import AjudaCatalogo from "@/components/AjudaCatalogo";
 import { minhaMoto } from "@/lib/minha-moto";
 import { nomeDaMoto } from "@/lib/motos";
 import { usaBlocoProprio } from "@/lib/templates";
@@ -78,6 +79,11 @@ export default async function Produtos({ searchParams }: { searchParams: Promise
         {moto && <> · <Link href="/produtos?moto=todas" className="underline">ver catálogo completo</Link></>}
       </p>
       <FiltrosProdutos categorias={categorias} valores={sp} medidas={temMedida} fabricantes={facetas.fabricantes} perfis={facetas.perfis} />
+      {temMedida.length > 0 && (
+        <p className="mb-4 text-sm text-muted-foreground">
+          Medidas iguais ou próximas não comprovam compatibilidade. Confira perfil, material e aplicação na ficha de cada peça antes de adicionar ao pedido.
+        </p>
+      )}
       {produtos.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
           Nada encontrado com esses filtros. Confira o nome, o código ou a referência do produto, ou reduza os filtros.
@@ -96,6 +102,7 @@ export default async function Produtos({ searchParams }: { searchParams: Promise
         </div>
       )}
       <PaginacaoLoja base="/produtos" sp={sp} pagina={pagina} temProxima={temProxima} total={lote.total} porPagina={porPagina} />
+      <AjudaCatalogo whatsapp={t.whatsapp} categoria={categoriaAtual?.nome} valores={sp} tecnico={temMedida.length > 0 || facetas.perfis.length > 0} />
     </div>
   );
 }

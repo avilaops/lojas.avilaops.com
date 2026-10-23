@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 1,
+  "version": "1.0.0",
+  "observedAt": "2026-10-18",
+  "scope": "Lojas 360",
+  "notes": [
+    "Retrato de capacidades observadas no repositorio, documentacao e consultas somente leitura aos conectores.",
+    "Valores de credenciais e segredos nao fazem parte deste artefato.",
+    "Limites de terceiros marcados como desconhecidos devem ser reconfirmados antes de publicacao."
+  ],
+  "integrations": [
+    {
+      "id": "mercado-livre", "name": "Mercado Livre", "channel": "marketplace", "status": "operational", "environment": "production-capable",
+      "evidence": ["src/lib/mercadolivre.ts", "src/lib/mercadolivre-publicacao.ts", "docs/CANAIS-MARKETPLACES.md", "docs/ROTINAS.md"],
+      "authentication": "OAuth por loja; credencial de aplicacao configurada fora do repositorio", "scopes": ["catalogo", "anuncios", "pedidos", "estoque", "preco", "notificacoes"],
+      "capabilities": { "queries": ["anuncios", "pedidos", "categorias", "catalogo"], "actions": ["vincular produto", "publicar e atualizar anuncio", "sincronizar preco e estoque"] },
+      "webhooks": ["notificacoes recebidas e processadas a cada 5 minutos"], "pagination": "Tratada pelos clientes de consulta; cursor/pagina depende do recurso", "rateLimit": "Do provedor; sem cota fixa documentada localmente", "retention": "Eventos e estado sincronizado seguem persistencia operacional do Lojas", "homologation": "Validacao requer conta autorizada e anuncios de teste controlados", "dependencies": ["Aplicacao Mercado Livre", "OAuth da loja", "rotinas internas do Lojas"],
+      "gaps": [{ "description": "Cotas e janelas precisam ser registradas por endpoint.", "dependency": "Documentacao e cabecalhos atuais da API Mercado Livre" }]
+    },
+    {
+      "id": "amazon", "name": "Amazon Selling Partner API", "channel": "marketplace", "status": "connection-only", "environment": "beta",
+      "evidence": ["src/lib/canal-amazon.ts", "docs/CANAIS-MARKETPLACES.md"],
+      "authentication": "OAuth SP-API; acesso de 1 hora e reautorizacao de ate 365 dias", "scopes": ["identificacao da conta; dominios comerciais ainda nao implementados"],
+      "capabilities": { "queries": ["identificacao da conta conectada"], "actions": ["conectar", "renovar", "desconectar"] },
+      "webhooks": [], "pagination": "Nao implementada", "rateLimit": "Nao aplicavel enquanto nao ha operacoes SP-API", "retention": "Metadados e credenciais OAuth por loja", "homologation": "Aplicacao em modo beta; exige autorizacao de seller de teste", "dependencies": ["Aprovacao e configuracao SP-API", "implementacao de catalogo, estoque, preco e pedidos"],
+      "gaps": [{ "description": "Publicacao e sincronizacao comercial nao existem.", "dependency": "Implementar adaptadores SP-API e concluir homologacao Amazon" }]
+    },
+    {
+      "id": "shopee", "name": "Shopee Open Platform", "channel": "marketplace", "status": "connection-only", "environment": "development",
+      "evidence": ["src/lib/canal-shopee.ts", "docs/CANAIS-MARKETPLACES.md"],
+      "authentication": "OAuth assinado; acesso de 4 horas, refresh de uso unico por 30 dias e autorizacao de ate 365 dias", "scopes": ["identificacao da loja; dominios comerciais ainda nao implementados"],
+      "capabilities": { "queries": ["identificacao da loja conectada"], "actions": ["conectar", "renovar", "desconectar"] },
+      "webhooks": [], "pagination": "Nao implementada", "rateLimit": "Nao aplicavel enquanto nao ha operacoes de dominio", "retention": "Metadados e credenciais OAuth por loja", "homologation": "Exige parceiro e loja de teste autorizados", "dependencies": ["Credenciamento Shopee", "implementacao de catalogo, estoque, preco e pedidos"],
+      "gaps": [{ "description": "Publicacao e sincronizacao comercial nao existem.", "dependency": "Implementar adaptadores Shopee e homologar com loja de teste" }]
+    },
+    {
+      "id": "magalu", "name": "Magalu Marketplace", "channel": "marketplace", "status": "connection-only", "environment": "development",
+      "evidence": ["src/lib/canal-magalu.ts", "docs/CANAIS-MARKETPLACES.md"],
+      "authentication": "OAuth; acesso de 2 horas", "scopes": ["catalogo", "estoque", "preco", "pedidos", "entrega", "nota fiscal"],
+      "capabilities": { "queries": ["identificacao da conta conectada"], "actions": ["conectar", "renovar", "desconectar"] },
+      "webhooks": [], "pagination": "Nao implementada", "rateLimit": "Nao aplicavel enquanto nao ha operacoes de dominio", "retention": "Metadados e credenciais OAuth por loja", "homologation": "Exige aplicacao e seller de teste autorizados", "dependencies": ["Credenciamento Magalu", "implementacao dos escopos ja declarados"],
+      "gaps": [{ "description": "Os escopos existem, mas as operacoes comerciais nao.", "dependency": "Implementar e homologar adaptadores Magalu" }]
+    },
+    {
+      "id": "mercado-pago", "name": "Mercado Pago", "channel": "payment", "status": "operational", "environment": "production-capable",
+      "evidence": ["src/lib/mercado-pago-conta.ts", "packages/checkout/src/providers"],
+      "authentication": "Credencial por loja/plataforma mantida fora do repositorio", "scopes": ["pagamentos", "Pix", "estado de cobranca"],
+      "capabilities": { "queries": ["estado do pagamento"], "actions": ["criar pagamento", "consultar e reconciliar cobranca"] },
+      "webhooks": ["atualizacao de pagamento"], "pagination": "Por recurso; nao usada no fluxo transacional principal", "rateLimit": "Do provedor; sem cota fixa documentada localmente", "retention": "Identificadores e estados necessarios ao pedido e conciliacao", "homologation": "Sandbox/credenciais de teste e pagamento controlado", "dependencies": ["Credencial Mercado Pago da loja", "webhook publico valido"],
+      "gaps": [{ "description": "Cotas e retencao contratual precisam de confirmacao formal.", "dependency": "Contrato e documentacao vigentes do Mercado Pago" }]
+    },
+    {
+      "id": "melhor-envio", "name": "Melhor Envio", "channel": "logistics", "status": "partial", "environment": "production-capable",
+      "evidence": ["docs/MELHOR-ENVIO.md", "src/lib/melhor-envio.ts"],
+      "authentication": "OAuth por loja", "scopes": ["cotacao de frete"],
+      "capabilities": { "queries": ["cotar servicos de entrega"], "actions": ["conectar", "renovar", "desconectar"] },
+      "webhooks": [], "pagination": "Nao aplicavel a cotacao atual", "rateLimit": "Do provedor; sem cota fixa documentada localmente", "retention": "Cotacao usada no checkout; credenciais por loja", "homologation": "Sandbox do provedor e CEPs de origem/destino controlados", "dependencies": ["Conta Melhor Envio", "OAuth da loja"],
+      "gaps": [{ "description": "Compra de etiqueta e rastreio integrado nao sao suportados.", "decision": "OMNI-0.2 registra a integracao como parcial; expansao exige item proprio de roadmap." }]
+    },
+    {
+      "id": "cepcerto-viacep", "name": "CepCerto e ViaCEP", "channel": "address-and-shipping", "status": "partial", "environment": "production-capable",
+      "evidence": ["src/lib/cepcerto.ts", "src/app/api/cep/route.ts", ".env.example"],
+      "authentication": "CepCerto usa credencial externa; ViaCEP e publico", "scopes": ["consulta de CEP", "apoio a cotacao"],
+      "capabilities": { "queries": ["endereco por CEP", "cotacao quando disponivel"], "actions": [] },
+      "webhooks": [], "pagination": "Nao aplicavel", "rateLimit": "Conforme cada provedor; nao consolidado localmente", "retention": "Endereco persiste somente no contexto funcional que o solicitou", "homologation": "CEPs validos, inexistentes e indisponibilidade do primario", "dependencies": ["Disponibilidade dos provedores", "credencial CepCerto quando usada"],
+      "gaps": [{ "description": "SLA, cota e fallback de cotacao precisam de contrato explicito.", "dependency": "Contrato CepCerto e politica operacional de fallback" }]
+    },
+    {
+      "id": "erp-nfe-recebida", "name": "ERP Avila Ops — NF-e recebida", "channel": "erp-fiscal", "status": "partial", "environment": "review",
+      "evidence": ["docs/FISCAL-RECEBIMENTO.md", ".agents/equipe/controle.json"],
+      "authentication": "Chave server-to-server por tenant; nunca enviada ao navegador", "scopes": ["notas recebidas", "XML", "DANFE", "fornecedor", "produtos", "compra", "custos"],
+      "capabilities": { "queries": ["listar notas recebidas", "obter XML e DANFE"], "actions": ["abrir conferencia no ERP"] },
+      "webhooks": [], "pagination": "Contrato GET /api/v1/notas-recebidas deve preservar cursor do ERP", "rateLimit": "Nao formalizado", "retention": "ERP e fonte da escrituracao e dos artefatos fiscais", "homologation": "Pendente validacao integrada com tenant e chave de leitura reais", "dependencies": ["API ERP por tenant", "contrato I-ERP-NFE-RECEBIDA"],
+      "gaps": [{ "description": "Contrato esta em revisao e falta homologacao ponta a ponta.", "decision": "D-0002: ERP e a fonte da escrituracao fiscal recebida." }]
+    },
+    {
+      "id": "sefaz-dfe", "name": "SEFAZ Distribuicao DF-e", "channel": "fiscal", "status": "operational", "environment": "compatibility",
+      "evidence": ["docs/FISCAL-RECEBIMENTO.md", "src/lib/fiscal-distribuicao.ts", "src/lib/fiscal-monitor.ts"],
+      "authentication": "Certificado cliente mTLS por CNPJ", "scopes": ["distribuicao de NF-e recebida"],
+      "capabilities": { "queries": ["consultar NSU e documentos destinados"], "actions": ["persistir resumo e XML recebido"] },
+      "webhooks": [], "pagination": "Consulta sequencial por NSU, ate 50 documentos por resposta", "rateLimit": "Intervalo deve respeitar regras da SEFAZ e ultNSU/maxNSU", "retention": "XML e metadados conforme politica fiscal da loja", "homologation": "Certificado valido, CNPJ correspondente e ambiente SEFAZ correto", "dependencies": ["Certificado fiscal", "disponibilidade do Web Service DF-e"],
+      "gaps": [{ "description": "Nao cobre manifestacao, NFC-e ou NFS-e.", "decision": "D-0002 transfere a fonte completa ao ERP e mantem este coletor como compatibilidade." }]
+    },
+    {
+      "id": "google", "name": "Google", "channel": "identity-and-commerce", "status": "partial", "environment": "production-capable",
+      "evidence": [".env.example", "src/lib/google-entrada.ts", "src/lib/catalogo-merchant.ts", "src/app/api/painel/buscadores/route.ts"],
+      "authentication": "OAuth e/ou service account conforme o produto", "scopes": ["login", "Merchant Center", "Search Console"],
+      "capabilities": { "queries": ["identidade", "estado de integracoes comerciais"], "actions": ["autenticar usuario", "sincronizar recursos suportados"] },
+      "webhooks": [], "pagination": "Depende da API Google consumida", "rateLimit": "Quota por projeto e API", "retention": "Dados minimos de identidade e sincronizacao por tenant", "homologation": "Projeto Google, redirect URIs e contas de teste autorizadas", "dependencies": ["Google Cloud project", "consentimento e escopos aprovados"],
+      "gaps": [{ "description": "Capacidades e quotas variam entre APIs e ainda nao possuem matriz separada.", "dependency": "Inventario por API Google e quotas do projeto ativo" }]
+    },
+    {
+      "id": "cloudflare", "name": "Cloudflare", "channel": "infrastructure", "status": "operational", "environment": "production-capable",
+      "evidence": [".env.example", "src/lib/provisionar.ts", "src/app/api/painel/dominio/route.ts"],
+      "authentication": "Credencial de infraestrutura fora do repositorio", "scopes": ["DNS de dominios de lojas"],
+      "capabilities": { "queries": ["consultar zona e registros"], "actions": ["criar e atualizar DNS de dominio"] },
+      "webhooks": [], "pagination": "Listagens da API paginadas pelo cliente", "rateLimit": "Do provedor; sem cota fixa documentada localmente", "retention": "Identificadores de zona e configuracao de dominio", "homologation": "Zona de teste e verificacao DNS sem afetar dominio produtivo", "dependencies": ["Conta Cloudflare", "zona DNS gerenciada"],
+      "gaps": [{ "description": "Escopo minimo da credencial precisa substituir chave global quando aplicavel.", "dependency": "Criar e validar API Token Cloudflare de menor privilegio" }]
+    },
+    {
+      "id": "mail-avilaops", "name": "Avila Mail", "channel": "communication", "status": "operational", "environment": "production-capable",
+      "evidence": [".env.example", "src/lib/email.ts"],
+      "authentication": "API server-to-server", "scopes": ["envio de mensagens transacionais"],
+      "capabilities": { "queries": [], "actions": ["enviar e-mail transacional"] },
+      "webhooks": [], "pagination": "Nao aplicavel", "rateLimit": "Nao formalizado no repositorio", "retention": "Conteudo e metadados conforme politicas do servico de e-mail", "homologation": "Destinatario controlado e ambiente que nao gere disparo em massa", "dependencies": ["API Avila Mail", "dominio remetente configurado"],
+      "gaps": [{ "description": "Entrega, bounce, complaint e limites nao estao contratados no inventario.", "dependency": "Contrato e observabilidade da API Avila Mail" }]
+    },
+    {
+      "id": "auth-avilaops", "name": "Auth Avila Ops", "channel": "identity", "status": "operational", "environment": "production-capable",
+      "evidence": [".env.example", "src/lib/admin-auth.ts", "src/lib/corporativo-auth.ts", ".agents/equipe/controle.json"],
+      "authentication": "OIDC e chamadas server-to-server", "scopes": ["sessao", "identidade", "acesso da equipe", "contexto corporativo"],
+      "capabilities": { "queries": ["validar identidade e acesso"], "actions": ["abrir sessao", "revalidar troca de loja"] },
+      "webhooks": [], "pagination": "Nao aplicavel aos fluxos atuais", "rateLimit": "Nao formalizado", "retention": "Sessao assinada e referencias minimas de identidade", "homologation": "Usuarios e tenants de teste com papeis distintos", "dependencies": ["Auth Avila Ops", "contrato OIDC e access token"],
+      "gaps": [{ "description": "Contrato corporativo v2 segue em revisao.", "dependency": "Conclusao e homologacao do item AVL-232" }]
+    },
+    {
+      "id": "n8n-lojas-operacao", "name": "n8n — Lojas Operacao Completa", "channel": "automation", "status": "partial", "environment": "n8n-live", "workflowId": "p063yYJXt0dT6lK6", "workflowActive": true,
+      "evidence": ["Consulta somente leitura ao n8n em 2026-10-18", "docs/ROTINAS.md", "docs/n8n/README.md"],
+      "authentication": "Credenciais nomeadas no n8n; valores nao inventariados", "scopes": ["eventos", "mensagens", "tarefas", "cobranca", "relatorios", "Mercado Livre", "leads"],
+      "capabilities": { "queries": ["pendencias", "pagamentos", "dados de relatorio e canal"], "actions": ["rotear eventos", "enviar mensagens", "criar tarefas", "processar rotinas agendadas"] },
+      "webhooks": ["entrada de eventos Lojas"], "pagination": "Especifica por no/API; sem politica unificada", "rateLimit": "Especifico por dependencia; sem controle unificado observado", "retention": "Execucoes conforme configuracao n8n; dados permanentes pertencem aos sistemas fonte", "homologation": "Clonar/desativar gatilhos e usar tenant controlado antes de publicar", "dependencies": ["n8n", "Lojas", "Mercado Livre", "Mercado Pago", "WhatsApp", "e-mail", "Todoist"],
+      "gaps": [
+        { "description": "Alguns caminhos nao registram encerramento.", "dependency": "Adicionar observabilidade e terminalidade por rota" },
+        { "description": "Aplicativo WhatsApp Meta foi removido e exige nova configuracao.", "dependency": "Novo app, credencial e templates Meta aprovados" },
+        { "description": "Agendamentos podem duplicar rotinas agora executadas pelo proprio Lojas.", "decision": "Reconciliar cada schedule com docs/ROTINAS.md antes de qualquer reativacao ou mudanca." }
+      ]
+    },
+    {
+      "id": "n8n-mcp-avilaops", "name": "n8n — MCP Avila Ops", "channel": "automation-and-tools", "status": "partial", "environment": "n8n-live", "workflowId": "IwWSp6RA3SJ5eyhZ", "workflowActive": true,
+      "evidence": ["Consulta somente leitura ao n8n em 2026-10-18"],
+      "authentication": "Endpoint MCP e credenciais internas no n8n", "scopes": ["ferramentas Lojas e adaptadores Avila Ops"],
+      "capabilities": { "queries": ["consultas expostas como ferramentas MCP"], "actions": ["acoes expostas como ferramentas MCP, sujeitas a autorizacao"] },
+      "webhooks": ["endpoint MCP"], "pagination": "Definida por ferramenta", "rateLimit": "Sem politica unificada observada", "retention": "Execucoes conforme n8n; sistemas fonte preservam registros", "homologation": "Chamadas de leitura primeiro; mutacoes apenas em tenant de teste", "dependencies": ["n8n", "APIs Avila Ops", "adaptadores por produto"],
+      "gaps": [{ "description": "CRM, Auth, TMS e ERP ainda dependem de adaptadores/OAuth adicionais.", "dependency": "Implementar e homologar adaptadores declarados pelo workflow" }]
+    }
+  ]
+}

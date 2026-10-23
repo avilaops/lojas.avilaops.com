@@ -30,6 +30,14 @@ test("mapeia categorias com nome exato na taxonomia do Google", () => {
   assert.equal(categoriaGoogle("Conjuntos"), undefined);
 });
 
+test("mapeia o catálogo de saneantes da Domi-Rio para a taxonomia oficial", () => {
+  assert.equal(categoriaGoogle("Controle de Pragas"), 2869);
+  assert.equal(categoriaGoogle("Controle de Roedores"), 2869);
+  assert.equal(categoriaGoogle("Inseticidas"), 2869);
+  assert.equal(categoriaGoogle("Herbicidas"), 3103);
+  assert.equal(categoriaGoogle("Controle de Odores"), 4973);
+});
+
 test("classifica tintas spray na categoria oficial de tintas", () => {
   assert.equal(categoriaGoogle("Tintas Spray"), 1361);
   assert.equal(categoriaGoogle("Tinta spray"), 1361);

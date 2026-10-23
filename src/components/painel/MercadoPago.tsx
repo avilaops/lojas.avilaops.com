@@ -128,7 +128,7 @@ export default function MercadoPago({ conexao, integracaoDisponivel, retorno }: 
             // Sem o aplicativo cadastrado na plataforma, o botão levaria a uma
             // tela de erro do próprio Mercado Pago, que parece defeito da loja.
             <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
-              A conexão com o Mercado Pago ainda não está liberada nesta instalação da plataforma. Enquanto isso, use as chaves abaixo.
+              A integração OAuth do Mercado Pago está aguardando a ativação das credenciais de produção pela plataforma Ávila Ops. Suas credenciais atuais continuam funcionando; não é necessário copiar chaves.
             </p>
           )}
         </>

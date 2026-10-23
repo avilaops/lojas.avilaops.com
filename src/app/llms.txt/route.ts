@@ -4,6 +4,7 @@ import { listarCategorias, listarProdutos, formatarBRL } from "@/lib/catalogo";
 import { descricaoDaLoja } from "@/lib/textos-loja";
 import { avaliarPedidoMinimo } from "@avilaops/checkout";
 import { identidadePublica } from "@/lib/identidade-publica";
+import { visivelNaBusca } from "@/lib/descoberta";
 
 /**
  * llms.txt da LOJA — o mapa que assistentes de IA (ChatGPT, Perplexity, Gemini)
@@ -55,7 +56,7 @@ políticas dela. Este arquivo descreve a plataforma, não uma loja.
     );
   }
   const t = await tenantAtual();
-  if (!t || t.status !== "ATIVA") return new Response("Loja nao encontrada.", { status: 404, headers: { "content-type": "text/plain; charset=utf-8" } });
+  if (!t || !visivelNaBusca(t)) return new Response("Loja nao encontrada.", { status: 404, headers: { "content-type": "text/plain; charset=utf-8" } });
   const base = urlDaLoja(t);
   const identidade = identidadeDa(t);
   // Categorias em ordem de tamanho (é como `listarCategorias` devolve) e só as

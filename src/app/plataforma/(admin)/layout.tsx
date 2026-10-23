@@ -43,7 +43,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="padm">
-      <NavPainel nome={loja.nome} urlLoja={urlDaLoja(loja)} aSeparar={aSeparar} pixManual={pixLigado} pixAConferir={pixAConferir} podeTrocarLoja={sessao.equipe} />
+      <NavPainel nome={loja.nome} urlLoja={urlDaLoja(loja)} aSeparar={aSeparar} pixManual={pixLigado} pixAConferir={pixAConferir} podeTrocarLoja={!sessao.equipe && sessao.papel === "DONO" && Boolean(loja.loginEmail)} />
       <BuscaPainel />
       <main className="padm-conteudo pl-workspace">{children}</main>
     </div>
