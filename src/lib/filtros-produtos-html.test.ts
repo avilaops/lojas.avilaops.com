@@ -4,17 +4,19 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import FiltrosProdutos from "@/components/FiltrosProdutos";
 
-test("mobile mantém Filtrar e Ordenar na barra principal", () => {
+test("mobile mantém Filtros e ordem e Ordenar na barra principal", () => {
   const html = renderToStaticMarkup(createElement(FiltrosProdutos, {
     categorias: [],
     valores: {},
   }));
 
-  assert.match(html, /class="filtros-abrir"[^>]*>Filtrar<\/label>/);
+  assert.match(html, /class="filtros-abrir"[^>]*>Filtros e ordem<\/label>/);
+  assert.match(html, /id="filtros-mais"[^>]*aria-controls="filtros-campos"/);
+  assert.match(html, /id="filtros-campos"/);
   assert.match(html, /class="[^\"]*filtros-ordem-principal[^\"]*"/);
   assert.match(html, /value="relevancia"[^>]*>Ordenar<\/option>/);
 
-  const inicioDosCampos = html.indexOf("filtros-campos");
+  const inicioDosCampos = html.indexOf('id="filtros-campos"');
   const ordem = html.indexOf("filtros-ordem-principal");
   assert.ok(ordem > 0 && ordem < inicioDosCampos, "a ordenação não pode ficar dentro da gaveta mobile");
 });
