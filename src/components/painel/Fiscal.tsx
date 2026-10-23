@@ -36,7 +36,7 @@ type Estado = {
     eventoMotivo: string | null;
     situacao: "COMPLETA" | "RESUMO" | "EVENTO" | "OUTRO";
   }>;
-  totais: { documentos: number; notas: number; eventos: number; outros: number };
+  totais: { documentos: number; notas: number; eventos: number; outros: number; completas: number };
   ufEmpresa: string;
   pagina: number;
   paginas: number;
@@ -87,6 +87,7 @@ export default function Fiscal() {
   const [agora] = useState(() => Date.now());
   const [busca, setBusca] = useState("");
   const [tipo, setTipo] = useState("nfe-recebidas");
+  const [somenteDisponiveis, setSomenteDisponiveis] = useState(false);
   const [pagina, setPagina] = useState(1);
   const [inicio, setInicio] = useState("");
   const [fim, setFim] = useState("");
@@ -94,14 +95,14 @@ export default function Fiscal() {
 
   useEffect(() => {
     const controller = new AbortController();
-    const parametros = new URLSearchParams({ busca, tipo, pagina: String(pagina), inicio, fim });
+    const parametros = new URLSearchParams({ busca, tipo, pagina: String(pagina), inicio, fim, arquivos: somenteDisponiveis ? "disponiveis" : "todos" });
     const timer = setTimeout(() => { void fetch(`/api/painel/fiscal?${parametros}`, { signal: controller.signal }).then(async (r) => {
       const dados = await r.json();
       if (!r.ok) throw new Error(dados.erro);
       setEstado(dados);
     }).catch((e) => { if (e.name !== "AbortError") setErro(e.message); }); }, 250);
     return () => { clearTimeout(timer); controller.abort(); };
-  }, [busca, tipo, pagina, inicio, fim]);
+  }, [busca, tipo, somenteDisponiveis, pagina, inicio, fim]);
 
   async function enviar(form?: HTMLFormElement) {
     setOcupado(form ? "certificado" : "consulta");
@@ -115,7 +116,7 @@ export default function Fiscal() {
       const dados = await r.json();
       if (!r.ok) throw new Error(dados.erro ?? "Não foi possível concluir a operação.");
       setEstado(dados);
-      setBusca(""); setTipo("nfe-recebidas"); setPagina(1); setInicio(""); setFim("");
+      setBusca(""); setTipo("nfe-recebidas"); setSomenteDisponiveis(false); setPagina(1); setInicio(""); setFim("");
       setMensagem(form ? "Certificado guardado com segurança." : `${dados.resultado.recebidos} documento(s) recebido(s). ${dados.resultado.mensagem}`);
       if (form) {
         form.reset();
@@ -225,6 +226,10 @@ export default function Fiscal() {
           <label className="grid gap-1 text-xs">Recebido de<input className={inputClasse} type="date" value={inicio} onChange={(e) => { setInicio(e.target.value); setPagina(1); }} /></label>
           <label className="grid gap-1 text-xs">Recebido até<input className={inputClasse} type="date" value={fim} onChange={(e) => { setFim(e.target.value); setPagina(1); }} /></label>
         </div>
+        <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Disponibilidade dos documentos">
+          <button type="button" className={`btn-secundario ${!somenteDisponiveis ? "border-primary text-primary" : ""}`} aria-pressed={!somenteDisponiveis} onClick={() => { setSomenteDisponiveis(false); setPagina(1); }}>Todas as NF-e</button>
+          <button type="button" className={`btn-secundario ${somenteDisponiveis ? "border-primary text-primary" : ""}`} aria-pressed={somenteDisponiveis} onClick={() => { setSomenteDisponiveis(true); setPagina(1); }}>Com XML e PDF ({estado?.totais.completas ?? 0})</button>
+        </div>
         {estado?.erp && "erro" in estado.erp && <p role="status" className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">Integração com o ERP: {estado.erp.erro}</p>}
         {estado?.erp && "notas" in estado.erp && (
           <div className="mb-5 grid min-w-0 gap-3 rounded-xl border border-border bg-muted/20 p-4">
@@ -258,6 +263,7 @@ export default function Fiscal() {
             </div>
             <div className="min-w-0">
               <h3 className="mb-1 text-sm font-semibold">Notas fiscais</h3>
+              <p className="mb-2 text-xs text-muted-foreground">{estado.totais.completas} XML(s) completo(s) já disponíveis para download. Notas ainda sem XML completo dependem da disponibilização pela SEFAZ e, quando cabível, da manifestação fiscal autorizada do destinatário.</p>
               <p className="mb-3 text-xs text-muted-foreground">Documentos fiscais por categoria. XML e PDF ficam disponíveis quando recebidos integralmente.</p>
               {!documentosSeparados.notas.length ? <p className="rounded-xl border border-border p-4 text-sm text-muted-foreground">Nenhuma NF-e encontrada neste lote.</p> : (
                 <>
