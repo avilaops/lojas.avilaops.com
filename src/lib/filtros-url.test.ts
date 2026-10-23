@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { faixasDaUrl, filtroDaUrl, porPaginaDaUrl, reaisDaUrl, temFiltroAtivo, temFiltroSecundarioAtivo } from "./filtros-url";
+import { faixasDaUrl, filtroDaUrl, porPaginaDaUrl, reaisDaUrl, temFiltroAtivo, temFiltroCatalogoAplicado, temFiltroSecundarioAtivo } from "./filtros-url";
 import { agruparMarcas, grafiasDaMarca } from "./catalogo";
 
 test("categoria da rota vence a da URL", () => {
@@ -24,6 +24,13 @@ test("página e ordem padrão não contam como filtro ativo", () => {
   assert.equal(temFiltroAtivo({ pagina: "3", ordem: "relevancia" }), false);
   assert.equal(temFiltroAtivo({ alt_ate: "2" }), true);
   assert.equal(temFiltroAtivo({ disponivel: "1" }), true);
+});
+
+test("analytics conta só filtros reais do catálogo", () => {
+  assert.equal(temFiltroCatalogoAplicado({ utm_source: "google", ordem: "relevancia", q: "6204" }), false);
+  assert.equal(temFiltroCatalogoAplicado({ fabricante: "SKF" }), true);
+  assert.equal(temFiltroCatalogoAplicado({ ordem: "menor-preco" }), true);
+  assert.equal(temFiltroCatalogoAplicado({ marca: "Honda", modelo: "CG 160" }), true);
 });
 
 test("busca não abre a gaveta, mas filtros secundários abrem", () => {

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { readFileSync } from "node:fs";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import BannerCarousel from "@/components/home/BannerCarousel";
@@ -18,4 +19,9 @@ test("carrossel entrega somente a primeira arte no carregamento inicial", () => 
   assert.doesNotMatch(html, /src(?:Set)?="\/(?:mobile|desktop)-[23]\.webp"/);
   assert.equal((html.match(/data-carregada="true"/g) ?? []).length, 1);
   assert.equal((html.match(/data-carregada="false"/g) ?? []).length, 2);
+});
+
+test("swipe carrega a campanha que ficou visível", () => {
+  const fonte = readFileSync("src/components/home/BannerCarousel.tsx", "utf8");
+  assert.match(fonte, /onScroll=.*?[\s\S]*?carregar\(indice\);[\s\S]*?setAtiva\(indice\)/);
 });

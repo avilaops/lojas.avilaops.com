@@ -62,7 +62,9 @@ export default function BannerCarousel({ campanhas }: { campanhas: Campanha[] })
         ref={trilho}
         onScroll={(evento) => {
           const elemento = evento.currentTarget;
-          setAtiva(Math.round(elemento.scrollLeft / elemento.clientWidth));
+          const indice = Math.max(0, Math.min(campanhas.length - 1, Math.round(elemento.scrollLeft / elemento.clientWidth)));
+          carregar(indice);
+          setAtiva(indice);
         }}
       >
         {campanhas.map((campanha, indice) => {

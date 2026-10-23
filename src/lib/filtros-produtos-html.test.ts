@@ -57,5 +57,6 @@ test("filtro secundário mantém a gaveta aberta e anuncia o estado", () => {
 
   assert.match(html, /id="filtros-mais"[^>]*checked/);
   assert.match(html, /Filtros ativos/);
+  assert.match(html, /filtros-selo-ativo/);
   assert.match(html, /Limpar busca e filtros/);
 });

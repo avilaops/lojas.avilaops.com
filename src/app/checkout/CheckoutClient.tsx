@@ -266,7 +266,7 @@ export default function CheckoutClient({ loja, conta }: { loja: TenantPublico; c
           // eslint-disable-next-line @next/next/no-img-element
           <img src={`data:image/png;base64,${resultado.pix.qrCodeBase64}`} alt="QR Code PIX" className="mx-auto mt-6 h-56 w-56 rounded-lg border border-border bg-white p-2" />
         )}
-        <textarea readOnly value={resultado.pix.copiaECola} className="mt-4 h-24 w-full rounded-lg border border-border bg-card p-2 text-xs" onFocus={(e) => e.currentTarget.select()} />
+        <textarea aria-label="Código Pix copia e cola" readOnly value={resultado.pix.copiaECola} className="mt-4 h-24 w-full rounded-lg border border-border bg-card p-2 text-xs" onFocus={(e) => e.currentTarget.select()} />
         <button className="btn-secundario mt-2 w-full" onClick={() => navigator.clipboard?.writeText(resultado.pix!.copiaECola)}>
           Copiar código
         </button>

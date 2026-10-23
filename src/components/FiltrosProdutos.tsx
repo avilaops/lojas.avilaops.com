@@ -110,7 +110,7 @@ export default function FiltrosProdutos({
         <p className="filtros-ajuda">{dica ? `${dica} ${categoriaFixa ? "Só entram produtos com a medida cadastrada." : "Selecione a categoria para ver os atributos cadastrados."}` : "Combine categoria, marca e preço para encontrar o produto."}</p>
         {temEstadoAtivo && (
           <span className="flex min-h-11 items-center gap-2">
-            {filtroSecundarioAtivo && <span className="rounded-full bg-primary/10 px-2 py-1 font-medium text-primary">Filtros ativos</span>}
+            {filtroSecundarioAtivo && <span className="filtros-selo-ativo rounded-full bg-primary/10 px-2 py-1 font-medium">Filtros ativos</span>}
             {/* A navegação completa também limpa campos ainda não enviados. O
                 Link reutilizava selects não controlados e mantinha a seleção anterior. */}
             <a href={acao} className="inline-flex min-h-11 items-center underline">Limpar busca e filtros</a>
@@ -123,7 +123,7 @@ export default function FiltrosProdutos({
         <details open={usandoMedida} className="rounded-lg border border-border/70 bg-background/40">
           <summary className="cursor-pointer select-none px-3 py-2 text-sm font-medium">
             Buscar pela medida
-            {usandoMedida && <span className="ml-2 rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">ativo</span>}
+            {usandoMedida && <span className="filtros-selo-ativo ml-2 rounded-full bg-primary/10 px-2 py-0.5 text-xs">ativo</span>}
           </summary>
           <div className="grid gap-3 px-3 pb-3 sm:grid-cols-3">
             {medidas.map((m) => {

@@ -6,7 +6,7 @@ import { exigirTenant, lojaVende, urlDaLoja, temaDo } from "@/lib/tenant";
 import { facetasTecnicas, grafiasDaMarca, listarCategorias, medidasDaLoja, paginaDeProdutos } from "@/lib/catalogo";
 import FiltrosProdutos from "@/components/FiltrosProdutos";
 import AjudaCatalogo from "@/components/AjudaCatalogo";
-import { filtroDaUrl, temFiltroAtivo } from "@/lib/filtros-url";
+import { filtroDaUrl, temFiltroAtivo, temFiltroCatalogoAplicado } from "@/lib/filtros-url";
 import CategoriasPremium from "@/components/templates/automotivo-premium/Categorias";
 import PaginacaoLoja, { paginaDaUrl, porPaginaDaUrl } from "@/components/PaginacaoLoja";
 import ProductCard from "@/components/ProductCard";
@@ -106,7 +106,7 @@ export default async function Categoria({ params, searchParams }: Props) {
   if (produtos.length === 0 && pagina > 1) notFound();
   const vende = lojaVende(t);
   const buscou = Boolean(sp.q?.trim());
-  const aplicouFiltro = Object.entries(sp).some(([chave, valor]) => Boolean(valor) && !["q", "pagina", "porPagina"].includes(chave));
+  const aplicouFiltro = temFiltroCatalogoAplicado(sp);
   const eventos = [
     ...(buscou ? ["search" as const] : []),
     ...(buscou && lote.total === 0 ? ["search_no_results" as const] : []),

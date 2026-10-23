@@ -5,11 +5,13 @@ import { registrarEventoFunil } from "@/lib/eventos-loja";
 import type { EventoFunil as NomeEventoFunil } from "@/lib/funil-analytics";
 
 export function EventoFunil({ eventos }: { eventos: NomeEventoFunil[] }) {
-  const enviados = useRef(false);
+  const enviados = useRef<Set<NomeEventoFunil>>(new Set());
   useEffect(() => {
-    if (enviados.current) return;
-    enviados.current = true;
-    for (const evento of eventos) registrarEventoFunil(evento);
+    for (const evento of eventos) {
+      if (enviados.current.has(evento)) continue;
+      enviados.current.add(evento);
+      registrarEventoFunil(evento);
+    }
   }, [eventos]);
   return null;
 }
