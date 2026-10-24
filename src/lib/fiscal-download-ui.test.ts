@@ -9,8 +9,7 @@ test("download fiscal usa ação controlada em vez de link direto para resposta 
     href: "/api/painel/fiscal/documentos/doc-1",
     fallback: "NFe-doc-1.xml",
     className: "btn-secundario",
-    children: "XML",
-  }));
+  }, "XML"));
 
   assert.match(html, /<button[^>]+type="button"/);
   assert.doesNotMatch(html, /href=/);
