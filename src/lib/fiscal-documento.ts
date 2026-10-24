@@ -1,7 +1,7 @@
 import { XMLParser, XMLValidator } from "fast-xml-parser";
 
 export type ResumoDocumentoFiscal = {
-  tipo: "NFE" | "EVENTO" | "OUTRO";
+  tipo: "NFE" | "CTE" | "EVENTO" | "OUTRO";
   fornecedor: string | null;
   documentoFornecedor: string | null;
   inscricaoEstadual: string | null;
@@ -60,6 +60,10 @@ function tipoOperacao(codigo: unknown): string | null {
 
 function situacaoNfe(codigo: unknown): string | null {
   return ({ "1": "Uso autorizado", "2": "Uso denegado", "3": "NF-e cancelada" } as Record<string, string>)[texto(codigo)] ?? null;
+}
+
+function situacaoCte(codigo: unknown): string | null {
+  return ({ "1": "Uso autorizado", "2": "Uso denegado", "3": "CT-e cancelado" } as Record<string, string>)[texto(codigo)] ?? null;
 }
 
 function situacaoManifestacao(codigo: unknown): string | null {
@@ -143,14 +147,53 @@ export function resumirDocumentoFiscal(xml: string, schema: string, chave: strin
         situacao: "COMPLETA",
       };
     }
+    if (/^resCTe/i.test(schema)) {
+      const cte = lido.resCTe ?? lido;
+      const chaveCte = primeiro(cte.chCTe, chave);
+      return {
+        ...fallback,
+        tipo: "CTE",
+        fornecedor: texto(cte.xNome) || null,
+        documentoFornecedor: primeiro(cte.CNPJ, cte.CPF),
+        inscricaoEstadual: texto(cte.IE) || null,
+        numero: numeroPelaChave(chaveCte),
+        valorCentavos: centavos(cte.vTPrest),
+        emitidaEm: primeiro(cte.dhEmi, cte.dEmi),
+        autorizadaEm: texto(cte.dhRecbto) || null,
+        protocolo: texto(cte.nProt) || null,
+        situacaoNfe: situacaoCte(cte.cSitCTe),
+        situacao: "RESUMO",
+      };
+    }
+    if (/^(procCTe|cteProc)/i.test(schema)) {
+      const info = lido.cteProc?.CTe?.infCte ?? lido.CTe?.infCte;
+      const protocolo = lido.cteProc?.protCTe?.infProt ?? lido.protCTe?.infProt;
+      if (!info) return fallback;
+      return {
+        ...fallback,
+        tipo: "CTE",
+        fornecedor: texto(info.emit?.xNome) || null,
+        documentoFornecedor: primeiro(info.emit?.CNPJ, info.emit?.CPF),
+        inscricaoEstadual: texto(info.emit?.IE) || null,
+        numero: primeiro(info.ide?.nCT, numeroPelaChave(chave)),
+        valorCentavos: centavos(info.vPrest?.vTPrest),
+        emitidaEm: primeiro(info.ide?.dhEmi, info.ide?.dEmi),
+        autorizadaEm: texto(protocolo?.dhRecbto) || null,
+        protocolo: texto(protocolo?.nProt) || null,
+        operacao: texto(info.ide?.natOp) || null,
+        situacaoNfe: situacaoCte(protocolo?.cStat === "100" ? "1" : null),
+        quantidadeItens: quantidadeItens(info.infCTeNorm?.infDoc?.infNFe),
+        situacao: "COMPLETA",
+      };
+    }
     if (/evento/i.test(schema)) {
       const resumo = lido.resEvento;
-      const evento = lido.procEventoNFe?.evento?.infEvento ?? lido.evento?.infEvento;
-      const retorno = lido.procEventoNFe?.retEvento?.infEvento ?? lido.retEvento?.infEvento;
+      const evento = lido.procEventoNFe?.evento?.infEvento ?? lido.procEventoCTe?.eventoCTe?.infEvento ?? lido.evento?.infEvento ?? lido.eventoCTe?.infEvento;
+      const retorno = lido.procEventoNFe?.retEvento?.infEvento ?? lido.procEventoCTe?.retEventoCTe?.infEvento ?? lido.retEvento?.infEvento ?? lido.retEventoCTe?.infEvento;
       const info = resumo ?? evento ?? retorno;
       if (!info) return fallback;
       const descricao = primeiro(resumo?.xEvento, evento?.detEvento?.descEvento, retorno?.xEvento);
-      const eventoChave = primeiro(info.chNFe, retorno?.chNFe, chave);
+      const eventoChave = primeiro(info.chNFe, info.chCTe, retorno?.chNFe, retorno?.chCTe, chave);
       return {
         ...fallback,
         tipo: "EVENTO",
@@ -168,4 +211,37 @@ export function resumirDocumentoFiscal(xml: string, schema: string, chave: strin
     }
   } catch {}
   return fallback;
+}
+
+const dataValida = (valor: string | null): Date | null => {
+  if (!valor) return null;
+  const resultado = new Date(valor);
+  return Number.isNaN(resultado.getTime()) ? null : resultado;
+};
+
+/** Campos de busca derivados. O XML original continua sendo a única fonte para reprocessamento. */
+export function cabecalhoDocumentoFiscal(xml: string, schema: string, chave: string | null) {
+  const resumo = resumirDocumentoFiscal(xml, schema, chave);
+  const versao = schema.match(/_v([0-9.]+)/i)?.[1] ?? null;
+  const evento = /evento/i.test(schema);
+  const completo = resumo.situacao === "COMPLETA";
+  const tipoDocumento = resumo.tipo === "NFE" ? "NFE" : resumo.tipo === "CTE" ? "CTE" : evento ? (/cte/i.test(schema) ? "CTE_EVENTO" : "NFE_EVENTO") : "DESCONHECIDO";
+  return {
+    tipoDocumento,
+    modelo: resumo.tipo === "NFE" ? "55" : resumo.tipo === "CTE" ? "57" : null,
+    versaoSchema: versao,
+    estadoConteudo: completo ? "COMPLETO" : resumo.situacao === "RESUMO" ? "RESUMO" : evento ? "EVENTO" : "INVALIDO_OU_DESCONHECIDO",
+    validacao: resumo.situacao === "OUTRO" ? "INVALIDO_OU_NAO_SUPORTADO" : "ESTRUTURA_INTERPRETADA",
+    errosInterpretacao: resumo.situacao === "OUTRO" ? ["XML malformado, inseguro ou schema não suportado pelo parser local."] : [],
+    dadosIncompletos: !completo,
+    categoria: resumo.situacao === "RESUMO" ? `${tipoDocumento}_RESUMO` : resumo.situacao === "COMPLETA" ? `${tipoDocumento}_COMPLETO` : evento ? `${tipoDocumento}_EVENTO` : "DESCONHECIDO",
+    numero: resumo.numero,
+    emitidaEm: dataValida(resumo.emitidaEm),
+    autorizadaEm: dataValida(resumo.autorizadaEm),
+    statusFiscal: resumo.situacaoNfe,
+    protocolo: resumo.protocolo,
+    cancelada: /cancelad/i.test(resumo.situacaoNfe ?? "") || resumo.eventoCodigo === "110111",
+    emitenteDocumento: resumo.documentoFornecedor,
+    emitenteNome: resumo.fornecedor,
+  };
 }

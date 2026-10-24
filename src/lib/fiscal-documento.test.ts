@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { resumirDocumentoFiscal } from "./fiscal-documento";
+import { cabecalhoDocumentoFiscal, resumirDocumentoFiscal } from "./fiscal-documento";
 
 test("resume documento resNFe para a lista fiscal", () => {
   const chave = "35261067554083000131550010000123451000012345";
@@ -33,6 +33,22 @@ test("resume NF-e completa para a lista fiscal", () => {
   assert.equal(resumo.situacao, "COMPLETA");
 });
 
+test("resume CT-e completo e resumo sem confundir com NF-e", () => {
+  const chave = "35261067554083000131570010000123451000012345";
+  const completo = resumirDocumentoFiscal(`<cteProc><CTe><infCte><ide><nCT>12345</nCT><dhEmi>2026-10-20T09:00:00-03:00</dhEmi><natOp>Prestação de serviço</natOp></ide><emit><CNPJ>67554083000131</CNPJ><xNome>Transportadora</xNome><IE>123</IE></emit><vPrest><vTPrest>321.45</vTPrest></vPrest><infCTeNorm><infDoc><infNFe><chave>1</chave></infNFe><infNFe><chave>2</chave></infNFe></infDoc></infCTeNorm></infCte></CTe><protCTe><infProt><cStat>100</cStat><dhRecbto>2026-10-20T09:01:00-03:00</dhRecbto><nProt>135000000000004</nProt></infProt></protCTe></cteProc>`, "cteProc_v4.00.xsd", chave);
+  assert.equal(completo.tipo, "CTE");
+  assert.equal(completo.fornecedor, "Transportadora");
+  assert.equal(completo.numero, "12345");
+  assert.equal(completo.valorCentavos, 32145);
+  assert.equal(completo.quantidadeItens, 2);
+  assert.equal(completo.situacao, "COMPLETA");
+
+  const resumo = resumirDocumentoFiscal(`<resCTe><chCTe>${chave}</chCTe><CNPJ>67554083000131</CNPJ><xNome>Transportadora</xNome><vTPrest>321.45</vTPrest><dhEmi>2026-10-20T09:00:00-03:00</dhEmi><cSitCTe>1</cSitCTe></resCTe>`, "resCTe_v1.00.xsd", chave);
+  assert.equal(resumo.tipo, "CTE");
+  assert.equal(resumo.situacaoNfe, "Uso autorizado");
+  assert.equal(resumo.situacao, "RESUMO");
+});
+
 test("resume resEvento e processo de evento para a linha do tempo", () => {
   const chave = "35261067554083000131550010000123451000012345";
   const resumo = resumirDocumentoFiscal(`<resEvento><CNPJ>67554083000131</CNPJ><chNFe>${chave}</chNFe><tpEvento>210210</tpEvento><nSeqEvento>1</nSeqEvento><xEvento>Ciência da Operação</xEvento><dhRecbto>2026-10-18T11:00:00-03:00</dhRecbto><nProt>135000000000002</nProt></resEvento>`, "resEvento_v1.01.xsd", chave);
@@ -54,4 +70,5 @@ test("resume resEvento e processo de evento para a linha do tempo", () => {
 
 test("XML inseguro não é interpretado", () => {
   assert.equal(resumirDocumentoFiscal("<!DOCTYPE x><resNFe />", "resNFe_v1.01.xsd", null).situacao, "OUTRO");
+  assert.deepEqual(cabecalhoDocumentoFiscal("<!DOCTYPE x><resNFe />", "resNFe_v1.01.xsd", null).errosInterpretacao, ["XML malformado, inseguro ou schema não suportado pelo parser local."]);
 });

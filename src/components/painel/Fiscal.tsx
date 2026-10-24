@@ -15,7 +15,7 @@ type Estado = {
     schema: string;
     chave: string | null;
     recebidoEm: string;
-    tipo: "NFE" | "EVENTO" | "OUTRO";
+    tipo: "NFE" | "CTE" | "EVENTO" | "OUTRO";
     fornecedor: string | null;
     documentoFornecedor: string | null;
     inscricaoEstadual: string | null;
@@ -36,7 +36,7 @@ type Estado = {
     eventoMotivo: string | null;
     situacao: "COMPLETA" | "RESUMO" | "EVENTO" | "OUTRO";
   }>;
-  totais: { documentos: number; notas: number; eventos: number; outros: number; completas: number };
+  totais: { documentos: number; notas: number; ctes: number; eventos: number; outros: number; completas: number };
   ufEmpresa: string;
   pagina: number;
   paginas: number;
@@ -63,6 +63,8 @@ const dinheiro = (centavos: number | null) => centavos == null ? "—" : new Int
 function tipoDocumento(schema: string) {
   if (schema.startsWith("resNFe")) return "Resumo de NF-e";
   if (schema.startsWith("procNFe")) return "NF-e completa";
+  if (schema.startsWith("resCTe")) return "Resumo de CT-e";
+  if (/^(procCTe|cteProc)/i.test(schema)) return "CT-e completo";
   if (/evento/i.test(schema)) return "Evento da NF-e";
   return "Documento fiscal";
 }
@@ -222,7 +224,7 @@ export default function Fiscal() {
         )}
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <label className="grid gap-1 text-xs">Buscar fornecedor, nota, chave ou NSU<input className={inputClasse} maxLength={100} value={busca} onChange={(e) => { setBusca(e.target.value); setPagina(1); }} /></label>
-          <label className="grid gap-1 text-xs">Categoria<select className={inputClasse} value={tipo} onChange={(e) => { setTipo(e.target.value); setPagina(1); }}><optgroup label="NF-e"><option value="nfe-recebidas">Recebidas</option><option value="nfe-enviadas" disabled>Enviadas — integração pendente</option><option value="nfe-citadas" disabled>Citadas — integração pendente</option></optgroup><optgroup label="CT-e"><option value="cte-recebedor" disabled>Como recebedor — integração pendente</option><option value="cte-tomador" disabled>Como tomador — integração pendente</option><option value="cte-remetente" disabled>Como remetente — integração pendente</option><option value="cte-emitidos" disabled>Emitidos — integração pendente</option></optgroup></select></label>
+          <label className="grid gap-1 text-xs">Categoria<select className={inputClasse} value={tipo} onChange={(e) => { setTipo(e.target.value); setPagina(1); }}><optgroup label="NF-e"><option value="nfe-recebidas">Recebidas pela distribuição nacional</option><option value="nfe-enviadas" disabled>Emitidas — exige fonte oficial do emitente</option><option value="nfe-citadas" disabled>Citadas/autorizadas — fonte não configurada</option></optgroup><optgroup label="CT-e"><option value="cte" disabled>Indisponível — serviço CT-e oficial não configurado</option></optgroup></select><span className="leading-relaxed text-muted-foreground">O coletor atual usa exclusivamente a distribuição nacional de NF-e. CT-e não é consultado por esse serviço.</span></label>
           <label className="grid gap-1 text-xs">Recebido de<input className={inputClasse} type="date" value={inicio} onChange={(e) => { setInicio(e.target.value); setPagina(1); }} /></label>
           <label className="grid gap-1 text-xs">Recebido até<input className={inputClasse} type="date" value={fim} onChange={(e) => { setFim(e.target.value); setPagina(1); }} /></label>
         </div>
@@ -247,20 +249,33 @@ export default function Fiscal() {
           </div>
         ) : (
           <div className="grid min-w-0 gap-5">
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               <div className="rounded-xl border border-border bg-muted/30 p-3">
                 <p className="text-xs text-muted-foreground">NF-e no histórico</p>
                 <p className="mt-1 text-2xl font-semibold">{estado.totais.notas}</p>
               </div>
               <div className="rounded-xl border border-border bg-muted/30 p-3">
+                <p className="text-xs text-muted-foreground">CT-e no histórico</p>
+                <p className="mt-1 text-2xl font-semibold">{estado.totais.ctes}</p>
+              </div>
+              <div className="rounded-xl border border-border bg-muted/30 p-3">
                 <p className="text-xs text-muted-foreground">Eventos fiscais</p>
                 <p className="mt-1 text-2xl font-semibold">{estado.totais.eventos}</p>
               </div>
-              <div className="col-span-2 rounded-xl border border-border bg-muted/30 p-3 sm:col-span-1">
+              <div className="rounded-xl border border-border bg-muted/30 p-3">
                 <p className="text-xs text-muted-foreground">Documentos no histórico</p>
                 <p className="mt-1 text-2xl font-semibold">{estado.totais.documentos}</p>
               </div>
             </div>
+            {!!documentosSeparados.ctes.length && (
+              <div className="min-w-0">
+                <h3 className="mb-1 text-sm font-semibold">Conhecimentos de transporte</h3>
+                <p className="mb-3 text-xs text-muted-foreground">CT-e recebidos de fonte oficial identificada. A tela não consulta CT-e pelo serviço exclusivo de NF-e.</p>
+                <ul className="divide-y divide-border rounded-xl border border-border px-3">
+                  {documentosSeparados.ctes.map((doc) => <DocumentoFiscal key={doc.id} doc={doc} selecionar={setDocumentoSelecionado} />)}
+                </ul>
+              </div>
+            )}
             <div className="min-w-0">
               <h3 className="mb-1 text-sm font-semibold">Notas fiscais</h3>
               <p className="mb-2 text-xs text-muted-foreground">{estado.totais.completas} XML(s) completo(s) já disponíveis para download. Notas ainda sem XML completo dependem da disponibilização pela SEFAZ e, quando cabível, da manifestação fiscal autorizada do destinatário.</p>
@@ -325,6 +340,7 @@ export default function Fiscal() {
 
 function DocumentoFiscal({ doc, manifestacao, selecionar, erpId }: { doc: Estado["documentos"][number]; manifestacao?: string | null; erpId?: number; selecionar: (doc: Estado["documentos"][number]) => void }) {
   const rotuloXml = "XML";
+  const cte = doc.tipo === "CTE";
   return (
     <li className="grid min-w-0 gap-3 py-4 first:pt-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
       <div className="min-w-0">
@@ -333,9 +349,9 @@ function DocumentoFiscal({ doc, manifestacao, selecionar, erpId }: { doc: Estado
         <p className={`mt-2 text-xs ${doc.situacao === "RESUMO" ? "text-amber-900" : "text-muted-foreground"}`}>{doc.situacao === "RESUMO" ? "XML e PDF aguardando disponibilização pela SEFAZ." : textoSituacao(doc, manifestacao)}</p>
         <DetalhesDocumentoFiscal doc={doc} manifestacao={manifestacao} />
       </div>
-      <div className="flex flex-wrap gap-2"><a className="btn-secundario" href="#fluxos-fiscais" onClick={() => selecionar(doc)}>Usar no fluxo</a>{(erpId || doc.situacao === "COMPLETA") && <a className="btn-secundario w-full sm:w-auto" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/xml` : `/api/painel/fiscal/documentos/${doc.completoId ?? doc.id}`}>
+      <div className="flex flex-wrap gap-2">{!cte && <a className="btn-secundario" href="#fluxos-fiscais" onClick={() => selecionar(doc)}>Usar no fluxo</a>}{(erpId || doc.situacao === "COMPLETA") && <a className="btn-secundario w-full sm:w-auto" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/xml` : `/api/painel/fiscal/documentos/${doc.completoId ?? doc.id}`}>
         <Download size={16} aria-hidden="true" /> {rotuloXml}
-      </a>}{(erpId || doc.situacao === "COMPLETA") ? <a className="btn-secundario" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/danfe` : `/api/painel/fiscal/documentos/${doc.completoId ?? doc.id}/danfe`}><FileText size={16} aria-hidden="true" /> DANFE PDF</a> : <span className="self-center text-xs text-muted-foreground">XML e PDF pendentes</span>}</div>
+      </a>}{!cte && (erpId || doc.situacao === "COMPLETA") ? <a className="btn-secundario" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/danfe` : `/api/painel/fiscal/documentos/${doc.completoId ?? doc.id}/danfe`}><FileText size={16} aria-hidden="true" /> DANFE PDF</a> : <span className="self-center text-xs text-muted-foreground">{cte && doc.situacao === "COMPLETA" ? "DACTE indisponível: renderizador não configurado" : "XML e PDF pendentes"}</span>}</div>
     </li>
   );
 }

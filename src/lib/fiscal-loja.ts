@@ -3,6 +3,8 @@ import { abrirCertificado, ErroFiscal, lerCertificado } from "./fiscal-certifica
 import { consultarSefaz } from "./fiscal-distribuicao";
 import { enfileirarFluxosFiscais } from "./fiscal-fluxos";
 import { fiscalErpConfigurado } from "./erp-fiscal";
+import { createHash } from "node:crypto";
+import { cabecalhoDocumentoFiscal } from "./fiscal-documento";
 
 export const RESUMO_FISCAL = {
   cnpj: true, uf: true, titular: true, validoAte: true,
@@ -67,7 +69,14 @@ export async function sincronizarNotas(tenantId: string, consultar: typeof consu
       : `SEFAZ ${resposta.status}: ${resposta.mensagem}`;
     const resultado = await prisma.$transaction(async (tx) => {
       const novos = resposta.documentos.length ? await tx.documentoFiscalLoja.createManyAndReturn({
-        data: resposta.documentos.map((d) => ({ ...d, tenantId, cnpj: fiscal.cnpj })), skipDuplicates: true,
+        data: resposta.documentos.map((d) => ({
+          ...d,
+          ...cabecalhoDocumentoFiscal(d.xml, d.schema, d.chave),
+          tenantId,
+          cnpj: fiscal.cnpj,
+          hashXml: createHash("sha256").update(d.xml, "utf8").digest("hex"),
+          identificadorExterno: `SEFAZ_NFE:${fiscal.cnpj}:${d.nsu}`,
+        })), skipDuplicates: true,
       }) : [];
       const enfileirados = await enfileirarFluxosFiscais(tx, tenantId, novos);
       await tx.fiscalLoja.update({ where: { tenantId }, data: {

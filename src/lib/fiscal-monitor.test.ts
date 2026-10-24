@@ -16,12 +16,13 @@ test("separa NF-e dos eventos para que eventos recentes nao escondam as notas", 
   assert.deepEqual(resultado.eventos.map((documento) => documento.id), ["evento-1", "evento-2"]);
 });
 
-test("mantem documentos desconhecidos separados das NF-e", () => {
+test("separa CT-e das NF-e sem tratar documento oficial como desconhecido", () => {
   const resultado = separarDocumentosFiscais([{ id: "outro-1", schema: "cteProc_v4.00.xsd" }]);
 
   assert.deepEqual(resultado.notas, []);
+  assert.deepEqual(resultado.ctes.map((documento) => documento.id), ["outro-1"]);
   assert.deepEqual(resultado.eventos, []);
-  assert.deepEqual(resultado.outros.map((documento) => documento.id), ["outro-1"]);
+  assert.deepEqual(resultado.outros, []);
 });
 
 test("totaliza todo o histórico por schema sem confundir a amostra exibida", () => {
@@ -31,5 +32,5 @@ test("totaliza todo o histórico por schema sem confundir a amostra exibida", ()
     { schema: "resEvento_v1.01.xsd", quantidade: 78 },
     { schema: "procEventoNFe_v1.00.xsd", quantidade: 43 },
     { schema: "cteProc_v4.00.xsd", quantidade: 1 },
-  ]), { documentos: 130, notas: 8, eventos: 121, outros: 1 });
+  ]), { documentos: 130, notas: 8, ctes: 1, eventos: 121, outros: 0 });
 });
