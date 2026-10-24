@@ -71,11 +71,13 @@ A correção centraliza os downloads e exige:
 - build de produção Next.js aprovado;
 - teste PostgreSQL local não executado porque o host não possui Docker; o
   cenário foi adicionado à suíte de integração para execução no CI.
+- CI `40103746135` aprovado no PR #172: 195 testes de integração em PostgreSQL
+  18, 1.271 testes na imagem, lint, TypeScript e build de 116 rotas.
 
 ## Pendências externas
 
 - configurar `ERP_API_URL` ou `ERP_APP_URL` e uma entrada por CNPJ em
   `ERP_API_KEYS_BY_CNPJ` para habilitar o caminho canônico do ERP;
-- obter CI verde, publicar a correção e repetir em produção a prova de que
-  `resNFe` retorna 409, mantendo XML e PDF integrais em 200;
+- publicar a correção e repetir em produção a prova de que `resNFe` retorna
+  409, mantendo XML e PDF integrais em 200;
 - manifestação real continua fora do escopo e depende de ação humana explícita.

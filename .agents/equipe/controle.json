@@ -485,17 +485,22 @@
         "O painel informa fornecedor, itens, compra e custos e abre a conferência no ERP.",
         "Sem integração configurada, o monitor fiscal atual continua funcionando."
       ],
-      "evidence": "Cliente server-to-server e proxy fiscal implementados em worktree isolado.\nConsulta SEFAZ local desativada por CNPJ quando o ERP está configurado, preservando a sequência NSU.\nTrês testes do contrato, validação da resposta e isolamento da credencial aprovados.\nTypeScript, ESLint direcionado e 1122 testes unitários concluídos sem erros.\nCapturas desktop e mobile revisadas em docs/revisao-telas/avl-254-nfe-erp.",
-      "review": "Validação local e telas concluídas; pendente de commit, PR, CI e revisão dos artefatos. Sem publicação autorizada.",
-      "environment": "local",
+      "evidence": "PR #172: https://github.com/avilaops/lojas.avilaops.com/pull/172\nCI 40103746135 aprovado: 195 testes de integração em PostgreSQL 18 e imagem com lint, TypeScript, 1.271 testes e build de 116 rotas.\nProdução antes da correção: XML integral HTTP 200 com hash idêntico ao banco, DANFE HTTP 200 com assinatura %PDF-, acesso cruzado HTTP 404 e resNFe incorretamente HTTP 200.\nCorreção bloqueia resumo com HTTP 409, valida procNFe autorizado e respostas XML/PDF do ERP e mostra erros operacionais no painel.\nConfiguração sanitizada: serviço DANFE compartilhado presente; ERP_API_URL, ERP_APP_URL e ERP_API_KEYS_BY_CNPJ ausentes.",
+      "review": "Código e CI concluídos no PR #172. Pendente merge, deploy e repetição da prova autenticada em produção para confirmar resNFe 409. Nenhuma manifestação fiscal ou alteração n8n foi executada.",
+      "environment": "local, GitHub Actions e produção (diagnóstico anterior ao deploy)",
       "owner": null,
       "acceptance": "A chave do ERP nunca chega ao navegador.\nCada CNPJ usa somente a chave do próprio tenant no ERP.\nO lojista baixa XML completo e DANFE por proxy autenticado.\nO painel informa fornecedor, itens, compra e custos e abre a conferência no ERP.\nSem integração configurada, o monitor fiscal atual continua funcionando.",
-      "blocker": "",
+      "blocker": "O caminho canônico do ERP depende de configurar URL e chave efetiva por CNPJ. A correção local ainda depende de merge e deploy para a prova final em produção.",
       "history": [
         {
           "at": "2026-10-18",
           "status": "em-revisao",
           "note": "Registro legado normalizado para o contrato central."
+        },
+        {
+          "at": "2026-10-24",
+          "status": "em-revisao",
+          "note": "PR #172 aberto com CI verde e prova sanitizada do download real; aguardando merge, deploy e revalidação do bloqueio de resNFe em produção."
         }
       ]
     },
