@@ -34,3 +34,13 @@ test("totaliza todo o histórico por schema sem confundir a amostra exibida", ()
     { schema: "cteProc_v4.00.xsd", quantidade: 1 },
   ]), { documentos: 130, notas: 8, ctes: 1, eventos: 121, outros: 0 });
 });
+
+test("totaliza todo o histórico por schema sem confundir a amostra exibida", () => {
+  assert.deepEqual(totalizarDocumentosFiscais([
+    { schema: "resNFe_v1.01.xsd", quantidade: 6 },
+    { schema: "procNFe_v4.00.xsd", quantidade: 2 },
+    { schema: "resEvento_v1.01.xsd", quantidade: 78 },
+    { schema: "procEventoNFe_v1.00.xsd", quantidade: 43 },
+    { schema: "cteProc_v4.00.xsd", quantidade: 1 },
+  ]), { documentos: 130, notas: 8, eventos: 121, outros: 1 });
+});
