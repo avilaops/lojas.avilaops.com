@@ -785,6 +785,34 @@
           "note": "Demanda registrada após auditoria inicial de fontes canônicas, n8n, GitHub e disponibilidade do Remote Desktop Commander."
         }
       ]
+    },
+    {
+      "id": "T-0017",
+      "title": "Profissionalizar o monitor fiscal",
+      "objective": "Consolidar representações da mesma nota e tornar a consulta fiscal mais compacta, legível e operacional no desktop e no celular.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "em-andamento",
+      "acceptanceCriteria": [
+        "A tabela exibe uma linha por identidade fiscal e prioriza o XML completo sobre o resumo.",
+        "Downloads e manifestações aparecem em colunas separadas.",
+        "Filtros e certificado ocupam menos espaço sem perder contexto.",
+        "Desktop e celular não apresentam rolagem horizontal acidental.",
+        "Lint, TypeScript, testes, build, CI e validação visual em produção são aprovados."
+      ],
+      "evidence": "Implementação em andamento na branch codex/fiscal-profissional.",
+      "review": "Aguardando CI e validação visual em produção.",
+      "environment": "local",
+      "owner": null,
+      "acceptance": "Uma linha por identidade fiscal; arquivos e ações separados; filtros compactos; responsividade validada.",
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-10-24",
+          "status": "em-andamento",
+          "note": "Demanda registrada e implementação iniciada."
+        }
+      ]
     }
   ],
   "decisions": [

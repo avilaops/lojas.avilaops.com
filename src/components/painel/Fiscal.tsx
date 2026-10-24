@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useState } from "react";
 import { Download, ExternalLink, FileText, RefreshCw, ShieldCheck, Upload } from "lucide-react";
+import { deduplicarDocumentosFiscais } from "@/lib/fiscal-lista";
 import { separarDocumentosFiscais } from "@/lib/fiscal-monitor";
 import { Secao, inputClasse } from "./campos";
 import FluxosFiscais from "./FluxosFiscais";
@@ -178,7 +179,8 @@ export default function Fiscal() {
     valor: doc.valorCentavos ?? 0,
     situacao: textoSituacao(doc, doc.manifestacao),
   })[coluna];
-  const notasOrdenadas = [...documentosSeparados.notas].sort((a, b) => {
+  const notasUnicas = deduplicarDocumentosFiscais(documentosSeparados.notas);
+  const notasOrdenadas = [...notasUnicas].sort((a, b) => {
     const av = valorOrdenacao(a, ordenacao.coluna); const bv = valorOrdenacao(b, ordenacao.coluna);
     const resultado = typeof av === "number" && typeof bv === "number" ? av - bv : String(av).localeCompare(String(bv), "pt-BR", { numeric: true });
     return ordenacao.direcao === "asc" ? resultado : -resultado;
@@ -234,14 +236,14 @@ export default function Fiscal() {
         {!estado ? <p role="status" className="text-sm text-muted-foreground">Carregando configuração fiscal…</p> : (
           <>
             {configuracao && (
-              <div className="grid min-w-0 gap-3">
+              <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center">
                 <span className={`w-fit rounded-full px-3 py-1 text-xs font-medium ${vencido ? "bg-amber-100 text-amber-900" : "bg-emerald-50 text-emerald-800"}`}>
                   {vencido ? "Certificado vencido" : "Certificado válido"}
                 </span>
-                <p className="break-words text-sm font-semibold">{configuracao.titular.replace(new RegExp(`:${configuracao.cnpj}$`), "")}</p>
-                <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
-                  <div><dt className="text-xs text-muted-foreground">CNPJ</dt><dd className="mt-1">{cnpjFormatado(configuracao.cnpj)}</dd></div>
-                  <div><dt className="text-xs text-muted-foreground">Válido até</dt><dd className="mt-1">{dia(configuracao.validoAte)}</dd></div>
+                <p className="min-w-0 flex-1 break-words text-sm font-semibold">{configuracao.titular.replace(new RegExp(`:${configuracao.cnpj}$`), "")}</p>
+                <dl className="flex flex-wrap gap-x-6 gap-y-2 text-sm sm:justify-end">
+                  <div><dt className="text-xs text-muted-foreground">CNPJ</dt><dd className="mt-0.5 font-mono tabular-nums">{cnpjFormatado(configuracao.cnpj)}</dd></div>
+                  <div><dt className="text-xs text-muted-foreground">Validade</dt><dd className="mt-0.5 tabular-nums">{dia(configuracao.validoAte)}</dd></div>
                 </dl>
                 {vencido && <p className="text-sm text-amber-900">Envie um certificado válido para retomar as consultas.</p>}
               </div>
@@ -275,13 +277,15 @@ export default function Fiscal() {
         )}
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <label className="grid gap-1 text-xs">Buscar fornecedor, nota, chave ou NSU<input className={inputClasse} maxLength={100} value={busca} onChange={(e) => { setBusca(e.target.value); setPagina(1); }} /></label>
-          <label className="grid gap-1 text-xs">Categoria<select className={inputClasse} value={tipo} onChange={(e) => { setTipo(e.target.value); setPagina(1); }}><optgroup label="NF-e"><option value="nfe-recebidas">Recebidas pela distribuição nacional</option><option value="nfe-enviadas" disabled>Emitidas — exige fonte oficial do emitente</option><option value="nfe-citadas" disabled>Citadas/autorizadas — fonte não configurada</option></optgroup><optgroup label="CT-e"><option value="cte" disabled={!estado?.tms || "erro" in estado.tms}>{estado?.tms && !("erro" in estado.tms) ? "Gerenciados pelo TMS" : "Indisponível — TMS não configurado"}</option></optgroup></select><span className="leading-relaxed text-muted-foreground">NF-e é consultada pelo ERP; CT-e autorizado é lido do TMS. O Lojas não disputa cursor nem transmite documento fiscal.</span></label>
+          <label className="grid gap-1 text-xs">Categoria<select className={inputClasse} value={tipo} onChange={(e) => { setTipo(e.target.value); setPagina(1); }}><optgroup label="NF-e"><option value="nfe-recebidas">Recebidas pela distribuição nacional</option><option value="nfe-enviadas" disabled>Emitidas — exige fonte oficial do emitente</option><option value="nfe-citadas" disabled>Citadas/autorizadas — fonte não configurada</option></optgroup><optgroup label="CT-e"><option value="cte" disabled={!estado?.tms || "erro" in estado.tms}>{estado?.tms && !("erro" in estado.tms) ? "Gerenciados pelo TMS" : "Indisponível — TMS não configurado"}</option></optgroup></select></label>
           <label className="grid gap-1 text-xs">Recebido de<input className={inputClasse} type="date" value={inicio} onChange={(e) => { setInicio(e.target.value); setPagina(1); }} /></label>
           <label className="grid gap-1 text-xs">Recebido até<input className={inputClasse} type="date" value={fim} onChange={(e) => { setFim(e.target.value); setPagina(1); }} /></label>
         </div>
+        <p className="-mt-1 text-xs leading-relaxed text-muted-foreground">NF-e é consultada pelo ERP; CT-e autorizado é lido do TMS. O Lojas não disputa cursor nem transmite documento fiscal.</p>
         <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Disponibilidade dos documentos">
           <button type="button" className={`btn-secundario ${!somenteDisponiveis ? "border-primary text-primary" : ""}`} aria-pressed={!somenteDisponiveis} onClick={() => { setSomenteDisponiveis(false); setPagina(1); }}>Todas as NF-e</button>
           <button type="button" className={`btn-secundario ${somenteDisponiveis ? "border-primary text-primary" : ""}`} aria-pressed={somenteDisponiveis} onClick={() => { setSomenteDisponiveis(true); setPagina(1); }}>Com XML e PDF ({estado?.totais.completas ?? 0})</button>
+          {(busca || inicio || fim || somenteDisponiveis || tipo !== "nfe-recebidas") && <button type="button" className="min-h-11 px-2 text-sm font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline" onClick={() => { setBusca(""); setTipo("nfe-recebidas"); setSomenteDisponiveis(false); setInicio(""); setFim(""); setPagina(1); }}>Limpar filtros</button>}
         </div>
         {estado?.erp && "erro" in estado.erp && <p role="status" className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">Integração com o ERP: {estado.erp.erro}</p>}
         {estado?.erp && "notas" in estado.erp && (
@@ -337,15 +341,15 @@ export default function Fiscal() {
             <div className="min-w-0">
               <h3 className="mb-1 text-sm font-semibold">Notas fiscais</h3>
               <p className="mb-2 text-xs text-muted-foreground">{estado.totais.completas} XML(s) completo(s) já disponíveis para download. Notas ainda sem XML completo dependem da disponibilização pela SEFAZ e, quando cabível, da manifestação fiscal autorizada do destinatário.</p>
-              <p className="mb-3 text-xs text-muted-foreground">Documentos fiscais por categoria. XML e PDF ficam disponíveis quando recebidos integralmente.</p>
+              <p className="mb-3 text-xs text-muted-foreground">{notasOrdenadas.length} nota(s) única(s) nesta página. XML e PDF ficam disponíveis quando recebidos integralmente.</p>
               {!documentosSeparados.notas.length ? <p className="rounded-xl border border-border p-4 text-sm text-muted-foreground">Nenhuma NF-e encontrada neste lote.</p> : (
                 <>
                   <ul className="divide-y divide-border sm:hidden">
                     {notasOrdenadas.map((doc) => <DocumentoFiscal key={doc.id} doc={doc} selecionar={setDocumentoSelecionado} manifestar={manifestar} ocupado={ocupado === `manifestacao:${doc.id}`} erpId={doc.chave ? erpPorChave.get(doc.chave) : undefined} manifestacao={doc.manifestacao ?? (doc.chave ? manifestacoesPorChave.get(doc.chave) : null)} />)}
                   </ul>
                   <div className="hidden overflow-x-auto rounded-xl border border-border sm:block">
-                    <table className="w-full text-left text-xs">
-                      <thead className="bg-muted/40 text-muted-foreground"><tr><th className="whitespace-nowrap px-2 py-2">Download XML ou PDF</th>{([['emissao','Emissão'],['numero','Número'],['serie','Série'],['tipo','Tipo'],['documento','CNPJ/CPF'],['ie','IE'],['nome','Nome'],['valor','Valor'],['situacao','Situação']] as Array<[ColunaOrdenacao,string]>).map(([coluna, rotulo]) => <th key={coluna} className={`px-2 py-2 ${coluna === 'valor' ? 'text-right' : ''}`}><button type="button" className="min-h-8 whitespace-nowrap font-semibold hover:text-foreground" onClick={() => ordenar(coluna)}>{rotulo}{ordenacao.coluna === coluna ? (ordenacao.direcao === 'asc' ? ' ↑' : ' ↓') : ''}</button></th>)}</tr></thead>
+                    <table className="w-full min-w-[816px] table-fixed text-left text-xs">
+                      <thead className="sticky top-0 z-10 bg-muted text-muted-foreground"><tr><th className="w-24 whitespace-nowrap px-2 py-1.5">Arquivos</th>{([['emissao','Emissão','w-20'],['numero','Número','w-16'],['serie','Série','w-12'],['tipo','Tipo','hidden w-16 2xl:table-cell'],['documento','CNPJ/CPF','w-28'],['ie','IE','hidden w-28 2xl:table-cell'],['nome','Nome','w-36'],['valor','Valor','w-20 text-right'],['situacao','Situação','w-28']] as Array<[ColunaOrdenacao,string,string]>).map(([coluna, rotulo, classe]) => <th key={coluna} className={`px-2 py-1.5 ${classe}`}><button type="button" className="min-h-8 whitespace-nowrap font-semibold hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2" onClick={() => ordenar(coluna)}>{rotulo}{ordenacao.coluna === coluna ? (ordenacao.direcao === 'asc' ? ' ↑' : ' ↓') : ''}</button></th>)}<th className="w-20 px-2 py-1.5 text-right">Ações</th></tr></thead>
                       <tbody className="divide-y divide-border">{notasOrdenadas.map((doc) => <LinhaDocumentoFiscal key={doc.id} doc={doc} manifestar={manifestar} ocupado={ocupado === `manifestacao:${doc.id}`} erpId={doc.chave ? erpPorChave.get(doc.chave) : undefined} manifestacao={doc.manifestacao ?? (doc.chave ? manifestacoesPorChave.get(doc.chave) : null)} />)}</tbody>
                     </table>
                   </div>
@@ -425,17 +429,18 @@ function LinhaDocumentoFiscal({ doc, manifestacao, erpId, manifestar, ocupado }:
   const idDocumento = doc.completoId ?? doc.id;
   const classeDownload = "inline-flex h-8 items-center gap-1 rounded-md border border-border px-2 font-medium";
   return (
-    <tr className="whitespace-nowrap">
-      <td className="px-2 py-1.5"><div className="flex min-w-max items-center gap-1.5">{arquivosDisponiveis ? <><a className={classeDownload} href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/xml` : `/api/painel/fiscal/documentos/${idDocumento}`} download><Download size={13} aria-hidden="true" /> XML</a><a className={classeDownload} href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/danfe` : `/api/painel/fiscal/documentos/${idDocumento}/danfe`} download><FileText size={13} aria-hidden="true" /> PDF</a></> : <><span className={`${classeDownload} cursor-not-allowed text-muted-foreground opacity-60`} aria-disabled="true" title="XML completo ainda não disponível"><Download size={13} aria-hidden="true" /> XML</span><span className={`${classeDownload} cursor-not-allowed text-muted-foreground opacity-60`} aria-disabled="true" title="PDF disponível somente após o XML completo"><FileText size={13} aria-hidden="true" /> PDF</span></>}<AcoesManifestacao doc={doc} manifestar={manifestar} ocupado={ocupado} compacto /></div></td>
+    <tr className="whitespace-nowrap even:bg-muted/20 hover:bg-muted/40">
+      <td className="px-2 py-1.5"><div className="flex items-center gap-1">{arquivosDisponiveis ? <><a className={classeDownload} href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/xml` : `/api/painel/fiscal/documentos/${idDocumento}`} download title="Baixar XML completo"><Download size={13} aria-hidden="true" /> XML</a><a className={classeDownload} href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/danfe` : `/api/painel/fiscal/documentos/${idDocumento}/danfe`} download title="Baixar DANFE em PDF"><FileText size={13} aria-hidden="true" /> PDF</a></> : <><span className={`${classeDownload} cursor-not-allowed text-muted-foreground opacity-60`} aria-disabled="true" title="XML completo ainda não disponível"><Download size={13} aria-hidden="true" /> XML</span><span className={`${classeDownload} cursor-not-allowed text-muted-foreground opacity-60`} aria-disabled="true" title="PDF disponível somente após o XML completo"><FileText size={13} aria-hidden="true" /> PDF</span></>}</div></td>
       <td className="whitespace-nowrap px-2 py-2">{doc.emitidaEm ? dia(doc.emitidaEm) : dia(doc.recebidoEm)}</td>
       <td className="px-2 py-2 font-medium">{doc.numero ?? "—"}</td>
       <td className="px-2 py-2">{serieDaChave(doc.chave)}</td>
-      <td className="px-2 py-2">{doc.operacao ?? "—"}</td>
-      <td className="whitespace-nowrap px-2 py-2">{documentoFormatado(doc.documentoFornecedor) ?? "—"}</td>
-      <td className="px-2 py-2">{doc.inscricaoEstadual ?? "—"}</td>
+      <td className="hidden px-2 py-2 2xl:table-cell">{doc.operacao ?? "—"}</td>
+      <td className="whitespace-nowrap px-2 py-2 font-mono text-[11px]">{documentoFormatado(doc.documentoFornecedor) ?? "—"}</td>
+      <td className="hidden px-2 py-2 font-mono text-[11px] 2xl:table-cell">{doc.inscricaoEstadual ?? "—"}</td>
       <td className="max-w-56 px-2 py-2"><span className="block truncate" title={doc.fornecedor ?? undefined}>{doc.fornecedor ?? "Não informado"}</span></td>
       <td className="whitespace-nowrap px-2 py-2 text-right font-medium tabular-nums">{dinheiro(doc.valorCentavos)}</td>
-      <td className="max-w-64 px-2 py-2"><span className="block truncate" title={textoSituacao(doc, manifestacao)}>{textoSituacao(doc, manifestacao)}</span></td>
+      <td className="max-w-36 px-2 py-2"><span className={`block truncate rounded-full px-2 py-1 text-center font-medium ${doc.situacao === "COMPLETA" ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-amber-900"}`} title={textoSituacao(doc, manifestacao)}>{textoSituacao(doc, manifestacao)}</span></td>
+      <td className="px-2 py-1.5 text-right"><div className="flex justify-end"><AcoesManifestacao doc={doc} manifestar={manifestar} ocupado={ocupado} compacto /></div></td>
     </tr>
   );
 }
