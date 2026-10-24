@@ -213,9 +213,9 @@ export function modeloDeProdutosEmLinhas(): Valor[][] {
  * O catálogo como planilha, respeitando o filtro que está na tela: quem
  * filtrou "sem preço" baixa os 5.588 sem preço, não o catálogo inteiro.
  */
-export async function produtosEmLinhas(tenantId: string, filtro: FiltroCatalogo = {}): Promise<Valor[][]> {
-  const produtos = await prisma.produto.findMany({
-    where: condicaoDoCatalogo(tenantId, filtro),
+async function buscarLoteProdutos(where: ReturnType<typeof condicaoDoCatalogo>, skip: number, take: number) {
+  return prisma.produto.findMany({
+    where,
     select: {
       nome: true, precoCentavos: true, precoDeCentavos: true, marca: true, sku: true, gtin: true,
       googleProductCategory: true, atributos: true,
@@ -224,9 +224,23 @@ export async function produtosEmLinhas(tenantId: string, filtro: FiltroCatalogo 
       categoria: { select: { nome: true } },
       variantes: { where: { padrao: true }, select: { mpn: true, identificadoresEstado: true }, take: 1 },
     },
-    orderBy: [{ ativo: "desc" }, { nome: "asc" }],
-    take: TETO_EXPORTACAO.produtos,
+    orderBy: [{ ativo: "desc" }, { nome: "asc" }, { id: "asc" }],
+    skip,
+    take,
   });
+}
+
+export async function produtosEmLinhas(tenantId: string, filtro: FiltroCatalogo = {}): Promise<Valor[][]> {
+  // Não carregar milhares de linhas e duas relações aninhadas numa única
+  // consulta: no PostgreSQL/Prisma a expressão SQL gerada pode ultrapassar
+  // max_stack_depth (erro 54001). Lotes limitam a complexidade e a memória.
+  const produtos: Awaited<ReturnType<typeof buscarLoteProdutos>> = [];
+  const where = condicaoDoCatalogo(tenantId, filtro);
+  for (let pagina = 0; pagina * 250 < TETO_EXPORTACAO.produtos; pagina++) {
+    const lote = await buscarLoteProdutos(where, pagina * 250, Math.min(250, TETO_EXPORTACAO.produtos - pagina * 250));
+    produtos.push(...lote);
+    if (lote.length < 250) break;
+  }
 
   return [[...COLUNAS_PRODUTO], ...produtos.map((p) => linhaDoProduto({
     ...p,
