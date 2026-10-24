@@ -757,6 +757,34 @@
           "note": "Implementação concluída localmente; aguardando CI, revisão e publicação via GitHub."
         }
       ]
+    },
+    {
+      "id": "T-0016",
+      "title": "Completar recebimento e operação fiscal de NF-e e CT-e",
+      "objective": "Implementar persistência, distribuição, manifestação explícita, projeções pesquisáveis, downloads, integração ERP/n8n e monitor responsivo sem consumidores concorrentes de NSU.",
+      "assignee": null,
+      "priority": "urgente",
+      "status": "em-andamento",
+      "acceptanceCriteria": [
+        "NF-e e CT-e são separados por papel, resumo, documento completo e eventos, preservando XML original.",
+        "Manifestação exige permissão e confirmação, é idempotente e só fica aceita após resposta positiva da SEFAZ.",
+        "Cursor, documentos e falhas são transacionais e não existe agendador fiscal duplicado entre Lojas, ERP e n8n.",
+        "Monitor, downloads, busca, filtros, auditoria e observabilidade funcionam em desktop e mobile.",
+        "Testes, CI, merge, deploy e validação de produção possuem evidências separadas de integrações e autorizações externas."
+      ],
+      "evidence": "Worktree codex/fiscal-documentos-completo criada em 2026-10-23 e rebaseada sobre origin/main em 2026-10-24. Auditoria n8n confirmou ramo fiscal idempotente no workflow p063mxq8dQijjBDL, sem agendador fiscal próprio. ERP origin/main expõe a API de NF-e recebida e o TMS origin/main possui emissão CT-e real. Contrato avila.fiscal.cte.v1 implementado entre TMS e Lojas. Migração aditiva aplicada do zero em duas bases PostgreSQL 18 isoladas. Testes fiscais e TypeScript/ESLint direcionados aprovados; dois testes locais de PKCS#12 legado dependem do módulo OpenSSL legacy ausente no host Windows.",
+      "review": "Fundação e integração TMS implementadas localmente. Nenhuma manifestação real autorizada, nenhum PR, merge ou deploy realizado nesta etapa.",
+      "environment": "worktree-local",
+      "owner": null,
+      "acceptance": "Processo fiscal completo implementado e publicado, com limites externos explicitamente separados.",
+      "blocker": "Faltam configurar as chaves efetivas ERP/TMS por CNPJ, concluir CI/PR/deploy e validar o painel em dispositivo desktop/mobile. A estação hp do Remote Desktop Commander segue offline. Nenhuma manifestação real pode ser enviada sem autorização humana para uma nota específica.",
+      "history": [
+        {
+          "at": "2026-10-23",
+          "status": "em-andamento",
+          "note": "Demanda registrada após auditoria inicial de fontes canônicas, n8n, GitHub e disponibilidade do Remote Desktop Commander."
+        }
+      ]
     }
   ],
   "decisions": [

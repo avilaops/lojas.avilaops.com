@@ -8,6 +8,7 @@ import { resumirDocumentoFiscal } from "@/lib/fiscal-documento";
 import { totalizarDocumentosFiscais } from "@/lib/fiscal-monitor";
 import { filtrosFiscais } from "@/lib/fiscal-filtros";
 import { buscarFiscalErp } from "@/lib/erp-fiscal";
+import { buscarFiscalTms } from "@/lib/tms-fiscal";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,11 +23,12 @@ async function estado(tenantId: string, endereco: unknown, parametros?: URLSearc
   const { where, pagina, limite } = filtrosFiscais(tenantId, parametros);
   const tenant = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { cnpj: true } });
   const cnpj = tenant?.cnpj?.replace(/[^0-9A-Z]/gi, "").toUpperCase() ?? "";
-  const [configuracao, documentos, total, erp, contagens] = await Promise.all([
+  const [configuracao, documentos, total, erp, tms, contagens] = await Promise.all([
     prisma.fiscalLoja.findUnique({ where: { tenantId }, select: RESUMO_FISCAL }),
     prisma.documentoFiscalLoja.findMany({ where, select: { id: true, cnpj: true, nsu: true, schema: true, chave: true, xml: true, recebidoEm: true }, orderBy: [{ recebidoEm: "desc" }, { nsu: "desc" }, { id: "desc" }], skip: (pagina - 1) * limite, take: limite }),
     prisma.documentoFiscalLoja.count({ where }),
     cnpj ? buscarFiscalErp(cnpj).catch((erro) => ({ erro: erro instanceof Error ? erro.message : "ERP fiscal indisponível." })) : null,
+    cnpj ? buscarFiscalTms(cnpj).catch((erro) => ({ erro: erro instanceof Error ? erro.message : "TMS fiscal indisponível." })) : null,
     prisma.documentoFiscalLoja.groupBy({ where: { tenantId }, by: ["schema"], _count: { _all: true } }),
   ]);
   // Alguns XMLs completos chegaram em outro NSU: vincular pelo par tenant/chave.
@@ -50,6 +52,7 @@ async function estado(tenantId: string, endereco: unknown, parametros?: URLSearc
     ufEmpresa: ufDaEmpresa(endereco),
     pagina, total, paginas: Math.max(1, Math.ceil(total / limite)),
     erp,
+    tms,
   };
 }
 
