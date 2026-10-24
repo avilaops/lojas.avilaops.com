@@ -6,9 +6,11 @@ pedido, criar cupom. Recurso do plano Loja Pro.
 
 - Endereço: `https://lojas.avilaops.com/api/mcp`
 - Transporte: Streamable HTTP, só requisição e resposta (sem fluxo de eventos).
-- Ferramentas: `MCP_TOOLS` em `src/lib/mcp-tools.ts`.
+- Ferramentas de loja: `MCP_TOOLS` em `src/lib/mcp-tools.ts`.
+- Ferramentas administrativas: `MCP_ADMIN_TOOLS` em
+  `src/lib/mcp-admin-tools.ts`.
 
-## Três credenciais, uma regra
+## Credenciais de loja
 
 | | Login (OAuth) | Chave secreta | Chave antiga |
 |---|---|---|---|
@@ -22,6 +24,28 @@ pedido, criar cupom. Recurso do plano Loja Pro.
 As três passam por `autenticarMcp` (`src/lib/mcp-auth.ts`) e pela mesma regra:
 loja `ATIVA` e plano `LOJA_PRO`. Rebaixar o plano ou suspender a loja derruba
 todas na chamada seguinte.
+
+## Administração da plataforma
+
+`LOJAS_ADMIN_TOKEN` autentica somente o salto interno do n8n até o Lojas; não
+representa nem autoriza uma pessoa. O gateway `mcp.avilaops.com` confere antes
+o `papel` recebido do OAuth e só repassa ferramentas `admin_*` quando a pessoa
+autenticada é `ADMIN`. A integração técnica não fica vinculada a uma loja e
+recebe somente ferramentas `admin_*`:
+
+- `admin_listar_tenants` e `admin_obter_tenant` consultam lojas sem expor
+  tokens, hashes ou campos cifrados;
+- `admin_criar_tenant` cria uma loja com o conjunto mínimo de campos aceitos;
+- `admin_atualizar_tenant` altera cadastro, plano e situação sem aceitar
+  credenciais de pagamento;
+- `admin_provisionar_tenant` executa novamente o provisionamento idempotente;
+- `admin_executar_no_tenant` escolhe uma loja por `tenantSlug` e delega para
+  uma ferramenta de `MCP_TOOLS`, preservando o isolamento por `tenantId` e o
+  histórico da loja.
+
+Uma loja é a unidade isolada do produto e do banco. O sistema não possui uma
+hierarquia separada de “subtenant”; criar outra operação significa criar outro
+tenant. A credencial administrativa também respeita 120 chamadas por minuto.
 
 ## O que cada conexão pode
 
