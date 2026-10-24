@@ -345,8 +345,8 @@ export default function Fiscal() {
                   </ul>
                   <div className="hidden overflow-x-auto rounded-xl border border-border sm:block">
                     <table className="w-full text-left text-xs">
-                      <thead className="bg-muted/40 text-muted-foreground"><tr><th className="px-2 py-2">Arquivos</th>{([['emissao','Emissão'],['numero','Número'],['serie','Série'],['tipo','Tipo'],['documento','CNPJ/CPF'],['ie','IE'],['nome','Nome'],['valor','Valor'],['situacao','Situação']] as Array<[ColunaOrdenacao,string]>).map(([coluna, rotulo]) => <th key={coluna} className={`px-2 py-2 ${coluna === 'valor' ? 'text-right' : ''}`}><button type="button" className="min-h-8 whitespace-nowrap font-semibold hover:text-foreground" onClick={() => ordenar(coluna)}>{rotulo}{ordenacao.coluna === coluna ? (ordenacao.direcao === 'asc' ? ' ↑' : ' ↓') : ''}</button></th>)}</tr></thead>
-                      <tbody className="divide-y divide-border">{notasOrdenadas.map((doc) => <LinhaDocumentoFiscal key={doc.id} doc={doc} selecionar={setDocumentoSelecionado} manifestar={manifestar} ocupado={ocupado === `manifestacao:${doc.id}`} erpId={doc.chave ? erpPorChave.get(doc.chave) : undefined} manifestacao={doc.manifestacao ?? (doc.chave ? manifestacoesPorChave.get(doc.chave) : null)} />)}</tbody>
+                      <thead className="bg-muted/40 text-muted-foreground"><tr><th className="whitespace-nowrap px-2 py-2">Download XML ou PDF</th>{([['emissao','Emissão'],['numero','Número'],['serie','Série'],['tipo','Tipo'],['documento','CNPJ/CPF'],['ie','IE'],['nome','Nome'],['valor','Valor'],['situacao','Situação']] as Array<[ColunaOrdenacao,string]>).map(([coluna, rotulo]) => <th key={coluna} className={`px-2 py-2 ${coluna === 'valor' ? 'text-right' : ''}`}><button type="button" className="min-h-8 whitespace-nowrap font-semibold hover:text-foreground" onClick={() => ordenar(coluna)}>{rotulo}{ordenacao.coluna === coluna ? (ordenacao.direcao === 'asc' ? ' ↑' : ' ↓') : ''}</button></th>)}</tr></thead>
+                      <tbody className="divide-y divide-border">{notasOrdenadas.map((doc) => <LinhaDocumentoFiscal key={doc.id} doc={doc} manifestar={manifestar} ocupado={ocupado === `manifestacao:${doc.id}`} erpId={doc.chave ? erpPorChave.get(doc.chave) : undefined} manifestacao={doc.manifestacao ?? (doc.chave ? manifestacoesPorChave.get(doc.chave) : null)} />)}</tbody>
                     </table>
                   </div>
                 </>
@@ -398,9 +398,9 @@ export default function Fiscal() {
 
 type Manifestar = (doc: Estado["documentos"][number], tipo: "CIENCIA" | "CONFIRMACAO" | "DESCONHECIMENTO" | "NAO_REALIZADA") => Promise<void>;
 
-function AcoesManifestacao({ doc, manifestar, ocupado = false }: { doc: Estado["documentos"][number]; manifestar?: Manifestar; ocupado?: boolean }) {
+function AcoesManifestacao({ doc, manifestar, ocupado = false, compacto = false }: { doc: Estado["documentos"][number]; manifestar?: Manifestar; ocupado?: boolean; compacto?: boolean }) {
   if (!manifestar || doc.situacao !== "RESUMO" || doc.tipo !== "NFE") return null;
-  return <details className="relative"><summary className="btn-secundario min-h-11 cursor-pointer list-none">{ocupado ? "Enviando à SEFAZ…" : "Manifestar"}</summary><div className="z-10 mt-2 grid min-w-64 gap-2 rounded-xl border border-border bg-background p-3 shadow-lg sm:absolute sm:right-0"><button disabled={ocupado} className="btn-secundario justify-start" onClick={() => void manifestar(doc, "CIENCIA")}>Ciência da Emissão</button><button disabled={ocupado} className="btn-secundario justify-start" onClick={() => void manifestar(doc, "CONFIRMACAO")}>Confirmação da Operação</button><button disabled={ocupado} className="btn-secundario justify-start" onClick={() => void manifestar(doc, "DESCONHECIMENTO")}>Desconhecimento</button><button disabled={ocupado} className="btn-secundario justify-start" onClick={() => void manifestar(doc, "NAO_REALIZADA")}>Operação não Realizada</button></div></details>;
+  return <details className="relative"><summary className={compacto ? "inline-flex h-8 cursor-pointer list-none items-center rounded-md border border-border px-2 font-medium" : "btn-secundario min-h-11 cursor-pointer list-none"}>{ocupado ? "Enviando…" : "Manifestar"}</summary><div className="z-10 mt-2 grid min-w-64 gap-2 rounded-xl border border-border bg-background p-3 shadow-lg sm:absolute sm:left-0"><button disabled={ocupado} className="btn-secundario justify-start" onClick={() => void manifestar(doc, "CIENCIA")}>Ciência da Emissão</button><button disabled={ocupado} className="btn-secundario justify-start" onClick={() => void manifestar(doc, "CONFIRMACAO")}>Confirmação da Operação</button><button disabled={ocupado} className="btn-secundario justify-start" onClick={() => void manifestar(doc, "DESCONHECIMENTO")}>Desconhecimento</button><button disabled={ocupado} className="btn-secundario justify-start" onClick={() => void manifestar(doc, "NAO_REALIZADA")}>Operação não Realizada</button></div></details>;
 }
 
 function DocumentoFiscal({ doc, manifestacao, selecionar, erpId, manifestar, ocupado }: { doc: Estado["documentos"][number]; manifestacao?: string | null; erpId?: number; selecionar: (doc: Estado["documentos"][number]) => void; manifestar?: Manifestar; ocupado?: boolean }) {
@@ -412,7 +412,6 @@ function DocumentoFiscal({ doc, manifestacao, selecionar, erpId, manifestar, ocu
         <div className="flex items-start justify-between gap-3"><p className="min-w-0 text-sm font-semibold">{doc.fornecedor ?? tipoDocumento(doc.schema)}</p><strong className="shrink-0 text-sm">{dinheiro(doc.valorCentavos)}</strong></div>
         <p className="mt-1 text-xs text-muted-foreground">{doc.numero ? `Nota ${doc.numero} · ` : ""}Recebida em {data(doc.recebidoEm)}</p>
         <p className={`mt-2 text-xs ${doc.situacao === "RESUMO" ? "text-amber-900" : "text-muted-foreground"}`}>{textoSituacao(doc, manifestacao)}</p>
-        <DetalhesDocumentoFiscal doc={doc} manifestacao={manifestacao} />
       </div>
       <div className="flex flex-wrap gap-2"><AcoesManifestacao doc={doc} manifestar={manifestar} ocupado={ocupado} />{!cte && <a className="btn-secundario" href="#fluxos-fiscais" onClick={() => selecionar(doc)}>Usar no fluxo</a>}{(erpId || doc.situacao === "COMPLETA") && <a className="btn-secundario w-full sm:w-auto" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/xml` : `/api/painel/fiscal/documentos/${doc.completoId ?? doc.id}`}>
         <Download size={16} aria-hidden="true" /> {rotuloXml}
@@ -421,41 +420,22 @@ function DocumentoFiscal({ doc, manifestacao, selecionar, erpId, manifestar, ocu
   );
 }
 
-function DetalhesDocumentoFiscal({ doc, manifestacao }: { doc: Estado["documentos"][number]; manifestacao?: string | null }) {
+function LinhaDocumentoFiscal({ doc, manifestacao, erpId, manifestar, ocupado }: { doc: Estado["documentos"][number]; manifestacao?: string | null; erpId?: number; manifestar: Manifestar; ocupado: boolean }) {
+  const arquivosDisponiveis = Boolean(erpId || doc.situacao === "COMPLETA");
+  const idDocumento = doc.completoId ?? doc.id;
+  const classeDownload = "inline-flex h-8 items-center gap-1 rounded-md border border-border px-2 font-medium";
   return (
-    <details className="mt-2 min-w-0 text-xs text-muted-foreground">
-      <summary className="cursor-pointer py-1">Ver todos os dados recebidos</summary>
-      <dl className="mt-2 grid gap-2 sm:grid-cols-2">
-        {doc.documentoFornecedor && <div><dt>CNPJ/CPF do emitente</dt><dd className="break-all text-foreground">{documentoFormatado(doc.documentoFornecedor)}</dd></div>}
-        {doc.inscricaoEstadual && <div><dt>Inscrição estadual</dt><dd className="break-all text-foreground">{doc.inscricaoEstadual}</dd></div>}
-        {doc.emitidaEm && <div><dt>Emissão</dt><dd className="text-foreground">{data(doc.emitidaEm)}</dd></div>}
-        {doc.autorizadaEm && <div><dt>Autorização</dt><dd className="text-foreground">{data(doc.autorizadaEm)}</dd></div>}
-        {doc.protocolo && <div><dt>Protocolo</dt><dd className="break-all text-foreground">{doc.protocolo}</dd></div>}
-        {doc.operacao && <div><dt>Operação informada na NF-e</dt><dd className="text-foreground">{doc.operacao}</dd></div>}
-        {doc.situacaoNfe && <div><dt>Situação da NF-e</dt><dd className="text-foreground">{doc.situacaoNfe}</dd></div>}
-        {manifestacao && <div><dt>Manifestação encontrada</dt><dd className="text-foreground">{manifestacao}</dd></div>}
-        {doc.quantidadeItens != null && <div><dt>Itens no XML</dt><dd className="text-foreground">{doc.quantidadeItens}</dd></div>}
-        {doc.chave && <div className="sm:col-span-2"><dt>Chave de acesso</dt><dd className="break-all text-foreground">{doc.chave}</dd></div>}
-        <div><dt>NSU</dt><dd className="break-all text-foreground">{doc.nsu}</dd></div>
-        <div><dt>Formato recebido</dt><dd className="break-all text-foreground">{doc.schema}</dd></div>
-      </dl>
-    </details>
-  );
-}
-
-function LinhaDocumentoFiscal({ doc, manifestacao, selecionar, erpId, manifestar, ocupado }: { doc: Estado["documentos"][number]; manifestacao?: string | null; erpId?: number; selecionar: (doc: Estado["documentos"][number]) => void; manifestar: Manifestar; ocupado: boolean }) {
-  return (
-    <tr>
-      <td className="px-2 py-2"><div className="flex min-w-28 flex-wrap gap-1">{(erpId || doc.situacao === "COMPLETA") ? <><a className="underline" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/xml` : `/api/painel/fiscal/documentos/${doc.completoId ?? doc.id}`}>XML</a><a className="underline" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/danfe` : `/api/painel/fiscal/documentos/${doc.completoId ?? doc.id}/danfe`}>PDF</a></> : <span className="text-muted-foreground">Pendente</span>}<AcoesManifestacao doc={doc} manifestar={manifestar} ocupado={ocupado} /></div></td>
+    <tr className="whitespace-nowrap">
+      <td className="px-2 py-1.5"><div className="flex min-w-max items-center gap-1.5">{arquivosDisponiveis ? <><a className={classeDownload} href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/xml` : `/api/painel/fiscal/documentos/${idDocumento}`} download><Download size={13} aria-hidden="true" /> XML</a><a className={classeDownload} href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/danfe` : `/api/painel/fiscal/documentos/${idDocumento}/danfe`} download><FileText size={13} aria-hidden="true" /> PDF</a></> : <><span className={`${classeDownload} cursor-not-allowed text-muted-foreground opacity-60`} aria-disabled="true" title="XML completo ainda não disponível"><Download size={13} aria-hidden="true" /> XML</span><span className={`${classeDownload} cursor-not-allowed text-muted-foreground opacity-60`} aria-disabled="true" title="PDF disponível somente após o XML completo"><FileText size={13} aria-hidden="true" /> PDF</span></>}<AcoesManifestacao doc={doc} manifestar={manifestar} ocupado={ocupado} compacto /></div></td>
       <td className="whitespace-nowrap px-2 py-2">{doc.emitidaEm ? dia(doc.emitidaEm) : dia(doc.recebidoEm)}</td>
-      <td className="px-2 py-2 font-medium">{doc.numero ?? "—"}<DetalhesDocumentoFiscal doc={doc} manifestacao={manifestacao} /></td>
+      <td className="px-2 py-2 font-medium">{doc.numero ?? "—"}</td>
       <td className="px-2 py-2">{serieDaChave(doc.chave)}</td>
       <td className="px-2 py-2">{doc.operacao ?? "—"}</td>
       <td className="whitespace-nowrap px-2 py-2">{documentoFormatado(doc.documentoFornecedor) ?? "—"}</td>
       <td className="px-2 py-2">{doc.inscricaoEstadual ?? "—"}</td>
       <td className="max-w-56 px-2 py-2"><span className="block truncate" title={doc.fornecedor ?? undefined}>{doc.fornecedor ?? "Não informado"}</span></td>
       <td className="whitespace-nowrap px-2 py-2 text-right font-medium tabular-nums">{dinheiro(doc.valorCentavos)}</td>
-      <td className="max-w-64 px-2 py-2"><span className="line-clamp-2" title={textoSituacao(doc, manifestacao)}>{textoSituacao(doc, manifestacao)}</span><a className="mt-1 block underline" href="#fluxos-fiscais" onClick={() => selecionar(doc)}>Usar no fluxo</a></td>
+      <td className="max-w-64 px-2 py-2"><span className="block truncate" title={textoSituacao(doc, manifestacao)}>{textoSituacao(doc, manifestacao)}</span></td>
     </tr>
   );
 }
