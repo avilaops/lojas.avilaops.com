@@ -23,7 +23,7 @@ export default function DownloadFiscal({ href, fallback, className, title, child
   fallback: string;
   className: string;
   title?: string;
-  children: ReactNode;
+  children?: ReactNode;
 }) {
   const [baixando, setBaixando] = useState(false);
   const [erro, setErro] = useState("");
