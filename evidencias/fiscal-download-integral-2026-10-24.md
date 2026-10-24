@@ -71,11 +71,30 @@ A correção centraliza os downloads e exige:
 - build de produção Next.js aprovado;
 - teste PostgreSQL local não executado porque o host não possui Docker; o
   cenário foi adicionado à suíte de integração para execução no CI.
+- CI `40103746135` aprovado no PR #172: 195 testes de integração em PostgreSQL
+  18, 1.271 testes na imagem, lint, TypeScript e build de 116 rotas.
 
 ## Pendências externas
 
 - configurar `ERP_API_URL` ou `ERP_APP_URL` e uma entrada por CNPJ em
   `ERP_API_KEYS_BY_CNPJ` para habilitar o caminho canônico do ERP;
-- obter CI verde, publicar a correção e repetir em produção a prova de que
-  `resNFe` retorna 409, mantendo XML e PDF integrais em 200;
 - manifestação real continua fora do escopo e depende de ação humana explícita.
+
+## Revalidação após deploy
+
+O PR #172 foi mesclado no commit `dcabcf6`. O run de produção `40104406643`
+aprovou integração, imagem, deploy e fumaça; o container saudável expôs o mesmo
+commit no rótulo de revisão.
+
+A prova autenticada foi repetida dentro do container já publicado:
+
+- XML integral: HTTP 200, 8.305 bytes, tipo e cabeçalhos corretos e hash
+  idêntico ao original persistido;
+- DANFE: HTTP 200, 5.491 bytes, `application/pdf` e assinatura `%PDF-`;
+- abertura do DANFE com `pypdf`: uma página, não criptografada e com área de
+  página válida;
+- `resNFe`: HTTP 409;
+- documento de outro tenant: HTTP 404.
+
+O arquivo PDF temporário e o ambiente do parser foram removidos ao fim da
+prova. Nenhum conteúdo fiscal, identificador, cookie ou segredo foi impresso.
