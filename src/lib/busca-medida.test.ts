@@ -15,6 +15,18 @@ test("campo inválido bloqueia a busca mesmo com outra medida válida", () => {
   if (!resultado.ok) assert.equal(resultado.campo, "de");
 });
 
+test("busca exata não amplia nem arredonda as medidas cadastradas", () => {
+  assert.deepEqual(prepararBuscaMedida({ di: "50,8125", de: "63.5", alt: "9,52" }, "exata"), {
+    ok: true, query: "di_de=50.8125&di_ate=50.8125&de_de=63.5&de_ate=63.5&alt_de=9.52&alt_ate=9.52",
+  });
+});
+
+test("busca exata aceita campo parcial e recusa outro campo inválido", () => {
+  assert.deepEqual(prepararBuscaMedida({ alt: "0,1" }, "exata"), { ok: true, query: "alt_de=0.1&alt_ate=0.1" });
+  assert.equal(prepararBuscaMedida({ di: "50,8", de: "abc" }, "exata").ok, false);
+  assert.equal(prepararBuscaMedida({ di: " " }, "exata").ok, false);
+});
+
 test("busca parcial é permitida e limite inferior nunca fica negativo", () => {
   assert.deepEqual(prepararBuscaMedida({ alt: "0,1" }), { ok: true, query: "alt_de=0&alt_ate=0.6" });
   assert.equal(prepararBuscaMedida({ di: " " }).ok, false);
