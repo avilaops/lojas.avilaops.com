@@ -5,6 +5,7 @@ import forge from "node-forge";
 import { prisma } from "../../src/lib/db";
 import { selarCertificado } from "../../src/lib/fiscal-certificado";
 import { sincronizarNotas } from "../../src/lib/fiscal-loja";
+import { responderDownloadXmlFiscal } from "../../src/lib/fiscal-download";
 import { cifrar } from "../../src/lib/cofre";
 
 const url = new URL(process.env.DATABASE_URL ?? "http://invalid");
@@ -64,6 +65,24 @@ test("duas consultas concorrentes produzem uma chamada e preservam isolamento", 
   assert.equal(await prisma.documentoFiscalLoja.findFirst({ where: { id: doc.id, tenantId: b.id } }), null);
   const dados = { tenantId: a.id, cnpj: a.cnpj!, nsu: doc.nsu, schema: doc.schema, xml: doc.xml };
   assert.equal((await prisma.documentoFiscalLoja.createMany({ data: [dados], skipDuplicates: true })).count, 0);
+});
+
+test("download XML exige documento completo e mantém isolamento por tenant", async () => {
+  const a = await preparar("13345678000190");
+  const b = await preparar("13345678000270");
+  const xml = `<nfeProc xmlns="http://www.portalfiscal.inf.br/nfe"><NFe><infNFe Id="NFe${"1".repeat(44)}"><ide><mod>55</mod></ide></infNFe></NFe><protNFe><infProt><cStat>100</cStat></infProt></protNFe></nfeProc>`;
+  const completo = await prisma.documentoFiscalLoja.create({ data: {
+    tenantId: a.id, cnpj: a.cnpj!, nsu: "000000000000001", schema: "procNFe_v4.00.xsd", chave: "1".repeat(44), xml,
+  } });
+  const resumo = await prisma.documentoFiscalLoja.create({ data: {
+    tenantId: a.id, cnpj: a.cnpj!, nsu: "000000000000002", schema: "resNFe_v1.01.xsd", chave: "2".repeat(44), xml: `<resNFe><chNFe>${"2".repeat(44)}</chNFe></resNFe>`,
+  } });
+
+  const autorizado = await responderDownloadXmlFiscal(a.id, completo.id);
+  assert.equal(autorizado.status, 200);
+  assert.equal(await autorizado.text(), xml);
+  assert.equal((await responderDownloadXmlFiscal(b.id, completo.id)).status, 404);
+  assert.equal((await responderDownloadXmlFiscal(a.id, resumo.id)).status, 409);
 });
 
 test("falha de transporte preserva NSU e aguarda uma hora a partir da falha", async () => {

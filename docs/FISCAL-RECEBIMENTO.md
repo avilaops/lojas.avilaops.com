@@ -89,3 +89,25 @@ certificado válido do CNPJ e não foi realizada nesta validação local.
 Os estados acima distinguem código, configuração e operação externa. Presença
 de tabela, botão, ferramenta MCP ou workflow não comprova consulta, recebimento,
 manifestação aceita ou autorização fiscal.
+
+## Downloads integrais
+
+O Monitor de Notas só oferece XML e DANFE quando o documento armazenado é um
+`procNFe` integral. `resNFe` é resumo e retorna HTTP 409 até que o documento
+completo esteja disponível. O XML é devolvido sem transformação; o DANFE local
+é gerado pelo serviço fiscal compartilhado a partir desse XML.
+
+As rotas exigem sessão com permissão fiscal e consultam o documento por `id` e
+`tenantId`. Arquivos válidos usam `Content-Disposition`,
+`Cache-Control: private, no-store` e `X-Content-Type-Options: nosniff`. PDF e
+respostas do ERP são lidos com limite de 12 MiB e validados por tipo e conteúdo
+antes de chegar ao navegador.
+
+Para CNPJ integrado, configure `ERP_API_URL` (ou `ERP_APP_URL`) e o mapa
+`ERP_API_KEYS_BY_CNPJ`; a credencial permanece exclusivamente no servidor. Sem
+integração ERP, o monitor local continua funcional. R2 é cache opcional: falha
+de leitura ou gravação não impede usar o XML do banco nem gerar o DANFE sob
+demanda.
+
+Evidência operacional e limites de produção estão em
+`evidencias/fiscal-download-integral-2026-10-24.md`.
