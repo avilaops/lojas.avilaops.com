@@ -772,12 +772,12 @@
         "Monitor, downloads, busca, filtros, auditoria e observabilidade funcionam em desktop e mobile.",
         "Testes, CI, merge, deploy e validação de produção possuem evidências separadas de integrações e autorizações externas."
       ],
-      "evidence": "Worktree codex/fiscal-documentos-completo criada em 2026-10-23. Auditoria n8n confirmou ramo fiscal idempotente no workflow p063mxq8dQijjBDL, sem agendador fiscal próprio. Estação hp do Remote Desktop Commander estava offline no início da execução.",
-      "review": "Implementação em andamento; nenhuma manifestação real autorizada.",
+      "evidence": "Worktree codex/fiscal-documentos-completo criada em 2026-10-23. Auditoria n8n confirmou ramo fiscal idempotente no workflow p063mxq8dQijjBDL, sem agendador fiscal próprio. Estação hp do Remote Desktop Commander estava offline no início da execução. Migração aditiva aplicada do zero em duas bases PostgreSQL 18 isoladas. Testes direcionados: 14 unitários e 15 integrações fiscais aprovados; TypeScript, ESLint e git diff --check aprovados. A execução ampla de integração teve 192 aprovações e uma falha concorrente fora do escopo em catalogo-b2b-resolucao.",
+      "review": "Fundação implementada em três commits locais. Nenhuma manifestação real autorizada, nenhum PR, merge ou deploy realizado.",
       "environment": "worktree-local",
       "owner": null,
       "acceptance": "Processo fiscal completo implementado e publicado, com limites externos explicitamente separados.",
-      "blocker": "",
+      "blocker": "ERP atual não expõe /api/v1/notas-recebidas; MCP valida DF-e mas não resNFe e a manifestação exige A1 local; estação hp do Remote Desktop Commander está offline. Manifestação, coleta CT-e, DACTE e validação visual real não podem ser apresentados como concluídos.",
       "history": [
         {
           "at": "2026-10-23",
