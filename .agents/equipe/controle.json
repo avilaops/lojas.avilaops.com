@@ -4,6 +4,15 @@
   "members": [],
   "tasks": [
     {
+      "id": "BERETA-VISUAL-20261024",
+      "title": "Melhorar imagens e visual mobile da Bereta Rodas",
+      "assignee": null,
+      "status": "em-revisao",
+      "acceptanceCriteria": ["Banner automotivo com imagem mobile própria", "Cards compactos sem alterar dados comerciais", "CI aprovado e visual público conferido"],
+      "evidence": "git diff --check aprovado; evidencias/bereta-visual-2026-10-24.md",
+      "history": [{"at": "2026-10-24", "status": "em-revisao", "note": "Ajustes do template e imagens preparados para validação e publicação."}]
+    },
+    {
       "id": "BRILHAX-SEO-CATALOGO-20261024",
       "title": "Auditar SEO de todos os produtos da Brilhax",
       "objective": "Verificar o catálogo público inteiro, cruzar oportunidades com o Search Console e impedir que metadados de integração apareçam para compradores e buscadores.",
