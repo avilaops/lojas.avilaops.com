@@ -15,7 +15,14 @@ test("medida sai formatada, com unidade e antes do resto", () => {
 });
 
 test("chave interna do ERP não aparece", () => {
-  const f = fichaDoProduto({ grupoLegado: "Diversos", _origem: "csv", unidade: "PC" });
+  const f = fichaDoProduto({
+    grupoLegado: "Diversos",
+    _origem: "csv",
+    VEHICLE_TYPE: "Carro/Caminhonete",
+    UNITS_PER_PACK: "1",
+    categoriaGoogle: "888",
+    unidade: "PC",
+  });
   assert.deepEqual(f.map((l) => l.rotulo), ["Unidade de venda"]);
 });
 
