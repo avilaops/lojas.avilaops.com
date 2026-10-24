@@ -263,6 +263,8 @@ model Tenant {
    * /**
    * /**
    * /**
+   * /**
+   * /**
    * Políticas escritas pelo lojista, por tipo ("envio", "devolucao",
    * "privacidade", "termos", "aviso-legal").
    * Chave ausente = a loja publica o modelo da plataforma, que é o
@@ -281,6 +283,8 @@ model Tenant {
 
   // ── Campos personalizados do catálogo ─────────────────────────────────
   /**
+   * /**
+   * /**
    * /**
    * /**
    * /**
@@ -372,6 +376,16 @@ model Tenant {
   fiscal                 FiscalLoja?
   documentosFiscais      DocumentoFiscalLoja[]
   fluxosFiscais          FluxoFiscalLoja[]
+  eventosFiscais         EventoFiscalLoja[]
+  manifestacoesFiscais   ManifestacaoFiscalLoja[]
+  participantesFiscais   ParticipanteFiscalLoja[]
+  itensFiscais           ItemFiscalLoja[]
+  tributosFiscais        TributoFiscalLoja[]
+  pagamentosFiscais      PagamentoFiscalLoja[]
+  parcelasFiscais        ParcelaFiscalLoja[]
+  transportesFiscais     TransporteFiscalLoja[]
+  anexosFiscais          AnexoFiscalLoja[]
+  auditoriasFiscais      AuditoriaFiscalLoja[]
 
   apiKeyEnc            String?
   apiKeyCriadaEm       DateTime?
@@ -412,41 +426,302 @@ model FiscalLoja {
 }
 
 model DocumentoFiscalLoja {
-  id         String   @id @default(cuid())
-  tenantId   String
-  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  cnpj       String
-  nsu        String
-  schema     String
-  chave      String?
-  xml        String   @db.Text
-  recebidoEm DateTime @default(now())
-  arquivadoEm DateTime? // XML completo já copiado ao R2 privado
+  id                    String    @id @default(cuid())
+  tenantId              String
+  tenant                Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  cnpj                  String
+  nsu                   String
+  schema                String
+  chave                 String?
+  xml                   String    @db.Text
+  recebidoEm            DateTime  @default(now())
+  arquivadoEm           DateTime? // XML completo já copiado ao R2 privado
   /// Marcadores duráveis: a retenção da fila não permite reenviar o mesmo documento ao mesmo fluxo.
-  fluxosEnfileirados String[] @default([])
+  fluxosEnfileirados    String[]  @default([])
+  /// Metadados e projeções são derivados do XML imutável. Podem ser refeitos sem substituir `xml`.
+  tipoDocumento         String?
+  modelo                String?
+  versaoSchema          String?
+  origem                String    @default("SEFAZ_DISTRIBUICAO")
+  identificadorExterno  String?
+  hashXml               String?
+  estadoConteudo        String    @default("DESCONHECIDO")
+  validacao             String    @default("NAO_VALIDADO")
+  errosInterpretacao    String[]  @default([])
+  parserVersao          Int       @default(1)
+  dadosIncompletos      Boolean   @default(true)
+  papelEmpresa          String?
+  categoria             String?
+  numero                String?
+  serie                 String?
+  emitidaEm             DateTime?
+  autorizadaEm          DateTime?
+  statusFiscal          String?
+  protocolo             String?
+  cancelada             Boolean   @default(false)
+  emitenteDocumento     String?
+  emitenteNome          String?
+  destinatarioDocumento String?
+  destinatarioNome      String?
+
+  eventos           EventoFiscalLoja[]       @relation("DocumentoEventos")
+  eventosVinculados EventoFiscalLoja[]       @relation("EventoDocumentoPrincipal")
+  manifestacoes     ManifestacaoFiscalLoja[]
+  participantes     ParticipanteFiscalLoja[]
+  itens             ItemFiscalLoja[]
+  pagamentos        PagamentoFiscalLoja[]
+  transportes       TransporteFiscalLoja[]
+  anexos            AnexoFiscalLoja[]
 
   @@unique([tenantId, cnpj, nsu])
   @@index([tenantId, recebidoEm])
   @@index([arquivadoEm, recebidoEm])
   @@index([tenantId, chave])
   @@index([tenantId, schema, recebidoEm])
+  @@index([tenantId, tipoDocumento, papelEmpresa, emitidaEm])
+  @@index([tenantId, emitenteDocumento, recebidoEm])
+  @@index([tenantId, destinatarioDocumento, recebidoEm])
+  @@index([tenantId, numero, serie])
+  @@index([tenantId, statusFiscal, categoria])
+  @@index([tenantId, protocolo])
+  @@index([tenantId, hashXml])
+}
+
+model EventoFiscalLoja {
+  id                   String    @id @default(cuid())
+  tenantId             String
+  documentoId          String
+  documentoPrincipalId String?
+  codigo               String
+  descricao            String?
+  sequencia            Int
+  autorDocumento       String?
+  ocorridoEm           DateTime?
+  registradoEm         DateTime?
+  protocolo            String?
+  status               String?
+  motivo               String?
+  xmlOriginal          String    @db.Text
+  hashXml              String
+  criadoEm             DateTime  @default(now())
+
+  tenant             Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  documento          DocumentoFiscalLoja  @relation("DocumentoEventos", fields: [documentoId], references: [id], onDelete: Cascade)
+  documentoPrincipal DocumentoFiscalLoja? @relation("EventoDocumentoPrincipal", fields: [documentoPrincipalId], references: [id], onDelete: SetNull)
+
+  @@unique([tenantId, hashXml])
+  @@unique([tenantId, documentoPrincipalId, codigo, sequencia])
+  @@index([tenantId, codigo, registradoEm])
+  @@index([documentoPrincipalId, ocorridoEm])
+}
+
+model ManifestacaoFiscalLoja {
+  id                 String    @id @default(cuid())
+  tenantId           String
+  documentoId        String
+  idempotencia       String
+  tipo               String
+  justificativa      String?
+  autor              String
+  ambiente           String
+  lote               String?
+  sequencia          Int
+  intencaoEm         DateTime  @default(now())
+  enviadoEm          DateTime?
+  concluidoEm        DateTime?
+  protocolo          String?
+  status             String    @default("INTENCAO_REGISTRADA")
+  codigoRetorno      String?
+  motivoRetorno      String?
+  xmlEnviado         String?   @db.Text
+  xmlResposta        String?   @db.Text
+  tentativas         Int       @default(0)
+  proximaTentativaEm DateTime?
+  resultadoFinal     Boolean   @default(false)
+
+  tenant    Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  documento DocumentoFiscalLoja @relation(fields: [documentoId], references: [id], onDelete: Restrict)
+
+  @@unique([tenantId, idempotencia])
+  @@index([tenantId, status, proximaTentativaEm])
+  @@index([documentoId, intencaoEm])
+}
+
+model ParticipanteFiscalLoja {
+  id                String  @id @default(cuid())
+  tenantId          String
+  documentoId       String
+  papel             String
+  documento         String?
+  inscricaoEstadual String?
+  razaoSocial       String?
+  nomeFantasia      String?
+  endereco          Json?
+  contatos          Json?
+
+  tenant          Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  documentoFiscal DocumentoFiscalLoja @relation(fields: [documentoId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, papel, documento])
+  @@index([documentoId, papel])
+}
+
+model ItemFiscalLoja {
+  id             String   @id @default(cuid())
+  tenantId       String
+  documentoId    String
+  numero         Int
+  codigo         String?
+  gtin           String?
+  descricao      String
+  ncm            String?
+  cest           String?
+  cfop           String?
+  unidade        String?
+  quantidade     Decimal? @db.Decimal(24, 8)
+  valorUnitario  Decimal? @db.Decimal(24, 10)
+  valorTotal     Decimal? @db.Decimal(24, 2)
+  desconto       Decimal? @db.Decimal(24, 2)
+  frete          Decimal? @db.Decimal(24, 2)
+  seguro         Decimal? @db.Decimal(24, 2)
+  outrasDespesas Decimal? @db.Decimal(24, 2)
+  pedido         String?
+  itemPedido     String?
+  detalhes       Json?
+
+  tenant          Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  documentoFiscal DocumentoFiscalLoja @relation(fields: [documentoId], references: [id], onDelete: Cascade)
+  tributos        TributoFiscalLoja[]
+
+  @@unique([documentoId, numero])
+  @@index([tenantId, codigo])
+  @@index([tenantId, descricao])
+  @@index([tenantId, ncm, cfop])
+}
+
+model TributoFiscalLoja {
+  id          String   @id @default(cuid())
+  tenantId    String
+  itemId      String
+  tipo        String
+  origem      String?
+  codigo      String?
+  baseCalculo Decimal? @db.Decimal(24, 2)
+  aliquota    Decimal? @db.Decimal(12, 8)
+  valor       Decimal? @db.Decimal(24, 2)
+  detalhes    Json?
+
+  tenant Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  item   ItemFiscalLoja @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, tipo, codigo])
+  @@index([itemId, tipo])
+}
+
+model PagamentoFiscalLoja {
+  id          String   @id @default(cuid())
+  tenantId    String
+  documentoId String
+  meio        String?
+  valor       Decimal? @db.Decimal(24, 2)
+  troco       Decimal? @db.Decimal(24, 2)
+  detalhes    Json?
+
+  tenant          Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  documentoFiscal DocumentoFiscalLoja @relation(fields: [documentoId], references: [id], onDelete: Cascade)
+  parcelas        ParcelaFiscalLoja[]
+
+  @@index([tenantId, meio])
+  @@index([documentoId])
+}
+
+model ParcelaFiscalLoja {
+  id          String    @id @default(cuid())
+  tenantId    String
+  pagamentoId String
+  numero      String?
+  vencimento  DateTime?
+  valor       Decimal?  @db.Decimal(24, 2)
+
+  tenant    Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  pagamento PagamentoFiscalLoja @relation(fields: [pagamentoId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, vencimento])
+  @@index([pagamentoId])
+}
+
+model TransporteFiscalLoja {
+  id                     String   @id @default(cuid())
+  tenantId               String
+  documentoId            String
+  modalidade             String?
+  transportadorDocumento String?
+  transportadorNome      String?
+  veiculo                Json?
+  volumes                Json?
+  pesoLiquido            Decimal? @db.Decimal(24, 8)
+  pesoBruto              Decimal? @db.Decimal(24, 8)
+  detalhes               Json?
+
+  tenant          Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  documentoFiscal DocumentoFiscalLoja @relation(fields: [documentoId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, transportadorDocumento])
+  @@index([documentoId])
+}
+
+model AnexoFiscalLoja {
+  id            String   @id @default(cuid())
+  tenantId      String
+  documentoId   String
+  tipo          String
+  nome          String
+  mime          String
+  origem        String
+  armazenamento String?
+  hash          String?
+  erro          String?
+  criadoEm      DateTime @default(now())
+
+  tenant          Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  documentoFiscal DocumentoFiscalLoja @relation(fields: [documentoId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, documentoId, tipo, hash])
+  @@index([documentoId, tipo])
+}
+
+model AuditoriaFiscalLoja {
+  id             String   @id @default(cuid())
+  tenantId       String
+  documentoId    String?
+  manifestacaoId String?
+  acao           String
+  ator           String
+  dados          Json
+  ocorridoEm     DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, ocorridoEm])
+  @@index([documentoId, ocorridoEm])
+  @@index([manifestacaoId, ocorridoEm])
 }
 
 /// Regra fiscal usa um destino já cadastrado e a fila assinada EntregaWebhook.
 model FluxoFiscalLoja {
-  id         String   @id @default(cuid())
-  tenantId   String
-  webhookId  String
-  nome       String
-  finalidade String
-  eventos    String[]
-  campos     String[]
-  ativo      Boolean  @default(true)
-  criadoPor  String
-  criadoEm   DateTime @default(now())
+  id           String   @id @default(cuid())
+  tenantId     String
+  webhookId    String
+  nome         String
+  finalidade   String
+  eventos      String[]
+  campos       String[]
+  ativo        Boolean  @default(true)
+  criadoPor    String
+  criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
-  tenant  Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant  Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   webhook WebhookApi @relation(fields: [tenantId, webhookId], references: [tenantId, id], onDelete: Cascade)
 
   @@unique([tenantId, webhookId, finalidade])
@@ -665,15 +940,15 @@ model Pedido {
   /// De onde veio a venda: "loja" (checkout próprio) ou "mercadolivre".
   /// Não é condição por loja — é fato do pedido, e o painel, o relatório e o
   /// n8n precisam distinguir: quem compra no ML fala com o ML, não com a loja.
-  canal            String  @default("loja")
+  canal               String  @default("loja")
   /// Id do pedido no canal externo (`order.id` do ML). É o que torna a
   /// ingestão idempotente: a notificação do ML chega mais de uma vez, e o
   /// mesmo pedido não pode virar dois.
-  canalPedidoId    String?
+  canalPedidoId       String?
   /// De onde o pedido entrou quando não foi pelo checkout da vitrine:
   /// "api:<id da chave>". Nulo = checkout da própria loja.
-  origem           String?
-  vendedorEmail    String?
+  origem              String?
+  vendedorEmail       String?
   pedidoCompra        String?
   empresaB2BId        String?
   unidadeB2BId        String?
@@ -1638,7 +1913,7 @@ model CotacaoB2B {
 }
 
 model VersaoCotacaoB2B {
-  id               String    @id @default(cuid())
+  id               String   @id @default(cuid())
   tenantId         String
   cotacaoId        String
   numero           Int
@@ -1647,13 +1922,13 @@ model VersaoCotacaoB2B {
   autorEmail       String?
   itens            Json
   subtotalCentavos Int
-  descontoCentavos Int       @default(0)
-  freteCentavos    Int       @default(0)
+  descontoCentavos Int      @default(0)
+  freteCentavos    Int      @default(0)
   totalCentavos    Int
-  condicoes        Json      @default("{}")
+  condicoes        Json     @default("{}")
   justificativa    String?
-  excecaoComercial Boolean   @default(false)
-  criadoEm         DateTime  @default(now())
+  excecaoComercial Boolean  @default(false)
+  criadoEm         DateTime @default(now())
 
   tenant  Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   cotacao CotacaoB2B @relation(fields: [tenantId, cotacaoId], references: [tenantId, id], onDelete: Cascade)
@@ -2150,15 +2425,15 @@ model SessaoVitrine {
   /// Marcos agregados da sessão. Ficam aqui, e não numa tabela de cliques,
   /// porque o painel responde quantas sessões avançaram em cada etapa. Isso
   /// também torna a repetição do mesmo evento naturalmente idempotente.
-  paginas             Int     @default(1)
-  buscou              Boolean @default(false)
-  buscaSemResultado   Boolean @default(false)
-  filtrou             Boolean @default(false)
-  viuProduto          Boolean @default(false)
-  contatoTecnico      Boolean @default(false)
-  adicionouCarrinho   Boolean @default(false)
-  abriuCarrinho       Boolean @default(false)
-  iniciouCheckout     Boolean @default(false)
+  paginas           Int     @default(1)
+  buscou            Boolean @default(false)
+  buscaSemResultado Boolean @default(false)
+  filtrou           Boolean @default(false)
+  viuProduto        Boolean @default(false)
+  contatoTecnico    Boolean @default(false)
+  adicionouCarrinho Boolean @default(false)
+  abriuCarrinho     Boolean @default(false)
+  iniciouCheckout   Boolean @default(false)
 
   criadoEm DateTime @default(now())
   ultimoEm DateTime @default(now())
@@ -2287,8 +2562,8 @@ model WebhookApi {
   ultimaEntregaEm DateTime?
   criadoEm        DateTime  @default(now())
 
-  tenant   Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  entregas EntregaWebhook[]
+  tenant        Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  entregas      EntregaWebhook[]
   fluxosFiscais FluxoFiscalLoja[]
 
   @@unique([tenantId, id])
@@ -2406,13 +2681,13 @@ model EventoSaudeCanal {
 
 /// Vínculo explícito entre identidade SSO e tenant. Nunca concede acesso por domínio de e-mail.
 model AcessoLoja {
-  id       String  @id @default(cuid())
+  id       String   @id @default(cuid())
   tenantId String
   email    String
-  papel    String  @default("DONO")
-  ativo    Boolean @default(true)
+  papel    String   @default("DONO")
+  ativo    Boolean  @default(true)
   criadoEm DateTime @default(now())
-  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@unique([tenantId, email])
   @@index([email, ativo])
