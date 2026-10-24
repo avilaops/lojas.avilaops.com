@@ -72,6 +72,12 @@ function abrirCertificadoOpenSSL(pfx: Buffer, senha: string): { info: Certificad
   }
 }
 
+/** Chave e certificado PEM para XML-DSig. Nunca persiste material aberto. */
+export function credencialAssinatura(pfx: Buffer, senha: string): { cert: string; key: string } {
+  const convertido = abrirCertificadoOpenSSL(pfx, senha);
+  return { cert: convertido.cert, key: convertido.key };
+}
+
 /** Credencial aceita pelo TLS do Node, inclusive quando o PKCS#12 usa cifras legadas. */
 export function credencialTls(pfx: Buffer, senha: string): SecureContextOptions {
   try {
