@@ -11,7 +11,7 @@ import Categorias from "./Categorias";
 import Trilho from "./Trilho";
 import IconeCuidado from "./IconeCuidado";
 
-export default function HomePremium({ t, identidade, categorias, vitrine, vende }: DadosHome) {
+export default function HomePremium({ t, identidade, categorias, marcas = [], vitrine, vende }: DadosHome) {
   const conteudo = temaDo(t).premium ?? {};
   const etapas = etapasDoPremium(conteudo, categorias);
   const acessorios = categoriaPorPictograma("acessorios", categorias);
@@ -26,6 +26,7 @@ export default function HomePremium({ t, identidade, categorias, vitrine, vende 
       <div className="ap-hero-conteudo">{conteudo.heroSelo && <p className="ap-selo">{conteudo.heroSelo}</p>}<h1>{conteudo.heroTitulo ?? t.slogan ?? t.nome}</h1><p>{conteudo.heroTexto ?? identidade.diferencial}</p><div className="ap-hero-acoes"><Link className="btn-primario" href="/produtos">Explorar produtos <ArrowRight size={17}/></Link><a href={atendimento} {...(t.whatsapp ? { target: "_blank", rel: "noopener noreferrer" } : {})}>Montar meu kit <ArrowRight size={14}/></a></div></div>
     </div></section>
     {categoriasVisiveis.length > 0 && <div className="ap-faixa-categorias"><Categorias categorias={categoriasVisiveis}/></div>}
+    {marcas.length > 0 && <section className="container-loja ap-marcas" aria-labelledby="ap-marcas-titulo"><div><p className="ap-sobretitulo">Encontre sua referência</p><h2 id="ap-marcas-titulo">Compre por marca</h2></div><nav aria-label="Marcas do catálogo">{marcas.map(marca => <Link key={marca} href={`/produtos?fabricante=${encodeURIComponent(marca)}`}>{marca}</Link>)}</nav></section>}
     {vitrine.length > 0 && <section className="container-loja ap-secao"><div className="ap-secao-titulo"><div><p className="ap-sobretitulo">Escolhidos para a sua rotina</p><h2>Destaques</h2></div><Link href="/produtos">Ver catálogo <ArrowRight size={16}/></Link></div><Trilho titulo="Produtos em destaque">{vitrine.map(p => <ProductCard loja={t} key={p.id} produto={p} vende={vende} whatsapp={t.whatsapp}/>)}</Trilho></section>}
     <div className="container-loja ap-beneficios"><BeneficiosBarra t={t}/></div>
     {etapas.length > 0 && <section className="container-loja ap-secao"><div className="ap-secao-titulo"><div><p className="ap-sobretitulo">Cada etapa tem seu produto</p><h2>O cuidado começa na escolha.</h2><p>Encontre o que precisa pelo que você quer fazer.</p></div></div><div className="ap-etapas">{etapas.map((e,i) => <Link href={`/categoria/${e.categoria}`} key={e.categoria}><span className="ap-etapa-numero">0{i+1}</span><IconeCuidado tipo={e.icone}/><h3>{e.titulo}</h3><p>{e.texto}</p><ArrowRight className="ap-etapa-seta" size={19}/></Link>)}</div></section>}
