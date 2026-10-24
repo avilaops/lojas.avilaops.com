@@ -27,6 +27,7 @@ type Estado = {
     operacao: string | null;
     situacaoNfe: string | null;
     manifestacao: string | null;
+    manifestacaoEnvio: { status: string; codigo: string | null; motivo: string | null; protocolo: string | null } | null;
     quantidadeItens: number | null;
     eventoCodigo: string | null;
     eventoDescricao: string | null;
@@ -76,6 +77,9 @@ function nomeEvento(doc: Estado["documentos"][number]) {
 
 function textoSituacao(doc: Estado["documentos"][number], manifestacao?: string | null) {
   if (doc.situacao === "COMPLETA") return doc.situacaoNfe ?? "XML completo";
+  if (doc.manifestacaoEnvio?.status === "ACEITA") return `Manifestação aceita${doc.manifestacaoEnvio.protocolo ? ` · protocolo ${doc.manifestacaoEnvio.protocolo}` : ""}`;
+  if (doc.manifestacaoEnvio?.status === "REJEITADA") return `Manifestação rejeitada${doc.manifestacaoEnvio.codigo ? ` (${doc.manifestacaoEnvio.codigo})` : ""}: ${doc.manifestacaoEnvio.motivo ?? "consulte a auditoria"}`;
+  if (doc.manifestacaoEnvio) return `Manifestação ${doc.manifestacaoEnvio.status.toLowerCase().replaceAll("_", " ")}`;
   if (doc.situacao === "RESUMO") return manifestacao ?? "Sem manifestação informada";
   return doc.situacaoNfe ?? "Documento recebido";
 }
