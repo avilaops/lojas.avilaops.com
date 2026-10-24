@@ -4,6 +4,15 @@
   "members": [],
   "tasks": [
     {
+      "id": "RECOMPRA-VITRINE-20261024",
+      "title": "Recomprar itens do histórico com revisão das ofertas atuais",
+      "assignee": null,
+      "status": "em-revisao",
+      "acceptanceCriteria": ["Pedido restrito ao comprador e tenant", "Preço e disponibilidade atuais antes de adicionar", "Revisão explícita sem substituir variantes ou criar compra"],
+      "evidence": "evidencias/recompra-2026-10-24.md; cinco testes unitários e teste de integração em banco isolado",
+      "history": [{"at": "2026-10-24", "status": "em-revisao", "note": "Implementado na conta da vitrine; aguardando CI, merge e publicação."}]
+    },
+    {
       "id": "BERETA-CATALOGO-MARCAS-20261024",
       "title": "Preencher catálogo automotivo e destacar marcas da Bereta",
       "assignee": null,

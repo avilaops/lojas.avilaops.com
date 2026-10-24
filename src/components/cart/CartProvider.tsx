@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { somarAoCarrinho } from "@/lib/carrinho-local";
 
 /**
  * Carrinho no navegador.
@@ -87,13 +88,7 @@ export function CartProvider({ slug, children, painelHabilitado = false }: { slu
 
   const adicionar = useCallback<CartValue["adicionar"]>((item, quantidade = 1) => {
     if (painelHabilitado) setAberto(true);
-    setItens((atual) => {
-      const i = atual.findIndex((x) => x.id === item.id);
-      if (i === -1) return [...atual, { ...item, quantidade }];
-      const copia = [...atual];
-      copia[i] = { ...copia[i], quantidade: copia[i].quantidade + quantidade };
-      return copia;
-    });
+    setItens((atual) => somarAoCarrinho(atual, item, quantidade));
   }, [painelHabilitado]);
 
   const alterar = useCallback<CartValue["alterar"]>((id, quantidade) => {

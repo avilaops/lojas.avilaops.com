@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db";
 import { formatarBRL } from "@/lib/catalogo";
 import ContaForm from "@/components/conta/ContaForm";
 import EnderecosSalvos from "@/components/conta/EnderecosSalvos";
+import ComprarNovamente from "@/components/conta/ComprarNovamente";
 
 export const metadata: Metadata = { title: "Minha conta", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -35,7 +36,7 @@ export default async function ContaPage() {
   }
 
   const [pedidos, enderecos] = await Promise.all([
-    prisma.pedido.findMany({ where: { compradorId: c.id }, include: { itens: true }, orderBy: { criadoEm: "desc" }, take: 50 }),
+    prisma.pedido.findMany({ where: { tenantId: t.id, compradorId: c.id }, include: { itens: true }, orderBy: { criadoEm: "desc" }, take: 50 }),
     prisma.enderecoComprador.findMany({ where: { compradorId: c.id }, orderBy: [{ principal: "desc" }] }),
   ]);
 
@@ -68,6 +69,7 @@ export default async function ContaPage() {
                 </div>
                 <span className="font-bold">{formatarBRL(p.totalCentavos)}</span>
                 <Link href={`/pedido/${p.referencia}`} className="text-xs underline">detalhes</Link>
+                <ComprarNovamente pedidoId={p.id} />
               </li>
             ))}
           </ul>
