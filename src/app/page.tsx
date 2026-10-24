@@ -52,7 +52,7 @@ export default async function Home() {
     listarProdutos(t.id, { destaque: true, moto, limite: 12, ...(campanhaVisual ? { imagemOrigem: "propria" as const, compraveis: true } : {}) }),
     campanhaVisual ? { media: null, total: 0, avaliacoes: [] } : provaSocialDa(t.id),
     motopecas ? motosDaLoja(t.id) : null,
-    motopecas || layoutAtual === "industrial" ? marcasDaLoja(t.id) : [],
+    motopecas || layoutAtual === "industrial" || layoutAtual === "automotivo-premium" ? marcasDaLoja(t.id) : [],
     t.segmento === "farmacia" ? necessidadesDaLoja(t.id) : undefined,
   ]);
   const vitrine = campanhaVisual

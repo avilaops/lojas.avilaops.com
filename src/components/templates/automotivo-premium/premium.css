@@ -105,6 +105,14 @@ html[data-template="automotivo-premium"][data-modo="claro"] {
 [data-template="automotivo-premium"] .cartao-produto-imagem img { object-fit:contain; padding:15px; }
 [data-template="automotivo-premium"] .cartao-produto>div:last-child { gap:8px; padding:18px; }
 [data-template="automotivo-premium"] .cartao-produto .btn-primario { border-radius:8px; font-size:11px; padding-inline:8px; min-height:40px; letter-spacing:0; }
+[data-template="automotivo-premium"] :is(.cartao-produto-marca,.ap-produto-marca) { display:inline-flex; align-self:flex-start; width:fit-content; max-width:100%; padding:5px 9px; border-radius:5px; background:var(--primary); color:var(--primary-foreground); font-weight:850; line-height:1.3; letter-spacing:.04em; }
+.ap-marcas { display:grid; gap:16px; padding-block:28px 8px; }
+.ap-marcas h2 { margin:0; font-size:22px; font-weight:800; letter-spacing:-.5px; }
+.ap-marcas nav { display:flex; gap:9px; overflow-x:auto; max-width:100%; padding-block:4px 10px; scroll-snap-type:x proximity; }
+.ap-marcas nav a { flex-shrink:0; scroll-snap-align:start; display:inline-flex; align-items:center; min-height:44px; border:1px solid var(--border); border-radius:8px; padding:10px 16px; background:var(--card); color:var(--foreground); font-size:12px; font-weight:800; }
+.ap-marcas nav a:hover { border-color:var(--primary); }
+.ap-faixa-categorias .ap-categorias-grade:has(>:nth-child(3):last-child) { grid-template-columns:repeat(3,minmax(0,1fr)); }
+@media (min-width:768px) { .ap-marcas nav { flex-wrap:wrap; } }
 .ap-beneficios .beneficios-barra { margin:0; box-shadow:none; border-radius:0; border-width:1px 0; background:transparent; }
 .ap-etapas { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1px; background:var(--border); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
 .ap-etapas>a { position:relative; padding:29px; background:var(--background); transition:background .2s; }
@@ -264,6 +272,8 @@ html[data-template="automotivo-premium"][data-modo="claro"] {
   [data-template="automotivo-premium"] .cartao-produto .btn-primario { font-size:10px; min-height:42px; }
   [data-template="automotivo-premium"] .cartao-produto .btn-primario svg { display:none; }
   [data-template="automotivo-premium"] .cartao-produto-imagem img { padding:10px; }
+  .ap-marcas { padding-block:22px 4px; gap:12px; }
+  .ap-marcas h2 { font-size:20px; }
   .ap-beneficios .beneficios-barra { display:grid; grid-template-columns:1fr; }
   .ap-beneficios .beneficios-barra>div { border-right:0; border-bottom:1px solid var(--border); padding:17px 0; }
   .ap-beneficios .beneficios-barra>div:last-child { border-bottom:0; }

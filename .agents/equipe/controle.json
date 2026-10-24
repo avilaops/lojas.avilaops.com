@@ -4,6 +4,15 @@
   "members": [],
   "tasks": [
     {
+      "id": "BERETA-CATALOGO-MARCAS-20261024",
+      "title": "Preencher catálogo automotivo e destacar marcas da Bereta",
+      "assignee": null,
+      "status": "em-revisao",
+      "acceptanceCriteria": ["Marcas sustentadas pelo título ou fonte oficial", "Ficha, descrição e resumo sem GTIN ou embalagem inventados", "Marcas visíveis e filtro por fabricante funcional", "Fotos correspondentes ao modelo e acabamento"],
+      "evidence": "7.047 itens enriquecidos, 6.476 marcas e 7.038 fichas; 9 testes aprovados. evidencias/bereta-catalogo-marcas-2026-10-24.md",
+      "history": [{"at":"2026-10-24","status":"em-revisao","note":"Enriquecimento aplicado com backup; interface preparada para CI e publicação. Fotos e dados sem confirmação permanecem pendentes."}]
+    },
+    {
       "id": "CATALOGOS-DOMI-VEDA-20261024",
       "title": "Revisar dados comprovados dos catálogos Domi-Rio e VedaShow",
       "assignee": null,

@@ -222,7 +222,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
         {usaBlocoProprio(temaDo(t), "produto") ? <GaleriaPremium imagens={p.imagens} alt={p.nome} origem={p.imagemOrigem}/> : <GaleriaProduto imagens={p.imagens} alt={p.nome} origem={p.imagemOrigem} />}
 
         <div className="ap-produto-info">
-          {p.marca && <p className="text-xs uppercase tracking-wide text-muted-foreground">{p.marca}</p>}
+          {p.marca && <p className="ap-produto-marca text-xs uppercase tracking-wide text-muted-foreground">{p.marca}</p>}
           <h1 className="mt-1 text-2xl font-bold">{p.nome}</h1>
           {p.descricaoCurta && <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{textoPuro(p.descricaoCurta)}</p>}
 

@@ -149,7 +149,7 @@ export default function ProductCard({ produto, loja, vende, whatsapp, moto = nul
         )}
       </Link>
       <div className="cartao-produto-conteudo flex flex-1 flex-col gap-2 p-4">
-        {!tecnico && marca && <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{marca}</p>}
+        {!tecnico && marca && <p className="cartao-produto-marca text-[11px] uppercase tracking-wide text-muted-foreground">{marca}</p>}
         {serve ? (
           <p className="selo-serve">✔ Serve na sua moto</p>
         ) : modelos.length > 0 ? (
