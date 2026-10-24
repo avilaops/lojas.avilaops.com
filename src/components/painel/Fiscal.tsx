@@ -391,7 +391,7 @@ function DocumentoFiscal({ doc, manifestacao, selecionar, erpId, manifestar, ocu
       <div className="min-w-0">
         <div className="flex items-start justify-between gap-3"><p className="min-w-0 text-sm font-semibold">{doc.fornecedor ?? tipoDocumento(doc.schema)}</p><strong className="shrink-0 text-sm">{dinheiro(doc.valorCentavos)}</strong></div>
         <p className="mt-1 text-xs text-muted-foreground">{doc.numero ? `Nota ${doc.numero} · ` : ""}Recebida em {data(doc.recebidoEm)}</p>
-        <p className={`mt-2 text-xs ${doc.situacao === "RESUMO" ? "text-amber-900" : "text-muted-foreground"}`}>{doc.situacao === "RESUMO" ? "XML e PDF aguardando disponibilização pela SEFAZ." : textoSituacao(doc, manifestacao)}</p>
+        <p className={`mt-2 text-xs ${doc.situacao === "RESUMO" ? "text-amber-900" : "text-muted-foreground"}`}>{textoSituacao(doc, manifestacao)}</p>
         <DetalhesDocumentoFiscal doc={doc} manifestacao={manifestacao} />
       </div>
       <div className="flex flex-wrap gap-2"><AcoesManifestacao doc={doc} manifestar={manifestar} ocupado={ocupado} />{!cte && <a className="btn-secundario" href="#fluxos-fiscais" onClick={() => selecionar(doc)}>Usar no fluxo</a>}{(erpId || doc.situacao === "COMPLETA") && <a className="btn-secundario w-full sm:w-auto" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/xml` : `/api/painel/fiscal/documentos/${doc.completoId ?? doc.id}`}>
