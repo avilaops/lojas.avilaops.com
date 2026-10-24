@@ -85,7 +85,7 @@ export default function Fiscal() {
   const [estado, setEstado] = useState<Estado | null>(null);
   const [erro, setErro] = useState("");
   const [mensagem, setMensagem] = useState("");
-  const [ocupado, setOcupado] = useState<"certificado" | "consulta" | null>(null);
+  const [ocupado, setOcupado] = useState<string | null>(null);
   const [arquivoNome, setArquivoNome] = useState("");
   const [agora] = useState(() => Date.now());
   const [busca, setBusca] = useState("");
@@ -130,6 +130,32 @@ export default function Fiscal() {
     } finally {
       setOcupado(null);
     }
+  }
+
+  async function manifestar(doc: Estado["documentos"][number], tipo: "CIENCIA" | "CONFIRMACAO" | "DESCONHECIMENTO" | "NAO_REALIZADA") {
+    const efeitos = {
+      CIENCIA: "registra que você tomou conhecimento da emissão; não confirma a compra.",
+      CONFIRMACAO: "confirma que a operação ocorreu e produz efeito fiscal.",
+      DESCONHECIMENTO: "declara que você não reconhece esta operação.",
+      NAO_REALIZADA: "declara que a operação conhecida não foi realizada.",
+    } as const;
+    let justificativa: string | undefined;
+    if (tipo === "NAO_REALIZADA") {
+      justificativa = window.prompt("Informe a justificativa fiscal (15 a 255 caracteres):")?.trim();
+      if (!justificativa) return;
+    }
+    if (!window.confirm(`Confirma o envio real à SEFAZ? Esta ação ${efeitos[tipo]}`)) return;
+    setOcupado(`manifestacao:${doc.id}`); setErro(""); setMensagem("");
+    try {
+      const resposta = await fetch(`/api/painel/fiscal/documentos/${doc.id}/manifestacao`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tipo, justificativa, confirmacao: true }) });
+      const resultado = await resposta.json();
+      if (!resposta.ok) throw new Error(resultado.erro ?? "A SEFAZ não confirmou a manifestação.");
+      setMensagem(resultado.aceita ? `Manifestação aceita pela SEFAZ. Protocolo ${resultado.protocolo}. A busca do XML completo foi executada.` : `Manifestação não aceita: ${resultado.codigo} — ${resultado.motivo}`);
+      setPagina(1);
+      const atualizada = await fetch(`/api/painel/fiscal?tipo=${tipo === "CIENCIA" ? "nfe-recebidas" : tipo}`).then((r) => r.json());
+      setEstado(atualizada);
+    } catch (e) { setErro(e instanceof Error ? e.message : "Falha ao manifestar."); }
+    finally { setOcupado(null); }
   }
 
   const configuracao = estado?.configuracao;
@@ -291,12 +317,12 @@ export default function Fiscal() {
               {!documentosSeparados.notas.length ? <p className="rounded-xl border border-border p-4 text-sm text-muted-foreground">Nenhuma NF-e encontrada neste lote.</p> : (
                 <>
                   <ul className="divide-y divide-border sm:hidden">
-                    {documentosSeparados.notas.map((doc) => <DocumentoFiscal key={doc.id} doc={doc} selecionar={setDocumentoSelecionado} erpId={doc.chave ? erpPorChave.get(doc.chave) : undefined} manifestacao={doc.manifestacao ?? (doc.chave ? manifestacoesPorChave.get(doc.chave) : null)} />)}
+                    {documentosSeparados.notas.map((doc) => <DocumentoFiscal key={doc.id} doc={doc} selecionar={setDocumentoSelecionado} manifestar={manifestar} ocupado={ocupado === `manifestacao:${doc.id}`} erpId={doc.chave ? erpPorChave.get(doc.chave) : undefined} manifestacao={doc.manifestacao ?? (doc.chave ? manifestacoesPorChave.get(doc.chave) : null)} />)}
                   </ul>
                   <div className="hidden overflow-x-auto rounded-xl border border-border sm:block">
                     <table className="w-full text-left text-sm">
                       <thead className="bg-muted/40 text-xs uppercase text-muted-foreground"><tr><th className="px-3 py-3">Recebida</th><th className="px-3 py-3">Fornecedor</th><th className="px-3 py-3">Nota</th><th className="px-3 py-3 text-right">Valor</th><th className="px-3 py-3">Situação</th><th className="px-3 py-3" /></tr></thead>
-                      <tbody className="divide-y divide-border">{documentosSeparados.notas.map((doc) => <LinhaDocumentoFiscal key={doc.id} doc={doc} selecionar={setDocumentoSelecionado} erpId={doc.chave ? erpPorChave.get(doc.chave) : undefined} manifestacao={doc.manifestacao ?? (doc.chave ? manifestacoesPorChave.get(doc.chave) : null)} />)}</tbody>
+                      <tbody className="divide-y divide-border">{documentosSeparados.notas.map((doc) => <LinhaDocumentoFiscal key={doc.id} doc={doc} selecionar={setDocumentoSelecionado} manifestar={manifestar} ocupado={ocupado === `manifestacao:${doc.id}`} erpId={doc.chave ? erpPorChave.get(doc.chave) : undefined} manifestacao={doc.manifestacao ?? (doc.chave ? manifestacoesPorChave.get(doc.chave) : null)} />)}</tbody>
                     </table>
                   </div>
                 </>
@@ -346,7 +372,14 @@ export default function Fiscal() {
   );
 }
 
-function DocumentoFiscal({ doc, manifestacao, selecionar, erpId }: { doc: Estado["documentos"][number]; manifestacao?: string | null; erpId?: number; selecionar: (doc: Estado["documentos"][number]) => void }) {
+type Manifestar = (doc: Estado["documentos"][number], tipo: "CIENCIA" | "CONFIRMACAO" | "DESCONHECIMENTO" | "NAO_REALIZADA") => Promise<void>;
+
+function AcoesManifestacao({ doc, manifestar, ocupado = false }: { doc: Estado["documentos"][number]; manifestar?: Manifestar; ocupado?: boolean }) {
+  if (!manifestar || doc.situacao !== "RESUMO" || doc.tipo !== "NFE") return null;
+  return <details className="relative"><summary className="btn-secundario min-h-11 cursor-pointer list-none">{ocupado ? "Enviando à SEFAZ…" : "Manifestar"}</summary><div className="z-10 mt-2 grid min-w-64 gap-2 rounded-xl border border-border bg-background p-3 shadow-lg sm:absolute sm:right-0"><button disabled={ocupado} className="btn-secundario justify-start" onClick={() => void manifestar(doc, "CIENCIA")}>Ciência da Emissão</button><button disabled={ocupado} className="btn-secundario justify-start" onClick={() => void manifestar(doc, "CONFIRMACAO")}>Confirmação da Operação</button><button disabled={ocupado} className="btn-secundario justify-start" onClick={() => void manifestar(doc, "DESCONHECIMENTO")}>Desconhecimento</button><button disabled={ocupado} className="btn-secundario justify-start" onClick={() => void manifestar(doc, "NAO_REALIZADA")}>Operação não Realizada</button></div></details>;
+}
+
+function DocumentoFiscal({ doc, manifestacao, selecionar, erpId, manifestar, ocupado }: { doc: Estado["documentos"][number]; manifestacao?: string | null; erpId?: number; selecionar: (doc: Estado["documentos"][number]) => void; manifestar?: Manifestar; ocupado?: boolean }) {
   const rotuloXml = "XML";
   const cte = doc.tipo === "CTE";
   return (
@@ -357,7 +390,7 @@ function DocumentoFiscal({ doc, manifestacao, selecionar, erpId }: { doc: Estado
         <p className={`mt-2 text-xs ${doc.situacao === "RESUMO" ? "text-amber-900" : "text-muted-foreground"}`}>{doc.situacao === "RESUMO" ? "XML e PDF aguardando disponibilização pela SEFAZ." : textoSituacao(doc, manifestacao)}</p>
         <DetalhesDocumentoFiscal doc={doc} manifestacao={manifestacao} />
       </div>
-      <div className="flex flex-wrap gap-2">{!cte && <a className="btn-secundario" href="#fluxos-fiscais" onClick={() => selecionar(doc)}>Usar no fluxo</a>}{(erpId || doc.situacao === "COMPLETA") && <a className="btn-secundario w-full sm:w-auto" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/xml` : `/api/painel/fiscal/documentos/${doc.completoId ?? doc.id}`}>
+      <div className="flex flex-wrap gap-2"><AcoesManifestacao doc={doc} manifestar={manifestar} ocupado={ocupado} />{!cte && <a className="btn-secundario" href="#fluxos-fiscais" onClick={() => selecionar(doc)}>Usar no fluxo</a>}{(erpId || doc.situacao === "COMPLETA") && <a className="btn-secundario w-full sm:w-auto" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/xml` : `/api/painel/fiscal/documentos/${doc.completoId ?? doc.id}`}>
         <Download size={16} aria-hidden="true" /> {rotuloXml}
       </a>}{!cte && (erpId || doc.situacao === "COMPLETA") ? <a className="btn-secundario" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/danfe` : `/api/painel/fiscal/documentos/${doc.completoId ?? doc.id}/danfe`}><FileText size={16} aria-hidden="true" /> DANFE PDF</a> : <span className="self-center text-xs text-muted-foreground">{cte && doc.situacao === "COMPLETA" ? "DACTE indisponível: renderizador não configurado" : "XML e PDF pendentes"}</span>}</div>
     </li>
@@ -386,7 +419,7 @@ function DetalhesDocumentoFiscal({ doc, manifestacao }: { doc: Estado["documento
   );
 }
 
-function LinhaDocumentoFiscal({ doc, manifestacao, selecionar, erpId }: { doc: Estado["documentos"][number]; manifestacao?: string | null; erpId?: number; selecionar: (doc: Estado["documentos"][number]) => void }) {
+function LinhaDocumentoFiscal({ doc, manifestacao, selecionar, erpId, manifestar, ocupado }: { doc: Estado["documentos"][number]; manifestacao?: string | null; erpId?: number; selecionar: (doc: Estado["documentos"][number]) => void; manifestar: Manifestar; ocupado: boolean }) {
   return (
     <tr>
       <td className="whitespace-nowrap px-3 py-3 text-xs text-muted-foreground">{dia(doc.recebidoEm)}</td>
@@ -394,7 +427,7 @@ function LinhaDocumentoFiscal({ doc, manifestacao, selecionar, erpId }: { doc: E
       <td className="px-3 py-3">{doc.numero ?? "—"}<DetalhesDocumentoFiscal doc={doc} manifestacao={manifestacao} /></td>
       <td className="whitespace-nowrap px-3 py-3 text-right font-medium tabular-nums">{dinheiro(doc.valorCentavos)}</td>
       <td className="px-3 py-3 text-xs"><span className="block font-medium text-foreground">{doc.situacao === "COMPLETA" ? "Arquivos disponíveis" : "Arquivos pendentes"}</span><span className="mt-1 block text-muted-foreground">{textoSituacao(doc, manifestacao)}</span></td>
-      <td className="px-3 py-3 text-right"><div className="flex flex-wrap justify-end gap-2"><a className="btn-secundario" href="#fluxos-fiscais" onClick={() => selecionar(doc)}>Usar no fluxo</a>{(erpId || doc.situacao === "COMPLETA") && <a className="btn-secundario whitespace-nowrap" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/xml` : `/api/painel/fiscal/documentos/${doc.completoId ?? doc.id}`}><Download size={15} aria-hidden="true" /> XML</a>}{(erpId || doc.situacao === "COMPLETA") ? <a className="btn-secundario whitespace-nowrap" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/danfe` : `/api/painel/fiscal/documentos/${doc.completoId ?? doc.id}/danfe`}><FileText size={15} aria-hidden="true" /> DANFE PDF</a> : <span className="self-center whitespace-nowrap text-xs text-muted-foreground">XML e PDF pendentes</span>}</div></td>
+      <td className="px-3 py-3 text-right"><div className="flex flex-wrap justify-end gap-2"><AcoesManifestacao doc={doc} manifestar={manifestar} ocupado={ocupado} /><a className="btn-secundario" href="#fluxos-fiscais" onClick={() => selecionar(doc)}>Usar no fluxo</a>{(erpId || doc.situacao === "COMPLETA") && <a className="btn-secundario whitespace-nowrap" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/xml` : `/api/painel/fiscal/documentos/${doc.completoId ?? doc.id}`}><Download size={15} aria-hidden="true" /> XML</a>}{(erpId || doc.situacao === "COMPLETA") ? <a className="btn-secundario whitespace-nowrap" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/danfe` : `/api/painel/fiscal/documentos/${doc.completoId ?? doc.id}/danfe`}><FileText size={15} aria-hidden="true" /> DANFE PDF</a> : <span className="self-center whitespace-nowrap text-xs text-muted-foreground">XML e PDF pendentes</span>}</div></td>
     </tr>
   );
 }
