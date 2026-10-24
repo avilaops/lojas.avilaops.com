@@ -10,6 +10,7 @@ import ProvaSocial from "@/components/home/ProvaSocial";
 import { comporHome } from "@/components/home/composicao";
 import { identidadePublica } from "@/lib/identidade-publica";
 import { dadosDaHomeIndustrial } from "@/lib/home-industrial";
+import { usaBlocoProprio } from "@/lib/templates";
 
 /**
  * Página inicial: um dos layouts fixos (Tenant.tema.layout), todos
@@ -52,7 +53,7 @@ export default async function Home() {
     listarProdutos(t.id, { destaque: true, moto, limite: 12, ...(campanhaVisual ? { imagemOrigem: "propria" as const, compraveis: true } : {}) }),
     campanhaVisual ? { media: null, total: 0, avaliacoes: [] } : provaSocialDa(t.id),
     motopecas ? motosDaLoja(t.id) : null,
-    motopecas || layoutAtual === "industrial" || layoutAtual === "automotivo-premium" ? marcasDaLoja(t.id) : [],
+    motopecas || layoutAtual === "industrial" || usaBlocoProprio(publicado, "categorias") ? marcasDaLoja(t.id) : [],
     t.segmento === "farmacia" ? necessidadesDaLoja(t.id) : undefined,
   ]);
   const vitrine = campanhaVisual
