@@ -4,6 +4,15 @@
   "members": [],
   "tasks": [
     {
+      "id": "CATALOGOS-DOMI-VEDA-20261024",
+      "title": "Revisar dados comprovados dos catálogos Domi-Rio e VedaShow",
+      "assignee": null,
+      "status": "parcial",
+      "acceptanceCriteria": ["Alterações com cópia anterior e releitura", "Não inventar GTIN ou embalagem", "Registrar cobertura e pendências"],
+      "evidence": "75 produtos atualizados e relidos; simulação posterior com zero alterações; evidencias/revisao-catalogos-2026-10-24.md",
+      "history": [{"at": "2026-10-24", "status": "parcial", "note": "Incremento aplicado em produção. Fotos e especificações sem identidade confirmada dependem de conferência física ou documental."}]
+    },
+    {
       "id": "BERETA-VISUAL-20261024",
       "title": "Melhorar imagens e visual mobile da Bereta Rodas",
       "assignee": null,
