@@ -61,6 +61,8 @@ const documentoFormatado = (documento: string | null) => {
   return documento;
 };
 const dinheiro = (centavos: number | null) => centavos == null ? "—" : new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(centavos / 100);
+const serieDaChave = (chave: string | null) => chave && /^\d{44}$/.test(chave) ? String(Number(chave.slice(22, 25))) : "—";
+type ColunaOrdenacao = "emissao" | "numero" | "serie" | "tipo" | "documento" | "ie" | "nome" | "valor" | "situacao";
 
 function tipoDocumento(schema: string) {
   if (schema.startsWith("resNFe")) return "Resumo de NF-e";
@@ -99,6 +101,7 @@ export default function Fiscal() {
   const [inicio, setInicio] = useState("");
   const [fim, setFim] = useState("");
   const [documentoSelecionado, setDocumentoSelecionado] = useState<Estado["documentos"][number] | null>(null);
+  const [ordenacao, setOrdenacao] = useState<{ coluna: ColunaOrdenacao; direcao: "asc" | "desc" }>({ coluna: "emissao", direcao: "desc" });
 
   useEffect(() => {
     const controller = new AbortController();
@@ -164,6 +167,23 @@ export default function Fiscal() {
 
   const configuracao = estado?.configuracao;
   const documentosSeparados = separarDocumentosFiscais(estado?.documentos ?? []);
+  const valorOrdenacao = (doc: Estado["documentos"][number], coluna: ColunaOrdenacao): string | number => ({
+    emissao: doc.emitidaEm ? new Date(doc.emitidaEm).getTime() : 0,
+    numero: Number(doc.numero) || 0,
+    serie: Number(serieDaChave(doc.chave)) || 0,
+    tipo: doc.operacao ?? "",
+    documento: doc.documentoFornecedor ?? "",
+    ie: doc.inscricaoEstadual ?? "",
+    nome: doc.fornecedor ?? "",
+    valor: doc.valorCentavos ?? 0,
+    situacao: textoSituacao(doc, doc.manifestacao),
+  })[coluna];
+  const notasOrdenadas = [...documentosSeparados.notas].sort((a, b) => {
+    const av = valorOrdenacao(a, ordenacao.coluna); const bv = valorOrdenacao(b, ordenacao.coluna);
+    const resultado = typeof av === "number" && typeof bv === "number" ? av - bv : String(av).localeCompare(String(bv), "pt-BR", { numeric: true });
+    return ordenacao.direcao === "asc" ? resultado : -resultado;
+  });
+  const ordenar = (coluna: ColunaOrdenacao) => setOrdenacao((atual) => ({ coluna, direcao: atual.coluna === coluna && atual.direcao === "asc" ? "desc" : "asc" }));
   const manifestacoesPorChave = new Map<string, string>();
   for (const evento of documentosSeparados.eventos) {
     if (evento.chave && evento.eventoCodigo?.startsWith("2102") && !manifestacoesPorChave.has(evento.chave)) {
@@ -321,12 +341,12 @@ export default function Fiscal() {
               {!documentosSeparados.notas.length ? <p className="rounded-xl border border-border p-4 text-sm text-muted-foreground">Nenhuma NF-e encontrada neste lote.</p> : (
                 <>
                   <ul className="divide-y divide-border sm:hidden">
-                    {documentosSeparados.notas.map((doc) => <DocumentoFiscal key={doc.id} doc={doc} selecionar={setDocumentoSelecionado} manifestar={manifestar} ocupado={ocupado === `manifestacao:${doc.id}`} erpId={doc.chave ? erpPorChave.get(doc.chave) : undefined} manifestacao={doc.manifestacao ?? (doc.chave ? manifestacoesPorChave.get(doc.chave) : null)} />)}
+                    {notasOrdenadas.map((doc) => <DocumentoFiscal key={doc.id} doc={doc} selecionar={setDocumentoSelecionado} manifestar={manifestar} ocupado={ocupado === `manifestacao:${doc.id}`} erpId={doc.chave ? erpPorChave.get(doc.chave) : undefined} manifestacao={doc.manifestacao ?? (doc.chave ? manifestacoesPorChave.get(doc.chave) : null)} />)}
                   </ul>
                   <div className="hidden overflow-x-auto rounded-xl border border-border sm:block">
-                    <table className="w-full text-left text-sm">
-                      <thead className="bg-muted/40 text-xs uppercase text-muted-foreground"><tr><th className="px-3 py-3">Recebida</th><th className="px-3 py-3">Fornecedor</th><th className="px-3 py-3">Nota</th><th className="px-3 py-3 text-right">Valor</th><th className="px-3 py-3">Situação</th><th className="px-3 py-3" /></tr></thead>
-                      <tbody className="divide-y divide-border">{documentosSeparados.notas.map((doc) => <LinhaDocumentoFiscal key={doc.id} doc={doc} selecionar={setDocumentoSelecionado} manifestar={manifestar} ocupado={ocupado === `manifestacao:${doc.id}`} erpId={doc.chave ? erpPorChave.get(doc.chave) : undefined} manifestacao={doc.manifestacao ?? (doc.chave ? manifestacoesPorChave.get(doc.chave) : null)} />)}</tbody>
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-muted/40 text-muted-foreground"><tr><th className="px-2 py-2">Arquivos</th>{([['emissao','Emissão'],['numero','Número'],['serie','Série'],['tipo','Tipo'],['documento','CNPJ/CPF'],['ie','IE'],['nome','Nome'],['valor','Valor'],['situacao','Situação']] as Array<[ColunaOrdenacao,string]>).map(([coluna, rotulo]) => <th key={coluna} className={`px-2 py-2 ${coluna === 'valor' ? 'text-right' : ''}`}><button type="button" className="min-h-8 whitespace-nowrap font-semibold hover:text-foreground" onClick={() => ordenar(coluna)}>{rotulo}{ordenacao.coluna === coluna ? (ordenacao.direcao === 'asc' ? ' ↑' : ' ↓') : ''}</button></th>)}</tr></thead>
+                      <tbody className="divide-y divide-border">{notasOrdenadas.map((doc) => <LinhaDocumentoFiscal key={doc.id} doc={doc} selecionar={setDocumentoSelecionado} manifestar={manifestar} ocupado={ocupado === `manifestacao:${doc.id}`} erpId={doc.chave ? erpPorChave.get(doc.chave) : undefined} manifestacao={doc.manifestacao ?? (doc.chave ? manifestacoesPorChave.get(doc.chave) : null)} />)}</tbody>
                     </table>
                   </div>
                 </>
@@ -426,12 +446,16 @@ function DetalhesDocumentoFiscal({ doc, manifestacao }: { doc: Estado["documento
 function LinhaDocumentoFiscal({ doc, manifestacao, selecionar, erpId, manifestar, ocupado }: { doc: Estado["documentos"][number]; manifestacao?: string | null; erpId?: number; selecionar: (doc: Estado["documentos"][number]) => void; manifestar: Manifestar; ocupado: boolean }) {
   return (
     <tr>
-      <td className="whitespace-nowrap px-3 py-3 text-xs text-muted-foreground">{dia(doc.recebidoEm)}</td>
-      <td className="max-w-64 px-3 py-3"><span className="block truncate font-medium" title={doc.fornecedor ?? undefined}>{doc.fornecedor ?? "Fornecedor não informado"}</span>{doc.documentoFornecedor && <span className="mt-1 block text-xs text-muted-foreground">{documentoFormatado(doc.documentoFornecedor)}</span>}</td>
-      <td className="px-3 py-3">{doc.numero ?? "—"}<DetalhesDocumentoFiscal doc={doc} manifestacao={manifestacao} /></td>
-      <td className="whitespace-nowrap px-3 py-3 text-right font-medium tabular-nums">{dinheiro(doc.valorCentavos)}</td>
-      <td className="px-3 py-3 text-xs"><span className="block font-medium text-foreground">{doc.situacao === "COMPLETA" ? "Arquivos disponíveis" : "Arquivos pendentes"}</span><span className="mt-1 block text-muted-foreground">{textoSituacao(doc, manifestacao)}</span></td>
-      <td className="px-3 py-3 text-right"><div className="flex flex-wrap justify-end gap-2"><AcoesManifestacao doc={doc} manifestar={manifestar} ocupado={ocupado} /><a className="btn-secundario" href="#fluxos-fiscais" onClick={() => selecionar(doc)}>Usar no fluxo</a>{(erpId || doc.situacao === "COMPLETA") && <a className="btn-secundario whitespace-nowrap" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/xml` : `/api/painel/fiscal/documentos/${doc.completoId ?? doc.id}`}><Download size={15} aria-hidden="true" /> XML</a>}{(erpId || doc.situacao === "COMPLETA") ? <a className="btn-secundario whitespace-nowrap" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/danfe` : `/api/painel/fiscal/documentos/${doc.completoId ?? doc.id}/danfe`}><FileText size={15} aria-hidden="true" /> DANFE PDF</a> : <span className="self-center whitespace-nowrap text-xs text-muted-foreground">XML e PDF pendentes</span>}</div></td>
+      <td className="px-2 py-2"><div className="flex min-w-28 flex-wrap gap-1">{(erpId || doc.situacao === "COMPLETA") ? <><a className="underline" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/xml` : `/api/painel/fiscal/documentos/${doc.completoId ?? doc.id}`}>XML</a><a className="underline" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/danfe` : `/api/painel/fiscal/documentos/${doc.completoId ?? doc.id}/danfe`}>PDF</a></> : <span className="text-muted-foreground">Pendente</span>}<AcoesManifestacao doc={doc} manifestar={manifestar} ocupado={ocupado} /></div></td>
+      <td className="whitespace-nowrap px-2 py-2">{doc.emitidaEm ? dia(doc.emitidaEm) : dia(doc.recebidoEm)}</td>
+      <td className="px-2 py-2 font-medium">{doc.numero ?? "—"}<DetalhesDocumentoFiscal doc={doc} manifestacao={manifestacao} /></td>
+      <td className="px-2 py-2">{serieDaChave(doc.chave)}</td>
+      <td className="px-2 py-2">{doc.operacao ?? "—"}</td>
+      <td className="whitespace-nowrap px-2 py-2">{documentoFormatado(doc.documentoFornecedor) ?? "—"}</td>
+      <td className="px-2 py-2">{doc.inscricaoEstadual ?? "—"}</td>
+      <td className="max-w-56 px-2 py-2"><span className="block truncate" title={doc.fornecedor ?? undefined}>{doc.fornecedor ?? "Não informado"}</span></td>
+      <td className="whitespace-nowrap px-2 py-2 text-right font-medium tabular-nums">{dinheiro(doc.valorCentavos)}</td>
+      <td className="max-w-64 px-2 py-2"><span className="line-clamp-2" title={textoSituacao(doc, manifestacao)}>{textoSituacao(doc, manifestacao)}</span><a className="mt-1 block underline" href="#fluxos-fiscais" onClick={() => selecionar(doc)}>Usar no fluxo</a></td>
     </tr>
   );
 }
