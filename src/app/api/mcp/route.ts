@@ -6,17 +6,19 @@ import { CORS } from "@/lib/mcp-oauth-http";
 import { anotacoes, FERRAMENTAS, podeUsar } from "@/lib/mcp-permissoes";
 import { ehNotificacao, erroRpc, negociarVersao } from "@/lib/mcp-protocolo";
 import { MCP_TOOLS } from "@/lib/mcp-tools";
+import { executarFerramentaNoTenant, MCP_ADMIN_TOOLS } from "@/lib/mcp-admin-tools";
 import { hostDoSlug, registrarSemDerrubar } from "@/lib/metricas-rota";
 import { HOST_SEM_LOJA } from "@/lib/metricas-tenant";
 
 const SERVER_INFO = {
   name: "avilaops-lojas-mcp",
   title: "Lojas por Avila Ops",
-  version: "1.2.0",
+  version: "1.3.0",
 };
 
 const INSTRUCOES =
-  "Conector da loja do lojista na plataforma Lojas por Avila Ops. As ferramentas leem e alteram a loja de verdade: " +
+  "Conector da plataforma Lojas por Avila Ops. Credenciais administrativas recebem ferramentas admin_* para criar, provisionar e operar tenants; " +
+  "credenciais de loja recebem apenas as ferramentas autorizadas pelo lojista. As ferramentas leem e alteram dados de verdade: " +
   "catálogo, preços, estoque, pedidos, cupons e clientes. Valores em reais; confirme com o lojista antes de alterar preço, estoque ou status de pedido. " +
   "Você só vê as ferramentas que o lojista autorizou para esta conexão.";
 
@@ -95,14 +97,15 @@ export async function POST(request: Request) {
   let doLimite: Record<string, string> = {};
   if (auth.tipo === "loja") {
     hostDaLoja = hostDoSlug(auth.tenant.slug) ?? HOST_SEM_LOJA;
-    const limite = limitador.consumir(`${auth.origem.tipo}:${auth.origem.id}`, LIMITE_POR_MINUTO);
-    doLimite = cabecalhosDoLimite(limite);
-    if (!limite.permitido) {
-      return medida(json(erroRpc(id, -32003, `Limite de ${limite.limite} chamadas por minuto atingido. Tente de novo em ${limite.reiniciaEm} s.`), 429, {
-        ...doLimite,
-        "retry-after": String(limite.reiniciaEm),
-      }));
-    }
+  }
+  const chaveDoLimite = auth.tipo === "loja" ? `${auth.origem.tipo}:${auth.origem.id}` : "admin";
+  const limite = limitador.consumir(chaveDoLimite, LIMITE_POR_MINUTO);
+  doLimite = cabecalhosDoLimite(limite);
+  if (!limite.permitido) {
+    return medida(json(erroRpc(id, -32003, `Limite de ${limite.limite} chamadas por minuto atingido. Tente de novo em ${limite.reiniciaEm} s.`), 429, {
+      ...doLimite,
+      "retry-after": String(limite.reiniciaEm),
+    }));
   }
   const responder = (corpo: unknown) => medida(json(corpo, 200, doLimite));
 
@@ -131,17 +134,28 @@ export async function POST(request: Request) {
   // 3. Listar Ferramentas: só as que esta credencial pode usar. O assistente
   // não oferece ao lojista o que a conexão recusaria.
   if (method === "tools/list") {
-    const visiveis = auth.tipo === "loja" ? MCP_TOOLS.filter((t) => podeUsar(auth.escopos, t.name)) : MCP_TOOLS;
+    const visiveis = auth.tipo === "loja" ? MCP_TOOLS.filter((t) => podeUsar(auth.escopos, t.name)) : [...MCP_ADMIN_TOOLS, ...MCP_TOOLS];
     return responder({
       jsonrpc: "2.0",
       id,
       result: {
         tools: visiveis.map((t) => ({
           name: t.name,
-          title: anotacoes(t.name).title,
+          title: "title" in t ? t.title : anotacoes(t.name).title,
           description: t.description,
-          inputSchema: t.inputSchema,
-          annotations: anotacoes(t.name),
+          inputSchema: auth.tipo === "admin" && !("readOnly" in t)
+            ? {
+                ...t.inputSchema,
+                properties: {
+                  tenantSlug: { type: "string", description: "Slug exato do tenant em que a ferramenta será executada." },
+                  ...t.inputSchema.properties,
+                },
+                required: [...new Set(["tenantSlug", ...(t.inputSchema.required ?? [])])],
+              }
+            : t.inputSchema,
+          annotations: "readOnly" in t
+            ? { title: t.title, readOnlyHint: t.readOnly, destructiveHint: !t.readOnly, idempotentHint: t.name === "admin_provisionar_tenant", openWorldHint: t.name === "admin_provisionar_tenant" }
+            : anotacoes(t.name),
         })),
       },
     });
@@ -154,9 +168,6 @@ export async function POST(request: Request) {
       ? params.arguments as Record<string, unknown>
       : {};
 
-    const tool = MCP_TOOLS.find((t) => t.name === toolName);
-    if (!tool) return responder(erroRpc(id, -32602, `Ferramenta não encontrada: ${toolName}`));
-
     const comoTexto = (resultado: unknown, isError = false) =>
       responder({
         jsonrpc: "2.0",
@@ -167,7 +178,24 @@ export async function POST(request: Request) {
         },
       });
 
-    if (auth.tipo !== "loja") return comoTexto({ erro: "Chave de admin não vinculada a uma loja específica." }, true);
+    if (auth.tipo === "admin") {
+      const adminTool = MCP_ADMIN_TOOLS.find((t) => t.name === toolName);
+      try {
+        if (adminTool) return comoTexto(await adminTool.handler(toolArgs));
+        const tenantTool = MCP_TOOLS.find((t) => t.name === toolName);
+        if (!tenantTool) return responder(erroRpc(id, -32602, `Ferramenta não encontrada: ${toolName}`));
+        const tenantSlug = String(toolArgs.tenantSlug ?? "").trim();
+        if (!tenantSlug) return comoTexto({ erro: "tenantSlug é obrigatório para a credencial administrativa." }, true);
+        const { tenantSlug: _tenantSlug, ...argumentos } = toolArgs;
+        void _tenantSlug;
+        return comoTexto(await executarFerramentaNoTenant(tenantSlug, tenantTool.name, argumentos));
+      } catch (err: unknown) {
+        return comoTexto({ erro: err instanceof Error ? err.message : String(err) }, true);
+      }
+    }
+
+    const tool = MCP_TOOLS.find((t) => t.name === toolName);
+    if (!tool) return responder(erroRpc(id, -32602, `Ferramenta não encontrada: ${toolName}`));
 
     if (!podeUsar(auth.escopos, tool.name)) {
       const escopo = FERRAMENTAS[tool.name]?.escopo;
