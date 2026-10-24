@@ -47,3 +47,10 @@ test("preserva campos revisados e permite repetição sem novas alterações",()
  const manual=enriquecer({...p,marca:"Marca conferida",descricao:"Texto revisado",descricaoCurta:"Resumo revisado",atributos:{aro:"18 polegadas"}});
  assert.equal(manual.marca,undefined);assert.equal(manual.descricao,undefined);assert.equal(manual.atributos.aro,"18 polegadas");
 });
+
+test("linha comercial não substitui fabricante declarado",()=>{
+ assert.equal(marcaDoNome("PNEU 265/45/21 PROTOURA DAVANTI SPORT 108W","pneus"),"Davanti");
+ assert.equal(marcaDoNome("PNEU 265/40/22 VELOCITA MASSIMO 106W XL","pneus"),"Massimo");
+ assert.equal(marcaDoNome("PNEU 205/55/16 ECOVISION VI-682 91 V TL OVATION","pneus"),"Ovation");
+ assert.equal(marcaDoNome("PNEU 225/70/15 ROADTOUR 100T","pneus"),null);
+});
