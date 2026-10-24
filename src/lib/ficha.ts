@@ -50,7 +50,18 @@ const MEDIDAS: Record<string, string> = {
  * como identificador do produto; repetidos na ficha, viravam uma linha
  * "Gtin 7898…" no meio das características.
  */
-const INTERNAS = new Set(["grupoLegado", "gtin", "ean"]);
+const INTERNAS = new Set([
+  "grupoLegado",
+  "gtin",
+  "ean",
+  // Metadados usados por integrações e feeds. Eles não descrevem uma
+  // característica que ajude a pessoa a decidir a compra e, quando vazam,
+  // viram rótulos crus como "Vehicle type" e "Categoria google" na ficha e
+  // no Product JSON-LD.
+  "VEHICLE_TYPE",
+  "UNITS_PER_PACK",
+  "categoriaGoogle",
+]);
 
 /**
  * Dado comercial do lojista que a importação às vezes traz em `atributos`:

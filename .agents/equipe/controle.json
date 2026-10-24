@@ -4,6 +4,40 @@
   "members": [],
   "tasks": [
     {
+      "id": "BRILHAX-SEO-CATALOGO-20261024",
+      "title": "Auditar SEO de todos os produtos da Brilhax",
+      "objective": "Verificar o catálogo público inteiro, cruzar oportunidades com o Search Console e impedir que metadados de integração apareçam para compradores e buscadores.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "concluida",
+      "acceptanceCriteria": [
+        "Todas as URLs de produto presentes no sitemap atual são auditadas.",
+        "Status HTTP, canonical, imagem, preço e dados estruturados são conferidos em lote.",
+        "Oportunidades orgânicas são baseadas nos dados reais do Search Console.",
+        "Campos internos de integração não aparecem na ficha pública nem no JSON-LD.",
+        "Frete, avaliações e preço não são inventados para preencher alertas do Google.",
+        "Testes, TypeScript, lint e build local são aprovados antes do envio ao GitHub."
+      ],
+      "evidence": "Auditoria concluída em 87 URLs do sitemap público e cruzada com o Search Console. Suíte completa com 1260 testes, teste de HTML da ficha, TypeScript, ESLint sem erros e build Next.js aprovados. Evidência detalhada em evidencias/brilhax-seo-produtos-2026-10-24.md.",
+      "review": "Autorrevisão concluída. A correção preserva dados reais e remove somente metadados auxiliares de integração. O lint mantém 24 avisos preexistentes fora do escopo e nenhum erro.",
+      "environment": "local",
+      "owner": null,
+      "acceptance": "As 87 URLs atuais são verificadas e os campos auxiliares de integração deixam de vazar na página e no schema.",
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-10-24",
+          "status": "em-andamento",
+          "note": "Sitemap, HTML público e desempenho orgânico auditados; correção compartilhada implementada."
+        },
+        {
+          "at": "2026-10-24",
+          "status": "concluida",
+          "note": "Suíte completa, renderização HTML, TypeScript, lint e build local aprovados."
+        }
+      ]
+    },
+    {
       "id": "SEO-INDEXACAO-20261023",
       "title": "Corrigir sitemap grande e completar dados estruturados das lojas",
       "objective": "Remover a falha do sitemap da Bereta Rodas e reforçar sinais de indexação e políticas comerciais sem publicar dados inventados.",
