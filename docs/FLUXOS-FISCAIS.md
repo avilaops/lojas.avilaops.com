@@ -69,3 +69,11 @@ Para retornar ao código anterior, pausar novos fluxos e desligar seus destinos 
 Usar o PostgreSQL isolado definido em `docker-compose.test.yml`; nunca apontar testes ao banco das lojas. `npm run test:integracao` inclui `fiscal-fluxos.test.ts` e a prova de consulta fiscal com rollback do cursor em `fiscal.test.ts`. `npm test`, `npm run typecheck` e `npm run build` verificam a aplicação.
 
 O QA de navegador está em `scripts/qa-fluxos-fiscais.mts`. Executar com `DATABASE_URL` local `:5548` ou `:5588`, banco `*_test`, `LOJAS_SECRET` de teste, `LOJAS_BASE_DOMAIN=localhost` e `ROTINAS_AGENDADOR=0`. Iniciar `next dev -p 3088 -H 127.0.0.1` com as mesmas variáveis e rodar `node --import tsx scripts/qa-fluxos-fiscais.mts`. O script cria e remove suas lojas fictícias, não entrega webhooks reais e salva capturas em `output/fiscal-fluxos-qa`. Opcionalmente usar `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` para um Chromium local.
+
+## Auditoria viva de 23/10/2026
+
+- O workflow `p063mxq8dQijjBDL` está ativo na versão `dbeeca93-f794-4a57-813d-de8f4eff2ff0`.
+- O ramo `Receber Documento Fiscal` chama somente `/api/admin/fiscal/n8n/receber` e responde com o status persistido.
+- Nenhum schedule desse workflow inicia distribuição NF-e ou CT-e. Os schedules existentes são comerciais, cobrança, SEO, Mercado Livre e prospecção.
+- Não foi criado workflow fiscal adicional. A aplicação ou o ERP continuam sendo o único dono do cursor por CNPJ.
+- O workflow temporário `QA temporário · Ativação fiscal PR125` está inativo e não é fonte operacional.

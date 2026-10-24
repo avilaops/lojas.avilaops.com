@@ -70,3 +70,20 @@ certificado válido, cadeia ICP-Brasil confiável no servidor e acesso à SEFAZ.
 
 Publicação acompanhada no PR #105. Consulta real à SEFAZ ainda depende de
 certificado válido do CNPJ e não foi realizada nesta validação local.
+
+## Matriz de capacidade verificada em 23/10/2026
+
+| Capacidade | Estado | Evidência ou limite |
+| --- | --- | --- |
+| Distribuição NF-e por `distNSU` | Implementada no Lojas | Cursor e documentos são gravados na mesma transação; ERP configurado desliga o consumidor local. |
+| Resumo, NF-e completa e eventos NF-e | Implementada | `resNFe`, `procNFe`, `resEvento` e `procEventoNFe` são interpretados sem alterar o XML original. |
+| CT-e completo, resumo e evento já recebidos | Parser e modelo implementados | `resCTe`, `cteProc`/`procCTe` e `procEventoCTe`; não existe coleta CT-e ativa. |
+| Distribuição CT-e | Indisponível | O coletor atual chama exclusivamente `NFeDistribuicaoDFe`; CT-e exige serviço, contrato e schemas próprios. |
+| Manifestação NF-e | Modelo persistente preparado; envio indisponível no Lojas | O MCP Ávila Ops oferece manifestação local com A1, mas essa ferramenta não é um contrato de runtime do Lojas. Nenhuma manifestação foi enviada. |
+| Validação MCP de resumo | Indisponível | A chamada real ao MCP recusou `resNFe` por ausência de schema. O parser local continua classificando o resumo, sem alegar validação XSD. |
+| ERP recebido | Contrato esperado no Lojas; provedor ausente | O checkout atual do ERP não expõe `/api/v1/notas-recebidas`; não há integração ponta a ponta para homologar. |
+| n8n fiscal | Configurado | O workflow vivo `p063mxq8dQijjBDL` contém apenas recepção HMAC e revisão idempotente, sem agendador fiscal e sem escrita em estoque/financeiro. |
+
+Os estados acima distinguem código, configuração e operação externa. Presença
+de tabela, botão, ferramenta MCP ou workflow não comprova consulta, recebimento,
+manifestação aceita ou autorização fiscal.
