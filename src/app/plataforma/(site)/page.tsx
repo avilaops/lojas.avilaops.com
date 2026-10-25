@@ -153,7 +153,7 @@ export default function LandingPlataforma() {
       <section className="pl-abertura">
         <div className="pl-container pl-abertura-grid">
           <div className="pl-abertura-copy">
-            <span className="pl-selo">Loja virtual para o comércio de bairro</span>
+            <span className="pl-selo">E-commerce para empresas de todos os portes</span>
             <h1>A loja com a cara<br />do <span>seu</span> negócio.</h1>
             <p>
               Sua cor, sua letra, suas fotos, e o cliente comprando pelo celular sem
