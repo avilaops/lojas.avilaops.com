@@ -1,7 +1,7 @@
 import type { Tenant } from "@prisma/client";
 import { cifrar, decifrar } from "./cofre";
 import { prisma } from "./db";
-import { baseDoMelhorEnvio, cabecalhosDoMelhorEnvio } from "./melhor-envio";
+import { baseDoMelhorEnvio, cabecalhosDoMelhorEnvio, lojaPermitidaNoMelhorEnvio } from "./melhor-envio";
 import { emitirState as emitirStateAssinado, lerState as lerStateAssinado } from "./oauth-state";
 
 /**
@@ -48,23 +48,22 @@ export function lerState(state: string | null | undefined): string | null {
 
 // ── OAuth ──────────────────────────────────────────────────────────────
 
-export function urlDeAutorizacao(slug: string, base: string): string {
+export function urlDeAutorizacao(loja: Pick<Tenant, "slug" | "recursos">, base: string): string {
+  if (!lojaPermitidaNoMelhorEnvio(loja)) throw new Error("Sandbox disponível somente para lojas de teste autorizadas.");
   const p = new URLSearchParams({
     client_id: process.env.MELHOR_ENVIO_CLIENT_ID ?? "",
     redirect_uri: `${base}${CAMINHO_DE_RETORNO}`,
     response_type: "code",
-    state: emitirState(slug),
+    state: emitirState(loja.slug),
     scope: ESCOPOS.join(" "),
   });
   return `${baseDoMelhorEnvio()}/oauth/authorize?${p}`;
 }
 
 interface RespostaToken {
-  access_token?: string;
-  refresh_token?: string;
+  access_token: string;
+  refresh_token: string;
   expires_in?: number;
-  error?: string;
-  message?: string;
 }
 
 async function pedirToken(corpo: Record<string, string>): Promise<RespostaToken> {
@@ -81,30 +80,53 @@ async function pedirToken(corpo: Record<string, string>): Promise<RespostaToken>
       ...corpo,
     }),
     signal: AbortSignal.timeout(20_000),
+    cache: "no-store",
+    redirect: "error",
   });
-  return (await r.json().catch(() => ({}))) as RespostaToken;
+  if (!r.ok) throw new Error(`Melhor Envio recusou a autorização (HTTP ${r.status}).`);
+  const d: unknown = await r.json();
+  if (!d || typeof d !== "object") throw new Error("Resposta de autorização inválida do Melhor Envio.");
+  const dados = d as Record<string, unknown>;
+  if (typeof dados.access_token !== "string" || !dados.access_token.trim()
+    || typeof dados.refresh_token !== "string" || !dados.refresh_token.trim()
+    || (dados.expires_in !== undefined && (typeof dados.expires_in !== "number"
+      || !Number.isSafeInteger(dados.expires_in) || dados.expires_in <= 0 || dados.expires_in > TRINTA_DIAS))) {
+    throw new Error("Resposta de autorização inválida do Melhor Envio.");
+  }
+  return dados as unknown as RespostaToken;
 }
 
 const TRINTA_DIAS = 30 * 86_400;
 
 /** Troca o `code` do retorno pelos tokens e grava na loja. */
-export async function conectar(slug: string, code: string, base: string) {
+export async function conectar(loja: Pick<Tenant, "slug" | "recursos">, code: string, base: string) {
+  if (!lojaPermitidaNoMelhorEnvio(loja)) throw new Error("Sandbox disponível somente para lojas de teste autorizadas.");
+  const slug = loja.slug;
   const d = await pedirToken({
     grant_type: "authorization_code",
     redirect_uri: `${base}${CAMINHO_DE_RETORNO}`,
     code,
   });
-  if (!d.access_token || !d.refresh_token) {
-    throw new Error(d.message ?? d.error ?? "O Melhor Envio não devolveu o token.");
-  }
 
   // De quem é a conta: é o que o lojista vê na tela para saber que conectou a
   // certa. Se a leitura falhar a conexão vale do mesmo jeito.
-  const conta = await fetch(`${baseDoMelhorEnvio()}/api/v2/me`, {
+  const conta: { firstname?: string; lastname?: string; email?: string } = await fetch(`${baseDoMelhorEnvio()}/api/v2/me`, {
     headers: cabecalhosDoMelhorEnvio(d.access_token),
     signal: AbortSignal.timeout(15_000),
+    cache: "no-store",
+    redirect: "error",
   })
-    .then((r) => r.json() as Promise<{ firstname?: string; lastname?: string; email?: string }>)
+    .then(async (r) => {
+      if (!r.ok) return {};
+      const dados: unknown = await r.json();
+      if (!dados || typeof dados !== "object") return {};
+      const campos = dados as Record<string, unknown>;
+      return {
+        firstname: typeof campos.firstname === "string" ? campos.firstname : undefined,
+        lastname: typeof campos.lastname === "string" ? campos.lastname : undefined,
+        email: typeof campos.email === "string" ? campos.email : undefined,
+      };
+    })
     .catch(() => ({}) as { firstname?: string; lastname?: string; email?: string });
   const nome = [conta.firstname, conta.lastname].filter(Boolean).join(" ").trim();
   const rotulo = [nome, conta.email].filter(Boolean).join(" · ");
@@ -149,6 +171,7 @@ export async function tokenDaLoja(t: Tenant): Promise<string | null> {
   if (!t.melhorEnvioAccessTokenEnc || !t.melhorEnvioRefreshTokenEnc) return null;
 
   try {
+    if (!lojaPermitidaNoMelhorEnvio(t)) return null;
     const folga = 86_400_000;
     if (t.melhorEnvioExpiraEm && t.melhorEnvioExpiraEm.getTime() - folga > Date.now()) {
       return decifrar(t.melhorEnvioAccessTokenEnc);
@@ -159,10 +182,6 @@ export async function tokenDaLoja(t: Tenant): Promise<string | null> {
       grant_type: "refresh_token",
       refresh_token: decifrar(t.melhorEnvioRefreshTokenEnc),
     });
-    if (!d.access_token || !d.refresh_token) {
-      console.error(`[frete] Melhor Envio recusou renovar o acesso da loja ${t.slug}:`, d.message ?? d.error ?? "sem motivo");
-      return null;
-    }
 
     // O refresh também é trocado a cada renovação: guardar o antigo derruba a
     // próxima, e a cotação some um mês depois sem ninguém ter mexido em nada.
@@ -175,8 +194,8 @@ export async function tokenDaLoja(t: Tenant): Promise<string | null> {
       },
     });
     return d.access_token;
-  } catch (erro) {
-    console.error(`[frete] não consegui o token do Melhor Envio da loja ${t.slug}:`, erro instanceof Error ? erro.message : erro);
+  } catch {
+    console.error(`[frete] não consegui renovar o acesso do Melhor Envio da loja ${t.slug}.`);
     return null;
   }
 }
@@ -188,6 +207,8 @@ export async function testarConexaoMelhorEnvio(t: Tenant): Promise<void> {
   const r = await fetch(`${baseDoMelhorEnvio()}/api/v2/me`, {
     headers: cabecalhosDoMelhorEnvio(token),
     signal: AbortSignal.timeout(15_000),
+    cache: "no-store",
+    redirect: "error",
   });
   if (!r.ok) throw new Error(`Melhor Envio recusou o teste (${r.status}).`);
 }

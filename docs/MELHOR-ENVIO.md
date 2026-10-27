@@ -1,5 +1,13 @@
 # Frete: Melhor Envio da loja ou CepCerto da plataforma
 
+**Escopo atual (27/10/2026): somente sandbox.** O ambiente padrão mudou para
+`https://sandbox.melhorenvio.com.br`, com autorização explícita das lojas de
+teste. As credenciais do aplicativo de sandbox ainda precisam ser cadastradas;
+nenhuma cotação real no provedor foi comprovada nesta etapa. Siga o
+[roteiro de sandbox e demonstração](MELHOR-ENVIO-SANDBOX.md). O diagnóstico e os
+comandos operacionais de outubro abaixo são históricos, não uma autorização
+para executar código ou builds diretamente em `applications`.
+
 A transportadora é cotada por uma de duas contas (`cotarTransportadora` em
 `src/lib/frete.ts`):
 

@@ -4,6 +4,22 @@
   "members": [],
   "tasks": [
     {
+      "id": "MELHOR-ENVIO-SANDBOX-20261027",
+      "title": "Preparar e publicar conexão e cotação do Melhor Envio somente em sandbox",
+      "assignee": null,
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "Sandbox é padrão e lojas de teste precisam de liberação explícita",
+        "Contrato de cotação, preços e prazos são validados sem promessas inventadas",
+        "Tokens continuam cifrados, isolados por loja e fora dos logs",
+        "Testes e CI aprovados antes de publicar pelo GitHub",
+        "Demonstração autenticada é registrada somente após configurar aplicativo e conta de sandbox"
+      ],
+      "evidence": "evidencias/melhor-envio-sandbox-2026-10-27.md; 1289 testes locais aprovados; TypeScript e lint sem erros; docs/MELHOR-ENVIO-SANDBOX.md",
+      "blocker": "O proprietário ainda precisa cadastrar ou preencher o aplicativo de sandbox e indicar a loja de testes. Não há cotação autenticada comprovada.",
+      "history": [{"at": "2026-10-27", "status": "em-andamento", "note": "Código preparado em checkout isolado; aplicações em produção auditadas somente por leitura. Escopo confirmado: apenas sandbox."}]
+    },
+    {
       "id": "RECOMPRA-VITRINE-20261024",
       "title": "Recomprar itens do histórico com revisão das ofertas atuais",
       "assignee": null,

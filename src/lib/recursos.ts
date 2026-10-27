@@ -17,6 +17,8 @@ export const RECURSOS = [
   "pagamentos_cielo",
   /** Pix direto na conta do lojista, com baixa manual. */
   "pagamentos_pix_manual",
+  /** Conta e cotações de teste do Melhor Envio, sem atender lojas reais. */
+  "frete_melhor_envio_sandbox",
 ] as const;
 export type Recurso = (typeof RECURSOS)[number];
 
