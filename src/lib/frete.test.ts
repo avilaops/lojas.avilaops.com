@@ -15,8 +15,10 @@ import { caixaDoCarrinho, cotarFrete, entregaLocal, pesoTotalKg } from "./frete"
  */
 
 function loja(parcial: Partial<Tenant> = {}): Tenant {
-  return { pesoPadraoKg: 0.5, caixaPadrao: null, entregaLocal: [], ...parcial } as Tenant;
+  return { slug: "loja-teste", recursos: ["frete_melhor_envio_sandbox"], pesoPadraoKg: 0.5, caixaPadrao: null, entregaLocal: [], ...parcial } as Tenant;
 }
+
+delete process.env.MELHOR_ENVIO_URL;
 
 /** Motoboy de Ribeirão Preto: a faixa da VedaShow, que estreou o recurso. */
 const MOTOBOY = [{ prefixos: ["14"], nome: "Motoboy Ribeirão", preco: 1500, prazoDiasUteis: 0, gratisAcima: 19900 }];
@@ -166,7 +168,7 @@ test("CEP de origem com máscara chega limpo à transportadora", async () => {
     assert.equal(chamadas.length, 1, "a cotação foi pedida");
     assert.deepEqual(chamadas[0].from, { postal_code: "14010100" });
     assert.deepEqual(chamadas[0].to, { postal_code: "15075170" });
-    assert.equal((chamadas[0].options as { insurance_value: number }).insurance_value, 80, "centavos viram reais");
+    assert.equal((chamadas[0].volumes as Array<{ insurance: number }>)[0].insurance, 80, "centavos viram reais");
     assert.deepEqual(opcoes.filter((o) => o.id.startsWith("melhorenvio:")), [
       { id: "melhorenvio:1", nome: "PAC", preco: 2140, prazoDiasUteis: 6 },
     ]);
@@ -230,6 +232,16 @@ test("loja com Melhor Envio conectado não cai na CepCerto, nem quando ele não 
       assert.equal(opcoes.some((o) => o.id.startsWith("cepcerto:")), false);
     }),
   );
+});
+
+test("sandbox sem recurso da loja não usa token nem oferece cotação de teste no checkout", async () => {
+  await comCepCerto(() => comMelhorEnvio(PAC, async (chamadas) => {
+    const opcoes = await cotarFrete(loja({
+      cepOrigem: "14010100", recursos: [], entregaLocal: MOTOBOY, ...CONECTADA,
+    }), "14075240", [item({ quantidade: 1 })]);
+    assert.equal(chamadas.length, 0);
+    assert.deepEqual(opcoes.map((o) => o.id), ["local:0"]);
+  }));
 });
 
 test("loja sem CEP de origem não chama a CepCerto", async () => {

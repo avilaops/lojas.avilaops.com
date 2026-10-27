@@ -1,4 +1,6 @@
 import type { OpcaoFrete } from "@avilaops/checkout";
+import type { Tenant } from "@prisma/client";
+import { recursoAtivo } from "./recursos";
 
 /**
  * Cotação de frete pelo Melhor Envio.
@@ -17,9 +19,24 @@ import type { OpcaoFrete } from "@avilaops/checkout";
  *     outro aplicativo — `MELHOR_ENVIO_URL` troca um pelo outro.
  */
 const PRODUCAO = "https://melhorenvio.com.br";
+const SANDBOX = "https://sandbox.melhorenvio.com.br";
 
 export function baseDoMelhorEnvio(): string {
-  return (process.env.MELHOR_ENVIO_URL || PRODUCAO).replace(/\/+$/, "");
+  const base = (process.env.MELHOR_ENVIO_URL?.trim() || SANDBOX).replace(/\/+$/, "");
+  if (![PRODUCAO, SANDBOX].includes(base)) {
+    throw new Error("MELHOR_ENVIO_URL deve apontar para produção ou sandbox oficiais.");
+  }
+  return base;
+}
+
+export function ambienteDoMelhorEnvio(): "sandbox" | "producao" {
+  return baseDoMelhorEnvio() === SANDBOX ? "sandbox" : "producao";
+}
+
+/** O sandbox compartilhado só pode atender as lojas de teste autorizadas. */
+export function lojaPermitidaNoMelhorEnvio(loja: Pick<Tenant, "recursos">): boolean {
+  if (ambienteDoMelhorEnvio() === "producao") return true;
+  return recursoAtivo(loja, "frete_melhor_envio_sandbox");
 }
 
 /** Cabeçalhos que toda chamada autenticada leva. */
@@ -33,8 +50,16 @@ export function cabecalhosDoMelhorEnvio(token: string): Record<string, string> {
 }
 
 function numero(v: unknown): number | undefined {
-  const n = typeof v === "number" ? v : typeof v === "string" ? Number.parseFloat(v) : Number.NaN;
+  const n = typeof v === "number" ? v
+    : typeof v === "string" && /^\d+(?:\.\d+)?$/.test(v.trim()) ? Number(v) : Number.NaN;
   return Number.isFinite(n) ? n : undefined;
+}
+
+function prazoDoServico(s: Record<string, unknown>): number | undefined {
+  const faixaCustom = s.custom_delivery_range as { max?: unknown } | null;
+  const faixa = s.delivery_range as { max?: unknown } | null;
+  const prazo = numero(s.custom_delivery_time ?? faixaCustom?.max ?? s.delivery_time ?? faixa?.max);
+  return prazo !== undefined && Number.isSafeInteger(prazo) && prazo >= 0 ? prazo : undefined;
 }
 
 /**
@@ -60,23 +85,27 @@ export function extrairCotacoes(dados: unknown): OpcaoFrete[] {
 
   const opcoes: OpcaoFrete[] = [];
   for (const bruto of dados) {
+    if (!bruto || typeof bruto !== "object" || Array.isArray(bruto)) continue;
     const s = (bruto ?? {}) as Record<string, unknown>;
     if (s.error) continue;
 
     const id = numero(s.id);
-    const preco = numero(s.custom_price) ?? numero(s.price);
-    const nome = String(s.name ?? "").trim();
-    if (id === undefined || preco === undefined || preco <= 0 || !nome) continue;
+    const preco = numero(s.custom_price ?? s.price);
+    const centavos = preco === undefined ? undefined : Math.round(preco * 100);
+    const nome = typeof s.name === "string" ? s.name.trim() : "";
+    if (id === undefined || !Number.isSafeInteger(id) || id <= 0
+      || centavos === undefined || !Number.isSafeInteger(centavos) || centavos <= 0 || !nome) continue;
 
-    const prazo = numero(s.custom_delivery_time) ?? numero(s.delivery_time);
+    const prazo = prazoDoServico(s);
+    // Sem prazo publicado não há promessa de entrega verificável no checkout.
+    if (prazo === undefined) continue;
     const transportadora = String((s.company as { name?: unknown } | null)?.name ?? "").trim();
 
     opcoes.push({
       id: `melhorenvio:${id}`,
       nome: nomeDoServico(nome, transportadora),
-      preco: Math.round(preco * 100),
-      // Sem prazo reconhecível, assume uma semana, como a tabela própria faria.
-      prazoDiasUteis: prazo !== undefined && prazo > 0 ? Math.round(prazo) : 7,
+      preco: centavos,
+      prazoDiasUteis: prazo,
     });
   }
   return opcoes.sort((a, b) => a.preco - b.preco);
@@ -102,6 +131,11 @@ export interface PedidoDeCotacao {
  */
 export async function cotarMelhorEnvio(token: string, p: PedidoDeCotacao): Promise<OpcaoFrete[] | null> {
   if (!token) return null;
+  const origem = p.cepOrigem.replace(/\D/g, "");
+  const destino = p.cepDestino.replace(/\D/g, "");
+  if (origem.length !== 8 || destino.length !== 8
+    || ![p.pesoKg, p.caixa.altura, p.caixa.largura, p.caixa.comprimento].every((n) => Number.isFinite(n) && n > 0)
+    || !Number.isFinite(p.valorDeclarado) || p.valorDeclarado < 0) return null;
 
   // Opcional: restringe aos serviços que a plataforma sabe despachar
   // ("1,2,3,4"). Vazio deixa o Melhor Envio devolver todos os que atendem.
@@ -112,38 +146,37 @@ export async function cotarMelhorEnvio(token: string, p: PedidoDeCotacao): Promi
       method: "POST",
       headers: cabecalhosDoMelhorEnvio(token),
       body: JSON.stringify({
-        from: { postal_code: p.cepOrigem },
-        to: { postal_code: p.cepDestino },
-        package: {
+        from: { postal_code: origem },
+        to: { postal_code: destino },
+        volumes: [{
           height: p.caixa.altura,
           width: p.caixa.largura,
           length: p.caixa.comprimento,
           weight: p.pesoKg,
-        },
-        options: { insurance_value: Number(p.valorDeclarado.toFixed(2)), receipt: false, own_hand: false },
+          insurance: Number(p.valorDeclarado.toFixed(2)),
+        }],
+        options: { receipt: false, own_hand: false },
         ...(servicos ? { services: servicos } : {}),
       }),
       signal: AbortSignal.timeout(8000),
+      cache: "no-store",
+      redirect: "error",
     });
 
     if (!r.ok) {
-      const corpo = await r.text().catch(() => "");
-      console.error(`[frete] Melhor Envio respondeu ${r.status}:`, corpo.slice(0, 300));
+      console.error(`[frete] Melhor Envio respondeu HTTP ${r.status}.`);
       return null;
     }
 
     const dados: unknown = await r.json();
     const cotacoes = extrairCotacoes(dados);
     if (!cotacoes.length) {
-      const motivos = Array.isArray(dados)
-        ? dados.map((s) => `${(s as { name?: string })?.name ?? "?"}: ${(s as { error?: string })?.error ?? "sem preço"}`).join("; ")
-        : "resposta fora do formato esperado";
-      console.error(`[frete] Melhor Envio sem serviço para ${p.cepOrigem} → ${p.cepDestino}:`, motivos.slice(0, 500));
+      console.error("[frete] Melhor Envio não retornou serviço com preço e prazo válidos.");
       return null;
     }
     return cotacoes;
-  } catch (erro) {
-    console.error("[frete] Melhor Envio indisponível:", erro instanceof Error ? erro.message : erro);
+  } catch {
+    console.error("[frete] Melhor Envio indisponível ou configuração inválida.");
     return null;
   }
 }

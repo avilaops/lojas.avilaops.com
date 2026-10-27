@@ -11,6 +11,7 @@ import RecebimentoV2 from "@/components/painel/RecebimentoV2";
 import { dadosDaTela } from "@/lib/recebimento-v2";
 import { CANAIS_CONECTAVEIS, contasDaLoja, provedorDo } from "@/lib/contas-canal";
 import { aplicativoConfigurado as melhorEnvioDisponivel, conectado as melhorEnvioConectado } from "@/lib/melhor-envio-conta";
+import { ambienteDoMelhorEnvio, lojaPermitidaNoMelhorEnvio } from "@/lib/melhor-envio";
 import { aplicativoConfigurado as mercadoPagoDisponivel, conectadoPorOAuth as mercadoPagoConectado } from "@/lib/mercado-pago-conta";
 import PerguntasMl from "@/components/painel/PerguntasMl";
 import ReputacaoMl from "@/components/painel/ReputacaoMl";
@@ -299,6 +300,8 @@ export default async function Pagina({ params, searchParams }: {
             conectadoEm: loja.melhorEnvioConectadoEm?.toISOString() ?? null,
           }}
           integracaoDisponivel={melhorEnvioDisponivel()}
+          ambiente={ambienteDoMelhorEnvio()}
+          liberadoParaLoja={lojaPermitidaNoMelhorEnvio(loja)}
           temCepOrigem={(loja.cepOrigem ?? "").replace(/\D/g, "").length === 8}
           retorno={sp.me}
         />

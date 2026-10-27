@@ -32,10 +32,10 @@ export async function GET(request: Request) {
 
   try {
     const base = `https://${process.env.LOJAS_BASE_DOMAIN ?? "lojas.avilaops.com"}`;
-    await conectar(slug, code, base);
-  } catch (erro) {
+    await conectar(s.tenant, code, base);
+  } catch {
     // A mensagem não vai para a URL: ela pode carregar detalhe do token.
-    console.error(`[frete] conexão do Melhor Envio falhou na loja ${slug}:`, erro instanceof Error ? erro.message : erro);
+    console.error(`[frete] conexão do Melhor Envio falhou na loja ${slug}.`);
     redirect(`${destino}?me=falhou`);
   }
   redirect(`${destino}?me=conectado`);

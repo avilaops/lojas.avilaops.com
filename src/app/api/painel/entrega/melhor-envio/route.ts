@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { sessaoDoPainel } from "@/lib/sessao";
 import { exigir, permite } from "@/lib/operadores";
 import { caixaDoCarrinho, pesoTotalKg } from "@/lib/frete";
-import { cotarMelhorEnvio } from "@/lib/melhor-envio";
+import { cotarMelhorEnvio, lojaPermitidaNoMelhorEnvio } from "@/lib/melhor-envio";
 import { aplicativoConfigurado, desconectar, tokenDaLoja, urlDeAutorizacao } from "@/lib/melhor-envio-conta";
 
 /**
@@ -20,11 +20,12 @@ export async function GET() {
   if (!s) redirect("/entrar");
   // Balcão não troca a conta que cota o frete da loja inteira.
   if (!permite(s.papel, "configuracoes")) redirect(`${DESTINO}?me=sem-permissao`);
+  if (!lojaPermitidaNoMelhorEnvio(s.tenant)) redirect(`${DESTINO}?me=sandbox-bloqueado`);
   if (!aplicativoConfigurado()) redirect(`${DESTINO}?me=indisponivel`);
 
   const base = `https://${process.env.LOJAS_BASE_DOMAIN ?? "lojas.avilaops.com"}`;
   // O slug vem da sessão, nunca da URL, e segue assinado no `state`.
-  redirect(urlDeAutorizacao(s.tenant.slug, base));
+  redirect(urlDeAutorizacao(s.tenant, base));
 }
 
 /**
@@ -39,6 +40,9 @@ export async function POST() {
   const { s, erro } = await exigir("configuracoes");
   if (erro) return erro;
   const loja = s.tenant;
+  if (!lojaPermitidaNoMelhorEnvio(loja)) {
+    return Response.json({ ok: false, mensagem: "Sandbox disponível somente para lojas de teste autorizadas." }, { status: 409 });
+  }
 
   const origem = (loja.cepOrigem ?? "").replace(/\D/g, "");
   if (origem.length !== 8) {

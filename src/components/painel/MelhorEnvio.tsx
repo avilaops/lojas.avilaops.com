@@ -7,12 +7,13 @@ import { Secao, brl } from "./campos";
 
 /** O que o retorno do Melhor Envio diz, na língua do lojista. */
 const RETORNO: Record<string, { tom: "ok" | "erro"; texto: string }> = {
-  conectado: { tom: "ok", texto: "Conta do Melhor Envio conectada. O frete já é cotado no checkout." },
+  conectado: { tom: "ok", texto: "Conta do Melhor Envio conectada. Use Testar cotação para conferir os serviços disponíveis." },
   recusado: { tom: "erro", texto: "Você não autorizou a conexão. Nada mudou na loja." },
   incompleto: { tom: "erro", texto: "A autorização voltou incompleta ou vencida. Clique em conectar de novo." },
   falhou: { tom: "erro", texto: "O Melhor Envio não concluiu a conexão. Tente de novo em alguns minutos." },
   indisponivel: { tom: "erro", texto: "A conexão com o Melhor Envio ainda não está liberada nesta instalação." },
   "sem-permissao": { tom: "erro", texto: "Seu acesso não permite conectar a conta de frete. Fale com o dono da loja." },
+  "sandbox-bloqueado": { tom: "erro", texto: "O sandbox do Melhor Envio está restrito às lojas de teste autorizadas pela plataforma." },
 };
 
 const dataHora = (iso: string) => new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
@@ -30,10 +31,12 @@ interface Prova {
  * Conectado, ele vem antes da tabela por UF na cotação; desconectado, a tabela
  * volta a valer sozinha. Nada do que está preenchido abaixo se perde.
  */
-export default function MelhorEnvio({ conexao, integracaoDisponivel, temCepOrigem, retorno }: {
+export default function MelhorEnvio({ conexao, integracaoDisponivel, temCepOrigem, ambiente, liberadoParaLoja, retorno }: {
   conexao: { conectado: boolean; conta: string | null; conectadoEm: string | null };
   integracaoDisponivel: boolean;
   temCepOrigem: boolean;
+  ambiente: "sandbox" | "producao";
+  liberadoParaLoja: boolean;
   retorno?: string;
 }) {
   const router = useRouter();
@@ -69,6 +72,16 @@ export default function MelhorEnvio({ conexao, integracaoDisponivel, temCepOrige
       titulo="Melhor Envio"
       descricao="Conecte a sua conta e o checkout passa a cotar Correios, Jadlog e as outras transportadoras na hora, com o preço do seu contrato."
     >
+      <p role="status" className="rounded-lg border border-border bg-background p-3 text-sm">
+        {ambiente === "sandbox"
+          ? "Sandbox · ambiente de testes do Melhor Envio. As cotações são de teste; esta conexão não deve atender pedidos reais."
+          : "Melhor Envio · ambiente de produção."}
+      </p>
+      {!liberadoParaLoja && (
+        <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
+          Esta loja não está autorizada a usar o sandbox. A conexão é exclusiva das lojas de teste indicadas pela plataforma.
+        </p>
+      )}
       {aviso && (
         <p className={`rounded-lg p-3 text-sm ${aviso.tom === "ok" ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-amber-900"}`}>
           {aviso.texto}
@@ -84,7 +97,7 @@ export default function MelhorEnvio({ conexao, integracaoDisponivel, temCepOrige
               <b className="block">{conexao.conta ?? "Conta conectada"}</b>
               {conexao.conectadoEm && <span className="text-xs text-muted-foreground">conectada em {dataHora(conexao.conectadoEm)}</span>}
             </span>
-            <button className="btn-secundario inline-flex h-9 items-center gap-1.5 px-3 text-xs" disabled={Boolean(ocupado)} onClick={() => void chamar("testar", "POST")}>
+            <button className="btn-secundario inline-flex h-9 items-center gap-1.5 px-3 text-xs" disabled={Boolean(ocupado) || !liberadoParaLoja} onClick={() => void chamar("testar", "POST")}>
               {ocupado === "testar" ? "Cotando…" : "Testar cotação"}
             </button>
             <button className="btn-secundario inline-flex h-9 items-center gap-1.5 px-3 text-xs" disabled={Boolean(ocupado)} onClick={desconectar}>
@@ -124,7 +137,7 @@ export default function MelhorEnvio({ conexao, integracaoDisponivel, temCepOrige
             Ao conectar, você autoriza a loja a consultar preço e prazo de frete na sua conta. Ela não compra etiqueta nem
             movimenta saldo. Se desconectar, o checkout volta para a tabela de frete abaixo.
           </p>
-          {integracaoDisponivel ? (
+          {integracaoDisponivel && liberadoParaLoja ? (
             <div>
               <a className="btn-primario inline-flex items-center gap-2" href="/api/painel/entrega/melhor-envio">
                 <Link2 size={15} /> Conectar Melhor Envio
