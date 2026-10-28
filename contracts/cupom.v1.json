@@ -1,0 +1,188 @@
+{
+  "schemaVersion": "lojas-payload-contract/1",
+  "operation": "POST /api/v1/vitrine/cupom",
+  "authorization": {
+    "escopo": "vitrine:comprar",
+    "navegador": true,
+    "escrita": {
+      "exigeOrigem": true,
+      "porEnderecoPorMinuto": 10
+    }
+  },
+  "errorStatuses": {
+    "chave_ausente": 401,
+    "chave_invalida": 401,
+    "chave_revogada": 401,
+    "escopo_insuficiente": 403,
+    "plano_sem_api": 403,
+    "loja_fora_do_ar": 403,
+    "parametro_invalido": 400,
+    "nao_encontrado": 404,
+    "conflito": 409,
+    "origem_nao_permitida": 403,
+    "loja_nao_vende": 403,
+    "pedido_invalido": 422,
+    "limite_excedido": 429,
+    "erro_interno": 500,
+    "gateway_recusou": 502,
+    "pagamento_a_confirmar": 503
+  },
+  "request": {
+    "type": "object",
+    "properties": {
+      "codigo": {
+        "type": "string",
+        "x-trim": true,
+        "x-minLengthUtf16": 1,
+        "x-maxLengthUtf16": 40
+      },
+      "itens": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "x-trim": true,
+              "x-minLengthUtf16": 1,
+              "x-maxLengthUtf16": 80
+            },
+            "quantidade": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 999
+            }
+          },
+          "required": [
+            "id",
+            "quantidade"
+          ],
+          "additionalProperties": false
+        },
+        "minItems": 1,
+        "maxItems": 50
+      },
+      "cep": {
+        "type": "string",
+        "x-trim": true,
+        "x-minLengthUtf16": 8,
+        "x-maxLengthUtf16": 9
+      }
+    },
+    "required": [
+      "codigo",
+      "itens"
+    ],
+    "additionalProperties": false
+  },
+  "response": {
+    "type": "object",
+    "properties": {
+      "dados": {
+        "type": "object",
+        "properties": {
+          "codigo": {
+            "type": "string"
+          },
+          "tipo": {
+            "type": "string"
+          },
+          "descontoCentavos": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "fretes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "nome": {
+                  "type": "string"
+                },
+                "precoCentavos": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "prazoDiasUteis": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "id",
+                "nome",
+                "precoCentavos",
+                "prazoDiasUteis"
+              ],
+              "additionalProperties": true
+            }
+          }
+        },
+        "required": [
+          "codigo",
+          "tipo",
+          "descontoCentavos"
+        ],
+        "additionalProperties": true
+      }
+    },
+    "required": [
+      "dados"
+    ],
+    "additionalProperties": true
+  },
+  "error": {
+    "type": "object",
+    "properties": {
+      "erro": {
+        "type": "object",
+        "properties": {
+          "codigo": {
+            "type": "string",
+            "enum": [
+              "chave_ausente",
+              "chave_invalida",
+              "chave_revogada",
+              "escopo_insuficiente",
+              "plano_sem_api",
+              "loja_fora_do_ar",
+              "parametro_invalido",
+              "nao_encontrado",
+              "conflito",
+              "origem_nao_permitida",
+              "loja_nao_vende",
+              "pedido_invalido",
+              "limite_excedido",
+              "erro_interno",
+              "gateway_recusou",
+              "pagamento_a_confirmar"
+            ]
+          },
+          "mensagem": {
+            "type": "string"
+          },
+          "detalhe": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "codigo",
+          "mensagem"
+        ],
+        "additionalProperties": true
+      },
+      "requisicao": {
+        "type": "string",
+        "x-minLengthUtf16": 1
+      }
+    },
+    "required": [
+      "erro",
+      "requisicao"
+    ],
+    "additionalProperties": true
+  }
+}

@@ -1,25 +1,17 @@
 import { CriarCotacaoSchema } from "@/lib/cotacoes-b2b-schema";
 import { criarCotacaoB2B, expirarCotacoesVencidas } from "@/lib/cotacoes-b2b";
 import { erroCotacao } from "@/lib/cotacoes-b2b-api";
-import { prisma } from "@/lib/db";
+import { listarCotacoesB2B } from "@/lib/cotacoes-b2b-consulta";
 import { exigir } from "@/lib/operadores";
 
 const Entrada = CriarCotacaoSchema.omit({ ator: true });
 
-export async function GET() {
+export async function GET(request: Request) {
   const { s, erro } = await exigir("pedidos");
   if (erro) return erro;
   await expirarCotacoesVencidas(s.tenant.id);
-  const cotacoes = await prisma.cotacaoB2B.findMany({
-    where: { tenantId: s.tenant.id },
-    include: {
-      empresa: { select: { razaoSocial: true } },
-      versoes: { orderBy: { numero: "desc" }, take: 1 },
-      pedido: { select: { id: true, numero: true, status: true } },
-    },
-    orderBy: { criadoEm: "desc" },
-  });
-  return Response.json({ cotacoes });
+  try { return Response.json(await listarCotacoesB2B(s.tenant.id, new URL(request.url).searchParams)); }
+  catch (error) { return erroCotacao(error); }
 }
 
 export async function POST(request: Request) {

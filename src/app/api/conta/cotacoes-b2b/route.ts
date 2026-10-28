@@ -4,6 +4,7 @@ import { erroCotacao } from "@/lib/cotacoes-b2b-api";
 import { CriarCotacaoSchema } from "@/lib/cotacoes-b2b-schema";
 import { prisma } from "@/lib/db";
 import { tenantAtual } from "@/lib/tenant";
+import { listarCotacoesB2B } from "@/lib/cotacoes-b2b-consulta";
 
 const Entrada = CriarCotacaoSchema.omit({ ator: true, responsavelEmail: true });
 
@@ -15,21 +16,13 @@ async function sessaoComprador() {
   return { tenant, comprador } as const;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   const sessao = await sessaoComprador();
   if ("resposta" in sessao) return sessao.resposta;
   const { tenant, comprador } = sessao;
   await expirarCotacoesVencidas(tenant.id);
-  const cotacoes = await prisma.cotacaoB2B.findMany({
-    where: { tenantId: tenant.id, compradorEmpresa: { compradorId: comprador.id, situacao: "ATIVO" } },
-    include: {
-      empresa: { select: { razaoSocial: true } },
-      versoes: { orderBy: { numero: "desc" }, take: 1 },
-      pedido: { select: { id: true, numero: true, status: true } },
-    },
-    orderBy: { criadoEm: "desc" },
-  });
-  return Response.json({ cotacoes });
+  try { return Response.json(await listarCotacoesB2B(tenant.id, new URL(request.url).searchParams, comprador.id)); }
+  catch (error) { return erroCotacao(error); }
 }
 
 export async function POST(request: Request) {
