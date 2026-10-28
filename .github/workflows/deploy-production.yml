@@ -144,6 +144,12 @@ jobs:
           MLOPS_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
       - name: Instalar Chromium para a jornada B2B
         run: npx playwright install --with-deps chromium
+      - name: Construir aplicação para verificação funcional isolada
+        run: npm run build
+        env:
+          LOJAS_BASE_DOMAIN: 127.0.0.1
+          LOJAS_SECRET: '0000000000000000000000000000000000000000000000000000000000000000'
+          NEXT_TELEMETRY_DISABLED: '1'
       - name: Verificar jornada B2B, HTTP e reinício em serviço isolado
         run: node --import tsx scripts/qa-cotacoes-b2b.mts
         env:

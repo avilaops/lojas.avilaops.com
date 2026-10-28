@@ -27,9 +27,9 @@ async function iniciar() {
   const probe = createServer();
   await new Promise<void>((resolve, reject) => { probe.once("error", reject); probe.listen(3097, "127.0.0.1", resolve); });
   await new Promise<void>((resolve, reject) => probe.close(error => error ? reject(error) : resolve()));
-  server = spawn(process.execPath, ["node_modules/next/dist/bin/next", "dev", "--hostname", "0.0.0.0", "--port", "3097"], {
+  server = spawn(process.execPath, ["node_modules/next/dist/bin/next", "start", "--hostname", "0.0.0.0", "--port", "3097"], {
     detached: true, stdio: "ignore",
-    env: { PATH: process.env.PATH, HOME: process.env.HOME, CI: "true", DATABASE_URL: process.env.DATABASE_URL,
+    env: { PATH: process.env.PATH, HOME: process.env.HOME, CI: "true", NODE_ENV: "production", DATABASE_URL: process.env.DATABASE_URL,
       LOJAS_SECRET: process.env.LOJAS_SECRET, LOJAS_BASE_DOMAIN: "127.0.0.1", NEXT_TELEMETRY_DISABLED: "1" },
   });
   let failed = false;
