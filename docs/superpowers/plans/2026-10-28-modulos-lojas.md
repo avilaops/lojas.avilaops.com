@@ -79,6 +79,14 @@ AVL-234 e do Lojas 360 antes de concluir o módulo: anexos, centros de custo,
 alçadas, exceções comerciais e acesso revogado não podem ficar implícitos no
 caminho feliz de um comprador administrador.
 
+Diagnóstico posterior: a CI `40652897431` confirmou `ERR_INVALID_URL` nos
+metadados da conta, causado pelo domínio sintético `<slug>.127.0.0.1` da
+fixture. O domínio principal da loja de teste passa a ser `localhost`.
+O runner inicia `standalone/server.js` com os arquivos estáticos e com
+`ROTINAS_AGENDADOR=0`, configuração já suportada, evitando rotinas de fundo
+sobre dados dos outros testes. Adição de produtos à contraproposta também
+está implementada e coberta pela remoção/reinclusão de item na jornada.
+
 ## Limites operacionais
 
 Builds, testes e migrations somente no GitHub CI. Checkouts servem para leitura,

@@ -28,10 +28,11 @@ async function iniciar() {
   const probe = createServer();
   await new Promise<void>((resolve, reject) => { probe.once("error", reject); probe.listen(3097, "127.0.0.1", resolve); });
   await new Promise<void>((resolve, reject) => probe.close(error => error ? reject(error) : resolve()));
-  server = spawn(process.execPath, ["node_modules/next/dist/bin/next", "start", "--hostname", "0.0.0.0", "--port", "3097"], {
+  server = spawn(process.execPath, [".next/standalone/server.js"], {
     detached: true, stdio: ["ignore", "pipe", "pipe"],
     env: { PATH: process.env.PATH, HOME: process.env.HOME, CI: "true", NODE_ENV: "production", DATABASE_URL: process.env.DATABASE_URL,
-      LOJAS_SECRET: process.env.LOJAS_SECRET, LOJAS_BASE_DOMAIN: "127.0.0.1", NEXT_TELEMETRY_DISABLED: "1" },
+      LOJAS_SECRET: process.env.LOJAS_SECRET, LOJAS_BASE_DOMAIN: "127.0.0.1", NEXT_TELEMETRY_DISABLED: "1",
+      HOSTNAME: "0.0.0.0", PORT: "3097", ROTINAS_AGENDADOR: "0" },
   });
   const collect = (chunk: Buffer) => { serverOutput = `${serverOutput}${chunk.toString("utf8")}`.slice(-24_000); };
   server.stdout?.on("data", collect);
@@ -83,7 +84,7 @@ await mkdir(directory, { recursive: true });
 const browser = await chromium.launch({ headless: true });
 try {
   assert.equal(await prisma.tenant.count({ where: { dominios: { has: "localhost" } } }), 0, "Domínio de teste já utilizado.");
-  const tenant = await prisma.tenant.create({ data: { slug: `qa-browser-${randomUUID()}`, nome: "Loja QA B2B", status: "ATIVA", dominios: ["localhost"], loginEmail: "vendas@example.test" } });
+  const tenant = await prisma.tenant.create({ data: { slug: `qa-browser-${randomUUID()}`, nome: "Loja QA B2B", status: "ATIVA", dominios: ["localhost"], dominioPrincipal: "localhost", loginEmail: "vendas@example.test" } });
   const empresa = await prisma.empresaB2B.create({ data: { tenantId: tenant.id, referencia: "cliente", razaoSocial: "Indústria QA" } });
   const unidade = await prisma.unidadeEmpresaB2B.create({ data: { tenantId: tenant.id, empresaId: empresa.id, referencia: "matriz", nome: "Matriz", cnpj: "60067738000106" } });
   const senha = `qa-${randomUUID()}`;
@@ -214,6 +215,7 @@ try {
   await fresh.getByRole("link", { name: /Abrir pedido #/ }).waitFor({ timeout: 120_000 });
   await fresh.close();
   await registrarCheckCotacao("persistencia", { assertions: { freshHttpRead: true, serviceRestarted: true, orderPreserved: true, versionsPreserved: true, historyPreserved: true, freshPageRead: true } });
+  assert.equal(serverOutput.includes("[rotina] agendador ligado"), false, "Agendador deve permanecer desligado no serviço isolado.");
   await writeFile(`${directory}/summary.json`, JSON.stringify({ status: "passed", environment: "local_isolated", screenshots }, null, 2));
   console.log("Jornada B2B desktop/celular, contrato HTTP e reinício: aprovados.");
 } catch (error) {
