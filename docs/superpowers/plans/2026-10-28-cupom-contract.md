@@ -41,8 +41,11 @@ ausentes. A tentativa anterior falhou no carregador CJS/ESM dos testes;
 corrigida usando .mjs, sem contar essa falha como prova comportamental.
 
 Revisão independente encontrou coerção omitida e unidade Unicode incorreta.
-CI 40640349284 reproduziu os dois problemas antes das correções. Coerção
-passou a ser recusada; extensões UTF-16 preservam as regras Zod existentes.
+CI 40640349284 reproduziu o problema UTF-16 antes da correção. O teste inicial
+de coerção usava o entrypoint ESM de Zod, com construtor distinto do produtor
+CommonJS; foi corrigido para eliminar esse falso positivo. CI 40640581776
+reproduziu a coerção omitida com o mesmo construtor do produtor. Coerção passou
+a ser recusada; extensões UTF-16 preservam as regras Zod existentes.
 
 Decisão: exportação é um contrato com extensões explícitas, não JSON Schema
 puro para corpo bruto. Custo: leitores externos precisam entender essas
