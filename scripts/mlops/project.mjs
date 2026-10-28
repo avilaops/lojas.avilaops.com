@@ -40,11 +40,11 @@ export async function buildProjectReport(root, { validateProfile, assessFlow, fi
   if (team.projectOwner !== profile.owner || !Array.isArray(team.members) || !Array.isArray(team.tasks)) fail("INVALID_PROJECT_OWNERSHIP");
   resolveOwner({}, profile.owner, team.members);
   const modules = new Map();
-  for (const module of profile.modules) {
-    if (modules.has(module.id)) fail("DUPLICATE_MODULE");
-    modules.set(module.id, module);
-    resolveOwner(module, profile.owner, team.members);
-    if (module.state === "existing" && !module.sources.some(source => source.kind === "test")) fail("MISSING_TEST_REFERENCE");
+  for (const component of profile.modules) {
+    if (modules.has(component.id)) fail("DUPLICATE_MODULE");
+    modules.set(component.id, component);
+    resolveOwner(component, profile.owner, team.members);
+    if (component.state === "existing" && !component.sources.some(source => source.kind === "test")) fail("MISSING_TEST_REFERENCE");
   }
   const visited = new Set(), active = new Set();
   function visit(id) {
@@ -59,9 +59,9 @@ export async function buildProjectReport(root, { validateProfile, assessFlow, fi
   for (const reference of profile.references) await read(reference);
   const plans = new Map();
   const ids = new Set();
-  for (const module of profile.modules) {
-    for (const source of module.sources) await read(source.path);
-    for (const file of module.flows) {
+  for (const component of profile.modules) {
+    for (const source of component.sources) await read(source.path);
+    for (const file of component.flows) {
       const plan = JSON.parse((await read(file)).bytes);
       if (plan.product !== profile.id || ids.has(plan.id)) fail("INVALID_FLOW_OWNERSHIP");
       const dimensions = new Set(plan.checks?.filter(check => check.required && check.method === "runtime_assertion").map(check => check.dimension));
@@ -75,10 +75,10 @@ export async function buildProjectReport(root, { validateProfile, assessFlow, fi
   return {
     schemaVersion: "development-structure/1", product: profile.id, owner: profile.owner,
     sourceFingerprint, files, tasks,
-    modules: profile.modules.map(module => ({ id: module.id, name: module.name, ...resolveOwner(module, profile.owner, team.members),
-      state: module.state, dependsOn: module.dependsOn,
-      gaps: [...(module.state === "planned" ? ["implementation_pending"] : []), ...(!module.flows.length ? ["flow_plan_pending"] : []), "runtime_evidence_pending"],
-      flows: module.flows.map(file => {
+    modules: profile.modules.map(component => ({ id: component.id, name: component.name, ...resolveOwner(component, profile.owner, team.members),
+      state: component.state, dependsOn: component.dependsOn,
+      gaps: [...(component.state === "planned" ? ["implementation_pending"] : []), ...(!component.flows.length ? ["flow_plan_pending"] : []), "runtime_evidence_pending"],
+      flows: component.flows.map(file => {
         const plan = plans.get(file);
         return assessFlow(plan, { runId: `structure-${sourceFingerprint}`, sourceFingerprint, environment: "source_inventory", planHash: fingerprint(plan) }, []);
       }) })),
