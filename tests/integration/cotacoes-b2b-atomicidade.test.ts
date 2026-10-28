@@ -5,7 +5,7 @@ import { prisma } from "../../src/lib/db";
 import { salvarProdutoNoCatalogo } from "../../src/lib/catalogo-escrita";
 import { aprovarCotacaoB2B, contraproporCotacaoB2B, converterCotacaoB2B, criarCotacaoB2B, obterCotacaoB2B, submeterCotacaoB2B } from "../../src/lib/cotacoes-b2b";
 import { registrarCheckCotacao } from "../helpers/mlops-evidence";
-import { listarCotacoesB2B, referenciasCotacao } from "../../src/lib/cotacoes-b2b-consulta";
+import { listarCotacoesB2B, referenciasCotacao, verificarAcessoCotacaoComprador } from "../../src/lib/cotacoes-b2b-consulta";
 
 const url = new URL(process.env.DATABASE_URL ?? "http://invalid");
 if (!["127.0.0.1", "localhost"].includes(url.hostname) || url.port !== "5548" || !url.pathname.endsWith("_test")) throw new Error("Este teste exige o banco isolado local :5548/*_test.");
@@ -68,13 +68,17 @@ test("listagem deixa de expor cotação quando o escopo é revogado ou muda de u
   await prisma.cotacaoB2B.update({ where: { id: cotacao.id }, data: { unidadeId: matriz.id } });
   const filtros = new URLSearchParams({ busca: cotacao.referencia });
   assert.equal((await listarCotacoesB2B(c.tenant.id, filtros, c.conta.id)).cotacoes.length, 1);
+  assert.deepEqual(await verificarAcessoCotacaoComprador(c.tenant.id, c.conta.id, cotacao.id), { id: c.comprador.id });
   await prisma.escopoCompradorB2B.deleteMany({ where: { tenantId: c.tenant.id, compradorEmpresaId: c.comprador.id } });
   await prisma.escopoCompradorB2B.create({ data: { tenantId: c.tenant.id, empresaId: c.empresa.id, compradorEmpresaId: c.comprador.id, papel: "COMPRADOR", escopo: "UNIDADE", unidadeId: filial.id, contextoVersao: 2 } });
   assert.deepEqual((await listarCotacoesB2B(c.tenant.id, filtros, c.conta.id)).cotacoes, []);
+  await assert.rejects(verificarAcessoCotacaoComprador(c.tenant.id, c.conta.id, cotacao.id), /não encontrada/);
   await prisma.escopoCompradorB2B.create({ data: { tenantId: c.tenant.id, empresaId: c.empresa.id, compradorEmpresaId: c.comprador.id, papel: "COMPRADOR", escopo: "UNIDADE", unidadeId: matriz.id, contextoVersao: 2 } });
   assert.equal((await listarCotacoesB2B(c.tenant.id, filtros, c.conta.id)).cotacoes.length, 1);
+  assert.deepEqual(await verificarAcessoCotacaoComprador(c.tenant.id, c.conta.id, cotacao.id), { id: c.comprador.id });
   await prisma.escopoCompradorB2B.deleteMany({ where: { tenantId: c.tenant.id, compradorEmpresaId: c.comprador.id } });
   assert.deepEqual((await listarCotacoesB2B(c.tenant.id, filtros, c.conta.id)).cotacoes, []);
+  await assert.rejects(verificarAcessoCotacaoComprador(c.tenant.id, c.conta.id, cotacao.id), /não encontrada/);
 });
 
 test("conversão concorrente gera um pedido, uma reserva e um evento", async t => {

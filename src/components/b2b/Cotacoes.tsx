@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/LinkLoja";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { centavosDoFormulario } from "@/lib/cotacoes-b2b-form";
 

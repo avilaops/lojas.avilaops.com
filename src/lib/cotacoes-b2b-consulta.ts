@@ -4,12 +4,39 @@ import { prisma } from "./db";
 import { ErroCotacaoB2B } from "./cotacoes-b2b-erros";
 
 const Parametros = z.object({ pagina: z.coerce.number().int().min(1).max(100000).default(1), busca: z.string().trim().max(100).default(""), estado: z.enum(["RASCUNHO", "EM_NEGOCIACAO", "AGUARDANDO_APROVACAO", "APROVADA", "RECUSADA", "EXPIRADA", "CANCELADA", "CONVERTIDA"]).optional() });
+
+async function filtroComprador(tenantId: string, compradorId: string): Promise<Prisma.CotacaoB2BWhereInput> {
+  const escopos = await prisma.escopoCompradorB2B.findMany({
+    where: { tenantId, compradorEmpresa: { compradorId, situacao: "ATIVO" } },
+    select: { id: true, compradorEmpresaId: true, unidadeId: true },
+  });
+  return {
+    tenantId,
+    compradorEmpresa: { compradorId, situacao: "ATIVO" },
+    AND: [{ OR: escopos.map(escopo => ({
+      compradorEmpresaId: escopo.compradorEmpresaId,
+      ...(escopo.unidadeId ? { unidadeId: escopo.unidadeId } : {}),
+      // Revalidar o escopo no SELECT da cotação também cobre revogação entre as consultas.
+      compradorEmpresa: { escopos: { some: { id: escopo.id, unidadeId: escopo.unidadeId } } },
+    })) }],
+  };
+}
+
+export async function verificarAcessoCotacaoComprador(tenantId: string, compradorId: string, cotacaoId: string) {
+  const cotacao = await prisma.cotacaoB2B.findFirst({
+    where: { ...await filtroComprador(tenantId, compradorId), id: cotacaoId },
+    select: { compradorEmpresaId: true },
+  });
+  if (!cotacao?.compradorEmpresaId) throw new ErroCotacaoB2B("Cotação não encontrada.", 404);
+  return { id: cotacao.compradorEmpresaId };
+}
+
 export async function listarCotacoesB2B(tenantId: string, search: URLSearchParams, compradorId?: string) {
   const parsed = Parametros.safeParse(Object.fromEntries(search));
   if (!parsed.success) throw new ErroCotacaoB2B("Filtros inválidos.");
   const { pagina, busca, estado } = parsed.data;
   const where: Prisma.CotacaoB2BWhereInput = { tenantId,
-    ...(compradorId ? { compradorEmpresa: { compradorId, situacao: "ATIVO" } } : {}),
+    ...(compradorId ? await filtroComprador(tenantId, compradorId) : {}),
     ...(estado ? { estado } : {}),
     ...(busca ? { OR: [{ referencia: { contains: busca, mode: "insensitive" } }, { empresa: { razaoSocial: { contains: busca, mode: "insensitive" } } }, { pedidoCompra: { contains: busca, mode: "insensitive" } }] } : {}) };
   const linhas = await prisma.cotacaoB2B.findMany({ where, include: {

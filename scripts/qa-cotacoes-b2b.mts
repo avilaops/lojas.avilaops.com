@@ -216,6 +216,16 @@ try {
   await fresh.goto(`${painel}/painel/cotacoes?cotacao=${ultimaCotacao}`);
   await fresh.getByRole("link", { name: /Abrir pedido #/ }).waitFor({ timeout: 120_000 });
   await fresh.close();
+  stage = "revogacao";
+  const eventsBefore = await prisma.eventoCotacaoB2B.count({ where: { cotacaoId: ultimaCotacao, tenantId: tenant.id } });
+  await prisma.escopoCompradorB2B.deleteMany({ where: { tenantId: tenant.id, compradorEmpresaId: comprador.id } });
+  const revokedList = await buyer.request.get(`${loja}/api/conta/cotacoes-b2b`);
+  assert.equal(revokedList.status(), 200);
+  assert.deepEqual((await revokedList.json()).cotacoes, []);
+  assert.equal((await buyer.request.get(`${loja}/api/conta/cotacoes-b2b/${ultimaCotacao}`)).status(), 404);
+  assert.equal((await buyer.request.post(`${loja}/api/conta/cotacoes-b2b/${ultimaCotacao}`, { data: { acao: "cancelar", versaoEsperada: 2 } })).status(), 404);
+  assert.equal(await prisma.eventoCotacaoB2B.count({ where: { cotacaoId: ultimaCotacao, tenantId: tenant.id } }), eventsBefore);
+  assert.equal((await merchant.request.get(`${painel}/api/painel/cotacoes-b2b/${ultimaCotacao}`)).status(), 200);
   await registrarCheckCotacao("persistencia", { assertions: { freshHttpRead: true, serviceRestarted: true, orderPreserved: true, versionsPreserved: true, historyPreserved: true, freshPageRead: true } });
   assert.equal(serverOutput.includes("[rotina] agendador ligado"), false, "Agendador deve permanecer desligado no serviço isolado.");
   await writeFile(`${directory}/summary.json`, JSON.stringify({ status: "passed", environment: "local_isolated", screenshots }, null, 2));

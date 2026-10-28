@@ -87,6 +87,20 @@ O runner inicia `standalone/server.js` com os arquivos estáticos e com
 sobre dados dos outros testes. Adição de produtos à contraproposta também
 está implementada e coberta pela remoção/reinclusão de item na jornada.
 
+Na CI `40653602780`, a jornada e o gate real do Experiments aprovaram as oito
+dimensões no HEAD `e9a0349`; capturas desktop/celular conferidas. O job da
+imagem apontou o import direto de `next/link` no componente compartilhado,
+contrário ao teste de prévia do projeto. O componente passa a usar `LinkLoja`.
+Isso não invalida a captura funcional, mas impede declarar essa revisão
+inteiramente aprovada.
+
+A revisão seguinte amplia a verificação de acesso: a CI `40654282291` reproduziu
+listagem de cotação após o comprador perder o escopo da unidade. O filtro agora
+é compartilhado pela lista e pelo contexto dos comandos da conta, com escopo
+revalidado na consulta da cotação. Integração cobre troca de unidade, perda de
+todos os escopos e restauração; HTTP cobre lista, leitura e mutação após revogação.
+Essas correções aguardam nova execução completa.
+
 ## Limites operacionais
 
 Builds, testes e migrations somente no GitHub CI. Checkouts servem para leitura,

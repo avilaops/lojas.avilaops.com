@@ -3,7 +3,7 @@ import { compradorAtual } from "@/lib/conta";
 import { erroCotacao } from "@/lib/cotacoes-b2b-api";
 import { AcaoSimplesCotacaoSchema, RecomprarCotacaoSchema, VersaoCotacaoSchema } from "@/lib/cotacoes-b2b-schema";
 import { aprovarCotacaoB2B, cancelarCotacaoB2B, contraproporCotacaoB2B, obterCotacaoB2B, recusarCotacaoB2B, recomprarCotacaoB2B, submeterCotacaoB2B } from "@/lib/cotacoes-b2b";
-import { prisma } from "@/lib/db";
+import { verificarAcessoCotacaoComprador } from "@/lib/cotacoes-b2b-consulta";
 import { tenantAtual } from "@/lib/tenant";
 
 type Ctx = { params: Promise<{ cotacaoId: string }> };
@@ -17,12 +17,12 @@ async function contexto(cotacaoId: string) {
   if (!tenant) return { resposta: Response.json({ erro: "Loja não encontrada." }, { status: 404 }) } as const;
   const comprador = await compradorAtual(tenant);
   if (!comprador) return { resposta: Response.json({ erro: "Entre na sua conta." }, { status: 401 }) } as const;
-  const vinculo = await prisma.compradorEmpresaB2B.findFirst({
-    where: { tenantId: tenant.id, compradorId: comprador.id, situacao: "ATIVO", cotacoes: { some: { id: cotacaoId } } },
-    select: { id: true },
-  });
-  if (!vinculo) return { resposta: Response.json({ erro: "Cotação não encontrada." }, { status: 404 }) } as const;
-  return { tenant, comprador, vinculo } as const;
+  try {
+    const vinculo = await verificarAcessoCotacaoComprador(tenant.id, comprador.id, cotacaoId);
+    return { tenant, comprador, vinculo } as const;
+  } catch (error) {
+    return { resposta: erroCotacao(error) } as const;
+  }
 }
 
 export async function GET(_: Request, { params }: Ctx) {
