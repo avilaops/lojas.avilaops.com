@@ -230,7 +230,8 @@ export async function converterCotacaoB2B(tenantId: string, id: string, chave: s
         clienteDocumento: comprador?.documento ?? "", freteNome: "Cotação B2B", freteCentavos: versao.freteCentavos,
         subtotalCentavos: versao.subtotalCentavos, descontoCentavos: versao.descontoCentavos, totalCentavos: versao.totalCentavos,
         compradorId: comprador?.id ?? null, meioPagamento: "faturado", canal: "loja", origem: `cotacao:${id}`,
-        pedidoCompra: bloqueada.pedidoCompra, empresaB2BId: bloqueada.empresaId, centroCustoB2BId: bloqueada.centroCustoId,
+        pedidoCompra: bloqueada.pedidoCompra, empresaB2BId: bloqueada.empresaId, unidadeB2BId: bloqueada.unidadeId,
+        centroCustoB2BId: bloqueada.centroCustoId,
         cotacaoVersao: versao.numero, condicoesComerciais: versao.condicoes as Prisma.InputJsonValue,
         itens: { create: itens.map((i) => ({ produtoId: i.produtoId, varianteId: i.varianteId, nome: i.nome, sku: i.sku, quantidade: i.quantidade, precoUnitarioCentavos: i.precoUnitarioCentavos })) },
       }, include: { itens: true } });

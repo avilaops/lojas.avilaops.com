@@ -686,9 +686,11 @@
         "Commit 0d24e1b tornou reserva, pedido e evento atômicos, protegeu a projeção do comprador e validou limites monetários.",
         "CI 40642445847 aprovou contratos, 199 integrações e build/imagem de produção.",
         "Commit e683db3 adicionou isolamento negativo entre tenants, empresas e alçadas sem efeitos persistidos.",
-        "CI 40643437724 aprovou 200 de 201 integrações e revelou conflito serializável P2034 entre aprovações paralelas; a correção usa repetição limitada ao código P2034."
+        "CI 40643437724 aprovou 200 de 201 integrações e revelou conflito serializável P2034 entre aprovações paralelas; a correção usa repetição limitada ao código P2034.",
+        "CI 40643743785 aprovou contratos, 201 integrações e build após a correção P2034.",
+        "Incremento atual preserva unidade no pedido e adiciona adapter verificável para quatro das oito dimensões; CI ainda pendente."
       ],
-      "review": "PR 178 em rascunho; interface operacional e evidência final da correção P2034 permanecem pendentes.",
+      "review": "PR 178 em rascunho; adapter MLOps e preservação da unidade aguardam CI. Interface operacional e quatro dimensões funcionais continuam pendentes.",
       "environment": "github-ci"
     },
     {

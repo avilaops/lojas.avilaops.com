@@ -32,9 +32,14 @@ integrações e interfaces ainda exigem implementação e evidência próprias.
 - [x] Cobrir acesso negativo entre tenants, empresas e alçadas sem efeitos.
 - [x] Repetir somente conflitos serializáveis `P2034`, no máximo três vezes,
   em todas as mutações de cotação.
+- [x] Preservar empresa, unidade, centro de custo e versão no pedido convertido,
+  comparando a resposta com a releitura persistida.
+- [ ] Vincular observações reais no CI: o adapter cobre autorização, domínio,
+  efeitos e resposta; interface, requisição, persistência e falhas continuam
+  explicitamente `not_run`.
 - [ ] Concluir a interface operacional após definir se a primeira entrega será
   para o lojista, para o comprador ou para ambos.
-- [ ] Vincular observações reais ao plano MLOps e executar CI.
+- [ ] Executar CI do adapter e preservar o relatório funcional e o TAP.
 
 A execução `40643437724` preservou 200 de 201 integrações e revelou um conflito
 serializável `P2034` entre aprovações paralelas. A correção aplica a mesma

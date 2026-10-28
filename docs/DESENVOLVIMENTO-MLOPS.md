@@ -44,9 +44,11 @@ arquivo inexistente ou módulo existente sem referência de teste reprovam o CI.
 8. Verificar o comportamento implantado e registrar separadamente sua evidência.
 
 O primeiro plano é cotação → aprovação → pedido, priorizado no SETUP do
-Experiments e relacionado à AVL-234. O teste de integração existente já cobre
-negociação e conversão idempotente; não é automaticamente promovido a evidência
-das oito dimensões, pois ainda falta o adapter que vincula observações a checks.
+Experiments e relacionado à AVL-234. O adapter do job de integração preserva o
+TAP integral, exige os nomes exatos declarados no mapa versionado, recalcula o
+SHA-256 do artefato e usa o avaliador fixado do Experiments. Ele vincula somente
+autorização, domínio, efeitos e resposta. Interface, requisição, persistência e
+falhas permanecem `not_run` até existirem provas que satisfaçam seus critérios.
 
 ## Artefatos executáveis
 
@@ -57,20 +59,28 @@ O job de contratos do workflow existente produz:
 - `development.json`: módulos, dependências, responsáveis efetivos, fontes com
   hashes e planos avaliados pelo próprio Experiments em `flow-verification/1`.
 
+O job de integração produz `cotacao-pedido.json` e o TAP que lhe dá origem no
+artefato `lojas-flow-observations-<sha>`. A avaliação é do ambiente PostgreSQL
+isolado da CI e declara `originAuthenticated: false`, conforme o contrato do
+Experiments; não é evidência de staging ou produção.
+
 O JSON Schema rejeita campos desconhecidos do perfil. O verificador confere
 referências dentro do checkout, responsável cadastrado, dependências e as oito
 dimensões obrigatórias de cada plano. Os hashes do relatório de estrutura cobrem
 somente os arquivos referenciados, não o repositório inteiro.
 
-Sem observações, o avaliador retorna `not_run`. CI estrutural verde significa
-que a estrutura é consistente; não aprova um fluxo de negócio nem autoriza
-publicação. Testes, build e infraestrutura continuam exclusivamente na CI.
-O job não importa dados no laboratório, não chama provedores e não executa IA.
+Sem observações, o avaliador retorna `not_run`. Observação ausente ou sem método
+compatível não ganha aprovação por inferência. CI estrutural verde significa
+que a estrutura é consistente; o relatório funcional parcial também não aprova
+o fluxo completo nem autoriza publicação. Testes, build e infraestrutura
+continuam exclusivamente na CI. O job não importa dados no laboratório, não
+chama provedores e não executa IA.
 
 ## Próximas entregas sobre esta base
 
-1. Vincular o piloto cotação/pedido a observações reais de HTTP, autorização,
-   banco e navegador em ambiente isolado, com casos negativos e artefatos.
+1. Completar as observações ainda ausentes do piloto cotação/pedido: navegador
+   desktop/mobile, corpo HTTP inválido, reinício controlado e falhas de expiração,
+   revisão conflitante e ausência de aprovação.
 2. Completar contratos de payload e consumidores da AVL-343.
 3. Expandir os módulos e os planos conforme o Lojas 360; CMS requer contrato
    de conteúdo/publicação, identidade/tenant, prévia, confirmação e reversão.
