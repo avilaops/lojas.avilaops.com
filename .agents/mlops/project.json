@@ -112,6 +112,38 @@
         {
           "kind": "test",
           "path": "src/lib/cotacoes-b2b-form.test.ts"
+        },
+        {
+          "kind": "code",
+          "path": "src/app/api/painel/cotacoes-b2b/route.ts"
+        },
+        {
+          "kind": "code",
+          "path": "src/app/api/painel/cotacoes-b2b/[cotacaoId]/route.ts"
+        },
+        {
+          "kind": "code",
+          "path": "src/app/api/painel/cotacoes-b2b/referencias/route.ts"
+        },
+        {
+          "kind": "code",
+          "path": "src/app/api/conta/cotacoes-b2b/route.ts"
+        },
+        {
+          "kind": "code",
+          "path": "src/app/api/conta/cotacoes-b2b/[cotacaoId]/route.ts"
+        },
+        {
+          "kind": "code",
+          "path": "src/app/api/conta/cotacoes-b2b/referencias/route.ts"
+        },
+        {
+          "kind": "code",
+          "path": "src/app/conta/cotacoes/page.tsx"
+        },
+        {
+          "kind": "code",
+          "path": "src/app/plataforma/(admin)/painel/cotacoes/page.tsx"
         }
       ],
       "flows": [

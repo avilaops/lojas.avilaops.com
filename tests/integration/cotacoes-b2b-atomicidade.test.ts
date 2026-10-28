@@ -5,6 +5,7 @@ import { prisma } from "../../src/lib/db";
 import { salvarProdutoNoCatalogo } from "../../src/lib/catalogo-escrita";
 import { aprovarCotacaoB2B, contraproporCotacaoB2B, converterCotacaoB2B, criarCotacaoB2B, obterCotacaoB2B, submeterCotacaoB2B } from "../../src/lib/cotacoes-b2b";
 import { registrarCheckCotacao } from "../helpers/mlops-evidence";
+import { listarCotacoesB2B, referenciasCotacao } from "../../src/lib/cotacoes-b2b-consulta";
 
 const url = new URL(process.env.DATABASE_URL ?? "http://invalid");
 if (!["127.0.0.1", "localhost"].includes(url.hostname) || url.port !== "5548" || !url.pathname.endsWith("_test")) throw new Error("Este teste exige o banco isolado local :5548/*_test.");
@@ -37,6 +38,26 @@ test("projeção de cotação nunca serializa credenciais do comprador", async (
   const lida = await obterCotacaoB2B(c.tenant.id, cotacao.id);
   assert.equal(JSON.stringify(lida).includes("senhaHash"), false);
   assert.equal(JSON.stringify(lida).includes(c.conta.senhaHash), false);
+});
+
+test("listas e referências da interface respeitam tenant e vínculo do comprador", async () => {
+  const c = await preparar();
+  const cotacao = await c.criar("rascunho");
+  const outro = await preparar();
+  await outro.criar("rascunho");
+  const filtros = new URLSearchParams({ busca: cotacao.referencia, estado: "RASCUNHO" });
+  const lista = await listarCotacoesB2B(c.tenant.id, filtros, c.conta.id);
+  assert.deepEqual(lista.cotacoes.map(item => item.id), [cotacao.id]);
+  assert.equal(lista.temProxima, false);
+  assert.deepEqual((await listarCotacoesB2B(c.tenant.id, filtros, outro.conta.id)).cotacoes, []);
+  assert.deepEqual((await listarCotacoesB2B(outro.tenant.id, filtros)).cotacoes, []);
+  const empresas = await referenciasCotacao(c.tenant.id, new URLSearchParams({ tipo: "empresas" }), c.conta.id);
+  assert.deepEqual(empresas.opcoes.map(item => item.id), [c.empresa.id]);
+  const compradores = await referenciasCotacao(c.tenant.id, new URLSearchParams({ tipo: "compradores", empresaId: c.empresa.id }), c.conta.id);
+  assert.deepEqual(compradores.opcoes.map(item => item.id), [c.comprador.id]);
+  await assert.rejects(referenciasCotacao(c.tenant.id, new URLSearchParams({ tipo: "compradores", empresaId: outro.empresa.id }), c.conta.id), /não encontrada/);
+  await assert.rejects(referenciasCotacao(c.tenant.id, new URLSearchParams({ tipo: "produtos", empresaId: c.empresa.id }), outro.conta.id), /não encontrada/);
+  await assert.rejects(listarCotacoesB2B(c.tenant.id, new URLSearchParams({ pagina: "0" })), /Filtros inválidos/);
 });
 
 test("conversão concorrente gera um pedido, uma reserva e um evento", async t => {

@@ -45,8 +45,9 @@ arquivo inexistente ou módulo existente sem referência de teste reprovam o CI.
 
 O primeiro plano é cotação → aprovação → pedido, priorizado no SETUP do
 Experiments e relacionado à AVL-234. O teste de integração existente já cobre
-negociação e conversão idempotente; não é automaticamente promovido a evidência
-das oito dimensões, pois ainda falta o adapter que vincula observações a checks.
+negociação e conversão idempotente. O adaptador vincula somente as asserções
+efetivamente executadas aos checks correspondentes; as oito dimensões exigem
+evidências próprias.
 
 ## Artefatos executáveis
 
@@ -82,7 +83,9 @@ reprovam o gate. Não existe busca automática de evidência em runs anteriores.
 
 `development.json` conserva a análise estrutural e acrescenta `runtime`.
 Os checks de preço, isolamento no domínio, idempotência e releitura podem
-receber observações. Os demais permanecem `not_run`; o fluxo completo fica
+receber observações. A regressão de expiração, revisão antiga e falta de
+aprovação também registra o check de falhas quando aprovada. Os demais permanecem
+`not_run`; o fluxo completo fica
 inconclusivo enquanto faltar qualquer dimensão. Esse resultado não bloqueia
 a evolução da implementação nem declara o módulo concluído.
 
