@@ -3,13 +3,13 @@ import test from "node:test";
 
 // Falta da funcionalidade produz uma asserção explícita na primeira CI.
 const implementation = await import("../../scripts/contracts/payload-compatibility.mjs").catch(() => null);
-const compare = (before: unknown, after: unknown) => {
+const compare = (before, after) => {
   assert.ok(implementation, "Comparador de payloads ainda não implementado");
   return implementation.comparePayloadSchemas(before, after);
 };
-const object = (properties: Record<string, unknown>, required = Object.keys(properties)) =>
+const object = (properties, required = Object.keys(properties)) =>
   ({ type: "object", properties, required, additionalProperties: false });
-const contract = (request: unknown, response: unknown = object({ total: { type: "integer", minimum: 0 } })) =>
+const contract = (request, response = object({ total: { type: "integer", minimum: 0 } })) =>
   ({ request, response });
 
 test("entrada rejeita estreitamento de limites e nova propriedade obrigatória", () => {
