@@ -142,6 +142,21 @@ jobs:
         env:
           MLOPS_EVIDENCE_DIR: ${{ github.workspace }}/artifacts/runtime-checks
           MLOPS_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Instalar Chromium para a jornada B2B
+        run: npx playwright install --with-deps chromium
+      - name: Verificar jornada B2B, HTTP e reinício em serviço isolado
+        run: node --import tsx scripts/qa-cotacoes-b2b.mts
+        env:
+          MLOPS_EVIDENCE_DIR: ${{ github.workspace }}/artifacts/runtime-checks
+          MLOPS_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Preservar capturas e resumo da jornada B2B
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: lojas-b2b-browser-${{ github.sha }}
+          path: artifacts/b2b-browser/
+          if-no-files-found: warn
+          retention-days: 14
       - name: Preservar observações e artefatos do piloto B2B
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

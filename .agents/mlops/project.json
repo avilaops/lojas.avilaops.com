@@ -144,6 +144,10 @@
         {
           "kind": "code",
           "path": "src/app/plataforma/(admin)/painel/cotacoes/page.tsx"
+        },
+        {
+          "kind": "test",
+          "path": "scripts/qa-cotacoes-b2b.mts"
         }
       ],
       "flows": [

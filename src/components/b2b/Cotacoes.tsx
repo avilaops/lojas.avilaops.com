@@ -147,12 +147,17 @@ export default function Cotacoes({ modo, email, inicial }: { modo: "painel" | "c
   const [erro, setErro] = useState("");
   const [motivo, setMotivo] = useState("");
   const [novaValidade, setNovaValidade] = useState("");
+  const [agora, setAgora] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => setAgora(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
   const abertura = useRef(0);
   const abrir = useCallback(async (id: string) => {
     const sequencia = ++abertura.current;
     const value = await request<Cotacao>(`${base}/${encodeURIComponent(id)}`);
     if (sequencia !== abertura.current) return;
-    setCotacao(value); setErro("");
+    setCotacao(value); setAgora(Date.now()); setErro("");
     const url = new URL(window.location.href); url.searchParams.set("cotacao", id); window.history.replaceState(null, "", url);
   }, [base]);
   useEffect(() => {
@@ -178,7 +183,7 @@ export default function Cotacoes({ modo, email, inicial }: { modo: "painel" | "c
     finally { setBusy(false); }
   }
   const ultima = cotacao?.versoes.find(version => version.numero === cotacao.versaoAtual);
-  const vencida = !!cotacao && new Date(cotacao.validaAte).getTime() <= Date.now();
+  const vencida = !!cotacao && new Date(cotacao.validaAte).getTime() <= agora;
   const terminal = !!cotacao && ["CANCELADA", "EXPIRADA", "RECUSADA", "CONVERTIDA"].includes(cotacao.estado);
   return <div className="min-w-0 space-y-6">
     <div className="flex flex-wrap gap-3"><button className={button} type="button" onClick={() => { setNova(true); setEditar(false); }}>Nova cotação</button><button className={button} type="button" onClick={() => { setRevision(current => current + 1); if (cotacao) void abrir(cotacao.id).catch(error => setErro(error.message)); }}>Recarregar cotações</button></div>
