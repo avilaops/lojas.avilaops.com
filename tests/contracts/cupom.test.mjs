@@ -38,10 +38,14 @@ test("contrato da saída recusa dinheiro fracionado e erro sem correlação", ()
   assert.equal(schema.ErroDeCupom.safeParse({ erro: { codigo: "pedido_invalido", mensagem: "Cupom inválido" } }).success, false);
 });
 
-test("exportador não oculta coerção de valores ou a unidade UTF-16 do Zod", () => {
+test("exportador não oculta coerção de valores", () => {
   assert.ok(schema && exporter);
   assert.throws(() => exporter.exportSchema(z.coerce.string()), /UNSUPPORTED_ZOD/);
   assert.throws(() => exporter.exportSchema(z.coerce.number()), /UNSUPPORTED_ZOD/);
+});
+
+test("exportador preserva a unidade UTF-16 do Zod sem usar maxLength Unicode", () => {
+  assert.ok(schema && exporter);
   const exported = exporter.exportSchema(schema.ConsultaDeCupom);
   assert.equal(exported.properties.codigo["x-maxLengthUtf16"], 40);
   assert.equal(exported.properties.codigo.maxLength, undefined);
