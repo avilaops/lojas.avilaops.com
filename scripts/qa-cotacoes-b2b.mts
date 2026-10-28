@@ -63,9 +63,11 @@ async function selecionar(page: Page, label: string, id: string) {
   await page.getByLabel(label, { exact: true }).selectOption(id);
 }
 async function comando(page: Page, name: string) {
-  const response = page.waitForResponse(response => response.request().method() === "POST" && response.url().includes("/cotacoes-b2b"));
-  await page.getByRole("button", { name, exact: true }).click();
-  assert.ok((await response).ok(), `Comando recusado: ${name}`);
+  const [response] = await Promise.all([
+    page.waitForResponse(response => response.request().method() === "POST" && response.url().includes("/cotacoes-b2b")),
+    page.getByRole("button", { name, exact: true }).click(),
+  ]);
+  assert.ok(response.ok(), `Comando recusado: ${name}`);
 }
 async function capturar(page: Page, file: string) {
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), "Interface com overflow horizontal.");
@@ -101,6 +103,7 @@ try {
   privateValues.push(token);
   await merchant.addCookies([{ name: "lojas_sessao", value: token, url: painel, httpOnly: true, sameSite: "Lax" }]);
   assert.equal((await buyer.request.post(`${loja}/api/conta`, { data: { acao: "entrar", email: conta.email, senha } })).status(), 200);
+  assert.equal((await (await buyer.request.get(`${loja}/api/conta`)).json()).logado, true);
   const anon = await browser.newContext();
   assert.equal((await anon.request.get(`${painel}/api/painel/cotacoes-b2b`)).status(), 401);
   await anon.close();
@@ -145,21 +148,28 @@ try {
     await selecionar(sellerPage, "Selecionar comprador", comprador.id);
     await sellerPage.getByLabel("Validade", { exact: true }).fill("2099-12-01T12:00");
     await selecionar(sellerPage, "Selecionar produto", variante.id);
+    stage = `criacao-${width}`;
     await comando(sellerPage, "Criar cotação");
     await sellerPage.waitForURL(url => url.searchParams.has("cotacao"));
     ultimaCotacao = new URL(sellerPage.url()).searchParams.get("cotacao")!;
     await sellerPage.getByRole("button", { name: "Negociar", exact: true }).click();
+    stage = `negociacao-${width}`;
     await sellerPage.getByLabel("Quantidade do item 1", { exact: true }).fill("2");
     await sellerPage.getByLabel("Condições comerciais", { exact: true }).fill("Pagamento em 30 dias");
     await comando(sellerPage, "Salvar contraproposta");
     await sellerPage.getByText(/Versão 2 · Validade/).waitFor();
     assert.equal((await merchant.request.post(`${painel}/api/painel/cotacoes-b2b/${ultimaCotacao}`, { data: { acao: "submeter", versaoEsperada: 1 } })).status(), 409);
     await comando(sellerPage, "Enviar para aprovação");
+    stage = `aprovacao-${width}`;
+    const approval = await buyer.request.get(`${loja}/api/conta/cotacoes-b2b/${ultimaCotacao}`);
+    assert.equal(approval.status(), 200);
+    assert.equal((await approval.json()).estado, "AGUARDANDO_APROVACAO");
     await buyerPage.goto(`${loja}/conta/cotacoes?cotacao=${ultimaCotacao}`);
     await comando(buyerPage, "Aprovar cotação");
     await buyerPage.locator('section[aria-label="Detalhes da cotação"] strong').getByText("Aprovada", { exact: true }).waitFor();
     await capturar(buyerPage, `comprador-${width}.png`);
     await sellerPage.getByRole("button", { name: "Recarregar cotações", exact: true }).click();
+    stage = `conversao-${width}`;
     await comando(sellerPage, "Converter em pedido");
     const link = sellerPage.getByRole("link", { name: /Abrir pedido #/ });
     await link.waitFor();
@@ -203,6 +213,7 @@ try {
 } catch (error) {
   let index = 0;
   for (const context of browser.contexts()) for (const page of context.pages()) {
+    diagnostics.push({ type: "page", detail: `${new URL(page.url()).pathname}: ${(await page.locator("body").innerText({ timeout: 3000 }).catch(() => "Página indisponível")).slice(0, 2400)}` });
     await page.screenshot({ path: `${directory}/failure-${index++}.png`, fullPage: true, timeout: 5000 }).catch(() => undefined);
   }
   let message = error instanceof Error ? error.message : "Erro desconhecido";

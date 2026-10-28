@@ -56,6 +56,29 @@ e o fluxo permaneceu inconclusivo. Ainda faltam jornada real no navegador,
 contrato HTTP e persistência após reinício. A implementação das telas não
 constitui evidência de funcionamento dessas dimensões.
 
+### Jornada de navegador e reinício
+
+O runner `scripts/qa-cotacoes-b2b.mts` executa somente na CI, usando PostgreSQL
+isolado, Chromium, sessão local de vendedor e login HTTP do comprador. Asserções
+de navegador cobrem desktop e celular; HTTP inválido precisa ser recusado antes
+de criar uma cotação. O serviço é reiniciado pelo próprio runner, que confere
+pedido, versões e histórico em nova requisição e página. Registros MLOps só
+são gravados após as asserções correspondentes. Capturas e diagnóstico são
+artefatos separados, sem credenciais de produção.
+
+A CI `40649735969` aprovou integração e contratos, com cinco checks reais;
+o lint revelou relógio impuro na renderização, corrigido em `18267b1`. As CIs
+`40650343283` e `40650960015` reproduziram clique sem abertura do formulário
+em Next dev; HTTP de referências funcionou e o navegador registrou falhas de
+HMR. Para verificar o artefato entregue, a jornada passou a iniciar o build de
+produção, ainda no ambiente isolado. CI `40651466891` está em andamento para
+`694b733`. O comportamento da jornada não é declarado corrigido ou aprovado.
+
+Mesmo quando o piloto passar nas oito dimensões, revisar todo o aceite da
+AVL-234 e do Lojas 360 antes de concluir o módulo: anexos, centros de custo,
+alçadas, exceções comerciais e acesso revogado não podem ficar implícitos no
+caminho feliz de um comprador administrador.
+
 ## Limites operacionais
 
 Builds, testes e migrations somente no GitHub CI. Checkouts servem para leitura,
