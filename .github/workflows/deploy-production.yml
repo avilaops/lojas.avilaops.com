@@ -112,6 +112,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci --no-audit --no-fund
+      - name: Testar contratos de payload e consumidores
+        run: node --import tsx --test tests/contracts/*.test.ts
       - run: npx prisma generate
       - run: npx prisma migrate deploy
       - run: npm run test:integracao
