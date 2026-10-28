@@ -28,11 +28,11 @@ test("CLI usa baseline commitado mesmo se a cópia candidata ou o checkout base 
     await symlink(path.join(project, "node_modules"), path.join(candidate, "node_modules"), "dir");
     await mkdir(path.join(baseline, "contracts"), { recursive: true });
     const previous = JSON.parse(await readFile(path.join(candidate, "contracts/cupom.v1.json"), "utf8"));
-    previous.request.properties.codigo.maxLength = 80;
+    previous.request.properties.codigo["x-maxLengthUtf16"] = 80;
     await writeFile(path.join(baseline, "contracts/cupom.v1.json"), JSON.stringify(previous));
     await commit(baseline);
     // Adulterar o worktree base não altera o contrato do seu commit.
-    previous.request.properties.codigo.maxLength = 40;
+    previous.request.properties.codigo["x-maxLengthUtf16"] = 40;
     await writeFile(path.join(baseline, "contracts/cupom.v1.json"), JSON.stringify(previous));
     const output = path.join(directory, "report");
     const run = () => spawnSync(process.execPath, ["--import", path.join(project, "node_modules/tsx/dist/loader.mjs"),
@@ -42,9 +42,9 @@ test("CLI usa baseline commitado mesmo se a cópia candidata ou o checkout base 
     const report = JSON.parse(await readFile(path.join(output, "cupom-compatibility.json"), "utf8"));
     assert.equal(report.compatible, false);
     assert.equal(report.baselineMode, "previous_commit");
-    assert.ok(report.changes.some(change => change.path === "request.codigo" && change.reason === "maxLength_not_subset"));
+    assert.ok(report.changes.some(change => change.path === "request.codigo" && change.reason === "x-maxLengthUtf16_not_subset"));
     assert.ok(report.sources.every(source => /^[a-f0-9]{64}$/.test(source.sha256)));
     const exportedBase = JSON.parse(await readFile(path.join(output, "cupom-baseline.json"), "utf8"));
-    assert.equal(exportedBase.request.properties.codigo.maxLength, 80);
+    assert.equal(exportedBase.request.properties.codigo["x-maxLengthUtf16"], 80);
   } finally { await rm(directory, { recursive: true, force: true }); }
 });

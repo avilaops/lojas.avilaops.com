@@ -12,6 +12,7 @@ const SucessoV1 = z.object({ dados: z.object({
   fretes: z.array(z.object({ id: z.string(), nome: z.string(), precoCentavos: z.number().int().min(0), prazoDiasUteis: z.number().int().min(0) })).optional(),
 }) });
 const ErroV1 = z.object({ erro: z.object({ codigo: z.string(), mensagem: z.string(), detalhe: z.string().optional() }), requisicao: z.string().min(1) });
+export type RespostaCupomV1 = z.infer<typeof SucessoV1>["dados"];
 
 export class ErroConsultaCupom extends Error {
   constructor(public status: number, public codigo: string, mensagem: string, public requisicao: string, public detalhe?: string) {

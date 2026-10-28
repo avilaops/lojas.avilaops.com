@@ -65,3 +65,10 @@ test("obrigatoriedade, enum de entrada e limites inclusivos respeitam a direçã
   assert.equal(compare(contract({ type: "integer", minimum: 0, maximum: 10 }), contract({ type: "integer", minimum: 0, maximum: 10 })).compatible, true);
   assert.throws(() => compare(contract({ type: "integer", minimum: 10, maximum: 0 }), contract({ type: "integer" })), /UNSUPPORTED_SCHEMA/);
 });
+
+test("limites UTF-16 diferem de pontos Unicode e detectam estreitamento", () => {
+  const previous = contract({ type: "string", "x-maxLengthUtf16": 40 });
+  assert.equal(compare(previous, contract({ type: "string", "x-maxLengthUtf16": 39 })).compatible, false);
+  assert.equal(compare(contract({ type: "string", enum: ["😀"] }), contract({ type: "string", "x-maxLengthUtf16": 1 })).compatible, false);
+  assert.equal(compare(contract({ type: "string", enum: ["😀"] }), contract({ type: "string", maxLength: 1 })).compatible, true);
+});

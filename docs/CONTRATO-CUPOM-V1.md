@@ -28,12 +28,14 @@ aplica desconto ao pedido; a compra calcula tudo novamente.
 
 O exportador lê os schemas Zod da revisão testada. Usa um subconjunto fechado:
 objetos, campos opcionais, strings, inteiros/números, enums e arrays com limites
-inclusivos. Construções não suportadas interrompem a exportação.
+inclusivos. Coerções, transformações arbitrárias e construções não suportadas interrompem
+a exportação.
 
 `x-trim: true` declara normalização **antes** da validação de comprimento.
-Essa extensão precisa de um leitor ciente da normalização; um validador JSON
-Schema genérico que ignore a extensão não representa a aceitação do corpo
-bruto. O consumidor de referência envia o corpo bruto; a API o normaliza.
+Os limites `x-minLengthUtf16` e `x-maxLengthUtf16` preservam a unidade
+UTF-16 de Zod 3; não usam minLength/maxLength de JSON Schema, que contam
+pontos Unicode. As extensões precisam de um leitor ciente dessas regras;
+um validador genérico que as ignore não representa a aceitação do corpo bruto. O consumidor de referência envia o corpo bruto; a API o normaliza.
 O gate compara também a extensão e recusa mudança de normalização.
 
 Para entrada, todos os valores antes aceitos precisam continuar aceitos.
@@ -75,3 +77,6 @@ semântica comercial, produção ou o piloto cotação/pedido. Referências de
 políticas e testes afetados: `api-cupom.ts` (recusa e limite), `api-rotas.ts`
 (identidade/origem/tenant), `api-resposta.ts` (erros), `docs/API.md` e
 `tests/integration/api-v1-checkout.test.ts`.
+
+`tests/contracts/types.ts` verifica na compilação a entrada do consumidor
+contra o produtor e a saída do produtor contra o consumidor fixado.

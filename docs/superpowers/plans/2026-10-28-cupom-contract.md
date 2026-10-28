@@ -17,15 +17,15 @@ regras de cupom, autorização ou tenant. Preservar branch e trabalho existente.
 
 ## Execução
 
-- [ ] Adicionar testes de compatibilidade direcional e os executar na CI antes
+- [x] Adicionar testes de compatibilidade direcional e os executar na CI antes
   da implementação; entrada mais restrita e saída mais ampla devem reprovar.
-- [ ] Extrair ConsultaDeCupom para api-cupom-contrato.ts; acrescentar sucesso e
+- [x] Extrair ConsultaDeCupom para api-cupom-contrato.ts; acrescentar sucesso e
   erro usados pela rota. Exportar schemas suportados; unsupported deve falhar.
-- [ ] Implementar consumidor independente, exemplos sintéticos e testes HTTP;
+- [x] Implementar consumidor independente, exemplos sintéticos e testes HTTP;
   corpo malformado, recusa, correlação e falha de protocolo devem ser visíveis.
-- [ ] Exportar payloads, comparar com baseline explícito e preservar relatório
+- [x] Exportar payloads, comparar com baseline explícito e preservar relatório
   com SHAs/hashes. Conectar ao job de integração já existente.
-- [ ] Vincular respostas reais dos testes PostgreSQL aos schemas e consumidor.
+- [x] Vincular respostas reais dos testes PostgreSQL aos schemas e consumidor.
 - [ ] Revisar diff, conferir CI completa do SHA final e atualizar PR/Linear.
 
 ## Pontos de revisão
@@ -33,3 +33,17 @@ regras de cupom, autorização ou tenant. Preservar branch e trabalho existente.
 Normalização antes dos limites; campos opcionais; objetos estritos na entrada
 e extensíveis no consumidor; fronteiras numéricas inclusivas; schema desconhecido;
 baseline ausente somente na introdução; erros preservam código e correlação.
+
+## Registro de execução
+
+RED efetivo: CI 40639817817, nove falhas explícitas por funcionalidades
+ausentes. A tentativa anterior falhou no carregador CJS/ESM dos testes;
+corrigida usando .mjs, sem contar essa falha como prova comportamental.
+
+Revisão independente encontrou coerção omitida e unidade Unicode incorreta.
+CI 40640349284 reproduziu os dois problemas antes das correções. Coerção
+passou a ser recusada; extensões UTF-16 preservam as regras Zod existentes.
+
+Decisão: exportação é um contrato com extensões explícitas, não JSON Schema
+puro para corpo bruto. Custo: leitores externos precisam entender essas
+extensões. Não se altera o comportamento da API para simplificar o exportador.

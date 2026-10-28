@@ -8,17 +8,19 @@ type Schema = Record<string, unknown>;
 export function exportSchema(schema: ZodTypeAny): Schema {
   if (schema instanceof z.ZodOptional) return exportSchema(schema.unwrap());
   if (schema instanceof z.ZodString) {
+    if (schema._def.coerce) throw new Error("UNSUPPORTED_ZOD_COERCION");
     const result: Schema = { type: "string" };
     let bounded = false;
     for (const check of schema._def.checks) {
       if (check.kind === "trim" && !bounded && !result["x-trim"]) result["x-trim"] = true;
-      else if (check.kind === "min") { result.minLength = Math.max(Number(result.minLength ?? 0), check.value); bounded = true; }
-      else if (check.kind === "max") { result.maxLength = Math.min(Number(result.maxLength ?? Infinity), check.value); bounded = true; }
+      else if (check.kind === "min") { result["x-minLengthUtf16"] = Math.max(Number(result["x-minLengthUtf16"] ?? 0), check.value); bounded = true; }
+      else if (check.kind === "max") { result["x-maxLengthUtf16"] = Math.min(Number(result["x-maxLengthUtf16"] ?? Infinity), check.value); bounded = true; }
       else throw new Error("UNSUPPORTED_ZOD_STRING_CHECK");
     }
     return result;
   }
   if (schema instanceof z.ZodNumber) {
+    if (schema._def.coerce) throw new Error("UNSUPPORTED_ZOD_COERCION");
     const result: Schema = { type: "number" };
     for (const check of schema._def.checks) {
       if (check.kind === "int") result.type = "integer";

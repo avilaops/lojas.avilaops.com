@@ -18,14 +18,14 @@
       "objective": "Fechar entrada, saída, erros, consumidor e gate de compatibilidade do módulo.",
       "assignee": "codex",
       "priority": "alta",
-      "status": "em-andamento",
+      "status": "em-revisao",
       "acceptanceCriteria": [
         "Schemas usados pela rota real; validação de saída e recusa uniforme preservadas.",
         "Exportação fail-closed e compatibilidade direcional contra baseline explícito.",
         "Consumidor independente e respostas do Postgres conferidos na CI.",
         "Artefatos com SHAs/hashes; nenhum teste ou build no servidor."
       ],
-      "evidence": "RED: nove testes falharam pela ausência da implementação na CI 40639817817. Implementação 1556949 enviada; aguarda validação final.",
+      "evidence": "RED: CI 40639817817. Integração e primeiros contratos aprovados em 1556949, CI 40640110997. Revisão reproduziu coerção/UTF-16 na CI 40640349284; correções implementadas. CI do HEAD final será vinculada no PR 178 e na AVL-343.",
       "history": [
         {
           "at": "2026-10-28",

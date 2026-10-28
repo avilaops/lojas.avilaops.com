@@ -1,5 +1,5 @@
 const keys = {
-  string: ["minLength", "maxLength", "x-trim"],
+  string: ["minLength", "maxLength", "x-minLengthUtf16", "x-maxLengthUtf16", "x-trim"],
   integer: ["minimum", "maximum"], number: ["minimum", "maximum"],
   boolean: [], null: [], array: ["items", "minItems", "maxItems"],
   object: ["properties", "required", "additionalProperties"],
@@ -13,12 +13,12 @@ function validate(schema) {
   if (Object.keys(schema).some(key => !allowed.includes(key))) throw new Error("UNSUPPORTED_SCHEMA_KEYWORD");
   if (schema.enum !== undefined && (!["string", "number", "integer", "boolean", "null"].includes(schema.type) ||
     !Array.isArray(schema.enum) || !schema.enum.length || schema.enum.some(value => !scalarFits(value, { ...schema, enum: undefined })))) throw new Error("UNSUPPORTED_SCHEMA_ENUM");
-  for (const key of ["minimum", "maximum", "minLength", "maxLength", "minItems", "maxItems"]) {
+  for (const key of ["minimum", "maximum", "minLength", "maxLength", "x-minLengthUtf16", "x-maxLengthUtf16", "minItems", "maxItems"]) {
     if (schema[key] !== undefined && (!Number.isFinite(schema[key]) ||
       (!key.endsWith("imum") && (!Number.isInteger(schema[key]) || schema[key] < 0)))) throw new Error("UNSUPPORTED_SCHEMA_BOUND");
   }
   if (schema["x-trim"] !== undefined && schema["x-trim"] !== true) throw new Error("UNSUPPORTED_SCHEMA_NORMALIZATION");
-  for (const [min, max] of [["minimum", "maximum"], ["minLength", "maxLength"], ["minItems", "maxItems"]]) {
+  for (const [min, max] of [["minimum", "maximum"], ["minLength", "maxLength"], ["x-minLengthUtf16", "x-maxLengthUtf16"], ["minItems", "maxItems"]]) {
     if (schema[min] !== undefined && schema[max] !== undefined && schema[min] > schema[max]) throw new Error("UNSUPPORTED_SCHEMA_EMPTY_RANGE");
   }
   if (schema.type === "object") {
@@ -32,7 +32,8 @@ function validate(schema) {
 function scalarFits(value, schema) {
   if (schema.enum && !schema.enum.includes(value)) return false;
   if (schema.type === "null") return value === null;
-  if (schema.type === "string") return typeof value === "string" && value.length >= (schema.minLength ?? 0) && value.length <= (schema.maxLength ?? Infinity);
+  if (schema.type === "string") return typeof value === "string" && [...value].length >= (schema.minLength ?? 0) && [...value].length <= (schema.maxLength ?? Infinity) &&
+    value.length >= (schema["x-minLengthUtf16"] ?? 0) && value.length <= (schema["x-maxLengthUtf16"] ?? Infinity);
   if (schema.type === "boolean") return typeof value === "boolean";
   return typeof value === "number" && Number.isFinite(value) && (schema.type !== "integer" || Number.isInteger(value)) &&
     value >= (schema.minimum ?? -Infinity) && value <= (schema.maximum ?? Infinity);
@@ -46,7 +47,7 @@ function subset(from, to, path, changes) {
   if (from.enum) {
     if (from.enum.some(value => !scalarFits(value, to))) fail("enum_not_subset");
   } else if (to.enum) fail("enum_restricts_values");
-  for (const [min, max] of (from.enum ? [] : [["minimum", "maximum"], ["minLength", "maxLength"], ["minItems", "maxItems"]])) {
+  for (const [min, max] of (from.enum ? [] : [["minimum", "maximum"], ["minLength", "maxLength"], ["x-minLengthUtf16", "x-maxLengthUtf16"], ["minItems", "maxItems"]])) {
     const floor = min === "minimum" ? -Infinity : 0;
     if ((from[min] ?? floor) < (to[min] ?? floor)) fail(`${min}_not_subset`);
     if ((from[max] ?? Infinity) > (to[max] ?? Infinity)) fail(`${max}_not_subset`);
