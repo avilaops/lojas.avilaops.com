@@ -8,10 +8,26 @@ type Runtime = {
 
 let inicializacao: Promise<Runtime | null> | undefined;
 
+export function destinoLangfuseSeguro(destino?: string): string | null {
+  if (!destino?.trim()) return null;
+  try {
+    const url = new URL(destino);
+    if (url.protocol !== "https:" || url.username || url.password || url.search || url.hash) return null;
+    return url.toString().replace(/\/$/, "");
+  } catch { return null; }
+}
+
 /** Só habilita exportação quando o destino e o par de chaves foram configurados. */
 export function langfuseConfigurado(env: Record<string, string | undefined> = process.env): boolean {
-  return env.LANGFUSE_TRACING_ENABLED !== "false"
-    && Boolean(env.LANGFUSE_PUBLIC_KEY?.trim() && env.LANGFUSE_SECRET_KEY?.trim() && env.LANGFUSE_BASE_URL?.trim());
+  return env.LANGFUSE_ENABLED === "true" && env.LANGFUSE_TRACING_ENABLED !== "false"
+    && Boolean(env.LANGFUSE_PUBLIC_KEY?.trim() && env.LANGFUSE_SECRET_KEY?.trim() && destinoLangfuseSeguro(env.LANGFUSE_BASE_URL));
+}
+
+async function aguardarComLimite(tarefa: Promise<void>): Promise<void> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    await Promise.race([tarefa, new Promise<void>((resolve) => { timer = setTimeout(resolve, 4_000); })]);
+  } finally { if (timer) clearTimeout(timer); }
 }
 
 export async function iniciarLangfuse(): Promise<Runtime | null> {
@@ -22,6 +38,7 @@ export async function iniciarLangfuse(): Promise<Runtime | null> {
         import("@opentelemetry/sdk-node"), import("@langfuse/otel"), import("@langfuse/tracing"),
       ]);
       const processador = new LangfuseSpanProcessor({
+        baseUrl: destinoLangfuseSeguro(process.env.LANGFUSE_BASE_URL)!,
         timeout: 3,
         mediaUploadEnabled: false,
         shouldExportSpan: ({ otelSpan }) => otelSpan.name.startsWith("lojas.gemini."),
@@ -33,7 +50,8 @@ export async function iniciarLangfuse(): Promise<Runtime | null> {
         spanProcessors: [processador],
       });
       sdk.start();
-      return { iniciar: startObservation, descarregar: () => processador.forceFlush() };
+      process.once("beforeExit", () => { void aguardarComLimite(sdk.shutdown()).catch(() => {}); });
+      return { iniciar: startObservation, descarregar: () => aguardarComLimite(processador.forceFlush()) };
     } catch {
       // Observabilidade não pode impedir a geração nem imprimir credenciais.
       console.warn("[langfuse] Inicialização indisponível; geração continua sem rastreamento.");

@@ -1,18 +1,24 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createServer } from "node:http";
+import { createServer } from "node:https";
 import { gunzipSync } from "node:zlib";
+import forge from "node-forge";
 import { GenerateContentResponse } from "@google/genai";
-import { langfuseConfigurado, rastrearGeracaoGemini, usoGemini } from "./langfuse";
+import { destinoLangfuseSeguro, langfuseConfigurado, rastrearGeracaoGemini, usoGemini } from "./langfuse";
 
 test("Langfuse exige destino explícito e ambas as credenciais; permite desligamento", () => {
-  const configurado = { LANGFUSE_BASE_URL: "https://langfuse.example", LANGFUSE_PUBLIC_KEY: "public", LANGFUSE_SECRET_KEY: "secret" };
+  const configurado = { LANGFUSE_ENABLED: "true", LANGFUSE_BASE_URL: "https://langfuse.example", LANGFUSE_PUBLIC_KEY: "public", LANGFUSE_SECRET_KEY: "secret" };
   assert.equal(langfuseConfigurado(configurado), true);
   assert.equal(langfuseConfigurado({}), false);
   for (const campo of Object.keys(configurado)) {
     assert.equal(langfuseConfigurado({ ...configurado, [campo]: " " }), false);
   }
   assert.equal(langfuseConfigurado({ ...configurado, LANGFUSE_TRACING_ENABLED: "false" }), false);
+  for (const destino of ["http://example.com", "https://user:pass@example.com", "https://example.com?key=secret", "https://example.com#key", "inválido"]) {
+    assert.equal(destinoLangfuseSeguro(destino), null);
+    assert.equal(langfuseConfigurado({ ...configurado, LANGFUSE_BASE_URL: destino }), false);
+  }
+  assert.equal(destinoLangfuseSeguro("https://langfuse.example/"), "https://langfuse.example");
 });
 
 test("uso Gemini inclui raciocínio na saída sem duplicar o total e não estima tokens ausentes", () => {
@@ -49,7 +55,17 @@ test("desabilitado preserva a resposta e o erro do provedor sem repetir chamadas
 test("exportação real OTLP contém modelo, uso e erro seguro, sem conteúdo privado", async () => {
   const envAnterior = { ...process.env };
   const cargas: string[] = [];
-  const servidor = createServer(async (request, response) => {
+  // Certificado efêmero restrito ao coletor de teste em loopback.
+  const chaves = forge.pki.rsa.generateKeyPair(2048);
+  const certificado = forge.pki.createCertificate();
+  certificado.publicKey = chaves.publicKey;
+  certificado.serialNumber = "01";
+  certificado.validity.notBefore = new Date(Date.now() - 60_000);
+  certificado.validity.notAfter = new Date(Date.now() + 60_000);
+  certificado.setSubject([{ name: "commonName", value: "localhost" }]);
+  certificado.setIssuer(certificado.subject.attributes);
+  certificado.sign(chaves.privateKey, forge.md.sha256.create());
+  const servidor = createServer({ key: forge.pki.privateKeyToPem(chaves.privateKey), cert: forge.pki.certificateToPem(certificado) }, async (request, response) => {
     const partes: Buffer[] = [];
     for await (const parte of request) partes.push(Buffer.from(parte));
     const corpo = Buffer.concat(partes);
@@ -61,10 +77,13 @@ test("exportação real OTLP contém modelo, uso e erro seguro, sem conteúdo pr
   try {
     const endereco = servidor.address();
     assert.ok(endereco && typeof endereco !== "string");
-    process.env.LANGFUSE_BASE_URL = `http://127.0.0.1:${endereco.port}`;
+    process.env.LANGFUSE_BASE_URL = `https://127.0.0.1:${endereco.port}`;
     process.env.LANGFUSE_PUBLIC_KEY = "public-test-only";
     process.env.LANGFUSE_SECRET_KEY = "secret-test-only";
     process.env.LANGFUSE_TRACING_ENABLED = "true";
+    process.env.LANGFUSE_ENABLED = "true";
+    // Este processo de teste só acessa o coletor local, com certificado efêmero.
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
     const resposta = new GenerateContentResponse();
     resposta.usageMetadata = { promptTokenCount: 10, candidatesTokenCount: 4, totalTokenCount: 14 };
     resposta.candidates = [{ content: { parts: [{ text: "RESPOSTA-PRIVADA" }] } }];

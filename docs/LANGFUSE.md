@@ -5,8 +5,10 @@ As três chamadas reais de Gemini (`copy-produto`, `diagnostico-marca` e
 de candidatos, tokens de entrada/saída e estado de erro do provedor.
 
 Configure `LANGFUSE_BASE_URL`, `LANGFUSE_PUBLIC_KEY` e `LANGFUSE_SECRET_KEY`
-somente no ambiente do servidor. Ausência de qualquer variável mantém o
-rastreamento desligado. `LANGFUSE_TRACING_ENABLED=false` desativa explicitamente.
+somente no ambiente do servidor e ative `LANGFUSE_ENABLED=true`. Ausência de
+qualquer variável mantém o rastreamento desligado. A URL deve usar HTTPS e não
+conter usuário, senha, query ou fragmento. `LANGFUSE_TRACING_ENABLED=false`
+desativa explicitamente.
 O SDK 6.0.2 exige Langfuse v4 >= 4.59.0. OpenTelemetry Node 0.223.0 é a última
 versão compatível com os peers 2.x de Langfuse 6.0.2; Node 0.300.0 usa peers 3.x.
 
@@ -21,7 +23,8 @@ O gancho Node do Next inicializa o SDK uma vez por processo; não registra
 instrumentações automáticas de HTTP ou banco. Somente spans `lojas.gemini.*`
 são exportados. Cada chamada encerra sua observação e aguarda `forceFlush()`
 antes de devolver resultado, inclusive nas rotinas fora de uma requisição.
-O exportador usa timeout de três segundos; falhas de exportação preservam o
+O exportador usa timeout de três segundos, com espera limitada a quatro
+segundos no flush e shutdown em `beforeExit`; falhas de exportação preservam o
 resultado/erro original e nunca repetem a chamada ao Gemini.
 
 Tipos, lint, testes e build são executados exclusivamente pelo workflow
