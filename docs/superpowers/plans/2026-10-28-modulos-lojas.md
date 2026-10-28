@@ -29,7 +29,9 @@ integrações e interfaces ainda exigem implementação e evidência próprias.
   três falhas esperadas e 196 integrações preservadas.
 - [x] Fazer reserva, pedido e evento na mesma transação.
 - [x] Corrigir projeção do comprador e validar limites monetários.
-- [ ] Concluir interface operacional e casos negativos de acesso.
+- [x] Cobrir acesso negativo entre tenants, empresas e alçadas sem efeitos.
+- [ ] Concluir a interface operacional após definir se a primeira entrega será
+  para o lojista, para o comprador ou para ambos.
 - [ ] Vincular observações reais ao plano MLOps e executar CI.
 
 ## Limites operacionais
