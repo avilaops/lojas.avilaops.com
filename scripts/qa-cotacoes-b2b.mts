@@ -191,6 +191,8 @@ try {
     assert.equal(stored.pedido?.totalCentavos, 3000);
     assert.deepEqual(stored.pedido?.condicoesComerciais, { observacoes: "Pagamento em 30 dias" });
     assert.equal(stored.pedido?.itens[0].quantidade, 2);
+    await sellerPage.getByRole("heading", { name: `Pedido #${stored.pedido!.numero}`, exact: true }).waitFor();
+    await capturar(sellerPage, `pedido-${width}.png`);
     assert.deepEqual(pageErrors, []);
     ultimoPedido = stored.pedidoId!;
     await sellerPage.close(); await buyerPage.close();

@@ -60,6 +60,23 @@ test("listas e referências da interface respeitam tenant e vínculo do comprado
   await assert.rejects(listarCotacoesB2B(c.tenant.id, new URLSearchParams({ pagina: "0" })), /Filtros inválidos/);
 });
 
+test("listagem deixa de expor cotação quando o escopo é revogado ou muda de unidade", async () => {
+  const c = await preparar();
+  const cotacao = await c.criar("rascunho");
+  const matriz = await prisma.unidadeEmpresaB2B.create({ data: { tenantId: c.tenant.id, empresaId: c.empresa.id, referencia: "matriz", nome: "Matriz", cnpj: "60067738000106" } });
+  const filial = await prisma.unidadeEmpresaB2B.create({ data: { tenantId: c.tenant.id, empresaId: c.empresa.id, referencia: "filial", nome: "Filial", cnpj: "16672799000173" } });
+  await prisma.cotacaoB2B.update({ where: { id: cotacao.id }, data: { unidadeId: matriz.id } });
+  const filtros = new URLSearchParams({ busca: cotacao.referencia });
+  assert.equal((await listarCotacoesB2B(c.tenant.id, filtros, c.conta.id)).cotacoes.length, 1);
+  await prisma.escopoCompradorB2B.deleteMany({ where: { tenantId: c.tenant.id, compradorEmpresaId: c.comprador.id } });
+  await prisma.escopoCompradorB2B.create({ data: { tenantId: c.tenant.id, empresaId: c.empresa.id, compradorEmpresaId: c.comprador.id, papel: "COMPRADOR", escopo: "UNIDADE", unidadeId: filial.id, contextoVersao: 2 } });
+  assert.deepEqual((await listarCotacoesB2B(c.tenant.id, filtros, c.conta.id)).cotacoes, []);
+  await prisma.escopoCompradorB2B.create({ data: { tenantId: c.tenant.id, empresaId: c.empresa.id, compradorEmpresaId: c.comprador.id, papel: "COMPRADOR", escopo: "UNIDADE", unidadeId: matriz.id, contextoVersao: 2 } });
+  assert.equal((await listarCotacoesB2B(c.tenant.id, filtros, c.conta.id)).cotacoes.length, 1);
+  await prisma.escopoCompradorB2B.deleteMany({ where: { tenantId: c.tenant.id, compradorEmpresaId: c.comprador.id } });
+  assert.deepEqual((await listarCotacoesB2B(c.tenant.id, filtros, c.conta.id)).cotacoes, []);
+});
+
 test("conversão concorrente gera um pedido, uma reserva e um evento", async t => {
   const c = await preparar();
   const cotacao = await c.criar();
