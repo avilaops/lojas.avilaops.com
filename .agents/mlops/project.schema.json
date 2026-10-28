@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "owner", "references", "modules"],
+  "properties": {
+    "schemaVersion": { "const": "development-project/1" },
+    "id": { "$ref": "#/$defs/id" },
+    "owner": { "$ref": "#/$defs/id" },
+    "references": { "$ref": "#/$defs/paths" },
+    "modules": {
+      "type": "array", "minItems": 1, "maxItems": 100,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "name", "state", "dependsOn", "sources", "flows"],
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "name": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "owner": { "$ref": "#/$defs/id" },
+          "state": { "enum": ["existing", "planned"] },
+          "dependsOn": { "type": "array", "maxItems": 100, "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
+          "sources": {
+            "type": "array", "minItems": 1, "maxItems": 100,
+            "items": {
+              "type": "object", "additionalProperties": false, "required": ["kind", "path"],
+              "properties": {
+                "kind": { "enum": ["code", "contract", "test"] },
+                "path": { "$ref": "#/$defs/path" }
+              }
+            }
+          },
+          "flows": { "type": "array", "maxItems": 100, "uniqueItems": true, "items": { "$ref": "#/$defs/path" } }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,79}$" },
+    "path": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "paths": { "type": "array", "minItems": 1, "maxItems": 100, "uniqueItems": true, "items": { "$ref": "#/$defs/path" } }
+  }
+}

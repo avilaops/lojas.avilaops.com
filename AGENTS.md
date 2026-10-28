@@ -175,6 +175,19 @@ Mandatory first step: Analyze the user's request and project state. Select a wor
 
 ## Controle da equipe
 
+### Responsabilidade e desenvolvimento MLOps
+
+- O responsável técnico padrão de Lojas é o agente Codex (`codex`).
+- Demanda sem responsável explícito pertence ao responsável do projeto. Campo
+  legado nulo não representa ausência de responsável e não bloqueia execução.
+- Preserve atribuições explícitas e não represente o agente como pessoa humana.
+- MLOps/Experiments é o padrão de desenvolvimento: cada módulo deve ter fontes,
+  contratos, plano de verificação e evidências vinculadas à versão e ao ambiente.
+- CMS é um módulo; seu repositório e domínio próprios não tornam sua integração
+  com Lojas concluída. Desenvolva sobre a estrutura comum e preserve fronteiras.
+- O perfil executável está em `.agents/mlops/project.json`; o procedimento está
+  em `docs/DESENVOLVIMENTO-MLOPS.md`. Builds e testes somente no GitHub CI.
+
 Para coordenar demandas deste projeto, leia [.agents/equipe/README.md](.agents/equipe/README.md).
 O registro de responsaveis, tarefas, decisoes e integracoes fica em `.agents/equipe/controle.json`.
 A skill de coordenacao esta em `.agents/skills/avila-lojas-avilaops-com-equipe/SKILL.md`.

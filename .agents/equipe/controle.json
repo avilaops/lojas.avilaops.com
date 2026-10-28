@@ -1,13 +1,33 @@
 {
   "schemaVersion": 1,
   "application": "avila-lojas-avilaops-com",
-  "members": [],
+  "projectOwner": "codex",
+  "members": [
+    { "id": "codex", "name": "Codex", "type": "agent", "role": "Responsável técnico de Lojas", "source": "Orientação explícita do proprietário em 2026-10-28" }
+  ],
   "tasks": [
+    {
+      "id": "MLOPS-ESTRUTURA-20261028",
+      "title": "Estruturar desenvolvimento de Lojas no padrão MLOps",
+      "objective": "Vincular módulos, fontes, contratos, planos funcionais e responsáveis ao CI usando Experiments.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-andamento",
+      "acceptanceCriteria": [
+        "Demandas sem atribuição herdam o responsável técnico do projeto sem apagar histórico.",
+        "CMS é registrado como módulo com integração pendente, sem declaração fictícia de prontidão.",
+        "Perfil validável recusa fontes ausentes, ciclos e responsáveis desconhecidos.",
+        "Plano cotação/pedido usa o avaliador real do Experiments e permanece not_run sem observações.",
+        "GitHub CI valida a estrutura e preserva relatório com versões e hashes."
+      ],
+      "evidence": "Implementação na branch codex/avl-343-lojas-contracts e PR 178; resultado deste incremento será registrado no PR após a CI.",
+      "history": [{ "at": "2026-10-28", "note": "Proprietário definiu Codex como responsável de Lojas e MLOps como padrão; desenvolvimento começa pela estrutura comum." }]
+    },
     {
       "id": "AVL-343-LOJAS",
       "title": "Primeiro gate de contratos Lojas integrado ao Experiments",
       "objective": "Inventariar fontes e impedir remoções da API v1 no CI existente, alinhado a OMNI-0 e OMNI-3.5.",
-      "assignee": null,
+      "assignee": "codex",
       "priority": "alta",
       "status": "em-andamento",
       "acceptanceCriteria": [
@@ -16,7 +36,7 @@
         "Relatórios preservam pendências e não atribuem verificação funcional.",
         "Testes e build executados exclusivamente no GitHub CI."
       ],
-      "evidence": "Implementação na branch codex/avl-343-lojas-contracts; CI ainda pendente.",
+      "evidence": "Primeiro incremento aprovado no HEAD a94414e: https://github.com/avilaops/lojas.avilaops.com/actions/runs/40635545108. 1289 testes da aplicação, 196 de integração e 6 do gate. A continuação acrescenta a estrutura de desenvolvimento MLOps e aguarda sua própria CI.",
       "review": "Incremento parcial da AVL-343; schemas de payload, consumidores e semântica continuam fora deste gate.",
       "environment": "checkout-desenvolvimento",
       "history": [{ "at": "2026-10-28", "note": "Início autorizado; contexto Lojas 360 e Experiments conferido." }]

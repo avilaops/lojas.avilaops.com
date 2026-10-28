@@ -49,6 +49,12 @@ jobs:
           EXPERIMENTS_ROOT: ${{ github.workspace }}/experiments
       - name: Capturar e comparar contratos
         run: node lojas/scripts/contracts/capture.mjs lojas baseline experiments artifacts/contracts
+      - name: Testar estrutura de desenvolvimento e responsáveis
+        run: node --test lojas/scripts/mlops/project.test.mjs
+        env:
+          EXPERIMENTS_ROOT: ${{ github.workspace }}/experiments
+      - name: Gerar estrutura MLOps e planos funcionais
+        run: node lojas/scripts/mlops/report.mjs lojas experiments artifacts/contracts
       - name: Preservar inventário, baseline e diferenças
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

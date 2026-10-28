@@ -15,7 +15,17 @@ SHA base do PR; preservar relatórios compatíveis com `route-inventory/2`.
   não funcionais, conflitos, erros sintáticos e inventário vazio.
 - [x] Implementar comparação conservadora e captura sem executar handlers.
 - [x] Integrar no workflow existente como dependência da imagem e guardar artefatos.
-- [ ] Validar exclusivamente no GitHub CI e registrar o resultado do commit exato.
+- [x] Validar o primeiro incremento exclusivamente no GitHub CI:
+  HEAD `a94414e`, execução `40635545108`, aprovada.
+
+## Continuação: estrutura comum de desenvolvimento
+
+- [x] Persistir Codex como responsável padrão e preservar atribuições explícitas.
+- [x] Registrar módulos, fontes, dependências e schema do perfil de projeto.
+- [x] Definir as oito dimensões do piloto cotação → pedido em `flow-plan/1`.
+- [x] Reutilizar o avaliador real do Experiments sem criar observações fictícias.
+- [x] Testar herança de responsável, dependências, fontes, hashes e plano incompleto.
+- [ ] Conferir CI do novo commit e registrar resultado no PR, sem deploy.
 
 ## Revisão
 
