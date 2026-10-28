@@ -10,6 +10,7 @@ permissions:
 jobs:
   contratos:
     name: contratos / API v1 e inventário Experiments
+    needs: integracao
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -50,11 +51,16 @@ jobs:
       - name: Capturar e comparar contratos
         run: node lojas/scripts/contracts/capture.mjs lojas baseline experiments artifacts/contracts
       - name: Testar estrutura de desenvolvimento e responsáveis
-        run: node --test lojas/scripts/mlops/project.test.mjs
+        run: node --test lojas/scripts/mlops/project.test.mjs lojas/scripts/mlops/runtime.test.mjs
         env:
           EXPERIMENTS_ROOT: ${{ github.workspace }}/experiments
-      - name: Gerar estrutura MLOps e planos funcionais
-        run: node lojas/scripts/mlops/report.mjs lojas experiments artifacts/contracts
+      - name: Obter observações da integração desta execução
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: lojas-runtime-${{ github.sha }}
+          path: runtime-checks
+      - name: Gerar estrutura MLOps e avaliar observações reais
+        run: node lojas/scripts/mlops/report.mjs lojas experiments artifacts/contracts runtime-checks '${{ github.run_id }}-${{ github.run_attempt }}'
       - name: Preservar inventário, baseline e diferenças
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -133,6 +139,17 @@ jobs:
       - run: npx prisma generate
       - run: npx prisma migrate deploy
       - run: npm run test:integracao
+        env:
+          MLOPS_EVIDENCE_DIR: ${{ github.workspace }}/artifacts/runtime-checks
+          MLOPS_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Preservar observações e artefatos do piloto B2B
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: lojas-runtime-${{ github.sha }}
+          path: artifacts/runtime-checks/
+          if-no-files-found: warn
+          retention-days: 14
 
   image:
     name: image / build

@@ -67,6 +67,39 @@ que a estrutura é consistente; não aprova um fluxo de negócio nem autoriza
 publicação. Testes, build e infraestrutura continuam exclusivamente na CI.
 O job não importa dados no laboratório, não chama provedores e não executa IA.
 
+### Observações reais do piloto B2B
+
+O job de integração agora preserva `lojas-runtime-<sha>`. Após asserções reais
+em PostgreSQL, o helper de testes grava um resumo de asserções e métricas
+sintéticas, sem serializar comprador, pedido, credenciais ou corpos comerciais.
+O registro vincula check, commit, execução/tentativa da CI e hash do plano.
+
+O job de contratos depende da integração e baixa somente o artefato da mesma
+execução. O adaptador confere identidade do check, commit, ambiente isolado,
+plano e bytes do artefato antes de chamar o avaliador real do Experiments.
+Commit/execução/plano divergentes, hashes alterados ou caminhos externos
+reprovam o gate. Não existe busca automática de evidência em runs anteriores.
+
+`development.json` conserva a análise estrutural e acrescenta `runtime`.
+Os checks de preço, isolamento no domínio, idempotência e releitura podem
+receber observações. Os demais permanecem `not_run`; o fluxo completo fica
+inconclusivo enquanto faltar qualquer dimensão. Esse resultado não bloqueia
+a evolução da implementação nem declara o módulo concluído.
+
+O isolamento testado aqui é do domínio/banco, não da sessão HTTP. Não há prova
+de interface ou reinício do serviço nesta captura. Os registros são produzidos
+por código da CI e conferidos por hashes; isso não é atestação remota e
+`originAuthenticated` permanece falso no contrato de Experiments.
+
+### Conversão de cotação
+
+Reserva, criação de pedido e evento de conversão usam a mesma transação.
+Falha reverte o conjunto e permite retry; chamadas concorrentes convergem no
+pedido da cotação. Preço e condições vêm da versão aprovada; empresa, unidade
+e centro de custo são preservados. A projeção do comprador seleciona somente
+os campos necessários e nunca serializa hash de senha. Totais recusam valores
+fora do limite persistível por Prisma Int antes de tentar gravá-los.
+
 ## Próximas entregas sobre esta base
 
 1. Vincular o piloto cotação/pedido a observações reais de HTTP, autorização,

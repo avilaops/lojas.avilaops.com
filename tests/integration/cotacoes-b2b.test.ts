@@ -5,6 +5,7 @@ import { prisma } from "../../src/lib/db";
 import { aprovarVersaoCatalogoB2B } from "../../src/lib/catalogo-b2b";
 import { salvarProdutoNoCatalogo } from "../../src/lib/catalogo-escrita";
 import { aprovarCotacaoB2B, contraproporCotacaoB2B, converterCotacaoB2B, criarCotacaoB2B, recomprarCotacaoB2B, submeterCotacaoB2B } from "../../src/lib/cotacoes-b2b";
+import { registrarCheckCotacao } from "../helpers/mlops-evidence";
 
 const url = new URL(process.env.DATABASE_URL ?? "http://invalid");
 if (!["127.0.0.1", "localhost"].includes(url.hostname) || url.port !== "5548" || !url.pathname.endsWith("_test")) throw new Error("Este teste exige o banco isolado local :5548/*_test.");
@@ -48,4 +49,12 @@ test("negociação preserva versões e conversão idempotente preserva o preço 
   const recompra = await recomprarCotacaoB2B(tenant.id, criada.id, new Date(Date.now() + 86_400_000), { tipo: "COMPRADOR", id: comprador.id, email: conta.email });
   assert.equal(recompra.estado, "RASCUNHO");
   assert.equal(recompra.versoes[0].totalCentavos, 4_500);
+  await registrarCheckCotacao("preco", { assertions: { approvedPricePreserved: true, approvedQuantityPreserved: true, conditionsPreserved: true, repurchaseUsesCurrentPrice: true }, metrics: { approvedTotalCentavos: primeiro.totalCentavos, repurchaseTotalCentavos: recompra.versoes[0].totalCentavos } });
+  const relido = await prisma.pedido.findFirstOrThrow({ where: { tenantId: tenant.id, id: primeiro.id }, include: { itens: true } });
+  assert.equal(relido.empresaB2BId, primeiro.empresaB2BId);
+  assert.equal(relido.unidadeB2BId, unidade.id);
+  assert.equal(relido.cotacaoVersao, 2);
+  assert.equal(relido.totalCentavos, primeiro.totalCentavos);
+  assert.deepEqual(relido.itens, primeiro.itens);
+  await registrarCheckCotacao("resposta", { assertions: { readbackMatches: true, companyPreserved: true, unitPreserved: true, approvedVersionPreserved: true } });
 });

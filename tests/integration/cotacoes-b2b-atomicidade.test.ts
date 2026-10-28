@@ -4,6 +4,7 @@ import { after, test } from "node:test";
 import { prisma } from "../../src/lib/db";
 import { salvarProdutoNoCatalogo } from "../../src/lib/catalogo-escrita";
 import { aprovarCotacaoB2B, converterCotacaoB2B, criarCotacaoB2B, obterCotacaoB2B, submeterCotacaoB2B } from "../../src/lib/cotacoes-b2b";
+import { registrarCheckCotacao } from "../helpers/mlops-evidence";
 
 const url = new URL(process.env.DATABASE_URL ?? "http://invalid");
 if (!["127.0.0.1", "localhost"].includes(url.hostname) || url.port !== "5548" || !url.pathname.endsWith("_test")) throw new Error("Este teste exige o banco isolado local :5548/*_test.");
@@ -18,11 +19,11 @@ async function preparar() {
   const produto = await salvarProdutoNoCatalogo(tenant.id, null, { nome: "Peça QA", slug: `peca-${randomUUID()}`, sku: `P-${randomUUID()}`, precoCentavos: 1_000, estoque: 20, imagens: ["https://example.test/peca.webp"] });
   const variante = await prisma.variante.findFirstOrThrow({ where: { tenantId: tenant.id, produtoId: produto.id } });
   const ator = { tipo: "VENDEDOR", email: "vendas@example.test" };
-  const criar = async () => {
+  const criar = async (aprovar = true) => {
     const cotacao = await criarCotacaoB2B(tenant.id, { empresaId: empresa.id, compradorEmpresaId: comprador.id, responsavelEmail: ator.email,
       validaAte: new Date(Date.now() + 86_400_000), itens: [{ produtoId: produto.id, varianteId: variante.id, quantidade: 2 }] }, ator);
     await submeterCotacaoB2B(tenant.id, cotacao.id, ator);
-    await aprovarCotacaoB2B(tenant.id, cotacao.id, comprador.id, { tipo: "APROVADOR", id: comprador.id });
+    if (aprovar) await aprovarCotacaoB2B(tenant.id, cotacao.id, comprador.id, { tipo: "APROVADOR", id: comprador.id });
     return cotacao;
   };
   return { tenant, empresa, comprador, conta, variante, ator, criar };
@@ -36,9 +37,10 @@ test("projeção de cotação nunca serializa credenciais do comprador", async (
   assert.equal(JSON.stringify(lida).includes(c.conta.senhaHash), false);
 });
 
-test("conversão concorrente gera um pedido, uma reserva e um evento", async () => {
+test("conversão concorrente gera um pedido, uma reserva e um evento", async t => {
   const c = await preparar();
   const cotacao = await c.criar();
+  const requests = t.mock.method(globalThis, "fetch", async () => { throw new Error("Nenhuma chamada externa é permitida neste teste."); });
   const pedidos = await Promise.all(Array.from({ length: 3 }, () => converterCotacaoB2B(c.tenant.id, cotacao.id, "mesma-chave-concorrente", c.ator)));
   assert.equal(new Set(pedidos.map(pedido => pedido.id)).size, 1);
   assert.equal(await prisma.pedido.count({ where: { tenantId: c.tenant.id, origem: `cotacao:${cotacao.id}` } }), 1);
@@ -46,6 +48,8 @@ test("conversão concorrente gera um pedido, uma reserva e um evento", async () 
   const saldo = await prisma.saldoEstoque.findFirstOrThrow({ where: { tenantId: c.tenant.id, varianteId: c.variante.id, local: "principal" } });
   assert.equal(saldo.reservado, 2);
   assert.equal(saldo.fisico, 20);
+  assert.equal(requests.mock.callCount(), 0);
+  await registrarCheckCotacao("idempotencia", { assertions: { oneOrder: true, oneEvent: true, oneReservation: true, noExternalRequest: true }, metrics: { attempts: 3, reserved: saldo.reservado } });
 });
 
 test("falha na criação reverte reserva e permite nova tentativa da cotação", async () => {
@@ -61,4 +65,21 @@ test("falha na criação reverte reserva e permite nova tentativa da cotação",
   assert.equal(novoPedido.totalCentavos, 2_000);
   const saldo = await prisma.saldoEstoque.findFirstOrThrow({ where: { tenantId: c.tenant.id, varianteId: c.variante.id, local: "principal" } });
   assert.equal(saldo.reservado, 4);
+});
+
+test("cotação recusa outro tenant, comprador fora do escopo e alçada insuficiente", async () => {
+  const c = await preparar();
+  const cotacao = await c.criar(false);
+  const outroTenant = await prisma.tenant.create({ data: { slug: `qa-outro-${randomUUID()}`, nome: "Outro", status: "ATIVA" } });
+  await assert.rejects(obterCotacaoB2B(outroTenant.id, cotacao.id));
+  await assert.rejects(converterCotacaoB2B(outroTenant.id, cotacao.id, "chave-outro-tenant", c.ator));
+  const outroComprador = await prisma.compradorEmpresaB2B.create({ data: { tenantId: c.tenant.id, empresaId: c.empresa.id, nome: "Sem escopo", emailNormalizado: `${randomUUID()}@example.test` } });
+  await assert.rejects(aprovarCotacaoB2B(c.tenant.id, cotacao.id, outroComprador.id, { tipo: "APROVADOR", id: outroComprador.id }), /escopo/i);
+  await prisma.escopoCompradorB2B.updateMany({ where: { tenantId: c.tenant.id, compradorEmpresaId: c.comprador.id }, data: { limiteAprovacaoCentavos: 1_000 } });
+  await assert.rejects(aprovarCotacaoB2B(c.tenant.id, cotacao.id, c.comprador.id, { tipo: "APROVADOR", id: c.comprador.id }), /alçada/i);
+  const atual = await obterCotacaoB2B(c.tenant.id, cotacao.id);
+  assert.equal(atual.estado, "AGUARDANDO_APROVACAO");
+  assert.equal(atual.pedidoId, null);
+  assert.equal(await prisma.eventoCotacaoB2B.count({ where: { tenantId: c.tenant.id, cotacaoId: cotacao.id, tipo: "APROVADA" } }), 0);
+  await registrarCheckCotacao("isolamento", { assertions: { otherTenantRejected: true, outOfScopeRejected: true, approvalLimitEnforced: true, noOrder: true } });
 });

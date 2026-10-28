@@ -25,11 +25,21 @@ integrações e interfaces ainda exigem implementação e evidência próprias.
 
 - [x] Inspecionar domínio, handlers, testes, projeções e reserva de estoque.
 - [x] Adicionar regressões para projeção privada, concorrência e falha/retry.
-- [ ] Confirmar regressões na CI antes da correção.
-- [ ] Fazer reserva, pedido e evento na mesma transação.
-- [ ] Corrigir projeção do comprador e validar limites monetários.
+- [x] Confirmar regressões na CI antes da correção: `40642109382`, três falhas
+  esperadas nos testes novos e 196 integrações preservadas.
+- [x] Fazer reserva, pedido e evento na mesma transação.
+- [x] Corrigir projeção do comprador, preservar unidade e validar limites monetários.
 - [ ] Concluir interface operacional e casos negativos de acesso.
 - [ ] Vincular observações reais ao plano MLOps e executar CI.
+
+As correções estão no checkout isolado `lojas-modulos-b2b`, PR 181. A branch
+178 e o checkout principal pertencem também a trabalhos concorrentes;
+não trocar suas branches nem sobrescrever alterações. CI da correção
+`40642521486`: integração aprovada; imagem ainda em execução na observação.
+
+O adaptador de evidências liga quatro checks a testes de domínio/banco:
+preço, isolamento, idempotência e releitura da resposta. Interface, HTTP,
+reinício e revisão conflitante ainda precisam de cobertura própria.
 
 ## Limites operacionais
 

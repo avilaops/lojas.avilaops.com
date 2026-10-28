@@ -13,6 +13,22 @@
   ],
   "tasks": [
     {
+      "id": "B2B-CONCLUSAO-MODULO-20261028",
+      "title": "Concluir módulo de comércio B2B e evidências funcionais",
+      "objective": "Completar domínio, contratos e operação de cotação/pedido até sua verificação ponta a ponta, preservando o escopo dos demais módulos.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-andamento",
+      "acceptanceCriteria": [
+        "Conversão concorrente e falha/retry preservam um pedido e reservas consistentes.",
+        "Resposta não expõe credenciais e mantém empresa, unidade, versão e condições.",
+        "Interface, HTTP, autorização, persistência, domínio, efeitos, falhas e resposta têm evidência vinculada ao plano.",
+        "Módulo só é concluído após comprovar todas as dimensões; CI estrutural verde não basta."
+      ],
+      "evidence": "Três defeitos reproduzidos na CI 40642109382; correção e coleta de observações em desenvolvimento no PR 181. Integração da correção inicial aprovada em 40642521486. CI do adaptador ainda pendente.",
+      "history": [{ "at": "2026-10-28", "note": "Objetivo permanente ativado: continuar até o fim de cada módulo. Trabalho isolado para preservar checkouts concorrentes." }]
+    },
+    {
       "id": "MLOPS-PAYLOAD-CUPOM-20261028",
       "title": "Contrato executável de payload cupom v1",
       "objective": "Fechar entrada, saída, erros, consumidor e gate de compatibilidade do módulo.",
