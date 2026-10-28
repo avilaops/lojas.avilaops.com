@@ -4,6 +4,24 @@
   "members": [],
   "tasks": [
     {
+      "id": "AVL-343-LOJAS",
+      "title": "Primeiro gate de contratos Lojas integrado ao Experiments",
+      "objective": "Inventariar fontes e impedir remoções da API v1 no CI existente, alinhado a OMNI-0 e OMNI-3.5.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "em-andamento",
+      "acceptanceCriteria": [
+        "Analisador de Experiments fixado por commit, sem dependência de runtime.",
+        "Baseline explícito por SHA e incompatibilidades de rota bloqueiam a imagem.",
+        "Relatórios preservam pendências e não atribuem verificação funcional.",
+        "Testes e build executados exclusivamente no GitHub CI."
+      ],
+      "evidence": "Implementação na branch codex/avl-343-lojas-contracts; CI ainda pendente.",
+      "review": "Incremento parcial da AVL-343; schemas de payload, consumidores e semântica continuam fora deste gate.",
+      "environment": "checkout-desenvolvimento",
+      "history": [{ "at": "2026-10-28", "note": "Início autorizado; contexto Lojas 360 e Experiments conferido." }]
+    },
+    {
       "id": "MELHOR-ENVIO-SANDBOX-20261027",
       "title": "Preparar e publicar conexão e cotação do Melhor Envio somente em sandbox",
       "assignee": null,

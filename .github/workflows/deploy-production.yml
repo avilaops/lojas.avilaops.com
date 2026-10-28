@@ -8,6 +8,49 @@ on:
 permissions:
   contents: read
 jobs:
+  contratos:
+    name: contratos / API v1 e inventário Experiments
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          path: lojas
+          persist-credentials: false
+      - name: Obter baseline explícito
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          path: baseline
+          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+          persist-credentials: false
+      - name: Obter analisador Experiments fixado
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: avilaops/experiments
+          ref: fb2262d1e30575a466b81fd91be323e931f43164
+          path: experiments
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: experiments/package-lock.json
+      - name: Instalar dependências do analisador
+        run: npm ci --ignore-scripts --no-audit --no-fund
+        working-directory: experiments
+      - name: Testar proteção de compatibilidade
+        run: node --test lojas/scripts/contracts/compatibility.test.mjs
+      - name: Capturar e comparar contratos
+        run: node lojas/scripts/contracts/capture.mjs lojas baseline experiments artifacts/contracts
+      - name: Preservar inventário, baseline e diferenças
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: lojas-contracts-${{ github.sha }}
+          path: artifacts/contracts/
+          if-no-files-found: error
+          retention-days: 14
+
   # Construção e implantação moram aqui, e não em `uses: avilaops/infra/...`:
   # este repositório é público e o avilaops/infra é privado, e o GitHub não
   # deixa repositório público chamar workflow reutilizável de repositório
@@ -62,7 +105,7 @@ jobs:
 
   image:
     name: image / build
-    needs: integracao
+    needs: [integracao, contratos]
     runs-on: ubuntu-latest
     timeout-minutes: 45
     permissions:
