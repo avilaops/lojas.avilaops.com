@@ -20,6 +20,7 @@ let server: ChildProcess | undefined;
 let stage = "preparar";
 const screenshots: Array<{ file: string; sha256: string }> = [];
 const privateValues: string[] = [];
+const diagnostics: Array<{ type: string; detail: string }> = [];
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 async function iniciar() {
@@ -68,7 +69,7 @@ async function comando(page: Page, name: string) {
 }
 async function capturar(page: Page, file: string) {
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), "Interface com overflow horizontal.");
-  await page.screenshot({ path: `${directory}/${file}`, fullPage: true });
+  await page.screenshot({ path: `${directory}/${file}`, fullPage: true, timeout: 10_000, animations: "disabled" });
   screenshots.push({ file, sha256: createHash("sha256").update(await readFile(`${directory}/${file}`)).digest("hex") });
 }
 
@@ -113,6 +114,9 @@ try {
   }
   assert.equal(await prisma.cotacaoB2B.count({ where: { tenantId: tenant.id } }), before);
   assert.equal((await merchant.request.get(`${painel}/api/painel/cotacoes-b2b/nao-existe`)).status(), 404);
+  const references = await merchant.request.get(`${painel}/api/painel/cotacoes-b2b/referencias?tipo=empresas`);
+  assert.equal(references.status(), 200);
+  assert.ok((await references.json()).opcoes.some((option: { id: string }) => option.id === empresa.id));
   await registrarCheckCotacao("contrato", { assertions: { unauthenticatedRejected: true, invalidBodiesRejected: true, unknownFieldRejected: true, noWrite: true, missingQuoteRejected: true } });
 
   let ultimaCotacao = "";
@@ -124,9 +128,18 @@ try {
     await sellerPage.setViewportSize({ width, height: 900 });
     await buyerPage.setViewportSize({ width, height: 900 });
     const pageErrors: string[] = [];
-    for (const page of [sellerPage, buyerPage]) { page.setDefaultTimeout(120_000); page.on("pageerror", error => pageErrors.push(error.name)); }
+    for (const page of [sellerPage, buyerPage]) {
+      page.setDefaultTimeout(120_000);
+      page.on("pageerror", error => { pageErrors.push(error.name); diagnostics.push({ type: "pageerror", detail: error.message }); });
+      page.on("console", message => { if (message.type() === "error") diagnostics.push({ type: "console", detail: message.text().slice(0, 800) }); });
+      page.on("response", response => { if (response.url().includes("/cotacoes-b2b")) diagnostics.push({ type: "http", detail: `${response.status()} ${new URL(response.url()).pathname}` }); });
+      page.on("requestfailed", request => diagnostics.push({ type: "network", detail: `${new URL(request.url()).pathname} ${request.failure()?.errorText}` }));
+    }
     await sellerPage.goto(`${painel}/painel/cotacoes`);
+    stage = `formulario-${width}`;
     await sellerPage.getByRole("button", { name: "Nova cotação", exact: true }).click();
+    await sellerPage.getByRole("heading", { name: "Nova cotação", exact: true }).waitFor();
+    stage = `empresa-${width}`;
     await selecionar(sellerPage, "Selecionar empresa", empresa.id);
     await selecionar(sellerPage, "Selecionar unidade", unidade.id);
     await selecionar(sellerPage, "Selecionar comprador", comprador.id);
@@ -188,9 +201,15 @@ try {
   await writeFile(`${directory}/summary.json`, JSON.stringify({ status: "passed", environment: "local_isolated", screenshots }, null, 2));
   console.log("Jornada B2B desktop/celular, contrato HTTP e reinício: aprovados.");
 } catch (error) {
+  let index = 0;
+  for (const context of browser.contexts()) for (const page of context.pages()) {
+    await page.screenshot({ path: `${directory}/failure-${index++}.png`, fullPage: true, timeout: 5000 }).catch(() => undefined);
+  }
   let message = error instanceof Error ? error.message : "Erro desconhecido";
   for (const value of privateValues) message = message.replaceAll(value, "[redacted]");
-  await writeFile(`${directory}/failure.json`, JSON.stringify({ status: "failed", stage, errorType: error instanceof Error ? error.name : "Unknown", message: message.slice(0, 2400), screenshots }));
+  let report = JSON.stringify({ status: "failed", stage, errorType: error instanceof Error ? error.name : "Unknown", message: message.slice(0, 2400), screenshots, diagnostics: diagnostics.slice(-80) });
+  for (const value of privateValues) report = report.replaceAll(value, "[redacted]");
+  await writeFile(`${directory}/failure.json`, report);
   throw new Error(`Falha na verificação B2B, etapa ${stage}. Consulte os artefatos da CI.`);
 } finally {
   try { await browser.close(); }
