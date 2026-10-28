@@ -50,7 +50,7 @@ test("clientes distingue relacionamento, pedidos registrados e valor realmente p
     assert.match(html, new RegExp(`>${cabecalho}<`));
   }
   assert.match(html, />Recorrente</);
-  assert.match(html, />2 compras pagas</);
-  assert.match(html, />3 pedidos registrados</);
+  assert.match(html, /2 compras pagas/);
+  assert.match(html, /3 pedidos registrados/);
   assert.match(html, />R\$\s*75,00</);
 });
