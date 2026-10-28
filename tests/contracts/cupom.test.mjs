@@ -38,6 +38,17 @@ test("contrato da saída recusa dinheiro fracionado e erro sem correlação", ()
   assert.equal(schema.ErroDeCupom.safeParse({ erro: { codigo: "pedido_invalido", mensagem: "Cupom inválido" } }).success, false);
 });
 
+test("exportador não oculta coerção de valores ou a unidade UTF-16 do Zod", () => {
+  assert.ok(schema && exporter);
+  assert.throws(() => exporter.exportSchema(z.coerce.string()), /UNSUPPORTED_ZOD/);
+  assert.throws(() => exporter.exportSchema(z.coerce.number()), /UNSUPPORTED_ZOD/);
+  const exported = exporter.exportSchema(schema.ConsultaDeCupom);
+  assert.equal(exported.properties.codigo["x-maxLengthUtf16"], 40);
+  assert.equal(exported.properties.codigo.maxLength, undefined);
+  assert.equal(schema.ConsultaDeCupom.safeParse({ ...input, codigo: "😀".repeat(20) }).success, true);
+  assert.equal(schema.ConsultaDeCupom.safeParse({ ...input, codigo: "😀".repeat(21) }).success, false);
+});
+
 test("consumidor fixado faz HTTP real, aceita extensão e preserva erro/correlação", async () => {
   assert.ok(consumer, "Consumidor independente ainda não implementado");
   let answer = success;

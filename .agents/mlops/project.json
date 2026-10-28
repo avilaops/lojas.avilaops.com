@@ -2,7 +2,11 @@
   "schemaVersion": "development-project/1",
   "id": "lojas",
   "owner": "codex",
-  "references": ["docs/OMNI-FONTES-CANONICAS.md", "docs/OMNI-INVENTARIO-INTEGRACOES.md", "docs/DESENVOLVIMENTO-MLOPS.md"],
+  "references": [
+    "docs/OMNI-FONTES-CANONICAS.md",
+    "docs/OMNI-INVENTARIO-INTEGRACOES.md",
+    "docs/DESENVOLVIMENTO-MLOPS.md"
+  ],
   "modules": [
     {
       "id": "fundacao",
@@ -10,11 +14,46 @@
       "state": "existing",
       "dependsOn": [],
       "sources": [
-        { "kind": "code", "path": "src/lib/api-indice.ts" },
-        { "kind": "code", "path": "src/lib/tenant.ts" },
-        { "kind": "test", "path": "src/lib/api-indice.test.ts" },
-        { "kind": "test", "path": "src/lib/tenant.test.ts" },
-        { "kind": "contract", "path": "docs/API.md" }
+        {
+          "kind": "code",
+          "path": "src/lib/api-indice.ts"
+        },
+        {
+          "kind": "code",
+          "path": "src/lib/tenant.ts"
+        },
+        {
+          "kind": "test",
+          "path": "src/lib/api-indice.test.ts"
+        },
+        {
+          "kind": "test",
+          "path": "src/lib/tenant.test.ts"
+        },
+        {
+          "kind": "contract",
+          "path": "docs/API.md"
+        },
+        {
+          "kind": "contract",
+          "path": "contracts/cupom.v1.json"
+        },
+        {
+          "kind": "contract",
+          "path": "docs/CONTRATO-CUPOM-V1.md"
+        },
+        {
+          "kind": "code",
+          "path": "src/lib/api-cupom-contrato.ts"
+        },
+        {
+          "kind": "test",
+          "path": "tests/contracts/cupom.test.mjs"
+        },
+        {
+          "kind": "test",
+          "path": "tests/contracts/report.test.mjs"
+        }
       ],
       "flows": []
     },
@@ -22,24 +61,51 @@
       "id": "comercio-b2b",
       "name": "Catálogo contratual, cotação e pedido",
       "state": "existing",
-      "dependsOn": ["fundacao"],
-      "sources": [
-        { "kind": "code", "path": "src/lib/cotacoes-b2b.ts" },
-        { "kind": "contract", "path": "src/lib/cotacoes-b2b-schema.ts" },
-        { "kind": "test", "path": "tests/integration/cotacoes-b2b.test.ts" },
-        { "kind": "test", "path": "src/lib/cotacoes-b2b.test.ts" }
+      "dependsOn": [
+        "fundacao"
       ],
-      "flows": [".agents/mlops/flows/cotacao-pedido.json"]
+      "sources": [
+        {
+          "kind": "code",
+          "path": "src/lib/cotacoes-b2b.ts"
+        },
+        {
+          "kind": "contract",
+          "path": "src/lib/cotacoes-b2b-schema.ts"
+        },
+        {
+          "kind": "test",
+          "path": "tests/integration/cotacoes-b2b.test.ts"
+        },
+        {
+          "kind": "test",
+          "path": "src/lib/cotacoes-b2b.test.ts"
+        }
+      ],
+      "flows": [
+        ".agents/mlops/flows/cotacao-pedido.json"
+      ]
     },
     {
       "id": "fiscal",
       "name": "Recebimento e integração fiscal",
       "state": "existing",
-      "dependsOn": ["fundacao"],
+      "dependsOn": [
+        "fundacao"
+      ],
       "sources": [
-        { "kind": "contract", "path": "docs/FLUXOS-FISCAIS.md" },
-        { "kind": "test", "path": "src/lib/erp-fiscal.test.ts" },
-        { "kind": "test", "path": "src/lib/fiscal-manifestacao.test.ts" }
+        {
+          "kind": "contract",
+          "path": "docs/FLUXOS-FISCAIS.md"
+        },
+        {
+          "kind": "test",
+          "path": "src/lib/erp-fiscal.test.ts"
+        },
+        {
+          "kind": "test",
+          "path": "src/lib/fiscal-manifestacao.test.ts"
+        }
       ],
       "flows": []
     },
@@ -47,8 +113,15 @@
       "id": "cms",
       "name": "Conteúdo e publicação — módulo CMS",
       "state": "planned",
-      "dependsOn": ["fundacao"],
-      "sources": [{ "kind": "contract", "path": "docs/DESENVOLVIMENTO-MLOPS.md" }],
+      "dependsOn": [
+        "fundacao"
+      ],
+      "sources": [
+        {
+          "kind": "contract",
+          "path": "docs/DESENVOLVIMENTO-MLOPS.md"
+        }
+      ],
       "flows": []
     }
   ]

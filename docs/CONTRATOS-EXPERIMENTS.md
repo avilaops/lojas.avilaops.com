@@ -50,3 +50,10 @@ Não se transforma descoberta sintática em certificação funcional.
 
 Build, lint, tipos, testes da aplicação e integração PostgreSQL permanecem
 nos jobs existentes do GitHub CI. Nenhum teste ou build é executado no servidor.
+
+## Payload da consulta de cupom
+
+O [módulo de contrato cupom v1](CONTRATO-CUPOM-V1.md) acrescenta schemas usados
+pela rota, consumidor independente e compatibilidade direcional no job de
+integração existente. O escopo de payload é somente essa operação; as demais
+continuam com o inventário de rotas descrito acima.
