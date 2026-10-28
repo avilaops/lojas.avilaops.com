@@ -76,7 +76,11 @@ async function transacaoCotacao<T>(operation: (tx: Prisma.TransactionClient) => 
     try {
       return await prisma.$transaction(operation, { isolationLevel: "Serializable", timeout: 20000 });
     } catch (error) {
-      if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== "P2034" || attempt >= 3) throw error;
+      // SELECT FOR UPDATE reports serialization/deadlock through P2010 SQLSTATE.
+      const conflict = error instanceof Prisma.PrismaClientKnownRequestError
+        && (error.code === "P2034" || error.code === "P2010" && ["40001", "40P01"].includes(String(error.meta?.code ?? "")));
+      if (!conflict || attempt >= 5) throw error;
+      await new Promise(resolve => setTimeout(resolve, attempt * 15));
     }
   }
 }
