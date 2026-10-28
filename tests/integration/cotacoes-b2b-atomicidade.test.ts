@@ -99,3 +99,23 @@ test("contrapropostas concorrentes preservam versões e eventos sem expor confli
   assert.equal(atual.pedidoId, null);
   assert.equal(await prisma.reservaEstoque.count({ where: { tenantId: c.tenant.id } }), 0);
 });
+
+test("revisão antiga, cotação expirada e falta de aprovação não criam pedido", async () => {
+  const c = await preparar();
+  const cotacao = await c.criar("rascunho");
+  const itens = [{ produtoId: c.variante.produtoId, varianteId: c.variante.id, quantidade: 2 }];
+  await contraproporCotacaoB2B(c.tenant.id, cotacao.id, { itens, versaoEsperada: 1 }, c.ator);
+  await assert.rejects(contraproporCotacaoB2B(c.tenant.id, cotacao.id, { itens, versaoEsperada: 1 }, c.ator), /mudou|revisão/i);
+  const atual = await obterCotacaoB2B(c.tenant.id, cotacao.id);
+  assert.equal(atual.versaoAtual, 2);
+  assert.equal(atual.versoes.length, 2);
+  await assert.rejects(converterCotacaoB2B(c.tenant.id, cotacao.id, "sem-aprovacao", c.ator), /aprovada/i);
+  await prisma.cotacaoB2B.update({ where: { id: cotacao.id }, data: { validaAte: new Date(Date.now() - 1000) } });
+  await assert.rejects(submeterCotacaoB2B(c.tenant.id, cotacao.id, c.ator), /expirada/i);
+  const aprovada = await c.criar();
+  await prisma.cotacaoB2B.update({ where: { id: aprovada.id }, data: { validaAte: new Date(Date.now() - 1000) } });
+  await assert.rejects(converterCotacaoB2B(c.tenant.id, aprovada.id, "conversao-expirada", c.ator), /expirada/i);
+  assert.equal(await prisma.pedido.count({ where: { tenantId: c.tenant.id } }), 0);
+  assert.equal(await prisma.reservaEstoque.count({ where: { tenantId: c.tenant.id } }), 0);
+  await registrarCheckCotacao("falhas", { assertions: { staleRevisionRejected: true, expiredSubmissionRejected: true, expiredConversionRejected: true, approvalRequired: true, noOrderOrReservation: true } });
+});
