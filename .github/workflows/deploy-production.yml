@@ -40,6 +40,13 @@ jobs:
         working-directory: experiments
       - name: Testar proteção de compatibilidade
         run: node --test lojas/scripts/contracts/compatibility.test.mjs
+      - name: Construir contrato do consumidor Experiments
+        run: npm run build
+        working-directory: experiments
+      - name: Validar captura e importação com consumidor fixado
+        run: node --test lojas/scripts/contracts/capture.test.mjs
+        env:
+          EXPERIMENTS_ROOT: ${{ github.workspace }}/experiments
       - name: Capturar e comparar contratos
         run: node lojas/scripts/contracts/capture.mjs lojas baseline experiments artifacts/contracts
       - name: Preservar inventário, baseline e diferenças
