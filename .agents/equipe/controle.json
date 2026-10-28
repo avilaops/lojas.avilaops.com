@@ -1,8 +1,83 @@
 {
   "schemaVersion": 1,
   "application": "avila-lojas-avilaops-com",
-  "members": [],
+  "projectOwner": "codex",
+  "members": [
+    {
+      "id": "codex",
+      "name": "Codex",
+      "type": "agent",
+      "role": "Responsável técnico de Lojas",
+      "source": "Orientação explícita do proprietário em 2026-10-28"
+    }
+  ],
   "tasks": [
+    {
+      "id": "MLOPS-PAYLOAD-CUPOM-20261028",
+      "title": "Contrato executável de payload cupom v1",
+      "objective": "Fechar entrada, saída, erros, consumidor e gate de compatibilidade do módulo.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "Schemas usados pela rota real; validação de saída e recusa uniforme preservadas.",
+        "Exportação fail-closed e compatibilidade direcional contra baseline explícito.",
+        "Consumidor independente e respostas do Postgres conferidos na CI.",
+        "Artefatos com SHAs/hashes; nenhum teste ou build no servidor."
+      ],
+      "evidence": "RED: CI 40639817817. Integração e primeiros contratos aprovados em 1556949, CI 40640110997. Revisão reproduziu coerção/UTF-16 na CI 40640349284; correções implementadas. CI do HEAD final será vinculada no PR 178 e na AVL-343.",
+      "history": [
+        {
+          "at": "2026-10-28",
+          "note": "Desenvolvimento solicitado até o fim de cada módulo; retomada AVL-343."
+        }
+      ]
+    },
+    {
+      "id": "MLOPS-ESTRUTURA-20261028",
+      "title": "Estruturar desenvolvimento de Lojas no padrão MLOps",
+      "objective": "Vincular módulos, fontes, contratos, planos funcionais e responsáveis ao CI usando Experiments.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-andamento",
+      "acceptanceCriteria": [
+        "Demandas sem atribuição herdam o responsável técnico do projeto sem apagar histórico.",
+        "CMS é registrado como módulo com integração pendente, sem declaração fictícia de prontidão.",
+        "Perfil validável recusa fontes ausentes, ciclos e responsáveis desconhecidos.",
+        "Plano cotação/pedido usa o avaliador real do Experiments e permanece not_run sem observações.",
+        "GitHub CI valida a estrutura e preserva relatório com versões e hashes."
+      ],
+      "evidence": "Implementação na branch codex/avl-343-lojas-contracts e PR 178; resultado deste incremento será registrado no PR após a CI.",
+      "history": [
+        {
+          "at": "2026-10-28",
+          "note": "Proprietário definiu Codex como responsável de Lojas e MLOps como padrão; desenvolvimento começa pela estrutura comum."
+        }
+      ]
+    },
+    {
+      "id": "AVL-343-LOJAS",
+      "title": "Primeiro gate de contratos Lojas integrado ao Experiments",
+      "objective": "Inventariar fontes e impedir remoções da API v1 no CI existente, alinhado a OMNI-0 e OMNI-3.5.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-andamento",
+      "acceptanceCriteria": [
+        "Analisador de Experiments fixado por commit, sem dependência de runtime.",
+        "Baseline explícito por SHA e incompatibilidades de rota bloqueiam a imagem.",
+        "Relatórios preservam pendências e não atribuem verificação funcional.",
+        "Testes e build executados exclusivamente no GitHub CI."
+      ],
+      "evidence": "Primeiro incremento aprovado no HEAD a94414e: https://github.com/avilaops/lojas.avilaops.com/actions/runs/40635545108. 1289 testes da aplicação, 196 de integração e 6 do gate. A continuação acrescenta a estrutura de desenvolvimento MLOps e aguarda sua própria CI.",
+      "review": "Incremento parcial da AVL-343; schemas de payload, consumidores e semântica continuam fora deste gate.",
+      "environment": "checkout-desenvolvimento",
+      "history": [
+        {
+          "at": "2026-10-28",
+          "note": "Início autorizado; contexto Lojas 360 e Experiments conferido."
+        }
+      ]
+    },
     {
       "id": "MELHOR-ENVIO-SANDBOX-20261027",
       "title": "Preparar e publicar conexão e cotação do Melhor Envio somente em sandbox",
@@ -17,43 +92,90 @@
       ],
       "evidence": "evidencias/melhor-envio-sandbox-2026-10-27.md; 1289 testes locais aprovados; TypeScript e lint sem erros; docs/MELHOR-ENVIO-SANDBOX.md",
       "blocker": "O proprietário ainda precisa cadastrar ou preencher o aplicativo de sandbox e indicar a loja de testes. Não há cotação autenticada comprovada.",
-      "history": [{"at": "2026-10-27", "status": "em-andamento", "note": "Código preparado em checkout isolado; aplicações em produção auditadas somente por leitura. Escopo confirmado: apenas sandbox."}]
+      "history": [
+        {
+          "at": "2026-10-27",
+          "status": "em-andamento",
+          "note": "Código preparado em checkout isolado; aplicações em produção auditadas somente por leitura. Escopo confirmado: apenas sandbox."
+        }
+      ]
     },
     {
       "id": "RECOMPRA-VITRINE-20261024",
       "title": "Recomprar itens do histórico com revisão das ofertas atuais",
       "assignee": null,
       "status": "em-revisao",
-      "acceptanceCriteria": ["Pedido restrito ao comprador e tenant", "Preço e disponibilidade atuais antes de adicionar", "Revisão explícita sem substituir variantes ou criar compra"],
+      "acceptanceCriteria": [
+        "Pedido restrito ao comprador e tenant",
+        "Preço e disponibilidade atuais antes de adicionar",
+        "Revisão explícita sem substituir variantes ou criar compra"
+      ],
       "evidence": "evidencias/recompra-2026-10-24.md; cinco testes unitários e teste de integração em banco isolado",
-      "history": [{"at": "2026-10-24", "status": "em-revisao", "note": "Implementado na conta da vitrine; aguardando CI, merge e publicação."}]
+      "history": [
+        {
+          "at": "2026-10-24",
+          "status": "em-revisao",
+          "note": "Implementado na conta da vitrine; aguardando CI, merge e publicação."
+        }
+      ]
     },
     {
       "id": "BERETA-CATALOGO-MARCAS-20261024",
       "title": "Preencher catálogo automotivo e destacar marcas da Bereta",
       "assignee": null,
       "status": "em-revisao",
-      "acceptanceCriteria": ["Marcas sustentadas pelo título ou fonte oficial", "Ficha, descrição e resumo sem GTIN ou embalagem inventados", "Marcas visíveis e filtro por fabricante funcional", "Fotos correspondentes ao modelo e acabamento"],
+      "acceptanceCriteria": [
+        "Marcas sustentadas pelo título ou fonte oficial",
+        "Ficha, descrição e resumo sem GTIN ou embalagem inventados",
+        "Marcas visíveis e filtro por fabricante funcional",
+        "Fotos correspondentes ao modelo e acabamento"
+      ],
       "evidence": "7.047 itens enriquecidos, 6.476 marcas e 7.038 fichas; 9 testes aprovados. evidencias/bereta-catalogo-marcas-2026-10-24.md",
-      "history": [{"at":"2026-10-24","status":"em-revisao","note":"Enriquecimento aplicado com backup; interface preparada para CI e publicação. Fotos e dados sem confirmação permanecem pendentes."}]
+      "history": [
+        {
+          "at": "2026-10-24",
+          "status": "em-revisao",
+          "note": "Enriquecimento aplicado com backup; interface preparada para CI e publicação. Fotos e dados sem confirmação permanecem pendentes."
+        }
+      ]
     },
     {
       "id": "CATALOGOS-DOMI-VEDA-20261024",
       "title": "Revisar dados comprovados dos catálogos Domi-Rio e VedaShow",
       "assignee": null,
       "status": "parcial",
-      "acceptanceCriteria": ["Alterações com cópia anterior e releitura", "Não inventar GTIN ou embalagem", "Registrar cobertura e pendências"],
+      "acceptanceCriteria": [
+        "Alterações com cópia anterior e releitura",
+        "Não inventar GTIN ou embalagem",
+        "Registrar cobertura e pendências"
+      ],
       "evidence": "75 produtos atualizados e relidos; simulação posterior com zero alterações; evidencias/revisao-catalogos-2026-10-24.md",
-      "history": [{"at": "2026-10-24", "status": "parcial", "note": "Incremento aplicado em produção. Fotos e especificações sem identidade confirmada dependem de conferência física ou documental."}]
+      "history": [
+        {
+          "at": "2026-10-24",
+          "status": "parcial",
+          "note": "Incremento aplicado em produção. Fotos e especificações sem identidade confirmada dependem de conferência física ou documental."
+        }
+      ]
     },
     {
       "id": "BERETA-VISUAL-20261024",
       "title": "Melhorar imagens e visual mobile da Bereta Rodas",
       "assignee": null,
       "status": "em-revisao",
-      "acceptanceCriteria": ["Banner automotivo com imagem mobile própria", "Cards compactos sem alterar dados comerciais", "CI aprovado e visual público conferido"],
+      "acceptanceCriteria": [
+        "Banner automotivo com imagem mobile própria",
+        "Cards compactos sem alterar dados comerciais",
+        "CI aprovado e visual público conferido"
+      ],
       "evidence": "git diff --check aprovado; evidencias/bereta-visual-2026-10-24.md",
-      "history": [{"at": "2026-10-24", "status": "em-revisao", "note": "Ajustes do template e imagens preparados para validação e publicação."}]
+      "history": [
+        {
+          "at": "2026-10-24",
+          "status": "em-revisao",
+          "note": "Ajustes do template e imagens preparados para validação e publicação."
+        }
+      ]
     },
     {
       "id": "BRILHAX-SEO-CATALOGO-20261024",
@@ -560,16 +682,16 @@
         "A recompra só parte de cotação convertida e recalcula os preços comerciais vigentes."
       ],
       "evidence": [
-        "Prisma validado e cliente regenerado após a modelagem.",
-        "Três testes unitários direcionados aprovados para totais, alçadas, exceção comercial e estados.",
-        "Suíte geral concluída com 1.125 testes aprovados e nenhuma falha.",
-        "TypeScript concluído sem erros após as correções de contrato.",
-        "ESLint concluído sem erros; 20 avisos preexistentes permanecem fora do escopo.",
-        "Build de produção concluído e listou todas as rotas administrativas, do painel e da conta para cotações B2B.",
-        "Testes de integração dependem do PostgreSQL descartável local na porta 5548; Docker não está instalado neste host."
+        "CI 40642109382 reproduziu três regressões B2B: projeção privada, concorrência e rollback da conversão; as 196 integrações anteriores permaneceram aprovadas.",
+        "Commit 0d24e1b tornou reserva, pedido e evento atômicos, protegeu a projeção do comprador e validou limites monetários.",
+        "CI 40642445847 aprovou contratos, 199 integrações e build/imagem de produção.",
+        "Commit e683db3 adicionou isolamento negativo entre tenants, empresas e alçadas sem efeitos persistidos.",
+        "CI 40643437724 aprovou 200 de 201 integrações e revelou conflito serializável P2034 entre aprovações paralelas; a correção usa repetição limitada ao código P2034.",
+        "CI 40643743785 aprovou contratos, 201 integrações e build após a correção P2034.",
+        "Incremento atual preserva unidade no pedido e adiciona adapter verificável para quatro das oito dimensões; CI ainda pendente."
       ],
-      "review": "Implementação local em andamento; a integração PostgreSQL isolada e a revisão final após essa prova ainda estão pendentes. Sem commit, push ou publicação.",
-      "environment": "local"
+      "review": "PR 178 em rascunho; adapter MLOps e preservação da unidade aguardam CI. Interface operacional e quatro dimensões funcionais continuam pendentes.",
+      "environment": "github-ci"
     },
     {
       "id": "OMNI-0.2",

@@ -13,6 +13,8 @@ import { POST as postFrete } from "../../src/app/api/v1/vitrine/frete/route";
 import { GET as getPedido } from "../../src/app/api/v1/vitrine/pedidos/[referencia]/route";
 import { GET as getProduto } from "../../src/app/api/v1/vitrine/produtos/[id]/route";
 import { GET as getLoja } from "../../src/app/api/v1/vitrine/loja/route";
+import { ErroDeCupom, RespostaDeCupom } from "../../src/lib/api-cupom-contrato";
+import { ErroConsultaCupom, lerRespostaCupomV1 } from "../../examples/contracts/cupom-v1";
 
 /**
  * A compra pela chave publicável, contra o Postgres. As rotas são as de
@@ -111,7 +113,22 @@ async function chamar<P>(rota: Rota<P>, metodo: string, caminho: string, chaveAp
     }),
     { params: Promise.resolve((opcoes.params ?? {}) as P) },
   );
-  return { status: r.status, cabecalhos: r.headers, corpo: (await r.json()) as { dados?: Record<string, unknown> & unknown[]; erro?: { codigo: string; mensagem: string; detalhe?: string } } };
+  const corpo = await r.json();
+  if (rota === postCupom) {
+    // Produtor e consumidor independentes conferidos contra a mesma resposta
+    // real, incluindo autorização, recusa uniforme e frete no Postgres de CI.
+    if (r.status === 200) {
+      RespostaDeCupom.parse(corpo);
+      assert.deepEqual(lerRespostaCupomV1(r.status, corpo), corpo.dados);
+    } else {
+      const erro = ErroDeCupom.parse(corpo);
+      assert.equal(erro.requisicao, r.headers.get("X-Requisicao-Id"));
+      assert.throws(() => lerRespostaCupomV1(r.status, corpo), (failure: unknown) =>
+        failure instanceof ErroConsultaCupom && failure.status === r.status &&
+        failure.codigo === erro.erro.codigo && failure.requisicao === erro.requisicao);
+    }
+  }
+  return { status: r.status, cabecalhos: r.headers, corpo: corpo as { dados?: Record<string, unknown> & unknown[]; erro?: { codigo: string; mensagem: string; detalhe?: string } } };
 }
 
 const comprar = (k: string, corpo: unknown, opcoes: { origem?: string | null; cabecalhos?: Record<string, string>; endereco?: string } = {}) =>

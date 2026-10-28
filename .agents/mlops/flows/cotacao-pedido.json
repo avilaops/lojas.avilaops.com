@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "flow-plan/1",
+  "id": "lojas-cotacao-pedido",
+  "version": "1",
+  "product": "lojas",
+  "reference": "https://linear.app/avilaops/issue/AVL-234",
+  "checks": [
+    { "id": "jornada", "dimension": "interface", "criterion": "Criar, negociar, submeter e aprovar cotação, depois abrir o pedido no desktop e celular", "required": true, "method": "runtime_assertion" },
+    { "id": "contrato", "dimension": "request", "criterion": "Validar entradas pelo schema real e recusar corpo inválido antes da escrita", "required": true, "method": "runtime_assertion" },
+    { "id": "isolamento", "dimension": "authorization", "criterion": "Recusar outra loja, comprador fora do escopo e aprovação acima da alçada", "required": true, "method": "runtime_assertion" },
+    { "id": "preco", "dimension": "domain", "criterion": "Preservar preço, quantidade e condições da versão aprovada; recompra usa condições atuais", "required": true, "method": "runtime_assertion" },
+    { "id": "persistencia", "dimension": "persistence", "criterion": "Reler pedido e histórico após nova requisição e reinício controlado do serviço de teste", "required": true, "method": "runtime_assertion" },
+    { "id": "idempotencia", "dimension": "effects", "criterion": "Duas conversões com a mesma chave resultam em um pedido sem cobrança externa não solicitada", "required": true, "method": "runtime_assertion" },
+    { "id": "falhas", "dimension": "failure", "criterion": "Cotação expirada, revisão conflitante ou falta de aprovação não criam pedido nem indicam sucesso", "required": true, "method": "runtime_assertion" },
+    { "id": "resposta", "dimension": "response", "criterion": "Pedido retornado corresponde à releitura persistida e mantém empresa, unidade e versão da cotação", "required": true, "method": "runtime_assertion" }
+  ]
+}
