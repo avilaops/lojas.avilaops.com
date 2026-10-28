@@ -45,3 +45,23 @@ test("arrays, objetos estritos e normalização participam do gate", () => {
 test("gate recusa schemas desconhecidos em vez de aprovar sem comparar", () => {
   assert.throws(() => compare(contract({ type: "string", pattern: "abc" }), contract({ type: "string" })), /UNSUPPORTED_SCHEMA/);
 });
+
+test("remoção de campo de entrada e inversão de inteiros não aprovam", () => {
+  const previous = contract(object({ codigo: { type: "string" }, cep: { type: "string" } }, ["codigo"]));
+  assert.equal(compare(previous, contract(object({ codigo: { type: "string" } }))).compatible, false);
+  assert.equal(compare(contract({ type: "number" }), contract({ type: "integer" })).compatible, false);
+  assert.equal(compare(contract({ type: "integer" }), contract({ type: "number" })).compatible, true);
+});
+
+test("extensão de saída é compatível quando o consumidor aceita campos adicionais", () => {
+  const previous = contract({ type: "string" }, { ...object({ total: { type: "integer", minimum: 0 } }), additionalProperties: true });
+  const next = contract({ type: "string" }, { ...object({ total: { type: "integer", minimum: 0 }, referencia: { type: "string" } }), additionalProperties: true });
+  assert.equal(compare(previous, next).compatible, true);
+});
+
+test("obrigatoriedade, enum de entrada e limites inclusivos respeitam a direção", () => {
+  assert.equal(compare(contract({ type: "string", enum: ["A"] }), contract({ type: "string", enum: ["A", "B"] })).compatible, true);
+  assert.equal(compare(contract({ type: "string", enum: ["A", "B"] }), contract({ type: "string", enum: ["A"] })).compatible, false);
+  assert.equal(compare(contract({ type: "integer", minimum: 0, maximum: 10 }), contract({ type: "integer", minimum: 0, maximum: 10 })).compatible, true);
+  assert.throws(() => compare(contract({ type: "integer", minimum: 10, maximum: 0 }), contract({ type: "integer" })), /UNSUPPORTED_SCHEMA/);
+});

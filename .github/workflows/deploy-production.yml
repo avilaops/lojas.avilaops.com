@@ -114,6 +114,22 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - name: Testar contratos de payload e consumidores
         run: node --import tsx --test tests/contracts/*.test.*
+      - name: Obter baseline de payload da base do PR
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          path: .contract-baseline
+          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+          persist-credentials: false
+      - name: Exportar e comparar payload de cupom
+        run: node --import tsx scripts/contracts/payload-report.mjs .contract-baseline artifacts/payloads
+      - name: Preservar contrato de cupom e diferenças
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: lojas-payloads-${{ github.sha }}
+          path: artifacts/payloads/
+          if-no-files-found: warn
+          retention-days: 14
       - run: npx prisma generate
       - run: npx prisma migrate deploy
       - run: npm run test:integracao

@@ -4,9 +4,9 @@ import { readFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { z } from "zod";
 
-const schema = await import("../../src/lib/api-cupom-contrato.ts").catch(() => null);
-const exporter = await import("../../scripts/contracts/export-schema.ts").catch(() => null);
-const consumer = await import("../../examples/contracts/cupom-v1.ts").catch(() => null);
+const schema = await import("../../src/lib/api-cupom-contrato.ts").then(value => value.default ?? value).catch(() => null);
+const exporter = await import("../../scripts/contracts/export-schema.ts").then(value => value.default ?? value).catch(() => null);
+const consumer = await import("../../examples/contracts/cupom-v1.ts").then(value => value.default ?? value).catch(() => null);
 const input = { codigo: " TESTE10 ", itens: [{ id: "produto-sintetico", quantidade: 2 }] };
 const success = { dados: { codigo: "TESTE10", tipo: "PERCENTUAL", descontoCentavos: 100 } };
 

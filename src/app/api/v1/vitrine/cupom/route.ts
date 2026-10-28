@@ -1,4 +1,5 @@
-import { ConsultaDeCupom, conferirCupomPelaApi } from "@/lib/api-cupom";
+import { conferirCupomPelaApi } from "@/lib/api-cupom";
+import { ConsultaDeCupom, RespostaDeCupom, OpcoesDaConsultaDeCupom } from "@/lib/api-cupom-contrato";
 import { preVooDaVitrine, rotaDaApi } from "@/lib/api-rotas";
 import { lerCorpo } from "@/lib/api-resposta";
 
@@ -12,9 +13,9 @@ import { lerCorpo } from "@/lib/api-resposta";
  */
 export const dynamic = "force-dynamic";
 
-export const POST = rotaDaApi({ escopo: "vitrine:comprar", navegador: true, escrita: { exigeOrigem: true, porEnderecoPorMinuto: 10 } }, async ({ request, tenant, chave }) => {
+export const POST = rotaDaApi(OpcoesDaConsultaDeCupom, async ({ request, tenant, chave }) => {
   const consulta = await lerCorpo(request, ConsultaDeCupom);
-  return { dados: await conferirCupomPelaApi(tenant, chave, request, consulta) };
+  return RespostaDeCupom.parse({ dados: await conferirCupomPelaApi(tenant, chave, request, consulta) });
 });
 
 export const OPTIONS = preVooDaVitrine;
