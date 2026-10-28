@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { after, test } from "node:test";
 import { prisma } from "../../src/lib/db";
 import { salvarProdutoNoCatalogo } from "../../src/lib/catalogo-escrita";
-import { aprovarCotacaoB2B, converterCotacaoB2B, criarCotacaoB2B, obterCotacaoB2B, submeterCotacaoB2B } from "../../src/lib/cotacoes-b2b";
+import { aprovarCotacaoB2B, contraproporCotacaoB2B, converterCotacaoB2B, criarCotacaoB2B, obterCotacaoB2B, submeterCotacaoB2B } from "../../src/lib/cotacoes-b2b";
 import { registrarCheckCotacao } from "../helpers/mlops-evidence";
 
 const url = new URL(process.env.DATABASE_URL ?? "http://invalid");
@@ -19,11 +19,13 @@ async function preparar() {
   const produto = await salvarProdutoNoCatalogo(tenant.id, null, { nome: "Peça QA", slug: `peca-${randomUUID()}`, sku: `P-${randomUUID()}`, precoCentavos: 1_000, estoque: 20, imagens: ["https://example.test/peca.webp"] });
   const variante = await prisma.variante.findFirstOrThrow({ where: { tenantId: tenant.id, produtoId: produto.id } });
   const ator = { tipo: "VENDEDOR", email: "vendas@example.test" };
-  const criar = async (aprovar = true) => {
+  const criar = async (aprovar: boolean | "rascunho" = true) => {
     const cotacao = await criarCotacaoB2B(tenant.id, { empresaId: empresa.id, compradorEmpresaId: comprador.id, responsavelEmail: ator.email,
       validaAte: new Date(Date.now() + 86_400_000), itens: [{ produtoId: produto.id, varianteId: variante.id, quantidade: 2 }] }, ator);
-    await submeterCotacaoB2B(tenant.id, cotacao.id, ator);
-    if (aprovar) await aprovarCotacaoB2B(tenant.id, cotacao.id, comprador.id, { tipo: "APROVADOR", id: comprador.id });
+    if (aprovar !== "rascunho") {
+      await submeterCotacaoB2B(tenant.id, cotacao.id, ator);
+      if (aprovar) await aprovarCotacaoB2B(tenant.id, cotacao.id, comprador.id, { tipo: "APROVADOR", id: comprador.id });
+    }
     return cotacao;
   };
   return { tenant, empresa, comprador, conta, variante, ator, criar };
@@ -82,4 +84,18 @@ test("cotação recusa outro tenant, comprador fora do escopo e alçada insufici
   assert.equal(atual.pedidoId, null);
   assert.equal(await prisma.eventoCotacaoB2B.count({ where: { tenantId: c.tenant.id, cotacaoId: cotacao.id, tipo: "APROVADA" } }), 0);
   await registrarCheckCotacao("isolamento", { assertions: { otherTenantRejected: true, outOfScopeRejected: true, approvalLimitEnforced: true, noOrder: true } });
+});
+
+test("contrapropostas concorrentes preservam versões e eventos sem expor conflito transiente", async () => {
+  const c = await preparar();
+  const cotacao = await c.criar("rascunho");
+  await Promise.all([1, 2, 3].map(quantidade => contraproporCotacaoB2B(c.tenant.id, cotacao.id, {
+    itens: [{ produtoId: c.variante.produtoId, varianteId: c.variante.id, quantidade }],
+  }, c.ator)));
+  const atual = await obterCotacaoB2B(c.tenant.id, cotacao.id);
+  assert.equal(atual.versaoAtual, 4);
+  assert.deepEqual(atual.versoes.map(versao => versao.numero), [1, 2, 3, 4]);
+  assert.equal(atual.eventos.filter(evento => evento.tipo === "CONTRAPROPOSTA").length, 3);
+  assert.equal(atual.pedidoId, null);
+  assert.equal(await prisma.reservaEstoque.count({ where: { tenantId: c.tenant.id } }), 0);
 });
