@@ -92,6 +92,26 @@
         {
           "kind": "test",
           "path": "tests/helpers/mlops-evidence.ts"
+        },
+        {
+          "kind": "code",
+          "path": "src/components/b2b/Cotacoes.tsx"
+        },
+        {
+          "kind": "code",
+          "path": "src/lib/cotacoes-b2b-consulta.ts"
+        },
+        {
+          "kind": "code",
+          "path": "src/lib/cotacoes-b2b-erros.ts"
+        },
+        {
+          "kind": "code",
+          "path": "src/lib/cotacoes-b2b-form.ts"
+        },
+        {
+          "kind": "test",
+          "path": "src/lib/cotacoes-b2b-form.test.ts"
         }
       ],
       "flows": [

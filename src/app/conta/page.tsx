@@ -53,6 +53,7 @@ export default async function ContaPage() {
       </header>
 
       <section>
+        <p className="mb-5"><Link href="/conta/cotacoes" className="underline">Minhas cotações B2B</Link></p>
         <h2 className="mb-3 text-base font-bold">Meus pedidos</h2>
         {pedidos.length === 0 ? (
           <p className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">

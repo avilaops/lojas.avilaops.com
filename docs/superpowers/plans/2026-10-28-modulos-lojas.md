@@ -41,6 +41,21 @@ O adaptador de evidências liga quatro checks a testes de domínio/banco:
 preço, isolamento, idempotência e releitura da resposta. Interface, HTTP,
 reinício e revisão conflitante ainda precisam de cobertura própria.
 
+### Continuação operacional
+
+As telas de cotação do painel e da conta do comprador implementam criação,
+contraproposta, submissão, aprovação, recusa, conversão e recompra. As referências
+e listas são paginadas e limitadas ao tenant e ao comprador autenticado.
+Comandos aceitam revisão esperada e rejeitam conflito dentro da transação.
+Erros inesperados têm resposta genérica, sem detalhes internos do banco.
+
+O teste de revisão antiga e submissão expirada falhou como esperado na CI
+`40644777671`, no HEAD `1966592`. A correção e as telas aguardam sua própria
+CI. A execução `40643539608` aprovou a base anterior: quatro dimensões passaram
+e o fluxo permaneceu inconclusivo. Ainda faltam jornada real no navegador,
+contrato HTTP e persistência após reinício. A implementação das telas não
+constitui evidência de funcionamento dessas dimensões.
+
 ## Limites operacionais
 
 Builds, testes e migrations somente no GitHub CI. Checkouts servem para leitura,
