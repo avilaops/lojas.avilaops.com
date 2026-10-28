@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import type { EstadoCotacaoB2B, Prisma } from "@prisma/client";
+import { Prisma, type EstadoCotacaoB2B } from "@prisma/client";
 import { prisma } from "./db";
 import { resolverCatalogoB2B } from "./catalogo-b2b";
 import { reservarEstoqueNaTransacao } from "./catalogo-reservas";
@@ -71,6 +71,21 @@ function evento(tenantId: string, cotacaoId: string, tipo: string, ator: AtorCot
   return { tenantId, cotacaoId, tipo, atorTipo: ator.tipo, atorId: ator.id ?? null, atorEmail: ator.email ?? null, dados };
 }
 
+async function executarTransacaoSerializavel<T>(
+  executar: (tx: Prisma.TransactionClient) => Promise<T>,
+  timeout?: number,
+): Promise<T> {
+  for (let tentativa = 1; tentativa <= 3; tentativa++) {
+    try {
+      return await prisma.$transaction(executar, { isolationLevel: "Serializable", timeout });
+    } catch (erro) {
+      if (tentativa < 3 && erro instanceof Prisma.PrismaClientKnownRequestError && erro.code === "P2034") continue;
+      throw erro;
+    }
+  }
+  throw new Error("Não foi possível concluir a transação da cotação B2B.");
+}
+
 async function bloquearCotacao(tx: Prisma.TransactionClient, tenantId: string, id: string) {
   await tx.$queryRaw`SELECT id FROM "CotacaoB2B" WHERE id=${id} AND "tenantId"=${tenantId} FOR UPDATE`;
   return tx.cotacaoB2B.findFirstOrThrow({
@@ -131,7 +146,7 @@ export async function contraproporCotacaoB2B(tenantId: string, id: string, entra
   const totais = totaisCotacao(itens, entrada.descontoCentavos, entrada.freteCentavos);
   const excecaoComercial = resolucao.temPrecoNegociado || (entrada.descontoCentavos ?? 0) > 0;
   if (excecaoComercial && !entrada.justificativa?.trim()) throw new Error("Exceção comercial exige justificativa.");
-  await prisma.$transaction(async (tx) => {
+  await executarTransacaoSerializavel(async (tx) => {
     const bloqueada = await bloquearCotacao(tx, tenantId, id);
     const estado = proximoEstadoCotacao(bloqueada.estado, "CONTRAPOR");
     if (bloqueada.validaAte.getTime() <= Date.now()) throw new Error("Cotação expirada.");
@@ -139,26 +154,26 @@ export async function contraproporCotacaoB2B(tenantId: string, id: string, entra
     await tx.versaoCotacaoB2B.create({ data: { tenantId, cotacaoId: id, numero, autorTipo: ator.tipo, autorId: ator.id ?? null, autorEmail: ator.email ?? null, itens: itens as unknown as Prisma.InputJsonValue, ...totais, condicoes: (entrada.condicoes ?? {}) as Prisma.InputJsonValue, justificativa: entrada.justificativa?.trim() || null, excecaoComercial } });
     await tx.cotacaoB2B.update({ where: { id }, data: { estado, versaoAtual: numero } });
     await tx.eventoCotacaoB2B.create({ data: evento(tenantId, id, "CONTRAPROPOSTA", ator, { versao: numero }) });
-  }, { isolationLevel: "Serializable" });
+  });
   return obterCotacaoB2B(tenantId, id);
 }
 
 export async function submeterCotacaoB2B(tenantId: string, id: string, ator: AtorCotacaoB2B) {
   const atual = await obterCotacaoB2B(tenantId, id);
   if (atual.validaAte.getTime() <= Date.now()) return expirarCotacaoB2B(tenantId, id, ator);
-  await prisma.$transaction(async (tx) => {
+  await executarTransacaoSerializavel(async (tx) => {
     const bloqueada = await bloquearCotacao(tx, tenantId, id);
     if (bloqueada.validaAte.getTime() <= Date.now()) throw new Error("Cotação expirada.");
     const estado = proximoEstadoCotacao(bloqueada.estado, "SUBMETER");
     await tx.cotacaoB2B.update({ where: { id }, data: { estado } });
     await tx.eventoCotacaoB2B.create({ data: evento(tenantId, id, "SUBMETIDA", ator, { versao: bloqueada.versaoAtual }) });
-  }, { isolationLevel: "Serializable" });
+  });
   return obterCotacaoB2B(tenantId, id);
 }
 
 export async function aprovarCotacaoB2B(tenantId: string, id: string, aprovadorEmpresaId: string, ator: AtorCotacaoB2B) {
   const aprovadaPor = ator.email ?? ator.id ?? aprovadorEmpresaId;
-  await prisma.$transaction(async (tx) => {
+  await executarTransacaoSerializavel(async (tx) => {
     const bloqueada = await bloquearCotacao(tx, tenantId, id);
     if (bloqueada.validaAte.getTime() <= Date.now()) throw new Error("Cotação expirada.");
     const estado = proximoEstadoCotacao(bloqueada.estado, "APROVAR");
@@ -167,18 +182,18 @@ export async function aprovarCotacaoB2B(tenantId: string, id: string, aprovadorE
     conferirAprovacaoCotacao({ totalCentavos: versao.totalCentavos, unidadeId: bloqueada.unidadeId, excecaoComercial: versao.excecaoComercial, justificativa: versao.justificativa }, escopos);
     await tx.cotacaoB2B.update({ where: { id }, data: { estado, versaoAprovada: bloqueada.versaoAtual, aprovadaEm: new Date(), aprovadaPor, aprovacaoExcecao: versao.excecaoComercial, aprovacaoJustificativa: versao.justificativa } });
     await tx.eventoCotacaoB2B.create({ data: evento(tenantId, id, "APROVADA", ator, { versao: bloqueada.versaoAtual, excecaoComercial: versao.excecaoComercial, justificativa: versao.justificativa }) });
-  }, { isolationLevel: "Serializable" });
+  });
   return obterCotacaoB2B(tenantId, id);
 }
 
 async function encerrar(tenantId: string, id: string, acao: "CANCELAR" | "EXPIRAR", ator: AtorCotacaoB2B, motivo?: string) {
-  await prisma.$transaction(async (tx) => {
+  await executarTransacaoSerializavel(async (tx) => {
     const bloqueada = await bloquearCotacao(tx, tenantId, id);
     if (acao === "EXPIRAR" && bloqueada.estado === "EXPIRADA") return;
     const estado = proximoEstadoCotacao(bloqueada.estado, acao);
     await tx.cotacaoB2B.update({ where: { id }, data: { estado } });
     await tx.eventoCotacaoB2B.create({ data: evento(tenantId, id, acao === "CANCELAR" ? "CANCELADA" : "EXPIRADA", ator, { motivo: motivo ?? null }) });
-  }, { isolationLevel: "Serializable" });
+  });
   return obterCotacaoB2B(tenantId, id);
 }
 export const cancelarCotacaoB2B = (tenantId: string, id: string, ator: AtorCotacaoB2B, motivo?: string) => encerrar(tenantId, id, "CANCELAR", ator, motivo);
@@ -186,19 +201,19 @@ export const expirarCotacaoB2B = (tenantId: string, id: string, ator: AtorCotaca
 
 export async function recusarCotacaoB2B(tenantId: string, id: string, ator: AtorCotacaoB2B, motivo: string) {
   if (!motivo.trim()) throw new Error("Recusa exige motivo.");
-  await prisma.$transaction(async (tx) => {
+  await executarTransacaoSerializavel(async (tx) => {
     const bloqueada = await bloquearCotacao(tx, tenantId, id);
     const estado = proximoEstadoCotacao(bloqueada.estado, "RECUSAR");
     await tx.cotacaoB2B.update({ where: { id }, data: { estado } });
     await tx.eventoCotacaoB2B.create({ data: evento(tenantId, id, "RECUSADA", ator, { motivo: motivo.trim() }) });
-  }, { isolationLevel: "Serializable" });
+  });
   return obterCotacaoB2B(tenantId, id);
 }
 
 export async function converterCotacaoB2B(tenantId: string, id: string, chave: string, ator: AtorCotacaoB2B) {
   const referencia = `cotacao:${id}`;
   try {
-    return await prisma.$transaction(async (tx) => {
+    return await executarTransacaoSerializavel(async (tx) => {
       await tx.$queryRaw`SELECT id FROM "CotacaoB2B" WHERE id=${id} AND "tenantId"=${tenantId} FOR UPDATE`;
       const bloqueada = await tx.cotacaoB2B.findFirstOrThrow({ where: { tenantId, id }, include: incluirCotacao });
       if (bloqueada.pedido) return bloqueada.pedido;
@@ -222,7 +237,7 @@ export async function converterCotacaoB2B(tenantId: string, id: string, chave: s
       await tx.cotacaoB2B.update({ where: { id }, data: { estado: proximoEstadoCotacao(bloqueada.estado, "CONVERTER"), pedidoId: pedido.id, chaveConversao: chave } });
       await tx.eventoCotacaoB2B.create({ data: evento(tenantId, id, "CONVERTIDA", ator, { pedidoId: pedido.id, chave }) });
       return pedido;
-    }, { isolationLevel: "Serializable", timeout: 20_000 });
+    }, 20_000);
   } catch (erro) {
     const repetida = await prisma.cotacaoB2B.findFirst({ where: { tenantId, id }, include: { pedido: { include: { itens: true } } } });
     if (repetida?.pedido) return prisma.pedido.findUniqueOrThrow({ where: { id: repetida.pedido.id }, include: { itens: true } });

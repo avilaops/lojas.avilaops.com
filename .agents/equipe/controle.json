@@ -682,16 +682,14 @@
         "A recompra só parte de cotação convertida e recalcula os preços comerciais vigentes."
       ],
       "evidence": [
-        "Prisma validado e cliente regenerado após a modelagem.",
-        "Três testes unitários direcionados aprovados para totais, alçadas, exceção comercial e estados.",
-        "Suíte geral concluída com 1.125 testes aprovados e nenhuma falha.",
-        "TypeScript concluído sem erros após as correções de contrato.",
-        "ESLint concluído sem erros; 20 avisos preexistentes permanecem fora do escopo.",
-        "Build de produção concluído e listou todas as rotas administrativas, do painel e da conta para cotações B2B.",
-        "Testes de integração dependem do PostgreSQL descartável local na porta 5548; Docker não está instalado neste host."
+        "CI 40642109382 reproduziu três regressões B2B: projeção privada, concorrência e rollback da conversão; as 196 integrações anteriores permaneceram aprovadas.",
+        "Commit 0d24e1b tornou reserva, pedido e evento atômicos, protegeu a projeção do comprador e validou limites monetários.",
+        "CI 40642445847 aprovou contratos, 199 integrações e build/imagem de produção.",
+        "Commit e683db3 adicionou isolamento negativo entre tenants, empresas e alçadas sem efeitos persistidos.",
+        "CI 40643437724 aprovou 200 de 201 integrações e revelou conflito serializável P2034 entre aprovações paralelas; a correção usa repetição limitada ao código P2034."
       ],
-      "review": "Implementação local em andamento; a integração PostgreSQL isolada e a revisão final após essa prova ainda estão pendentes. Sem commit, push ou publicação.",
-      "environment": "local"
+      "review": "PR 178 em rascunho; interface operacional e evidência final da correção P2034 permanecem pendentes.",
+      "environment": "github-ci"
     },
     {
       "id": "OMNI-0.2",

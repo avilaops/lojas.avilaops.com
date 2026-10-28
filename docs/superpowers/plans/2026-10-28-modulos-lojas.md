@@ -30,9 +30,16 @@ integrações e interfaces ainda exigem implementação e evidência próprias.
 - [x] Fazer reserva, pedido e evento na mesma transação.
 - [x] Corrigir projeção do comprador e validar limites monetários.
 - [x] Cobrir acesso negativo entre tenants, empresas e alçadas sem efeitos.
+- [x] Repetir somente conflitos serializáveis `P2034`, no máximo três vezes,
+  em todas as mutações de cotação.
 - [ ] Concluir a interface operacional após definir se a primeira entrega será
   para o lojista, para o comprador ou para ambos.
 - [ ] Vincular observações reais ao plano MLOps e executar CI.
+
+A execução `40643437724` preservou 200 de 201 integrações e revelou um conflito
+serializável `P2034` entre aprovações paralelas. A correção aplica a mesma
+política de repetição limitada já usada pelos demais serviços B2B e não captura
+erros de domínio ou infraestrutura diferentes desse código.
 
 ## Limites operacionais
 
