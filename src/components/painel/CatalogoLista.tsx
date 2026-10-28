@@ -193,6 +193,7 @@ export default function CatalogoLista({
             itens={dados.produtos}
             carregando={carregando}
             estilo="planilha"
+            rotulo="Produtos em formato de planilha"
             href={(p) => `/painel/produtos/${p.id}`}
             titulo={(p) => (
               <>

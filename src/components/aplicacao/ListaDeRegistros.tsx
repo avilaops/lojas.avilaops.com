@@ -44,6 +44,7 @@ export default function ListaDeRegistros<T extends { id: string }>({
   vazio,
   carregando,
   estilo = "lista",
+  rotulo,
 }: {
   itens: T[];
   colunas: Array<Coluna<T>>;
@@ -63,6 +64,8 @@ export default function ListaDeRegistros<T extends { id: string }>({
   /** Aparência compacta, com moldura e cabeçalho preenchido, para telas de
    *  conferência que funcionam como uma planilha. */
   estilo?: "lista" | "planilha";
+  /** Nome acessível da região rolável no modo planilha. */
+  rotulo?: string;
 }) {
   const router = useRouter();
 
@@ -106,7 +109,12 @@ export default function ListaDeRegistros<T extends { id: string }>({
       </ul>
 
       {/* Computador: tabela, onde comparar linhas é o que importa. */}
-      <div className={`hidden overflow-x-auto sm:block ${estilo === "planilha" ? "max-h-[70vh] rounded-xl border border-border" : ""}`}>
+      <div
+        className={`hidden overflow-x-auto sm:block ${estilo === "planilha" ? "max-h-[70vh] rounded-xl border border-border" : ""}`}
+        role={estilo === "planilha" ? "region" : undefined}
+        aria-label={estilo === "planilha" ? rotulo : undefined}
+        tabIndex={estilo === "planilha" ? 0 : undefined}
+      >
         <table className={`w-full text-sm ${estilo === "planilha" ? "min-w-[760px] table-fixed" : ""}`}>
           <thead className={`text-left text-xs text-muted-foreground ${estilo === "planilha" ? "sticky top-0 z-10 bg-muted" : "uppercase"}`}>
             <tr className={estilo === "planilha" ? "" : "border-b border-border"}>
