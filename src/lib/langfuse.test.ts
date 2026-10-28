@@ -78,11 +78,13 @@ test("exportação real OTLP contém modelo, uso e erro seguro, sem conteúdo pr
     assert.match(dados, /usage_details/);
     assert.match(dados, /ERROR/);
     assert.doesNotMatch(dados, /RESPOSTA-PRIVADA|ERRO-PRIVADO|api-key-secreta|secret-test-only/);
-    const spans = cargas.flatMap((carga) => JSON.parse(carga).resourceSpans.flatMap(
-      (recurso: { scopeSpans: { spans: { attributes: { key: string; value: { stringValue?: string } }[] }[] }[] }) => recurso.scopeSpans.flatMap((escopo) => escopo.spans),
-    ));
+    type OtlpSpan = { attributes: { key: string; value: { stringValue?: string } }[] };
+    const spans = cargas.flatMap((carga) => {
+      const payload: { resourceSpans: { scopeSpans: { spans: OtlpSpan[] }[] }[] } = JSON.parse(carga);
+      return payload.resourceSpans.flatMap((recurso) => recurso.scopeSpans.flatMap((escopo) => escopo.spans));
+    });
     assert.equal(spans.length, 2);
-    assert.ok(spans.every((span) => span.attributes.some((atributo: { key: string; value: { stringValue?: string } }) =>
+    assert.ok(spans.every((span) => span.attributes.some((atributo) =>
       atributo.key === "langfuse.observation.type" && atributo.value.stringValue === "generation")));
   } finally {
     process.env = envAnterior;
