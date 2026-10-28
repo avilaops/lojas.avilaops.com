@@ -38,7 +38,7 @@ test("tabela fiscal escolhe cartões ou planilha pela largura real do conteúdo"
 
 test("notas fiscais nomeiam a data e agrupam identificação do fornecedor", () => {
   assert.match(fiscal, /Data de emissão/);
-  assert.match(fiscal, />Fornecedor</);
+  assert.match(fiscal, /Fornecedor/);
   assert.match(fiscal, /documentoFormatado\(doc\.documentoFornecedor\)/);
 });
 

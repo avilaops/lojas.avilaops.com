@@ -43,6 +43,7 @@ export default function ListaDeRegistros<T extends { id: string }>({
   acoes,
   vazio,
   carregando,
+  estilo = "lista",
 }: {
   itens: T[];
   colunas: Array<Coluna<T>>;
@@ -59,6 +60,9 @@ export default function ListaDeRegistros<T extends { id: string }>({
   acoes?: (item: T) => React.ReactNode;
   vazio?: React.ReactNode;
   carregando?: boolean;
+  /** Aparência compacta, com moldura e cabeçalho preenchido, para telas de
+   *  conferência que funcionam como uma planilha. */
+  estilo?: "lista" | "planilha";
 }) {
   const router = useRouter();
 
@@ -102,23 +106,23 @@ export default function ListaDeRegistros<T extends { id: string }>({
       </ul>
 
       {/* Computador: tabela, onde comparar linhas é o que importa. */}
-      <div className="hidden overflow-x-auto sm:block">
-        <table className="w-full text-sm">
-          <thead className="text-left text-xs uppercase text-muted-foreground">
-            <tr className="border-b border-border">
+      <div className={`hidden overflow-x-auto sm:block ${estilo === "planilha" ? "max-h-[70vh] rounded-xl border border-border" : ""}`}>
+        <table className={`w-full text-sm ${estilo === "planilha" ? "min-w-[760px] table-fixed" : ""}`}>
+          <thead className={`text-left text-xs text-muted-foreground ${estilo === "planilha" ? "sticky top-0 z-10 bg-muted" : "uppercase"}`}>
+            <tr className={estilo === "planilha" ? "" : "border-b border-border"}>
               {colunas.map((c) => (
-                <th key={c.rotulo} className={`py-2 pr-4 font-medium ${c.largura ?? ""} ${c.numero ? "text-right" : ""}`}>
+                <th key={c.rotulo} className={`${estilo === "planilha" ? "px-3 py-2" : "py-2 pr-4"} font-medium ${c.largura ?? ""} ${c.numero ? "text-right" : ""}`}>
                   {c.rotulo}
                 </th>
               ))}
-              {acoes && <th className="w-28 py-2" />}
+              {acoes && <th className={`w-28 ${estilo === "planilha" ? "px-3 py-2" : "py-2"}`}><span className="sr-only">Ações</span></th>}
             </tr>
           </thead>
-          <tbody className={carregando ? "opacity-50" : undefined}>
+          <tbody className={`${estilo === "planilha" ? "divide-y divide-border" : ""} ${carregando ? "opacity-50" : ""}`}>
             {itens.map((item) => (
               <tr
                 key={item.id}
-                className={`border-t border-border align-top ${href ? "cursor-pointer transition-colors hover:bg-muted/40 focus-visible:bg-muted/40 focus-visible:outline-none" : ""}`}
+                className={`${estilo === "planilha" ? "align-middle even:bg-muted/20" : "border-t border-border align-top"} ${href ? "cursor-pointer transition-colors hover:bg-muted/40 focus-visible:bg-muted/40 focus-visible:outline-none" : ""}`}
                 role={href ? "link" : undefined}
                 tabIndex={href ? 0 : undefined}
                 onClick={(event) => {
@@ -137,7 +141,7 @@ export default function ListaDeRegistros<T extends { id: string }>({
                 }}
               >
                 {colunas.map((c, i) => (
-                  <td key={c.rotulo} className={`py-2.5 pr-4 ${c.numero ? "text-right tabular-nums whitespace-nowrap" : ""}`}>
+                  <td key={c.rotulo} className={`${estilo === "planilha" ? "px-3 py-2" : "py-2.5 pr-4"} ${c.numero ? "text-right tabular-nums whitespace-nowrap" : ""}`}>
                     {i === 0 && href ? (
                       <Link href={href(item)} className="hover:underline">{c.celula(item)}</Link>
                     ) : (
@@ -145,7 +149,7 @@ export default function ListaDeRegistros<T extends { id: string }>({
                     )}
                   </td>
                 ))}
-                {acoes && <td className="py-2.5 text-right text-xs whitespace-nowrap">{acoes(item)}</td>}
+                {acoes && <td className={`${estilo === "planilha" ? "px-3 py-1.5" : "py-2.5"} text-right text-xs whitespace-nowrap`}>{acoes(item)}</td>}
               </tr>
             ))}
           </tbody>

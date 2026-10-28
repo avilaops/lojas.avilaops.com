@@ -222,6 +222,16 @@
 .padm-conteudo > * { min-width: 0; max-width: 100%; }
 .padm-conteudo :where(p, h1, h2, h3, dd, dt, li, span) { overflow-wrap: anywhere; }
 
+/* A tabela fiscal responde à largura disponível no conteúdo, não à largura da
+   janela. Com a lateral aberta, viewport largo não significa mesa larga. */
+.fiscal-tabela-responsiva { container-type: inline-size; }
+.fiscal-tabela-planilha { display: none; }
+
+@container (min-width: 56rem) {
+  .fiscal-tabela-cartoes { display: none; }
+  .fiscal-tabela-planilha { display: block; }
+}
+
 .padm-cabecalho { display: flex; min-width: 0; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
 .padm-cabecalho > div { min-width: 0; }
 .padm-cabecalho > a { flex: 0 0 auto; }
