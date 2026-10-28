@@ -2,7 +2,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
 import { createServer } from "node:http";
-import { z } from "zod";
+import { createRequire } from "node:module";
+
+// Mesmo entrypoint CommonJS usado pelo TypeScript/tsx neste pacote. O entrypoint
+// ESM de Zod tem construtores distintos e geraria falsos positivos em instanceof.
+const { z } = createRequire(import.meta.url)("zod");
 
 const schema = await import("../../src/lib/api-cupom-contrato.ts").then(value => value.default ?? value).catch(() => null);
 const exporter = await import("../../scripts/contracts/export-schema.ts").then(value => value.default ?? value).catch(() => null);
@@ -40,6 +44,8 @@ test("contrato da saída recusa dinheiro fracionado e erro sem correlação", ()
 
 test("exportador não oculta coerção de valores", () => {
   assert.ok(schema && exporter);
+  assert.deepEqual(exporter.exportSchema(z.string()), { type: "string" });
+  assert.deepEqual(exporter.exportSchema(z.number().int()), { type: "integer" });
   assert.throws(() => exporter.exportSchema(z.coerce.string()), /UNSUPPORTED_ZOD/);
   assert.throws(() => exporter.exportSchema(z.coerce.number()), /UNSUPPORTED_ZOD/);
 });

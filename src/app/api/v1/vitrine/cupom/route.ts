@@ -13,7 +13,7 @@ import { lerCorpo } from "@/lib/api-resposta";
  */
 export const dynamic = "force-dynamic";
 
-export const POST = rotaDaApi(OpcoesDaConsultaDeCupom, async ({ request, tenant, chave }) => {
+export const POST = rotaDaApi({ escopo: "vitrine:comprar", navegador: OpcoesDaConsultaDeCupom.navegador, escrita: OpcoesDaConsultaDeCupom.escrita } satisfies typeof OpcoesDaConsultaDeCupom, async ({ request, tenant, chave }) => {
   const consulta = await lerCorpo(request, ConsultaDeCupom);
   return RespostaDeCupom.parse({ dados: await conferirCupomPelaApi(tenant, chave, request, consulta) });
 });
