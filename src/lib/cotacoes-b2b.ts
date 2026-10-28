@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { EstadoCotacaoB2B, Prisma } from "@prisma/client";
 import { prisma } from "./db";
 import { resolverCatalogoB2B } from "./catalogo-b2b";
-import { liberarReservas, reservarEstoque } from "./catalogo-reservas";
+import { reservarEstoqueNaTransacao } from "./catalogo-reservas";
 
 export type ItemCotacaoB2B = {
   produtoId: string;
@@ -35,6 +35,9 @@ export function totaisCotacao(itens: Array<Pick<ItemCotacaoB2B, "quantidade" | "
   if (!itens.length || itens.some((i) => !Number.isSafeInteger(i.quantidade) || i.quantidade <= 0 || !Number.isSafeInteger(i.precoUnitarioCentavos) || i.precoUnitarioCentavos < 0)) throw new Error("Itens da cotação inválidos.");
   if (![descontoCentavos, freteCentavos].every((v) => Number.isSafeInteger(v) && v >= 0)) throw new Error("Valores da cotação inválidos.");
   const subtotalCentavos = itens.reduce((s, i) => s + i.quantidade * i.precoUnitarioCentavos, 0);
+  const maximo = 2_147_483_647; // Prisma Int / PostgreSQL integer.
+  if (![subtotalCentavos, descontoCentavos, freteCentavos, subtotalCentavos - descontoCentavos + freteCentavos]
+    .every(valor => Number.isSafeInteger(valor) && valor <= maximo)) throw new Error("Valores da cotação excedem o limite em centavos.");
   if (descontoCentavos > subtotalCentavos) throw new Error("Desconto não pode superar o subtotal.");
   return { subtotalCentavos, descontoCentavos, freteCentavos, totalCentavos: subtotalCentavos - descontoCentavos + freteCentavos };
 }
@@ -58,7 +61,9 @@ const incluirCotacao = {
   versoes: { orderBy: { numero: "asc" as const } },
   eventos: { orderBy: { criadoEm: "asc" as const } },
   anexos: { orderBy: { criadoEm: "asc" as const } },
-  empresa: true, unidade: true, compradorEmpresa: { include: { comprador: true } }, centroCusto: true, pedido: { include: { itens: true } },
+  empresa: true, unidade: true,
+  compradorEmpresa: { include: { comprador: { select: { id: true, telefone: true, documento: true } } } },
+  centroCusto: true, pedido: { include: { itens: true } },
 } satisfies Prisma.CotacaoB2BInclude;
 
 function evento(tenantId: string, cotacaoId: string, tipo: string, ator: AtorCotacaoB2B, dados: Prisma.InputJsonValue = {}) {
@@ -190,42 +195,38 @@ export async function recusarCotacaoB2B(tenantId: string, id: string, ator: Ator
 }
 
 export async function converterCotacaoB2B(tenantId: string, id: string, chave: string, ator: AtorCotacaoB2B) {
-  const atual = await obterCotacaoB2B(tenantId, id);
-  if (atual.pedido) return prisma.pedido.findUniqueOrThrow({ where: { id: atual.pedido.id }, include: { itens: true } });
-  if (atual.estado !== "APROVADA" || atual.versaoAprovada === null) throw new Error("Cotação precisa estar aprovada.");
-  if (atual.validaAte.getTime() <= Date.now()) throw new Error("Cotação expirada.");
-  const versao = atual.versoes.find((v) => v.numero === atual.versaoAprovada)!;
-  const itens = versao.itens as unknown as ItemCotacaoB2B[];
-  const referencia = `cotacao:${id}`;
-  const carrinho = itens.map((i) => ({ id: `${i.produtoId}:${i.varianteId}`, nome: i.nome, sku: i.sku ?? undefined, quantidade: i.quantidade, precoUnitario: i.precoUnitarioCentavos }));
-  let reservouNestaChamada = false;
+  if (!chave.trim() || chave.trim().length < 8 || chave.trim().length > 200) throw new Error("Chave de idempotência inválida.");
   try {
-    await reservarEstoque(tenantId, referencia, carrinho, { validarPreco: false });
-    reservouNestaChamada = true;
-    const comprador = atual.compradorEmpresa?.comprador;
     return await prisma.$transaction(async (tx) => {
       await tx.$queryRaw`SELECT id FROM "CotacaoB2B" WHERE id=${id} AND "tenantId"=${tenantId} FOR UPDATE`;
-      const bloqueada = await tx.cotacaoB2B.findFirstOrThrow({ where: { tenantId, id }, include: { pedido: { include: { itens: true } } } });
-      if (bloqueada.pedido) return bloqueada.pedido;
-      if (bloqueada.estado !== "APROVADA") throw new Error("Cotação precisa estar aprovada.");
+      const atual = await tx.cotacaoB2B.findFirstOrThrow({ where: { tenantId, id }, include: incluirCotacao });
+      if (atual.pedido) return atual.pedido;
+      if (atual.estado !== "APROVADA" || atual.versaoAprovada === null) throw new Error("Cotação precisa estar aprovada.");
+      if (atual.validaAte.getTime() <= Date.now()) throw new Error("Cotação expirada.");
+      const versao = atual.versoes.find(v => v.numero === atual.versaoAprovada);
+      if (!versao) throw new Error("Versão aprovada não encontrada.");
+      const itens = versao.itens as unknown as ItemCotacaoB2B[];
+      const referencia = `cotacao:${id}`;
+      const carrinho = itens.map(i => ({ id: `${i.produtoId}:${i.varianteId}`, nome: i.nome, sku: i.sku ?? undefined, quantidade: i.quantidade, precoUnitario: i.precoUnitarioCentavos }));
+      await reservarEstoqueNaTransacao(tx, tenantId, referencia, carrinho, { validarPreco: false });
+      const comprador = atual.compradorEmpresa?.comprador;
       const pedido = await tx.pedido.create({ data: {
         tenantId, referencia, status: "AGUARDANDO_PAGAMENTO", clienteNome: atual.compradorEmpresa?.nome ?? atual.empresa.razaoSocial,
         clienteEmail: atual.compradorEmpresa?.emailNormalizado ?? ator.email ?? atual.responsavelEmail, clienteTelefone: comprador?.telefone ?? "",
         clienteDocumento: comprador?.documento ?? "", freteNome: "Cotação B2B", freteCentavos: versao.freteCentavos,
         subtotalCentavos: versao.subtotalCentavos, descontoCentavos: versao.descontoCentavos, totalCentavos: versao.totalCentavos,
         compradorId: comprador?.id ?? null, meioPagamento: "faturado", canal: "loja", origem: `cotacao:${id}`,
-        pedidoCompra: atual.pedidoCompra, empresaB2BId: atual.empresaId, centroCustoB2BId: atual.centroCustoId,
+        pedidoCompra: atual.pedidoCompra, empresaB2BId: atual.empresaId, unidadeB2BId: atual.unidadeId, centroCustoB2BId: atual.centroCustoId,
         cotacaoVersao: versao.numero, condicoesComerciais: versao.condicoes as Prisma.InputJsonValue,
         itens: { create: itens.map((i) => ({ produtoId: i.produtoId, varianteId: i.varianteId, nome: i.nome, sku: i.sku, quantidade: i.quantidade, precoUnitarioCentavos: i.precoUnitarioCentavos })) },
       }, include: { itens: true } });
-      await tx.cotacaoB2B.update({ where: { id }, data: { estado: proximoEstadoCotacao(atual.estado, "CONVERTER"), pedidoId: pedido.id, chaveConversao: chave } });
-      await tx.eventoCotacaoB2B.create({ data: evento(tenantId, id, "CONVERTIDA", ator, { pedidoId: pedido.id, chave }) });
+      await tx.cotacaoB2B.update({ where: { id }, data: { estado: proximoEstadoCotacao(atual.estado, "CONVERTER"), pedidoId: pedido.id, chaveConversao: chave.trim() } });
+      await tx.eventoCotacaoB2B.create({ data: evento(tenantId, id, "CONVERTIDA", ator, { pedidoId: pedido.id, chave: chave.trim() }) });
       return pedido;
-    }, { isolationLevel: "Serializable" });
+    }, { isolationLevel: "Serializable", timeout: 20000 });
   } catch (erro) {
     const repetida = await prisma.cotacaoB2B.findFirst({ where: { tenantId, id }, include: { pedido: { include: { itens: true } } } });
     if (repetida?.pedido) return prisma.pedido.findUniqueOrThrow({ where: { id: repetida.pedido.id }, include: { itens: true } });
-    if (reservouNestaChamada) await liberarReservas(tenantId, referencia).catch(() => undefined);
     throw erro;
   }
 }
