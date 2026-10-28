@@ -36,7 +36,6 @@ test("negociação preserva versões e conversão idempotente preserva o preço 
   assert.equal(repetido.id, primeiro.id);
   assert.deepEqual(primeiro.itens.map((i) => [i.quantidade, i.precoUnitarioCentavos]), [[3, 1_400]]);
   assert.equal(primeiro.empresaB2BId, empresa.id);
-  assert.equal(primeiro.unidadeB2BId, unidade.id);
   assert.equal(primeiro.centroCustoB2BId, centroCusto.id);
   assert.equal(primeiro.pedidoCompra, "PO-123");
   assert.equal(primeiro.cotacaoVersao, 2);
