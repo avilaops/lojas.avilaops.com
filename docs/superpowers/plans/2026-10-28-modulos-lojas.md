@@ -25,9 +25,10 @@ integrações e interfaces ainda exigem implementação e evidência próprias.
 
 - [x] Inspecionar domínio, handlers, testes, projeções e reserva de estoque.
 - [x] Adicionar regressões para projeção privada, concorrência e falha/retry.
-- [ ] Confirmar regressões na CI antes da correção.
-- [ ] Fazer reserva, pedido e evento na mesma transação.
-- [ ] Corrigir projeção do comprador e validar limites monetários.
+- [x] Confirmar regressões na CI antes da correção: execução `40642109382`,
+  três falhas esperadas e 196 integrações preservadas.
+- [x] Fazer reserva, pedido e evento na mesma transação.
+- [x] Corrigir projeção do comprador e validar limites monetários.
 - [ ] Concluir interface operacional e casos negativos de acesso.
 - [ ] Vincular observações reais ao plano MLOps e executar CI.
 
