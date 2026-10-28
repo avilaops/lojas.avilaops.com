@@ -9,7 +9,7 @@ type Runtime = {
 let inicializacao: Promise<Runtime | null> | undefined;
 
 /** Só habilita exportação quando o destino e o par de chaves foram configurados. */
-export function langfuseConfigurado(env: NodeJS.ProcessEnv = process.env): boolean {
+export function langfuseConfigurado(env: Record<string, string | undefined> = process.env): boolean {
   return env.LANGFUSE_TRACING_ENABLED !== "false"
     && Boolean(env.LANGFUSE_PUBLIC_KEY?.trim() && env.LANGFUSE_SECRET_KEY?.trim() && env.LANGFUSE_BASE_URL?.trim());
 }
