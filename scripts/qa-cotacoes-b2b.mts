@@ -19,7 +19,8 @@ const directory = "artifacts/b2b-browser";
 let server: ChildProcess | undefined;
 let stage = "preparar";
 const screenshots: Array<{ file: string; sha256: string }> = [];
-const privateValues: string[] = [];
+const privateValues: string[] = [process.env.LOJAS_SECRET, process.env.DATABASE_URL].filter((value): value is string => !!value);
+let serverOutput = "";
 const diagnostics: Array<{ type: string; detail: string }> = [];
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -28,10 +29,13 @@ async function iniciar() {
   await new Promise<void>((resolve, reject) => { probe.once("error", reject); probe.listen(3097, "127.0.0.1", resolve); });
   await new Promise<void>((resolve, reject) => probe.close(error => error ? reject(error) : resolve()));
   server = spawn(process.execPath, ["node_modules/next/dist/bin/next", "start", "--hostname", "0.0.0.0", "--port", "3097"], {
-    detached: true, stdio: "ignore",
+    detached: true, stdio: ["ignore", "pipe", "pipe"],
     env: { PATH: process.env.PATH, HOME: process.env.HOME, CI: "true", NODE_ENV: "production", DATABASE_URL: process.env.DATABASE_URL,
       LOJAS_SECRET: process.env.LOJAS_SECRET, LOJAS_BASE_DOMAIN: "127.0.0.1", NEXT_TELEMETRY_DISABLED: "1" },
   });
+  const collect = (chunk: Buffer) => { serverOutput = `${serverOutput}${chunk.toString("utf8")}`.slice(-24_000); };
+  server.stdout?.on("data", collect);
+  server.stderr?.on("data", collect);
   let failed = false;
   server.once("error", () => { failed = true; });
   const deadline = Date.now() + 180_000;
@@ -154,6 +158,8 @@ try {
     ultimaCotacao = new URL(sellerPage.url()).searchParams.get("cotacao")!;
     await sellerPage.getByRole("button", { name: "Negociar", exact: true }).click();
     stage = `negociacao-${width}`;
+    await sellerPage.getByRole("button", { name: "Remover item 1", exact: true }).click();
+    await selecionar(sellerPage, "Selecionar produto", variante.id);
     await sellerPage.getByLabel("Quantidade do item 1", { exact: true }).fill("2");
     await sellerPage.getByLabel("Condições comerciais", { exact: true }).fill("Pagamento em 30 dias");
     await comando(sellerPage, "Salvar contraproposta");
@@ -218,7 +224,7 @@ try {
   }
   let message = error instanceof Error ? error.message : "Erro desconhecido";
   for (const value of privateValues) message = message.replaceAll(value, "[redacted]");
-  let report = JSON.stringify({ status: "failed", stage, errorType: error instanceof Error ? error.name : "Unknown", message: message.slice(0, 2400), screenshots, diagnostics: diagnostics.slice(-80) });
+  let report = JSON.stringify({ status: "failed", stage, errorType: error instanceof Error ? error.name : "Unknown", message: message.slice(0, 2400), screenshots, diagnostics: diagnostics.slice(-80), serverOutput });
   for (const value of privateValues) report = report.replaceAll(value, "[redacted]");
   await writeFile(`${directory}/failure.json`, report);
   throw new Error(`Falha na verificação B2B, etapa ${stage}. Consulte os artefatos da CI.`);

@@ -12,7 +12,7 @@ const valor = (value: number) => (value / 100).toFixed(2).replace(".", ",");
 type Opcao = { id: string; nome: string; produtoId?: string };
 type Item = { produtoId: string; varianteId: string; nome: string; quantidade: number; precoUnitarioCentavos: number };
 type Versao = { numero: number; itens: Item[]; totalCentavos: number; descontoCentavos: number; freteCentavos: number; condicoes: Record<string, unknown>; justificativa: string | null };
-type Cotacao = { id: string; referencia: string; estado: string; versaoAtual: number; validaAte: string; empresa: { razaoSocial: string }; versoes: Versao[]; pedido: { id: string; numero: number; referencia?: string } | null; pedidoId?: string; eventos?: Array<{ id: string; tipo: string; criadoEm: string }>; anexos?: Array<{ id: string; nome: string; url: string }> };
+type Cotacao = { id: string; empresaId: string; referencia: string; estado: string; versaoAtual: number; validaAte: string; empresa: { razaoSocial: string }; versoes: Versao[]; pedido: { id: string; numero: number; referencia?: string } | null; pedidoId?: string; eventos?: Array<{ id: string; tipo: string; criadoEm: string }>; anexos?: Array<{ id: string; nome: string; url: string }> };
 type Linha = { produtoId: string; varianteId: string; nome: string; quantidade: string; preco: string };
 
 async function request<T>(url: string, body?: unknown, signal?: AbortSignal): Promise<T> {
@@ -70,6 +70,7 @@ function Formulario({ base, modo, email, cotacao, onSaved, onCancel }: { base: s
   const [validaAte, setValidaAte] = useState("");
   const [pedidoCompra, setPedidoCompra] = useState("");
   const [responsavelEmail, setResponsavelEmail] = useState(email);
+  const empresaDosItens = cotacao?.empresaId ?? empresa?.id;
   const [busy, setBusy] = useState(false);
   const [erro, setErro] = useState("");
   async function salvar(event: FormEvent) {
@@ -110,9 +111,9 @@ function Formulario({ base, modo, email, cotacao, onSaved, onCancel }: { base: s
           {modo === "painel" && <label className="block text-sm">E-mail do responsável<input className={input} type="email" required value={responsavelEmail} onChange={event => setResponsavelEmail(event.target.value)} /></label>}
         </div>
       </>}
-      {!cotacao && <Seletor key={`produtos-${empresa?.id ?? ""}`} base={base} tipo="produtos" titulo="Produto" empresaId={empresa?.id} selecionada={null} disabled={!empresa || itens.length >= 500} onChange={option => {
+      <Seletor key={`produtos-${empresaDosItens ?? ""}`} base={base} tipo="produtos" titulo="Produto" empresaId={empresaDosItens} selecionada={null} disabled={!empresaDosItens || itens.length >= 500} onChange={option => {
         if (option?.produtoId && !itens.some(item => item.varianteId === option.id)) setItens(current => [...current, { produtoId: option.produtoId!, varianteId: option.id, nome: option.nome, quantidade: "1", preco: "" }]);
-      }} />}
+      }} />
       <p className="text-sm text-muted-foreground">Deixe o preço vazio para usar as condições vigentes da empresa ao salvar.</p>
       {itens.map((item, index) => <div key={item.varianteId} className="grid min-w-0 gap-3 rounded-lg border border-border p-3 md:grid-cols-3">
         <p className="break-words font-medium md:col-span-3">{item.nome}</p>
