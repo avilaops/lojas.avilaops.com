@@ -29,7 +29,7 @@ test("criação persiste revisão validada no tenant informado", async () => {
   assert.equal(gravado?.tenantId, "tenant-mrg");
   assert.equal(gravado?.contratoVersao, 1);
   assert.equal(gravado?.nome, "Maria Silva");
-  assert.match(String(gravado?.referencia), /^MRG-[A-Z0-9]{12}$/);
+  assert.match(String(gravado?.referencia), /^CFG-[A-Z0-9]{12}$/);
   assert.deepEqual(resposta, { referencia: gravado?.referencia, criadoEm: new Date("2026-10-31T14:00:00Z") });
 });
 

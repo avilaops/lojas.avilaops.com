@@ -43,7 +43,7 @@ export default function Header({ loja, logoUrl, categorias, exemploBusca, mostra
             <span className="hidden sm:inline">Minha conta</span>
           </Link>
         )}
-        <MenuMobile className="ml-auto sm:hidden" nome={loja.nome} vende={loja.vende} mostrarPromocoes={mostrarPromocoes} categorias={categorias} />
+        <MenuMobile className="ml-auto sm:hidden" nome={loja.nome} vende={loja.vende} configuradorSobMedida={loja.configuradorSobMedida} mostrarPromocoes={mostrarPromocoes} categorias={categorias} />
         {/* Loja que fecha pelo WhatsApp também tem carrinho: é a lista do pedido. */}
         {(loja.vende || loja.whatsapp) && <CartButton />}
       </div>
@@ -60,12 +60,13 @@ export default function Header({ loja, logoUrl, categorias, exemploBusca, mostra
           (44px de toque), o sublinhado fica dentro da caixa e a rolagem
           vertical está travada; `overscroll-x-contain` impede o gesto de
           arrastar a página junto quando a tira chega ao fim. */}
-      {categorias.length > 0 && (
+      {(categorias.length > 0 || loja.configuradorSobMedida) && (
         <nav className="nav-loja border-t border-border" aria-label="Categorias de produtos">
           <div className="container-loja nav-loja-tira flex gap-6 overflow-x-auto overflow-y-hidden overscroll-x-contain text-[13px]">
             <Link href="/produtos" className="nav-loja-item font-semibold text-foreground">
               Todos
             </Link>
+            {loja.configuradorSobMedida && <Link href="/configurador" className="nav-loja-item font-semibold text-primary">Projeto sob medida</Link>}
             {mostrarPromocoes && <Link href="/promocoes" className="nav-loja-item font-semibold text-primary">Promoções</Link>}
             {categorias.slice(0, PRINCIPAIS).map((c) => (
               <Link key={c.slug} href={`/categoria/${c.slug}`} className="nav-loja-item text-muted-foreground hover:text-foreground">
