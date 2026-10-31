@@ -101,9 +101,9 @@ export async function clientesEmLinhas(tenantId: string): Promise<Valor[][]> {
   // A apuração é a mesma que alimenta a tela de Clientes (src/lib/clientes.ts):
   // arquivo e painel não podem discordar sobre quanto alguém gastou.
   const clientes = await clientesDaLoja(tenantId);
-  const linhas: Valor[][] = [["Nome", "E-mail", "Telefone", "Documento", "Tem conta", "Pedidos", "Total gasto", "Primeira compra", "Ultima compra", "Endereco"]];
+  const linhas: Valor[][] = [["Nome", "E-mail", "Telefone", "Documento", "Tem conta", "Pedidos registrados", "Compras pagas", "Total gasto", "Primeira compra", "Ultima compra", "Endereco"]];
   for (const c of clientes) {
-    linhas.push([c.nome, c.email, c.telefone, c.documento, c.temConta ? "sim" : "nao", c.pedidos, reais(c.gastoCentavos), data(c.primeiraCompra), data(c.ultimaCompra), c.endereco]);
+    linhas.push([c.nome, c.email, c.telefone, c.documento, c.temConta ? "sim" : "nao", c.pedidos, c.pedidosPagos, reais(c.gastoCentavos), data(c.primeiraCompra), data(c.ultimaCompra), c.endereco]);
   }
   return linhas;
 }
