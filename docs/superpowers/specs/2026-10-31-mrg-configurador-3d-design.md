@@ -26,6 +26,7 @@ Alternativas recusadas nesta fase:
 - O envio exige nome e ao menos um contato entre e-mail e telefone, aceite de tratamento dos dados e uma configuração válida.
 - O servidor resolve o tenant pelo host, revalida toda entrada e grava uma revisão imutável em JSON.
 - A resposta devolve uma referência não sequencial. O WhatsApp recebe apenas referência e resumo não sensível.
+- O painel da loja oferece uma fila tenant-safe com as 100 solicitações mais recentes, ficha, observações e canais de resposta.
 
 ## Dados
 
@@ -51,6 +52,7 @@ O formulário continua funcional sem animação ou suporte a transformações 3D
 - Persistência e migração tenant-safe.
 - Rota pública protegida por recurso.
 - Envio público validado no servidor, limitado e persistido.
+- Fila operacional disponível somente ao painel autenticado do tenant habilitado.
 - Visualização responsiva e formulário completo.
 - Testes, lint, typecheck e build verdes.
 

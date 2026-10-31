@@ -72,6 +72,18 @@
 3. Revisar diff integral contra spec, corrigir achados importantes e repetir verificações.
 4. Criar commits, publicar branch e abrir PR; mover AVL-400 para In Review com evidências.
 
+### Review fix: fila operacional
+
+**Files:**
+- Modify: `src/components/painel/NavPainel.tsx`
+- Modify: `src/app/plataforma/(admin)/layout.tsx`
+- Create: `src/app/plataforma/(admin)/painel/sob-medida/page.tsx`
+- Create: `src/lib/nav-painel-configurador.test.ts`
+
+1. Expor a fila apenas quando o recurso estiver ativo no tenant autenticado.
+2. Listar as 100 solicitações mais recentes sem misturar tenants.
+3. Exibir ficha, observações e canais de resposta sem colocar PII em URLs internas.
+
 ## Review Focus
 
 - Bypass de tenant ou feature flag.
