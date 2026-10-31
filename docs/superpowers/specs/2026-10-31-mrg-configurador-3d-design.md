@@ -55,4 +55,3 @@ O formulário continua funcional sem animação ou suporte a transformações 3D
 - Fila operacional disponível somente ao painel autenticado do tenant habilitado.
 - Visualização responsiva e formulário completo.
 - Testes, lint, typecheck e build verdes.
-

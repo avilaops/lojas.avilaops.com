@@ -91,4 +91,3 @@
 - Medidas tratadas como aprovação fabril.
 - Entrada inválida chegando ao Prisma.
 - Layout/controles inutilizáveis no celular ou sem transformações 3D.
-
