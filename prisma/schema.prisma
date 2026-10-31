@@ -265,6 +265,7 @@ model Tenant {
    * /**
    * /**
    * /**
+   * /**
    * Políticas escritas pelo lojista, por tipo ("envio", "devolucao",
    * "privacidade", "termos", "aviso-legal").
    * Chave ausente = a loja publica o modelo da plataforma, que é o
@@ -283,6 +284,7 @@ model Tenant {
 
   // ── Campos personalizados do catálogo ─────────────────────────────────
   /**
+   * /**
    * /**
    * /**
    * /**
@@ -399,17 +401,39 @@ model Tenant {
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
-  acessos           AcessoLoja[]
-  categorias        Categoria[]
-  produtos          Produto[]
-  pedidos           Pedido[]
-  eventosPedido     EventoPedido[]
-  cobrancasPix      CobrancaPixManual[]
-  pesquisasCatalogo PesquisaCatalogoExecucao[]
-  publicacoes       PublicacaoLoja[]
-  sessoesVitrine    SessaoVitrine[]
+  acessos               AcessoLoja[]
+  categorias            Categoria[]
+  produtos              Produto[]
+  pedidos               Pedido[]
+  eventosPedido         EventoPedido[]
+  cobrancasPix          CobrancaPixManual[]
+  pesquisasCatalogo     PesquisaCatalogoExecucao[]
+  publicacoes           PublicacaoLoja[]
+  sessoesVitrine        SessaoVitrine[]
+  solicitacoesSobMedida SolicitacaoSobMedida[]
 
   @@index([status])
+}
+
+model SolicitacaoSobMedida {
+  id              String   @id @default(cuid())
+  tenantId        String
+  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  referencia      String
+  contratoVersao  Int
+  estado          String   @default("RECEBIDA")
+  nome            String
+  email           String?
+  telefone        String?
+  configuracao    Json
+  resumo          String
+  origem          String   @default("configurador_publico")
+  consentimentoEm DateTime
+  criadoEm        DateTime @default(now())
+  atualizadoEm    DateTime @updatedAt
+
+  @@unique([tenantId, referencia])
+  @@index([tenantId, estado, criadoEm])
 }
 
 model FiscalLoja {
