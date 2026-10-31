@@ -18,7 +18,7 @@
         "A interface não inventa preço, capacidade ou aprovação de fabricação.",
         "Testes, TypeScript, lint e build são aprovados antes da revisão."
       ],
-      "evidence": "Ticket Linear AVL-400; spec e plano em docs/superpowers; 1307 testes aprovados após a revisão; TypeScript, lint sem erros e build Next.js aprovados; fila operacional tenant-safe incluída no painel.",
+      "evidence": "Ticket Linear AVL-400; spec e plano em docs/superpowers; 1298 testes aprovados após rebase na main; TypeScript, lint sem erros e build Next.js aprovados; fila operacional tenant-safe incluída no painel.",
       "review": "Autorrevisão do diff: tenant e feature flag preservados, PII fora de URLs e WhatsApp, e nenhuma promessa de preço, capacidade ou viabilidade fabril.",
       "environment": "local",
       "owner": null,
