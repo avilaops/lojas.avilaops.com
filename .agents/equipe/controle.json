@@ -4,6 +4,39 @@
   "members": [],
   "tasks": [
     {
+      "id": "AVL-400",
+      "title": "Criar configurador 3D de caixas térmicas sob medida para a MRG",
+      "objective": "Permitir que o cliente configure uma intenção de produto, visualize o volume em 3D e envie uma ficha estruturada para análise da fábrica.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "O recurso é isolado por tenant e pode ser desligado globalmente.",
+        "A configuração paramétrica é validada novamente no servidor.",
+        "A prévia 3D responde às medidas e opções em celular e desktop.",
+        "A solicitação é persistida com referência, versão e consentimento.",
+        "A interface não inventa preço, capacidade ou aprovação de fabricação.",
+        "Testes, TypeScript, lint e build são aprovados antes da revisão."
+      ],
+      "evidence": "Ticket Linear AVL-400; spec e plano em docs/superpowers; 1305 testes aprovados antes da revisão; TypeScript, lint sem erros e build Next.js aprovados.",
+      "review": "Autorrevisão do diff: tenant e feature flag preservados, PII fora de URLs e WhatsApp, e nenhuma promessa de preço, capacidade ou viabilidade fabril.",
+      "environment": "local",
+      "owner": null,
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-10-31",
+          "status": "em-andamento",
+          "note": "Contrato, persistência, API pública e editor visual implementados em worktree isolado."
+        },
+        {
+          "at": "2026-10-31",
+          "status": "em-revisao",
+          "note": "Suíte completa, TypeScript, lint e build aprovados; link de descoberta adicionado aos cabeçalhos desktop e móvel."
+        }
+      ]
+    },
+    {
       "id": "MELHOR-ENVIO-SANDBOX-20261027",
       "title": "Preparar e publicar conexão e cotação do Melhor Envio somente em sandbox",
       "assignee": null,

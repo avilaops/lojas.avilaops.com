@@ -265,7 +265,6 @@ model Tenant {
    * /**
    * /**
    * /**
-   * /**
    * Políticas escritas pelo lojista, por tipo ("envio", "devolucao",
    * "privacidade", "termos", "aviso-legal").
    * Chave ausente = a loja publica o modelo da plataforma, que é o
@@ -284,7 +283,6 @@ model Tenant {
 
   // ── Campos personalizados do catálogo ─────────────────────────────────
   /**
-   * /**
    * /**
    * /**
    * /**

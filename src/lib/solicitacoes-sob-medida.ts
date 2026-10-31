@@ -24,7 +24,7 @@ const persistirNoBanco: PersistirSolicitacao = (dados) => prisma.solicitacaoSobM
 
 export async function criarSolicitacaoSobMedida(tenantId: string, entradaBruta: unknown, persistir: PersistirSolicitacao = persistirNoBanco) {
   const entrada = EntradaSolicitacaoSobMedidaSchema.parse(entradaBruta);
-  const referencia = `MRG-${randomUUID().replaceAll("-", "").slice(0, 12).toUpperCase()}`;
+  const referencia = `CFG-${randomUUID().replaceAll("-", "").slice(0, 12).toUpperCase()}`;
   const gravada = await persistir({
     tenantId,
     referencia,
