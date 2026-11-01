@@ -3,6 +3,14 @@ export interface ArmazenamentoRetomada {
   setItem(chave: string, valor: string): void;
 }
 
+export function armazenamentoLocalSeguro(janela: { readonly localStorage: ArmazenamentoRetomada }): ArmazenamentoRetomada | null {
+  try {
+    return janela.localStorage;
+  } catch {
+    return null;
+  }
+}
+
 const FORMATO_CODIGO = /^CFG-[A-Z0-9]{12}\.[A-Za-z0-9_-]{22}$/;
 
 function chaveDoTenant(slug: string): string {

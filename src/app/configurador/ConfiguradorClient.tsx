@@ -5,7 +5,7 @@ import { useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { ArrowRight, Box, CheckCircle2, Rotate3D } from "lucide-react";
 import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
-import { lerUltimoCodigoRetomada, salvarUltimoCodigoRetomada } from "@/lib/configurador-retomada";
+import { armazenamentoLocalSeguro, lerUltimoCodigoRetomada, salvarUltimoCodigoRetomada } from "@/lib/configurador-retomada";
 import { LIMITES_EDITOR_SOB_MEDIDA, OPCOES_CONFIGURADOR, resumoDaConfiguracao, type ConfiguracaoSobMedida } from "@/lib/configurador-sob-medida";
 
 const INICIAL: ConfiguracaoSobMedida = {
@@ -32,6 +32,16 @@ function assinarMudancasNoStorage(aoMudar: () => void) {
   return () => window.removeEventListener("storage", aoMudar);
 }
 
+function codigoSalvoNoNavegador(slug: string): string | null {
+  const armazenamento = armazenamentoLocalSeguro(window);
+  return armazenamento ? lerUltimoCodigoRetomada(slug, armazenamento) : null;
+}
+
+function salvarCodigoNoNavegador(slug: string, codigo: string): void {
+  const armazenamento = armazenamentoLocalSeguro(window);
+  if (armazenamento) salvarUltimoCodigoRetomada(slug, codigo, armazenamento);
+}
+
 export default function ConfiguradorClient({ nomeDaLoja, slugDaLoja, whatsapp }: { nomeDaLoja: string; slugDaLoja: string; whatsapp: string | null }) {
   const [configuracao, setConfiguracao] = useState(INICIAL);
   const [rotacao, setRotacao] = useState({ x: -18, y: 32 });
@@ -46,7 +56,7 @@ export default function ConfiguradorClient({ nomeDaLoja, slugDaLoja, whatsapp }:
 
   const codigoSalvo = useSyncExternalStore(
     assinarMudancasNoStorage,
-    () => lerUltimoCodigoRetomada(slugDaLoja, window.localStorage),
+    () => codigoSalvoNoNavegador(slugDaLoja),
     () => null,
   );
   const codigoRetomada = codigoDigitado || codigoSalvo || "";
@@ -87,7 +97,7 @@ export default function ConfiguradorClient({ nomeDaLoja, slugDaLoja, whatsapp }:
       setResposta(recebida);
       setCodigoDigitado(recebida.codigoRetomada);
       setCodigoRetomadaOrigem(recebida.codigoRetomada);
-      salvarUltimoCodigoRetomada(slugDaLoja, recebida.codigoRetomada, window.localStorage);
+      salvarCodigoNoNavegador(slugDaLoja, recebida.codigoRetomada);
     } catch (falha) {
       setErro(falha instanceof Error ? falha.message : "Não foi possível enviar a solicitação.");
     } finally {
@@ -113,7 +123,7 @@ export default function ConfiguradorClient({ nomeDaLoja, slugDaLoja, whatsapp }:
       setCodigoRetomadaOrigem(codigoRetomada);
       setResposta(null);
       setMensagemRetomada(`Configuração ${retomada.referencia} retomada. Confira a ficha e informe o contato para enviar uma nova solicitação.`);
-      salvarUltimoCodigoRetomada(slugDaLoja, codigoRetomada, window.localStorage);
+      salvarCodigoNoNavegador(slugDaLoja, codigoRetomada);
     } catch (falha) {
       setErro(falha instanceof Error ? falha.message : "Não foi possível retomar a configuração.");
     } finally {
