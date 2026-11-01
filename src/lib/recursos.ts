@@ -19,6 +19,8 @@ export const RECURSOS = [
   "pagamentos_pix_manual",
   /** Conta e cotações de teste do Melhor Envio, sem atender lojas reais. */
   "frete_melhor_envio_sandbox",
+  /** Editor público de solicitações paramétricas para produtos sob medida. */
+  "configurador_sob_medida",
 ] as const;
 export type Recurso = (typeof RECURSOS)[number];
 

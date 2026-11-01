@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import ListaAgrupada from "@/components/aplicacao/ListaAgrupada";
+import ListaAgrupada from "@/components/painel/IndiceConfiguracoes";
 
 export const metadata: Metadata = { title: "Configurações | Painel", robots: { index: false } };
 
@@ -25,24 +25,24 @@ export default function Pagina() {
             { href: "/painel/configuracoes/marca", titulo: "Marca", descricao: "Nome, logo, cores e texto de apresentação" },
             { href: "/painel/configuracoes/dominio", titulo: "Domínio", descricao: "Endereço próprio da sua loja" },
             { href: "/painel/configuracoes/entrega", titulo: "Entrega", descricao: "Frete por CEP, prazo e retirada" },
-            { href: "/painel/configuracoes/recebimento", titulo: "Recebimento", descricao: "Pix, cartão e boleto" },
+            { href: "/painel/configuracoes/recebimento", titulo: "Pagamentos", descricao: "Pix, cartão e boleto" },
             { href: "/painel/configuracoes/fiscal", titulo: "Notas fiscais", descricao: "Certificado A1 e consulta de NF-e do CNPJ" },
           ],
         },
         {
-          titulo: "O que a loja publica",
+          titulo: "Conteúdo da loja",
           itens: [
-            { href: "/painel/configuracoes/politicas", titulo: "Políticas", descricao: "Devolução, privacidade, termos e as regras que valem para o cliente" },
-            { href: "/painel/configuracoes/campos", titulo: "Campos do produto", descricao: "O que a sua loja pergunta além do que toda loja pergunta" },
-            { href: "/painel/marketing/blog", titulo: "Blog", descricao: "Textos que trazem quem ainda está pesquisando" },
+            { href: "/painel/configuracoes/politicas", titulo: "Políticas", descricao: "Trocas, privacidade e termos" },
+            { href: "/painel/configuracoes/campos", titulo: "Campos do produto", descricao: "Informações adicionais dos produtos" },
+            { href: "/painel/marketing/blog", titulo: "Blog", descricao: "Artigos e publicações da loja" },
           ],
         },
         {
-          titulo: "Vender em outros lugares",
+          titulo: "Integrações e divulgação",
           itens: [
-            { href: "/painel/configuracoes/canais", titulo: "Canais", descricao: "Mercado Livre e outros marketplaces" },
-            { href: "/painel/configuracoes/descoberta", titulo: "Descoberta", descricao: "Google, Bing e assistentes de IA" },
-            { href: "/painel/configuracoes/automacoes", titulo: "Automações", descricao: "Avisos por WhatsApp e e-mail: o que saiu e o que falhou" },
+            { href: "/painel/configuracoes/canais", titulo: "Marketplaces", descricao: "Mercado Livre e outros marketplaces" },
+            { href: "/painel/configuracoes/descoberta", titulo: "SEO e buscadores", descricao: "Google, Bing e assistentes de IA" },
+            { href: "/painel/configuracoes/automacoes", titulo: "Automações", descricao: "Avisos por WhatsApp e e-mail" },
           ],
         },
         {
@@ -50,7 +50,7 @@ export default function Pagina() {
           itens: [
             { href: "/painel/configuracoes/equipe", titulo: "Equipe", descricao: "Quem entra no painel e o que pode fazer" },
             { href: "/painel/configuracoes/assinatura", titulo: "Assinatura", descricao: "Plano e cobrança mensal" },
-            { href: "/painel/configuracoes/conta", titulo: "Dados da empresa", descricao: "Razão social, CNPJ e senha" },
+            { href: "/painel/configuracoes/conta", titulo: "Dados da empresa", descricao: "Razão social e CNPJ" },
           ],
         },
       ]}
