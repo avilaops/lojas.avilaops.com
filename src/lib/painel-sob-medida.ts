@@ -94,6 +94,19 @@ export async function buscarProjetoSobMedidaNoPainel(
   const fichaTecnica = semSnapshot ? fichaLegada(registro) : fichaPersistidaValida(registro);
   if (!fichaTecnica) return null;
 
-  const { configuracao: _configuracao, fichaTecnica: _fichaBruta, ...projeto } = registro;
-  return { ...projeto, fichaTecnica };
+  return {
+    id: registro.id,
+    referencia: registro.referencia,
+    referenciaOrigem: registro.referenciaOrigem,
+    contratoVersao: registro.contratoVersao,
+    fichaTecnicaVersao: registro.fichaTecnicaVersao,
+    previaVersao: registro.previaVersao,
+    estado: registro.estado,
+    resumo: registro.resumo,
+    nome: registro.nome,
+    email: registro.email,
+    telefone: registro.telefone,
+    criadoEm: registro.criadoEm,
+    fichaTecnica,
+  };
 }

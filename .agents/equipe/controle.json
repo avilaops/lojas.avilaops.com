@@ -74,6 +74,39 @@
       ]
     },
     {
+      "id": "AVL-403",
+      "title": "Gerar prévia e ficha técnica de produção da configuração 3D da MRG",
+      "objective": "Congelar uma ficha técnica versionada e disponibilizar uma prévia SVG privada para análise e impressão pela fábrica.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "Novas solicitações persistem ficha e versões na mesma operação.",
+        "A prévia SVG é derivada no servidor e não contém PII ou observações livres.",
+        "Detalhe e imagem são acessíveis somente pelo painel autenticado do mesmo tenant.",
+        "Registros antigos válidos continuam abrindo sem backfill silencioso.",
+        "A ficha é responsiva, imprimível e deixa claro que depende de validação fabril.",
+        "Testes, integração PostgreSQL, TypeScript, lint e build passam antes da publicação."
+      ],
+      "evidence": "Ticket Linear AVL-403; spec e plano em docs/superpowers; implementação TDD no checkout isolado .work/avl-403; 1324 testes aprovados; TypeScript e Prisma aprovados; lint sem erros e com 24 avisos preexistentes; build Next.js Node 22 aprovado com 119 páginas. Migração e integração PostgreSQL aguardam o CI do PR.",
+      "review": "Autorrevisão: snapshot e versões são atômicos; SVG não recebe PII nem texto livre; consulta do detalhe usa tenant e ID juntos; registros legados são apenas lidos e validados; saída mantém aviso de validação fabril.",
+      "environment": "local",
+      "owner": null,
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-11-01",
+          "status": "em-andamento",
+          "note": "Snapshot técnico, migração, SVG determinístico, consulta tenant-safe, detalhe privado e impressão implementados com testes vermelhos antes do código."
+        },
+        {
+          "at": "2026-11-01",
+          "status": "em-revisao",
+          "note": "Suíte completa, TypeScript, Prisma, lint e build Node 22 aprovados; integração PostgreSQL delegada ao gate obrigatório do GitHub CI."
+        }
+      ]
+    },
+    {
       "id": "MELHOR-ENVIO-SANDBOX-20261027",
       "title": "Preparar e publicar conexão e cotação do Melhor Envio somente em sandbox",
       "assignee": null,
