@@ -1031,6 +1031,96 @@
           "note": "Demanda registrada e implementação iniciada."
         }
       ]
+    },
+    {
+      "id": "CONFIGURACOES-MOBILE-20261031",
+      "title": "Compactar configurações e facilitar busca no celular",
+      "assignee": null,
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "Busca ignora acentos e encontra Pix e certificado",
+        "Linhas compactas com ícones, foco visível e descrições curtas",
+        "Preservar rotas e permissões",
+        "CI aprovada antes de publicar"
+      ],
+      "evidence": "Branch codex/configuracoes-compactas; git diff --check aprovado; Prisma generate aprovado. TypeScript e lint em execução. Publicação e revisão visual autenticada pendentes.",
+      "history": [
+        {
+          "at": "2026-10-31",
+          "status": "em-revisao",
+          "note": "Implementação em checkout separado via Desktop Commander; código enviado pelo conector GitHub."
+        }
+      ]
+    },
+    {
+      "id": "AVL-400",
+      "title": "Criar configurador 3D de caixas térmicas sob medida para a MRG",
+      "objective": "Permitir que o cliente configure uma intenção de produto, visualize o volume em 3D e envie uma ficha estruturada para análise da fábrica.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "O recurso é isolado por tenant e pode ser desligado globalmente.",
+        "A configuração paramétrica é validada novamente no servidor.",
+        "A prévia 3D responde às medidas e opções em celular e desktop.",
+        "A solicitação é persistida com referência, versão e consentimento.",
+        "A interface não inventa preço, capacidade ou aprovação de fabricação.",
+        "Testes, TypeScript, lint e build são aprovados antes da revisão."
+      ],
+      "evidence": "Ticket Linear AVL-400; spec e plano em docs/superpowers; 1307 testes aprovados após a revisão; TypeScript, lint sem erros e build Next.js aprovados; fila operacional tenant-safe incluída no painel.",
+      "review": "Autorrevisão do diff: tenant e feature flag preservados, PII fora de URLs e WhatsApp, e nenhuma promessa de preço, capacidade ou viabilidade fabril.",
+      "environment": "local",
+      "owner": null,
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-10-31",
+          "status": "em-andamento",
+          "note": "Contrato, persistência, API pública e editor visual implementados em worktree isolado."
+        },
+        {
+          "at": "2026-10-31",
+          "status": "em-revisao",
+          "note": "Suíte completa, TypeScript, lint e build aprovados; link de descoberta adicionado aos cabeçalhos desktop e móvel."
+        }
+      ]
+    },
+    {
+      "id": "AVL-401",
+      "title": "Salvar e reabrir configurações 3D da MRG com segurança",
+      "objective": "Permitir que o cliente retome a ficha técnica sem expor contato, observações pessoais ou a chave privada no banco e nas URLs.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "concluida",
+      "acceptanceCriteria": [
+        "A chave privada é entregue uma vez e somente o hash é persistido.",
+        "A retomada usa POST, é isolada por tenant e não revela se referência ou chave existem.",
+        "Somente a ficha técnica é restaurada; contato e observações permanecem vazios.",
+        "Uma nova solicitação preserva a referência da origem comprovada.",
+        "Testes, TypeScript, lint e build são aprovados antes da revisão."
+      ],
+      "evidence": "Ticket Linear AVL-401; PRs #185 e #186 mesclados; 1315 testes aprovados; TypeScript aprovado; lint sem erros e com 24 avisos preexistentes; build Next.js aprovado no Node 22; migração e integração aprovadas no PostgreSQL 18 do CI; deploy c8cbac1 e fumaça aprovados no run 41271409737; página e API de retomada verificadas em mrgcaixastermicas.com.br.",
+      "review": "Autorrevisão: a chave tem 128 bits aleatórios, só o SHA-256 chega ao banco, a retomada usa POST e limite por tenant/IP, a consulta seleciona apenas a ficha técnica e uma nova solicitação só referencia origem validada. A revisão do PR também originou cobertura para navegadores que bloqueiam o getter de localStorage.",
+      "environment": "producao",
+      "owner": null,
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-11-01",
+          "status": "em-andamento",
+          "note": "Contrato de retomada, hash da chave, isolamento por tenant, migração e interface implementados com testes vermelhos antes do código."
+        },
+        {
+          "at": "2026-11-01",
+          "status": "em-revisao",
+          "note": "Testes, TypeScript, lint e build Node 22 aprovados. Prova de migração local indisponível por ausência do Docker; o CI executa migrate deploy e testes de integração em PostgreSQL 18."
+        },
+        {
+          "at": "2026-11-01",
+          "status": "concluida",
+          "note": "PRs #185 e #186 mesclados; integração, imagem, deploy e fumaça aprovados. Produção serve c8cbac1 e a API retorna erro genérico para código inválido."
+        }
+      ]
     }
   ],
   "decisions": [

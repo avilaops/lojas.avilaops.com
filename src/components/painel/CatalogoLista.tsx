@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ImageOff } from "lucide-react";
+import { CircleAlert } from "lucide-react";
 import { Secao } from "./campos";
 import ListaDeRegistros from "@/components/aplicacao/ListaDeRegistros";
 import Paginacao from "@/components/aplicacao/Paginacao";
@@ -46,6 +46,33 @@ type Item = {
 type Resposta = { total: number; pagina: number; paginas: number; porPagina: number; produtos: Item[] };
 
 const brl = (c: number) => (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+function pendenciasDoProduto(p: Item): string[] {
+  return [
+    !p.temFoto && "Sem foto",
+    p.fotoMerchantRevisar && p.temFoto && "Imagem Merchant a revisar",
+    !p.marca && "Sem marca",
+    p.identificadoresPendentes && "GTIN/MPN a confirmar",
+    p.precoCentavos <= 0 && "Preço pendente",
+    !p.categoria && "Sem categoria",
+  ].filter((pendencia): pendencia is string => Boolean(pendencia));
+}
+
+function PendenciasProduto({ produto, detalhadas = false }: { produto: Item; detalhadas?: boolean }) {
+  const pendencias = pendenciasDoProduto(produto);
+  if (!pendencias.length) return <span className="text-emerald-800">Em ordem</span>;
+
+  if (detalhadas) {
+    return <>{pendencias.map((pendencia) => <span key={pendencia} className="rounded bg-amber-50 px-1.5 py-0.5 text-amber-800">{pendencia}</span>)}</>;
+  }
+
+  return (
+    <span className="inline-flex items-center gap-1 rounded bg-amber-50 px-1.5 py-0.5 text-[11px] text-amber-800" title={pendencias.join(" · ")}>
+      <CircleAlert size={10} aria-hidden="true" />
+      {pendencias.length === 1 ? pendencias[0] : `${pendencias.length} pendências`}
+    </span>
+  );
+}
 
 /** Os filtros respondem à pergunta do dia, não a um campo do banco. */
 const SITUACOES = [
@@ -126,7 +153,7 @@ export default function CatalogoLista({
     p.opcoes.length
       ? `${p.variantes} variações`
       : p.estoque == null
-        ? "∞"
+        ? "Estoque não controlado"
         : p.estoque === 0
           ? <span className="font-medium text-red-700">esgotado</span>
           : `${p.estoque} em estoque`;
@@ -165,6 +192,8 @@ export default function CatalogoLista({
           <ListaDeRegistros
             itens={dados.produtos}
             carregando={carregando}
+            estilo="planilha"
+            rotulo="Produtos em formato de planilha"
             href={(p) => `/painel/produtos/${p.id}`}
             titulo={(p) => (
               <>
@@ -178,16 +207,7 @@ export default function CatalogoLista({
               <>
                 <b className="tabular-nums">{preco(p)}</b>
                 <span className="text-muted-foreground">{estoque(p)}</span>
-                {/* Sem foto é o problema mais caro de um catálogo grande, e
-                    aparece no lugar onde a decisão é tomada. */}
-                {!p.temFoto && (
-                  <span className="inline-flex items-center gap-1 rounded bg-amber-50 px-1.5 py-0.5 text-amber-800">
-                    <ImageOff size={10} aria-hidden="true" /> sem foto
-                  </span>
-                )}
-                {p.fotoMerchantRevisar && p.temFoto && <span className="rounded bg-amber-50 px-1.5 py-0.5 text-amber-800">imagem Merchant a revisar</span>}
-                {!p.marca && <span className="rounded bg-amber-50 px-1.5 py-0.5 text-amber-800">sem marca</span>}
-                {p.identificadoresPendentes && <span className="rounded bg-amber-50 px-1.5 py-0.5 text-amber-800">GTIN/MPN a confirmar</span>}
+                <PendenciasProduto produto={p} detalhadas />
               </>
             )}
             colunas={[
@@ -196,14 +216,6 @@ export default function CatalogoLista({
                   {p.destaque && "★ "}
                   {p.nome}
                   {!p.ativo && " (inativo)"}
-                  {!p.temFoto && (
-                    <span className="ml-2 inline-flex items-center gap-1 rounded bg-amber-50 px-1.5 py-0.5 text-[11px] text-amber-800">
-                      <ImageOff size={10} aria-hidden="true" /> sem foto
-                    </span>
-                  )}
-                  {p.fotoMerchantRevisar && p.temFoto && <span className="ml-2 inline-flex rounded bg-amber-50 px-1.5 py-0.5 text-[11px] text-amber-800">imagem Merchant a revisar</span>}
-                  {!p.marca && <span className="ml-2 inline-flex rounded bg-amber-50 px-1.5 py-0.5 text-[11px] text-amber-800">sem marca</span>}
-                  {p.identificadoresPendentes && <span className="ml-2 inline-flex rounded bg-amber-50 px-1.5 py-0.5 text-[11px] text-amber-800">GTIN/MPN a confirmar</span>}
                 </>
               ) },
               // Só aparece em loja que sincroniza com ERP: sem nenhum valor na
@@ -215,6 +227,7 @@ export default function CatalogoLista({
               { rotulo: "Código", celula: (p) => p.sku ?? "—", largura: "w-24" },
               { rotulo: "Preço", celula: preco, largura: "w-28", numero: true },
               { rotulo: "Estoque", celula: estoque, largura: "w-32", numero: true },
+              { rotulo: "Pendências", celula: (p) => <PendenciasProduto produto={p} />, largura: "w-36" },
             ]}
             acoes={(p) =>
               p.ativo ? (

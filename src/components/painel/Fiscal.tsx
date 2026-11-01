@@ -64,7 +64,7 @@ const documentoFormatado = (documento: string | null) => {
 };
 const dinheiro = (centavos: number | null) => centavos == null ? "—" : new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(centavos / 100);
 const serieDaChave = (chave: string | null) => chave && /^\d{44}$/.test(chave) ? String(Number(chave.slice(22, 25))) : "—";
-type ColunaOrdenacao = "emissao" | "numero" | "serie" | "tipo" | "documento" | "ie" | "nome" | "valor" | "situacao";
+type ColunaOrdenacao = "emissao" | "numero" | "serie" | "tipo" | "nome" | "valor" | "situacao";
 
 function tipoDocumento(schema: string) {
   if (schema.startsWith("resNFe")) return "Resumo de NF-e";
@@ -174,8 +174,6 @@ export default function Fiscal() {
     numero: Number(doc.numero) || 0,
     serie: Number(serieDaChave(doc.chave)) || 0,
     tipo: doc.operacao ?? "",
-    documento: doc.documentoFornecedor ?? "",
-    ie: doc.inscricaoEstadual ?? "",
     nome: doc.fornecedor ?? "",
     valor: doc.valorCentavos ?? 0,
     situacao: textoSituacao(doc, doc.manifestacao),
@@ -344,17 +342,17 @@ export default function Fiscal() {
               <p className="mb-2 text-xs text-muted-foreground">{estado.totais.completas} XML(s) completo(s) já disponíveis para download. Notas ainda sem XML completo dependem da disponibilização pela SEFAZ e, quando cabível, da manifestação fiscal autorizada do destinatário.</p>
               <p className="mb-3 text-xs text-muted-foreground">{notasOrdenadas.length} nota(s) única(s) nesta página. XML e PDF ficam disponíveis quando recebidos integralmente.</p>
               {!documentosSeparados.notas.length ? <p className="rounded-xl border border-border p-4 text-sm text-muted-foreground">Nenhuma NF-e encontrada neste lote.</p> : (
-                <>
-                  <ul className="divide-y divide-border sm:hidden">
+                <div className="fiscal-tabela-responsiva min-w-0">
+                  <ul className="fiscal-tabela-cartoes divide-y divide-border">
                     {notasOrdenadas.map((doc) => <DocumentoFiscal key={doc.id} doc={doc} selecionar={setDocumentoSelecionado} manifestar={manifestar} ocupado={ocupado === `manifestacao:${doc.id}`} erpId={doc.chave ? erpPorChave.get(doc.chave) : undefined} manifestacao={doc.manifestacao ?? (doc.chave ? manifestacoesPorChave.get(doc.chave) : null)} />)}
                   </ul>
-                  <div className="hidden overflow-x-auto rounded-xl border border-border sm:block">
-                    <table className="w-full min-w-[816px] table-fixed text-left text-xs">
-                      <thead className="sticky top-0 z-10 bg-muted text-muted-foreground"><tr><th className="w-24 whitespace-nowrap px-2 py-1.5">Arquivos</th>{([['emissao','Emissão','w-20'],['numero','Número','w-16'],['serie','Série','w-12'],['tipo','Tipo','hidden w-16 2xl:table-cell'],['documento','CNPJ/CPF','w-28'],['ie','IE','hidden w-28 2xl:table-cell'],['nome','Nome','w-36'],['valor','Valor','w-20 text-right'],['situacao','Situação','w-28']] as Array<[ColunaOrdenacao,string,string]>).map(([coluna, rotulo, classe]) => <th key={coluna} className={`px-2 py-1.5 ${classe}`}><button type="button" className="min-h-8 whitespace-nowrap font-semibold hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2" onClick={() => ordenar(coluna)}>{rotulo}{ordenacao.coluna === coluna ? (ordenacao.direcao === 'asc' ? ' ↑' : ' ↓') : ''}</button></th>)}<th className="w-20 px-2 py-1.5 text-right">Ações</th></tr></thead>
+                  <div className="fiscal-tabela-planilha overflow-x-auto overscroll-x-contain rounded-xl border border-border" tabIndex={0} role="region" aria-label="Notas fiscais em formato de planilha">
+                    <table className="w-full min-w-[856px] table-fixed text-left text-xs">
+                      <thead className="sticky top-0 z-10 bg-muted text-muted-foreground"><tr><th className="w-28 whitespace-nowrap px-2 py-1.5">Arquivos</th>{([['emissao','Data de emissão','w-24'],['numero','Número','w-16'],['serie','Série','w-12'],['tipo','Tipo','hidden w-16 2xl:table-cell'],['nome','Fornecedor','w-52'],['valor','Valor','w-20 text-right'],['situacao','Situação','w-44']] as Array<[ColunaOrdenacao,string,string]>).map(([coluna, rotulo, classe]) => <th key={coluna} className={`px-2 py-1.5 ${classe}`}><button type="button" className="min-h-8 whitespace-nowrap font-semibold hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2" onClick={() => ordenar(coluna)}>{rotulo}{ordenacao.coluna === coluna ? (ordenacao.direcao === 'asc' ? ' ↑' : ' ↓') : ''}</button></th>)}<th className="w-20 px-2 py-1.5 text-right">Ações</th></tr></thead>
                       <tbody className="divide-y divide-border">{notasOrdenadas.map((doc) => <LinhaDocumentoFiscal key={doc.id} doc={doc} manifestar={manifestar} ocupado={ocupado === `manifestacao:${doc.id}`} erpId={doc.chave ? erpPorChave.get(doc.chave) : undefined} manifestacao={doc.manifestacao ?? (doc.chave ? manifestacoesPorChave.get(doc.chave) : null)} />)}</tbody>
                     </table>
                   </div>
-                </>
+                </div>
               )}
             </div>
             <details className="min-w-0 border-t border-border pt-4">
@@ -436,11 +434,14 @@ function LinhaDocumentoFiscal({ doc, manifestacao, erpId, manifestar, ocupado }:
       <td className="px-2 py-2 font-medium">{doc.numero ?? "—"}</td>
       <td className="px-2 py-2">{serieDaChave(doc.chave)}</td>
       <td className="hidden px-2 py-2 2xl:table-cell">{doc.operacao ?? "—"}</td>
-      <td className="whitespace-nowrap px-2 py-2 font-mono text-[11px]">{documentoFormatado(doc.documentoFornecedor) ?? "—"}</td>
-      <td className="hidden px-2 py-2 font-mono text-[11px] 2xl:table-cell">{doc.inscricaoEstadual ?? "—"}</td>
-      <td className="max-w-56 px-2 py-2"><span className="block truncate" title={doc.fornecedor ?? undefined}>{doc.fornecedor ?? "Não informado"}</span></td>
+      <td className="max-w-52 px-2 py-2">
+        <span className="block whitespace-normal break-words font-medium" title={doc.fornecedor ?? undefined}>{doc.fornecedor ?? "Não informado"}</span>
+        <span className="mt-0.5 block whitespace-normal break-words font-mono text-[10px] text-muted-foreground">
+          {documentoFormatado(doc.documentoFornecedor) ?? "Documento não informado"}{doc.inscricaoEstadual ? ` · IE ${doc.inscricaoEstadual}` : ""}
+        </span>
+      </td>
       <td className="whitespace-nowrap px-2 py-2 text-right font-medium tabular-nums">{dinheiro(doc.valorCentavos)}</td>
-      <td className="max-w-36 px-2 py-2"><span className={`block truncate rounded-full px-2 py-1 text-center font-medium ${doc.situacao === "COMPLETA" ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-amber-900"}`} title={textoSituacao(doc, manifestacao)}>{textoSituacao(doc, manifestacao)}</span></td>
+      <td className="max-w-44 px-2 py-2"><span className={`block whitespace-normal break-words rounded-lg px-2 py-1 text-center font-medium ${doc.situacao === "COMPLETA" ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-amber-900"}`} title={textoSituacao(doc, manifestacao)}>{textoSituacao(doc, manifestacao)}</span></td>
       <td className="px-2 py-1.5 text-right"><div className="flex justify-end"><AcoesManifestacao doc={doc} manifestar={manifestar} ocupado={ocupado} compacto /></div></td>
     </tr>
   );
