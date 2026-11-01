@@ -138,6 +138,8 @@ jobs:
           path: artifacts/payloads/
           if-no-files-found: warn
           retention-days: 14
+      - name: Tirar baseline da raiz do Turbopack
+        run: mv .contract-baseline "$RUNNER_TEMP/lojas-contract-baseline"
       - run: npx prisma generate
       - run: npx prisma migrate deploy
       - name: Executar integrações e preservar evidência TAP e runtime
