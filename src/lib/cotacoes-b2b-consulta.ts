@@ -12,6 +12,7 @@ async function filtroComprador(tenantId: string, compradorId: string): Promise<P
   });
   return {
     tenantId,
+    compradorEmpresaId: { in: escopos.map(escopo => escopo.compradorEmpresaId) },
     compradorEmpresa: { compradorId, situacao: "ATIVO" },
     AND: [{ OR: escopos.map(escopo => ({
       compradorEmpresaId: escopo.compradorEmpresaId,
