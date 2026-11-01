@@ -23,7 +23,10 @@ export async function POST(request: Request) {
 
   try {
     const entrada = await request.json();
-    return Response.json(await criarSolicitacaoSobMedida(tenant.id, entrada), { status: 201, headers: cabecalhosDoLimite(limite) });
+    return Response.json(await criarSolicitacaoSobMedida(tenant.id, entrada), {
+      status: 201,
+      headers: { ...cabecalhosDoLimite(limite), "Cache-Control": "no-store" },
+    });
   } catch (erro) {
     if (erro instanceof ZodError) return Response.json({ erro: "Revise os dados informados.", detalhes: erro.flatten() }, { status: 422, headers: cabecalhosDoLimite(limite) });
     if (erro instanceof SyntaxError) return Response.json({ erro: "JSON inválido." }, { status: 400, headers: cabecalhosDoLimite(limite) });

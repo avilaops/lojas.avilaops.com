@@ -1,10 +1,11 @@
 "use client";
 
 import type { CSSProperties, FormEvent } from "react";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { ArrowRight, Box, CheckCircle2, Rotate3D } from "lucide-react";
 import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
+import { lerUltimoCodigoRetomada, salvarUltimoCodigoRetomada } from "@/lib/configurador-retomada";
 import { LIMITES_EDITOR_SOB_MEDIDA, OPCOES_CONFIGURADOR, resumoDaConfiguracao, type ConfiguracaoSobMedida } from "@/lib/configurador-sob-medida";
 
 const INICIAL: ConfiguracaoSobMedida = {
@@ -18,20 +19,37 @@ const INICIAL: ConfiguracaoSobMedida = {
   observacoes: "",
 };
 
-type Resposta = { referencia: string; criadoEm: string };
+type Resposta = { referencia: string; criadoEm: string; codigoRetomada: string };
+type RespostaRetomada = { referencia: string; contratoVersao: number; configuracao: ConfiguracaoSobMedida };
 type Variaveis3D = CSSProperties & Record<`--${string}`, string>;
 
 function Opcoes({ valores }: { valores: Record<string, string> }) {
   return Object.entries(valores).map(([valor, rotulo]) => <option key={valor} value={valor}>{rotulo}</option>);
 }
 
-export default function ConfiguradorClient({ nomeDaLoja, whatsapp }: { nomeDaLoja: string; whatsapp: string | null }) {
+function assinarMudancasNoStorage(aoMudar: () => void) {
+  window.addEventListener("storage", aoMudar);
+  return () => window.removeEventListener("storage", aoMudar);
+}
+
+export default function ConfiguradorClient({ nomeDaLoja, slugDaLoja, whatsapp }: { nomeDaLoja: string; slugDaLoja: string; whatsapp: string | null }) {
   const [configuracao, setConfiguracao] = useState(INICIAL);
   const [rotacao, setRotacao] = useState({ x: -18, y: 32 });
   const [contato, setContato] = useState({ nome: "", email: "", telefone: "", consentimento: false });
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState("");
   const [resposta, setResposta] = useState<Resposta | null>(null);
+  const [codigoDigitado, setCodigoDigitado] = useState("");
+  const [codigoRetomadaOrigem, setCodigoRetomadaOrigem] = useState("");
+  const [retomando, setRetomando] = useState(false);
+  const [mensagemRetomada, setMensagemRetomada] = useState("");
+
+  const codigoSalvo = useSyncExternalStore(
+    assinarMudancasNoStorage,
+    () => lerUltimoCodigoRetomada(slugDaLoja, window.localStorage),
+    () => null,
+  );
+  const codigoRetomada = codigoDigitado || codigoSalvo || "";
 
   const resumo = useMemo(() => resumoDaConfiguracao(configuracao), [configuracao]);
   const visual = useMemo<Variaveis3D>(() => {
@@ -61,15 +79,45 @@ export default function ConfiguradorClient({ nomeDaLoja, whatsapp }: { nomeDaLoj
       const requisicao = await fetch("/api/configurador", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ configuracao, ...contato }),
+        body: JSON.stringify({ configuracao, ...contato, codigoRetomadaOrigem: codigoRetomadaOrigem || undefined }),
       });
       const corpo = await requisicao.json().catch(() => ({}));
       if (!requisicao.ok) throw new Error(corpo.erro ?? "Não foi possível enviar a solicitação.");
-      setResposta(corpo as Resposta);
+      const recebida = corpo as Resposta;
+      setResposta(recebida);
+      setCodigoDigitado(recebida.codigoRetomada);
+      setCodigoRetomadaOrigem(recebida.codigoRetomada);
+      salvarUltimoCodigoRetomada(slugDaLoja, recebida.codigoRetomada, window.localStorage);
     } catch (falha) {
       setErro(falha instanceof Error ? falha.message : "Não foi possível enviar a solicitação.");
     } finally {
       setEnviando(false);
+    }
+  }
+
+  async function retomar(evento: FormEvent<HTMLFormElement>) {
+    evento.preventDefault();
+    setRetomando(true);
+    setErro("");
+    setMensagemRetomada("");
+    try {
+      const requisicao = await fetch("/api/configurador/retomar", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ codigoRetomada }),
+      });
+      const corpo = await requisicao.json().catch(() => ({}));
+      if (!requisicao.ok) throw new Error(corpo.erro ?? "Não foi possível retomar a configuração.");
+      const retomada = corpo as RespostaRetomada;
+      setConfiguracao(retomada.configuracao);
+      setCodigoRetomadaOrigem(codigoRetomada);
+      setResposta(null);
+      setMensagemRetomada(`Configuração ${retomada.referencia} retomada. Confira a ficha e informe o contato para enviar uma nova solicitação.`);
+      salvarUltimoCodigoRetomada(slugDaLoja, codigoRetomada, window.localStorage);
+    } catch (falha) {
+      setErro(falha instanceof Error ? falha.message : "Não foi possível retomar a configuração.");
+    } finally {
+      setRetomando(false);
     }
   }
 
@@ -84,6 +132,18 @@ export default function ConfiguradorClient({ nomeDaLoja, whatsapp }: { nomeDaLoj
         <h1>Desenhe a caixa térmica que sua operação precisa.</h1>
         <p>Ajuste o modelo, confira a ficha e envie para a fábrica analisar. A visualização orienta o orçamento; medidas e viabilidade serão confirmadas pela equipe técnica.</p>
       </header>
+
+      <section className="configurador-retomada container-loja" aria-labelledby="titulo-retomada">
+        <div>
+          <h2 id="titulo-retomada">Retomar uma configuração</h2>
+          <p>Use o código privado recebido no envio anterior. Observações e dados de contato não são recuperados.</p>
+        </div>
+        <form onSubmit={retomar}>
+          <label>Código privado de retomada<input required autoComplete="off" spellCheck={false} value={codigoRetomada} onChange={(evento) => setCodigoDigitado(evento.target.value.trim())} /></label>
+          <button className="btn-secundario" type="submit" disabled={retomando}>{retomando ? "Retomando…" : "Retomar ficha"}</button>
+        </form>
+        {mensagemRetomada && <p className="configurador-retomada-status" role="status">{mensagemRetomada}</p>}
+      </section>
 
       <div className="configurador-grade container-loja">
         <section className="configurador-visual" aria-labelledby="titulo-visual">
@@ -147,7 +207,7 @@ export default function ConfiguradorClient({ nomeDaLoja, whatsapp }: { nomeDaLoj
           {erro && <p className="configurador-erro" role="alert">{erro}</p>}
           {resposta && (
             <div className="configurador-sucesso" role="status">
-              <CheckCircle2 aria-hidden="true" /><div><strong>Configuração recebida</strong><p>Referência: <b>{resposta.referencia}</b>. Guarde este código para falar com a fábrica.</p></div>
+              <CheckCircle2 aria-hidden="true" /><div><strong>Configuração recebida</strong><p>Referência: <b>{resposta.referencia}</b>.</p><p>Guarde o código privado para retomar esta ficha depois: <code>{resposta.codigoRetomada}</code></p></div>
               {whatsapp && <a href={linkWhatsApp(whatsapp, mensagemWhatsApp)} target="_blank" rel="noopener">Continuar no WhatsApp <ArrowRight aria-hidden="true" /></a>}
             </div>
           )}

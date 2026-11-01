@@ -55,6 +55,7 @@ export const EntradaSolicitacaoSobMedidaSchema = z.object({
   email: emailOpcional.default(""),
   telefone: telefoneOpcional.default(""),
   consentimento: z.literal(true),
+  codigoRetomadaOrigem: texto(80).optional(),
 }).superRefine((entrada, contexto) => {
   if (!entrada.email && !entrada.telefone) contexto.addIssue({ code: z.ZodIssueCode.custom, path: ["email"], message: "Informe e-mail ou telefone." });
 });
