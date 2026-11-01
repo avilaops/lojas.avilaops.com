@@ -5,7 +5,8 @@ Este diretorio e o registro compartilhado de trabalho de `avila-lojas-avilaops-c
 ## Rotina
 
 1. Leia o AGENTS.md da raiz, o contexto e o registro de controle.
-2. Cadastre as pessoas reais da equipe antes de atribuir tarefas.
+2. Cadastre identidades reais; identifique agentes como agentes. O responsável
+   técnico padrão de Lojas é `codex`, conforme orientação do proprietário.
 3. Registre cada demanda com objetivo, responsavel e criterios de aceite.
 4. Atualize o estado ao iniciar, bloquear, enviar para revisao ou concluir.
 5. Para concluir, registre a evidencia da verificacao e a revisao pertinente.
@@ -17,7 +18,8 @@ Este diretorio e o registro compartilhado de trabalho de `avila-lojas-avilaops-c
 - [Registro](controle.json): pessoas, tarefas, decisoes e integracoes.
 - [Modelo de demanda](MODELO-DE-DEMANDA.md): contrato de entrega e passagem entre pessoas.
 
-O arquivo inicia vazio porque nao foram informados membros nem demandas concretas.
+Demandas sem atribuição explícita pertencem ao responsável padrão do projeto.
+O relatório MLOps resolve essa herança sem apagar atribuições ou histórico.
 Esta estrutura coordena pessoas e agentes; nao delega trabalho ou envia mensagens automaticamente.
 Versione os registros junto ao projeto. Em conflitos, preserve os IDs e reconcilie as evidencias.
 

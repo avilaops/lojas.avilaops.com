@@ -1,75 +1,80 @@
 {
   "schemaVersion": 1,
   "application": "avila-lojas-avilaops-com",
-  "members": [],
+  "projectOwner": "codex",
+  "members": [
+    {
+      "id": "codex",
+      "name": "Codex",
+      "type": "agent",
+      "role": "Responsável técnico de Lojas",
+      "source": "Orientação explícita do proprietário em 2026-10-28"
+    }
+  ],
   "tasks": [
     {
-      "id": "AVL-400",
-      "title": "Criar configurador 3D de caixas térmicas sob medida para a MRG",
-      "objective": "Permitir que o cliente configure uma intenção de produto, visualize o volume em 3D e envie uma ficha estruturada para análise da fábrica.",
-      "assignee": null,
+      "id": "MLOPS-PAYLOAD-CUPOM-20261028",
+      "title": "Contrato executável de payload cupom v1",
+      "objective": "Fechar entrada, saída, erros, consumidor e gate de compatibilidade do módulo.",
+      "assignee": "codex",
       "priority": "alta",
       "status": "em-revisao",
       "acceptanceCriteria": [
-        "O recurso é isolado por tenant e pode ser desligado globalmente.",
-        "A configuração paramétrica é validada novamente no servidor.",
-        "A prévia 3D responde às medidas e opções em celular e desktop.",
-        "A solicitação é persistida com referência, versão e consentimento.",
-        "A interface não inventa preço, capacidade ou aprovação de fabricação.",
-        "Testes, TypeScript, lint e build são aprovados antes da revisão."
+        "Schemas usados pela rota real; validação de saída e recusa uniforme preservadas.",
+        "Exportação fail-closed e compatibilidade direcional contra baseline explícito.",
+        "Consumidor independente e respostas do Postgres conferidos na CI.",
+        "Artefatos com SHAs/hashes; nenhum teste ou build no servidor."
       ],
-      "evidence": "Ticket Linear AVL-400; spec e plano em docs/superpowers; 1307 testes aprovados após a revisão; TypeScript, lint sem erros e build Next.js aprovados; fila operacional tenant-safe incluída no painel.",
-      "review": "Autorrevisão do diff: tenant e feature flag preservados, PII fora de URLs e WhatsApp, e nenhuma promessa de preço, capacidade ou viabilidade fabril.",
-      "environment": "local",
-      "owner": null,
-      "blocker": "",
+      "evidence": "RED: CI 40639817817. Integração e primeiros contratos aprovados em 1556949, CI 40640110997. Revisão reproduziu coerção/UTF-16 na CI 40640349284; correções implementadas. CI do HEAD final será vinculada no PR 178 e na AVL-343.",
       "history": [
         {
-          "at": "2026-10-31",
-          "status": "em-andamento",
-          "note": "Contrato, persistência, API pública e editor visual implementados em worktree isolado."
-        },
-        {
-          "at": "2026-10-31",
-          "status": "em-revisao",
-          "note": "Suíte completa, TypeScript, lint e build aprovados; link de descoberta adicionado aos cabeçalhos desktop e móvel."
+          "at": "2026-10-28",
+          "note": "Desenvolvimento solicitado até o fim de cada módulo; retomada AVL-343."
         }
       ]
     },
     {
-      "id": "AVL-401",
-      "title": "Salvar e reabrir configurações 3D da MRG com segurança",
-      "objective": "Permitir que o cliente retome a ficha técnica sem expor contato, observações pessoais ou a chave privada no banco e nas URLs.",
-      "assignee": null,
+      "id": "MLOPS-ESTRUTURA-20261028",
+      "title": "Estruturar desenvolvimento de Lojas no padrão MLOps",
+      "objective": "Vincular módulos, fontes, contratos, planos funcionais e responsáveis ao CI usando Experiments.",
+      "assignee": "codex",
       "priority": "alta",
-      "status": "concluida",
+      "status": "em-andamento",
       "acceptanceCriteria": [
-        "A chave privada é entregue uma vez e somente o hash é persistido.",
-        "A retomada usa POST, é isolada por tenant e não revela se referência ou chave existem.",
-        "Somente a ficha técnica é restaurada; contato e observações permanecem vazios.",
-        "Uma nova solicitação preserva a referência da origem comprovada.",
-        "Testes, TypeScript, lint e build são aprovados antes da revisão."
+        "Demandas sem atribuição herdam o responsável técnico do projeto sem apagar histórico.",
+        "CMS é registrado como módulo com integração pendente, sem declaração fictícia de prontidão.",
+        "Perfil validável recusa fontes ausentes, ciclos e responsáveis desconhecidos.",
+        "Plano cotação/pedido usa o avaliador real do Experiments e permanece not_run sem observações.",
+        "GitHub CI valida a estrutura e preserva relatório com versões e hashes."
       ],
-      "evidence": "Ticket Linear AVL-401; PRs #185 e #186 mesclados; 1315 testes aprovados; TypeScript aprovado; lint sem erros e com 24 avisos preexistentes; build Next.js aprovado no Node 22; migração e integração aprovadas no PostgreSQL 18 do CI; deploy c8cbac1 e fumaça aprovados no run 41271409737; página e API de retomada verificadas em mrgcaixastermicas.com.br.",
-      "review": "Autorrevisão: a chave tem 128 bits aleatórios, só o SHA-256 chega ao banco, a retomada usa POST e limite por tenant/IP, a consulta seleciona apenas a ficha técnica e uma nova solicitação só referencia origem validada. A revisão do PR também originou cobertura para navegadores que bloqueiam o getter de localStorage.",
-      "environment": "producao",
-      "owner": null,
-      "blocker": "",
+      "evidence": "Implementação na branch codex/avl-343-lojas-contracts e PR 178; resultado deste incremento será registrado no PR após a CI.",
       "history": [
         {
-          "at": "2026-11-01",
-          "status": "em-andamento",
-          "note": "Contrato de retomada, hash da chave, isolamento por tenant, migração e interface implementados com testes vermelhos antes do código."
-        },
+          "at": "2026-10-28",
+          "note": "Proprietário definiu Codex como responsável de Lojas e MLOps como padrão; desenvolvimento começa pela estrutura comum."
+        }
+      ]
+    },
+    {
+      "id": "AVL-343-LOJAS",
+      "title": "Primeiro gate de contratos Lojas integrado ao Experiments",
+      "objective": "Inventariar fontes e impedir remoções da API v1 no CI existente, alinhado a OMNI-0 e OMNI-3.5.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-andamento",
+      "acceptanceCriteria": [
+        "Analisador de Experiments fixado por commit, sem dependência de runtime.",
+        "Baseline explícito por SHA e incompatibilidades de rota bloqueiam a imagem.",
+        "Relatórios preservam pendências e não atribuem verificação funcional.",
+        "Testes e build executados exclusivamente no GitHub CI."
+      ],
+      "evidence": "Primeiro incremento aprovado no HEAD a94414e: https://github.com/avilaops/lojas.avilaops.com/actions/runs/40635545108. 1289 testes da aplicação, 196 de integração e 6 do gate. A continuação acrescenta a estrutura de desenvolvimento MLOps e aguarda sua própria CI.",
+      "review": "Incremento parcial da AVL-343; schemas de payload, consumidores e semântica continuam fora deste gate.",
+      "environment": "checkout-desenvolvimento",
+      "history": [
         {
-          "at": "2026-11-01",
-          "status": "em-revisao",
-          "note": "Testes, TypeScript, lint e build Node 22 aprovados. Prova de migração local indisponível por ausência do Docker; o CI executa migrate deploy e testes de integração em PostgreSQL 18."
-        },
-        {
-          "at": "2026-11-01",
-          "status": "concluida",
-          "note": "PRs #185 e #186 mesclados; integração, imagem, deploy e fumaça aprovados. Produção serve c8cbac1 e a API retorna erro genérico para código inválido."
+          "at": "2026-10-28",
+          "note": "Início autorizado; contexto Lojas 360 e Experiments conferido."
         }
       ]
     },
@@ -677,16 +682,16 @@
         "A recompra só parte de cotação convertida e recalcula os preços comerciais vigentes."
       ],
       "evidence": [
-        "Prisma validado e cliente regenerado após a modelagem.",
-        "Três testes unitários direcionados aprovados para totais, alçadas, exceção comercial e estados.",
-        "Suíte geral concluída com 1.125 testes aprovados e nenhuma falha.",
-        "TypeScript concluído sem erros após as correções de contrato.",
-        "ESLint concluído sem erros; 20 avisos preexistentes permanecem fora do escopo.",
-        "Build de produção concluído e listou todas as rotas administrativas, do painel e da conta para cotações B2B.",
-        "Testes de integração dependem do PostgreSQL descartável local na porta 5548; Docker não está instalado neste host."
+        "CI 40642109382 reproduziu três regressões B2B: projeção privada, concorrência e rollback da conversão; as 196 integrações anteriores permaneceram aprovadas.",
+        "Commit 0d24e1b tornou reserva, pedido e evento atômicos, protegeu a projeção do comprador e validou limites monetários.",
+        "CI 40642445847 aprovou contratos, 199 integrações e build/imagem de produção.",
+        "Commit e683db3 adicionou isolamento negativo entre tenants, empresas e alçadas sem efeitos persistidos.",
+        "CI 40643437724 aprovou 200 de 201 integrações e revelou conflito serializável P2034 entre aprovações paralelas; a correção usa repetição limitada ao código P2034.",
+        "CI 40643743785 aprovou contratos, 201 integrações e build após a correção P2034.",
+        "Incremento atual preserva unidade no pedido e adiciona adapter verificável para quatro das oito dimensões; CI ainda pendente."
       ],
-      "review": "Implementação local em andamento; a integração PostgreSQL isolada e a revisão final após essa prova ainda estão pendentes. Sem commit, push ou publicação.",
-      "environment": "local"
+      "review": "PR 178 em rascunho; adapter MLOps e preservação da unidade aguardam CI. Interface operacional e quatro dimensões funcionais continuam pendentes.",
+      "environment": "github-ci"
     },
     {
       "id": "OMNI-0.2",
@@ -1044,6 +1049,76 @@
           "at": "2026-10-31",
           "status": "em-revisao",
           "note": "Implementação em checkout separado via Desktop Commander; código enviado pelo conector GitHub."
+        }
+      ]
+    },
+    {
+      "id": "AVL-400",
+      "title": "Criar configurador 3D de caixas térmicas sob medida para a MRG",
+      "objective": "Permitir que o cliente configure uma intenção de produto, visualize o volume em 3D e envie uma ficha estruturada para análise da fábrica.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "O recurso é isolado por tenant e pode ser desligado globalmente.",
+        "A configuração paramétrica é validada novamente no servidor.",
+        "A prévia 3D responde às medidas e opções em celular e desktop.",
+        "A solicitação é persistida com referência, versão e consentimento.",
+        "A interface não inventa preço, capacidade ou aprovação de fabricação.",
+        "Testes, TypeScript, lint e build são aprovados antes da revisão."
+      ],
+      "evidence": "Ticket Linear AVL-400; spec e plano em docs/superpowers; 1307 testes aprovados após a revisão; TypeScript, lint sem erros e build Next.js aprovados; fila operacional tenant-safe incluída no painel.",
+      "review": "Autorrevisão do diff: tenant e feature flag preservados, PII fora de URLs e WhatsApp, e nenhuma promessa de preço, capacidade ou viabilidade fabril.",
+      "environment": "local",
+      "owner": null,
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-10-31",
+          "status": "em-andamento",
+          "note": "Contrato, persistência, API pública e editor visual implementados em worktree isolado."
+        },
+        {
+          "at": "2026-10-31",
+          "status": "em-revisao",
+          "note": "Suíte completa, TypeScript, lint e build aprovados; link de descoberta adicionado aos cabeçalhos desktop e móvel."
+        }
+      ]
+    },
+    {
+      "id": "AVL-401",
+      "title": "Salvar e reabrir configurações 3D da MRG com segurança",
+      "objective": "Permitir que o cliente retome a ficha técnica sem expor contato, observações pessoais ou a chave privada no banco e nas URLs.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "concluida",
+      "acceptanceCriteria": [
+        "A chave privada é entregue uma vez e somente o hash é persistido.",
+        "A retomada usa POST, é isolada por tenant e não revela se referência ou chave existem.",
+        "Somente a ficha técnica é restaurada; contato e observações permanecem vazios.",
+        "Uma nova solicitação preserva a referência da origem comprovada.",
+        "Testes, TypeScript, lint e build são aprovados antes da revisão."
+      ],
+      "evidence": "Ticket Linear AVL-401; PRs #185 e #186 mesclados; 1315 testes aprovados; TypeScript aprovado; lint sem erros e com 24 avisos preexistentes; build Next.js aprovado no Node 22; migração e integração aprovadas no PostgreSQL 18 do CI; deploy c8cbac1 e fumaça aprovados no run 41271409737; página e API de retomada verificadas em mrgcaixastermicas.com.br.",
+      "review": "Autorrevisão: a chave tem 128 bits aleatórios, só o SHA-256 chega ao banco, a retomada usa POST e limite por tenant/IP, a consulta seleciona apenas a ficha técnica e uma nova solicitação só referencia origem validada. A revisão do PR também originou cobertura para navegadores que bloqueiam o getter de localStorage.",
+      "environment": "producao",
+      "owner": null,
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-11-01",
+          "status": "em-andamento",
+          "note": "Contrato de retomada, hash da chave, isolamento por tenant, migração e interface implementados com testes vermelhos antes do código."
+        },
+        {
+          "at": "2026-11-01",
+          "status": "em-revisao",
+          "note": "Testes, TypeScript, lint e build Node 22 aprovados. Prova de migração local indisponível por ausência do Docker; o CI executa migrate deploy e testes de integração em PostgreSQL 18."
+        },
+        {
+          "at": "2026-11-01",
+          "status": "concluida",
+          "note": "PRs #185 e #186 mesclados; integração, imagem, deploy e fumaça aprovados. Produção serve c8cbac1 e a API retorna erro genérico para código inválido."
         }
       ]
     }

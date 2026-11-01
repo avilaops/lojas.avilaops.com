@@ -8,6 +8,8 @@ import { CUPOM_INVALIDO, MENSAGEM_CUPOM_INVALIDO } from "./checkout-cobranca";
 import { buscarCupomValido, descontoDoCupom, normalizarCodigo } from "./cupons";
 import { cotarFrete } from "./frete";
 import { enderecoDaRequisicao } from "./requisicao-origem";
+import { ConsultaDeCupom } from "./api-cupom-contrato";
+export { ConsultaDeCupom } from "./api-cupom-contrato";
 
 /**
  * Cupom pela chave publicável.
@@ -57,15 +59,6 @@ export function registrarCupomRecusado(chaveId: string, request: Request) {
 export function cupomRecusado(): ErroApi {
   return new ErroApi("pedido_invalido", MENSAGEM_CUPOM_INVALIDO, {}, CUPOM_INVALIDO);
 }
-
-export const ConsultaDeCupom = z
-  .object({
-    codigo: z.string().trim().min(1).max(40),
-    itens: z.array(z.object({ id: z.string().trim().min(1).max(80), quantidade: z.number().int().min(1).max(999) }).strict()).min(1).max(50),
-    /** Só para cupom de frete grátis: com o CEP, a resposta traz as opções de entrega já com ele. */
-    cep: z.string().trim().min(8, "CEP com 8 dígitos").max(9).optional(),
-  })
-  .strict();
 
 /**
  * Confere um cupom para um carrinho. Só informa: quem aplica é a compra, que

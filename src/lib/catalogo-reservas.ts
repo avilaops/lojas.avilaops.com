@@ -17,41 +17,43 @@ async function projetarComEvento(tx: Tx, tenantId: string, ids: string[]) {
 }
 
 /** Reserva antes da cobrança, na mesma ordem de locks usada na edição. */
-export async function reservarEstoque(tenantId: string, referencia: string, itens: ItemCarrinho[], opcoes: { validarPreco?: boolean } = {}) {
+export async function reservarEstoqueNaTransacao(tx: Tx, tenantId: string, referencia: string, itens: ItemCarrinho[], opcoes: { validarPreco?: boolean } = {}) {
   if (!referencia || referencia.length>120 || !itens.length) throw new ErroCatalogo("Referência de checkout inválida.");
   const hash = createHash("sha256").update(JSON.stringify(itens.map(i=>[i.id,i.quantidade,i.precoUnitario]).sort())).digest("hex");
+  await permitirProjecao(tx);
+  if (await tx.pedido.findUnique({ where: { referencia }, select: { id: true } })) throw new ErroCatalogo("Esta tentativa já foi recebida. Consulte o pedido antes de tentar pagar novamente.", 409);
+  // Unicidade impede duas cobranças concorrentes da mesma tentativa.
+  await tx.tentativaCatalogo.create({ data: { tenantId, referencia, resumoHash: hash } });
+  const produtoIds = [...new Set(itens.map(i=>i.id.split(":")[0]))].sort();
+  const produtos = [];
+  for (const id of produtoIds) produtos.push(await travarProduto(tx, tenantId, id));
+  const porVariante = new Map<string,{ quantidade:number; preco:number; produtoId:string }>();
+  for (const item of itens) {
+    const [produtoId,varianteId] = item.id.split(":");
+    if (!varianteId || !Number.isSafeInteger(item.quantidade) || item.quantidade<1) throw new ErroCatalogo("Unidade vendável inválida.");
+    const anterior = porVariante.get(varianteId);
+    porVariante.set(varianteId,{ produtoId, quantidade:(anterior?.quantidade??0)+item.quantidade, preco:item.precoUnitario });
+  }
+  for (const [varianteId,item] of [...porVariante.entries()].sort()) {
+    const p = produtos.find(p=>p.id===item.produtoId);
+    const original = p?.variantes.find(v=>v.id===varianteId);
+    const v = original && ofertaDaVariante(original);
+    if (p && !dispensavelADistancia(p)) throw new ErroCatalogo("Este medicamento é de controle especial e só pode ser dispensado presencialmente.",422);
+    if (!p?.ativo || !v?.compravel || (opcoes.validarPreco !== false && v.precoCentavos!==item.preco) || (v.estoque!=null && v.estoque<item.quantidade)) throw new ErroCatalogo("Preço ou estoque mudou. Revise o carrinho antes de pagar.",409);
+    const saldo = v.saldos.find(s=>s.local==="principal");
+    if (!saldo) throw new ErroCatalogo("Estoque da apresentação não cadastrado.");
+    if (saldo.fisico!=null) {
+      const atualizado = await tx.saldoEstoque.updateMany({ where: { id:saldo.id, reservado:saldo.reservado, fisico:{gte:saldo.reservado+item.quantidade} }, data:{reservado:{increment:item.quantidade}} });
+      if (!atualizado.count) throw new ErroCatalogo("A última unidade acabou de ser reservada.",409);
+    }
+    await tx.reservaEstoque.create({data:{tenantId,referencia,varianteId,quantidade:item.quantidade}});
+  }
+  await projetarComEvento(tx,tenantId,produtoIds);
+}
+
+export async function reservarEstoque(tenantId: string, referencia: string, itens: ItemCarrinho[], opcoes: { validarPreco?: boolean } = {}) {
   try {
-    return await prisma.$transaction(async tx=>{
-      await permitirProjecao(tx);
-      if (await tx.pedido.findUnique({ where: { referencia }, select: { id: true } })) throw new ErroCatalogo("Esta tentativa já foi recebida. Consulte o pedido antes de tentar pagar novamente.", 409);
-      // Unicidade impede duas cobranças concorrentes da mesma tentativa.
-      await tx.tentativaCatalogo.create({ data: { tenantId, referencia, resumoHash: hash } });
-      const produtoIds = [...new Set(itens.map(i=>i.id.split(":")[0]))].sort();
-      const produtos = [];
-      for (const id of produtoIds) produtos.push(await travarProduto(tx, tenantId, id));
-      const porVariante = new Map<string,{ quantidade:number; preco:number; produtoId:string }>();
-      for (const item of itens) {
-        const [produtoId,varianteId] = item.id.split(":");
-        if (!varianteId || !Number.isSafeInteger(item.quantidade) || item.quantidade<1) throw new ErroCatalogo("Unidade vendável inválida.");
-        const anterior = porVariante.get(varianteId);
-        porVariante.set(varianteId,{ produtoId, quantidade:(anterior?.quantidade??0)+item.quantidade, preco:item.precoUnitario });
-      }
-      for (const [varianteId,item] of [...porVariante.entries()].sort()) {
-        const p = produtos.find(p=>p.id===item.produtoId);
-        const original = p?.variantes.find(v=>v.id===varianteId);
-        const v = original && ofertaDaVariante(original);
-        if (p && !dispensavelADistancia(p)) throw new ErroCatalogo("Este medicamento é de controle especial e só pode ser dispensado presencialmente.",422);
-        if (!p?.ativo || !v?.compravel || (opcoes.validarPreco !== false && v.precoCentavos!==item.preco) || (v.estoque!=null && v.estoque<item.quantidade)) throw new ErroCatalogo("Preço ou estoque mudou. Revise o carrinho antes de pagar.",409);
-        const saldo = v.saldos.find(s=>s.local==="principal");
-        if (!saldo) throw new ErroCatalogo("Estoque da apresentação não cadastrado.");
-        if (saldo.fisico!=null) {
-          const atualizado = await tx.saldoEstoque.updateMany({ where: { id:saldo.id, reservado:saldo.reservado, fisico:{gte:saldo.reservado+item.quantidade} }, data:{reservado:{increment:item.quantidade}} });
-          if (!atualizado.count) throw new ErroCatalogo("A última unidade acabou de ser reservada.",409);
-        }
-        await tx.reservaEstoque.create({data:{tenantId,referencia,varianteId,quantidade:item.quantidade}});
-      }
-      await projetarComEvento(tx,tenantId,produtoIds);
-    },{timeout:20000});
+    return await prisma.$transaction(tx=>reservarEstoqueNaTransacao(tx, tenantId, referencia, itens, opcoes),{timeout:20000});
   } catch(e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code==="P2002") throw new ErroCatalogo("Esta tentativa já foi recebida. Consulte o pedido antes de tentar pagar novamente.",409);
     throw e;

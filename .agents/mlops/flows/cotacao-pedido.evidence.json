@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "flow-evidence-map/1",
+  "flowId": "lojas-cotacao-pedido",
+  "checks": [
+    {
+      "checkId": "isolamento",
+      "tests": [
+        "outra loja não lê, avança nem converte a cotação",
+        "aprovação recusa vínculo de outra empresa e valor acima da alçada"
+      ]
+    },
+    {
+      "checkId": "preco",
+      "tests": [
+        "negociação preserva versões e conversão idempotente preserva o preço aprovado"
+      ]
+    },
+    {
+      "checkId": "idempotencia",
+      "tests": [
+        "negociação preserva versões e conversão idempotente preserva o preço aprovado",
+        "conversão concorrente gera um pedido, uma reserva e um evento"
+      ]
+    },
+    {
+      "checkId": "resposta",
+      "tests": [
+        "negociação preserva versões e conversão idempotente preserva o preço aprovado"
+      ]
+    }
+  ]
+}

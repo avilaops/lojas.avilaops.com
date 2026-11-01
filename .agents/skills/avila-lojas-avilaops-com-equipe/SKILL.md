@@ -7,7 +7,7 @@ description: Coordene a equipe desta aplicacao quando o usuario pedir distribuic
 
 1. Confirme que a raiz do checkout corresponde a `avila-lojas-avilaops-com`; leia AGENTS.md e `.agents/equipe/README.md`.
 2. Leia `.agents/equipe/CONTEXTO.md` e `.agents/equipe/controle.json`. Consulte o codigo e os manifestos quando o pedido depender de fatos tecnicos.
-3. Use apenas membros cadastrados. Se faltar a identidade de quem deve receber uma demanda, mantenha-a sem atribuicao no relato e solicite o dado antes de cadastrar a tarefa.
+3. Use identidades cadastradas, distinguindo pessoa e agente. Em Lojas, demandas sem atribuição explícita pertencem ao responsável padrão `codex`, autorizado pelo proprietário em 28/10/2026; não solicite novamente responsável para campos nulos. Preserve atribuições explícitas.
 4. Registre tarefas reais com objetivo, responsavel, prioridade e criterios de aceite. Preserve IDs, historico e alteracoes de outros colaboradores.
 5. Ao atualizar status, registre motivo de bloqueio ou evidencia de conclusao. Uma implementacao local nao comprova publicacao em producao.
 6. Registre decisoes com justificativa e evidencia. Integrações precisam de ambiente, identidade nao secreta e verificacao real de acesso.
