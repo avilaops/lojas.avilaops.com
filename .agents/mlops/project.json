@@ -82,6 +82,74 @@
           "path": "src/lib/cotacoes-b2b.test.ts"
         },
         {
+          "kind": "code",
+          "path": "src/lib/catalogo-reservas.ts"
+        },
+        {
+          "kind": "test",
+          "path": "tests/integration/cotacoes-b2b-atomicidade.test.ts"
+        },
+        {
+          "kind": "test",
+          "path": "tests/helpers/mlops-evidence.ts"
+        },
+        {
+          "kind": "code",
+          "path": "src/components/b2b/Cotacoes.tsx"
+        },
+        {
+          "kind": "code",
+          "path": "src/lib/cotacoes-b2b-consulta.ts"
+        },
+        {
+          "kind": "code",
+          "path": "src/lib/cotacoes-b2b-erros.ts"
+        },
+        {
+          "kind": "code",
+          "path": "src/lib/cotacoes-b2b-form.ts"
+        },
+        {
+          "kind": "test",
+          "path": "src/lib/cotacoes-b2b-form.test.ts"
+        },
+        {
+          "kind": "code",
+          "path": "src/app/api/painel/cotacoes-b2b/route.ts"
+        },
+        {
+          "kind": "code",
+          "path": "src/app/api/painel/cotacoes-b2b/[cotacaoId]/route.ts"
+        },
+        {
+          "kind": "code",
+          "path": "src/app/api/painel/cotacoes-b2b/referencias/route.ts"
+        },
+        {
+          "kind": "code",
+          "path": "src/app/api/conta/cotacoes-b2b/route.ts"
+        },
+        {
+          "kind": "code",
+          "path": "src/app/api/conta/cotacoes-b2b/[cotacaoId]/route.ts"
+        },
+        {
+          "kind": "code",
+          "path": "src/app/api/conta/cotacoes-b2b/referencias/route.ts"
+        },
+        {
+          "kind": "code",
+          "path": "src/app/conta/cotacoes/page.tsx"
+        },
+        {
+          "kind": "code",
+          "path": "src/app/plataforma/(admin)/painel/cotacoes/page.tsx"
+        },
+        {
+          "kind": "test",
+          "path": "scripts/qa-cotacoes-b2b.mts"
+        },
+        {
           "kind": "contract",
           "path": ".agents/mlops/flows/cotacao-pedido.evidence.json"
         },

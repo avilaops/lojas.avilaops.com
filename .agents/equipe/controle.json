@@ -13,6 +13,22 @@
   ],
   "tasks": [
     {
+      "id": "B2B-CONCLUSAO-MODULO-20261028",
+      "title": "Concluir módulo de comércio B2B e evidências funcionais",
+      "objective": "Completar domínio, contratos e operação de cotação/pedido até sua verificação ponta a ponta, preservando o escopo dos demais módulos.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-andamento",
+      "acceptanceCriteria": [
+        "Conversão concorrente e falha/retry preservam um pedido e reservas consistentes.",
+        "Resposta não expõe credenciais e mantém empresa, unidade, versão e condições.",
+        "Interface, HTTP, autorização, persistência, domínio, efeitos, falhas e resposta têm evidência vinculada ao plano.",
+        "Módulo só é concluído após comprovar todas as dimensões; CI estrutural verde não basta."
+      ],
+      "evidence": "Correção atômica e adaptador aprovados na CI 40643539608. A CI 40649735969 aprovou integração e contratos e registrou cinco dimensões; lint revelou Date.now em renderização, corrigido em 18267b1. Jornada Playwright reproduziu clique sem abertura do formulário em Next dev nas CIs 40650343283 e 40650960015; API de referências retornou empresa e logs registraram falhas HMR. Verificação sobre build de produção em andamento na CI 40651466891, HEAD 694b733. Módulo permanece em implementação; telas e oito dimensões ainda exigem aprovação conjunta.",
+      "history": [{ "at": "2026-10-28", "note": "Objetivo permanente ativado: continuar até o fim de cada módulo. Trabalho isolado para preservar checkouts concorrentes." }]
+    },
+    {
       "id": "MLOPS-PAYLOAD-CUPOM-20261028",
       "title": "Contrato executável de payload cupom v1",
       "objective": "Fechar entrada, saída, erros, consumidor e gate de compatibilidade do módulo.",

@@ -10,6 +10,7 @@ permissions:
 jobs:
   contratos:
     name: contratos / API v1 e inventário Experiments
+    needs: integracao
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -53,8 +54,13 @@ jobs:
         run: node --test lojas/scripts/mlops/*.test.mjs
         env:
           EXPERIMENTS_ROOT: ${{ github.workspace }}/experiments
-      - name: Gerar estrutura MLOps e planos funcionais
-        run: node lojas/scripts/mlops/report.mjs lojas experiments artifacts/contracts
+      - name: Obter observações da integração desta execução
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: lojas-runtime-${{ github.sha }}
+          path: runtime-checks
+      - name: Gerar estrutura MLOps e avaliar observações reais
+        run: node lojas/scripts/mlops/report.mjs lojas experiments artifacts/contracts runtime-checks '${{ github.run_id }}-${{ github.run_attempt }}'
       - name: Preservar inventário, baseline e diferenças
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -134,11 +140,48 @@ jobs:
           retention-days: 14
       - run: npx prisma generate
       - run: npx prisma migrate deploy
-      - name: Executar integrações e preservar evidência TAP
+      - name: Executar integrações e preservar evidência TAP e runtime
         run: |
           set -o pipefail
           mkdir -p artifacts/flow-observations
           npm run test:integracao 2>&1 | tee artifacts/flow-observations/integration.tap
+        env:
+          MLOPS_EVIDENCE_DIR: ${{ github.workspace }}/artifacts/runtime-checks
+          MLOPS_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Instalar Chromium para a jornada B2B
+        run: npx playwright install --with-deps chromium
+      - name: Construir aplicação para verificação funcional isolada
+        run: npm run build
+        env:
+          LOJAS_BASE_DOMAIN: 127.0.0.1
+          LOJAS_SECRET: '0000000000000000000000000000000000000000000000000000000000000000'
+          NEXT_TELEMETRY_DISABLED: '1'
+          ROTINAS_AGENDADOR: '0'
+      - name: Preparar arquivos estáticos do servidor standalone
+        run: |
+          cp -R public .next/standalone/public
+          cp -R .next/static .next/standalone/.next/static
+      - name: Verificar jornada B2B, HTTP e reinício em serviço isolado
+        run: node --import tsx scripts/qa-cotacoes-b2b.mts
+        env:
+          MLOPS_EVIDENCE_DIR: ${{ github.workspace }}/artifacts/runtime-checks
+          MLOPS_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Preservar capturas e resumo da jornada B2B
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: lojas-b2b-browser-${{ github.sha }}
+          path: artifacts/b2b-browser/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Preservar observações e artefatos do piloto B2B
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: lojas-runtime-${{ github.sha }}
+          path: artifacts/runtime-checks/
+          if-no-files-found: warn
+          retention-days: 14
       - name: Obter avaliador Experiments para as observações
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
