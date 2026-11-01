@@ -20,6 +20,7 @@ export interface ClienteDaLoja {
   documento: string;
   temConta: boolean;
   pedidos: number;
+  pedidosPagos: number;
   gastoCentavos: number;
   primeiraCompra: Date;
   ultimaCompra: Date;
@@ -43,7 +44,10 @@ export async function clientesDaLoja(tenantId: string): Promise<ClienteDaLoja[]>
     const atual = porEmail.get(chave);
     if (atual) {
       atual.pedidos += 1;
-      if (conta) atual.gastoCentavos += p.totalCentavos;
+      if (conta) {
+        atual.pedidosPagos += 1;
+        atual.gastoCentavos += p.totalCentavos;
+      }
       if (p.criadoEm < atual.primeiraCompra) atual.primeiraCompra = p.criadoEm;
       if (p.criadoEm > atual.ultimaCompra) atual.ultimaCompra = p.criadoEm;
     } else {
@@ -54,6 +58,7 @@ export async function clientesDaLoja(tenantId: string): Promise<ClienteDaLoja[]>
         documento: p.clienteDocumento,
         temConta: false,
         pedidos: 1,
+        pedidosPagos: conta ? 1 : 0,
         gastoCentavos: conta ? p.totalCentavos : 0,
         primeiraCompra: p.criadoEm,
         ultimaCompra: p.criadoEm,
@@ -79,6 +84,7 @@ export async function clientesDaLoja(tenantId: string): Promise<ClienteDaLoja[]>
         documento: c.documento ?? "",
         temConta: true,
         pedidos: 0,
+        pedidosPagos: 0,
         gastoCentavos: 0,
         primeiraCompra: c.criadoEm,
         ultimaCompra: c.criadoEm,

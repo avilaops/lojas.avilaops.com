@@ -4,6 +4,76 @@
   "members": [],
   "tasks": [
     {
+      "id": "AVL-400",
+      "title": "Criar configurador 3D de caixas térmicas sob medida para a MRG",
+      "objective": "Permitir que o cliente configure uma intenção de produto, visualize o volume em 3D e envie uma ficha estruturada para análise da fábrica.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "O recurso é isolado por tenant e pode ser desligado globalmente.",
+        "A configuração paramétrica é validada novamente no servidor.",
+        "A prévia 3D responde às medidas e opções em celular e desktop.",
+        "A solicitação é persistida com referência, versão e consentimento.",
+        "A interface não inventa preço, capacidade ou aprovação de fabricação.",
+        "Testes, TypeScript, lint e build são aprovados antes da revisão."
+      ],
+      "evidence": "Ticket Linear AVL-400; spec e plano em docs/superpowers; 1307 testes aprovados após a revisão; TypeScript, lint sem erros e build Next.js aprovados; fila operacional tenant-safe incluída no painel.",
+      "review": "Autorrevisão do diff: tenant e feature flag preservados, PII fora de URLs e WhatsApp, e nenhuma promessa de preço, capacidade ou viabilidade fabril.",
+      "environment": "local",
+      "owner": null,
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-10-31",
+          "status": "em-andamento",
+          "note": "Contrato, persistência, API pública e editor visual implementados em worktree isolado."
+        },
+        {
+          "at": "2026-10-31",
+          "status": "em-revisao",
+          "note": "Suíte completa, TypeScript, lint e build aprovados; link de descoberta adicionado aos cabeçalhos desktop e móvel."
+        }
+      ]
+    },
+    {
+      "id": "AVL-401",
+      "title": "Salvar e reabrir configurações 3D da MRG com segurança",
+      "objective": "Permitir que o cliente retome a ficha técnica sem expor contato, observações pessoais ou a chave privada no banco e nas URLs.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "concluida",
+      "acceptanceCriteria": [
+        "A chave privada é entregue uma vez e somente o hash é persistido.",
+        "A retomada usa POST, é isolada por tenant e não revela se referência ou chave existem.",
+        "Somente a ficha técnica é restaurada; contato e observações permanecem vazios.",
+        "Uma nova solicitação preserva a referência da origem comprovada.",
+        "Testes, TypeScript, lint e build são aprovados antes da revisão."
+      ],
+      "evidence": "Ticket Linear AVL-401; PRs #185 e #186 mesclados; 1315 testes aprovados; TypeScript aprovado; lint sem erros e com 24 avisos preexistentes; build Next.js aprovado no Node 22; migração e integração aprovadas no PostgreSQL 18 do CI; deploy c8cbac1 e fumaça aprovados no run 41271409737; página e API de retomada verificadas em mrgcaixastermicas.com.br.",
+      "review": "Autorrevisão: a chave tem 128 bits aleatórios, só o SHA-256 chega ao banco, a retomada usa POST e limite por tenant/IP, a consulta seleciona apenas a ficha técnica e uma nova solicitação só referencia origem validada. A revisão do PR também originou cobertura para navegadores que bloqueiam o getter de localStorage.",
+      "environment": "producao",
+      "owner": null,
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-11-01",
+          "status": "em-andamento",
+          "note": "Contrato de retomada, hash da chave, isolamento por tenant, migração e interface implementados com testes vermelhos antes do código."
+        },
+        {
+          "at": "2026-11-01",
+          "status": "em-revisao",
+          "note": "Testes, TypeScript, lint e build Node 22 aprovados. Prova de migração local indisponível por ausência do Docker; o CI executa migrate deploy e testes de integração em PostgreSQL 18."
+        },
+        {
+          "at": "2026-11-01",
+          "status": "concluida",
+          "note": "PRs #185 e #186 mesclados; integração, imagem, deploy e fumaça aprovados. Produção serve c8cbac1 e a API retorna erro genérico para código inválido."
+        }
+      ]
+    },
+    {
       "id": "MELHOR-ENVIO-SANDBOX-20261027",
       "title": "Preparar e publicar conexão e cotação do Melhor Envio somente em sandbox",
       "assignee": null,
@@ -17,43 +87,90 @@
       ],
       "evidence": "evidencias/melhor-envio-sandbox-2026-10-27.md; 1289 testes locais aprovados; TypeScript e lint sem erros; docs/MELHOR-ENVIO-SANDBOX.md",
       "blocker": "O proprietário ainda precisa cadastrar ou preencher o aplicativo de sandbox e indicar a loja de testes. Não há cotação autenticada comprovada.",
-      "history": [{"at": "2026-10-27", "status": "em-andamento", "note": "Código preparado em checkout isolado; aplicações em produção auditadas somente por leitura. Escopo confirmado: apenas sandbox."}]
+      "history": [
+        {
+          "at": "2026-10-27",
+          "status": "em-andamento",
+          "note": "Código preparado em checkout isolado; aplicações em produção auditadas somente por leitura. Escopo confirmado: apenas sandbox."
+        }
+      ]
     },
     {
       "id": "RECOMPRA-VITRINE-20261024",
       "title": "Recomprar itens do histórico com revisão das ofertas atuais",
       "assignee": null,
       "status": "em-revisao",
-      "acceptanceCriteria": ["Pedido restrito ao comprador e tenant", "Preço e disponibilidade atuais antes de adicionar", "Revisão explícita sem substituir variantes ou criar compra"],
+      "acceptanceCriteria": [
+        "Pedido restrito ao comprador e tenant",
+        "Preço e disponibilidade atuais antes de adicionar",
+        "Revisão explícita sem substituir variantes ou criar compra"
+      ],
       "evidence": "evidencias/recompra-2026-10-24.md; cinco testes unitários e teste de integração em banco isolado",
-      "history": [{"at": "2026-10-24", "status": "em-revisao", "note": "Implementado na conta da vitrine; aguardando CI, merge e publicação."}]
+      "history": [
+        {
+          "at": "2026-10-24",
+          "status": "em-revisao",
+          "note": "Implementado na conta da vitrine; aguardando CI, merge e publicação."
+        }
+      ]
     },
     {
       "id": "BERETA-CATALOGO-MARCAS-20261024",
       "title": "Preencher catálogo automotivo e destacar marcas da Bereta",
       "assignee": null,
       "status": "em-revisao",
-      "acceptanceCriteria": ["Marcas sustentadas pelo título ou fonte oficial", "Ficha, descrição e resumo sem GTIN ou embalagem inventados", "Marcas visíveis e filtro por fabricante funcional", "Fotos correspondentes ao modelo e acabamento"],
+      "acceptanceCriteria": [
+        "Marcas sustentadas pelo título ou fonte oficial",
+        "Ficha, descrição e resumo sem GTIN ou embalagem inventados",
+        "Marcas visíveis e filtro por fabricante funcional",
+        "Fotos correspondentes ao modelo e acabamento"
+      ],
       "evidence": "7.047 itens enriquecidos, 6.476 marcas e 7.038 fichas; 9 testes aprovados. evidencias/bereta-catalogo-marcas-2026-10-24.md",
-      "history": [{"at":"2026-10-24","status":"em-revisao","note":"Enriquecimento aplicado com backup; interface preparada para CI e publicação. Fotos e dados sem confirmação permanecem pendentes."}]
+      "history": [
+        {
+          "at": "2026-10-24",
+          "status": "em-revisao",
+          "note": "Enriquecimento aplicado com backup; interface preparada para CI e publicação. Fotos e dados sem confirmação permanecem pendentes."
+        }
+      ]
     },
     {
       "id": "CATALOGOS-DOMI-VEDA-20261024",
       "title": "Revisar dados comprovados dos catálogos Domi-Rio e VedaShow",
       "assignee": null,
       "status": "parcial",
-      "acceptanceCriteria": ["Alterações com cópia anterior e releitura", "Não inventar GTIN ou embalagem", "Registrar cobertura e pendências"],
+      "acceptanceCriteria": [
+        "Alterações com cópia anterior e releitura",
+        "Não inventar GTIN ou embalagem",
+        "Registrar cobertura e pendências"
+      ],
       "evidence": "75 produtos atualizados e relidos; simulação posterior com zero alterações; evidencias/revisao-catalogos-2026-10-24.md",
-      "history": [{"at": "2026-10-24", "status": "parcial", "note": "Incremento aplicado em produção. Fotos e especificações sem identidade confirmada dependem de conferência física ou documental."}]
+      "history": [
+        {
+          "at": "2026-10-24",
+          "status": "parcial",
+          "note": "Incremento aplicado em produção. Fotos e especificações sem identidade confirmada dependem de conferência física ou documental."
+        }
+      ]
     },
     {
       "id": "BERETA-VISUAL-20261024",
       "title": "Melhorar imagens e visual mobile da Bereta Rodas",
       "assignee": null,
       "status": "em-revisao",
-      "acceptanceCriteria": ["Banner automotivo com imagem mobile própria", "Cards compactos sem alterar dados comerciais", "CI aprovado e visual público conferido"],
+      "acceptanceCriteria": [
+        "Banner automotivo com imagem mobile própria",
+        "Cards compactos sem alterar dados comerciais",
+        "CI aprovado e visual público conferido"
+      ],
       "evidence": "git diff --check aprovado; evidencias/bereta-visual-2026-10-24.md",
-      "history": [{"at": "2026-10-24", "status": "em-revisao", "note": "Ajustes do template e imagens preparados para validação e publicação."}]
+      "history": [
+        {
+          "at": "2026-10-24",
+          "status": "em-revisao",
+          "note": "Ajustes do template e imagens preparados para validação e publicação."
+        }
+      ]
     },
     {
       "id": "BRILHAX-SEO-CATALOGO-20261024",
@@ -907,6 +1024,26 @@
           "at": "2026-10-24",
           "status": "em-andamento",
           "note": "Demanda registrada e implementação iniciada."
+        }
+      ]
+    },
+    {
+      "id": "CONFIGURACOES-MOBILE-20261031",
+      "title": "Compactar configurações e facilitar busca no celular",
+      "assignee": null,
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "Busca ignora acentos e encontra Pix e certificado",
+        "Linhas compactas com ícones, foco visível e descrições curtas",
+        "Preservar rotas e permissões",
+        "CI aprovada antes de publicar"
+      ],
+      "evidence": "Branch codex/configuracoes-compactas; git diff --check aprovado; Prisma generate aprovado. TypeScript e lint em execução. Publicação e revisão visual autenticada pendentes.",
+      "history": [
+        {
+          "at": "2026-10-31",
+          "status": "em-revisao",
+          "note": "Implementação em checkout separado via Desktop Commander; código enviado pelo conector GitHub."
         }
       ]
     }

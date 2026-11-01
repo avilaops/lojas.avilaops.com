@@ -22,6 +22,12 @@ test("LOJAS_RECURSOS_DESLIGADOS desliga para todas", () => {
   assert.equal(recursoAtivo(loja, "recebimento_v2", env), true);
 });
 
+test("configurador sob medida pode ser ligado por loja e desligado globalmente", () => {
+  const loja = { recursos: ["configurador_sob_medida"] };
+  assert.equal(recursoAtivo(loja, "configurador_sob_medida", {}), true);
+  assert.equal(recursoAtivo(loja, "configurador_sob_medida", { LOJAS_RECURSOS_DESLIGADOS: "configurador_sob_medida" }), false);
+});
+
 test("Pix na conta da loja só oferece Pix; sem o recurso, valem os meios da loja", () => {
   const meios = ["pix", "cartao", "boleto"];
   const ligado = { provedorPadrao: "pix_manual", recursos: ["pagamentos_pix_manual"], meiosPagamento: meios };

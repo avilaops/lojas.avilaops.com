@@ -11,12 +11,14 @@ export default function MenuMobile({
   className,
   nome,
   vende,
+  configuradorSobMedida,
   mostrarPromocoes,
   categorias,
 }: {
   className?: string;
   nome: string;
   vende: boolean;
+  configuradorSobMedida: boolean;
   mostrarPromocoes: boolean;
   categorias: CategoriaMenu[];
 }) {
@@ -54,6 +56,7 @@ export default function MenuMobile({
         <nav aria-label="Navegação móvel">
           <Link href="/">Início</Link>
           <Link href="/produtos">Todos os produtos</Link>
+          {configuradorSobMedida && <Link href="/configurador">Projeto sob medida</Link>}
           {mostrarPromocoes && <Link href="/promocoes">Promoções</Link>}
           {vende && <Link href="/conta">Minha conta e pedidos</Link>}
           <div className="menu-mobile-separador" aria-hidden="true">Categorias</div>
