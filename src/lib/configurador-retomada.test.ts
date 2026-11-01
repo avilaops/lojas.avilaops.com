@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { lerUltimoCodigoRetomada, salvarUltimoCodigoRetomada, type ArmazenamentoRetomada } from "./configurador-retomada";
+import { armazenamentoLocalSeguro, lerUltimoCodigoRetomada, salvarUltimoCodigoRetomada, type ArmazenamentoRetomada } from "./configurador-retomada";
 
 function memoria(): ArmazenamentoRetomada {
   const valores = new Map<string, string>();
@@ -30,4 +30,12 @@ test("valor corrompido ou storage bloqueado não derruba o configurador", () => 
   };
   assert.equal(lerUltimoCodigoRetomada("mrg-caixas-termicas", bloqueado), null);
   assert.equal(salvarUltimoCodigoRetomada("mrg-caixas-termicas", "CFG-ABCDEFGHIJKL.abcdefghijklmnopqrstuv", bloqueado), false);
+});
+
+test("getter de localStorage bloqueado é tratado antes de acessar os métodos", () => {
+  const janela = Object.defineProperty({}, "localStorage", {
+    get() { throw new DOMException("bloqueado", "SecurityError"); },
+  }) as { readonly localStorage: ArmazenamentoRetomada };
+
+  assert.equal(armazenamentoLocalSeguro(janela), null);
 });

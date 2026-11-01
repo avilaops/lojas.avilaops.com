@@ -50,8 +50,8 @@
         "Uma nova solicitação preserva a referência da origem comprovada.",
         "Testes, TypeScript, lint e build são aprovados antes da revisão."
       ],
-      "evidence": "Ticket Linear AVL-401; implementação em checkout isolado .work/avl-401; 1314 testes aprovados; TypeScript aprovado; lint sem erros e com 24 avisos preexistentes; build Next.js aprovado no Node 22 do Dockerfile e do CI, com 119 páginas geradas.",
-      "review": "Autorrevisão: a chave tem 128 bits aleatórios, só o SHA-256 chega ao banco, a retomada usa POST e limite por tenant/IP, a consulta seleciona apenas a ficha técnica e uma nova solicitação só referencia origem validada.",
+      "evidence": "Ticket Linear AVL-401; implementação em checkout isolado .work/avl-401; 1315 testes aprovados; TypeScript aprovado; lint sem erros e com 24 avisos preexistentes; build Next.js aprovado no Node 22 do Dockerfile e do CI, com 119 páginas geradas.",
+      "review": "Autorrevisão: a chave tem 128 bits aleatórios, só o SHA-256 chega ao banco, a retomada usa POST e limite por tenant/IP, a consulta seleciona apenas a ficha técnica e uma nova solicitação só referencia origem validada. A revisão do PR também originou cobertura para navegadores que bloqueiam o getter de localStorage.",
       "environment": "local",
       "owner": null,
       "blocker": "",
