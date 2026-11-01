@@ -1,5 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { z } from "zod";
+import { rastrearGeracaoGemini } from "./langfuse";
 
 /**
  * Modelo Padrão do Gemini (override via GEMINI_MODEL).
@@ -127,7 +128,7 @@ Marca: ${entrada.marca || "Não informada"}
 Segmento da Loja: ${entrada.segmento || "geral"}
 Contexto Adicional: ${entrada.contexto || "Nenhum"}`;
 
-    const response = await cliente.ai.models.generateContent({
+    const response = await rastrearGeracaoGemini("copy-produto", cliente.modelo, () => cliente.ai.models.generateContent({
       model: cliente.modelo,
       contents: prompt,
       config: {
@@ -187,7 +188,7 @@ Marque sempre o campo requerConfirmacao como true para os dados de logística.`,
           required: ["tituloSeo", "descricaoCurta", "descricao", "palavrasChave", "logistica", "atributos"],
         },
       },
-    });
+    }));
 
     if (!response.text) return null;
     const jsonBruto = JSON.parse(response.text);
@@ -222,7 +223,7 @@ Segmento: ${entrada.segmento || "comércio"}
 Personalidades desejadas: ${(entrada.personalidade || []).join(", ") || "não informada"}
 Contexto: ${entrada.contexto || "Nenhum"}`;
 
-    const response = await cliente.ai.models.generateContent({
+    const response = await rastrearGeracaoGemini("diagnostico-marca", cliente.modelo, () => cliente.ai.models.generateContent({
       model: cliente.modelo,
       contents: prompt,
       config: {
@@ -261,7 +262,7 @@ Respeite estritamente os limites de caracteres e o formato especificado.`,
           ],
         },
       },
-    });
+    }));
 
     if (!response.text) return null;
     const jsonBruto = JSON.parse(response.text);
@@ -290,7 +291,7 @@ export async function gerarSeoCategoria(
   if (!cliente) return null;
 
   try {
-    const response = await cliente.ai.models.generateContent({
+    const response = await rastrearGeracaoGemini("seo-categoria", cliente.modelo, () => cliente.ai.models.generateContent({
       model: cliente.modelo,
       contents: `Crie os metadados de uma página de categoria de e-commerce brasileiro.
 
@@ -318,7 +319,7 @@ A descrição deve ser natural, útil e comercial, sem lista de palavras-chave e
           required: ["titulo", "descricao", "palavrasChave"],
         },
       },
-    });
+    }));
 
     if (!response.text) return null;
     const validacao = SeoCategoriaGeradaSchema.safeParse(JSON.parse(response.text));

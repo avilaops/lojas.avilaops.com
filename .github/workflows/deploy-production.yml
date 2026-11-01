@@ -50,8 +50,8 @@ jobs:
           EXPERIMENTS_ROOT: ${{ github.workspace }}/experiments
       - name: Capturar e comparar contratos
         run: node lojas/scripts/contracts/capture.mjs lojas baseline experiments artifacts/contracts
-      - name: Testar estrutura de desenvolvimento e responsáveis
-        run: node --test lojas/scripts/mlops/project.test.mjs lojas/scripts/mlops/runtime.test.mjs
+      - name: Testar estrutura de desenvolvimento, responsáveis e observações
+        run: node --test lojas/scripts/mlops/*.test.mjs
         env:
           EXPERIMENTS_ROOT: ${{ github.workspace }}/experiments
       - name: Obter observações da integração desta execução
@@ -118,6 +118,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci --no-audit --no-fund
+      - name: Testar observabilidade e privacidade sem LLM
+        run: node --import tsx --test src/lib/langfuse.test.ts
       - name: Testar contratos de payload e consumidores
         run: node --import tsx --test tests/contracts/*.test.*
       - name: Obter baseline de payload da base do PR
@@ -138,7 +140,11 @@ jobs:
           retention-days: 14
       - run: npx prisma generate
       - run: npx prisma migrate deploy
-      - run: npm run test:integracao
+      - name: Executar integrações e preservar evidência TAP e runtime
+        run: |
+          set -o pipefail
+          mkdir -p artifacts/flow-observations
+          npm run test:integracao 2>&1 | tee artifacts/flow-observations/integration.tap
         env:
           MLOPS_EVIDENCE_DIR: ${{ github.workspace }}/artifacts/runtime-checks
           MLOPS_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
@@ -175,6 +181,28 @@ jobs:
           name: lojas-runtime-${{ github.sha }}
           path: artifacts/runtime-checks/
           if-no-files-found: warn
+          retention-days: 14
+      - name: Obter avaliador Experiments para as observações
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: avilaops/experiments
+          ref: fb2262d1e30575a466b81fd91be323e931f43164
+          path: .flow-experiments
+          persist-credentials: false
+      - name: Instalar e construir avaliador das observações
+        run: npm ci --ignore-scripts --no-audit --no-fund && npm run build
+        working-directory: .flow-experiments
+      - name: Vincular observações reais ao plano cotação → pedido
+        env:
+          FLOW_RUN_ID: github-${{ github.run_id }}-${{ github.run_attempt }}
+        run: node scripts/mlops/flow-observations.mjs . .flow-experiments artifacts/flow-observations/integration.tap artifacts/flow-observations
+      - name: Preservar observações do fluxo B2B
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: lojas-flow-observations-${{ github.sha }}
+          path: artifacts/flow-observations/
+          if-no-files-found: error
           retention-days: 14
 
   image:

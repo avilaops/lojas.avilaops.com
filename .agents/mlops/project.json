@@ -148,6 +148,18 @@
         {
           "kind": "test",
           "path": "scripts/qa-cotacoes-b2b.mts"
+        },
+        {
+          "kind": "contract",
+          "path": ".agents/mlops/flows/cotacao-pedido.evidence.json"
+        },
+        {
+          "kind": "code",
+          "path": "scripts/mlops/flow-observations.mjs"
+        },
+        {
+          "kind": "test",
+          "path": "scripts/mlops/flow-observations.test.mjs"
         }
       ],
       "flows": [

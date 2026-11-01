@@ -25,12 +25,30 @@ integrações e interfaces ainda exigem implementação e evidência próprias.
 
 - [x] Inspecionar domínio, handlers, testes, projeções e reserva de estoque.
 - [x] Adicionar regressões para projeção privada, concorrência e falha/retry.
-- [x] Confirmar regressões na CI antes da correção: `40642109382`, três falhas
-  esperadas nos testes novos e 196 integrações preservadas.
+- [x] Confirmar regressões na CI antes da correção: execução `40642109382`,
+  três falhas esperadas e 196 integrações preservadas.
 - [x] Fazer reserva, pedido e evento na mesma transação.
-- [x] Corrigir projeção do comprador, preservar unidade e validar limites monetários.
-- [ ] Concluir interface operacional e casos negativos de acesso.
-- [ ] Vincular observações reais ao plano MLOps e executar CI.
+- [x] Corrigir projeção do comprador e validar limites monetários.
+- [x] Cobrir acesso negativo entre tenants, empresas e alçadas sem efeitos.
+- [x] Repetir somente conflitos serializáveis `P2034`, no máximo três vezes,
+  em todas as mutações de cotação.
+- [x] Preservar empresa, unidade, centro de custo e versão no pedido convertido,
+  comparando a resposta com a releitura persistida.
+- [ ] Vincular observações reais no CI: o adapter cobre autorização, domínio,
+  efeitos e resposta; interface, requisição, persistência e falhas continuam
+  explicitamente `not_run`.
+- [ ] Concluir a interface operacional após definir se a primeira entrega será
+  para o lojista, para o comprador ou para ambos.
+- [ ] Executar CI do adapter e preservar o relatório funcional e o TAP.
+
+A execução `40643437724` preservou 200 de 201 integrações e revelou um conflito
+serializável `P2034` entre aprovações paralelas. A correção aplica a mesma
+política de repetição limitada já usada pelos demais serviços B2B e não captura
+erros de domínio ou infraestrutura diferentes desse código.
+
+A integração de 01/11 preserva as verificações de revisão e o retry do PR 181,
+limitado a cinco tentativas para P2034 ou P2010 com SQLSTATE 40001/40P01.
+A validação da revisão integrada depende de uma nova execução completa da CI.
 
 As correções estão no checkout isolado `lojas-modulos-b2b`, PR 181. A branch
 178 e o checkout principal pertencem também a trabalhos concorrentes;

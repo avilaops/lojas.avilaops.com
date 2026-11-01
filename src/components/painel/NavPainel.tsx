@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeftRight, BarChart3, Bot, ExternalLink, LayoutDashboard, LogOut, Megaphone, Menu, Package, Settings,
-  PlugZap, Search, ShoppingCart, Star, Tags, Ticket, Users, Warehouse, X,
+  PlugZap, Ruler, Search, ShoppingCart, Star, Tags, Ticket, Users, Warehouse, X,
 } from "lucide-react";
 import { LogoLojas } from "@/components/marca/MarcaLojas";
 import { abrirBusca } from "./BuscaPainel";
@@ -36,6 +36,7 @@ const ICONES = {
   ia: Bot,
   conexoes: PlugZap,
   categorias: Tags,
+  sobMedida: Ruler,
   config: Settings,
 } as const;
 
@@ -79,6 +80,15 @@ export const SECOES: ItemNav[] = [
   { rotulo: "IA e API", href: "/painel/ia", icone: "ia" },
   { rotulo: "Conexões", href: "/painel/conexoes", icone: "conexoes" },
 ];
+
+export function secoesDoPainel({ pixManual, configuradorSobMedida }: { pixManual: boolean; configuradorSobMedida: boolean }): ItemNav[] {
+  return SECOES.flatMap((secao) => {
+    const adicionais: ItemNav[] = [];
+    if (secao.href === "/painel/pedidos" && configuradorSobMedida) adicionais.push({ rotulo: "Projetos sob medida", href: "/painel/sob-medida", icone: "sobMedida" });
+    if (secao.href === "/painel/pedidos" && pixManual) adicionais.push({ rotulo: "Pix a conferir", href: "/painel/pedidos/pix", icone: "pedidos" });
+    return [secao, ...adicionais];
+  });
+}
 
 /** Ativo por prefixo, para a rota de detalhe acender a seção que a contém. */
 function ativo(pathname: string, href: string): boolean {
@@ -157,11 +167,9 @@ function Rodape({ pathname, aoNavegar, urlLoja, podeTrocarLoja }: { pathname: st
   );
 }
 
-export default function NavPainel({ nome, urlLoja, aSeparar = 0, pixManual = false, pixAConferir = 0, podeTrocarLoja = false }: { nome: string; urlLoja: string; aSeparar?: number; pixManual?: boolean; pixAConferir?: number; podeTrocarLoja?: boolean }) {
+export default function NavPainel({ nome, urlLoja, aSeparar = 0, pixManual = false, pixAConferir = 0, configuradorSobMedida = false, podeTrocarLoja = false }: { nome: string; urlLoja: string; aSeparar?: number; pixManual?: boolean; pixAConferir?: number; configuradorSobMedida?: boolean; podeTrocarLoja?: boolean }) {
   const pathname = usePathname().replace(/^\/plataforma(?=\/|$)/, "");
-  const secoes: ItemNav[] = pixManual
-    ? SECOES.flatMap((s) => (s.href === "/painel/pedidos" ? [s, { rotulo: "Pix a conferir", href: "/painel/pedidos/pix", icone: "pedidos" }] : [s]))
-    : SECOES;
+  const secoes = secoesDoPainel({ pixManual, configuradorSobMedida });
   const [aberto, setAberto] = useState(false);
   const botaoMenu = useRef<HTMLButtonElement>(null);
   const primeiroItem = useRef<HTMLDivElement>(null);

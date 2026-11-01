@@ -17,16 +17,6 @@ async function projetarComEvento(tx: Tx, tenantId: string, ids: string[]) {
 }
 
 /** Reserva antes da cobrança, na mesma ordem de locks usada na edição. */
-export async function reservarEstoque(tenantId: string, referencia: string, itens: ItemCarrinho[], opcoes: { validarPreco?: boolean } = {}) {
-  try {
-    return await prisma.$transaction(tx => reservarEstoqueNaTransacao(tx, tenantId, referencia, itens, opcoes), { timeout: 20000 });
-  } catch (erro) {
-    if (erro instanceof Prisma.PrismaClientKnownRequestError && erro.code === "P2002") throw new ErroCatalogo("Esta tentativa já foi recebida. Consulte o pedido antes de tentar pagar novamente.", 409);
-    throw erro;
-  }
-}
-
-/** Permite ao domínio B2B confirmar reserva e pedido no mesmo commit. */
 export async function reservarEstoqueNaTransacao(tx: Tx, tenantId: string, referencia: string, itens: ItemCarrinho[], opcoes: { validarPreco?: boolean } = {}) {
   if (!referencia || referencia.length>120 || !itens.length) throw new ErroCatalogo("Referência de checkout inválida.");
   const hash = createHash("sha256").update(JSON.stringify(itens.map(i=>[i.id,i.quantidade,i.precoUnitario]).sort())).digest("hex");
@@ -59,6 +49,15 @@ export async function reservarEstoqueNaTransacao(tx: Tx, tenantId: string, refer
     await tx.reservaEstoque.create({data:{tenantId,referencia,varianteId,quantidade:item.quantidade}});
   }
   await projetarComEvento(tx,tenantId,produtoIds);
+}
+
+export async function reservarEstoque(tenantId: string, referencia: string, itens: ItemCarrinho[], opcoes: { validarPreco?: boolean } = {}) {
+  try {
+    return await prisma.$transaction(tx=>reservarEstoqueNaTransacao(tx, tenantId, referencia, itens, opcoes),{timeout:20000});
+  } catch(e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code==="P2002") throw new ErroCatalogo("Esta tentativa já foi recebida. Consulte o pedido antes de tentar pagar novamente.",409);
+    throw e;
+  }
 }
 
 /** Só libera após resposta conclusiva de recusa/cancelamento. Timeout é incerto. */

@@ -28,6 +28,7 @@ const loja = {
   pedidoMinimoCentavos: null,
   avisoTopo: null,
   segmento: "geral",
+  configuradorSobMedida: false,
   vende: false,
 } satisfies TenantPublico;
 
@@ -61,4 +62,16 @@ test("menu móvel conserva acesso a todas as categorias", () => {
 
   assert.equal((menu.match(/href="\/categoria\//g) ?? []).length, quantidade);
   assert.match(menu, />Categoria 10<\/a>/);
+});
+
+test("loja habilitada oferece o projeto sob medida no menu", () => {
+  const html = renderToStaticMarkup(
+    createElement(AppRouterContext.Provider, { value: roteador },
+      createElement(PathnameContext.Provider, { value: "/" },
+        createElement(Header, { loja: { ...loja, configuradorSobMedida: true }, logoUrl: null, categorias: [] }),
+      ),
+    ),
+  );
+  assert.match(html, /href="\/configurador"/);
+  assert.match(html, />Projeto sob medida<\/a>/);
 });

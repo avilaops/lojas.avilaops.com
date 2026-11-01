@@ -1,4 +1,4 @@
-import { meiosAceitos, pixNaConta } from "./recursos";
+import { meiosAceitos, pixNaConta, recursoAtivo } from "./recursos";
 import { cache } from "react";
 import { headers } from "next/headers";
 import type { Tenant } from "@prisma/client";
@@ -201,6 +201,7 @@ export function tenantPublico(t: Tenant) {
     pedidoMinimoCentavos: t.pedidoMinimoCentavos,
     avisoTopo: t.avisoTopo,
     segmento: t.segmento,
+    configuradorSobMedida: recursoAtivo(t, "configurador_sob_medida"),
     vende: lojaVende(t),
   };
 }

@@ -7,7 +7,7 @@ const Parametros = z.object({ pagina: z.coerce.number().int().min(1).max(100000)
 
 async function filtroComprador(tenantId: string, compradorId: string): Promise<Prisma.CotacaoB2BWhereInput> {
   const escopos = await prisma.escopoCompradorB2B.findMany({
-    where: { tenantId, compradorEmpresa: { compradorId, situacao: "ATIVO" } },
+    where: { tenantId, comprador: { compradorId, situacao: "ATIVO" } },
     select: { id: true, compradorEmpresaId: true, unidadeId: true },
   });
   return {

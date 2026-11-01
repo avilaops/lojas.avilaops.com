@@ -42,7 +42,7 @@ export function totaisCotacao(itens: Array<Pick<ItemCotacaoB2B, "quantidade" | "
   const subtotalCentavos = itens.reduce((s, i) => s + i.quantidade * i.precoUnitarioCentavos, 0);
   const maximo = 2_147_483_647; // Prisma Int / PostgreSQL integer.
   if (![subtotalCentavos, descontoCentavos, freteCentavos, subtotalCentavos - descontoCentavos + freteCentavos]
-    .every(valor => Number.isSafeInteger(valor) && valor <= maximo)) throw new ErroCotacaoB2B("Valores da cotação excedem o limite em centavos.");
+    .every(valor => Number.isSafeInteger(valor) && valor <= maximo)) throw new ErroCotacaoB2B("Valores da cotação excedem o limite monetário persistível em centavos.");
   if (descontoCentavos > subtotalCentavos) throw new ErroCotacaoB2B("Desconto não pode superar o subtotal.");
   return { subtotalCentavos, descontoCentavos, freteCentavos, totalCentavos: subtotalCentavos - descontoCentavos + freteCentavos };
 }

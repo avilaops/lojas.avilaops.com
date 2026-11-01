@@ -62,6 +62,7 @@ function renderizarCabecalho(slug: string, nome: string, categoriasDaLoja: typeo
     pedidoMinimoCentavos: null,
     avisoTopo: null,
     segmento: "geral",
+    configuradorSobMedida: false,
     vende: false,
     },
     logoUrl: null,
