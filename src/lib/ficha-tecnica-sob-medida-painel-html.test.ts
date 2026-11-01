@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -51,4 +52,12 @@ test("ficha do painel mostra prévia, especificação, origem e aviso de valida�
   assert.match(html, /Sujeito à validação da fábrica; não é desenho liberado para fabricação\./u);
   assert.match(html, /Imprimir ficha/u);
   assert.doesNotMatch(html, /chaveRetomadaHash|codigoRetomada|hash/u);
+});
+
+test("impressão restaura a visibilidade da ficha ocultada pela regra global", () => {
+  const globalCss = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8");
+  const painelCss = readFileSync(new URL("../app/plataforma/(admin)/painel.css", import.meta.url), "utf8");
+
+  assert.match(globalCss, /body \*\s*\{\s*visibility:\s*hidden;/u);
+  assert.match(painelCss, /\.ficha-sob-medida,\s*\.ficha-sob-medida \*\s*\{\s*visibility:\s*visible;/u);
 });
