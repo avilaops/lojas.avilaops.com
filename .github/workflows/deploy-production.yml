@@ -112,6 +112,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci --no-audit --no-fund
+      - name: Testar observabilidade e privacidade sem LLM
+        run: node --import tsx --test src/lib/langfuse.test.ts
       - name: Testar contratos de payload e consumidores
         run: node --import tsx --test tests/contracts/*.test.*
       - name: Obter baseline de payload da base do PR
