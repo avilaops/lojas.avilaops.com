@@ -238,6 +238,45 @@
 .padm-cabecalho h1 { font-size: 24px; font-weight: 750; line-height: 1.15; letter-spacing: -0.035em; color: #12172a; }
 .padm-cabecalho p { max-width: 68ch; margin-top: 6px; color: #667085; font-size: 14px; line-height: 1.5; }
 
+/* Ficha de projeto sob medida: leitura operacional na tela e em A4. */
+.ficha-sob-medida { display: grid; gap: 1.25rem; max-width: 74rem; margin-inline: auto; border: 1px solid #d8dde8; border-radius: 1rem; background: #fff; padding: clamp(1rem, 3vw, 2rem); color: #12172a; }
+.ficha-sob-medida-cabecalho { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #e4e7ec; }
+.ficha-sob-medida-cabecalho p { color: #667085; font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.ficha-sob-medida-cabecalho h2 { margin-top: .2rem; font-size: clamp(1.4rem, 3vw, 2rem); letter-spacing: -.03em; }
+.ficha-sob-medida-cabecalho span { display: block; margin-top: .3rem; color: #667085; font-size: .85rem; }
+.ficha-sob-medida-cabecalho button { display: inline-flex; align-items: center; gap: .45rem; }
+.ficha-sob-medida-grade { display: grid; grid-template-columns: minmax(18rem, 1.15fr) minmax(18rem, .85fr); gap: 1.25rem; align-items: start; }
+.ficha-sob-medida-previa { overflow: hidden; border: 1px solid #e4e7ec; border-radius: .8rem; background: #f8fafc; }
+.ficha-sob-medida-previa img { display: block; width: 100%; aspect-ratio: 3 / 2; object-fit: contain; }
+.ficha-sob-medida-previa figcaption { border-top: 1px solid #e4e7ec; padding: .65rem .8rem; color: #667085; font-size: .75rem; }
+.ficha-sob-medida-campos { display: grid; border: 1px solid #e4e7ec; border-radius: .8rem; }
+.ficha-sob-medida-campos > div { display: grid; grid-template-columns: minmax(8rem, .8fr) minmax(0, 1.2fr); gap: .75rem; padding: .7rem .85rem; border-bottom: 1px solid #e4e7ec; }
+.ficha-sob-medida-campos > div:last-child { border-bottom: 0; }
+.ficha-sob-medida-campos dt { color: #667085; font-size: .78rem; }
+.ficha-sob-medida-campos dd { font-size: .85rem; font-weight: 650; text-align: right; }
+.ficha-sob-medida-bloco { border: 1px solid #e4e7ec; border-radius: .8rem; padding: 1rem; }
+.ficha-sob-medida-bloco h3 { font-size: .9rem; }
+.ficha-sob-medida-bloco > p { margin-top: .5rem; color: #475467; font-size: .85rem; line-height: 1.55; white-space: pre-wrap; }
+.ficha-sob-medida-contato > div { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .75rem; }
+.ficha-sob-medida-contato-impresso { display: none; }
+.ficha-sob-medida-aviso { border-left: 4px solid #b42318; background: #fef3f2; padding: .8rem 1rem; color: #912018; font-size: .82rem; font-weight: 700; }
+
+@media (max-width: 760px) {
+  .ficha-sob-medida-grade { grid-template-columns: 1fr; }
+  .ficha-sob-medida-campos > div { grid-template-columns: 1fr; gap: .2rem; }
+  .ficha-sob-medida-campos dd { text-align: left; }
+}
+
+@media print {
+  @page { size: A4 portrait; margin: 12mm; }
+  .padm > nav, .padm > header, .ficha-sob-medida-nao-imprimir { display: none !important; }
+  .padm, .padm-conteudo { display: block; width: auto; min-height: 0; margin: 0; padding: 0; background: #fff; }
+  .ficha-sob-medida { max-width: none; gap: 8mm; border: 0; border-radius: 0; padding: 0; box-shadow: none; }
+  .ficha-sob-medida-grade { grid-template-columns: 1.05fr .95fr; gap: 6mm; break-inside: avoid; }
+  .ficha-sob-medida-previa, .ficha-sob-medida-campos, .ficha-sob-medida-bloco, .ficha-sob-medida-aviso { break-inside: avoid; }
+  .ficha-sob-medida-contato-impresso { display: block; }
+}
+
 @media (min-width: 1024px) {
   .pnav-lateral { display: flex; }
   .pnav-barra { display: none; }

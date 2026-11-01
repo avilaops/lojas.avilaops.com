@@ -13,7 +13,7 @@ const itemTecnico = <T extends Record<string, string>>(opcoes: T) => z.object({
   codigo: z.enum(Object.keys(opcoes) as [keyof T & string, ...(keyof T & string)[]]),
   rotulo: z.string().min(1),
 }).superRefine((item, contexto) => {
-  if (opcoes[item.codigo] !== item.rotulo) {
+  if (item.codigo === undefined || opcoes[item.codigo] !== item.rotulo) {
     contexto.addIssue({ code: z.ZodIssueCode.custom, path: ["rotulo"], message: "Rótulo técnico não corresponde ao código." });
   }
 });
