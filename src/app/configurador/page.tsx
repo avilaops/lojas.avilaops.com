@@ -14,5 +14,5 @@ export const metadata: Metadata = {
 export default async function ConfiguradorPage() {
   const tenant = await exigirTenant();
   if (!recursoAtivo(tenant, "configurador_sob_medida")) notFound();
-  return <ConfiguradorClient nomeDaLoja={tenant.nome} whatsapp={tenant.whatsapp} />;
+  return <ConfiguradorClient nomeDaLoja={tenant.nome} slugDaLoja={tenant.slug} whatsapp={tenant.whatsapp} />;
 }

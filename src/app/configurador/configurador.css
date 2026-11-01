@@ -4,6 +4,14 @@
 .configurador-selo svg { width: 1rem; }
 .configurador-abertura h1 { max-width: 18ch; margin: .65rem auto 1rem; font-size: clamp(2.25rem, 5vw, 4.5rem); font-weight: 850; line-height: .98; letter-spacing: -.055em; text-wrap: balance; }
 .configurador-abertura > p:last-child { max-width: 48rem; margin: auto; color: var(--muted-foreground); line-height: 1.7; }
+.configurador-retomada { display: grid; grid-template-columns: minmax(15rem, .8fr) minmax(22rem, 1.2fr); gap: 1rem 2rem; align-items: end; max-width: 70rem; margin-bottom: 1.5rem; border: 1px solid var(--border); border-radius: calc(var(--radius) * 1.5); background: var(--card); padding: 1.25rem; }
+.configurador-retomada h2 { font-size: 1.05rem; font-weight: 800; }
+.configurador-retomada p { margin-top: .35rem; color: var(--muted-foreground); font-size: .85rem; line-height: 1.5; }
+.configurador-retomada form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .75rem; align-items: end; }
+.configurador-retomada label { display: grid; gap: .4rem; font-size: .8rem; font-weight: 700; }
+.configurador-retomada input { width: 100%; min-height: 44px; border: 1px solid var(--input); border-radius: var(--radius); background: var(--background); padding: .65rem .75rem; color: var(--foreground); font: inherit; }
+.configurador-retomada button { min-height: 44px; white-space: nowrap; }
+.configurador-retomada-status { grid-column: 1 / -1; margin: 0 !important; color: #166534 !important; font-weight: 650; }
 .configurador-grade { display: grid; grid-template-columns: minmax(19rem, .85fr) minmax(28rem, 1.15fr); align-items: start; gap: 1.5rem; }
 .configurador-visual, .configurador-formulario { border: 1px solid var(--border); border-radius: calc(var(--radius) * 2); background: color-mix(in srgb, var(--card) 96%, transparent); box-shadow: 0 24px 80px color-mix(in srgb, var(--foreground) 7%, transparent); }
 .configurador-visual { position: sticky; top: 6rem; overflow: hidden; }
@@ -55,6 +63,7 @@
 .configurador-sucesso { display: grid; grid-template-columns: auto 1fr; gap: .75rem; margin-bottom: 1rem; border: 1px solid color-mix(in srgb, #16a34a 40%, var(--border)); border-radius: var(--radius); background: color-mix(in srgb, #16a34a 8%, var(--card)); padding: 1rem; }
 .configurador-sucesso > svg { color: #16a34a; }
 .configurador-sucesso p { margin-top: .25rem; font-size: .9rem; }
+.configurador-sucesso code { display: block; overflow-wrap: anywhere; margin-top: .3rem; border-radius: .35rem; background: var(--background); padding: .35rem .5rem; font-size: .75rem; user-select: all; }
 .configurador-sucesso a { grid-column: 2; display: inline-flex; align-items: center; gap: .35rem; color: var(--primary); font-weight: 750; }
 .configurador-sucesso a svg { width: 1rem; }
 .configurador-enviar { display: flex; width: 100%; min-height: 52px; align-items: center; justify-content: center; gap: .55rem; }
@@ -62,6 +71,7 @@
 
 @media (max-width: 900px) {
   .configurador-grade { grid-template-columns: 1fr; }
+  .configurador-retomada { grid-template-columns: 1fr; }
   .configurador-visual { position: static; }
 }
 @media (max-width: 560px) {
@@ -71,5 +81,6 @@
   .configurador-palco { min-height: 330px; }
   .configurador-dois-colunas, .configurador-tres-colunas { grid-template-columns: 1fr; gap: 0; }
   .configurador-rotacao { grid-template-columns: 1fr; }
+  .configurador-retomada form { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) { .caixa-3d { transition: none; } }

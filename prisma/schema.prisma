@@ -414,24 +414,27 @@ model Tenant {
 }
 
 model SolicitacaoSobMedida {
-  id              String   @id @default(cuid())
-  tenantId        String
-  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  referencia      String
-  contratoVersao  Int
-  estado          String   @default("RECEBIDA")
-  nome            String
-  email           String?
-  telefone        String?
-  configuracao    Json
-  resumo          String
-  origem          String   @default("configurador_publico")
-  consentimentoEm DateTime
-  criadoEm        DateTime @default(now())
-  atualizadoEm    DateTime @updatedAt
+  id                String   @id @default(cuid())
+  tenantId          String
+  tenant            Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  referencia        String
+  contratoVersao    Int
+  estado            String   @default("RECEBIDA")
+  nome              String
+  email             String?
+  telefone          String?
+  configuracao      Json
+  resumo            String
+  origem            String   @default("configurador_publico")
+  chaveRetomadaHash String?
+  referenciaOrigem  String?
+  consentimentoEm   DateTime
+  criadoEm          DateTime @default(now())
+  atualizadoEm      DateTime @updatedAt
 
   @@unique([tenantId, referencia])
   @@index([tenantId, estado, criadoEm])
+  @@index([tenantId, referenciaOrigem])
 }
 
 model FiscalLoja {
