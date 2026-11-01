@@ -79,6 +79,29 @@ test("registro legado monta ficha em memória sem exigir escrita", async () => {
   assert.equal(projeto?.fichaTecnica.criadaEm, legado.criadoEm.toISOString());
 });
 
+test("fallback legado despacha pelo contrato e recusa versão desconhecida", async () => {
+  const legadoV1: RegistroProjetoSobMedida = {
+    ...base,
+    fichaTecnica: null,
+    fichaTecnicaVersao: null,
+    previaVersao: null,
+    configuracao: {
+      dimensoes: { larguraCm: 80, alturaCm: 60, profundidadeCm: 120 },
+      materialExterno: "aco_galvanizado",
+      acabamento: "pintura_eletrostatica",
+      tampa: "superior",
+      mobilidade: "rodizios",
+      divisorias: 2,
+      quantidade: 3,
+      observacoes: "Fixture legada v1",
+    },
+  };
+  const desconhecido = { ...legadoV1, contratoVersao: 99 };
+
+  assert.equal((await buscarProjetoSobMedidaNoPainel("tenant-mrg", "sol-1", async () => legadoV1))?.fichaTecnica.contratoVersao, 1);
+  assert.equal(await buscarProjetoSobMedidaNoPainel("tenant-mrg", "sol-1", async () => desconhecido), null);
+});
+
 test("snapshot parcial, divergente ou configuração histórica inválida falham fechados", async () => {
   const parcial = { ...base, previaVersao: null };
   const divergente = { ...base, fichaTecnica: { ...(base.fichaTecnica as object), referencia: "CFG-OUTRAREF1234" } };

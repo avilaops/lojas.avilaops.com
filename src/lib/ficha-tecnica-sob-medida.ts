@@ -1,14 +1,50 @@
 import { z } from "zod";
-import {
-  ConfiguracaoSobMedidaSchema,
-  OPCOES_CONFIGURADOR,
-  type ConfiguracaoSobMedida,
-} from "./configurador-sob-medida";
 
 export const VERSAO_FICHA_TECNICA_SOB_MEDIDA = 1;
 export const VERSAO_PREVIA_SOB_MEDIDA = 1;
 
 const referencia = z.string().regex(/^CFG-[A-Z0-9]{12}$/);
+
+// Contratos publicados são deliberadamente copiados e imutáveis. Alterar as
+// opções do editor atual não pode reinterpretar snapshots ou registros v1.
+const OPCOES_FICHA_TECNICA_V1 = {
+  materialExterno: {
+    aco_galvanizado: "Aço galvanizado",
+    aco_pintado: "Aço pintado",
+    aco_inoxidavel: "Aço inoxidável",
+    aluminio: "Alumínio",
+  },
+  acabamento: {
+    natural: "Natural",
+    pintura_eletrostatica: "Pintura eletrostática",
+    escovado: "Escovado",
+  },
+  tampa: {
+    superior: "Tampa superior",
+    frontal: "Porta frontal",
+    dupla: "Tampa dupla",
+  },
+  mobilidade: {
+    pes: "Pés fixos",
+    rodizios: "Rodízios",
+    sem_base: "Sem base elevada",
+  },
+} as const;
+
+const ConfiguracaoSobMedidaContratoV1Schema = z.object({
+  dimensoes: z.object({
+    larguraCm: z.number().int().min(20).max(300),
+    alturaCm: z.number().int().min(20).max(300),
+    profundidadeCm: z.number().int().min(20).max(300),
+  }),
+  materialExterno: z.enum(["aco_galvanizado", "aco_pintado", "aco_inoxidavel", "aluminio"]),
+  acabamento: z.enum(["natural", "pintura_eletrostatica", "escovado"]),
+  tampa: z.enum(["superior", "frontal", "dupla"]),
+  mobilidade: z.enum(["pes", "rodizios", "sem_base"]),
+  divisorias: z.number().int().min(0).max(10),
+  quantidade: z.number().int().min(1).max(100),
+  observacoes: z.string().max(1_000),
+});
 const itemTecnico = <T extends Record<string, string>>(opcoes: T) => z.object({
   codigo: z.enum(Object.keys(opcoes) as [keyof T & string, ...(keyof T & string)[]]),
   rotulo: z.string().min(1),
@@ -18,22 +54,24 @@ const itemTecnico = <T extends Record<string, string>>(opcoes: T) => z.object({
   }
 });
 
-export const FichaTecnicaSobMedidaSchema = z.object({
+const FichaTecnicaSobMedidaV1Schema = z.object({
   versao: z.literal(VERSAO_FICHA_TECNICA_SOB_MEDIDA),
   previaVersao: z.literal(VERSAO_PREVIA_SOB_MEDIDA),
   referencia,
   referenciaOrigem: referencia.nullable(),
   contratoVersao: z.number().int().positive(),
   criadaEm: z.string().datetime({ offset: true }),
-  dimensoes: ConfiguracaoSobMedidaSchema.shape.dimensoes,
-  materialExterno: itemTecnico(OPCOES_CONFIGURADOR.materialExterno),
-  acabamento: itemTecnico(OPCOES_CONFIGURADOR.acabamento),
-  tampa: itemTecnico(OPCOES_CONFIGURADOR.tampa),
-  mobilidade: itemTecnico(OPCOES_CONFIGURADOR.mobilidade),
-  divisorias: ConfiguracaoSobMedidaSchema.shape.divisorias,
-  quantidade: ConfiguracaoSobMedidaSchema.shape.quantidade,
-  observacoes: ConfiguracaoSobMedidaSchema.shape.observacoes,
+  dimensoes: ConfiguracaoSobMedidaContratoV1Schema.shape.dimensoes,
+  materialExterno: itemTecnico(OPCOES_FICHA_TECNICA_V1.materialExterno),
+  acabamento: itemTecnico(OPCOES_FICHA_TECNICA_V1.acabamento),
+  tampa: itemTecnico(OPCOES_FICHA_TECNICA_V1.tampa),
+  mobilidade: itemTecnico(OPCOES_FICHA_TECNICA_V1.mobilidade),
+  divisorias: ConfiguracaoSobMedidaContratoV1Schema.shape.divisorias,
+  quantidade: ConfiguracaoSobMedidaContratoV1Schema.shape.quantidade,
+  observacoes: ConfiguracaoSobMedidaContratoV1Schema.shape.observacoes,
 });
+
+export const FichaTecnicaSobMedidaSchema = FichaTecnicaSobMedidaV1Schema;
 
 export type FichaTecnicaSobMedida = z.infer<typeof FichaTecnicaSobMedidaSchema>;
 
@@ -42,7 +80,7 @@ interface EntradaFichaTecnica {
   referenciaOrigem: string | null;
   contratoVersao: number;
   criadaEm: Date;
-  configuracao: ConfiguracaoSobMedida;
+  configuracao: unknown;
 }
 
 function item<T extends Record<string, string>>(opcoes: T, codigo: keyof T & string) {
@@ -50,7 +88,8 @@ function item<T extends Record<string, string>>(opcoes: T, codigo: keyof T & str
 }
 
 export function criarFichaTecnicaSobMedida(entrada: EntradaFichaTecnica): FichaTecnicaSobMedida {
-  const configuracao = ConfiguracaoSobMedidaSchema.parse(entrada.configuracao);
+  if (entrada.contratoVersao !== 1) throw new Error(`Contrato sob medida não suportado: ${entrada.contratoVersao}.`);
+  const configuracao = ConfiguracaoSobMedidaContratoV1Schema.parse(entrada.configuracao);
   return FichaTecnicaSobMedidaSchema.parse({
     versao: VERSAO_FICHA_TECNICA_SOB_MEDIDA,
     previaVersao: VERSAO_PREVIA_SOB_MEDIDA,
@@ -59,14 +98,21 @@ export function criarFichaTecnicaSobMedida(entrada: EntradaFichaTecnica): FichaT
     contratoVersao: entrada.contratoVersao,
     criadaEm: entrada.criadaEm.toISOString(),
     dimensoes: configuracao.dimensoes,
-    materialExterno: item(OPCOES_CONFIGURADOR.materialExterno, configuracao.materialExterno),
-    acabamento: item(OPCOES_CONFIGURADOR.acabamento, configuracao.acabamento),
-    tampa: item(OPCOES_CONFIGURADOR.tampa, configuracao.tampa),
-    mobilidade: item(OPCOES_CONFIGURADOR.mobilidade, configuracao.mobilidade),
+    materialExterno: item(OPCOES_FICHA_TECNICA_V1.materialExterno, configuracao.materialExterno),
+    acabamento: item(OPCOES_FICHA_TECNICA_V1.acabamento, configuracao.acabamento),
+    tampa: item(OPCOES_FICHA_TECNICA_V1.tampa, configuracao.tampa),
+    mobilidade: item(OPCOES_FICHA_TECNICA_V1.mobilidade, configuracao.mobilidade),
     divisorias: configuracao.divisorias,
     quantidade: configuracao.quantidade,
     observacoes: configuracao.observacoes,
   });
+}
+
+export function analisarFichaTecnicaSobMedida(entrada: unknown): FichaTecnicaSobMedida | null {
+  if (typeof entrada !== "object" || entrada === null || !("versao" in entrada)) return null;
+  if (entrada.versao !== 1) return null;
+  const analisada = FichaTecnicaSobMedidaV1Schema.safeParse(entrada);
+  return analisada.success ? analisada.data : null;
 }
 
 const CORES_MATERIAL: Record<FichaTecnicaSobMedida["materialExterno"]["codigo"], { frente: string; topo: string; lateral: string }> = {
@@ -90,8 +136,7 @@ function escaparXml(valor: string): string {
   return valor.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&apos;");
 }
 
-export function gerarPreviaSvgSobMedida(entrada: FichaTecnicaSobMedida): string {
-  const ficha = FichaTecnicaSobMedidaSchema.parse(entrada);
+function gerarPreviaSvgSobMedidaV1(ficha: FichaTecnicaSobMedida): string {
   const { larguraCm, alturaCm, profundidadeCm } = ficha.dimensoes;
   const escala = Math.min(420 / larguraCm, 260 / alturaCm, 180 / profundidadeCm);
   const largura = Math.max(60, larguraCm * escala);
@@ -127,6 +172,8 @@ ${divisorias}
 <text x="${numero((esquerda + direita) / 2)}" y="${numero(base + 52)}" text-anchor="middle" fill="#334155" font-family="Arial, sans-serif" font-size="15">L ${larguraCm} cm</text>
 <line x1="${numero(esquerda - 28)}" y1="${numero(topo)}" x2="${numero(esquerda - 28)}" y2="${numero(base)}" stroke="#64748b" stroke-width="2"/>
 <text x="${numero(esquerda - 42)}" y="${numero((topo + base) / 2)}" transform="rotate(-90 ${numero(esquerda - 42)} ${numero((topo + base) / 2)})" text-anchor="middle" fill="#334155" font-family="Arial, sans-serif" font-size="15">A ${alturaCm} cm</text>
+<line x1="${numero(direita + 10)}" y1="${numero(topo - 10)}" x2="${numero(trasDireita + 10)}" y2="${numero(trasTopo - 10)}" stroke="#64748b" stroke-width="2"/>
+<text x="${numero((direita + trasDireita) / 2 + 26)}" y="${numero((topo + trasTopo) / 2 - 14)}" text-anchor="middle" fill="#334155" font-family="Arial, sans-serif" font-size="15">P ${profundidadeCm} cm</text>
 <text x="560" y="155" fill="#0f172a" font-family="Arial, sans-serif" font-size="28" font-weight="700">${dimensoes}</text>
 <text x="560" y="205" fill="#334155" font-family="Arial, sans-serif" font-size="18">Material: ${escaparXml(ficha.materialExterno.rotulo)}</text>
 <text x="560" y="239" fill="#334155" font-family="Arial, sans-serif" font-size="18">Acabamento: ${escaparXml(ficha.acabamento.rotulo)}</text>
@@ -136,4 +183,16 @@ ${divisorias}
 <text x="560" y="375" fill="#334155" font-family="Arial, sans-serif" font-size="18">Quantidade: ${ficha.quantidade}</text>
 <text x="64" y="590" fill="#991b1b" font-family="Arial, sans-serif" font-size="16" font-weight="700">Sujeito à validação da fábrica; não é desenho liberado para fabricação.</text>
 </svg>`;
+}
+
+const GERADORES_PREVIA = {
+  1: gerarPreviaSvgSobMedidaV1,
+} as const;
+
+export function gerarPreviaSvgSobMedida(entrada: unknown): string {
+  const ficha = analisarFichaTecnicaSobMedida(entrada);
+  if (!ficha) throw new Error("Ficha técnica sob medida inválida ou não suportada.");
+  const gerador = GERADORES_PREVIA[ficha.previaVersao];
+  if (!gerador) throw new Error(`Versão de prévia não suportada: ${ficha.previaVersao}.`);
+  return gerador(ficha);
 }

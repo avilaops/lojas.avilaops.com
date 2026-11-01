@@ -92,7 +92,31 @@ test("a mesma ficha gera o mesmo SVG e dimensões diferentes mudam a geometria",
   assert.ok(geometriaOutra);
   assert.notEqual(geometriaPrimeira, geometriaOutra);
   assert.match(primeira, /80 × 60 × 120 cm/u);
+  assert.match(primeira, />P 120 cm</u);
   assert.match(primeira, /Aço galvanizado/u);
+});
+
+test("parser versionado preserva uma fixture v1 e recusa versões desconhecidas", () => {
+  const fixtureV1 = {
+    versao: 1,
+    previaVersao: 1,
+    referencia: "CFG-ABCDEFGHIJKL",
+    referenciaOrigem: null,
+    contratoVersao: 1,
+    criadaEm: "2026-11-01T12:30:00.000Z",
+    dimensoes: { larguraCm: 80, alturaCm: 60, profundidadeCm: 120 },
+    materialExterno: { codigo: "aco_galvanizado", rotulo: "Aço galvanizado" },
+    acabamento: { codigo: "pintura_eletrostatica", rotulo: "Pintura eletrostática" },
+    tampa: { codigo: "superior", rotulo: "Tampa superior" },
+    mobilidade: { codigo: "rodizios", rotulo: "Rodízios" },
+    divisorias: 2,
+    quantidade: 3,
+    observacoes: "Fixture histórica.",
+  };
+
+  assert.deepEqual(FichaTecnicaSobMedidaSchema.parse(fixtureV1), fixtureV1);
+  assert.equal(FichaTecnicaSobMedidaSchema.safeParse({ ...fixtureV1, versao: 99 }).success, false);
+  assert.throws(() => gerarPreviaSvgSobMedida({ ...fixtureV1, previaVersao: 99 } as never));
 });
 
 test("SVG permanece válido nos limites e não inclui observações livres nem PII", () => {

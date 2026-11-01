@@ -8,5 +8,11 @@ ALTER TABLE "SolicitacaoSobMedida"
     CHECK (
       ("fichaTecnica" IS NULL AND "fichaTecnicaVersao" IS NULL AND "previaVersao" IS NULL)
       OR
-      ("fichaTecnica" IS NOT NULL AND "fichaTecnicaVersao" > 0 AND "previaVersao" > 0)
+      (
+        "fichaTecnica" IS NOT NULL
+        AND "fichaTecnicaVersao" IS NOT NULL
+        AND "previaVersao" IS NOT NULL
+        AND "fichaTecnicaVersao" > 0
+        AND "previaVersao" > 0
+      )
     );

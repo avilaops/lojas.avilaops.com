@@ -1,7 +1,6 @@
 import { prisma } from "./db";
-import { ConfiguracaoSobMedidaSchema } from "./configurador-sob-medida";
 import {
-  FichaTecnicaSobMedidaSchema,
+  analisarFichaTecnicaSobMedida,
   criarFichaTecnicaSobMedida,
   type FichaTecnicaSobMedida,
 } from "./ficha-tecnica-sob-medida";
@@ -51,9 +50,8 @@ const buscarNoBanco: BuscarRegistroProjetoSobMedida = (tenantId, id) => prisma.s
 
 function fichaPersistidaValida(registro: RegistroProjetoSobMedida): FichaTecnicaSobMedida | null {
   if (registro.fichaTecnica === null || registro.fichaTecnicaVersao === null || registro.previaVersao === null) return null;
-  const analisada = FichaTecnicaSobMedidaSchema.safeParse(registro.fichaTecnica);
-  if (!analisada.success) return null;
-  const ficha = analisada.data;
+  const ficha = analisarFichaTecnicaSobMedida(registro.fichaTecnica);
+  if (!ficha) return null;
   if (
     ficha.versao !== registro.fichaTecnicaVersao
     || ficha.previaVersao !== registro.previaVersao
@@ -65,15 +63,13 @@ function fichaPersistidaValida(registro: RegistroProjetoSobMedida): FichaTecnica
 }
 
 function fichaLegada(registro: RegistroProjetoSobMedida): FichaTecnicaSobMedida | null {
-  const configuracao = ConfiguracaoSobMedidaSchema.safeParse(registro.configuracao);
-  if (!configuracao.success) return null;
   try {
     return criarFichaTecnicaSobMedida({
       referencia: registro.referencia,
       referenciaOrigem: registro.referenciaOrigem,
       contratoVersao: registro.contratoVersao,
       criadaEm: registro.criadoEm,
-      configuracao: configuracao.data,
+      configuracao: registro.configuracao,
     });
   } catch {
     return null;

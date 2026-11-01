@@ -88,8 +88,8 @@
         "A ficha é responsiva, imprimível e deixa claro que depende de validação fabril.",
         "Testes, integração PostgreSQL, TypeScript, lint e build passam antes da publicação."
       ],
-      "evidence": "Ticket Linear AVL-403; spec e plano em docs/superpowers; implementação TDD no checkout isolado .work/avl-403; 1324 testes aprovados; TypeScript e Prisma aprovados; lint sem erros e com 24 avisos preexistentes; build Next.js Node 22 aprovado com 119 páginas. Migração e integração PostgreSQL aguardam o CI do PR.",
-      "review": "Autorrevisão: snapshot e versões são atômicos; SVG não recebe PII nem texto livre; consulta do detalhe usa tenant e ID juntos; registros legados são apenas lidos e validados; saída mantém aviso de validação fabril.",
+      "evidence": "Ticket Linear AVL-403; spec e plano em docs/superpowers; implementação TDD no checkout isolado .work/avl-403; 1326 testes aprovados; TypeScript e Prisma aprovados; lint sem erros e com 24 avisos preexistentes; build Next.js Node 22 aprovado com 119 páginas. Teste semântico da restrição foi adicionado e aguarda o PostgreSQL 18 do CI do PR.",
+      "review": "Revisão independente corrigida: o CHECK agora recusa qualquer estado parcial; contrato, schema, rótulos e gerador v1 estão congelados e despachados por versão; contrato desconhecido falha fechado; SVG ganhou cota de profundidade. Isolamento tenant e ausência de PII foram preservados.",
       "environment": "local",
       "owner": null,
       "blocker": "",
@@ -103,6 +103,11 @@
           "at": "2026-11-01",
           "status": "em-revisao",
           "note": "Suíte completa, TypeScript, Prisma, lint e build Node 22 aprovados; integração PostgreSQL delegada ao gate obrigatório do GitHub CI."
+        },
+        {
+          "at": "2026-11-01",
+          "status": "em-revisao",
+          "note": "Parecer independente corrigido: restrição all-or-none robusta a NULL, contratos históricos v1 congelados, despacho por versão e cota de profundidade cobertos por testes."
         }
       ]
     },
