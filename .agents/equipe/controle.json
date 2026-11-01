@@ -42,7 +42,7 @@
       "objective": "Permitir que o cliente retome a ficha técnica sem expor contato, observações pessoais ou a chave privada no banco e nas URLs.",
       "assignee": null,
       "priority": "alta",
-      "status": "em-revisao",
+      "status": "concluida",
       "acceptanceCriteria": [
         "A chave privada é entregue uma vez e somente o hash é persistido.",
         "A retomada usa POST, é isolada por tenant e não revela se referência ou chave existem.",
@@ -50,9 +50,9 @@
         "Uma nova solicitação preserva a referência da origem comprovada.",
         "Testes, TypeScript, lint e build são aprovados antes da revisão."
       ],
-      "evidence": "Ticket Linear AVL-401; implementação em checkout isolado .work/avl-401; 1315 testes aprovados; TypeScript aprovado; lint sem erros e com 24 avisos preexistentes; build Next.js aprovado no Node 22 do Dockerfile e do CI, com 119 páginas geradas.",
+      "evidence": "Ticket Linear AVL-401; PRs #185 e #186 mesclados; 1315 testes aprovados; TypeScript aprovado; lint sem erros e com 24 avisos preexistentes; build Next.js aprovado no Node 22; migração e integração aprovadas no PostgreSQL 18 do CI; deploy c8cbac1 e fumaça aprovados no run 41271409737; página e API de retomada verificadas em mrgcaixastermicas.com.br.",
       "review": "Autorrevisão: a chave tem 128 bits aleatórios, só o SHA-256 chega ao banco, a retomada usa POST e limite por tenant/IP, a consulta seleciona apenas a ficha técnica e uma nova solicitação só referencia origem validada. A revisão do PR também originou cobertura para navegadores que bloqueiam o getter de localStorage.",
-      "environment": "local",
+      "environment": "producao",
       "owner": null,
       "blocker": "",
       "history": [
@@ -65,6 +65,11 @@
           "at": "2026-11-01",
           "status": "em-revisao",
           "note": "Testes, TypeScript, lint e build Node 22 aprovados. Prova de migração local indisponível por ausência do Docker; o CI executa migrate deploy e testes de integração em PostgreSQL 18."
+        },
+        {
+          "at": "2026-11-01",
+          "status": "concluida",
+          "note": "PRs #185 e #186 mesclados; integração, imagem, deploy e fumaça aprovados. Produção serve c8cbac1 e a API retorna erro genérico para código inválido."
         }
       ]
     },
