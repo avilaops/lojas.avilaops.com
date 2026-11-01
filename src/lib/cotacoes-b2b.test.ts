@@ -5,6 +5,16 @@ import { conferirAprovacaoCotacao, proximoEstadoCotacao, totaisCotacao } from ".
 test("total usa centavos inteiros e recusa desconto superior ao subtotal", () => {
   assert.deepEqual(totaisCotacao([{ quantidade: 3, precoUnitarioCentavos: 1_001 }], 3, 100), { subtotalCentavos: 3_003, descontoCentavos: 3, freteCentavos: 100, totalCentavos: 3_100 });
   assert.throws(() => totaisCotacao([{ quantidade: 1, precoUnitarioCentavos: 10 }], 11, 0), /desconto/i);
+  assert.throws(() => totaisCotacao([{ quantidade: 2, precoUnitarioCentavos: Number.MAX_SAFE_INTEGER }]), /limite monetário/i);
+  assert.throws(() => totaisCotacao([{ quantidade: 1, precoUnitarioCentavos: Number.MAX_SAFE_INTEGER }], 0, 1), /limite monetário/i);
+});
+
+test("totais recusam valores fora do limite persistível antes de gravar", () => {
+  const maximo = 2_147_483_647;
+  assert.equal(totaisCotacao([{ quantidade: 1, precoUnitarioCentavos: maximo }]).totalCentavos, maximo);
+  assert.throws(() => totaisCotacao([{ quantidade: 2, precoUnitarioCentavos: maximo }]), /limite/i);
+  assert.throws(() => totaisCotacao([{ quantidade: 1, precoUnitarioCentavos: maximo }], 0, 1), /limite/i);
+  assert.throws(() => totaisCotacao([{ quantidade: 1, precoUnitarioCentavos: Number.MAX_SAFE_INTEGER }]), /limite/i);
 });
 
 test("aprovação respeita papel, escopo, alçada e exceção administrativa", () => {

@@ -53,6 +53,7 @@ export const SECOES: ItemNav[] = [
     ],
   },
   { rotulo: "Pedidos", href: "/painel/pedidos", icone: "pedidos" },
+  { rotulo: "Cotações B2B", href: "/painel/cotacoes", icone: "pedidos" },
   {
     rotulo: "Produtos",
     href: "/painel/produtos",

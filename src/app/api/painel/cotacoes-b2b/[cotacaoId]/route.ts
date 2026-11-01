@@ -36,12 +36,13 @@ export async function POST(request: Request, { params }: Ctx) {
         freteCentavos: entrada.data.freteCentavos,
         condicoes: entrada.data.condicoes,
         justificativa: entrada.data.justificativa,
+        versaoEsperada: entrada.data.versaoEsperada,
       };
       return Response.json(await contraproporCotacaoB2B(s.tenant.id, id, versao, ator));
     }
-    if (entrada.data.acao === "submeter") return Response.json(await submeterCotacaoB2B(s.tenant.id, id, ator));
-    if (entrada.data.acao === "cancelar") return Response.json(await cancelarCotacaoB2B(s.tenant.id, id, ator, entrada.data.motivo));
-    if (entrada.data.acao === "converter") return Response.json(await converterCotacaoB2B(s.tenant.id, id, entrada.data.chaveIdempotencia, ator));
+    if (entrada.data.acao === "submeter") return Response.json(await submeterCotacaoB2B(s.tenant.id, id, ator, entrada.data.versaoEsperada));
+    if (entrada.data.acao === "cancelar") return Response.json(await cancelarCotacaoB2B(s.tenant.id, id, ator, entrada.data.motivo, entrada.data.versaoEsperada));
+    if (entrada.data.acao === "converter") return Response.json(await converterCotacaoB2B(s.tenant.id, id, entrada.data.chaveIdempotencia, ator, entrada.data.versaoEsperada));
     if (entrada.data.acao === "recomprar") return Response.json(await recomprarCotacaoB2B(s.tenant.id, id, entrada.data.validaAte, ator), { status: 201 });
     return Response.json({ erro: "Ação inválida." }, { status: 422 });
   } catch (falha) {

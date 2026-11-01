@@ -1,5 +1,8 @@
 import { autorizado, naoAutorizado } from "./admin-auth";
 import { prisma } from "./db";
+import { Prisma } from "@prisma/client";
+import { ErroCotacaoB2B } from "./cotacoes-b2b-erros";
+import { ErroCatalogo } from "./catalogo-oferta";
 
 export async function contextoCotacao(request: Request, slug: string) {
   if (!autorizado(request)) return { resposta: naoAutorizado() } as const;
@@ -9,7 +12,10 @@ export async function contextoCotacao(request: Request, slug: string) {
 }
 
 export function erroCotacao(erro: unknown) {
-  const mensagem = erro instanceof Error ? erro.message : "operação de cotação não concluída";
-  const status = /não encontrad/i.test(mensagem) ? 404 : /transição|expirad|alçada|escopo|precisa estar|indisponível|inválid|exige/i.test(mensagem) ? 422 : 409;
-  return Response.json({ erro: mensagem }, { status });
+  if (erro instanceof ErroCotacaoB2B || erro instanceof ErroCatalogo) return Response.json({ erro: erro.message }, { status: erro.status });
+  if (erro instanceof Prisma.PrismaClientKnownRequestError) {
+    if (erro.code === "P2025") return Response.json({ erro: "Cotação ou referência não encontrada." }, { status: 404 });
+    if (erro.code === "P2002") return Response.json({ erro: "A referência ou chave já foi usada. Confira o pedido antes de tentar novamente." }, { status: 409 });
+  }
+  return Response.json({ erro: "Não foi possível concluir a operação agora. Recarregue a cotação antes de tentar novamente." }, { status: 500 });
 }

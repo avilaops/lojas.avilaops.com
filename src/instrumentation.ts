@@ -11,6 +11,8 @@ import type { Instrumentation } from "next";
 export async function register(): Promise<void> {
   // O runtime Edge não tem timers longos nem Prisma; só o nodejs agenda.
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
+  const { iniciarLangfuse } = await import("./lib/langfuse");
+  await iniciarLangfuse();
   // Importação tardia para o build e o runtime Edge não carregarem o Prisma.
   const { iniciarAgendador } = await import("./lib/rotinas-agendador");
   iniciarAgendador();

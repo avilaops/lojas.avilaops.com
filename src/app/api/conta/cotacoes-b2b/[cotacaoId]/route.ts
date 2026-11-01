@@ -3,7 +3,7 @@ import { compradorAtual } from "@/lib/conta";
 import { erroCotacao } from "@/lib/cotacoes-b2b-api";
 import { AcaoSimplesCotacaoSchema, RecomprarCotacaoSchema, VersaoCotacaoSchema } from "@/lib/cotacoes-b2b-schema";
 import { aprovarCotacaoB2B, cancelarCotacaoB2B, contraproporCotacaoB2B, obterCotacaoB2B, recusarCotacaoB2B, recomprarCotacaoB2B, submeterCotacaoB2B } from "@/lib/cotacoes-b2b";
-import { prisma } from "@/lib/db";
+import { verificarAcessoCotacaoComprador } from "@/lib/cotacoes-b2b-consulta";
 import { tenantAtual } from "@/lib/tenant";
 
 type Ctx = { params: Promise<{ cotacaoId: string }> };
@@ -17,12 +17,12 @@ async function contexto(cotacaoId: string) {
   if (!tenant) return { resposta: Response.json({ erro: "Loja não encontrada." }, { status: 404 }) } as const;
   const comprador = await compradorAtual(tenant);
   if (!comprador) return { resposta: Response.json({ erro: "Entre na sua conta." }, { status: 401 }) } as const;
-  const vinculo = await prisma.compradorEmpresaB2B.findFirst({
-    where: { tenantId: tenant.id, compradorId: comprador.id, situacao: "ATIVO", cotacoes: { some: { id: cotacaoId } } },
-    select: { id: true },
-  });
-  if (!vinculo) return { resposta: Response.json({ erro: "Cotação não encontrada." }, { status: 404 }) } as const;
-  return { tenant, comprador, vinculo } as const;
+  try {
+    const vinculo = await verificarAcessoCotacaoComprador(tenant.id, comprador.id, cotacaoId);
+    return { tenant, comprador, vinculo } as const;
+  } catch (error) {
+    return { resposta: erroCotacao(error) } as const;
+  }
 }
 
 export async function GET(_: Request, { params }: Ctx) {
@@ -51,16 +51,17 @@ export async function POST(request: Request, { params }: Ctx) {
         freteCentavos: entrada.data.freteCentavos,
         condicoes: entrada.data.condicoes,
         justificativa: entrada.data.justificativa,
+        versaoEsperada: entrada.data.versaoEsperada,
       };
       return Response.json(await contraproporCotacaoB2B(c.tenant.id, id, versao, ator));
     }
-    if (entrada.data.acao === "submeter") return Response.json(await submeterCotacaoB2B(c.tenant.id, id, ator));
-    if (entrada.data.acao === "aprovar") return Response.json(await aprovarCotacaoB2B(c.tenant.id, id, c.vinculo.id, { ...ator, tipo: "APROVADOR" }));
+    if (entrada.data.acao === "submeter") return Response.json(await submeterCotacaoB2B(c.tenant.id, id, ator, entrada.data.versaoEsperada));
+    if (entrada.data.acao === "aprovar") return Response.json(await aprovarCotacaoB2B(c.tenant.id, id, c.vinculo.id, { ...ator, tipo: "APROVADOR" }, entrada.data.versaoEsperada));
     if (entrada.data.acao === "recusar") {
       if (!entrada.data.motivo) return Response.json({ erro: "Informe o motivo da recusa." }, { status: 422 });
-      return Response.json(await recusarCotacaoB2B(c.tenant.id, id, ator, entrada.data.motivo));
+      return Response.json(await recusarCotacaoB2B(c.tenant.id, id, ator, entrada.data.motivo, entrada.data.versaoEsperada));
     }
-    if (entrada.data.acao === "cancelar") return Response.json(await cancelarCotacaoB2B(c.tenant.id, id, ator, entrada.data.motivo));
+    if (entrada.data.acao === "cancelar") return Response.json(await cancelarCotacaoB2B(c.tenant.id, id, ator, entrada.data.motivo, entrada.data.versaoEsperada));
     if (entrada.data.acao === "recomprar") return Response.json(await recomprarCotacaoB2B(c.tenant.id, id, entrada.data.validaAte, ator), { status: 201 });
     return Response.json({ erro: "Ação inválida." }, { status: 422 });
   } catch (falha) {
