@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import CabecalhoSecao from "@/components/painel/CabecalhoSecao";
 import { prisma } from "@/lib/db";
@@ -42,6 +43,7 @@ export default async function ProjetosSobMedidaPage() {
                   {observacoes && <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{observacoes}</p>}
                   <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">
                     <span className="font-semibold">{solicitacao.nome}</span>
+                    <Link className="btn-primario" href={`/painel/sob-medida/${solicitacao.id}`}>Abrir ficha técnica</Link>
                     {solicitacao.email && <a className="btn-secundario" href={`mailto:${solicitacao.email}`}>Enviar e-mail</a>}
                     {telefone && <a className="btn-secundario" href={`https://wa.me/${telefone}`} target="_blank" rel="noopener">Abrir WhatsApp</a>}
                   </div>

@@ -8,6 +8,11 @@ import {
   resumoDaConfiguracao,
   VERSAO_CONFIGURADOR_SOB_MEDIDA,
 } from "./configurador-sob-medida";
+import {
+  criarFichaTecnicaSobMedida,
+  VERSAO_FICHA_TECNICA_SOB_MEDIDA,
+  VERSAO_PREVIA_SOB_MEDIDA,
+} from "./ficha-tecnica-sob-medida";
 
 export interface DadosPersistenciaSolicitacao {
   tenantId: string;
@@ -20,6 +25,9 @@ export interface DadosPersistenciaSolicitacao {
   resumo: string;
   chaveRetomadaHash: string;
   referenciaOrigem: string | null;
+  fichaTecnica: Prisma.InputJsonValue;
+  fichaTecnicaVersao: number;
+  previaVersao: number;
   consentimentoEm: Date;
 }
 
@@ -99,6 +107,15 @@ export async function criarSolicitacaoSobMedida(
     : null;
   const referencia = `CFG-${randomUUID().replaceAll("-", "").slice(0, 12).toUpperCase()}`;
   const chaveRetomada = randomBytes(16).toString("base64url");
+  const consentimentoEm = new Date();
+  const referenciaOrigem = origem?.referencia ?? null;
+  const fichaTecnica = criarFichaTecnicaSobMedida({
+    referencia,
+    referenciaOrigem,
+    contratoVersao: VERSAO_CONFIGURADOR_SOB_MEDIDA,
+    criadaEm: consentimentoEm,
+    configuracao: entrada.configuracao,
+  });
   const gravada = await persistir({
     tenantId,
     referencia,
@@ -109,8 +126,11 @@ export async function criarSolicitacaoSobMedida(
     configuracao: entrada.configuracao as Prisma.InputJsonValue,
     resumo: resumoDaConfiguracao(entrada.configuracao),
     chaveRetomadaHash: hashDaChave(chaveRetomada),
-    referenciaOrigem: origem?.referencia ?? null,
-    consentimentoEm: new Date(),
+    referenciaOrigem,
+    fichaTecnica: fichaTecnica as Prisma.InputJsonValue,
+    fichaTecnicaVersao: VERSAO_FICHA_TECNICA_SOB_MEDIDA,
+    previaVersao: VERSAO_PREVIA_SOB_MEDIDA,
+    consentimentoEm,
   });
   return {
     referencia: gravada.referencia,

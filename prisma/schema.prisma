@@ -428,6 +428,9 @@ model SolicitacaoSobMedida {
   origem            String   @default("configurador_publico")
   chaveRetomadaHash String?
   referenciaOrigem  String?
+  fichaTecnica      Json?
+  fichaTecnicaVersao Int?
+  previaVersao      Int?
   consentimentoEm   DateTime
   criadoEm          DateTime @default(now())
   atualizadoEm      DateTime @updatedAt

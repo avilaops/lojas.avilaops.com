@@ -89,6 +89,18 @@ test("docs/BACKUP-E-ROLLBACK.md só cita caminho que existe no repositório", ()
   assert.deepEqual(faltando, []);
 });
 
+test("CI tira o checkout de baseline da raiz antes do build Turbopack", () => {
+  const workflow = ler(".github/workflows/deploy-production.yml");
+  const checkout = workflow.indexOf("path: .contract-baseline");
+  const retirar = workflow.indexOf("Tirar baseline da raiz do Turbopack");
+  const build = workflow.indexOf("Construir aplicação para verificação funcional isolada");
+
+  assert.ok(checkout >= 0, "checkout de baseline não encontrado");
+  assert.ok(retirar > checkout, "baseline precisa sair depois da comparação");
+  assert.ok(build > retirar, "baseline precisa sair antes do build");
+  assert.match(workflow, /mv \.contract-baseline "\$RUNNER_TEMP\/lojas-contract-baseline"/u);
+});
+
 test("caminhosCitados ignora servidor, outro repositório, glob e marcador", () => {
   const texto = "`/opt/backups/db`, `scripts/deploy-container.sh` no `infra`, `src/lib/*.test.ts`, `docs/ROTINAS.md`, `tests/integration/catalogo.test.ts:12`, `host-lojas-<data>.sql.gz` e `npm run banco:ensaio`.";
   assert.deepEqual(caminhosCitados(texto), ["docs/ROTINAS.md", "scripts/deploy-container.sh", "tests/integration/catalogo.test.ts"]);

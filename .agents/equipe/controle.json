@@ -95,6 +95,49 @@
       ]
     },
     {
+      "id": "AVL-403",
+      "title": "Gerar prévia e ficha técnica de produção da configuração 3D da MRG",
+      "objective": "Congelar uma ficha técnica versionada e disponibilizar uma prévia SVG privada para análise e impressão pela fábrica.",
+      "assignee": null,
+      "priority": "alta",
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "Novas solicitações persistem ficha e versões na mesma operação.",
+        "A prévia SVG é derivada no servidor e não contém PII ou observações livres.",
+        "Detalhe e imagem são acessíveis somente pelo painel autenticado do mesmo tenant.",
+        "Registros antigos válidos continuam abrindo sem backfill silencioso.",
+        "A ficha é responsiva, imprimível e deixa claro que depende de validação fabril.",
+        "Testes, integração PostgreSQL, TypeScript, lint e build passam antes da publicação."
+      ],
+      "evidence": "Ticket Linear AVL-403; spec e plano em docs/superpowers; implementação TDD no checkout isolado .work/avl-403; 1327 testes aprovados; TypeScript e Prisma aprovados; lint sem erros e com 24 avisos preexistentes; build Next.js Node 22 aprovado com 119 páginas. Teste semântico da restrição foi adicionado e aguarda o PostgreSQL 18 do CI do PR.",
+      "review": "Revisão independente corrigida: o CHECK agora recusa qualquer estado parcial; contrato, schema, rótulos e gerador v1 estão congelados e despachados por versão; contrato desconhecido falha fechado; SVG ganhou cota de profundidade; a regra de impressão restaura explicitamente a ficha ocultada pelo CSS global. Isolamento tenant e ausência de PII foram preservados.",
+      "environment": "local",
+      "owner": null,
+      "blocker": "",
+      "history": [
+        {
+          "at": "2026-11-01",
+          "status": "em-andamento",
+          "note": "Snapshot técnico, migração, SVG determinístico, consulta tenant-safe, detalhe privado e impressão implementados com testes vermelhos antes do código."
+        },
+        {
+          "at": "2026-11-01",
+          "status": "em-revisao",
+          "note": "Suíte completa, TypeScript, Prisma, lint e build Node 22 aprovados; integração PostgreSQL delegada ao gate obrigatório do GitHub CI."
+        },
+        {
+          "at": "2026-11-01",
+          "status": "em-revisao",
+          "note": "Parecer independente corrigido: restrição all-or-none robusta a NULL, contratos históricos v1 congelados, despacho por versão e cota de profundidade cobertos por testes."
+        },
+        {
+          "at": "2026-11-01",
+          "status": "em-revisao",
+          "note": "Review do PR detectou conflito com a regra global de impressão; a ficha agora restaura visibilidade e posicionamento A4 com teste de regressão."
+        }
+      ]
+    },
+    {
       "id": "MELHOR-ENVIO-SANDBOX-20261027",
       "title": "Preparar e publicar conexão e cotação do Melhor Envio somente em sandbox",
       "assignee": null,

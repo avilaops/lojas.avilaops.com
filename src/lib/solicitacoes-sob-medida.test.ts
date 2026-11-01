@@ -37,6 +37,24 @@ test("criação persiste revisão validada no tenant informado", async () => {
   assert.equal(gravado?.contratoVersao, 1);
   assert.equal(gravado?.nome, "Maria Silva");
   assert.match(String(gravado?.referencia), /^CFG-[A-Z0-9]{12}$/);
+  assert.equal(gravado?.fichaTecnicaVersao, 1);
+  assert.equal(gravado?.previaVersao, 1);
+  assert.deepEqual(gravado?.fichaTecnica, {
+    versao: 1,
+    previaVersao: 1,
+    referencia: gravado?.referencia,
+    referenciaOrigem: null,
+    contratoVersao: 1,
+    criadaEm: gravado?.consentimentoEm.toISOString(),
+    dimensoes: { larguraCm: 80, alturaCm: 60, profundidadeCm: 120 },
+    materialExterno: { codigo: "aco_galvanizado", rotulo: "Aço galvanizado" },
+    acabamento: { codigo: "pintura_eletrostatica", rotulo: "Pintura eletrostática" },
+    tampa: { codigo: "superior", rotulo: "Tampa superior" },
+    mobilidade: { codigo: "rodizios", rotulo: "Rodízios" },
+    divisorias: 2,
+    quantidade: 3,
+    observacoes: "Uso industrial",
+  });
   assert.equal(resposta.referencia, gravado?.referencia);
   assert.deepEqual(resposta.criadoEm, new Date("2026-10-31T14:00:00Z"));
   assert.match(resposta.codigoRetomada, /^CFG-[A-Z0-9]{12}\.[A-Za-z0-9_-]{22}$/);
@@ -130,6 +148,7 @@ test("nova solicitação só vincula uma origem comprovada pela chave", async ()
     async () => origem,
   );
   assert.equal(gravado?.referenciaOrigem, origem.referencia);
+  assert.equal((gravado?.fichaTecnica as { referenciaOrigem?: string } | undefined)?.referenciaOrigem, origem.referencia);
 
   await assert.rejects(
     criarSolicitacaoSobMedida(
