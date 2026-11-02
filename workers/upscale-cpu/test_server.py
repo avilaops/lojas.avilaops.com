@@ -49,8 +49,16 @@ class WorkerHTTPTests(unittest.TestCase):
         self.assertEqual(self.request("POST", "/upscale", b"x", "wrong")[0], 401)
 
     def test_rejects_oversized_payload(self):
-        # Content-Length rejected before allocating request body.
-        self.assertEqual(self.request("POST", "/upscale", b"x" * (2 * 1024 * 1024 + 1), os.environ["UPSCALE_WORKER_TOKEN"])[0], 413)
+        # Send headers only: server must reject before reading the body.
+        conn = http.client.HTTPConnection("127.0.0.1", self.http.server_port, timeout=5)
+        try:
+            conn.putrequest("POST", "/upscale")
+            conn.putheader("Authorization", "Bearer " + os.environ["UPSCALE_WORKER_TOKEN"])
+            conn.putheader("Content-Length", str(2 * 1024 * 1024 + 1))
+            conn.endheaders()
+            self.assertEqual(conn.getresponse().status, 413)
+        finally:
+            conn.close()
 
     def test_rejects_invalid_image(self):
         self.assertEqual(self.request("POST", "/upscale", b"invalid", os.environ["UPSCALE_WORKER_TOKEN"])[0], 422)
