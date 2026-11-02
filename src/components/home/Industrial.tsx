@@ -7,6 +7,7 @@ import BuscaTecnica from "./BuscaTecnica";
 import BeneficiosBarra from "./BeneficiosBarra";
 import { LinkContatoMedido } from "@/components/EventoFunil";
 import type { DadosHome } from "./tipos";
+import styles from "./IndustrialPk.module.css";
 
 /** Imagem enviada à plataforma sai na largura pedida (`?w=`); as de fora ficam como estão. */
 function reduzida(url: string, largura: 320 | 1200): string {
@@ -32,7 +33,7 @@ export default function Industrial({ t, identidadePublica, categorias, marcas = 
   const contato = identidadePublica;
 
   return (
-    <div className="home-industrial">
+    <div className={`home-industrial ${t.slug === "pkvedacoes" ? styles.pk : ""}`}>
       <section className="industrial-topo" aria-labelledby="industrial-titulo">
         {/* Fundo por CSS, e só em tela larga: no celular a foto ficava atrás do
             formulário, a meia opacidade, e custava o maior download da página. */}
