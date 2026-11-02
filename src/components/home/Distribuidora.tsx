@@ -7,6 +7,8 @@ import BeneficiosBarra from "./BeneficiosBarra";
 import AtalhosCategorias from "./AtalhosCategorias";
 import { campanhasDaLoja } from "@/lib/campanhas";
 import type { DadosHome } from "./tipos";
+import BuscaTecnica from "./BuscaTecnica";
+import styles from "./Vedashow.module.css";
 
 /** Vitrine de campanha para lojas com artes promocionais e catálogo. */
 export default function Distribuidora({ t, identidade, categorias, vitrine, temDestaques, vende, moto }: DadosHome) {
@@ -14,13 +16,20 @@ export default function Distribuidora({ t, identidade, categorias, vitrine, temD
   const motopecas = t.segmento === "motopecas";
   const campanhas = campanhasDaLoja(tema);
   const distribuidoraVisual = campanhas.length > 0 || Boolean(t.bannerUrl);
+  const vedashow = t.slug === "vedashow";
 
   if (distribuidoraVisual) {
     const banners = campanhas.length ? campanhas : [{ imagemUrl: t.bannerUrl!, link: "/produtos", alt: "Campanha da loja" }];
     return (
-      <main className="home-mercado home-distribuidora home-campanhas">
-        <h1 className="sr-only">{t.nome} — {t.slogan || "Catálogo de produtos"}</h1>
+      <main className={`home-mercado home-distribuidora home-campanhas${vedashow ? ` ${styles.loja}` : ""}`}>
+        {!vedashow && <h1 className="sr-only">{t.nome} — {t.slogan || "Catálogo de produtos"}</h1>}
         <div className="campanhas-hero">
+          {vedashow && (
+            <div className={styles.abertura}>
+              <h1>{t.nome} — {t.slogan || "Catálogo de produtos"}</h1>
+              <Link href="/produtos" className="btn-primario">Ver produtos <ArrowRight size={18} aria-hidden="true" /></Link>
+            </div>
+          )}
           <BannerCarousel campanhas={banners} />
           {(tema.heroTitulo || tema.heroTexto) && (
             <div className="container-loja campanhas-hero-conteudo">
@@ -38,6 +47,7 @@ export default function Distribuidora({ t, identidade, categorias, vitrine, temD
         </section>
         <section className="container-loja campanhas-busca" aria-label="Busca no catálogo">
           <div><h2>Encontre o produto certo</h2><p>Busque por nome, código, finalidade ou marca.</p></div>
+          {vedashow && <BuscaTecnica />}
           <Link href="/produtos" className="btn-secundario">Buscar e filtrar produtos <Search size={18} /></Link>
         </section>
         <section className="container-loja campanhas-produtos" aria-labelledby="produtos-titulo">
