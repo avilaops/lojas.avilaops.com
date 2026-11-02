@@ -192,3 +192,103 @@
   .pk :global(.ct-abertura) { padding-block: 3.25rem; }
   .pk :global(.ct-busca) { box-shadow: 0 8px 25px rgb(22 37 30 / 6%); }
 }
+
+/* Search controls: the original industrial form assumes a dark hero.
+ * Explicit foregrounds prevent invisible labels over the new light surface. */
+.pk :global(.industrial-busca-livre > label) {
+  color: var(--pk-ink);
+  font-size: .875rem;
+  font-weight: 650;
+}
+.pk :global(.industrial-busca-livre > div) {
+  border: 1px solid var(--pk-border);
+  background: var(--pk-paper);
+  color: var(--pk-ink);
+}
+.pk :global(.industrial-busca-livre input) {
+  color: var(--pk-ink);
+  font-size: 1rem;
+}
+.pk :global(.industrial-busca-livre button),
+.pk :global(.industrial-medida-botao) {
+  background: var(--pk-accent);
+  color: var(--pk-paper);
+  font-weight: 680;
+}
+.pk :global(.industrial-busca-livre > div:focus-within),
+.pk :global(.industrial-medida-entrada:focus-within),
+.pk :global(.ct-busca:focus-within) {
+  border-color: var(--pk-accent);
+  box-shadow: 0 0 0 3px var(--pk-accent-soft);
+}
+.pk :global(.industrial-identificador-divisor::before),
+.pk :global(.industrial-identificador-divisor::after) {
+  background: var(--pk-border);
+}
+.pk :global(.industrial-medida) { padding: .75rem 0 0; }
+.pk :global(.industrial-medida-entrada) {
+  border-color: var(--pk-border);
+  background: var(--pk-paper);
+}
+.pk :global(.industrial-medida-entrada input) { color: var(--pk-ink); }
+.pk :global(.industrial-medida-ajuda) {
+  color: var(--pk-muted);
+  line-height: 1.6;
+}
+.pk :global(.industrial-linhas a) {
+  padding: 1.15rem;
+  gap: 1rem;
+}
+.pk :global(.industrial-linhas img) {
+  width: 6rem;
+  height: 6rem;
+  background: var(--pk-surface);
+}
+.pk :global(.industrial-linhas li:focus-within) { border-color: var(--pk-accent); }
+.pk :global(.industrial-linha-texto > span),
+.pk :global(.industrial-marcas > div p),
+.pk :global(.industrial-empresa > div p) { color: var(--pk-muted); }
+.pk :global(.industrial-marcas li) {
+  border-color: var(--pk-border);
+  background: var(--pk-surface);
+  color: var(--pk-ink);
+  font-weight: 580;
+}
+.pk :global(.industrial-empresa aside p),
+.pk :global(.industrial-empresa aside li span) {
+  color: color-mix(in srgb, var(--pk-paper) 78%, transparent);
+}
+.pk :global(.industrial-empresa aside a:not(.industrial-contato-botao)) {
+  color: var(--pk-paper);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.pk :global(.ct-rolagem) { border-color: var(--pk-border); border-radius: 12px; }
+.pk :global(.ct-tabela thead th) {
+  background: var(--pk-surface);
+  color: var(--pk-muted);
+  letter-spacing: normal;
+  text-transform: none;
+  font-size: .78rem;
+}
+.pk :global(.ct-tabela tbody th a:hover) { color: var(--pk-accent); }
+@media (max-width: 760px) {
+  .pk :global(.industrial-topo h1) { min-height: 0; }
+  .pk :global(.industrial-medida-campos) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .75rem;
+  }
+  .pk :global(.industrial-medida-campos > label:last-of-type) { grid-column: 1 / -1; }
+  .pk :global(.industrial-busca-livre button) { min-height: 48px; }
+  .pk :global(.industrial-linhas a) {
+    grid-template-columns: 5.25rem minmax(0, 1fr);
+    padding: 1rem;
+  }
+  .pk :global(.industrial-linhas img) { width: 5.25rem; height: 5.25rem; }
+  .pk :global(.industrial-empresa aside) { padding: 1.5rem; }
+}
+@media (max-width: 380px) {
+  .pk :global(.industrial-medida-campos) { grid-template-columns: minmax(0, 1fr); }
+  .pk :global(.industrial-medida-campos > label:last-of-type) { grid-column: auto; }
+  .pk :global(.industrial-linhas a) { grid-template-columns: minmax(0, 1fr); }
+}
