@@ -19,3 +19,15 @@ Python com onnxruntime (CPU), Pillow e NumPy; modelo ONNX verificado. Exige CPU 
 
 ## Segurança e operação
 Não registrar conteúdo ou token; sem URL arbitrária de imagem; upload autenticado pelo painel e segregado por tenant. O endpoint de health deve permanecer privado. Monitorar memória e disco. Rollback: remover variáveis do backend e parar worker. Não publicar antes dos testes e da revisão de implantação.
+
+## Ensaios reais em CPU (02/11/2026)
+
+Servidor de teste: Ubuntu 26.04, 2 vCPU, 3,7 GiB RAM, 93% de disco ocupado; ONNX Runtime 1.31.1 com 1 thread. As entradas foram padrões sintéticos e o tempo abaixo é **somente inferência**, não upload HTTP, compressão ou persistência.
+
+| Entrada | Saída | Inferência | RSS máximo |
+| --- | --- | ---: | ---: |
+| 32×32 | 128×128 | 0,12 s (com inicialização) | ~81 MiB |
+| 256×256 | 1024×1024 | 4,60 s | ~134 MiB |
+| 512×512 | 2048×2048 | 14,94 s | ~320 MiB |
+
+O teste 512×512 terminou com código 0, mas isso **não autoriza habilitar em produção** com o disco acima de 90%. Executar `python -m unittest discover -s workers/upscale-cpu -p 'test_server.py' -v` no ambiente com modelo e dependências; os 5 testes HTTP passaram no servidor de teste. Verificar fotos reais, picos de carga, limites de memória, segredos e deploy antes de liberar a feature.
