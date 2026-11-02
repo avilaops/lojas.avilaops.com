@@ -2,6 +2,7 @@ import Link from "@/components/LinkLoja";
 import { ArrowRight, Search } from "lucide-react";
 import TabelaTecnica from "@/components/TabelaTecnica";
 import type { DadosHome } from "./tipos";
+import styles from "./IndustrialPk.module.css";
 
 /**
  * Tabela de peças no lugar da grade de fotos: código, código original,
@@ -12,7 +13,7 @@ export default function CatalogoTecnico({ t, vitrine, temDestaques, vende }: Dad
   const titulo = temDestaques ? "Destaques do catálogo" : "Produtos disponíveis";
 
   return (
-    <main className="home-catalogo-tecnico">
+    <main className={`home-catalogo-tecnico ${t.slug === "pkvedacoes" ? styles.pk : ""}`}>
       <section className="ct-abertura">
         <div className="container-loja">
           <h1>{t.slogan ?? t.nome}</h1>
