@@ -140,3 +140,55 @@
   .pk :global(.industrial-linhas li) { transition: none; }
   .pk :global(.industrial-linhas li:hover) { transform: none; }
 }
+
+/* Technical-catalog variant: the same PK design without changing search semantics. */
+.pk :global(.ct-abertura) {
+  background: var(--pk-surface);
+  border-bottom: 1px solid var(--pk-border);
+  padding-block: clamp(4rem, 8vw, 7rem);
+}
+.pk :global(.ct-abertura h1) {
+  max-width: 16ch;
+  font-size: clamp(2.6rem, 6.5vw, 5.5rem);
+  font-weight: 720;
+  letter-spacing: -.055em;
+  line-height: 1.04;
+  overflow-wrap: break-word;
+  color: var(--pk-ink);
+}
+.pk :global(.ct-abertura p) {
+  color: var(--pk-muted);
+  font-size: 1.08rem;
+  line-height: 1.65;
+}
+.pk :global(.ct-busca) {
+  background: var(--pk-paper);
+  border: 1px solid var(--pk-border);
+  border-radius: 12px;
+  padding: .55rem;
+  max-width: 820px;
+  box-shadow: 0 18px 45px rgb(22 37 30 / 8%);
+}
+.pk :global(.ct-busca input) {
+  min-width: 0;
+  color: var(--pk-ink);
+  background: transparent;
+}
+.pk :global(.ct-busca button) {
+  background: var(--pk-accent);
+  color: var(--pk-paper);
+  border-radius: 7px;
+  min-height: 44px;
+}
+.pk :global(.ct-catalogo) { padding-block: clamp(3.5rem, 6vw, 6rem); }
+.pk :global(.ct-catalogo h2) {
+  color: var(--pk-ink);
+  font-size: clamp(1.75rem, 3vw, 2.65rem);
+  letter-spacing: -.04em;
+  font-weight: 680;
+}
+.pk :global(.ct-catalogo header a) { color: var(--pk-accent); font-weight: 650; }
+@media (max-width: 760px) {
+  .pk :global(.ct-abertura) { padding-block: 3.25rem; }
+  .pk :global(.ct-busca) { box-shadow: 0 8px 25px rgb(22 37 30 / 6%); }
+}
