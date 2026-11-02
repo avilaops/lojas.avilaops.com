@@ -6,6 +6,13 @@ export const runtime = "nodejs";
 const MAX_INPUT = 2 * 1024 * 1024;
 const MAX_OUTPUT = 12 * 1024 * 1024;
 
+/** Consulta autenticada para mostrar o botão somente quando o worker está configurado. */
+export async function GET() {
+  const { erro } = await exigir("catalogo");
+  if (erro) return erro;
+  return Response.json({ disponivel: Boolean(process.env.LOJAS_UPSCALE_WORKER_URL && process.env.LOJAS_UPSCALE_WORKER_TOKEN) }, { headers: { "Cache-Control": "no-store" } });
+}
+
 /** Amplia uma imagem de catálogo usando o worker ONNX CPU privado. */
 export async function POST(request: Request) {
   const { s, erro } = await exigir("catalogo");
