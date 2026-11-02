@@ -1,0 +1,88 @@
+/* Hallmark · v2.0.0 · theme: brand · redesign: full · scope: page · brand: VedaShow (live 2026-11-02) · shape: catalogue · hero: split · signature: catalogue search · copy: verbatim */
+/* Critique: campaign artwork hid the page heading and displaced catalogue search. Preserve campaign links, product cards and tenant tokens. */
+/* waive: 44b — existing campaign copy is retained; no invented headline. */
+.loja {
+  --veda-paper: var(--background);
+  --veda-ink: var(--foreground);
+  --veda-accent: var(--primary);
+  --veda-line: var(--border);
+  --veda-surface: var(--card);
+  --veda-muted: var(--muted-foreground);
+  color: var(--veda-ink);
+  background: var(--veda-paper);
+  padding-top: 1.5rem;
+}
+.loja :global(.campanhas-hero) {
+  display: grid;
+  grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr);
+  align-items: center;
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+  width: min(calc(100% - 2rem), 1200px);
+  margin-inline: auto;
+}
+.abertura { min-width: 0; padding-block: 1rem; }
+.abertura h1 {
+  max-width: 17ch;
+  min-width: 0;
+  overflow-wrap: break-word;
+  font-size: clamp(1.75rem, 3.2vw, 3rem);
+  font-weight: 750;
+  line-height: 1.1;
+  letter-spacing: -.035em;
+  text-wrap: balance;
+}
+.abertura > a { display: inline-flex; margin-top: 1.5rem; }
+.loja :global(.banner-campanhas) { min-width: 0; border-radius: .75rem; }
+.loja :global(.banner-campanha img) { object-fit: contain; }
+.loja :global(.campanhas-hero-conteudo) {
+  position: static;
+  grid-column: 1 / -1;
+  width: 100%;
+  padding: 0;
+  color: var(--veda-ink);
+  background: none;
+}
+.loja :global(.campanhas-hero-conteudo > div) { max-width: 65ch; }
+.loja :global(.campanhas-busca) {
+  order: -1;
+  display: grid;
+  grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
+  border: 0;
+  border-bottom: 1px solid var(--veda-line);
+  border-radius: 0;
+  padding: 0 0 1.5rem;
+}
+.loja :global(.campanhas-busca > a) { grid-column: 2; justify-self: start; }
+.loja :global(.industrial-busca-livre > label) { color: var(--veda-ink); }
+.loja :global(.industrial-busca-livre > div) { border: 1px solid var(--veda-line); background: var(--veda-surface); color: var(--veda-ink); }
+.loja :global(.industrial-busca-livre input) { color: var(--veda-ink); }
+.loja :global(.industrial-busca-livre button) { background: var(--veda-accent); color: var(--primary-foreground); }
+.loja :global(.campanhas-categorias) { padding-block: 1rem; }
+.loja :global(.atalhos-cat-tira) { gap: .75rem; }
+.loja :global(.atalhos-cat-tira > a) {
+  align-items: center;
+  border: 1px solid var(--veda-line);
+  border-radius: .5rem;
+  padding: 1rem .5rem;
+  background: var(--veda-surface);
+}
+.loja :global(.atalhos-cat-nome) { color: var(--veda-ink); font-weight: 600; }
+.loja :global(a:active), .loja :global(button:active) { opacity: .8; }
+.loja :global(.campanhas-produtos) { border-top: 1px solid var(--veda-line); padding-top: 1.5rem; }
+.loja :global(.campanhas-produtos > header) { margin-bottom: 1.5rem; }
+.loja :global(a:focus-visible), .loja :global(button:focus-visible), .loja :global(input:focus-visible) {
+  outline: 3px solid var(--veda-accent);
+  outline-offset: 3px;
+}
+@media (max-width: 760px) {
+  .loja { padding-top: 1rem; }
+  .loja :global(.campanhas-hero), .loja :global(.campanhas-busca) { grid-template-columns: minmax(0, 1fr); gap: 1rem; }
+  .loja :global(.campanhas-busca > a) { grid-column: 1; }
+  .abertura { padding: 0; }
+  .abertura h1 { max-width: 24ch; font-size: clamp(1.6rem, 6vw, 2.25rem); }
+  .abertura > a { margin-top: 1rem; }
+  .loja :global(.atalhos-cat-tira) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .loja :global(*) { scroll-behavior: auto; transition-duration: 0s; animation: none; }
+}
