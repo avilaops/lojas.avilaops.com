@@ -1,0 +1,142 @@
+/* Hallmark / PK Vedações — 2026-11-02.
+ * Critique: industrial storefront needs a clear technical-search hierarchy,
+ * quieter surfaces, typographic rhythm and accessible calls to action.
+ * Scope: this module only attaches to tenant slug pkvedacoes.
+ */
+.pk {
+  --pk-ink: #16251e;
+  --pk-muted: #64756b;
+  --pk-surface: #f5f7f3;
+  --pk-paper: #ffffff;
+  --pk-border: #dce5dc;
+  --pk-accent: #1f6742;
+  --pk-accent-soft: #e8f1e9;
+  color: var(--pk-ink);
+  background: var(--pk-paper);
+  overflow-x: clip;
+}
+.pk :global(.industrial-topo) {
+  background: var(--pk-surface);
+  border-bottom: 1px solid var(--pk-border);
+  position: relative;
+  isolation: isolate;
+}
+.pk :global(.industrial-topo-foto) {
+  opacity: .12;
+  filter: grayscale(1);
+  pointer-events: none;
+}
+.pk :global(.industrial-topo-conteudo) {
+  position: relative;
+  padding-block: clamp(3rem, 7vw, 6.5rem);
+}
+.pk :global(.industrial-topo-marca) {
+  color: var(--pk-accent);
+  font-size: .85rem;
+  font-weight: 650;
+  text-transform: none;
+  letter-spacing: 0;
+  margin-bottom: 1.3rem;
+}
+.pk :global(.industrial-topo h1) {
+  color: var(--pk-ink);
+  max-width: 17ch;
+  font-weight: 720;
+  font-size: clamp(2.75rem, 6vw, 5.4rem);
+  line-height: 1.04;
+  letter-spacing: -.055em;
+  overflow-wrap: break-word;
+}
+.pk :global(.industrial-topo-texto) {
+  color: var(--pk-muted);
+  max-width: 58ch;
+  line-height: 1.7;
+  font-size: clamp(1rem, 1.45vw, 1.2rem);
+}
+.pk :global(.industrial-identificador) {
+  background: var(--pk-paper);
+  border: 1px solid var(--pk-border);
+  box-shadow: 0 18px 45px rgb(22 37 30 / 7%);
+  border-radius: 14px;
+  padding: clamp(1rem, 2.5vw, 2rem);
+  max-width: 920px;
+  margin-top: clamp(1.75rem, 3vw, 3rem);
+}
+.pk :global(.industrial-identificador-divisor) {
+  color: var(--pk-muted);
+}
+.pk :global(.industrial-linhas),
+.pk :global(.industrial-produtos),
+.pk :global(.industrial-empresa) {
+  padding-block: clamp(3.5rem, 6vw, 6rem);
+}
+.pk :global(.industrial-linhas h2),
+.pk :global(.industrial-produtos h2),
+.pk :global(.industrial-marcas h2),
+.pk :global(.industrial-diferenciais h2),
+.pk :global(.industrial-empresa h2) {
+  color: var(--pk-ink);
+  font-size: clamp(1.75rem, 3vw, 2.7rem);
+  font-weight: 680;
+  letter-spacing: -.04em;
+  line-height: 1.15;
+}
+.pk :global(.industrial-linhas ul) { gap: 1rem; }
+.pk :global(.industrial-linhas li) {
+  background: var(--pk-paper);
+  border: 1px solid var(--pk-border);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color .2s, box-shadow .2s, transform .2s;
+}
+.pk :global(.industrial-linhas li:hover) {
+  border-color: var(--pk-accent);
+  box-shadow: 0 10px 24px rgb(22 37 30 / 7%);
+  transform: translateY(-2px);
+}
+.pk :global(.industrial-linha-texto strong) {
+  color: var(--pk-ink);
+  font-weight: 680;
+  letter-spacing: -.02em;
+}
+.pk :global(.industrial-linha-texto em) {
+  color: var(--pk-accent);
+  font-style: normal;
+  font-weight: 650;
+}
+.pk :global(.industrial-marcas),
+.pk :global(.industrial-beneficios) { border-color: var(--pk-border); }
+.pk :global(.industrial-diferenciais) {
+  background: var(--pk-surface);
+  border-block: 1px solid var(--pk-border);
+}
+.pk :global(.industrial-empresa aside) {
+  background: var(--pk-ink);
+  color: var(--pk-paper);
+  border-radius: 14px;
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+}
+.pk :global(.industrial-empresa aside h3) { color: var(--pk-paper); }
+.pk :global(.industrial-contato-botao) {
+  background: var(--pk-accent);
+  color: var(--pk-paper);
+  border-radius: 7px;
+  font-weight: 650;
+  min-height: 46px;
+}
+.pk :global(a:focus-visible),
+.pk :global(button:focus-visible),
+.pk :global(input:focus-visible) {
+  outline: 3px solid var(--pk-accent);
+  outline-offset: 3px;
+}
+@media (max-width: 760px) {
+  .pk :global(.industrial-topo-foto) { display: none; }
+  .pk :global(.industrial-topo-conteudo) { padding-block: 2.5rem 3rem; }
+  .pk :global(.industrial-topo h1) { font-size: clamp(2.4rem, 10vw, 3.75rem); }
+  .pk :global(.industrial-identificador) { box-shadow: 0 8px 22px rgb(22 37 30 / 6%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pk :global(.industrial-linhas li) { transition: none; }
+  .pk :global(.industrial-linhas li:hover) { transform: none; }
+}
