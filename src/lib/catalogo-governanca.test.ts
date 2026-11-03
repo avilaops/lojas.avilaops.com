@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type { ProdutoCatalogo } from "./catalogo-qualidade";
-import { relatorioDeGovernanca } from "./catalogo-governanca";
+import { relatorioDeGovernanca, type LinhaGovernancaCatalogo } from "./catalogo-governanca";
 
 type Opcoes = {
   id?: string;
@@ -182,4 +182,134 @@ test("não contabiliza NCM ou medida técnica malformados como cobertura", () =>
   assert.equal(relatorio.linhas[0].campos.ncm, false);
   assert.equal(relatorio.linhas[0].campos.medidas, false);
   assert.equal(relatorio.linhas[0].estado, "BLOQUEADO");
+});
+
+test("medidas rejeitam booleanos, arrays e valores acima do teto técnico", () => {
+  for (const categoria of ["Retentores", "O-rings", "Rolamentos", "Ferramentas"]) {
+    for (const valor of [true, [20], { valor: 20 }, 3001]) {
+      const relatorio = relatorioDeGovernanca([produto({
+        categoria,
+        atributos: { diametroInternoMm: valor, diametroExternoMm: null, alturaMm: null },
+      })]);
+
+      assert.equal(relatorio.linhas[0].campos.medidas, false, `${categoria}: ${JSON.stringify(valor)}`);
+    }
+  }
+});
+
+test("retentor não aceita booleano como diâmetro mesmo com as outras medidas preenchidas", () => {
+  const relatorio = relatorioDeGovernanca([produto({ atributos: { diametroInternoMm: true } })]);
+
+  assert.equal(relatorio.linhas[0].campos.medidas, false);
+  assert.ok(relatorio.linhas[0].ocorrencias.some((o) => o.regra === "medidas_familia_ausentes"));
+});
+
+test("preserva medidas decimais legadas em texto e NCM formatado", () => {
+  const relatorio = relatorioDeGovernanca([produto({
+    ncm: "4016.93.00",
+    atributos: { diametroInternoMm: "20.5", diametroExternoMm: "35", alturaMm: "7" },
+  })]);
+
+  assert.equal(relatorio.linhas[0].campos.medidas, true);
+  assert.equal(relatorio.linhas[0].campos.ncm, true);
+  assert.equal(relatorio.resumo.coberturaPercentual, 100);
+});
+
+test("NCM com letras entre os dígitos não conta como preenchido", () => {
+  const relatorio = relatorioDeGovernanca([produto({ ncm: "4016abc9300" })]);
+
+  assert.equal(relatorio.linhas[0].campos.ncm, false);
+  assert.equal(relatorio.linhas[0].estado, "BLOQUEADO");
+});
+
+test("unidade exige texto e não aceita tipos JSON arbitrários", () => {
+  for (const unidade of [true, 1, {}, ["UN"]]) {
+    const relatorio = relatorioDeGovernanca([produto({ atributos: { unidade } })]);
+    assert.equal(relatorio.linhas[0].campos.unidade, false, JSON.stringify(unidade));
+  }
+  const legado = relatorioDeGovernanca([produto({ atributos: { unidade: null, unidadeVenda: " UN " } })]);
+  assert.equal(legado.linhas[0].campos.unidade, true);
+});
+
+test("dimensões da embalagem não suprem as medidas técnicas de outras famílias", () => {
+  const relatorio = relatorioDeGovernanca([produto({
+    categoria: "Ferramentas",
+    atributos: {
+      diametroInternoMm: null, diametroExternoMm: null, alturaMm: null,
+      comprimentoCm: 20, larguraCm: 10, alturaCm: 5,
+    },
+  })]);
+
+  assert.equal(relatorio.linhas[0].campos.medidas, false);
+});
+
+test("anel O e anéis O exigem todas as medidas da família O-ring", () => {
+  for (const categoria of ["Anel O", "Anéis O", "O-ring", "O-rings"]) {
+    const relatorio = relatorioDeGovernanca([produto({ categoria, atributos: { alturaMm: null } })]);
+    assert.equal(relatorio.linhas[0].familia, "oring", categoria);
+    assert.equal(relatorio.linhas[0].campos.medidas, false, categoria);
+  }
+});
+
+test("cobertura vazia é explícita e variantes inativas não entram no denominador", () => {
+  const inativo = produto();
+  inativo.variantes[0].ativo = false;
+  for (const produtos of [[], [inativo]]) {
+    const relatorio = relatorioDeGovernanca(produtos);
+    assert.equal(relatorio.resumo.skus, 0);
+    assert.equal(relatorio.resumo.camposObrigatorios, 0);
+    assert.equal(relatorio.resumo.coberturaPercentual, 100);
+    assert.deepEqual(relatorio.coberturaPorCampo.medidas, { preenchidos: 0, total: 0, percentual: 100 });
+    assert.deepEqual(relatorio.linhas, []);
+  }
+});
+
+test("cada campo obrigatório ausente reduz a cobertura e gera ocorrência crítica por SKU", () => {
+  const casos: Array<{
+    campo: keyof LinhaGovernancaCatalogo["campos"];
+    remover: (p: ProdutoCatalogo) => void;
+  }> = [
+    { campo: "nome", remover: (p) => { p.nome = " "; } },
+    { campo: "categoria", remover: (p) => { p.categoriaId = null; p.categoria = null; } },
+    { campo: "marca", remover: (p) => { p.marca = null; } },
+    { campo: "sku", remover: (p) => { p.sku = null; p.variantes[0].sku = null; } },
+    { campo: "unidade", remover: (p) => { p.atributos = { diametroInternoMm: 20, diametroExternoMm: 35, alturaMm: 7 }; } },
+    { campo: "ncm", remover: (p) => { p.ncm = null; } },
+    { campo: "descricao", remover: (p) => { p.descricao = null; p.descricaoCurta = null; } },
+    { campo: "imagem", remover: (p) => { p.midias = []; } },
+    { campo: "estoque", remover: (p) => { p.variantes[0].saldos = []; } },
+    { campo: "preco", remover: (p) => { p.variantes[0].preco = null; } },
+    { campo: "medidas", remover: (p) => { p.atributos = { unidade: "UN" }; } },
+  ];
+
+  for (const { campo, remover } of casos) {
+    const p = produto();
+    remover(p);
+    const relatorio = relatorioDeGovernanca([p]);
+    assert.equal(relatorio.linhas[0].campos[campo], false, campo);
+    assert.equal(relatorio.linhas[0].estado, "BLOQUEADO", campo);
+    assert.ok(relatorio.linhas[0].ocorrencias.some((o) => o.campo === campo && o.severidade === "erro"), campo);
+    assert.equal(relatorio.resumo.camposObrigatorios, 11, campo);
+    assert.equal(relatorio.resumo.camposPreenchidos, 10, campo);
+    assert.equal(relatorio.resumo.coberturaPercentual, 90.91, campo);
+  }
+});
+
+test("aceita seção do O-ring e largura do rolamento e separa a cobertura por família", () => {
+  const relatorio = relatorioDeGovernanca([
+    produto({ categoria: "O-rings", atributos: { alturaMm: null, secaoMm: 2.4, unidade: null } }),
+    produto({
+      id: "rolamento", categoria: "Rolamentos", sku: "ROL-6204",
+      atributos: { diametroInternoMm: null, diametroInternoRolamentoMm: 20, alturaMm: null, larguraMm: 14 },
+    }),
+  ]);
+
+  assert.ok(relatorio.linhas.every((linha) => linha.campos.medidas));
+  assert.equal(relatorio.resumo.camposObrigatorios, 22);
+  assert.equal(relatorio.resumo.camposPreenchidos, 21);
+  assert.equal(relatorio.resumo.coberturaPercentual, 95.45);
+  assert.deepEqual(relatorio.coberturaPorFamilia, [
+    { familia: "oring", skus: 1, preenchidos: 10, total: 11, percentual: 90.91, bloqueados: 1 },
+    { familia: "rolamento", skus: 1, preenchidos: 11, total: 11, percentual: 100, bloqueados: 0 },
+  ]);
 });

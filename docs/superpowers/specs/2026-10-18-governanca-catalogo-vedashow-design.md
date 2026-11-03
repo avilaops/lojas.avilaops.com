@@ -38,6 +38,14 @@ descrição, imagem, estoque e preço. Medidas são específicas:
 A família vem do nome da categoria; atributos legados podem fornecer `unidade`
 ou `unidadeVenda`, `ncm` e medidas sem reescrever os dados.
 
+Na validação, unidade exige texto; NCM exige oito dígitos, sem pontuação ou no
+formato `0000.00.00`. Isso verifica formato, sem atestar enquadramento fiscal.
+Medidas em milímetros aceitam números e números legados em texto, respeitando
+o teto de sanidade já usado pelo catálogo (`MEDIDA_MAXIMA_MM`, 3000 mm).
+Booleanos, arrays e objetos não são medidas. As dimensões de embalagem
+`comprimentoCm`, `larguraCm` e `alturaCm` não suprem medidas técnicas.
+As categorias “Anel O” e “Anéis O” recebem as regras de O-ring.
+
 Uma nova rota administrativa
 `/api/admin/tenants/[slug]/catalogo/qualidade` consulta somente o tenant
 resolvido, sem paginação truncada, e devolve o relatório. Ela é leitura

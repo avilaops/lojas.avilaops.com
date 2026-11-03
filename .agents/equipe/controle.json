@@ -29,6 +29,29 @@
       "history": [{ "at": "2026-11-03", "note": "Preparação de PR para publicação pelo workflow existente, sem alteração de schema ou dados comerciais." }]
     },
     {
+      "id": "AVL-263",
+      "title": "Vedashow — governança mínima de qualidade do catálogo",
+      "objective": "Revalidar a implementação existente e corrigir cobertura indevida de campos malformados, preservando a API administrativa somente leitura.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-andamento",
+      "acceptanceCriteria": [
+        "Relatório por SKU com cobertura total, por campo e por família.",
+        "Alertas de inconsistências críticas, SKU normalizado duplicado e preços conflitantes.",
+        "Medidas técnicas válidas sem inferência pelo nome nem uso das dimensões da embalagem.",
+        "API autenticada, isolada por tenant, com mais de cem SKUs e sem escrita no catálogo."
+      ],
+      "evidence": "17 testes direcionados aprovados antes dos dois testes adicionais de campos e famílias; seis regressões reproduzidas antes da correção; três testes de integração aprovados em PostgreSQL 18 descartável, incluindo 101 SKUs, isolamento e snapshots sem escrita. Gates finais de suíte geral, TypeScript, lint e build aguardam GitHub CI. evidencias/avl-263-governanca-catalogo-2026-11-03.md.",
+      "environment": "local-worktree-avl-263",
+      "history": [
+        {
+          "at": "2026-11-03",
+          "status": "em-andamento",
+          "note": "Retomada em branch isolada da main 45fe4cf; implementação anterior localizada no commit 785a5dc. Alterações de inventário do checkout principal preservadas."
+        }
+      ]
+    },
+    {
       "id": "B2B-CONCLUSAO-MODULO-20261028",
       "title": "Concluir módulo de comércio B2B e evidências funcionais",
       "objective": "Completar domínio, contratos e operação de cotação/pedido até sua verificação ponta a ponta, preservando o escopo dos demais módulos.",
