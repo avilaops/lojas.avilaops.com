@@ -22,3 +22,9 @@ test("fonte variável entra uma vez, e família ausente não devolve nada", () =
   assert.deepEqual(extrairPreCargas(css, "Inter"), ["/_next/static/media/inter-var.woff2"]);
   assert.deepEqual(extrairPreCargas(css, "Montserrat"), []);
 });
+
+test("pré-carrega a fonte local completa sem unicode-range uma única vez", () => {
+  const css = '@font-face{font-family:Playfair;src:url(../media/playfair.ttf)format("truetype");font-style:normal;font-weight:400 700;font-display:swap}';
+  assert.deepEqual(extrairPreCargas(css, "Playfair"), ["/_next/static/media/playfair.ttf"]);
+  assert.deepEqual(extrairPreCargas(css.replace("font-style:normal", "font-style:italic"), "Playfair"), []);
+});

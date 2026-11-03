@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import localFont from "next/font/local";
-import { Inter, Montserrat, Playfair_Display, Poppins } from "next/font/google";
+import { Inter, Montserrat, Poppins } from "next/font/google";
 import type { TemaLoja } from "./tema";
 import { extrairPreCargas } from "./fontes-pre-carga";
 
@@ -21,7 +21,17 @@ import { extrairPreCargas } from "./fontes-pre-carga";
 const inter = Inter({ subsets: ["latin"], weight: ["400", "600", "700", "800"], display: "swap", preload: false });
 const poppins = Poppins({ subsets: ["latin"], weight: ["400", "600", "700", "800"], display: "swap", preload: false });
 const montserrat = Montserrat({ subsets: ["latin"], weight: ["400", "600", "700", "800"], display: "swap", preload: false });
-const playfair = Playfair_Display({ subsets: ["latin"], weight: ["400", "700"], display: "swap", preload: false });
+// Playfair local evita a falha intermitente do Next com URLs /l/font do Google.
+// Proveniência e licença em src/fonts/README.md e OFL-playfair-display.txt.
+const playfair = localFont({
+  src: "../fonts/playfair-display-variable.ttf",
+  weight: "400 700",
+  style: "normal",
+  display: "swap",
+  preload: false,
+  adjustFontFallback: "Times New Roman",
+  fallback: ["Georgia", "serif"],
+});
 /**
  * Serifa do Ateliê. Arquivo nosso, licença OFL em `src/fonts/OFL-dm-serif-display.txt`.
  * Não passa pelo Google nem no build nem no navegador. Archivo continua sendo

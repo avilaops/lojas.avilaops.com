@@ -25,7 +25,7 @@
         "Permissão catalogo e isolamento por tenant preservados.",
         "CI aprovada e imagem publicada pelo workflow; verificação de produção registrada separadamente."
       ],
-      "evidence": "Implementação e procedimentos em docs/ETIQUETAS-PRODUTOS.md. Evidências locais da implementação anterior não substituem CI: testes unitários/integrados, navegador e decodificação dos PDFs. Publicação autorizada pelo proprietário nesta sessão; CI e deploy pendentes.",
+      "evidence": "PR 195 aprovado e integrado em a7efa21; CI 41669320491 aprovada. Deploy 41671439585 iniciado. Revisão complementar trata recuperação da impressão e inclui QA de navegador no CI. Procedimentos em docs/ETIQUETAS-PRODUTOS.md; aceite físico ainda depende da impressora e leitor do cliente.",
       "history": [{ "at": "2026-11-03", "note": "Preparação de PR para publicação pelo workflow existente, sem alteração de schema ou dados comerciais." }]
     },
     {

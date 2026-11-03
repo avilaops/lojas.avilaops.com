@@ -140,7 +140,8 @@ export default function EtiquetasProdutos({ produtoId }: { produtoId?: string })
           </select>
         </label>
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={preco} onChange={e => setPreco(e.target.checked)} />Incluir preço</label>
-        <button className="btn-primario" disabled={!podeImprimir || impressao} onClick={() => setImpressao(true)}>Imprimir / salvar PDF</button>
+        <button className="btn-primario" disabled={!podeImprimir || impressao} onClick={() => { setErro(""); setImpressao(true); }}>Imprimir / salvar PDF</button>
+        {impressao && <button className="btn-secundario" onClick={() => setImpressao(false)}>Voltar às etiquetas</button>}
         {lista.length > 0 && <button className="text-sm underline" onClick={() => setSelecionadas({})}>Limpar seleção</button>}
       </div>
       <p className="text-sm text-muted-foreground">Até {MAX_ETIQUETAS} etiquetas por impressão. Use escala 100%, sem cabeçalho e rodapé. No A4, use folha sem espaços entre etiquetas, duas colunas e margem de 5 mm; confira o alinhamento em papel comum primeiro.</p>
