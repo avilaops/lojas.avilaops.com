@@ -6,7 +6,8 @@ import { prisma } from "../src/lib/db";
 import { salvarProdutoNoCatalogo, salvarGradeNoCatalogo } from "../src/lib/catalogo-escrita";
 import { emitirToken } from "../src/lib/sessao";
 
-// Executar contra Next local iniciado com a mesma DATABASE_URL e LOJAS_SECRET.
+// Executar na CI contra Next isolado iniciado com a mesma DATABASE_URL e LOJAS_SECRET.
+assert.equal(process.env.CI, "true", "Jornada executada exclusivamente na CI.");
 const url = new URL(process.env.DATABASE_URL ?? "http://invalid");
 if (url.hostname !== "127.0.0.1" || url.port !== "5548" || !url.pathname.endsWith("_test")) throw new Error("QA exige banco isolado local :5548/*_test.");
 const base = "http://127.0.0.1:3089";
@@ -48,6 +49,23 @@ try {
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true);
   await page.setViewportSize({ width: 1440, height: 1100 });
   await page.evaluate(() => { window.print = () => {}; });
+  // Falha de preparação seguida de nova tentativa limpa o erro anterior.
+  await page.evaluate(() => {
+    const original = HTMLImageElement.prototype.decode;
+    HTMLImageElement.prototype.decode = function () {
+      HTMLImageElement.prototype.decode = original;
+      return Promise.reject(new Error("Falha de decode simulada no QA"));
+    };
+  });
+  await page.getByRole("button", { name: "Imprimir / salvar PDF" }).click();
+  await page.getByRole("alert").filter({ hasText: "Falha ao preparar" }).waitFor();
+  await page.getByRole("button", { name: "Imprimir / salvar PDF" }).click();
+  await page.locator("#etiquetas-impressao").waitFor({ state: "attached" });
+  assert.equal(await page.getByRole("alert").count(), 0);
+  // window.print foi substituído e não emite afterprint: o usuário ainda pode voltar.
+  await page.getByRole("button", { name: "Voltar às etiquetas" }).click();
+  await page.locator("#etiquetas-impressao").waitFor({ state: "detached" });
+  assert.equal(await page.getByRole("button", { name: "Imprimir / salvar PDF" }).isEnabled(), true);
   await page.getByRole("button", { name: "Imprimir / salvar PDF" }).click();
   await page.locator("#etiquetas-impressao .etiqueta-produto").first().waitFor({ state: "attached" });
   await page.waitForFunction(() => Array.from(document.querySelectorAll<HTMLImageElement>("#etiquetas-impressao img")).every(i => i.complete && i.naturalWidth > 0));

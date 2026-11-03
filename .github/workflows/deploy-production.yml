@@ -176,6 +176,36 @@ jobs:
           path: artifacts/b2b-browser/
           if-no-files-found: warn
           retention-days: 14
+      - name: Verificar etiquetas no navegador com servidor isolado
+        env:
+          LOJAS_BASE_DOMAIN: 127.0.0.1
+          LOJAS_SECRET: '0000000000000000000000000000000000000000000000000000000000000000'
+          HOSTNAME: 127.0.0.1
+          PORT: '3089'
+          ROTINAS_AGENDADOR: '0'
+          NEXT_TELEMETRY_DISABLED: '1'
+        run: |
+          set -euo pipefail
+          node .next/standalone/server.js > "$RUNNER_TEMP/lojas-etiquetas.log" 2>&1 &
+          etiquetas_pid=$!
+          trap 'kill "$etiquetas_pid" 2>/dev/null || true' EXIT
+          for tentativa in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:3089/api/health > /dev/null; then break; fi
+            sleep 1
+          done
+          node --import tsx scripts/qa-etiquetas.mts
+      - name: Decodificar PDFs de etiquetas a 203 dpi
+        run: |
+          python -m pip install --disable-pip-version-check pymupdf==1.28.0 pillow==12.2.0 zxing-cpp==3.1.1
+          python scripts/qa-etiquetas-pdf.py
+      - name: Preservar capturas e PDFs de etiquetas
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: lojas-etiquetas-${{ github.sha }}
+          path: output/playwright/etiquetas/
+          if-no-files-found: warn
+          retention-days: 14
       - name: Preservar observações e artefatos do piloto B2B
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

@@ -19,6 +19,8 @@ Formatos: etiqueta térmica de 100 × 50 mm ou A4 com duas colunas de 100 × 50 
 
 O campo de busca recebe leitores que funcionam como teclado. A leitura não movimenta estoque nem adiciona itens a uma venda. Testar o papel e o leitor reais do cliente continua necessário para aceitar a impressão física.
 
+Se o navegador não encerrar automaticamente o modo de impressão, **Voltar às etiquetas** libera uma nova tentativa sem perder a seleção. Tentar imprimir novamente limpa o aviso de falha da tentativa anterior. O CI executa o fluxo de navegador sobre o servidor standalone e preserva capturas e PDFs no artefato `lojas-etiquetas-<sha>`.
+
 ## Verificação reproduzível
 
 Os comandos abaixo descrevem as verificações. Conforme AGENTS.md, novas execuções de testes e build devem ocorrer no GitHub CI. As evidências locais citadas na entrega inicial são históricas e não substituem os gates de publicação.
