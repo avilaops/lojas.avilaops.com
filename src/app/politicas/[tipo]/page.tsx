@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import { exigirTenant, enderecoCompleto } from "@/lib/tenant";
+import { exigirTenant } from "@/lib/tenant";
+import { identidadePublica } from "@/lib/identidade-publica";
 import { mascararDocumento } from "@avilaops/checkout";
 import { descricaoDaPagina } from "@/lib/textos-loja";
 import { ROTULO_POLITICA, TIPOS_POLITICA, politicaPublicada, type TipoPolitica } from "@/lib/politicas";
@@ -42,7 +43,8 @@ export default async function Politica({ params }: { params: Promise<{ tipo: str
   const politica = politicaPublicada(t, tipo as TipoPolitica);
   if (!politica) notFound();
 
-  const empresa = t.razaoSocial ?? t.nome;
+  const identidade = identidadePublica(t);
+  const empresa = identidade.razaoSocial ?? identidade.nome;
   return (
     <div className="container-loja max-w-2xl py-10">
       <h1 className="text-2xl font-bold">{politica.titulo}</h1>
@@ -58,11 +60,11 @@ export default async function Politica({ params }: { params: Promise<{ tipo: str
         <p className="font-semibold text-foreground">Quem vende</p>
         <p className="mt-1">
           {empresa}
-          {t.cnpj && ` · CNPJ ${mascararDocumento(t.cnpj)}`}
+          {identidade.cnpj && ` · CNPJ ${mascararDocumento(identidade.cnpj)}`}
         </p>
-        {enderecoCompleto(t) && <p>{enderecoCompleto(t)}</p>}
-        {t.emailContato && <p>{t.emailContato}</p>}
-        {t.telefone && <p>{t.telefone}</p>}
+        {identidade.enderecoLegal && <p>{identidade.enderecoLegal.texto}</p>}
+        {identidade.email && <p><a href={`mailto:${identidade.email}`}>{identidade.email}</a></p>}
+        {identidade.telefone && <p><a href={`tel:${identidade.telefone.uri}`}>{identidade.telefone.exibicao}</a></p>}
       </div>
     </div>
   );

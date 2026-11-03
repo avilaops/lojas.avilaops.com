@@ -249,10 +249,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <main id="conteudo-loja" className="flex-1">{children}</main>
           <Footer tenant={t} categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} temBlog={publicacoes > 0} />
           {carrinhoProprio && <CarrinhoLateral pedidoMinimoCentavos={publico.pedidoMinimoCentavos}/>}
-          {t.whatsapp && <WhatsAppFlutuante numero={t.whatsapp} nome={t.nome} />}
+          {identidadeComercial.whatsapp && <WhatsAppFlutuante numero={identidadeComercial.whatsapp.numero} nome={t.nome} />}
           {/* Navegação do celular. Vale para todos os layouts: é da loja, não
               do template. As abas saem do que a loja faz — ver o componente. */}
-          <BarraInferior vende={publico.vende} temContato={Boolean(t.whatsapp || t.telefone || t.emailContato)} />
+          <BarraInferior vende={publico.vende} temContato={Boolean(identidadeComercial.whatsapp || identidadeComercial.telefone || identidadeComercial.email || identidadeComercial.enderecoVisita)} />
           {t.googleMerchantId && t.googleSeloAvaliacoes && <SeloAvaliacaoGoogle merchantId={t.googleMerchantId} />}
           <Consentimento ativo={temRastreio(pixels)} />
         </CartProvider>

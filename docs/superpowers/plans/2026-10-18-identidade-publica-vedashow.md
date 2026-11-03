@@ -65,3 +65,32 @@
 - [ ] Replace raw public identity reads with the validated projection.
 - [ ] Run focused tests, TypeScript, ESLint, full tests, and build in series.
 - [ ] Record evidence in Linear and the team ledger; screenshots are required only if rendered layout changes materially.
+
+## Retomada — AVL-261 — 03/11/2026
+
+- [x] Conferir a implementação já versionada e preservar o checkout com alterações de outras demandas.
+- [x] Auditar home, catálogo, contato, quatro políticas, rodapé, JSON-LD e `llms.txt` públicos.
+- [x] Reproduzir falhas de canal malformado, WhatsApp nacional sem DDI, endereço JSON inválido, políticas e descrição de contato.
+- [x] Aplicar validação compartilhada aos consumidores e incluir CNPJ em `llms.txt`.
+- [x] Corrigir regressão de DDI estrangeiro explícito encontrada na revisão independente, com teste RED → GREEN e normalização idempotente.
+- [x] Aprovar 47 testes direcionados.
+- [ ] Aprovar suíte geral, tipos, lint e CI da branch.
+- [ ] Publicar pelo workflow do repositório e conferir produção.
+
+Decisão: a implementação anterior já está na main; esta retomada corrige as
+lacunas verificadas, sem repetir o módulo nem alterar dados cadastrais.
+O usuário autorizou expressamente o deploy em 03/11/2026, substituindo para esta
+entrega a restrição histórica de commit, push e publicação automática acima.
+
+A auditoria pública confirmou WhatsApp `551634413180`, telefone
+`(16) 3441-3180`, e-mail `vendas@vedashow.com.br` e CNPJ `58.392.666/0001-12`
+consistentes no HTML e no schema. Endereço, horário e razão social não estavam
+publicados. A confirmação textual do usuário foi “Correto”; ela não fornece
+os campos ausentes nem comprova emissão fiscal ou recebimento de atendimento.
+Esses pontos permanecem pendentes de evidência operacional.
+
+Os primeiros comandos gerais locais sofreram falta de espaço/memória:
+TypeScript foi encerrado pelo sistema; a suíte registrou 166 cancelamentos
+por event loop encerrado. A validação é repetida em série, com um worker,
+e a publicação depende da CI obrigatória. Esses comandos interrompidos não
+constituem evidência de aprovação.

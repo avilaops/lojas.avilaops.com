@@ -29,6 +29,30 @@
       "history": [{ "at": "2026-11-03", "note": "Preparação de PR para publicação pelo workflow existente, sem alteração de schema ou dados comerciais." }]
     },
     {
+      "id": "AVL-261",
+      "title": "Vedashow — auditar e corrigir canais, identidade e prova legal",
+      "objective": "Corrigir divergências entre canais e identificação pública, validar regressões e publicar a entrega autorizada pelo proprietário.",
+      "assignee": "codex",
+      "priority": "urgente",
+      "status": "em-andamento",
+      "acceptanceCriteria": [
+        "Contato, rodapé, políticas, JSON-LD e llms.txt usam dados públicos validados.",
+        "Canais inválidos e endereço incompleto ou malformado são omitidos; visita exige enderecoPublico.",
+        "Números nacionais e internacionais mantêm o destino correto.",
+        "Testes e CI aprovados antes da publicação; versão pública conferida."
+      ],
+      "evidence": "Auditoria pública de home, catálogo, contato, quatro políticas, rodapé, Store JSON-LD e llms.txt em 03/11/2026. 47 testes direcionados aprovados. Revisão independente encontrou regressão de DDI internacional, corrigida com teste RED → GREEN. Suíte geral local repetida em série após limitação de recursos; CI e deploy pendentes.",
+      "blocker": "Aceite operacional ainda depende de endereço e horário confirmados, prova de emissão fiscal e recebimento real nos canais; não foram inventados nem preenchidos.",
+      "environment": "worktree-isolada-avl-261",
+      "history": [
+        {
+          "at": "2026-11-03",
+          "status": "em-andamento",
+          "note": "Retomada da AVL-261 em worktree isolada; proprietário autorizou o deploy. Correções e revisão de código realizadas; publicação depende das validações."
+        }
+      ]
+    },
+    {
       "id": "B2B-CONCLUSAO-MODULO-20261028",
       "title": "Concluir módulo de comércio B2B e evidências funcionais",
       "objective": "Completar domínio, contratos e operação de cotação/pedido até sua verificação ponta a ponta, preservando o escopo dos demais módulos.",

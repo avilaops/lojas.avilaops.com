@@ -4,6 +4,7 @@ import { retiradaPublicaDisponivel } from "./retirada-publica";
 import { vendaOnlineDisponivel } from "./venda-online";
 import { porOndeFalarCom, prazoDeDespacho } from "./textos-loja";
 import { avaliarPedidoMinimo, formatarBRL, mascararDocumento } from "@avilaops/checkout";
+import { identidadePublica } from "./identidade-publica";
 
 /**
  * Políticas da loja.
@@ -162,8 +163,9 @@ export function lerPoliticasEscritas(bruto: unknown): Partial<Record<TipoPolitic
 
 /** Nome de quem vende, com CNPJ quando existe: repete em vários modelos. */
 function vendedor(t: Tenant): string {
-  const empresa = t.razaoSocial ?? t.nome;
-  return t.cnpj ? `${empresa}, CNPJ ${mascararDocumento(t.cnpj)}` : empresa;
+  const identidade = identidadePublica(t);
+  const empresa = identidade.razaoSocial ?? identidade.nome;
+  return identidade.cnpj ? `${empresa}, CNPJ ${mascararDocumento(identidade.cnpj)}` : empresa;
 }
 
 

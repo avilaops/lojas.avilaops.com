@@ -1,7 +1,7 @@
 import { validarCnpj } from "@avilaops/checkout";
 import type { Tenant } from "@prisma/client";
-import { formatarCep, type Endereco } from "./tenant";
-import { numeroParaMeta } from "./whatsapp";
+import type { Endereco } from "./tenant";
+import { emailDeContato, numeroDeContato } from "./canais-publicos";
 
 type TenantIdentidade = Pick<
   Tenant,
@@ -28,25 +28,26 @@ export interface IdentidadePublica {
   enderecoVisita: IdentidadePublica["enderecoLegal"];
 }
 
-function texto(valor: string | null): string | null {
-  const limpo = valor?.trim();
+function texto(valor: unknown): string | null {
+  const limpo = typeof valor === "string" ? valor.trim() : "";
   return limpo || null;
 }
 
-function emailPublico(valor: string | null): string | null {
-  const limpo = texto(valor)?.toLowerCase() ?? null;
-  return limpo && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(limpo) ? limpo : null;
-}
+const UFS = new Set("AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO".split(" "));
 
 function enderecoCompleto(tenant: TenantIdentidade): IdentidadePublica["enderecoLegal"] {
-  const endereco = (tenant.endereco as Endereco | null) ?? {};
+  if (!tenant.endereco || typeof tenant.endereco !== "object" || Array.isArray(tenant.endereco)) return null;
+  const endereco = tenant.endereco as Record<string, unknown>;
   const logradouro = texto(endereco.logradouro ?? null);
   const numero = texto(endereco.numero ?? null);
   const cidade = texto(endereco.cidade ?? null);
   const uf = texto(endereco.uf ?? null)?.toUpperCase() ?? null;
-  const cep = formatarCep(endereco.cep);
+  const cepBruto = texto(endereco.cep);
 
-  if (!logradouro || !numero || !cidade || !uf || !/^\d{5}-\d{3}$/.test(cep)) return null;
+  if (!logradouro || !numero || !cidade || !uf || !UFS.has(uf) || !cepBruto || !/^\d{5}-?\d{3}$/.test(cepBruto)) return null;
+  const cepDigitos = cepBruto.replace(/\D/g, "");
+  if (cepDigitos === "00000000") return null;
+  const cep = `${cepDigitos.slice(0, 5)}-${cepDigitos.slice(5)}`;
 
   const bairro = texto(endereco.bairro ?? null) ?? undefined;
   return {
@@ -68,23 +69,23 @@ function enderecoCompleto(tenant: TenantIdentidade): IdentidadePublica["endereco
 export function identidadePublica(tenant: TenantIdentidade): IdentidadePublica {
   const cnpjBruto = texto(tenant.cnpj);
   const cnpj = cnpjBruto && validarCnpj(cnpjBruto) ? cnpjBruto.replace(/\D/g, "") : null;
-  const whatsapp = numeroParaMeta(tenant.whatsapp);
+  const whatsapp = numeroDeContato(tenant.whatsapp);
   const telefoneExibicao = texto(tenant.telefone);
-  const telefoneNumero = numeroParaMeta(telefoneExibicao);
+  const telefoneNumero = numeroDeContato(telefoneExibicao);
   const enderecoLegal = enderecoCompleto(tenant);
 
   return {
-    nome: tenant.nome.trim(),
+    nome: texto(tenant.nome) ?? "",
     razaoSocial: texto(tenant.razaoSocial),
     cnpj,
-    whatsapp: whatsapp ? { numero: whatsapp, url: `https://wa.me/${whatsapp}` } : null,
+    whatsapp: whatsapp ? { numero: whatsapp, url: `https://wa.me/${whatsapp.replace(/^\+/, "")}` } : null,
     telefone: telefoneExibicao && telefoneNumero
-      ? { exibicao: telefoneExibicao, uri: `+${telefoneNumero}` }
+      ? { exibicao: telefoneExibicao, uri: telefoneNumero.startsWith("+") ? telefoneNumero : `+${telefoneNumero}` }
       : null,
-    email: emailPublico(tenant.emailContato),
+    email: emailDeContato(tenant.emailContato),
     horario: texto(tenant.horario),
     enderecoLegal,
-    enderecoVisita: tenant.enderecoPublico ? enderecoLegal : null,
+    enderecoVisita: tenant.enderecoPublico === true ? enderecoLegal : null,
   };
 }
 
@@ -109,7 +110,7 @@ export function schemaDaIdentidadePublica(
           contactPoint: {
             "@type": "ContactPoint",
             contactType: "sales",
-            telephone: `+${identidade.whatsapp.numero}`,
+            telephone: identidade.whatsapp.numero.startsWith("+") ? identidade.whatsapp.numero : `+${identidade.whatsapp.numero}`,
             url: identidade.whatsapp.url,
           },
         }

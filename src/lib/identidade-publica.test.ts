@@ -61,6 +61,48 @@ test("omite canais e identidade legal malformados", () => {
   });
 });
 
+test("não transforma texto arbitrário com dígitos em canal público", () => {
+  for (const numero of ["ligue 1634413180", "https://wa.me/551634413180", "0000000000"]) {
+    const publico = identidadePublica(tenant({ whatsapp: numero, telefone: numero }));
+    assert.equal(publico.whatsapp, null, numero);
+    assert.equal(publico.telefone, null, numero);
+  }
+});
+
+test("normaliza número nacional para o mesmo destino do schema e dos links", () => {
+  const publico = identidadePublica(tenant({ whatsapp: " (16) 3441-3180 " }));
+  assert.deepEqual(publico.whatsapp, { numero: "551634413180", url: "https://wa.me/551634413180" });
+});
+
+test("número internacional mantém o país ao atravessar projeções e schema", () => {
+  const publico = identidadePublica(tenant({ whatsapp: "+1 202 555 0123", telefone: "+1 202 555 0123" }));
+  assert.deepEqual(publico.whatsapp, { numero: "+12025550123", url: "https://wa.me/12025550123" });
+  assert.equal(publico.telefone?.uri, "+12025550123");
+  const schema = schemaDaIdentidadePublica(publico, { url: "https://loja.example" });
+  assert.equal(schema.contactPoint?.telephone, "+12025550123");
+  const segunda = identidadePublica(tenant({ whatsapp: publico.whatsapp?.numero }));
+  assert.deepEqual(segunda.whatsapp, publico.whatsapp);
+});
+
+test("endereço JSON malformado não derruba a vitrine nem publica endereço parcial", () => {
+  const completo = { logradouro: "Rua A", numero: "10", cidade: "Franca", uf: "SP", cep: "14400000" };
+  for (const endereco of [
+    { ...completo, logradouro: 123 },
+    { ...completo, numero: true },
+    { ...completo, cep: 14400000 },
+    { ...completo, uf: "XX" },
+    { ...completo, cep: "cep14400000" },
+    { ...completo, cep: "00000000" },
+    [],
+    "Rua A, 10",
+  ]) {
+    const publico = identidadePublica(tenant({ endereco, enderecoPublico: true }));
+    assert.equal(publico.enderecoLegal, null, JSON.stringify(endereco));
+    assert.equal(publico.enderecoVisita, null);
+    assert.equal(schemaDaIdentidadePublica(publico, { url: "https://loja.example" }).address, undefined);
+  }
+});
+
 test("endereço completo integra a identificação legal mas não vira convite de visita sem autorização", () => {
   const endereco = {
     logradouro: "Rua das Oficinas",

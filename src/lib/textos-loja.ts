@@ -1,6 +1,7 @@
 import type { Tenant } from "@prisma/client";
 import { resumoParaMeta } from "./seo-texto";
 import type { TipoPolitica } from "./politicas";
+import { emailDeContato, numeroDeContato } from "./canais-publicos";
 
 /**
  * "no mesmo dia útil" / "em até 1 dia útil" / "em até 3 dias úteis".
@@ -31,8 +32,9 @@ export function prazoDeDespacho(dias: number): string {
  * consertar. Ver `contatoConfigurado`.
  */
 export function porOndeFalarCom(t: Pick<Tenant, "emailContato" | "whatsapp">): string {
-  if (t.emailContato) return `pelo ${t.emailContato}`;
-  if (t.whatsapp) return "pelo WhatsApp da loja";
+  const email = emailDeContato(t.emailContato);
+  if (email) return `pelo ${email}`;
+  if (numeroDeContato(t.whatsapp)) return "pelo WhatsApp da loja";
   return "pelos nossos canais de atendimento";
 }
 
@@ -94,7 +96,7 @@ export function descricaoDaPagina(t: LojaDaPagina, pagina: PaginaInstitucional):
   const uf = typeof e.uf === "string" ? e.uf.trim().toUpperCase() : "";
   const lugar = cidade ? (uf ? `${cidade}/${uf}` : cidade) : "";
 
-  const canais = [t.whatsapp && "WhatsApp", t.telefone && "telefone", t.emailContato && "e-mail", t.horario && "horário de atendimento"].filter((c): c is string => Boolean(c));
+  const canais = [numeroDeContato(t.whatsapp) && "WhatsApp", numeroDeContato(t.telefone) && "telefone", emailDeContato(t.emailContato) && "e-mail", t.horario?.trim() && "horário de atendimento"].filter((c): c is string => Boolean(c));
 
   /** `onde` entra entre o nome e o resto: ", de Cidade/UF" ou vazio. */
   const frases: Record<PaginaInstitucional, (onde: string) => string> = {
