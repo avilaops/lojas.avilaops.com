@@ -44,7 +44,8 @@ export default function ProdutoDetalhe({ id, nome, urlNaLoja, temVariacoes, segm
             Ver na loja <ExternalLink size={13} />
           </a>
         )}
-        <button className="btn-secundario ml-auto h-9 px-3 text-xs" onClick={() => setGrade(true)}>
+        <Link href={`/painel/produtos/etiquetas?produtoId=${id}`} className="btn-secundario ml-auto h-9 px-3 text-xs">Gerar etiquetas</Link>
+        <button className="btn-secundario h-9 px-3 text-xs" onClick={() => setGrade(true)}>
           {temVariacoes ? "Grade de variações" : "Criar variações"}
         </button>
       </div>
