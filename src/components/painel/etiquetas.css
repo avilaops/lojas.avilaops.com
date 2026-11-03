@@ -1,0 +1,18 @@
+.etiquetas-previa { display: flex; flex-wrap: wrap; gap: 12px; overflow-x: auto; }
+.etiqueta-produto { box-sizing: border-box; width: 100mm; height: 50mm; flex: 0 0 100mm; padding: 2mm 3mm; display: flex; flex-direction: column; align-items: center; justify-content: center; background: white; color: black; font: 10pt Arial, sans-serif; text-align: center; overflow: hidden; }
+.etiquetas-previa .etiqueta-produto { border: 1px solid #ddd; }
+.etiqueta-nome { width: 100%; line-height: 1.15; max-height: 7mm; overflow: hidden; overflow-wrap: anywhere; }
+.etiqueta-variacao { width: 100%; font-size: 8pt; line-height: 1.2; max-height: 5mm; overflow: hidden; overflow-wrap: anywhere; }
+.etiqueta-barras { display: block; width: 94mm; height: 22mm; max-width: none; object-fit: fill; flex-shrink: 0; }
+.etiqueta-codigo { font: 8pt monospace; white-space: nowrap; }
+#etiquetas-impressao { display: none; }
+@media print {
+  body:has(> #etiquetas-impressao) > :not(#etiquetas-impressao) { display: none !important; }
+  body:has(> #etiquetas-impressao) { margin: 0 !important; padding: 0 !important; background: white !important; }
+  #etiquetas-impressao { display: block; color-scheme: light; print-color-adjust: exact; }
+  #etiquetas-impressao, #etiquetas-impressao * { visibility: visible; }
+  #etiquetas-impressao.a4 { width: 200mm; display: grid; grid-template-columns: 100mm 100mm; }
+  #etiquetas-impressao .etiqueta-produto { break-inside: avoid; page-break-inside: avoid; }
+  #etiquetas-impressao.termica .etiqueta-produto { break-after: page; }
+  #etiquetas-impressao.termica .etiqueta-produto:last-child { break-after: auto; }
+}
