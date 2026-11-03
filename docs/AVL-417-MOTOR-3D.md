@@ -217,4 +217,3 @@ pela MRG ou uma decisão explícita de que isolamento/ferragens serão somente
 ilustrações sem configuração técnica nesta entrega. A falta desses dados
 não deve ser tratada como falha de autenticação ou impossibilidade técnica
 de desenhar uma caixa.
-
