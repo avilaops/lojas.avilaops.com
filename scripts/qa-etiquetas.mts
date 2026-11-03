@@ -61,7 +61,8 @@ try {
   await page.getByRole("alert").filter({ hasText: "Falha ao preparar" }).waitFor();
   await page.getByRole("button", { name: "Imprimir / salvar PDF" }).click();
   await page.locator("#etiquetas-impressao").waitFor({ state: "attached" });
-  assert.equal(await page.getByRole("alert").count(), 0);
+  // Next mantém um anunciante de navegação com role=alert mesmo sem erro.
+  await page.getByRole("alert").filter({ hasText: "Falha ao preparar" }).waitFor({ state: "hidden" });
   // window.print foi substituído e não emite afterprint: o usuário ainda pode voltar.
   await page.getByRole("button", { name: "Voltar às etiquetas" }).click();
   await page.locator("#etiquetas-impressao").waitFor({ state: "detached" });
