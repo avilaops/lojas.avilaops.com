@@ -13,10 +13,11 @@ env:
 jobs:
   dependencias:
     name: preparar dependências
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 1
     outputs:
       artifact_id: ${{ steps.arquivo.outputs.ids }}
+      ferramenta_id: ${{ steps.ferramenta.outputs.ids }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -46,11 +47,22 @@ jobs:
         with:
           tipo: dependencias
           pasta: ${{ runner.temp }}/dependencias/
+      - name: Arquivar somente a CLI de navegador da versão do lockfile
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/ferramenta-navegador"
+          tar -I 'zstd -T0 -1' -cf "$RUNNER_TEMP/ferramenta-navegador/payload.tar.zst" node_modules/playwright-core
+      - uses: ./.github/actions/publicar-artefato
+        id: ferramenta
+        with:
+          tipo: ferramenta-navegador
+          partes: '1'
+          pasta: ${{ runner.temp }}/ferramenta-navegador/
 
   unitarios:
     name: testes unitários / parte ${{ matrix.fatia }}
     needs: dependencias
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 1
     strategy:
       fail-fast: false
@@ -66,7 +78,7 @@ jobs:
   qualidade:
     name: qualidade / ${{ matrix.comando }}
     needs: dependencias
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 1
     strategy:
       fail-fast: false
@@ -84,7 +96,7 @@ jobs:
   payloads:
     name: contratos de payload e infraestrutura de CI
     needs: dependencias
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 1
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
@@ -100,7 +112,7 @@ jobs:
           ref: ${{ github.event.pull_request.base.sha || github.sha }}
           persist-credentials: false
       - run: node --import tsx scripts/contracts/payload-report.mjs .contract-baseline artifacts/payloads
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
           name: lojas-payloads-${{ github.sha }}
@@ -112,7 +124,7 @@ jobs:
   integracao:
     name: integração PostgreSQL / parte ${{ matrix.fatia }}
     needs: dependencias
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 1
     strategy:
       fail-fast: false
@@ -148,7 +160,7 @@ jobs:
           set -euo pipefail
           mkdir -p artifacts/flow-observations
           npx tsx --test --test-shard=${{ matrix.fatia }}/2 tests/integration/*.test.ts 2>&1 | tee artifacts/flow-observations/integration.tap
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
           name: lojas-integracao-${{ matrix.fatia }}-${{ github.sha }}
@@ -160,7 +172,7 @@ jobs:
   build:
     name: compilar aplicação
     needs: [dependencias, qualidade]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 1
     outputs:
       artifact_id: ${{ steps.arquivo.outputs.ids }}
@@ -186,12 +198,13 @@ jobs:
         id: arquivo
         with:
           tipo: build
+          partes: '1'
           pasta: ${{ runner.temp }}/build/
 
   navegador:
     name: preparar Chromium headless
     needs: dependencias
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 1
     outputs:
       artifact_id: ${{ steps.arquivo.outputs.ids }}
@@ -199,26 +212,57 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           persist-credentials: false
-      - uses: ./.github/actions/preparar-node
-      - run: npx playwright install --with-deps --only-shell chromium
+      - uses: ./.github/actions/preparar-artefatos
+        with:
+          ids: ${{ needs.dependencias.outputs.ferramenta_id }}
+          tipos: ferramenta-navegador
+      - run: node node_modules/playwright-core/cli.js install --only-shell chromium
       - name: Arquivar versão do navegador do lockfile
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/navegador"
-          mkdir -p "$RUNNER_TEMP/pacote-navegador/browsers" "$RUNNER_TEMP/pacote-navegador/fonts"
+          mkdir -p "$RUNNER_TEMP/pacote-navegador/browsers"
           cp -a "$HOME/.cache/ms-playwright/." "$RUNNER_TEMP/pacote-navegador/browsers/"
-          cp -a /usr/share/fonts/. "$RUNNER_TEMP/pacote-navegador/fonts/"
           tar -I 'zstd -T0 -1' -cf "$RUNNER_TEMP/navegador/payload.tar.zst" -C "$RUNNER_TEMP/pacote-navegador" .
       - uses: ./.github/actions/publicar-artefato
         id: arquivo
         with:
           tipo: navegador
+          partes: '1'
           pasta: ${{ runner.temp }}/navegador/
+
+  fontes:
+    name: preparar fontes do navegador
+    needs: dependencias
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    outputs:
+      artifact_id: ${{ steps.arquivo.outputs.ids }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/preparar-artefatos
+        with:
+          ids: ${{ needs.dependencias.outputs.ferramenta_id }}
+          tipos: ferramenta-navegador
+      - run: node node_modules/playwright-core/cli.js install-deps chromium
+      - name: Arquivar todas as fontes preparadas pelo Playwright
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/fontes"
+          tar -I 'zstd -T0 -1' -cf "$RUNNER_TEMP/fontes/payload.tar.zst" -C /usr/share/fonts .
+      - uses: ./.github/actions/publicar-artefato
+        id: arquivo
+        with:
+          tipo: fontes
+          partes: '1'
+          pasta: ${{ runner.temp }}/fontes/
 
   modelo:
     name: preparar modelo ONNX
     needs: dependencias
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 1
     outputs:
       artifact_id: ${{ steps.arquivo.outputs.ids }}
@@ -238,13 +282,14 @@ jobs:
         id: arquivo
         with:
           tipo: modelo
+          partes: '1'
           pasta: ${{ runner.temp }}/modelo/
 
   b2b:
     name: navegador / cotação, HTTP e reinício
-    needs: [dependencias, build, navegador]
-    runs-on: ubuntu-latest
-    timeout-minutes: 3
+    needs: [dependencias, build, navegador, fontes]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
     services:
       postgres:
         image: postgres:18-alpine
@@ -270,11 +315,11 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/preparar-artefatos
         with:
-          ids: ${{ needs.dependencias.outputs.artifact_id }},${{ needs.build.outputs.artifact_id }},${{ needs.navegador.outputs.artifact_id }}
-          tipos: dependencias build navegador
+          ids: ${{ needs.dependencias.outputs.artifact_id }},${{ needs.build.outputs.artifact_id }},${{ needs.navegador.outputs.artifact_id }},${{ needs.fontes.outputs.artifact_id }}
+          tipos: dependencias build navegador fontes
       - run: npx prisma migrate deploy
       - run: node --import tsx scripts/qa-cotacoes-b2b.mts
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
           name: lojas-b2b-browser-${{ github.sha }}
@@ -282,7 +327,7 @@ jobs:
           if-no-files-found: warn
           compression-level: 0
           retention-days: 7
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
           name: lojas-runtime-browser-${{ github.sha }}
@@ -293,9 +338,9 @@ jobs:
 
   etiquetas:
     name: navegador / etiquetas e PDFs
-    needs: [dependencias, build, navegador]
-    runs-on: ubuntu-latest
-    timeout-minutes: 3
+    needs: [dependencias, build, navegador, fontes]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
     services:
       postgres:
         image: postgres:18-alpine
@@ -321,8 +366,8 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/preparar-artefatos
         with:
-          ids: ${{ needs.dependencias.outputs.artifact_id }},${{ needs.build.outputs.artifact_id }},${{ needs.navegador.outputs.artifact_id }}
-          tipos: dependencias build navegador
+          ids: ${{ needs.dependencias.outputs.artifact_id }},${{ needs.build.outputs.artifact_id }},${{ needs.navegador.outputs.artifact_id }},${{ needs.fontes.outputs.artifact_id }}
+          tipos: dependencias build navegador fontes
       - run: npx prisma migrate deploy
       - name: Verificar etiquetas com servidor isolado
         env:
@@ -343,7 +388,7 @@ jobs:
         run: |
           python -m pip install --disable-pip-version-check pymupdf==1.28.0 pillow==12.2.0 zxing-cpp==3.1.1
           python scripts/qa-etiquetas-pdf.py
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
           name: lojas-etiquetas-${{ github.sha }}
@@ -355,7 +400,7 @@ jobs:
   contratos:
     name: contratos / API v1, Experiments e evidências
     needs: [integracao, b2b]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 1
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
@@ -380,11 +425,11 @@ jobs:
       - run: node --test scripts/contracts/compatibility.test.mjs scripts/contracts/capture.test.mjs scripts/mlops/*.test.mjs
         env:
           EXPERIMENTS_ROOT: ${{ github.workspace }}/.experiments
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
         with:
           pattern: lojas-integracao-*-${{ github.sha }}
           path: artifacts/integracao
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
         with:
           name: lojas-runtime-browser-${{ github.sha }}
           path: artifacts/runtime-checks
@@ -408,7 +453,7 @@ jobs:
       - run: node scripts/mlops/flow-observations.mjs . .experiments artifacts/flow-observations/integration.tap artifacts/flow-observations
         env:
           FLOW_RUN_ID: github-${{ github.run_id }}-${{ github.run_attempt }}
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
           name: lojas-contracts-${{ github.sha }}
@@ -416,7 +461,7 @@ jobs:
           if-no-files-found: warn
           compression-level: 0
           retention-days: 7
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
           name: lojas-runtime-${{ github.sha }}
@@ -424,7 +469,7 @@ jobs:
           if-no-files-found: warn
           compression-level: 0
           retention-days: 7
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
           name: lojas-flow-observations-${{ github.sha }}
@@ -436,7 +481,7 @@ jobs:
   contexto_imagem:
     name: imagem / preparar contexto verificado
     needs: [dependencias, build, modelo]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 1
     outputs:
       artifact_id: ${{ steps.arquivo.outputs.ids }}
@@ -466,13 +511,14 @@ jobs:
         id: arquivo
         with:
           tipo: imagem-contexto
+          partes: '1'
           pasta: ${{ runner.temp }}/imagem-contexto/
 
   image:
     name: imagem / empacotar bundle aprovado
     needs: [contexto_imagem, unitarios, qualidade, payloads, integracao, b2b, etiquetas, contratos]
-    runs-on: ubuntu-latest
-    timeout-minutes: 3
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
     permissions:
       contents: read
       packages: write
@@ -536,7 +582,7 @@ jobs:
       github.event_name != 'pull_request' && github.event_name != 'pull_request_target'
       && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
       && vars.DEPLOY_ENABLED == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 1
     environment: production
     permissions:
@@ -568,7 +614,7 @@ jobs:
     name: deploy
     needs: [image, preparar_entrega]
     if: needs.preparar_entrega.outputs.publicado == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 1
     environment: production
     permissions:
@@ -600,7 +646,7 @@ jobs:
   # /v1/health e a folha de estilo seguida a partir do HTML da vitrine.
   # Sem dependência instalada — é o node do runner e `fetch`.
   fumaca:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 1
     needs: deploy
     if: needs.deploy.outputs.publicado == 'true'

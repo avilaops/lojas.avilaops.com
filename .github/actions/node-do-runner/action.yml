@@ -9,9 +9,9 @@ runs:
         set -euo pipefail
         candidatos=("$RUNNER_TOOL_CACHE"/node/22.*/x64/bin/node)
         binario=$(printf '%s\n' "${candidatos[@]}" | sort -V | tail -n 1)
-        if [[ -x "$binario" ]] && [[ "$("$binario" -p 'process.versions.node.split(".")[0]')" == 22 ]]; then
+        if [[ -x "$binario" ]] && versao=$("$binario" --version) && [[ "$versao" == v22.* ]]; then
           dirname "$binario" >> "$GITHUB_PATH"
-          "$binario" --version
+          printf '%s\n' "$versao"
           echo 'pronto=true' >> "$GITHUB_OUTPUT"
         else
           echo 'pronto=false' >> "$GITHUB_OUTPUT"
