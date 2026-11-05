@@ -13,6 +13,22 @@
   ],
   "tasks": [
     {
+      "id": "PAINEL-BUSCA-MARCA-20261105",
+      "title": "Filtrar os produtos do painel por marca",
+      "objective": "Escolher fabricante em todas as páginas e combinar com categoria, texto e pendências; exportação deve corresponder à lista.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "Marcas pertencem somente à loja autenticada e não são limitadas à página atual.",
+        "Marca combina com busca, categoria e situação e é preservada na planilha.",
+        "Trocar marca reinicia paginação e limpar filtros remove a marca.",
+        "Integração PostgreSQL e jornada de navegador desktop/mobile aprovadas no GitHub CI."
+      ],
+      "evidence": "Implementação e testes em checkout isolado; validação e publicação pendentes do GitHub CI.",
+      "environment": "worktree-painel-marca-20261105"
+    },
+    {
       "id": "CATALOGO-LINKS-VARIANTES-20261105",
       "title": "Preservar links de apresentações agrupadas",
       "objective": "Redirecionar produto arquivado para sua variante de mesmo SKU no produto ativo da mesma loja.",
