@@ -100,7 +100,7 @@ jobs:
           ref: ${{ github.event.pull_request.base.sha || github.sha }}
           persist-credentials: false
       - run: node --import tsx scripts/contracts/payload-report.mjs .contract-baseline artifacts/payloads
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
           name: lojas-payloads-${{ github.sha }}
@@ -148,7 +148,7 @@ jobs:
           set -euo pipefail
           mkdir -p artifacts/flow-observations
           npx tsx --test --test-shard=${{ matrix.fatia }}/2 tests/integration/*.test.ts 2>&1 | tee artifacts/flow-observations/integration.tap
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
           name: lojas-integracao-${{ matrix.fatia }}-${{ github.sha }}
@@ -297,7 +297,7 @@ jobs:
           tipos: dependencias build navegador fontes
       - run: npx prisma migrate deploy
       - run: node --import tsx scripts/qa-cotacoes-b2b.mts
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
           name: lojas-b2b-browser-${{ github.sha }}
@@ -305,7 +305,7 @@ jobs:
           if-no-files-found: warn
           compression-level: 0
           retention-days: 7
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
           name: lojas-runtime-browser-${{ github.sha }}
@@ -366,7 +366,7 @@ jobs:
         run: |
           python -m pip install --disable-pip-version-check pymupdf==1.28.0 pillow==12.2.0 zxing-cpp==3.1.1
           python scripts/qa-etiquetas-pdf.py
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
           name: lojas-etiquetas-${{ github.sha }}
@@ -403,11 +403,11 @@ jobs:
       - run: node --test scripts/contracts/compatibility.test.mjs scripts/contracts/capture.test.mjs scripts/mlops/*.test.mjs
         env:
           EXPERIMENTS_ROOT: ${{ github.workspace }}/.experiments
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
         with:
           pattern: lojas-integracao-*-${{ github.sha }}
           path: artifacts/integracao
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
         with:
           name: lojas-runtime-browser-${{ github.sha }}
           path: artifacts/runtime-checks
@@ -431,7 +431,7 @@ jobs:
       - run: node scripts/mlops/flow-observations.mjs . .experiments artifacts/flow-observations/integration.tap artifacts/flow-observations
         env:
           FLOW_RUN_ID: github-${{ github.run_id }}-${{ github.run_attempt }}
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
           name: lojas-contracts-${{ github.sha }}
@@ -439,7 +439,7 @@ jobs:
           if-no-files-found: warn
           compression-level: 0
           retention-days: 7
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
           name: lojas-runtime-${{ github.sha }}
@@ -447,7 +447,7 @@ jobs:
           if-no-files-found: warn
           compression-level: 0
           retention-days: 7
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
           name: lojas-flow-observations-${{ github.sha }}

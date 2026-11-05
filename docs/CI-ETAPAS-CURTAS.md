@@ -5,6 +5,11 @@ Todos os jobs de `Build e deploy` e `Merge automático` mantêm
 
 ## Dependências e artefatos
 
+Transferências usam as actions oficiais nativas de Node 24, fixadas por SHA:
+download-artifact v8.0.2 e upload-artifact v7.0.2. Diretórios, IDs, ZIP e
+manifestos seguem o mesmo contrato. A validação de digest do download também
+reprova divergência; o hash próprio do arquivo continua obrigatório.
+
 `dependencias` instala o lockfile e gera o Prisma uma vez. Os consumidores
 recebem esse arquivo da mesma execução, sem repetir `npm ci`.
 O instalador oficial do ONNX usa `ONNXRUNTIME_NODE_INSTALL=skip` para dispensar
