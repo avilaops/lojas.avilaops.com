@@ -122,6 +122,10 @@ PATCH /api/v1/ofertas
 - `estoque` é o saldo **físico**. O que a leitura devolve é o disponível
   (físico menos reservado por pedidos em andamento). Saldo abaixo do reservado
   é recusado com `recusado`. `null` = a loja não controla estoque daquele SKU.
+  Saldo numérico também reconcilia disponibilidade: positivo fica em estoque,
+  zero fica esgotado, inclusive se o saldo já era igual mas o marcador estava
+  desatualizado. A escolha explícita `backorder` (sob encomenda) é preservada;
+  saldo nulo não altera o marcador de disponibilidade.
 - Se o cadastro trocar o SKU de uma variação enquanto o lote é gravado, o
   item volta `erro` com código `conflito` e nada é alterado: o preço do SKU
   antigo nunca é aplicado à apresentação que ganhou outro SKU. Basta reenviar.
