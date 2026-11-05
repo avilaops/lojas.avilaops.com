@@ -14,6 +14,7 @@ import { mensagemDoProduto } from "@/lib/whatsapp-produto";
 import FotoDoCartao from "@/components/FotoDoCartao";
 import { hrefDoProduto } from "@/lib/retorno-catalogo";
 import { fichaCompactaDoProduto, unidadeDeVenda } from "@/lib/ficha-cartao";
+import { numeroDeContato } from "@/lib/canais-publicos";
 
 const ROTULOS_COMPACTOS: Record<string, string> = {
   diametroInternoMm: "DI", diametroExternoMm: "DE", alturaMm: "Alt.",
@@ -21,7 +22,8 @@ const ROTULOS_COMPACTOS: Record<string, string> = {
   espessuraMm: "Esp.", secaoMm: "Seção",
 };
 
-export default function ProductCard({ produto, loja, vende, whatsapp, moto = null, ocultarSeloDestaque = false, compacto = false, alternarImagem = true, retorno = null }: { produto: Produto; loja: Tenant; vende: boolean; whatsapp: string | null; moto?: Moto | null; ocultarSeloDestaque?: boolean; compacto?: boolean; alternarImagem?: boolean; retorno?: string | null }) {
+export default function ProductCard({ produto, loja, vende, whatsapp: whatsappBruto, moto = null, ocultarSeloDestaque = false, compacto = false, alternarImagem = true, retorno = null }: { produto: Produto; loja: Tenant; vende: boolean; whatsapp: string | null; moto?: Moto | null; ocultarSeloDestaque?: boolean; compacto?: boolean; alternarImagem?: boolean; retorno?: string | null }) {
+  const whatsapp = numeroDeContato(whatsappBruto);
   const tecnico = ["distribuidora", "industrial"].includes(temaDo(loja).layout);
   // Na home Indústria a imagem é a foto da linha, com fundo próprio: ocupa o
   // cartão inteiro em vez de ficar encaixada numa moldura branca.

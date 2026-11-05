@@ -8,11 +8,25 @@ on:
 permissions:
   contents: read
 jobs:
+  unitarios:
+    name: testes unitários / canais e vitrine
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npx prisma generate
+      - run: npm test
+
   contratos:
     name: contratos / API v1 e inventário Experiments
     needs: integracao
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 1
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -87,7 +101,7 @@ jobs:
   integracao:
     name: testes de integração
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 1
     permissions:
       contents: read
     services:
@@ -239,9 +253,9 @@ jobs:
 
   image:
     name: image / build
-    needs: [integracao, contratos]
+    needs: [unitarios, integracao, contratos]
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 1
     permissions:
       contents: read
       packages: write
@@ -310,7 +324,7 @@ jobs:
       && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
       && vars.DEPLOY_ENABLED == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 1
     environment: production
     permissions:
       contents: read
@@ -387,6 +401,7 @@ jobs:
   # Sem dependência instalada — é o node do runner e `fetch`.
   fumaca:
     runs-on: ubuntu-latest
+    timeout-minutes: 1
     needs: deploy
     steps:
       - uses: actions/checkout@v4

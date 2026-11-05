@@ -62,3 +62,18 @@ test("loja sem medidas recebe linguagem genérica e sem canal não exibe atalho"
   assert.doesNotMatch(html, /identificar a peça/);
   assert.equal(renderToStaticMarkup(createElement(AjudaCatalogo, { ...props, whatsapp: null })), "");
 });
+
+test("catálogo não anuncia WhatsApp inválido como atendimento disponível", () => {
+  for (const whatsapp of ["inválido", "ligue 1634413180", "https://wa.me/551634413180", "0000000000", "   "]) {
+    assert.equal(renderToStaticMarkup(createElement(AjudaCatalogo, {
+      whatsapp, tecnico: true, valores: { q: "retentor" },
+    })), "", whatsapp);
+  }
+});
+
+test("ajuda do catálogo preserva o DDI internacional explícito", () => {
+  const html = renderToStaticMarkup(createElement(AjudaCatalogo, {
+    whatsapp: "+1 202 555 0123", tecnico: false, valores: {},
+  }));
+  assert.match(html, /href="https:\/\/wa.me\/12025550123\?text=/);
+});

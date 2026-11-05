@@ -41,7 +41,7 @@
         "Números nacionais e internacionais mantêm o destino correto.",
         "Testes e CI aprovados antes da publicação; versão pública conferida."
       ],
-      "evidence": "Auditoria pública de home, catálogo, contato, quatro políticas, rodapé, Store JSON-LD e llms.txt em 03/11/2026. 47 testes direcionados aprovados. Revisão independente encontrou regressão de DDI internacional, corrigida com teste RED → GREEN. Suíte geral local repetida em série após limitação de recursos; CI e deploy pendentes.",
+      "evidence": "CI histórica 41720628611 aprovada para 65ed5eb. Retomada em 05/11: conflito com AVL-263 reconciliado; canais da jornada assistida normalizados e regressões de HTML adicionadas. Política Linear aplicada aos sete jobs com timeout de um minuto e gates preservados. Nova suíte, tipos, lint, integração, build e navegador aguardam GitHub CI. Registro em evidencias/avl-261-retomada-2026-11-05.md; PR 198 mantido em rascunho durante a verificação.",
       "blocker": "Aceite operacional ainda depende de endereço e horário confirmados, prova de emissão fiscal e recebimento real nos canais; não foram inventados nem preenchidos.",
       "environment": "worktree-isolada-avl-261",
       "history": [
@@ -49,6 +49,34 @@
           "at": "2026-11-03",
           "status": "em-andamento",
           "note": "Retomada da AVL-261 em worktree isolada; proprietário autorizou o deploy. Correções e revisão de código realizadas; publicação depende das validações."
+        },
+        {
+          "at": "2026-11-05",
+          "status": "em-andamento",
+          "note": "Retomada do PR 198: CI anterior 41720628611 aprovada; conflito com AVL-263 reconciliado preservando as duas tarefas. Revisão identificou canais brutos na jornada assistida; correção e nova CI pendentes."
+        }
+      ]
+    },
+    {
+      "id": "AVL-263",
+      "title": "Vedashow — governança mínima de qualidade do catálogo",
+      "objective": "Revalidar a implementação existente e corrigir cobertura indevida de campos malformados, preservando a API administrativa somente leitura.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-andamento",
+      "acceptanceCriteria": [
+        "Relatório por SKU com cobertura total, por campo e por família.",
+        "Alertas de inconsistências críticas, SKU normalizado duplicado e preços conflitantes.",
+        "Medidas técnicas válidas sem inferência pelo nome nem uso das dimensões da embalagem.",
+        "API autenticada, isolada por tenant, com mais de cem SKUs e sem escrita no catálogo."
+      ],
+      "evidence": "17 testes direcionados aprovados antes dos dois testes adicionais de campos e famílias; seis regressões reproduzidas antes da correção; três testes de integração aprovados em PostgreSQL 18 descartável, incluindo 101 SKUs, isolamento e snapshots sem escrita. Gates finais de suíte geral, TypeScript, lint e build aguardam GitHub CI. evidencias/avl-263-governanca-catalogo-2026-11-03.md.",
+      "environment": "local-worktree-avl-263",
+      "history": [
+        {
+          "at": "2026-11-03",
+          "status": "em-andamento",
+          "note": "Retomada em branch isolada da main 45fe4cf; implementação anterior localizada no commit 785a5dc. Alterações de inventário do checkout principal preservadas."
         }
       ]
     },

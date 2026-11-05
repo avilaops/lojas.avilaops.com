@@ -160,7 +160,11 @@ export default function CarrinhoClient({ loja, vende }: { loja: TenantPublico; v
           <LinkContatoMedido href={linkWhatsApp(loja.whatsapp, `Olá! Quero fazer um pedido:\n${resumo}`)} target="_blank" rel="noopener" className="btn-primario mt-4 w-full">
             Pedir pelo WhatsApp
           </LinkContatoMedido>
-        ) : null}
+        ) : (
+          <p role="status" className="mt-4 rounded-lg bg-muted p-3 text-sm text-muted-foreground">
+            Esta loja ainda não disponibilizou a finalização de pedidos. Seus itens continuam no carrinho.
+          </p>
+        )}
         <Link href="/produtos" className="btn-secundario mt-2 w-full">
           Continuar comprando
         </Link>

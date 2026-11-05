@@ -36,6 +36,7 @@ import { usaBlocoProprio } from "@/lib/templates";
 import { LinkContatoMedido } from "@/components/EventoFunil";
 import { retornoSeguroDoCatalogo } from "@/lib/retorno-catalogo";
 import { referenciaPoliticaDevolucao } from "@/lib/politicas";
+import { numeroDeContato } from "@/lib/canais-publicos";
 
 const MEIOS: Record<string, string> = { pix: "Pix", cartao: "Cartão", boleto: "Boleto" };
 
@@ -62,6 +63,7 @@ export async function generateMetadata({ params }: Props) {
 
 export default async function ProdutoPage({ params,searchParams }: Props) {
   const t = await exigirTenant();
+  const whatsapp = numeroDeContato(t.whatsapp);
   const { slug } = await params;
   const p = await buscarProduto(t.id, slug);
   if (!p) {
@@ -271,26 +273,26 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
             ) : p.opcoes.length > 0 ? null : estado.acao === "aviso-reposicao" ? (
               <AvisoEstoque produtoId={p.id} />
             ) : estado.acao === "consulta-preco" ? (
-              t.whatsapp ? (
-                <LinkContatoMedido className="btn-primario acao-whatsapp w-full" href={linkWhatsApp(t.whatsapp, mensagemDoProduto(p, urlDaLoja(t), true))} target="_blank" rel="noopener">
+              whatsapp ? (
+                <LinkContatoMedido className="btn-primario acao-whatsapp w-full" href={linkWhatsApp(whatsapp, mensagemDoProduto(p, urlDaLoja(t), true))} target="_blank" rel="noopener">
                   Consultar preço
                 </LinkContatoMedido>
               ) : null
             ) : estado.acao === "carrinho" ? (
               <AddToCartButton item={{ id: escolhida?`${p.id}:${escolhida.id}`:p.id, slug: p.slug, nome: p.nome, precoCentavos: p.precoCentavos, imagem: p.imagens[0] }} disponivel irParaCarrinho />
-            ) : t.whatsapp ? (
+            ) : whatsapp ? (
               <>
                 <AddToCartButton pedido item={{ id: p.id, slug: p.slug, nome: p.nome, precoCentavos: p.precoCentavos, imagem: p.imagens[0] }} disponivel />
-                <LinkContatoMedido className="btn-secundario acao-whatsapp mt-2 w-full" href={linkWhatsApp(t.whatsapp, mensagemDoProduto(p, urlDaLoja(t)))} target="_blank" rel="noopener">
+                <LinkContatoMedido className="btn-secundario acao-whatsapp mt-2 w-full" href={linkWhatsApp(whatsapp, mensagemDoProduto(p, urlDaLoja(t)))} target="_blank" rel="noopener">
                   Pedir só este item pelo WhatsApp
                 </LinkContatoMedido>
               </>
             ) : null}
-            {!somenteNaLoja && !estado.esgotado && (estado.acao === "carrinho" || Boolean(t.whatsapp)) && (
+            {!somenteNaLoja && !estado.esgotado && (estado.acao === "carrinho" || Boolean(whatsapp)) && (
               <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
                 {estado.acao === "carrinho"
                   ? "Adicione ao carrinho para informar a entrega e concluir o pagamento no site."
-                  : t.whatsapp
+                  : whatsapp
                     ? "Adicione ao pedido; a loja confirma disponibilidade, entrega e pagamento pelo WhatsApp."
                     : null}
               </p>
@@ -319,7 +321,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
             {/* O WhatsApp flutuante some na ficha (cobria o botão de compra).
                 Onde a ação principal não é o WhatsApp, a dúvida sobre o produto
                 precisa de outro caminho, já com o nome e o link dele. */}
-            {duvidaNoWhatsApp && t.whatsapp && <LinkContatoMedido className="underline underline-offset-4" href={linkWhatsApp(t.whatsapp, `Olá! Tenho uma dúvida sobre ${p.nome}: ${urlDaLoja(t)}/produtos/${p.slug}`)} target="_blank" rel="noopener">Tirar dúvida sobre o produto</LinkContatoMedido>}
+            {duvidaNoWhatsApp && whatsapp && <LinkContatoMedido className="underline underline-offset-4" href={linkWhatsApp(whatsapp, `Olá! Tenho uma dúvida sobre ${p.nome}: ${urlDaLoja(t)}/produtos/${p.slug}`)} target="_blank" rel="noopener">Tirar dúvida sobre o produto</LinkContatoMedido>}
           </nav>
 
           <FichaTecnica
@@ -362,7 +364,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
             <TabelaTecnica produtos={serie} vende={vende} titulo="Outras medidas desta série" nomeDaLoja={t.nome} loja={t} />
           ) : (
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-              {serie.map((r) => <ProductCard loja={t} key={r.id} produto={r} vende={vende} whatsapp={t.whatsapp} moto={moto} />)}
+              {serie.map((r) => <ProductCard loja={t} key={r.id} produto={r} vende={vende} whatsapp={whatsapp} moto={moto} />)}
             </div>
           )}
         </section>
@@ -372,7 +374,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
               a lista é. Numa loja de peça, o que ela é: o resto da prateleira. */}
           <h2 className="mb-4 text-base font-bold">{p.categoria ? `Mais em ${p.categoria.nome}` : "Outros itens da loja"}</h2>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {relacionados.map((r) => <ProductCard loja={t} key={r.id} produto={r} vende={vende} whatsapp={t.whatsapp} moto={moto} />)}
+            {relacionados.map((r) => <ProductCard loja={t} key={r.id} produto={r} vende={vende} whatsapp={whatsapp} moto={moto} />)}
           </div>
         </section>
       ) : null}
