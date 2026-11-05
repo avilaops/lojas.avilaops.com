@@ -10,6 +10,9 @@ recebem esse arquivo da mesma execução, sem repetir `npm ci`.
 O instalador oficial do ONNX usa `ONNXRUNTIME_NODE_INSTALL=skip` para dispensar
 o download adicional de CUDA. O motor existente usa CPU e o pacote já inclui
 esse binário; a sessão CPU continua verificada dentro da imagem final.
+O arquivo Linux x64 não transfere os binários ONNX de Windows, macOS ou ARM.
+O manifesto também exige a mesma plataforma, arquitetura e versão principal
+do Node no consumidor.
 `scripts/ci/artefato.mjs` vincula cada arquivo ao SHA, run e tentativa atuais e
 valida SHA-256 antes da extração. Builds, navegador e modelo usam o mesmo
 contrato. Os nomes de artefatos incluem o SHA e o download não informa outro run.

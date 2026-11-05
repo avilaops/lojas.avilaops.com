@@ -11,7 +11,7 @@ export function contexto(env = process.env) {
   if (!/^[a-f0-9]{40}$/.test(sha ?? "") || !/^\d+$/.test(runId ?? "") || !/^\d+$/.test(attempt ?? "")) {
     throw new Error("INVALID_CI_CONTEXT");
   }
-  return { sha, runId, attempt };
+  return { sha, runId, attempt, platform: process.platform, arch: process.arch, nodeMajor: process.versions.node.split(".")[0] };
 }
 
 async function digest(file) {
