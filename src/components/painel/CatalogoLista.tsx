@@ -154,6 +154,13 @@ export default function CatalogoLista({
   }
 
   const filtrando = Boolean(aplicada || categoria || marca || situacao);
+  async function alterarFiltrados(ativo: boolean) {
+    if (!marca && !categoria) return;
+    const alvo = [marca && `marca ${marca}`, categoria && `categoria ${categoria}`].filter(Boolean).join(" e ");
+    if (!window.confirm(`${ativo ? "Reativar" : "Desativar"} ${dados?.total ?? 0} produto(s) filtrado(s) por ${alvo}?`)) return;
+    await chamar("/api/painel/produtos/lote", "POST", { q: aplicada || undefined, marca: marca || undefined, categoria: categoria || undefined, situacao: situacao || undefined, ativo }, `${ativo ? "Produtos reativados" : "Produtos desativados"}.`);
+    void carregar();
+  }
 
   const preco = (p: Item) =>
     p.precoCentavos > 0 ? brl(p.precoCentavos) : <span className="text-muted-foreground">sob consulta</span>;
@@ -180,7 +187,7 @@ export default function CatalogoLista({
         aoEscolher={(v) => { setSituacao(v); setPagina(1); }}
         fichas={SITUACOES}
         extra={
-          <>
+          <div className="grid gap-2 sm:flex sm:flex-wrap">
             <select
               className="h-11 w-full min-w-0 rounded-lg border border-border bg-background px-3 text-base sm:w-auto sm:flex-none sm:text-sm"
               value={categoria}
@@ -201,9 +208,17 @@ export default function CatalogoLista({
               <option value="">Todas as marcas</option>
               {(dados?.marcas ?? []).map((m) => <option key={m} value={m}>{m}</option>)}
             </select>
-          </>
+          </div>
         }
       />
+
+      {(marca || categoria) && dados && (
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-muted/30 p-3 text-sm">
+          <span className="mr-auto text-muted-foreground">Ações para os {dados.total.toLocaleString("pt-BR")} produtos filtrados:</span>
+          <button className="btn-secundario" disabled={ocupado || carregando || dados.total === 0} onClick={() => void alterarFiltrados(false)}>Desativar filtrados</button>
+          <button className="btn-secundario" disabled={ocupado || carregando || dados.total === 0} onClick={() => void alterarFiltrados(true)}>Reativar filtrados</button>
+        </div>
+      )}
 
       <ImportarFotosPorSku ocupado={ocupado} aoConcluir={() => void carregar()} />
 

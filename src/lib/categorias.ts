@@ -6,7 +6,7 @@ import { prisma } from "./db";
  * o mesmo resultado sem manter cache entre lojas ou entre publicações.
  */
 export const buscarCategoriaPublica = cache((tenantId: string, slug: string) =>
-  prisma.categoria.findUnique({
-    where: { tenantId_slug: { tenantId, slug } },
+  prisma.categoria.findFirst({
+    where: { tenantId, slug, ativo: true },
   }),
 );

@@ -72,6 +72,10 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
     if (destino) permanentRedirect(destino);
     notFound();
   }
+  // A categoria pode ser desativada sem desativar os produtos que ainda
+  // pertencem a ela. O produto continua consultável, mas não aponta para uma
+  // categoria pública que responde 404.
+  if (p.categoria && !p.categoria.ativo) p.categoria = null;
   const {variante:varianteId,voltar}=await searchParams;
   const retorno = retornoSeguroDoCatalogo(voltar);
   const ofertas=p.variantes.filter(v=>v.ativo).map(ofertaDaVariante);

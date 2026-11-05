@@ -10,6 +10,7 @@ export interface CategoriaView {
   slug: string;
   descricao: string | null;
   imagemUrl: string | null;
+  ativo: boolean;
   ordem: number;
   produtos: number;
   seoTitle: string | null;
@@ -165,8 +166,11 @@ export default function Categorias({ categorias, chamar, ocupado }: {
                 // eslint-disable-next-line @next/next/no-img-element -- URL dinâmica enviada pelo lojista
                 <img src={c.imagemUrl} alt="" className="h-8 w-8 rounded object-cover" />
               )}
-              <span className="font-medium">{c.nome}</span>
+              <span className={`font-medium ${c.ativo ? "" : "text-muted-foreground line-through"}`}>{c.nome}</span>
               <span className="text-xs text-muted-foreground">{c.produtos} produto(s)</span>
+              <span className={`rounded-full px-2 py-1 text-[11px] ${c.ativo ? "bg-sky-100 text-sky-900" : "bg-zinc-100 text-zinc-700"}`}>
+                {c.ativo ? "Ativa" : "Desativada"}
+              </span>
               <span className={`rounded-full px-2 py-1 text-[11px] ${c.seoPendente ? "bg-amber-100 text-amber-900" : "bg-emerald-100 text-emerald-900"}`}>
                 {c.seoProcessandoEm ? "SEO processando" : c.seoPendente ? "SEO pendente" : "SEO publicado"}
               </span>
@@ -177,6 +181,7 @@ export default function Categorias({ categorias, chamar, ocupado }: {
                   if (primeiro) await chamar("/api/painel/categorias", "POST", { id: categorias[i - 1].id, nome: categorias[i - 1].nome, ordem: c.ordem + 1 }, "Ordem atualizada.");
                 }}>↑</button>}
                 <button className="underline" onClick={() => editar(c)}>editar</button>
+                <button className="underline" disabled={ocupado} onClick={() => chamar("/api/painel/categorias", "POST", { id: c.id, nome: c.nome, ativo: !c.ativo }, c.ativo ? "Categoria desativada." : "Categoria reativada.")}>{c.ativo ? "desativar" : "reativar"}</button>
                 <button className="text-muted-foreground underline" disabled={ocupado} onClick={() => confirm(`Apagar a categoria ${c.nome}? Os produtos ficam sem categoria.`) && chamar(`/api/painel/categorias?id=${c.id}`, "DELETE", undefined, "Categoria apagada.")}>apagar</button>
               </span>
             </li>

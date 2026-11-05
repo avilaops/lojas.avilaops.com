@@ -47,7 +47,6 @@ export async function GET(request: Request) {
     }),
     marcasDoCatalogo(s.tenant.id),
   ]);
-
   return Response.json({
     total,
     pagina,

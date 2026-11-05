@@ -123,6 +123,26 @@ export async function salvarProdutoNoCatalogo(tenantId: string, id: string | nul
   }, { timeout: 20000 });
 }
 
+/**
+ * Altera apenas o estado de vários produtos numa transação única.
+ * Cada item ainda passa pela mesma trava, histórico e outbox da escrita individual.
+ */
+export async function alterarAtivoEmLote(tenantId: string, ids: string[], ativo: boolean, origem: string): Promise<number> {
+  if (!ids.length) return 0;
+  return prisma.$transaction(async tx => {
+    await permitirProjecao(tx);
+    let alterados = 0;
+    for (const id of ids) {
+      const anterior = await travarProduto(tx, tenantId, id);
+      if (anterior.ativo === ativo) continue;
+      await tx.produto.update({ where: { id }, data: { ativo } });
+      await registrar(tx, tenantId, id, anterior, ["ativo"], origem);
+      alterados++;
+    }
+    return alterados;
+  }, { timeout: 120000 });
+}
+
 export type AjusteDeOferta = { precoCentavos?: number; precoDeCentavos?: number | null; estoque?: number | null };
 
 /**

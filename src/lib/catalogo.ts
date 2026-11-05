@@ -31,7 +31,7 @@ export const listarCategorias = cache(async (tenantId: string) => {
   // do catálogo) pedem a mesma lista na mesma requisição, e cada pedido são
   // N subconsultas de contagem. Uma ida ao banco por requisição.
   const categorias = await prisma.categoria.findMany({
-    where: { tenantId, produtos: { some: { ativo: true } } },
+    where: { tenantId, ativo: true, produtos: { some: { ativo: true } } },
     include: { _count: { select: { produtos: { where: { ativo: true } } } } },
     orderBy: [{ ordem: "asc" }, { nome: "asc" }],
   });
@@ -315,7 +315,7 @@ export function condicaoProdutos(tenantId: string, filtro?: FiltroCatalogo): Pri
       ...(filtro?.imagemOrigem ? { imagemOrigem: filtro.imagemOrigem } : {}),
       ...(typeof filtro?.fabricante === "string" && filtro.fabricante ? { marca: { equals: filtro.fabricante, mode: "insensitive" } } : {}),
       ...(Array.isArray(filtro?.fabricante) && filtro.fabricante.length ? { marca: { in: filtro.fabricante, mode: "insensitive" } } : {}),
-      ...(filtro?.categoriaSlug ? { categoria: { slug: filtro.categoriaSlug } } : {}),
+      ...(filtro?.categoriaSlug ? { categoria: { slug: filtro.categoriaSlug, ativo: true } } : {}),
       ...(filtro?.excetoId ? { id: { not: filtro.excetoId } } : {}),
       ...(filtro?.minCentavos != null || filtro?.maxCentavos != null
         ? { precoCentavos: { ...(filtro.minCentavos != null ? { gte: filtro.minCentavos } : {}), ...(filtro.maxCentavos != null ? { lte: filtro.maxCentavos } : {}) } }
@@ -495,7 +495,7 @@ export async function medidasDaLoja(tenantId: string, categoriaSlug?: string) {
 }
 
 async function medidasDaLojaSemCache(tenantId: string, categoriaSlug?: string) {
-  const linhas = await prisma.produto.findMany({ where: { tenantId, ativo: true, ...(categoriaSlug ? { categoria: { slug: categoriaSlug } } : {}) }, select: { atributos: true } });
+  const linhas = await prisma.produto.findMany({ where: { tenantId, ativo: true, ...(categoriaSlug ? { categoria: { slug: categoriaSlug, ativo: true } } : {}) }, select: { atributos: true } });
   const valores = new Map<ChaveDeMedida, number[]>();
   for (const l of linhas) {
     const attr = (l.atributos ?? {}) as Record<string, unknown>;
@@ -791,7 +791,7 @@ export function grafiasDaMarca(facetas: FacetaMarca[], escolhida?: string | stri
 /** Facetas pertencem à loja e à família selecionada; só valores cadastrados. */
 export async function facetasTecnicas(tenantId: string, categoriaSlug?: string) {
   const linhas = await prisma.produto.findMany({
-    where: { tenantId, ativo: true, ...(categoriaSlug ? { categoria: { slug: categoriaSlug } } : {}) },
+    where: { tenantId, ativo: true, ...(categoriaSlug ? { categoria: { slug: categoriaSlug, ativo: true } } : {}) },
     select: { marca: true, atributos: true },
   });
   const fabricantes = agruparMarcas(linhas.map(p => p.marca));
