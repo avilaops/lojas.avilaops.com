@@ -89,16 +89,18 @@ test("docs/BACKUP-E-ROLLBACK.md só cita caminho que existe no repositório", ()
   assert.deepEqual(faltando, []);
 });
 
-test("CI tira o checkout de baseline da raiz antes do build Turbopack", () => {
+test("CI mantém o baseline em job separado do build Turbopack", () => {
   const workflow = ler(".github/workflows/deploy-production.yml");
-  const checkout = workflow.indexOf("path: .contract-baseline");
-  const retirar = workflow.indexOf("Tirar baseline da raiz do Turbopack");
-  const build = workflow.indexOf("Construir aplicação para verificação funcional isolada");
-
-  assert.ok(checkout >= 0, "checkout de baseline não encontrado");
-  assert.ok(retirar > checkout, "baseline precisa sair depois da comparação");
-  assert.ok(build > retirar, "baseline precisa sair antes do build");
-  assert.match(workflow, /mv \.contract-baseline "\$RUNNER_TEMP\/lojas-contract-baseline"/u);
+  const jobs = workflow.split(/\r?\n(?=  [a-z]+:\r?\n)/u);
+  const build = jobs.find((job) => job.startsWith("  build:"));
+  const payloads = jobs.find((job) => job.startsWith("  payloads:"));
+  assert.ok(build, "job de compilação não encontrado");
+  assert.ok(payloads, "job de comparação de payloads não encontrado");
+  assert.match(payloads, /path: \.contract-baseline/u);
+  assert.match(payloads, /payload-report\.mjs \.contract-baseline/u);
+  assert.match(build, /run: npm run build/u);
+  assert.doesNotMatch(build, /baseline|payload-report/u, "outro checkout não pode entrar na raiz da compilação");
+  assert.doesNotMatch(ler(".github/actions/preparar-node/action.yml"), /baseline/u);
 });
 
 test("caminhosCitados ignora servidor, outro repositório, glob e marcador", () => {

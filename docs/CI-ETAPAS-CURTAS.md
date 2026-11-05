@@ -7,6 +7,9 @@ Todos os jobs de `Build e deploy` e `Merge automático` mantêm
 
 `dependencias` instala o lockfile e gera o Prisma uma vez. Os consumidores
 recebem esse arquivo da mesma execução, sem repetir `npm ci`.
+O instalador oficial do ONNX usa `ONNXRUNTIME_NODE_INSTALL=skip` para dispensar
+o download adicional de CUDA. O motor existente usa CPU e o pacote já inclui
+esse binário; a sessão CPU continua verificada dentro da imagem final.
 `scripts/ci/artefato.mjs` vincula cada arquivo ao SHA, run e tentativa atuais e
 valida SHA-256 antes da extração. Builds, navegador e modelo usam o mesmo
 contrato. Os nomes de artefatos incluem o SHA e o download não informa outro run.

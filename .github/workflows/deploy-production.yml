@@ -24,6 +24,9 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci --no-audit --no-fund
+        env:
+          # O motor existente exige CPU; o pacote já inclui esse binário.
+          ONNXRUNTIME_NODE_INSTALL: skip
       - run: npx prisma generate
       - name: Arquivar dependências com identidade e hash
         run: |

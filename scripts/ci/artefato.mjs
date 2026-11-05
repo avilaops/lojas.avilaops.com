@@ -21,13 +21,14 @@ async function digest(file) {
 }
 
 export async function registrar(directory, kind, env = process.env) {
-  if (!/^[a-z-]+$/.test(kind)) throw new Error("INVALID_ARTIFACT_KIND");
+  if (typeof kind !== "string" || !/^[a-z-]+$/.test(kind)) throw new Error("INVALID_ARTIFACT_KIND");
   const manifest = { schemaVersion: 1, kind, ...contexto(env), sha256: await digest(path.join(directory, payload)) };
   await writeFile(path.join(directory, "manifest.json"), JSON.stringify(manifest));
   return manifest;
 }
 
 export async function verificar(directory, kind, env = process.env) {
+  if (typeof kind !== "string" || !/^[a-z-]+$/.test(kind)) throw new Error("INVALID_ARTIFACT_KIND");
   const expected = contexto(env);
   const manifest = JSON.parse(await readFile(path.join(directory, "manifest.json"), "utf8"));
   if (manifest.schemaVersion !== 1 || manifest.kind !== kind
