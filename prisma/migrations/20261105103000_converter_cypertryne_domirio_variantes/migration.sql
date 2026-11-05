@@ -68,9 +68,10 @@ REGISTRO M.S. ANVISA (CYPERTRYNE):
 $descricao$;
 BEGIN
   SELECT id INTO tenant_id FROM "Tenant" WHERE slug = 'domi-rio' FOR UPDATE;
-  IF tenant_id IS NULL THEN
-    RAISE EXCEPTION 'Conversão CYPERTRYNE: tenant domi-rio não encontrado';
-  END IF;
+  -- Bancos de teste e outras lojas não possuem a Domi-Rio. Neles a migração
+  -- não tem alvo e deve ser inócua; na Domi-Rio, qualquer divergência abaixo
+  -- continua abortando a transação inteira.
+  IF tenant_id IS NOT NULL THEN
 
   SELECT id INTO produto_100 FROM "Produto" WHERE "tenantId" = tenant_id AND sku = 'ISO014' AND ativo FOR UPDATE;
   SELECT id INTO produto_35 FROM "Produto" WHERE "tenantId" = tenant_id AND sku = 'ISO140' AND ativo FOR UPDATE;
@@ -151,6 +152,7 @@ BEGIN
     'ec_' || md5('cypertryne-variacoes:' || p.id || ':' || p."versaoCatalogo"),
     tenant_id, p.id, p."versaoCatalogo"
   FROM "Produto" p WHERE p.id IN (produto_100, produto_35, produto_1l);
+  END IF;
 END $$;
 
 COMMIT;
