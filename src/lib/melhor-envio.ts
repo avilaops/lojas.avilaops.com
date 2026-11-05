@@ -170,7 +170,7 @@ function respostaObjeto(v: unknown): Record<string, unknown> {
   return v && typeof v === "object" && !Array.isArray(v) ? v as Record<string, unknown> : {};
 }
 
-async function chamarOperacaoMelhorEnvio<T extends Record<string, unknown>>(
+async function chamarOperacaoMelhorEnvio<T>(
   token: string,
   caminho: string,
   corpo: Record<string, unknown>,
@@ -184,7 +184,7 @@ async function chamarOperacaoMelhorEnvio<T extends Record<string, unknown>>(
     cache: "no-store",
     redirect: "error",
   });
-  const dados = respostaObjeto(await r.json().catch(() => ({})));
+  const dados = await r.json().catch(() => ({})) as unknown;
   if (!r.ok) throw new Error(`Melhor Envio recusou a operação (HTTP ${r.status}).`);
   return dados as T;
 }
@@ -253,12 +253,14 @@ export async function gerarEtiquetasMelhorEnvio(token: string, ids: string[]): P
 
 export async function imprimirEtiquetasMelhorEnvio(token: string, ids: string[]): Promise<Record<string, unknown>> {
   if (!ids.length) throw new Error("Nenhuma postagem informada.");
-  return chamarOperacaoMelhorEnvio(token, "/api/v2/me/shipment/print", { orders: ids });
+  return chamarOperacaoMelhorEnvio(token, "/api/v2/me/shipment/print", { orders: ids, mode: "public" });
 }
 
 export async function cancelarEnviosMelhorEnvio(token: string, ids: string[]): Promise<Record<string, unknown>> {
-  if (!ids.length) throw new Error("Nenhuma postagem informada.");
-  return chamarOperacaoMelhorEnvio(token, "/api/v2/me/shipment/cancel", { orders: ids });
+  if (ids.length !== 1 || !/^[\w-]+$/.test(ids[0])) throw new Error("O cancelamento exige uma postagem válida.");
+  return chamarOperacaoMelhorEnvio(token, "/api/v2/me/shipment/cancel", {
+    order: { id: ids[0], reason_id: "2", description: "Cancelamento solicitado no painel da loja." },
+  });
 }
 
 export async function rastrearEnviosMelhorEnvio(token: string, ids: string[]): Promise<Record<string, unknown>> {
@@ -268,7 +270,10 @@ export async function rastrearEnviosMelhorEnvio(token: string, ids: string[]): P
 
 export function lerResultadoRastreioMelhorEnvio(dados: unknown): Array<{ id: string; status: string | null; tracking: string | null; trackingUrl: string | null }> {
   const raiz = respostaObjeto(dados);
-  const lista = Array.isArray(dados) ? dados : Array.isArray(raiz.data) ? raiz.data : [];
+  const lista = Array.isArray(dados) ? dados : Array.isArray(raiz.data) ? raiz.data : Object.entries(raiz).flatMap(([id, valor]) => {
+    const item = respostaObjeto(valor);
+    return item.id == null ? [{ ...item, id }] : [item];
+  });
   return lista.flatMap((item) => {
     const d = respostaObjeto(item);
     const id = texto(d.id) ?? (inteiroPositivo(d.id)?.toString() ?? null);

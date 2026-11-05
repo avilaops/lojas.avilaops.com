@@ -133,14 +133,16 @@ export default function PedidoDetalhe({ pedido, loja }: {
             <button className="btn-primario" disabled={ocupado} onClick={avancar}>
               {pedido.status === "PAGO" ? "Separar este pedido" : pedido.status === "EM_SEPARACAO" ? "Marcar como enviado" : "Marcar como entregue"}
             </button>
-            {e && pedido.status !== "AGUARDANDO_PAGAMENTO" && pedido.etiqueta?.provedor === "melhorenvio" ? (
+            {e && pedido.status !== "AGUARDANDO_PAGAMENTO" && (pedido.freteId?.startsWith("melhorenvio:") || pedido.etiqueta?.provedor === "melhorenvio") ? (
               <>
-                {!pedido.etiqueta.provedorStatus && <button className="btn-secundario" disabled={ocupado} onClick={() => chamar(`/api/painel/pedidos/${pedido.id}/etiqueta`, "POST", undefined, "Envio adicionado ao carrinho.")}>Adicionar ao carrinho</button>}
-                {pedido.etiqueta.provedorStatus === "pending" || pedido.etiqueta.status === "carrinho" ? <button className="btn-secundario" disabled={ocupado} onClick={() => operarMelhorEnvio("comprar")}>Comprar etiqueta</button> : null}
-                {pedido.etiqueta.provedorStatus === "released" || pedido.etiqueta.status === "comprada" ? <button className="btn-secundario" disabled={ocupado} onClick={() => operarMelhorEnvio("gerar")}>Gerar etiqueta</button> : null}
-                {(pedido.etiqueta.provedorStatus === "generated" || pedido.etiqueta.status === "gerada") && <button className="btn-secundario" disabled={ocupado} onClick={() => operarMelhorEnvio("imprimir")}>Imprimir etiqueta</button>}
-                {pedido.etiqueta.codigoObjeto && <button className="btn-secundario" disabled={ocupado} onClick={() => operarMelhorEnvio("rastrear")}>Atualizar rastreio</button>}
-                {pedido.etiqueta.rastreioUrl && <a className="btn-secundario inline-flex items-center px-4" href={pedido.etiqueta.rastreioUrl} target="_blank" rel="noopener">Abrir rastreio</a>}
+                {!pedido.etiqueta?.provedorStatus && <button className="btn-secundario" disabled={ocupado} onClick={() => chamar(`/api/painel/pedidos/${pedido.id}/etiqueta`, "POST", undefined, "Envio adicionado ao carrinho.")}>Adicionar ao carrinho</button>}
+                {pedido.etiqueta?.provedorStatus === "pending" || pedido.etiqueta?.status === "carrinho" ? <button className="btn-secundario" disabled={ocupado} onClick={() => operarMelhorEnvio("comprar")}>Comprar etiqueta</button> : null}
+                {pedido.etiqueta?.provedorStatus === "released" || pedido.etiqueta?.status === "comprada" ? <button className="btn-secundario" disabled={ocupado} onClick={() => operarMelhorEnvio("gerar")}>Gerar etiqueta</button> : null}
+                {(pedido.etiqueta?.provedorStatus === "generated" || pedido.etiqueta?.status === "gerada") && <button className="btn-secundario" disabled={ocupado} onClick={() => operarMelhorEnvio("imprimir")}>Imprimir etiqueta</button>}
+                {pedido.etiqueta?.pdf && <a className="btn-secundario inline-flex items-center px-4" href={pedido.etiqueta.pdf} target="_blank" rel="noopener">Baixar etiqueta</a>}
+                {pedido.etiqueta && pedido.etiqueta.status !== "cancelada" && <button className="btn-secundario" disabled={ocupado} onClick={() => operarMelhorEnvio("cancelar")}>Cancelar etiqueta</button>}
+                {pedido.etiqueta?.codigoObjeto && <button className="btn-secundario" disabled={ocupado} onClick={() => operarMelhorEnvio("rastrear")}>Atualizar rastreio</button>}
+                {pedido.etiqueta?.rastreioUrl && <a className="btn-secundario inline-flex items-center px-4" href={pedido.etiqueta.rastreioUrl} target="_blank" rel="noopener">Abrir rastreio</a>}
               </>
             ) : e && pedido.status !== "AGUARDANDO_PAGAMENTO" && (
               pedido.etiqueta?.pdf ? (

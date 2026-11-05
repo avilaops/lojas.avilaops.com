@@ -48,7 +48,8 @@ export default async function Pagina({ params }: { params: Promise<{ id: string 
           descontoCentavos: pedido.descontoCentavos,
           cupomCodigo: pedido.cupomCodigo,
           meioPagamento: pedido.meioPagamento,
-          freteNome: pedido.freteNome,
+            freteNome: pedido.freteNome,
+            freteId: pedido.freteId,
           rastreio: pedido.rastreio,
           etiqueta: pedido.postagem
             ? { provedor: pedido.postagem.provedor, provedorStatus: pedido.postagem.provedorStatus, rastreioUrl: pedido.postagem.rastreioUrl, status: pedido.postagem.status, codigoObjeto: pedido.postagem.codigoObjeto, pdf: pedido.postagem.pdfEtiqueta, custoCentavos: pedido.postagem.custoCentavos }

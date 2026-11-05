@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { adicionarEnvioAoCarrinho, ambienteDoMelhorEnvio, baseDoMelhorEnvio, comprarEnviosMelhorEnvio, cotarMelhorEnvio, extrairCotacoes, gerarEtiquetasMelhorEnvio, imprimirEtiquetasMelhorEnvio, lojaPermitidaNoMelhorEnvio, rastrearEnviosMelhorEnvio, type PedidoDeCotacao } from "./melhor-envio";
+import { adicionarEnvioAoCarrinho, ambienteDoMelhorEnvio, baseDoMelhorEnvio, comprarEnviosMelhorEnvio, cotarMelhorEnvio, extrairCotacoes, gerarEtiquetasMelhorEnvio, imprimirEtiquetasMelhorEnvio, lerResultadoRastreioMelhorEnvio, lojaPermitidaNoMelhorEnvio, rastrearEnviosMelhorEnvio, cancelarEnviosMelhorEnvio, type PedidoDeCotacao } from "./melhor-envio";
 
 delete process.env.MELHOR_ENVIO_URL;
 
@@ -193,5 +193,25 @@ test("operações de carteira usam os endpoints e IDs da postagem", async (t) =>
   await rastrearEnviosMelhorEnvio("token", ["shipment-1"]);
   assert.deepEqual(urls.map((u) => u.split("/api/v2")[1]), [
     "/me/shipment/checkout", "/me/shipment/generate", "/me/shipment/print", "/me/shipment/tracking",
+  ]);
+});
+
+test("impressão é pública e cancelamento informa motivo", async (t) => {
+  const corpos: Record<string, unknown>[] = [];
+  t.mock.method(globalThis, "fetch", async (_url: string, init: RequestInit) => {
+    corpos.push(JSON.parse(String(init.body)));
+    return Response.json({ ok: true });
+  });
+  await imprimirEtiquetasMelhorEnvio("token", ["shipment-1"]);
+  await cancelarEnviosMelhorEnvio("token", ["shipment-1"]);
+  assert.deepEqual(corpos, [
+    { orders: ["shipment-1"], mode: "public" },
+    { order: { id: "shipment-1", reason_id: "2", description: "Cancelamento solicitado no painel da loja." } },
+  ]);
+});
+
+test("aceita rastreio em objeto indexado pelo ID", () => {
+  assert.deepEqual(lerResultadoRastreioMelhorEnvio({ "shipment-1": { status: "posted", tracking: "AB123", tracking_url: "https://rastreio.test/AB123" } }), [
+    { id: "shipment-1", status: "posted", tracking: "AB123", trackingUrl: "https://rastreio.test/AB123" },
   ]);
 });

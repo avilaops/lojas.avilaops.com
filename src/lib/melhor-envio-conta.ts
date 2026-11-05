@@ -23,7 +23,7 @@ import { emitirState as emitirStateAssinado, lerState as lerStateAssinado } from
  */
 /** Escopos necessários para cotar, comprar, gerar, imprimir, cancelar e rastrear. */
 const ESCOPOS = [
-  "shipping-calculate", "shipping-checkout", "shipping-generate", "shipping-print",
+  "cart-write", "shipping-calculate", "shipping-checkout", "shipping-generate", "shipping-print",
   "shipping-cancel", "shipping-tracking", "users-read",
 ];
 

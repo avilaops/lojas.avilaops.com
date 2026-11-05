@@ -19,17 +19,15 @@ export async function POST(request: Request) {
   if (!postagem) return Response.json({ ok: true, ignorado: true });
   const tracking = typeof dado.tracking === "string" && dado.tracking.trim() ? dado.tracking.trim() : null;
   const trackingUrl = typeof dado.tracking_url === "string" && dado.tracking_url.trim() ? dado.tracking_url.trim() : null;
-  const statusPedido = status === "delivered" ? "ENTREGUE" : status === "posted" ? "ENVIADO" : ["generated", "released", "received"].includes(status) && postagem.pedido.status === "PAGO" ? "EM_SEPARACAO" : undefined;
+  const statusPostagem = status === "cancelled" ? "cancelada" : status === "generated" ? "gerada" : ["posted", "delivered"].includes(status) ? "emitida" : ["released", "received"].includes(status) ? "comprada" : postagem.status;
+  const statusPedido = postagem.pedido.status === "PAGO" && ["released", "received", "generated"].includes(status) ? "EM_SEPARACAO" : postagem.pedido.status === "EM_SEPARACAO" && status === "posted" ? "ENVIADO" : ["PAGO", "EM_SEPARACAO", "ENVIADO"].includes(postagem.pedido.status) && status === "delivered" ? "ENTREGUE" : undefined;
   const notificouRastreio = await prisma.$transaction(async (tx) => {
-    await tx.postagem.update({ where: { id: postagem.id }, data: { provedorStatus: status, codigoObjeto: tracking ?? postagem.codigoObjeto, rastreioUrl: trackingUrl ?? postagem.rastreioUrl, status: status === "cancelled" ? "cancelada" : postagem.status === "carrinho" && status !== "created" ? "comprada" : postagem.status } });
+    await tx.postagem.update({ where: { id: postagem.id }, data: { provedorStatus: status, codigoObjeto: tracking ?? postagem.codigoObjeto, rastreioUrl: trackingUrl ?? postagem.rastreioUrl, status: statusPostagem } });
     if (!tracking && !statusPedido) return false;
     const atualizado = tracking
       ? await tx.pedido.updateMany({ where: { id: postagem.pedido.id, rastreio: null }, data: { rastreio: tracking, ...(statusPedido ? { status: statusPedido } : {}) } })
       : { count: 0 };
-    if (tracking && statusPedido && atualizado.count === 0) {
-      await tx.pedido.update({ where: { id: postagem.pedido.id }, data: { status: statusPedido } });
-    }
-    if (!tracking && statusPedido) await tx.pedido.update({ where: { id: postagem.pedido.id }, data: { status: statusPedido } });
+    if (statusPedido) await tx.pedido.updateMany({ where: { id: postagem.pedido.id, status: postagem.pedido.status }, data: { status: statusPedido } });
     return Boolean(tracking && atualizado.count === 1);
   });
   if (notificouRastreio && tracking) await avisarEnvio(postagem.tenant, postagem.pedido, tracking);
