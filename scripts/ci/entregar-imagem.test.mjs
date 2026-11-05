@@ -53,10 +53,12 @@ test("prepare e deploy enviam somente o digest autorizado sem expor credenciais"
 });
 
 test("run superado não conecta ao servidor e não comprova publicação", async () => {
-  const result = await executar({ NEWER_RUNS: "1" });
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(result.ssh, null);
-  assert.equal(result.output, "publicar=false\n");
+  for (const pages of ["1", "0\n1", "0\n0\n2"]) {
+    const result = await executar({ NEWER_RUNS: pages });
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.ssh, null);
+    assert.equal(result.output, "publicar=false\n");
+  }
 });
 
 test("falha de SSH não publica sucesso e remove chave temporária", async () => {
