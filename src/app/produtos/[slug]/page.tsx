@@ -5,7 +5,8 @@ import FichaTecnica from "@/components/FichaTecnica";
 import { lerDefinicoes, lerValores } from "@/lib/campos-personalizados";
 import { exigirTenant, lojaVende, urlDaLoja, temaDo, retiradaPublicaDisponivel } from "@/lib/tenant";
 import GaleriaPremium from "@/components/templates/automotivo-premium/Galeria";
-import { buscarProduto, equivalentesDoProduto, formatarBRL, listarProdutos, mesmaSerie, resumoAvaliacoes, slugDoEquivalente } from "@/lib/catalogo";
+import { buscarProduto, equivalentesDoProduto, formatarBRL, listarProdutos, mesmaSerie, resumoAvaliacoes } from "@/lib/catalogo";
+import { destinoDoProdutoArquivado } from "@/lib/catalogo-redirecionamento";
 import * as regras from "@/lib/produto-regras";
 import { fichaDoProduto } from "@/lib/ficha";
 import AvisoEstoque from "@/components/AvisoEstoque";
@@ -67,9 +68,8 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
   const { slug } = await params;
   const p = await buscarProduto(t.id, slug);
   if (!p) {
-    // Cadastro repetido fora da vitrine: o link antigo leva ao que ficou.
-    const destino = await slugDoEquivalente(t.id, slug);
-    if (destino) permanentRedirect(`/produtos/${destino}`);
+    const destino = await destinoDoProdutoArquivado(t.id, slug);
+    if (destino) permanentRedirect(destino);
     notFound();
   }
   const {variante:varianteId,voltar}=await searchParams;

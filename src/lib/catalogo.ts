@@ -579,24 +579,6 @@ export async function buscarProduto(tenantId: string, slug: string) {
 }
 
 /**
- * Para onde vai o endereço de um cadastro repetido que saiu da vitrine.
- *
- * O ERP do lojista às vezes tem a mesma peça em dois ou três códigos (a
- * Vedashow tinha o anel 2007 em 307, 1445 e 4919, só um com saldo). Quem
- * importa pode tirar o repetido da vitrine declarando no produto inativo
- * `atributos.equivalenteA` = SKU do cadastro que fica. O registro continua —
- * com o mesmo SKU, que é o vínculo com o ERP —, e o endereço antigo leva ao
- * produto que fica em vez de virar 404 para quem salvou o link.
- */
-export async function slugDoEquivalente(tenantId: string, slug: string): Promise<string | null> {
-  const inativo = await prisma.produto.findFirst({ where: { tenantId, slug, ativo: false }, select: { atributos: true } });
-  const alvo = (inativo?.atributos as Record<string, unknown> | null)?.equivalenteA;
-  if (typeof alvo !== "string" || !alvo.trim()) return null;
-  const ativo = await prisma.produto.findFirst({ where: { tenantId, sku: alvo.trim(), ativo: true }, select: { slug: true } });
-  return ativo && ativo.slug !== slug ? ativo.slug : null;
-}
-
-/**
  * Resolve os itens do pedido pelo catálogo, no servidor.
  *
  * É a peça que o @avilaops/checkout exige: o preço nunca vem do navegador.
