@@ -4,7 +4,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import WhatsAppFlutuante, { linkWhatsApp } from "@/components/WhatsAppFlutuante";
 import type { Tenant } from "@prisma/client";
-import { comporHome } from "@/components/home/composicao";
+import { dadosPublicosDaHome } from "@/components/home/dados-publicos";
 import { tenantPublico } from "./tenant";
 import { VALORES_LAYOUT } from "./tema";
 import { lerIdentidade } from "./identidade";
@@ -34,13 +34,13 @@ test("todos os layouts recebem o mesmo WhatsApp público do carrinho sem alterar
   ]) {
     const t = { nome: "Loja de teste", whatsapp, status: "ATIVA", plano: "SITE" } as Tenant;
     for (const layout of VALORES_LAYOUT) {
-      const home = comporHome({ layout }, {
-        t, identidade: lerIdentidade(null), categorias: [], vitrine: [], temDestaques: false, vende: false,
+      const lojaDoLayout = { ...t, tema: { layout } };
+      const dados = dadosPublicosDaHome({
+        t: lojaDoLayout, identidade: lerIdentidade(null), categorias: [], vitrine: [], temDestaques: false, vende: false,
       });
-      const props = home.props as { t: Tenant };
-      assert.equal(props.t.whatsapp, esperado, layout);
-      assert.equal(props.t.whatsapp, tenantPublico(t).whatsapp, layout);
-      assert.equal(t.whatsapp, whatsapp, "a projeção não deve modificar o tenant original");
+      assert.equal(dados.t.whatsapp, esperado, layout);
+      assert.equal(dados.t.whatsapp, tenantPublico(t).whatsapp, layout);
+      assert.equal(lojaDoLayout.whatsapp, whatsapp, "a projeção não deve modificar o tenant original");
     }
   }
 });
