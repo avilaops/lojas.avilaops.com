@@ -41,7 +41,7 @@
         "Números nacionais e internacionais mantêm o destino correto.",
         "Testes e CI aprovados antes da publicação; versão pública conferida."
       ],
-      "evidence": "CI histórica 41720628611 aprovada para 65ed5eb. Retomada em 05/11: conflito com AVL-263 reconciliado; canais da jornada assistida normalizados e regressões de HTML adicionadas. Política Linear aplicada aos sete jobs com timeout de um minuto e gates preservados. Nova suíte, tipos, lint, integração, build e navegador aguardam GitHub CI. Registro em evidencias/avl-261-retomada-2026-11-05.md; PR 198 mantido em rascunho durante a verificação.",
+      "evidence": "Retomada 05/11: 1.365 unitários aprovados na CI 41983342814; CI completa bloqueada por tempo. Continuação autorizada: pipeline decomposto com dependências e build por artefatos da mesma execução/SHA, tipos gerados pelo Next, banco dividido, jornadas reais, contratos e imagem sem recompilação. Limite de um minuto e todos os gates preservados. Implementação aguarda GitHub CI; docs/CI-ETAPAS-CURTAS.md. PR 198 em rascunho até a aprovação integral.",
       "blocker": "Aceite operacional ainda depende de endereço e horário confirmados, prova de emissão fiscal e recebimento real nos canais; não foram inventados nem preenchidos.",
       "environment": "worktree-isolada-avl-261",
       "history": [

@@ -1,0 +1,15 @@
+name: Build verificado desta execução
+description: Restaura o servidor compilado para as jornadas de navegador.
+runs:
+  using: composite
+  steps:
+    - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+      with:
+        name: lojas-build-${{ github.sha }}
+        path: ${{ runner.temp }}/lojas-build
+    - shell: bash
+      run: |
+        set -euo pipefail
+        node scripts/ci/artefato.mjs verificar "$RUNNER_TEMP/lojas-build" build
+        mkdir -p .next/standalone
+        tar --zstd -xf "$RUNNER_TEMP/lojas-build/payload.tar.zst" -C .next/standalone
