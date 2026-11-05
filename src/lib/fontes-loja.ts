@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import localFont from "next/font/local";
-import { Inter, Montserrat, Poppins } from "next/font/google";
+import { Inter, Poppins } from "next/font/google";
 import type { TemaLoja } from "./tema";
 import { extrairPreCargas } from "./fontes-pre-carga";
 
@@ -20,7 +20,20 @@ import { extrairPreCargas } from "./fontes-pre-carga";
  */
 const inter = Inter({ subsets: ["latin"], weight: ["400", "600", "700", "800"], display: "swap", preload: false });
 const poppins = Poppins({ subsets: ["latin"], weight: ["400", "600", "700", "800"], display: "swap", preload: false });
-const montserrat = Montserrat({ subsets: ["latin"], weight: ["400", "600", "700", "800"], display: "swap", preload: false });
+// Mesmo arquivo variável nos quatro pesos oferecidos; sem consulta ao Google no build.
+// Proveniência e licença em src/fonts/README.md e OFL-montserrat.txt.
+const montserrat = localFont({
+  src: [
+    { path: "../fonts/montserrat-variable.ttf", weight: "400", style: "normal" },
+    { path: "../fonts/montserrat-variable.ttf", weight: "600", style: "normal" },
+    { path: "../fonts/montserrat-variable.ttf", weight: "700", style: "normal" },
+    { path: "../fonts/montserrat-variable.ttf", weight: "800", style: "normal" },
+  ],
+  display: "swap",
+  preload: false,
+  adjustFontFallback: "Arial",
+  fallback: ["Arial", "sans-serif"],
+});
 // Playfair local evita a falha intermitente do Next com URLs /l/font do Google.
 // Proveniência e licença em src/fonts/README.md e OFL-playfair-display.txt.
 const playfair = localFont({

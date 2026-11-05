@@ -21,3 +21,22 @@ Não há download dessa família durante o build.
 
 O arquivo WOFF2 latino existente mantém sua licença em
 `OFL-dm-serif-display.txt`.
+
+## Montserrat
+
+`montserrat-variable.ttf` é o arquivo original `Montserrat[wght].ttf`
+do repositório oficial Google Fonts, commit
+`eb20e9cf19d97cf579fa3867d729d4222d6c59e1`, pasta `ofl/montserrat`.
+Git blob do arquivo: `c97aca18592834d8706549c279cb8d5ac5d85f69`.
+SHA-256: `0f7b311b2f3279e4eef9b2f968bcdbab6e28f4daeb1f049f4f278a902bcd82f7`.
+A licença original acompanha o arquivo em `OFL-montserrat.txt`.
+
+O arquivo completo mantém os glifos e o eixo variável original 100–900.
+O tema continua declarando os pesos 400, 600, 700 e 800 em faces normais,
+com `display: swap`, sem pré-carga global. Todas apontam para o mesmo arquivo;
+a pré-carga por loja continua deduplicando os pesos 400/700.
+
+Foi incorporado após a CI de publicação `42066273513` falhar no carregador
+Montserrat com `next/font/google queries have exactly one entry`, a mesma
+classe de falha já tratada em Playfair Display. Não há download desta família
+durante o build. Origem: <https://github.com/google/fonts/tree/eb20e9cf19d97cf579fa3867d729d4222d6c59e1/ofl/montserrat>.
