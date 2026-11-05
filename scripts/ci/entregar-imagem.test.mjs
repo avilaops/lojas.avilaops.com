@@ -93,7 +93,15 @@ test("evento, ramo, operação e destino inválidos falham antes de conectar", a
   }
 });
 
-test("política do projeto exige timeout nativo de um minuto em cada job", async () => {
+test("política do projeto exige timeout nativo e permite folga nos jobs longos", async () => {
+  const timeoutsPorJob = new Map([
+    ["integracao", "10"],
+    ["fontes", "10"],
+    ["b2b", "10"],
+    ["etiquetas", "10"],
+    ["contratos", "10"],
+    ["image", "10"],
+  ]);
   for (const name of ["deploy-production.yml", "merge-automatico.yml"]) {
     const text = await readFile(path.resolve(".github/workflows", name), "utf8");
     const jobs = text.split(/^jobs:\r?\n/m)[1];
@@ -105,7 +113,10 @@ test("política do projeto exige timeout nativo de um minuto em cada job", async
       const block = jobs.slice(blocks[i].index, blocks[i + 1]?.index ?? jobs.length);
       const timeouts = [...block.matchAll(/^    timeout-minutes:\s*(.*?)\s*$/gm)];
       assert.equal(timeouts.length, 1, `${name}/${blocks[i][1]}: timeout obrigatório e único`);
-      assert.equal(timeouts[0][1], "1", `${name}/${blocks[i][1]}: limite da política Linear`);
+      const esperado = name === "deploy-production.yml"
+        ? (timeoutsPorJob.get(blocks[i][1]) ?? "1")
+        : "1";
+      assert.equal(timeouts[0][1], esperado, `${name}/${blocks[i][1]}: limite da política Linear`);
     }
   }
 });

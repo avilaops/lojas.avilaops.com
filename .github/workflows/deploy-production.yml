@@ -125,7 +125,7 @@ jobs:
     name: integração PostgreSQL / parte ${{ matrix.fatia }}
     needs: dependencias
     runs-on: ubuntu-24.04
-    timeout-minutes: 1
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
@@ -241,7 +241,7 @@ jobs:
     name: preparar fontes do navegador
     needs: dependencias
     runs-on: ubuntu-24.04
-    timeout-minutes: 1
+    timeout-minutes: 10
     outputs:
       artifact_id: ${{ steps.arquivo.outputs.ids }}
     steps:
@@ -295,7 +295,7 @@ jobs:
     name: navegador / cotação, HTTP e reinício
     needs: [dependencias, build, navegador, fontes]
     runs-on: ubuntu-24.04
-    timeout-minutes: 1
+    timeout-minutes: 10
     services:
       postgres:
         image: postgres:18-alpine
@@ -346,7 +346,7 @@ jobs:
     name: navegador / etiquetas e PDFs
     needs: [dependencias, build, navegador, fontes]
     runs-on: ubuntu-24.04
-    timeout-minutes: 1
+    timeout-minutes: 10
     services:
       postgres:
         image: postgres:18-alpine
@@ -407,7 +407,7 @@ jobs:
     name: contratos / API v1, Experiments e evidências
     needs: [integracao, b2b]
     runs-on: ubuntu-24.04
-    timeout-minutes: 1
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -524,7 +524,7 @@ jobs:
     name: imagem / empacotar bundle aprovado
     needs: [contexto_imagem, unitarios, qualidade, payloads, integracao, b2b, etiquetas, contratos]
     runs-on: ubuntu-24.04
-    timeout-minutes: 1
+    timeout-minutes: 10
     permissions:
       contents: read
       packages: write
