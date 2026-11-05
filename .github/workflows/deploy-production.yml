@@ -437,9 +437,8 @@ jobs:
     name: imagem / empacotar bundle aprovado
     needs: [dependencias, unitarios, qualidade, payloads, integracao, build, modelo, b2b, etiquetas, contratos]
     runs-on: ubuntu-latest
-    # O empacotamento Docker aprovado levou 1m22s no runner; um minuto cancela
-    # uma imagem íntegra antes de ela ser identificada ou publicada.
-    timeout-minutes: 3
+    # Política vigente no Linear: um minuto. O builder nativo evita bootstrap/cache redundantes.
+    timeout-minutes: 1
     permissions:
       contents: read
       packages: write
