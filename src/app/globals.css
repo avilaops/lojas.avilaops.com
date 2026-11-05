@@ -1241,6 +1241,48 @@ html[data-cookies-respondido] .aviso-cookies { display: none; }
 [data-layout="distribuidora"] .home-campanhas { gap: 1.5rem; padding-bottom: 0; }
 [data-layout="distribuidora"] .rodape-loja { margin-top: 2rem; }
 [data-layout="distribuidora"] .campanhas-ver-todos { margin-top: .75rem; margin-bottom: 0; }
+/* Catálogo Domi-Rio: a ação continua com 44px de toque, mas deixa de formar
+   uma faixa roxa pesada sob todos os produtos. A mistura mantém contraste e
+   a cor plena retorna no hover/foco como confirmação da ação. */
+[data-layout="distribuidora"] .cartao-produto button.btn-primario {
+  border: 1px solid color-mix(in srgb, var(--primary) 74%, var(--border));
+  background: color-mix(in srgb, var(--primary) 86%, var(--background));
+  box-shadow: none;
+}
+[data-layout="distribuidora"] .cartao-produto button.btn-primario:hover {
+  background: var(--primary);
+}
+[data-layout="distribuidora"] .cartao-produto button.btn-primario:focus-visible {
+  background: var(--primary);
+}
+/* A moldura continua quadrada, mas a pequena escala neutraliza fotos de
+   fornecedor com margens brancas internas sem cortar a embalagem. */
+[data-layout="distribuidora"] .cartao-produto-foto {
+  background: color-mix(in srgb, var(--muted) 58%, #fff);
+}
+[data-layout="distribuidora"] .cartao-produto-foto > img {
+  padding: .65rem;
+  transform: scale(1.05);
+}
+[data-layout="distribuidora"] .cartao-produto-selos {
+  left: .75rem;
+  top: .75rem;
+}
+[data-layout="distribuidora"] .cartao-produto-disponibilidade {
+  align-items: baseline;
+  min-height: 1.5rem;
+}
+[data-layout="distribuidora"] .cartao-produto-detalhes {
+  color: color-mix(in srgb, var(--primary) 84%, var(--foreground));
+  font-size: .6875rem;
+  font-weight: 650;
+  text-underline-offset: 3px;
+}
+@media (min-width: 641px) {
+  [data-layout="distribuidora"] .cartao-produto-detalhes {
+    padding: .25rem 0 .25rem .5rem;
+  }
+}
 @media (max-width: 640px) {
   [data-layout="distribuidora"] .marca-loja img { height: 60px; max-width: 170px; }
   [data-layout="distribuidora"] .banner-campanha picture { aspect-ratio: auto; height: min(calc(100vw * 5 / 4), 42svh); min-height: 0; }
