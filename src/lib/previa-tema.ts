@@ -139,6 +139,7 @@ function categoriaDemo(ordem: number, slug: string, nome: string, descricao: str
     nome,
     descricao,
     imagemUrl: null,
+    ativo: true,
     ordem,
     seoTitle: null,
     seoDescription: null,

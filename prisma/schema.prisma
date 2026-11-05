@@ -763,6 +763,7 @@ model Categoria {
   nome      String
   descricao String?
   imagemUrl String?
+  ativo     Boolean @default(true)
   ordem     Int     @default(0)
 
   // SEO persistido: gerado fora do request público e revisável no painel.
