@@ -433,11 +433,45 @@ jobs:
           compression-level: 0
           retention-days: 7
 
+  contexto_imagem:
+    name: imagem / preparar contexto verificado
+    needs: [dependencias, build, modelo]
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    outputs:
+      artifact_id: ${{ steps.arquivo.outputs.ids }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/preparar-artefatos
+        with:
+          ids: ${{ needs.dependencias.outputs.artifact_id }},${{ needs.build.outputs.artifact_id }},${{ needs.modelo.outputs.artifact_id }}
+          tipos: dependencias build modelo
+      - name: Montar contexto somente com os artefatos verificados
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/lojas-image/runtime"
+          cp Dockerfile.ci "$RUNNER_TEMP/lojas-image/Dockerfile"
+          cp -a .next/standalone/. "$RUNNER_TEMP/lojas-image/runtime/"
+          cp -a modelos "$RUNNER_TEMP/lojas-image/runtime/"
+          for modulo in .prisma @prisma/client onnxruntime-node; do
+            mkdir -p "$RUNNER_TEMP/lojas-image/runtime/node_modules/$modulo"
+            cp -a "node_modules/$modulo/." "$RUNNER_TEMP/lojas-image/runtime/node_modules/$modulo/"
+          done
+          cp -a prisma "$RUNNER_TEMP/lojas-image/runtime/"
+          mkdir -p "$RUNNER_TEMP/imagem-contexto"
+          tar -I 'zstd -T0 -1' -cf "$RUNNER_TEMP/imagem-contexto/payload.tar.zst" -C "$RUNNER_TEMP/lojas-image" .
+      - uses: ./.github/actions/publicar-artefato
+        id: arquivo
+        with:
+          tipo: imagem-contexto
+          pasta: ${{ runner.temp }}/imagem-contexto/
+
   image:
     name: imagem / empacotar bundle aprovado
-    needs: [dependencias, unitarios, qualidade, payloads, integracao, build, modelo, b2b, etiquetas, contratos]
+    needs: [contexto_imagem, unitarios, qualidade, payloads, integracao, b2b, etiquetas, contratos]
     runs-on: ubuntu-latest
-    # Política vigente no Linear: um minuto. O builder nativo evita bootstrap/cache redundantes.
     timeout-minutes: 1
     permissions:
       contents: read
@@ -452,9 +486,9 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/preparar-artefatos
         with:
-          ids: ${{ needs.dependencias.outputs.artifact_id }},${{ needs.build.outputs.artifact_id }},${{ needs.modelo.outputs.artifact_id }}
-          tipos: dependencias build modelo
-      - name: Montar contexto somente com os artefatos verificados
+          ids: ${{ needs.contexto_imagem.outputs.artifact_id }}
+          tipos: imagem-contexto
+      - name: Validar destino da publicação
         env:
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
@@ -464,15 +498,6 @@ jobs:
             [[ "$GITHUB_REF" == "refs/heads/$DEFAULT_BRANCH" ]]
           fi
           printf 'IMAGE_NAME=ghcr.io/%s\n' "${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
-          mkdir -p "$RUNNER_TEMP/lojas-image/runtime"
-          cp Dockerfile.ci "$RUNNER_TEMP/lojas-image/Dockerfile"
-          cp -a .next/standalone/. "$RUNNER_TEMP/lojas-image/runtime/"
-          cp -a modelos "$RUNNER_TEMP/lojas-image/runtime/"
-          for modulo in .prisma @prisma/client onnxruntime-node; do
-            mkdir -p "$RUNNER_TEMP/lojas-image/runtime/node_modules/$modulo"
-            cp -a "node_modules/$modulo/." "$RUNNER_TEMP/lojas-image/runtime/node_modules/$modulo/"
-          done
-          cp -a prisma "$RUNNER_TEMP/lojas-image/runtime/"
       - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9
         if: env.PUBLISH == 'true'
         with:
@@ -501,8 +526,8 @@ jobs:
           [[ "$publicada" =~ @sha256:[a-f0-9]{64}$ ]]
           printf 'image=%s\n' "$publicada" >> "$GITHUB_OUTPUT"
 
-  deploy:
-    name: deploy
+  preparar_entrega:
+    name: entrega / baixar imagem no servidor
     needs: image
     # Só a main, só por push ou disparo manual, e só com o deploy ligado na
     # variável do repositório. Pull request — inclusive de fork, agora que o
@@ -512,9 +537,7 @@ jobs:
       && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
       && vars.DEPLOY_ENABLED == 'true'
     runs-on: ubuntu-latest
-    # A conexão SSH executa atualização remota e pode atravessar um reinício do
-    # serviço. Um minuto cancela uma publicação íntegra antes da fumaça pública.
-    timeout-minutes: 5
+    timeout-minutes: 1
     environment: production
     permissions:
       contents: read
@@ -523,68 +546,55 @@ jobs:
     concurrency:
       group: deploy-production-lojas.avilaops.com
       cancel-in-progress: false
+    outputs:
+      publicado: ${{ steps.entrega.outputs.publicar }}
     steps:
-      # Só o run mais novo publica.
-      #
-      # Em 08/10/2026 dois pushes seguidos correram em paralelo; o build do
-      # commit mais antigo demorou mais e o deploy dele terminou por último.
-      # Produção ficou na versão ANTERIOR à que o painel do GitHub mostrava
-      # como publicada, sem o PR que tinha acabado de entrar. O `concurrency`
-      # acima não pega isso: ele enfileira os deploys, não os ordena por commit.
-      #
-      # A pergunta é "existe um run mais novo deste workflow na main que ainda
-      # vai publicar, ou já publicou?", e não "este commit é a ponta da main?":
-      # commit com `[skip ci]` vira a ponta sem ter run nenhum, e por essa
-      # segunda regra ninguém publicaria o código que veio antes dele.
-      - name: Conferir que nenhum deploy mais novo passou na frente
-        id: vez
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/entregar-imagem
+        id: entrega
+        with:
+          operacao: prepare
+          imagem: ${{ needs.image.outputs.image }}
         env:
-          GH_TOKEN: ${{ github.token }}
-          RAMO: ${{ github.event.repository.default_branch }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          mais_novos=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/deploy-production.yml/runs?branch=${RAMO}&per_page=50" \
-            --jq "[.workflow_runs[] | select(.id > ${GITHUB_RUN_ID} and .event != \"pull_request\" and (.conclusion == null or .conclusion == \"success\"))] | length")
-          if (( mais_novos > 0 )); then
-            echo "::notice::Há ${mais_novos} run(s) mais novo(s) deste workflow na ${RAMO}. Este não publica: publicar agora poria uma versão mais antiga por cima."
-            echo "publicar=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "publicar=true" >> "$GITHUB_OUTPUT"
-          fi
-      - name: Enviar imagem ao servidor
-        if: steps.vez.outputs.publicar == 'true'
-        env:
-          APPLICATION: lojas.avilaops.com
-          IMAGE: ${{ needs.image.outputs.image }}
-          DEPLOY_PORT: 22
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          [[ "$APPLICATION" =~ ^[a-z0-9][a-z0-9.-]*$ ]]
-          [[ "$IMAGE" =~ ^ghcr\.io/avilaops/[a-z0-9][a-z0-9._/-]*@sha256:[a-f0-9]{64}$ ]]
-          [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]]
-          [[ "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
-          [[ "$DEPLOY_PORT" =~ ^[0-9]{1,5}$ ]]
-          (( DEPLOY_PORT > 0 && DEPLOY_PORT < 65536 ))
-          temporary_ssh=$(mktemp -d)
-          trap 'rm -rf "$temporary_ssh"' EXIT
-          chmod 700 "$temporary_ssh"
-          printf '%s\n' "$SSH_KEY" > "$temporary_ssh/key"
-          printf '%s\n' "$KNOWN_HOSTS" > "$temporary_ssh/known_hosts"
-          chmod 600 "$temporary_ssh/key" "$temporary_ssh/known_hosts"
-          printf '%s\n' "$GHCR_TOKEN" | ssh -T -i "$temporary_ssh/key" -p "$DEPLOY_PORT" \
-            -o BatchMode=yes -o IdentitiesOnly=yes \
-            -o StrictHostKeyChecking=yes \
-            -o UserKnownHostsFile="$temporary_ssh/known_hosts" \
-            -o ConnectTimeout=20 -o ServerAliveInterval=15 \
-            -o ServerAliveCountMax=3 \
-            "$DEPLOY_USER@$DEPLOY_HOST" "deploy $APPLICATION $IMAGE"
+
+  deploy:
+    name: deploy
+    needs: [image, preparar_entrega]
+    if: needs.preparar_entrega.outputs.publicado == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    environment: production
+    permissions:
+      contents: read
+      packages: read
+      actions: read
+    concurrency:
+      group: deploy-production-lojas.avilaops.com
+      cancel-in-progress: false
+    outputs:
+      publicado: ${{ steps.entrega.outputs.publicar }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/entregar-imagem
+        id: entrega
+        with:
+          operacao: deploy
+          imagem: ${{ needs.image.outputs.image }}
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
 
   # Depois do deploy, o que o navegador faria: /api/health com banco,
   # /v1/health e a folha de estilo seguida a partir do HTML da vitrine.
@@ -593,6 +603,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 1
     needs: deploy
+    if: needs.deploy.outputs.publicado == 'true'
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/node-do-runner
