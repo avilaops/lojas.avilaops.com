@@ -39,6 +39,7 @@ jobs:
             --exclude='node_modules/onnxruntime-node/bin/napi-v6/darwin' \
             --exclude='node_modules/onnxruntime-node/bin/napi-v6/win32' \
             --exclude='node_modules/onnxruntime-node/bin/napi-v6/linux/arm64' \
+            --exclude='node_modules/@next/swc-linux-x64-musl' \
             -cf "$RUNNER_TEMP/dependencias/payload.tar.zst" node_modules
           node scripts/ci/artefato.mjs registrar "$RUNNER_TEMP/dependencias" dependencias
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -609,9 +610,7 @@ jobs:
     needs: deploy
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
+      - uses: ./.github/actions/node-do-runner
       - run: node scripts/smoke-publicacao.mjs "${{ vars.SMOKE_URL || 'https://lojas.avilaops.com' }}"
       # O domínio da plataforma não tem /uploads, então a conferência da foto
       # só mede alguma coisa contra uma loja. O endereço é variável de CI e não

@@ -13,6 +13,10 @@ esse binário; a sessão CPU continua verificada dentro da imagem final.
 O arquivo Linux x64 não transfere os binários ONNX de Windows, macOS ou ARM.
 O manifesto também exige a mesma plataforma, arquitetura e versão principal
 do Node no consumidor.
+O alvo é Linux x64 com glibc (runner Ubuntu e runtime Debian); o SWC de musl
+também fica fora do arquivo. O Node 22 presente em `RUNNER_TOOL_CACHE` é
+validado antes de entrar no PATH. Se não estiver disponível, a action oficial
+`setup-node` continua sendo o fallback. A preparação inicial mantém o cache npm.
 `scripts/ci/artefato.mjs` vincula cada arquivo ao SHA, run e tentativa atuais e
 valida SHA-256 antes da extração. Builds, navegador e modelo usam o mesmo
 contrato. Os nomes de artefatos incluem o SHA e o download não informa outro run.
