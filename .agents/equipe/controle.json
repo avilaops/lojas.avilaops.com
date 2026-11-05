@@ -13,6 +13,24 @@
   ],
   "tasks": [
     {
+      "id": "CI-ENTREGA-ETAPAS-20261105",
+      "title": "Cumprir limite de CI na imagem e na entrega remota",
+      "objective": "Separar a montagem do contexto Docker e o download remoto para que todos os jobs mantenham timeout-minutes: 1.",
+      "assignee": "codex",
+      "priority": "urgente",
+      "status": "em-andamento",
+      "acceptanceCriteria": [
+        "Imagem recebe somente contexto de runtime da mesma execução, com hash verificado.",
+        "Preparação SSH somente baixa o digest autorizado, sem migração nem troca de serviço.",
+        "Ativação mantém backup, migração, saúde, imagem esperada e rollback.",
+        "Run superado não ativa nem registra fumaça como publicação.",
+        "Todos os jobs da versão publicada aprovados com timeout de um minuto."
+      ],
+      "evidence": "Infra PR 12 implementa prepare opt-in com testes de segurança. Workflow Lojas em revisão: contexto Docker separado e entrega em duas etapas. Testes e build somente no GitHub CI.",
+      "environment": "worktree-ci-entrega-20261105",
+      "history": [{ "at": "2026-11-05", "note": "Continuação autorizada; PRs concorrentes de aparência e timeout preservados em outros checkouts. Política Linear reconfirmada: todos os jobs com um minuto." }]
+    },
+    {
       "id": "ETIQUETAS-PRODUTOS-20261103",
       "title": "Publicar códigos de barras e etiquetas de produtos",
       "objective": "Gerar e imprimir etiquetas por variante e localizar códigos no painel, com isolamento por loja.",

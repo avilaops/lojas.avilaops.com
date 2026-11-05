@@ -1,0 +1,26 @@
+name: Entregar digest autorizado
+description: Confere a ordem de publicação e executa prepare ou deploy pelo SSH restrito.
+inputs:
+  operacao:
+    description: prepare baixa a imagem; deploy ativa e verifica o serviço.
+    required: true
+  imagem:
+    description: Imagem aprovada identificada por digest.
+    required: true
+outputs:
+  publicar:
+    description: true somente quando esta execução realizou a operação remota.
+    value: ${{ steps.remoto.outputs.publicar }}
+runs:
+  using: composite
+  steps:
+    - id: remoto
+      shell: bash
+      env:
+        DEPLOY_OPERATION: ${{ inputs.operacao }}
+        IMAGE: ${{ inputs.imagem }}
+        APPLICATION: lojas.avilaops.com
+        DEPLOY_PORT: '22'
+        DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        GH_TOKEN: ${{ github.token }}
+      run: bash scripts/ci/entregar-imagem.sh

@@ -48,8 +48,28 @@ antes de executar as jornadas reais.
 - Modelo: download e verificação do hash do U2Netp existente no projeto.
 - Imagem: depende de todos os gates, recebe o bundle compilado e confere a
   sessão ONNX dentro do runtime Linux antes de publicar.
+- Contexto da imagem: outro job monta somente o runtime necessário e o
+  publica pelo protocolo de artefatos. O job de imagem não baixa mais o
+  node_modules inteiro nem remonta o contexto antes de executar Docker.
 - Deploy e fumaça: continuam exclusivos da main autorizada e da imagem por
   digest; preservam a proteção contra publicação de versão anterior.
+
+## Entrega remota em duas etapas
+
+`preparar_entrega` executa `prepare` pelo SSH restrito do dispatcher da infra.
+Esse comando apenas baixa a imagem autorizada. Não migra nem troca o container.
+O job `deploy` recebe o mesmo digest e executa a ativação completa existente,
+incluindo backup em migração pendente, migração, saúde, conferência da imagem
+e rollback. Cada job mantém `timeout-minutes: 1` e a mesma fila de publicação.
+
+As duas etapas conferem se existe run mais novo antes de conectar ao servidor;
+um run que perdeu a vez não ativa a imagem nem executa fumaça como se tivesse
+publicado. A consulta paginada também vê execuções além da primeira página.
+Chave, token e known_hosts temporários mantêm os limites anteriores.
+
+Pré-requisito de instalação: infra PR 12, comando `prepare` e opt-in
+`ALLOW_IMAGE_PREPARE=true` apenas em lojas.avilaops.com. O `deploy` tradicional
+continua aceito; a preparação pode falhar sem afetar o serviço atual.
 
 O `Dockerfile` original permanece disponível com o fluxo completo de build.
 `Dockerfile.ci` apenas empacota os arquivos produzidos pelo workflow aprovado;
