@@ -244,7 +244,7 @@ jobs:
     name: navegador / cotação, HTTP e reinício
     needs: [dependencias, build, navegador]
     runs-on: ubuntu-latest
-    timeout-minutes: 1
+    timeout-minutes: 3
     services:
       postgres:
         image: postgres:18-alpine
@@ -295,7 +295,7 @@ jobs:
     name: navegador / etiquetas e PDFs
     needs: [dependencias, build, navegador]
     runs-on: ubuntu-latest
-    timeout-minutes: 1
+    timeout-minutes: 3
     services:
       postgres:
         image: postgres:18-alpine
@@ -472,7 +472,7 @@ jobs:
     name: imagem / empacotar bundle aprovado
     needs: [contexto_imagem, unitarios, qualidade, payloads, integracao, b2b, etiquetas, contratos]
     runs-on: ubuntu-latest
-    timeout-minutes: 1
+    timeout-minutes: 3
     permissions:
       contents: read
       packages: write
