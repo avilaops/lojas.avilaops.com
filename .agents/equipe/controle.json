@@ -13,12 +13,28 @@
   ],
   "tasks": [
     {
+      "id": "CATALOGO-LINKS-VARIANTES-20261105",
+      "title": "Preservar links de apresentações agrupadas",
+      "objective": "Redirecionar produto arquivado para sua variante de mesmo SKU no produto ativo da mesma loja.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "Links antigos de 35 mL e 1 L abrem CYPERTRYNE com a variante correspondente.",
+        "Equivalência explícita mantém precedência e nenhum redirecionamento cruza tenant.",
+        "Produto e variante de destino precisam estar ativos.",
+        "Testes de integração aprovados no GitHub CI e comportamento conferido na origem após publicação."
+      ],
+      "evidence": "Após CI 42069220351, leitura HTTP da origem confirmou 200 para a ficha agrupada e 404 para /produtos/cypertryne-35 e /produtos/cypertryne-1000. Correção e regressões submetidas ao CI; publicação desta correção ainda pendente.",
+      "environment": "worktree-ci-entrega-20261105"
+    },
+    {
       "id": "CI-ENTREGA-ETAPAS-20261105",
       "title": "Cumprir limite de CI na imagem e na entrega remota",
       "objective": "Separar a montagem do contexto Docker e o download remoto para que todos os jobs mantenham timeout-minutes: 1.",
       "assignee": "codex",
       "priority": "urgente",
-      "status": "em-andamento",
+      "status": "concluida",
       "acceptanceCriteria": [
         "Imagem recebe somente contexto de runtime da mesma execução, com hash verificado.",
         "Preparação SSH somente baixa o digest autorizado, sem migração nem troca de serviço.",
@@ -26,9 +42,9 @@
         "Run superado não ativa nem registra fumaça como publicação.",
         "Todos os jobs da versão publicada aprovados com timeout de um minuto."
       ],
-      "evidence": "Infra PR 12 implementa prepare opt-in com testes de segurança. Workflow Lojas em revisão: contexto Docker separado e entrega em duas etapas. Testes e build somente no GitHub CI.",
-      "environment": "worktree-ci-entrega-20261105",
-      "history": [{ "at": "2026-11-05", "note": "Continuação autorizada; PRs concorrentes de aparência e timeout preservados em outros checkouts. Política Linear reconfirmada: todos os jobs com um minuto." }]
+      "evidence": "Infra PR 12 e Lojas PRs 203/206 publicadas. CI 42069220351 tentativa 2: 20 jobs aprovados com timeout de um minuto. Digest sha256:1d32e30d3c2415b609c67e76825f0947dc3b082b7f4d8c9b6db27e04011899c3; container saudável na revisão c1ef9c80e6855e7d5458eecf2d37dd0b6a823e29. Preparação 28s, deploy 57s, backup pré-migração verificado e 15 verificações públicas aprovadas.",
+      "environment": "producao",
+      "history": [{ "at": "2026-11-05", "note": "Continuação autorizada; PRs concorrentes de aparência e timeout preservados em outros checkouts. Política Linear reconfirmada: todos os jobs com um minuto." }, { "at": "2026-11-05", "note": "Publicação confirmada em produção, sem relaxar gates. Primeira tentativa teve cancelamentos por timeout; a execução completa seguinte foi aprovada." }]
     },
     {
       "id": "ETIQUETAS-PRODUTOS-20261103",
