@@ -474,7 +474,6 @@ jobs:
             cp -a "node_modules/$modulo/." "$RUNNER_TEMP/lojas-image/runtime/node_modules/$modulo/"
           done
           cp -a prisma "$RUNNER_TEMP/lojas-image/runtime/"
-      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f
       - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9
         if: env.PUBLISH == 'true'
         with:
@@ -482,27 +481,26 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Empacotar e verificar runtime ONNX
-        id: build
-        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8
-        with:
-          context: ${{ runner.temp }}/lojas-image
-          file: ${{ runner.temp }}/lojas-image/Dockerfile
-          platforms: linux/amd64
-          push: ${{ env.PUBLISH == 'true' }}
-          tags: ${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
-          labels: |
-            org.opencontainers.image.source=https://github.com/${{ github.repository }}
-            org.opencontainers.image.revision=${{ github.sha }}
-          cache-from: type=gha,scope=runtime
-          cache-to: type=gha,mode=max,scope=runtime
-      - name: Identificar imagem publicada
+        env:
+          DOCKER_BUILDKIT: '1'
+        run: |
+          set -euo pipefail
+          docker build --platform linux/amd64 --progress plain \
+            --file "$RUNNER_TEMP/lojas-image/Dockerfile" \
+            --tag "$IMAGE_NAME:sha-$GITHUB_SHA" \
+            --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
+            --label "org.opencontainers.image.revision=$GITHUB_SHA" \
+            "$RUNNER_TEMP/lojas-image"
+      - name: Publicar e identificar imagem por digest
         if: env.PUBLISH == 'true'
         id: result
-        env:
-          DIGEST: ${{ steps.build.outputs.digest }}
         run: |
-          [[ "$DIGEST" =~ ^sha256:[a-f0-9]{64}$ ]]
-          printf 'image=%s@%s\n' "$IMAGE_NAME" "$DIGEST" >> "$GITHUB_OUTPUT"
+          set -euo pipefail
+          docker push "$IMAGE_NAME:sha-$GITHUB_SHA"
+          publicada=$(docker image inspect --format '{{index .RepoDigests 0}}' "$IMAGE_NAME:sha-$GITHUB_SHA")
+          [[ "$publicada" == "$IMAGE_NAME"@sha256:* ]]
+          [[ "$publicada" =~ @sha256:[a-f0-9]{64}$ ]]
+          printf 'image=%s\n' "$publicada" >> "$GITHUB_OUTPUT"
 
   deploy:
     name: deploy

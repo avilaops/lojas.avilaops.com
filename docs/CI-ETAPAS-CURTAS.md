@@ -55,6 +55,10 @@ O `Dockerfile` original permanece disponível com o fluxo completo de build.
 `Dockerfile.ci` apenas empacota os arquivos produzidos pelo workflow aprovado;
 seu contexto temporário não usa o `.dockerignore` de fontes, que exclui
 `node_modules` e impediria incluir as dependências de runtime.
+O empacotamento usa o Docker/BuildKit do próprio runner, sem criar um builder
+adicional ou exportar cache de compilação que esta etapa já não executa.
+A publicação resolve o digest registrado pelo registry e entrega esse digest
+ao deploy, preservando os labels de repositório e revisão.
 
 ## Evidências
 
