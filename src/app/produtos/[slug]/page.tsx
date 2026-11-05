@@ -75,6 +75,13 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
   const {variante:varianteId,voltar}=await searchParams;
   const retorno = retornoSeguroDoCatalogo(voltar);
   const ofertas=p.variantes.filter(v=>v.ativo).map(ofertaDaVariante);
+  // A apresentação padrão normalmente representa o produto simples e não tem
+  // valores de grade. Quando ela os declara, é uma apresentação comprável da
+  // grade — por exemplo, 100 mL ao lado de 35 mL e 1 L — e precisa aparecer.
+  const variacoesVisiveis = ofertas.filter((v) => !v.padrao || p.opcoes.every((opcao) => {
+    const valor = (v.valores as Record<string, unknown>)[opcao];
+    return typeof valor === "string" && Boolean(valor.trim());
+  }));
   const escolhida=ofertas.find(v=>v.id===varianteId)??ofertas.find(v=>v.padrao);
   if(varianteId&&!ofertas.some(v=>v.id===varianteId))notFound();
   if(escolhida)Object.assign(p,{precoCentavos:escolhida.precoCentavos,precoDeCentavos:escolhida.precoDeCentavos,estoque:escolhida.estoque,sku:escolhida.sku,gtin:escolhida.gtin,disponibilidade:escolhida.disponibilidade,imagens:midiasDaOferta(p,escolhida.id).map(m=>m.url)});
@@ -236,7 +243,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
                 varianteInicial={escolhida?.id}
                 produto={{ id: p.id, slug: p.slug, nome: p.nome, precoCentavos: p.precoCentavos, imagem: p.imagens[0] }}
                 opcoes={p.opcoes}
-                variantes={ofertas.filter(v=>!v.padrao).map((v) => ({ id: v.id, nome: v.nome, valores: v.valores as Record<string, string>, precoCentavos: v.precoCentavos, estoque: v.estoque, imagem: v.imagem, disponivel:v.compravel }))}
+                variantes={variacoesVisiveis.map((v) => ({ id: v.id, nome: v.nome, valores: v.valores as Record<string, string>, precoCentavos: v.precoCentavos, estoque: v.estoque, imagem: v.imagem, disponivel:v.compravel }))}
                 vende={vende && !somenteNaLoja}
                 retorno={retorno}
               />
