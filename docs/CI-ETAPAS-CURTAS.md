@@ -2,6 +2,10 @@
 
 Todos os jobs de `Build e deploy` e `Merge automático` mantêm
 `timeout-minutes: 1`. Timeout reprova o job; não há build ou teste nos servidores.
+Os jobs usam `ubuntu-24.04` explicitamente: o alias `ubuntu-latest` iniciou
+mudança para 26.04 em novembro de 2026. A base fixa evita mudança de sistema
+operacional durante a comparação dos tempos. O cache de Node continua validado
+em runtime; a consulta de versão usa apenas uma inicialização do processo.
 
 ## Dependências e artefatos
 

@@ -13,7 +13,7 @@ env:
 jobs:
   dependencias:
     name: preparar dependências
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 1
     outputs:
       artifact_id: ${{ steps.arquivo.outputs.ids }}
@@ -62,7 +62,7 @@ jobs:
   unitarios:
     name: testes unitários / parte ${{ matrix.fatia }}
     needs: dependencias
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 1
     strategy:
       fail-fast: false
@@ -78,7 +78,7 @@ jobs:
   qualidade:
     name: qualidade / ${{ matrix.comando }}
     needs: dependencias
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 1
     strategy:
       fail-fast: false
@@ -96,7 +96,7 @@ jobs:
   payloads:
     name: contratos de payload e infraestrutura de CI
     needs: dependencias
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 1
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
@@ -124,7 +124,7 @@ jobs:
   integracao:
     name: integração PostgreSQL / parte ${{ matrix.fatia }}
     needs: dependencias
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 1
     strategy:
       fail-fast: false
@@ -172,7 +172,7 @@ jobs:
   build:
     name: compilar aplicação
     needs: [dependencias, qualidade]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 1
     outputs:
       artifact_id: ${{ steps.arquivo.outputs.ids }}
@@ -204,7 +204,7 @@ jobs:
   navegador:
     name: preparar Chromium headless
     needs: dependencias
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 1
     outputs:
       artifact_id: ${{ steps.arquivo.outputs.ids }}
@@ -234,7 +234,7 @@ jobs:
   fontes:
     name: preparar fontes do navegador
     needs: dependencias
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 1
     outputs:
       artifact_id: ${{ steps.arquivo.outputs.ids }}
@@ -262,7 +262,7 @@ jobs:
   modelo:
     name: preparar modelo ONNX
     needs: dependencias
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 1
     outputs:
       artifact_id: ${{ steps.arquivo.outputs.ids }}
@@ -288,7 +288,7 @@ jobs:
   b2b:
     name: navegador / cotação, HTTP e reinício
     needs: [dependencias, build, navegador, fontes]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 1
     services:
       postgres:
@@ -339,7 +339,7 @@ jobs:
   etiquetas:
     name: navegador / etiquetas e PDFs
     needs: [dependencias, build, navegador, fontes]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 1
     services:
       postgres:
@@ -400,7 +400,7 @@ jobs:
   contratos:
     name: contratos / API v1, Experiments e evidências
     needs: [integracao, b2b]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 1
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
@@ -481,7 +481,7 @@ jobs:
   contexto_imagem:
     name: imagem / preparar contexto verificado
     needs: [dependencias, build, modelo]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 1
     outputs:
       artifact_id: ${{ steps.arquivo.outputs.ids }}
@@ -517,7 +517,7 @@ jobs:
   image:
     name: imagem / empacotar bundle aprovado
     needs: [contexto_imagem, unitarios, qualidade, payloads, integracao, b2b, etiquetas, contratos]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 1
     permissions:
       contents: read
@@ -582,7 +582,7 @@ jobs:
       github.event_name != 'pull_request' && github.event_name != 'pull_request_target'
       && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
       && vars.DEPLOY_ENABLED == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 1
     environment: production
     permissions:
@@ -614,7 +614,7 @@ jobs:
     name: deploy
     needs: [image, preparar_entrega]
     if: needs.preparar_entrega.outputs.publicado == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 1
     environment: production
     permissions:
@@ -646,7 +646,7 @@ jobs:
   # /v1/health e a folha de estilo seguida a partir do HTML da vitrine.
   # Sem dependência instalada — é o node do runner e `fetch`.
   fumaca:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 1
     needs: deploy
     if: needs.deploy.outputs.publicado == 'true'
