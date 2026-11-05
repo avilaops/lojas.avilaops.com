@@ -22,7 +22,7 @@ runs:
         set -euo pipefail
         for tipo in $ARTIFACT_TYPES; do
           pasta="$RUNNER_TEMP/lojas-artefatos/lojas-$tipo-$GITHUB_SHA"
-          node scripts/ci/artefato.mjs verificar "$pasta" "$tipo"
+          node scripts/ci/artefato.mjs reunir "$RUNNER_TEMP/lojas-artefatos" "$tipo"
           case "$tipo" in
             dependencias|modelo)
               tar --zstd -xf "$pasta/payload.tar.zst"

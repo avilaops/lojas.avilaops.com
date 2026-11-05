@@ -1,0 +1,58 @@
+name: Publicar artefato em partes verificáveis
+description: Divide o arquivo em quatro partes para transferência paralela e preserva seu hash completo.
+inputs:
+  pasta:
+    description: Pasta contendo payload.tar.zst.
+    required: true
+  tipo:
+    description: Tipo registrado no manifesto.
+    required: true
+outputs:
+  ids:
+    description: IDs das quatro partes na ordem de publicação.
+    value: ${{ steps.parte0.outputs.artifact-id }},${{ steps.parte1.outputs.artifact-id }},${{ steps.parte2.outputs.artifact-id }},${{ steps.parte3.outputs.artifact-id }}
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        ARTIFACT_DIR: ${{ inputs.pasta }}
+        ARTIFACT_KIND: ${{ inputs.tipo }}
+      run: |
+        set -euo pipefail
+        node scripts/ci/artefato.mjs registrar "$ARTIFACT_DIR" "$ARTIFACT_KIND"
+        split -d -n 4 "$ARTIFACT_DIR/payload.tar.zst" "$ARTIFACT_DIR/part-"
+    - id: parte0
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      with:
+        name: lojas-${{ inputs.tipo }}-00-${{ github.sha }}
+        path: |
+          ${{ inputs.pasta }}/part-00
+          ${{ inputs.pasta }}/manifest.json
+        if-no-files-found: error
+        compression-level: 0
+        retention-days: 7
+    - id: parte1
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      with:
+        name: lojas-${{ inputs.tipo }}-01-${{ github.sha }}
+        path: ${{ inputs.pasta }}/part-01
+        if-no-files-found: error
+        compression-level: 0
+        retention-days: 7
+    - id: parte2
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      with:
+        name: lojas-${{ inputs.tipo }}-02-${{ github.sha }}
+        path: ${{ inputs.pasta }}/part-02
+        if-no-files-found: error
+        compression-level: 0
+        retention-days: 7
+    - id: parte3
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      with:
+        name: lojas-${{ inputs.tipo }}-03-${{ github.sha }}
+        path: ${{ inputs.pasta }}/part-03
+        if-no-files-found: error
+        compression-level: 0
+        retention-days: 7

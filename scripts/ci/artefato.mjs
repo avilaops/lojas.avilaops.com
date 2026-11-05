@@ -1,8 +1,10 @@
 import { createHash } from "node:crypto";
-import { createReadStream } from "node:fs";
-import { readFile, writeFile } from "node:fs/promises";
+import { constants, createReadStream, createWriteStream } from "node:fs";
+import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { Readable } from "node:stream";
+import { pipeline } from "node:stream/promises";
 
 const payload = "payload.tar.zst";
 
@@ -40,9 +42,27 @@ export async function verificar(directory, kind, env = process.env) {
   return manifest;
 }
 
+/** Quatro partes imutáveis, verificadas como um arquivo antes de extrair. */
+export async function reunir(root, kind, env = process.env) {
+  if (typeof kind !== "string" || !/^[a-z-]+$/.test(kind)) throw new Error("INVALID_ARTIFACT_KIND");
+  const { sha } = contexto(env);
+  const directory = path.join(root, `lojas-${kind}-${sha}`);
+  await mkdir(directory, { recursive: true });
+  const partDirectory = index => path.join(root, `lojas-${kind}-${index}-${sha}`);
+  async function* chunks() {
+    for (const index of ["00", "01", "02", "03"]) {
+      yield* createReadStream(path.join(partDirectory(index), `part-${index}`));
+    }
+  }
+  await pipeline(Readable.from(chunks()), createWriteStream(path.join(directory, payload), { flags: "wx" }));
+  await copyFile(path.join(partDirectory("00"), "manifest.json"), path.join(directory, "manifest.json"), constants.COPYFILE_EXCL);
+  return verificar(directory, kind, env);
+}
+
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
   const [command, directory, kind] = process.argv.slice(2);
-  if (!directory || !kind || !["registrar", "verificar"].includes(command)) throw new Error("INVALID_ARTIFACT_ARGUMENTS");
-  const result = await (command === "registrar" ? registrar : verificar)(directory, kind);
+  const commands = { registrar, verificar, reunir };
+  if (!directory || !kind || !Object.hasOwn(commands, command)) throw new Error("INVALID_ARTIFACT_ARGUMENTS");
+  const result = await commands[command](directory, kind);
   console.log(JSON.stringify(result));
 }

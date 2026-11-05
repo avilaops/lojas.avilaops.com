@@ -24,6 +24,8 @@ contrato. Os nomes de artefatos incluem o SHA e o download não informa outro ru
 tentativa anterior são recusados, inclusive em rerun somente dos jobs falhos.
 Jornadas e imagem recebem os IDs exatos dos produtores e baixam seus arquivos
 em paralelo. O navegador inclui as fontes preparadas uma vez; os consumidores
+reúnem quatro partes por arquivo e validam o hash completo antes de extrair.
+Isso limita o impacto de um download lento de arquivo grande. Os consumidores
 registram essas fontes no perfil do runner e conferem as bibliotecas nativas
 antes de executar as jornadas reais.
 

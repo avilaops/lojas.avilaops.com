@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 1
     outputs:
-      artifact_id: ${{ steps.arquivo.outputs.artifact-id }}
+      artifact_id: ${{ steps.arquivo.outputs.ids }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -41,15 +41,11 @@ jobs:
             --exclude='node_modules/onnxruntime-node/bin/napi-v6/linux/arm64' \
             --exclude='node_modules/@next/swc-linux-x64-musl' \
             -cf "$RUNNER_TEMP/dependencias/payload.tar.zst" node_modules
-          node scripts/ci/artefato.mjs registrar "$RUNNER_TEMP/dependencias" dependencias
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: ./.github/actions/publicar-artefato
         id: arquivo
         with:
-          name: lojas-dependencias-${{ github.sha }}
-          path: ${{ runner.temp }}/dependencias/
-          if-no-files-found: error
-          compression-level: 0
-          retention-days: 7
+          tipo: dependencias
+          pasta: ${{ runner.temp }}/dependencias/
 
   unitarios:
     name: testes unitários / parte ${{ matrix.fatia }}
@@ -167,7 +163,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 1
     outputs:
-      artifact_id: ${{ steps.arquivo.outputs.artifact-id }}
+      artifact_id: ${{ steps.arquivo.outputs.ids }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -186,15 +182,11 @@ jobs:
           cp -R .next/static .next/standalone/.next/static
           mkdir -p "$RUNNER_TEMP/build"
           tar -I 'zstd -T0 -1' -cf "$RUNNER_TEMP/build/payload.tar.zst" -C .next/standalone .
-          node scripts/ci/artefato.mjs registrar "$RUNNER_TEMP/build" build
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: ./.github/actions/publicar-artefato
         id: arquivo
         with:
-          name: lojas-build-${{ github.sha }}
-          path: ${{ runner.temp }}/build/
-          if-no-files-found: error
-          compression-level: 0
-          retention-days: 7
+          tipo: build
+          pasta: ${{ runner.temp }}/build/
 
   navegador:
     name: preparar Chromium headless
@@ -202,7 +194,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 1
     outputs:
-      artifact_id: ${{ steps.arquivo.outputs.artifact-id }}
+      artifact_id: ${{ steps.arquivo.outputs.ids }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -217,15 +209,11 @@ jobs:
           cp -a "$HOME/.cache/ms-playwright/." "$RUNNER_TEMP/pacote-navegador/browsers/"
           cp -a /usr/share/fonts/. "$RUNNER_TEMP/pacote-navegador/fonts/"
           tar -I 'zstd -T0 -1' -cf "$RUNNER_TEMP/navegador/payload.tar.zst" -C "$RUNNER_TEMP/pacote-navegador" .
-          node scripts/ci/artefato.mjs registrar "$RUNNER_TEMP/navegador" navegador
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: ./.github/actions/publicar-artefato
         id: arquivo
         with:
-          name: lojas-navegador-${{ github.sha }}
-          path: ${{ runner.temp }}/navegador/
-          if-no-files-found: error
-          compression-level: 0
-          retention-days: 7
+          tipo: navegador
+          pasta: ${{ runner.temp }}/navegador/
 
   modelo:
     name: preparar modelo ONNX
@@ -233,7 +221,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 1
     outputs:
-      artifact_id: ${{ steps.arquivo.outputs.artifact-id }}
+      artifact_id: ${{ steps.arquivo.outputs.ids }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -246,15 +234,11 @@ jobs:
           node --import tsx --input-type=module -e "import { baixarModelo, conferirModelo } from './packages/removedor-de-fundo/src/modelo.ts'; await baixarModelo('u2netp'); if (await conferirModelo('u2netp')) throw new Error('MODEL_HASH_MISMATCH');"
           mkdir -p "$RUNNER_TEMP/modelo"
           tar -I 'zstd -T0 -1' -cf "$RUNNER_TEMP/modelo/payload.tar.zst" modelos
-          node scripts/ci/artefato.mjs registrar "$RUNNER_TEMP/modelo" modelo
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: ./.github/actions/publicar-artefato
         id: arquivo
         with:
-          name: lojas-modelo-${{ github.sha }}
-          path: ${{ runner.temp }}/modelo/
-          if-no-files-found: error
-          compression-level: 0
-          retention-days: 7
+          tipo: modelo
+          pasta: ${{ runner.temp }}/modelo/
 
   b2b:
     name: navegador / cotação, HTTP e reinício
