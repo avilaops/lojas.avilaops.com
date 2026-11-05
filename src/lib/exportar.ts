@@ -213,7 +213,7 @@ export function modeloDeProdutosEmLinhas(): Valor[][] {
  * O catálogo como planilha, respeitando o filtro que está na tela: quem
  * filtrou "sem preço" baixa os 5.588 sem preço, não o catálogo inteiro.
  */
-async function buscarLoteProdutos(where: ReturnType<typeof condicaoDoCatalogo>, skip: number, take: number) {
+async function buscarLoteProdutos(where: Awaited<ReturnType<typeof condicaoDoCatalogo>>, skip: number, take: number) {
   return prisma.produto.findMany({
     where,
     select: {
@@ -235,7 +235,7 @@ export async function produtosEmLinhas(tenantId: string, filtro: FiltroCatalogo 
   // consulta: no PostgreSQL/Prisma a expressão SQL gerada pode ultrapassar
   // max_stack_depth (erro 54001). Lotes limitam a complexidade e a memória.
   const produtos: Awaited<ReturnType<typeof buscarLoteProdutos>> = [];
-  const where = condicaoDoCatalogo(tenantId, filtro);
+  const where = await condicaoDoCatalogo(tenantId, filtro);
   for (let pagina = 0; pagina * 250 < TETO_EXPORTACAO.produtos; pagina++) {
     const lote = await buscarLoteProdutos(where, pagina * 250, Math.min(250, TETO_EXPORTACAO.produtos - pagina * 250));
     produtos.push(...lote);

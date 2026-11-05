@@ -29,7 +29,7 @@ export async function GET(request: Request) {
   // Busca, categoria e situação saem daqui já do jeito que a exportação
   // também lê (src/lib/catalogo-filtros.ts): lista e planilha não podem
   // discordar sobre o que é "sem foto".
-  const where = condicaoDoCatalogo(s.tenant.id, filtroDaUrl(url));
+  const where = await condicaoDoCatalogo(s.tenant.id, filtroDaUrl(url));
 
   const [total, produtos, marcas] = await Promise.all([
     prisma.produto.count({ where }),
