@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { condicaoDoCatalogo, filtroDaUrl, varianteSemIdentificadores } from "@/lib/catalogo-filtros";
 import { exigir } from "@/lib/operadores";
+import { marcasDoCatalogo } from "@/lib/catalogo-marcas";
 
 /**
  * A listagem do catálogo no painel: busca, filtro e página.
@@ -30,7 +31,7 @@ export async function GET(request: Request) {
   // discordar sobre o que é "sem foto".
   const where = condicaoDoCatalogo(s.tenant.id, filtroDaUrl(url));
 
-  const [total, produtos] = await Promise.all([
+  const [total, produtos, marcas] = await Promise.all([
     prisma.produto.count({ where }),
     prisma.produto.findMany({
       where,
@@ -44,6 +45,7 @@ export async function GET(request: Request) {
       skip: (pagina - 1) * POR_PAGINA,
       take: POR_PAGINA,
     }),
+    marcasDoCatalogo(s.tenant.id),
   ]);
 
   return Response.json({
@@ -51,6 +53,7 @@ export async function GET(request: Request) {
     pagina,
     porPagina: POR_PAGINA,
     paginas: Math.max(1, Math.ceil(total / POR_PAGINA)),
+    marcas,
     produtos: produtos.map((p) => ({
       id: p.id,
       nome: p.nome,

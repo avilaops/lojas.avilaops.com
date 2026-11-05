@@ -13,6 +13,7 @@ import { termosDeBusca } from "./catalogo";
 export type FiltroCatalogo = {
   busca?: string;
   categoria?: string;
+  marca?: string;
   situacao?: string;
 };
 
@@ -28,6 +29,7 @@ export function condicaoDoCatalogo(tenantId: string, filtro: FiltroCatalogo): Pr
   const where: Prisma.ProdutoWhereInput = { tenantId };
   const busca = filtro.busca?.trim();
   const categoria = filtro.categoria?.trim();
+  const marca = filtro.marca?.trim();
   const situacao = filtro.situacao?.trim();
 
   if (busca) {
@@ -36,6 +38,7 @@ export function condicaoDoCatalogo(tenantId: string, filtro: FiltroCatalogo): Pr
     where.AND = termosDeBusca(busca).map((termo) => ({ busca: { contains: termo } }));
   }
   if (categoria) where.categoria = { slug: categoria };
+  if (marca) where.marca = { equals: marca, mode: "insensitive" };
 
   if (situacao === "ativo") where.ativo = true;
   else if (situacao === "inativo") where.ativo = false;
@@ -85,6 +88,7 @@ export function filtroDaUrl(url: URL): FiltroCatalogo {
   return {
     busca: url.searchParams.get("q") ?? undefined,
     categoria: url.searchParams.get("categoria") ?? undefined,
+    marca: url.searchParams.get("marca") ?? undefined,
     situacao: url.searchParams.get("situacao") ?? undefined,
   };
 }

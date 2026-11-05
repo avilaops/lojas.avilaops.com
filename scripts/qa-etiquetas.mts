@@ -16,7 +16,7 @@ await mkdir(pasta, { recursive: true });
 const loja = await prisma.tenant.create({ data: { slug: `qa-etiquetas-${randomUUID()}`, nome: "QA Etiquetas", status: "ATIVA" } });
 const browser = await chromium.launch();
 try {
-  const produto = await salvarProdutoNoCatalogo(loja.id, null, { nome: "Camiseta de teste", slug: "camiseta-teste", precoCentavos: 4990 });
+  const produto = await salvarProdutoNoCatalogo(loja.id, null, { nome: "Camiseta de teste", slug: "camiseta-teste", marca: "BGL", precoCentavos: 4990 });
   await salvarGradeNoCatalogo(loja.id, produto.id, ["Tamanho", "Cor"], [
     { valores: { Tamanho: "P", Cor: "Azul" }, sku: "QA-P-AZUL", precoCentavos: 4990, gtin: "036000291452" },
     { valores: { Tamanho: "G", Cor: "Azul" }, sku: "QA-G-AZUL", precoCentavos: 5990 },
@@ -98,6 +98,23 @@ try {
   await semSessao.addCookies([{ name: "lojas_sessao", value: emitirToken(loja.slug, op.id), url: base }]);
   assert.equal((await semSessao.request.get(`${base}/api/painel/etiquetas`)).status(), 403);
   assert.equal((await contexto.request.get(`${base}/api/painel/etiquetas?pagina=0`)).status(), 422);
+  assert.equal((await semSessao.request.get(`${base}/api/painel/catalogo?marca=BGL`)).status(), 403);
+  await salvarProdutoNoCatalogo(loja.id, null, { nome: "Produto de outra marca", slug: "outra-marca", marca: "SKF", precoCentavos: 1000 });
+  await page.goto(`${base}/painel/produtos`);
+  const marca = page.getByRole("combobox", { name: "Marca", exact: true });
+  await marca.locator('option[value="BGL"]').waitFor({ state: "attached" });
+  const [respostaMarca] = await Promise.all([
+    page.waitForResponse((r) => new URL(r.url()).pathname === "/api/painel/catalogo" && new URL(r.url()).searchParams.get("marca") === "BGL"),
+    marca.selectOption("BGL"),
+  ]);
+  assert.equal(respostaMarca.status(), 200);
+  assert.deepEqual((await respostaMarca.json()).produtos.map((p: { id: string }) => p.id), [produto.id]);
+  await page.getByRole("link", { name: "Produto de outra marca", exact: true }).waitFor({ state: "hidden" });
+  assert.ok((await page.getByRole("link", { name: /CSV/ }).getAttribute("href"))?.includes("marca=BGL"));
+  await page.screenshot({ path: `${pasta}/catalogo-marca-desktop.png`, fullPage: true });
+  await page.setViewportSize({ width: 390, height: 844 });
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true);
+  await page.screenshot({ path: `${pasta}/catalogo-marca-mobile.png`, fullPage: true });
   assert.deepEqual(erros, []);
   console.log("QA aprovado: seleção, busca por leitor, quantidades, mobile, A4, térmica, GTIN, 401/403/422 e console.");
 } finally {
