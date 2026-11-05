@@ -444,7 +444,7 @@ jobs:
           set -euo pipefail
           shopt -s nullglob
           entradas=(artifacts/integracao/*)
-          [[ ${#entradas[@]} == 2 ]]
+          [[ ${#entradas[@]} == 3 ]]
           mkdir -p artifacts/flow-observations artifacts/runtime-checks
           for entrada in "${entradas[@]}"; do
             cat "$entrada/flow-observations/integration.tap" >> artifacts/flow-observations/integration.tap
