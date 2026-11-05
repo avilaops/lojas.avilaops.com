@@ -102,6 +102,10 @@ try {
   await salvarProdutoNoCatalogo(loja.id, null, { nome: "Produto de outra marca", slug: "outra-marca", marca: "SKF", precoCentavos: 1000 });
   console.log("QA catálogo: abrir produtos");
   await page.goto(`${base}/painel/produtos`, { timeout: 10000 });
+  const diagnostico = await contexto.request.get(`${base}/api/painel/catalogo`);
+  const diagnosticoDados = await diagnostico.json();
+  console.log("QA catálogo: API", diagnostico.status(), JSON.stringify({ marcas: diagnosticoDados.marcas, erro: diagnosticoDados.erro }), "página", page.url());
+  await page.screenshot({ path: `${pasta}/catalogo-antes-do-filtro.png`, fullPage: true });
   const marca = page.getByRole("combobox", { name: "Marca", exact: true });
   await marca.locator('option[value="BGL"]').waitFor({ state: "attached", timeout: 5000 });
   console.log("QA catálogo: selecionar BGL");
