@@ -12,6 +12,7 @@ import { conviteAvaliacao } from "@/lib/avaliacoes-google";
 import PixNaConta from "@/components/checkout/PixNaConta";
 import { TEXTO_SEM_PEDIDO, telaSemPedido } from "@/lib/pedido-a-confirmar";
 import { pixManualLigado, qrPngBase64 } from "@/lib/pix-manual";
+import { numeroDeContato } from "@/lib/canais-publicos";
 
 export const metadata: Metadata = { title: "Pedido", robots: { index: false } };
 
@@ -27,6 +28,7 @@ const ROTULO: Record<string, string> = {
 
 export default async function PedidoPage({ params }: { params: Promise<{ referencia: string }> }) {
   const t = await exigirTenant();
+  const whatsapp = numeroDeContato(t.whatsapp);
   const { referencia } = await params;
   // A referência é longa e aleatória; funciona como o link "do seu pedido".
   const pedido = await prisma.pedido.findFirst({ where: { tenantId: t.id, referencia }, include: { itens: true } });
@@ -44,8 +46,8 @@ export default async function PedidoPage({ params }: { params: Promise<{ referen
         <p className="mt-1 text-sm text-muted-foreground">{texto}</p>
         <div className="mt-6 flex flex-wrap gap-2">
           {tela === "nao_concluido" ? <Link href="/carrinho" className="btn-primario">Voltar ao carrinho</Link> : <Link href="/produtos" className="btn-secundario">Continuar comprando</Link>}
-          {t.whatsapp && (
-            <a className={tela === "pago_sem_pedido" ? "btn-primario" : "btn-secundario"} href={linkWhatsApp(t.whatsapp, `Olá! Sobre o pagamento do pedido ${referencia}`)} target="_blank" rel="noopener">
+          {whatsapp && (
+            <a className={tela === "pago_sem_pedido" ? "btn-primario" : "btn-secundario"} href={linkWhatsApp(whatsapp, `Olá! Sobre o pagamento do pedido ${referencia}`)} target="_blank" rel="noopener">
               Falar com a loja
             </a>
           )}
@@ -118,8 +120,8 @@ export default async function PedidoPage({ params }: { params: Promise<{ referen
 
       <div className="mt-6 flex flex-wrap gap-2">
         <Link href="/produtos" className="btn-secundario">Continuar comprando</Link>
-        {t.whatsapp && (
-          <a className="btn-secundario" href={linkWhatsApp(t.whatsapp, `Olá! Sobre o pedido #${pedido.numero} (${pedido.referencia})`)} target="_blank" rel="noopener">
+        {whatsapp && (
+          <a className="btn-secundario" href={linkWhatsApp(whatsapp, `Olá! Sobre o pedido #${pedido.numero} (${pedido.referencia})`)} target="_blank" rel="noopener">
             Falar sobre o pedido
           </a>
         )}

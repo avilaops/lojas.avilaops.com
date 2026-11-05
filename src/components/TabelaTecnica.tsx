@@ -8,6 +8,7 @@ import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
 import { urlDaLoja } from "@/lib/tenant";
 import AddToCartButton from "@/components/cart/AddToCartButton";
 import { fichaDoProduto } from "@/lib/ficha";
+import { numeroDeContato } from "@/lib/canais-publicos";
 
 function celula(linha: LinhaTecnica, coluna: Coluna) {
   if (coluna === "equivalentes") return linha.equivalentes.join(", ") || "—";
@@ -41,6 +42,7 @@ function preco(produto: Produto, vende: boolean) {
  * a linha com as medidas, sim.
  */
 export default function TabelaTecnica({ produtos, vende, titulo, nomeDaLoja, loja }: { produtos: Produto[]; vende: boolean; titulo: string; nomeDaLoja: string; loja?: Tenant }) {
+  const whatsapp = numeroDeContato(loja?.whatsapp);
   const linhas = produtos.map((produto) => ({ produto, linha: linhaTecnica(produto) }));
   // Na listagem da loja, coluna que diz a mesma coisa em toda linha (a marca,
   // quando a loja é o fabricante) só empurra o preço para fora da tela.
@@ -73,9 +75,9 @@ export default function TabelaTecnica({ produtos, vende, titulo, nomeDaLoja, loj
               <td className="ct-preco">{preco(produto, vende)}</td>
               {loja && (
                 <td className="ct-acao">
-                  {estadoDeVenda(produto, { vende }).acao === "consulta-preco" && loja.whatsapp
-                    ? <a href={linkWhatsApp(loja.whatsapp, mensagemDoProduto(produto, urlDaLoja(loja), true))} target="_blank" rel="noopener">Consultar</a>
-                    : (vende || loja.whatsapp) && produto.opcoes.length === 0 && !estadoDeVenda(produto, { vende }).esgotado
+                  {estadoDeVenda(produto, { vende }).acao === "consulta-preco" && whatsapp
+                    ? <a href={linkWhatsApp(whatsapp, mensagemDoProduto(produto, urlDaLoja(loja), true))} target="_blank" rel="noopener">Consultar</a>
+                    : (vende || whatsapp) && produto.opcoes.length === 0 && !estadoDeVenda(produto, { vende }).esgotado
                       ? <AddToCartButton compacto pedido={!vende} disponivel item={{ id: produto.id, slug: produto.slug, nome: produto.nome, precoCentavos: produto.precoCentavos, imagem: produto.imagens[0] }} />
                       : <Link href={`/produtos/${linha.slug}`}>Ver</Link>}
                 </td>

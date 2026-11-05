@@ -22,8 +22,8 @@ export default function Distribuidora({ t, identidade, categorias, vitrine, temD
     const banners = campanhas.length ? campanhas : [{ imagemUrl: t.bannerUrl!, link: "/produtos", alt: "Campanha da loja" }];
     return (
       <main className={`home-mercado home-distribuidora home-campanhas${vedashow ? ` ${styles.loja}` : ""}`}>
-        {!vedashow && <h1 className="sr-only">{t.nome} — {t.slogan || "Catálogo de produtos"}</h1>}
-        <div className="campanhas-hero">
+        {!vedashow && !tema.heroTitulo && <h1 className="sr-only">{t.nome} — {t.slogan || "Catálogo de produtos"}</h1>}
+        <div className={`campanhas-hero${tema.heroTitulo || tema.heroTexto ? " campanhas-hero-com-conteudo" : ""}`}>
           {vedashow && (
             <div className={styles.abertura}>
               <h1>{t.nome} — {t.slogan || "Catálogo de produtos"}</h1>
@@ -34,7 +34,7 @@ export default function Distribuidora({ t, identidade, categorias, vitrine, temD
           {(tema.heroTitulo || tema.heroTexto) && (
             <div className="container-loja campanhas-hero-conteudo">
               <div>
-                {tema.heroTitulo && <h2>{tema.heroTitulo}</h2>}
+                {tema.heroTitulo && <h1>{tema.heroTitulo}</h1>}
                 {tema.heroTexto && <p>{tema.heroTexto}</p>}
                 <Link href="/produtos" className="btn-primario">Ver produtos <ArrowRight size={18} /></Link>
               </div>

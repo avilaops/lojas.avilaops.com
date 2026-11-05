@@ -89,7 +89,7 @@ políticas dela. Este arquivo descreve a plataforma, não uma loja.
     // Só o que é verdade hoje: loja sem gateway ligado não "aceita PIX".
     vende
       ? `- Pagamento na própria loja: ${t.meiosPagamento.length ? t.meiosPagamento.join(", ") : "PIX, cartão e boleto"}`
-      : t.whatsapp
+      : identidadeComercial.whatsapp
         ? `- Pedidos e orçamentos pelo WhatsApp`
         : "",
     retiradaPublicaDisponivel(t) ? `- Retirada na loja disponível` : `- Entrega para todo o Brasil`,
@@ -104,6 +104,7 @@ políticas dela. Este arquivo descreve a plataforma, não uma loja.
     identidadeComercial.enderecoVisita ? `- Endereço: ${identidadeComercial.enderecoVisita.texto}` : "",
     identidadeComercial.horario ? `- Horário: ${identidadeComercial.horario}` : "",
     identidadeComercial.razaoSocial ? `- Razão social: ${identidadeComercial.razaoSocial}` : "",
+    identidadeComercial.cnpj ? `- CNPJ: ${identidadeComercial.cnpj}` : "",
     "",
     "## Categorias principais",
     ...categorias.slice(0, 30).map((c) => `- [${c.nome}](${base}/categoria/${c.slug})${c.seoDescription ?? c.descricao ? `: ${(c.seoDescription ?? c.descricao ?? "").slice(0, 120)}` : ""}`),

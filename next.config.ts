@@ -14,6 +14,9 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   deploymentId: process.env.LOJAS_DEPLOY_ID || undefined,
   output: "standalone",
+  // No CI o job de tipos (incluindo next typegen) precisa passar antes do build.
+  // Builds comuns preservam a verificação interna do Next.
+  typescript: { ignoreBuildErrors: process.env.CI === "true" && process.env.LOJAS_CI_TIPOS_VERIFICADOS === "1" },
   // O checkout acompanha o codigo da plataforma no mesmo repositorio.
   turbopack: { root: process.cwd() },
   outputFileTracingRoot: process.cwd(),

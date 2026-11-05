@@ -29,6 +29,18 @@ function loja(extra: Partial<Tenant> = {}): Tenant {
   } as unknown as Tenant;
 }
 
+test("modelos de política omitem CNPJ e canais inválidos do cadastro", () => {
+  const t = loja({ razaoSocial: "   ", cnpj: "123", emailContato: "não-é-email", whatsapp: "ligue 1634413180" });
+  const termos = modeloDePolitica(t, "termos").join(" ");
+  assert.match(termos, /loja da Loja Teste/);
+  assert.doesNotMatch(termos, /CNPJ|não-é-email|pelo WhatsApp/);
+  assert.match(termos, /pelos nossos canais de atendimento/);
+});
+
+test("políticas usam o mesmo e-mail normalizado da identidade pública", () => {
+  assert.match(modeloDePolitica(loja({ emailContato: " VENDAS@VEDASHOW.COM.BR " }), "termos").join(" "), /pelo vendas@vedashow.com.br\./);
+});
+
 test("políticas acompanham venda assistida e checkout online", () => {
   const assistida = loja({ status: "ATIVA", plano: "SITE", mpAccessTokenEnc: null });
   assert.match(modeloDePolitica(assistida, "envio").join(" "), /confirmados pelo atendimento/);

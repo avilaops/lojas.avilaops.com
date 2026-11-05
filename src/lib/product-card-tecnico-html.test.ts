@@ -4,6 +4,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { Produto, Tenant } from "@prisma/client";
 import ProductCard from "@/components/ProductCard";
+import TabelaTecnica from "@/components/TabelaTecnica";
 
 const loja = {
   id: "loja",
@@ -77,4 +78,34 @@ test("selo de estoque baixo usa texto escuro sobre o âmbar", () => {
   }));
   assert.match(html, /bg-amber-500[^\"]*text-zinc-950/);
   assert.doesNotMatch(html, /bg-amber-500[^\"]*text-white/);
+});
+
+test("card e tabela não oferecem pedido assistido quando o WhatsApp é inválido", () => {
+  for (const whatsapp of ["ligue 1634413180", "https://wa.me/551634413180", "0000000000", "   "]) {
+    for (const precoCentavos of [0, 4590]) {
+      const p = { ...produto({}), disponibilidade: "in_stock", estoque: 3, precoCentavos } as Produto;
+      const card = renderToStaticMarkup(createElement(ProductCard, { produto: p, loja, vende: false, whatsapp }));
+      assert.doesNotMatch(card, /acao-whatsapp|Consultar preço<|Adicionar ao pedido|Pedir pelo WhatsApp/, whatsapp);
+      const tabela = renderToStaticMarkup(createElement(TabelaTecnica, {
+        produtos: [p], loja: { ...loja, whatsapp }, vende: false, titulo: "Peças", nomeDaLoja: loja.nome,
+      }));
+      assert.doesNotMatch(tabela, /wa.me|>Consultar<|Adicionar ao pedido/, whatsapp);
+      assert.match(tabela, /href="\/produtos\/rolamento-6204"/);
+    }
+  }
+});
+
+test("card e tabela sob consulta usam o mesmo destino nacional e internacional", () => {
+  for (const [whatsapp, destino] of [["(16) 3441-3180", "551634413180"], ["+1 202 555 0123", "12025550123"]]) {
+    const p = { ...produto({}), disponibilidade: "in_stock", estoque: 3, precoCentavos: 0 } as Produto;
+    const card = renderToStaticMarkup(createElement(ProductCard, { produto: p, loja, vende: false, whatsapp }));
+    const tabela = renderToStaticMarkup(createElement(TabelaTecnica, {
+      produtos: [p], loja: { ...loja, whatsapp }, vende: false, titulo: "Peças", nomeDaLoja: loja.nome,
+    }));
+    const hrefEsperado = `href="https://wa.me/${destino}?text=`;
+    assert.ok(card.includes(hrefEsperado), whatsapp);
+    assert.ok(tabela.includes(hrefEsperado), whatsapp);
+    assert.match(card, /Consultar preço/);
+    assert.match(tabela, />Consultar</);
+  }
 });

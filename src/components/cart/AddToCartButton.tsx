@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, ShoppingBag } from "lucide-react";
+import { Check, Plus } from "lucide-react";
 import { useCart, type ItemLocal } from "./CartProvider";
 import { adicionarAoCarrinho } from "@/lib/eventos-loja";
 
@@ -31,7 +31,7 @@ export default function AddToCartButton({ item, disponivel, irParaCarrinho = fal
         if (irParaCarrinho && !painelHabilitado) router.push("/carrinho");
       }}
     >
-      {ok ? <Check className="h-4 w-4" /> : <ShoppingBag className="h-4 w-4" />}
+      {ok ? <Check className="h-4 w-4" /> : <Plus className="h-3.5 w-3.5 opacity-80" />}
       {ok ? "Adicionado" : compacto ? "Adicionar" : pedido ? "Adicionar ao pedido" : "Adicionar ao carrinho"}
     </button>
   );

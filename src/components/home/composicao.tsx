@@ -16,6 +16,7 @@ import Minimal from "./Minimal";
 import Spotlight from "./Spotlight";
 import Vitrine from "./Vitrine";
 import HomePremium from "@/components/templates/automotivo-premium/Home";
+import { dadosPublicosDaHome } from "./dados-publicos";
 
 /**
  * Layout → composição da home.
@@ -48,5 +49,5 @@ function homeDo(tema: Pick<TemaLoja, "layout">): ComponentType<DadosHome> {
 
 /** A home do layout escolhido, já com os dados. */
 export function comporHome(tema: Pick<TemaLoja, "layout">, dados: DadosHome): ReactElement {
-  return createElement(homeDo(tema), dados);
+  return createElement(homeDo(tema), dadosPublicosDaHome(dados));
 }

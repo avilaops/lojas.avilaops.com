@@ -1,12 +1,14 @@
 import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
+import { numeroDeContato } from "@/lib/canais-publicos";
 
 /** Leva a consulta já feita ao atendimento da própria loja. */
-export default function AjudaCatalogo({ whatsapp, categoria, valores, tecnico }: {
+export default function AjudaCatalogo({ whatsapp: whatsappBruto, categoria, valores, tecnico }: {
   whatsapp: string | null;
   categoria?: string;
   valores: Record<string, string | undefined>;
   tecnico: boolean;
 }) {
+  const whatsapp = numeroDeContato(whatsappBruto);
   if (!whatsapp) return null;
   const contexto = [
     categoria && `Categoria: ${categoria}`,

@@ -29,6 +29,35 @@
       "history": [{ "at": "2026-11-03", "note": "Preparação de PR para publicação pelo workflow existente, sem alteração de schema ou dados comerciais." }]
     },
     {
+      "id": "AVL-261",
+      "title": "Vedashow — auditar e corrigir canais, identidade e prova legal",
+      "objective": "Corrigir divergências entre canais e identificação pública, validar regressões e publicar a entrega autorizada pelo proprietário.",
+      "assignee": "codex",
+      "priority": "urgente",
+      "status": "em-andamento",
+      "acceptanceCriteria": [
+        "Contato, rodapé, políticas, JSON-LD e llms.txt usam dados públicos validados.",
+        "Canais inválidos e endereço incompleto ou malformado são omitidos; visita exige enderecoPublico.",
+        "Números nacionais e internacionais mantêm o destino correto.",
+        "Testes e CI aprovados antes da publicação; versão pública conferida."
+      ],
+      "evidence": "Retomada 05/11: 1.365 unitários aprovados na CI 41983342814; CI completa bloqueada por tempo. Continuação autorizada: pipeline decomposto com dependências e build por artefatos da mesma execução/SHA, tipos gerados pelo Next, banco dividido, jornadas reais, contratos e imagem sem recompilação. Limite de um minuto e todos os gates preservados. Implementação aguarda GitHub CI; docs/CI-ETAPAS-CURTAS.md. PR 198 em rascunho até a aprovação integral.",
+      "blocker": "Aceite operacional ainda depende de endereço e horário confirmados, prova de emissão fiscal e recebimento real nos canais; não foram inventados nem preenchidos.",
+      "environment": "worktree-isolada-avl-261",
+      "history": [
+        {
+          "at": "2026-11-03",
+          "status": "em-andamento",
+          "note": "Retomada da AVL-261 em worktree isolada; proprietário autorizou o deploy. Correções e revisão de código realizadas; publicação depende das validações."
+        },
+        {
+          "at": "2026-11-05",
+          "status": "em-andamento",
+          "note": "Retomada do PR 198: CI anterior 41720628611 aprovada; conflito com AVL-263 reconciliado preservando as duas tarefas. Revisão identificou canais brutos na jornada assistida; correção e nova CI pendentes."
+        }
+      ]
+    },
+    {
       "id": "AVL-263",
       "title": "Vedashow — governança mínima de qualidade do catálogo",
       "objective": "Revalidar a implementação existente e corrigir cobertura indevida de campos malformados, preservando a API administrativa somente leitura.",

@@ -1,0 +1,22 @@
+name: Node 22 do runner
+description: Valida o runtime já instalado e usa o instalador oficial se necessário.
+runs:
+  using: composite
+  steps:
+    - id: existente
+      shell: bash
+      run: |
+        set -euo pipefail
+        candidatos=("$RUNNER_TOOL_CACHE"/node/22.*/x64/bin/node)
+        binario=$(printf '%s\n' "${candidatos[@]}" | sort -V | tail -n 1)
+        if [[ -x "$binario" ]] && [[ "$("$binario" -p 'process.versions.node.split(".")[0]')" == 22 ]]; then
+          dirname "$binario" >> "$GITHUB_PATH"
+          "$binario" --version
+          echo 'pronto=true' >> "$GITHUB_OUTPUT"
+        else
+          echo 'pronto=false' >> "$GITHUB_OUTPUT"
+        fi
+    - if: steps.existente.outputs.pronto != 'true'
+      uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+      with:
+        node-version: 22
