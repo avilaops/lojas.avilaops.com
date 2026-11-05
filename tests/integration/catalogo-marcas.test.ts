@@ -24,21 +24,25 @@ test("marca filtra catálogo e planilha por tenant, junto de busca, categoria e 
     await criar(a.id, "km09", "BGL", 0, categoria.id);
     await criar(a.id, "km12", "BGL", 5, categoria.id);
     await criar(a.id, "km14", "BGL Industrial", 0, categoria.id);
+    const legado = await criar(a.id, "legado", "BGL", 5, categoria.id);
+    await prisma.produto.update({ where: { id: legado.id }, data: { marca: " bgl " } });
     await criar(a.id, "outro", "SKF");
     await criar(a.id, "sem-marca", null);
     await criar(a.id, "diversos", "DIVERSOS");
     await criar(b.id, "outra-loja", "Exclusiva");
 
-    assert.deepEqual(await marcasDoCatalogo(a.id), ["BGL", "BGL Industrial", "SKF"]);
+    const marcas = await marcasDoCatalogo(a.id);
+    assert.deepEqual(marcas.map((m) => m.toUpperCase()), ["BGL", "BGL INDUSTRIAL", "SKF"]);
+    assert.ok(marcas.every((m) => m === m.trim()));
     const filtro = filtroDaUrl(new URL("https://loja.test/api/painel/catalogo?marca=bgl&categoria=porcas&q=pe%C3%A7a&situacao=esgotado"));
-    const encontrados = await prisma.produto.findMany({ where: condicaoDoCatalogo(a.id, filtro) });
+    const encontrados = await prisma.produto.findMany({ where: await condicaoDoCatalogo(a.id, filtro) });
     assert.deepEqual(encontrados.map((p) => p.slug), ["km09"]);
     const planilha = await produtosEmLinhas(a.id, filtro);
     assert.equal(planilha.length, 2);
     assert.ok(planilha[1].includes("km09"));
-    assert.equal(await prisma.produto.count({ where: condicaoDoCatalogo(b.id, filtro) }), 0);
-    assert.equal(await prisma.produto.count({ where: condicaoDoCatalogo(a.id, { marca: "BGL" }) }), 2);
-    assert.ok(await prisma.produto.count({ where: condicaoDoCatalogo(a.id, { busca: "bgl" }) }) >= 3);
+    assert.equal(await prisma.produto.count({ where: await condicaoDoCatalogo(b.id, filtro) }), 0);
+    assert.equal(await prisma.produto.count({ where: await condicaoDoCatalogo(a.id, { marca: " BGL " }) }), 3);
+    assert.ok(await prisma.produto.count({ where: await condicaoDoCatalogo(a.id, { busca: "bgl" }) }) >= 4);
   } finally {
     await prisma.movimentoEstoque.deleteMany({ where: { tenantId: { in: [a.id, b.id] } } });
     await prisma.tenant.deleteMany({ where: { id: { in: [a.id, b.id] } } });
