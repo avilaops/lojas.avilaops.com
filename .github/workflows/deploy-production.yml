@@ -9,9 +9,13 @@ permissions:
   contents: read
 jobs:
   unitarios:
-    name: testes unitários / canais e vitrine
+    name: testes unitários / parte ${{ matrix.fatia }}
     runs-on: ubuntu-latest
     timeout-minutes: 1
+    strategy:
+      fail-fast: false
+      matrix:
+        fatia: [1/2, 2/2]
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
@@ -20,7 +24,8 @@ jobs:
           cache: npm
       - run: npm ci --no-audit --no-fund
       - run: npx prisma generate
-      - run: npm test
+      - name: Executar parte da suíte completa
+        run: npx tsx --test --test-shard=${{ matrix.fatia }} src/lib/*.test.ts packages/checkout/src/core/*.test.ts packages/checkout/src/server/*.test.ts packages/checkout/src/providers/*.test.ts
 
   qualidade:
     name: qualidade / ${{ matrix.comando }}
