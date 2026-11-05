@@ -79,7 +79,7 @@ export default function ProductCard({ produto, loja, vende, whatsapp: whatsappBr
 
   return (
     <article className={`cartao-produto${tecnico ? " cartao-produto-tecnico" : ""}${fotoCheia ? " cartao-produto-foto-cheia" : ""} group flex flex-col overflow-hidden rounded-xl border border-border bg-card`}>
-      <Link href={hrefProduto} className={`cartao-produto-imagem relative block overflow-hidden bg-muted${imagem ? " aspect-square" : " cartao-produto-sem-imagem"}`}>
+      <Link href={hrefProduto} className={`cartao-produto-imagem cartao-produto-foto relative block overflow-hidden bg-muted${imagem ? " aspect-square" : " cartao-produto-sem-imagem"}`}>
         {imagem ? (
           <>
             {/* Imagem Principal */}
@@ -107,7 +107,7 @@ export default function ProductCard({ produto, loja, vende, whatsapp: whatsappBr
         )}
 
         {/* Badges Flutuantes */}
-        <div className="absolute left-2.5 top-2.5 flex flex-col gap-1 z-10">
+        <div className="cartao-produto-selos absolute left-2.5 top-2.5 z-10 flex flex-col gap-1">
           {percentualDesconto && (
             <span className="rounded-md bg-red-600 px-2 py-0.5 text-[11px] font-black uppercase text-white shadow-sm">
               -{percentualDesconto}% OFF
@@ -173,9 +173,9 @@ export default function ProductCard({ produto, loja, vende, whatsapp: whatsappBr
         {!tecnico && codigo && <p className="text-xs text-muted-foreground break-words">{rotuloCodigo}: {codigo}</p>}
         {tecnicos.length > 0 && <dl className="cartao-produto-tecnica">{tecnicos.map(l => <div key={l.chave}><dt>{tecnico && ROTULOS_COMPACTOS[l.chave] ? <abbr title={l.rotulo}>{ROTULOS_COMPACTOS[l.chave]}</abbr> : l.rotulo}</dt><dd>{l.valor}</dd></div>)}</dl>}
         {tecnico && <p className="cartao-produto-identificacao">{marca && <span>{marca}</span>}{codigo && <span>{rotuloCodigo}: {codigo}</span>}{unidadeVenda && <span>Venda: {unidadeVenda}</span>}</p>}
-        <div className={tecnico ? "cartao-produto-disponibilidade" : "contents"}>
+        <div className="cartao-produto-disponibilidade">
           <p className={`cartao-produto-estoque text-xs ${esgotado ? "text-muted-foreground" : "esta-disponivel"}`}>{estado.disponibilidade}</p>
-          <Link href={hrefProduto} className="text-xs underline underline-offset-4">Ver detalhes</Link>
+          <Link href={hrefProduto} className="cartao-produto-detalhes text-xs underline underline-offset-4">Ver detalhes</Link>
         </div>
         <div className="cartao-produto-preco mt-auto pt-1">
           {produto.precoDeCentavos && produto.precoDeCentavos > produto.precoCentavos && (
