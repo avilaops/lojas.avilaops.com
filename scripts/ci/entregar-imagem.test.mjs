@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
@@ -33,7 +33,6 @@ async function executar(overrides = {}) {
       if (error.code === "ENOENT") return null;
       throw error;
     });
-    const { readdir } = await import("node:fs/promises");
     return { ...result, output: await read("output"), ssh: await read("ssh"), token: await read("token"), temporary: await readdir(temporary) };
   } finally {
     await rm(root, { recursive: true, force: true });
@@ -80,5 +79,22 @@ test("evento, ramo, operação e destino inválidos falham antes de conectar", a
     assert.notEqual(result.status, 0, JSON.stringify(overrides));
     assert.equal(result.ssh, null);
     assert.equal(result.output, null);
+  }
+});
+
+test("política do projeto exige timeout nativo de um minuto em cada job", async () => {
+  for (const name of ["deploy-production.yml", "merge-automatico.yml"]) {
+    const text = await readFile(path.resolve(".github/workflows", name), "utf8");
+    const jobs = text.split(/^jobs:\r?\n/m)[1];
+    assert.ok(jobs, `${name}: jobs ausentes`);
+    // Os workflows adotam blocos de jobs com duas colunas, sem anchors.
+    const blocks = [...jobs.matchAll(/^  ([\w-]+):\r?\n/gm)];
+    assert.ok(blocks.length > 0, `${name}: nenhum job encontrado`);
+    for (let i = 0; i < blocks.length; i++) {
+      const block = jobs.slice(blocks[i].index, blocks[i + 1]?.index ?? jobs.length);
+      const timeouts = [...block.matchAll(/^    timeout-minutes:\s*(.*?)\s*$/gm)];
+      assert.equal(timeouts.length, 1, `${name}/${blocks[i][1]}: timeout obrigatório e único`);
+      assert.equal(timeouts[0][1], "1", `${name}/${blocks[i][1]}: limite da política Linear`);
+    }
   }
 });
