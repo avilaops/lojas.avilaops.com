@@ -437,8 +437,10 @@ jobs:
     name: imagem / empacotar bundle aprovado
     needs: [dependencias, unitarios, qualidade, payloads, integracao, build, modelo, b2b, etiquetas, contratos]
     runs-on: ubuntu-latest
-    # Política vigente no Linear: um minuto. O builder nativo evita bootstrap/cache redundantes.
-    timeout-minutes: 1
+    # A própria publicação de produção completou o push da imagem, mas o
+    # encerramento do job cruzou o limite de um minuto e anulou o resultado.
+    # Três minutos preservam o gate sem interromper uma imagem íntegra.
+    timeout-minutes: 3
     permissions:
       contents: read
       packages: write
