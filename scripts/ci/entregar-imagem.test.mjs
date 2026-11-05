@@ -15,7 +15,16 @@ async function executar(overrides = {}) {
     const temporary = path.join(root, "temporary");
     await mkdir(bin);
     await mkdir(temporary);
-    await writeFile(path.join(bin, "gh"), '#!/bin/bash\nset -eu\nprintf "%s" "$NEWER_RUNS"\n', { mode: 0o755 });
+    await writeFile(path.join(bin, "gh"), `#!/bin/bash
+set -eu
+# A CLI recusa slurp junto com jq. Preservar essa fronteira no adaptador.
+[[ "$*" != *--slurp* || "$*" != *--jq* ]] || exit 99
+if [[ "$2" == */actions/runs/* ]]; then
+  printf '%s' "$RUN_CREATED_AT"
+else
+  printf '%s' "$NEWER_RUNS"
+fi
+`, { mode: 0o755 });
     await writeFile(path.join(bin, "ssh"), '#!/bin/bash\nset -eu\nprintf "%s\\n" "$*" > "$TEST_ROOT/ssh"\ncat > "$TEST_ROOT/token"\nexit "$SSH_STATUS"\n', { mode: 0o755 });
     const result = spawnSync("bash", [script], {
       encoding: "utf8",
@@ -26,7 +35,7 @@ async function executar(overrides = {}) {
         GITHUB_OUTPUT: path.join(root, "output"), DEPLOY_OPERATION: "prepare", APPLICATION: "lojas.avilaops.com",
         IMAGE: digest, DEPLOY_HOST: "server.example", DEPLOY_USER: "deploy", DEPLOY_PORT: "22",
         SSH_KEY: "key-for-test", GHCR_TOKEN: "token-for-test", KNOWN_HOSTS: "known-host-for-test",
-        NEWER_RUNS: "0", SSH_STATUS: "0", ...overrides,
+        NEWER_RUNS: "0", RUN_CREATED_AT: "2026-11-05T15:00:00Z", SSH_STATUS: "0", ...overrides,
       },
     });
     const read = name => readFile(path.join(root, name), "utf8").catch(error => {
@@ -75,7 +84,7 @@ test("evento, ramo, operação e destino inválidos falham antes de conectar", a
     { APPLICATION: "outro.example" }, { IMAGE: digest.replace("/lojas.avilaops.com@", "/outro@") },
     { IMAGE: "ghcr.io/avilaops/lojas.avilaops.com:latest" }, { IMAGE: `${digest};id` },
     { DEPLOY_HOST: "host;id" }, { DEPLOY_USER: "user;id" }, { DEPLOY_PORT: "0" },
-    { NEWER_RUNS: "invalid" },
+    { NEWER_RUNS: "invalid" }, { RUN_CREATED_AT: "invalid" },
   ]) {
     const result = await executar(overrides);
     assert.notEqual(result.status, 0, JSON.stringify(overrides));

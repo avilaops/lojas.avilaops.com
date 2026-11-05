@@ -15,8 +15,10 @@ set -euo pipefail
 # A trava serializa operações; a consulta impede um run antigo de publicar
 # depois de um mais novo. Conferir em prepare E deploy: outro run pode surgir
 # entre os dois jobs. Um commit com skip-ci não impede a entrega aprovada.
+criado=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$GITHUB_RUN_ID" --jq '.created_at')
+[[ "$criado" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$ ]]
 contagens=$(gh api --paginate \
-  "repos/${GITHUB_REPOSITORY}/actions/workflows/deploy-production.yml/runs?branch=${DEFAULT_BRANCH}&per_page=100" \
+  "repos/${GITHUB_REPOSITORY}/actions/workflows/deploy-production.yml/runs?branch=${DEFAULT_BRANCH}&created=%3E%3D${criado}&per_page=100" \
   --jq "[.workflow_runs[] | select(.id > ${GITHUB_RUN_ID} and .event != \"pull_request\" and .event != \"pull_request_target\" and (.conclusion == null or .conclusion == \"success\"))] | length")
 mais_novos=0
 while IFS= read -r contagem; do
