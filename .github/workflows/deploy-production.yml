@@ -15,6 +15,8 @@ jobs:
     name: preparar dependências
     runs-on: ubuntu-latest
     timeout-minutes: 1
+    outputs:
+      artifact_id: ${{ steps.arquivo.outputs.artifact-id }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -40,6 +42,7 @@ jobs:
             -cf "$RUNNER_TEMP/dependencias/payload.tar.zst" node_modules
           node scripts/ci/artefato.mjs registrar "$RUNNER_TEMP/dependencias" dependencias
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        id: arquivo
         with:
           name: lojas-dependencias-${{ github.sha }}
           path: ${{ runner.temp }}/dependencias/
@@ -162,6 +165,8 @@ jobs:
     needs: [dependencias, qualidade]
     runs-on: ubuntu-latest
     timeout-minutes: 1
+    outputs:
+      artifact_id: ${{ steps.arquivo.outputs.artifact-id }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -182,6 +187,7 @@ jobs:
           tar -I 'zstd -T0 -1' -cf "$RUNNER_TEMP/build/payload.tar.zst" -C .next/standalone .
           node scripts/ci/artefato.mjs registrar "$RUNNER_TEMP/build" build
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        id: arquivo
         with:
           name: lojas-build-${{ github.sha }}
           path: ${{ runner.temp }}/build/
@@ -194,19 +200,25 @@ jobs:
     needs: dependencias
     runs-on: ubuntu-latest
     timeout-minutes: 1
+    outputs:
+      artifact_id: ${{ steps.arquivo.outputs.artifact-id }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           persist-credentials: false
       - uses: ./.github/actions/preparar-node
-      - run: npx playwright install --only-shell chromium
+      - run: npx playwright install --with-deps --only-shell chromium
       - name: Arquivar versão do navegador do lockfile
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/navegador"
-          tar -I 'zstd -T0 -1' -cf "$RUNNER_TEMP/navegador/payload.tar.zst" -C "$HOME/.cache/ms-playwright" .
+          mkdir -p "$RUNNER_TEMP/pacote-navegador/browsers" "$RUNNER_TEMP/pacote-navegador/fonts"
+          cp -a "$HOME/.cache/ms-playwright/." "$RUNNER_TEMP/pacote-navegador/browsers/"
+          cp -a /usr/share/fonts/. "$RUNNER_TEMP/pacote-navegador/fonts/"
+          tar -I 'zstd -T0 -1' -cf "$RUNNER_TEMP/navegador/payload.tar.zst" -C "$RUNNER_TEMP/pacote-navegador" .
           node scripts/ci/artefato.mjs registrar "$RUNNER_TEMP/navegador" navegador
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        id: arquivo
         with:
           name: lojas-navegador-${{ github.sha }}
           path: ${{ runner.temp }}/navegador/
@@ -219,6 +231,8 @@ jobs:
     needs: dependencias
     runs-on: ubuntu-latest
     timeout-minutes: 1
+    outputs:
+      artifact_id: ${{ steps.arquivo.outputs.artifact-id }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -233,6 +247,7 @@ jobs:
           tar -I 'zstd -T0 -1' -cf "$RUNNER_TEMP/modelo/payload.tar.zst" modelos
           node scripts/ci/artefato.mjs registrar "$RUNNER_TEMP/modelo" modelo
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        id: arquivo
         with:
           name: lojas-modelo-${{ github.sha }}
           path: ${{ runner.temp }}/modelo/
@@ -268,9 +283,10 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           persist-credentials: false
-      - uses: ./.github/actions/preparar-node
-      - uses: ./.github/actions/preparar-build
-      - uses: ./.github/actions/preparar-navegador
+      - uses: ./.github/actions/preparar-artefatos
+        with:
+          ids: ${{ needs.dependencias.outputs.artifact_id }},${{ needs.build.outputs.artifact_id }},${{ needs.navegador.outputs.artifact_id }}
+          tipos: dependencias build navegador
       - run: npx prisma migrate deploy
       - run: node --import tsx scripts/qa-cotacoes-b2b.mts
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -318,9 +334,10 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           persist-credentials: false
-      - uses: ./.github/actions/preparar-node
-      - uses: ./.github/actions/preparar-build
-      - uses: ./.github/actions/preparar-navegador
+      - uses: ./.github/actions/preparar-artefatos
+        with:
+          ids: ${{ needs.dependencias.outputs.artifact_id }},${{ needs.build.outputs.artifact_id }},${{ needs.navegador.outputs.artifact_id }}
+          tipos: dependencias build navegador
       - run: npx prisma migrate deploy
       - name: Verificar etiquetas com servidor isolado
         env:
@@ -447,12 +464,10 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           persist-credentials: false
-      - uses: ./.github/actions/preparar-node
-      - uses: ./.github/actions/preparar-build
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+      - uses: ./.github/actions/preparar-artefatos
         with:
-          name: lojas-modelo-${{ github.sha }}
-          path: ${{ runner.temp }}/lojas-modelo
+          ids: ${{ needs.dependencias.outputs.artifact_id }},${{ needs.build.outputs.artifact_id }},${{ needs.modelo.outputs.artifact_id }}
+          tipos: dependencias build modelo
       - name: Montar contexto somente com os artefatos verificados
         env:
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
@@ -463,11 +478,10 @@ jobs:
             [[ "$GITHUB_REF" == "refs/heads/$DEFAULT_BRANCH" ]]
           fi
           printf 'IMAGE_NAME=ghcr.io/%s\n' "${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
-          node scripts/ci/artefato.mjs verificar "$RUNNER_TEMP/lojas-modelo" modelo
           mkdir -p "$RUNNER_TEMP/lojas-image/runtime"
           cp Dockerfile.ci "$RUNNER_TEMP/lojas-image/Dockerfile"
           cp -a .next/standalone/. "$RUNNER_TEMP/lojas-image/runtime/"
-          tar --zstd -xf "$RUNNER_TEMP/lojas-modelo/payload.tar.zst" -C "$RUNNER_TEMP/lojas-image/runtime"
+          cp -a modelos "$RUNNER_TEMP/lojas-image/runtime/"
           for modulo in .prisma @prisma/client onnxruntime-node; do
             mkdir -p "$RUNNER_TEMP/lojas-image/runtime/node_modules/$modulo"
             cp -a "node_modules/$modulo/." "$RUNNER_TEMP/lojas-image/runtime/node_modules/$modulo/"

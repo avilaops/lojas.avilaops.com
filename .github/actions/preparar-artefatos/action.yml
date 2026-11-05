@@ -1,0 +1,52 @@
+name: Artefatos verificados em paralelo
+description: Baixa os IDs exatos dos jobs produtores da execução atual e confere os manifestos.
+inputs:
+  ids:
+    description: IDs dos artefatos separados por vírgula.
+    required: true
+  tipos:
+    description: Tipos esperados separados por espaço.
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+      with:
+        node-version: 22
+    - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+      with:
+        artifact-ids: ${{ inputs.ids }}
+        path: ${{ runner.temp }}/lojas-artefatos
+    - shell: bash
+      env:
+        ARTIFACT_TYPES: ${{ inputs.tipos }}
+      run: |
+        set -euo pipefail
+        for tipo in $ARTIFACT_TYPES; do
+          pasta="$RUNNER_TEMP/lojas-artefatos/lojas-$tipo-$GITHUB_SHA"
+          node scripts/ci/artefato.mjs verificar "$pasta" "$tipo"
+          case "$tipo" in
+            dependencias|modelo)
+              tar --zstd -xf "$pasta/payload.tar.zst"
+              ;;
+            build)
+              mkdir -p .next/standalone
+              tar --zstd -xf "$pasta/payload.tar.zst" -C .next/standalone
+              ;;
+            navegador)
+              mkdir -p "$RUNNER_TEMP/chromium" "$HOME/.cache/ms-playwright" "$HOME/.local/share/fonts"
+              tar --zstd -xf "$pasta/payload.tar.zst" -C "$RUNNER_TEMP/chromium"
+              cp -a "$RUNNER_TEMP/chromium/browsers/." "$HOME/.cache/ms-playwright/"
+              cp -a "$RUNNER_TEMP/chromium/fonts/." "$HOME/.local/share/fonts/"
+              fc-cache -f "$HOME/.local/share/fonts"
+              executavel=$(find "$HOME/.cache/ms-playwright" -type f -name chrome-headless-shell -print -quit)
+              [[ -n "$executavel" ]]
+              if ! ldd "$executavel" > "$RUNNER_TEMP/chromium-libs.txt" || grep -q 'not found' "$RUNNER_TEMP/chromium-libs.txt"; then
+                npx playwright install-deps chromium
+                ldd "$executavel" > "$RUNNER_TEMP/chromium-libs.txt"
+              fi
+              ! grep -q 'not found' "$RUNNER_TEMP/chromium-libs.txt"
+              ;;
+            *) echo 'Tipo de artefato desconhecido' >&2; exit 1 ;;
+          esac
+        done

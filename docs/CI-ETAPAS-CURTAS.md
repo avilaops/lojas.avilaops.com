@@ -18,6 +18,10 @@ valida SHA-256 antes da extração. Builds, navegador e modelo usam o mesmo
 contrato. Os nomes de artefatos incluem o SHA e o download não informa outro run.
 É necessário repetir a execução inteira ao mudar a tentativa: artefatos de uma
 tentativa anterior são recusados, inclusive em rerun somente dos jobs falhos.
+Jornadas e imagem recebem os IDs exatos dos produtores e baixam seus arquivos
+em paralelo. O navegador inclui as fontes preparadas uma vez; os consumidores
+registram essas fontes no perfil do runner e conferem as bibliotecas nativas
+antes de executar as jornadas reais.
 
 ## Gates preservados
 
