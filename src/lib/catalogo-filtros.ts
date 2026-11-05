@@ -1,5 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import { termosDeBusca } from "./catalogo";
+import { valoresDeMarcaDoCatalogo } from "./catalogo-marcas";
 
 /**
  * O filtro do catálogo no painel, num lugar só.
@@ -25,7 +26,7 @@ export const varianteSemIdentificadores: Prisma.VarianteWhereInput = {
 };
 
 /** As situações são a pergunta do dia ("o que está sem foto?"), não colunas. */
-export function condicaoDoCatalogo(tenantId: string, filtro: FiltroCatalogo): Prisma.ProdutoWhereInput {
+export async function condicaoDoCatalogo(tenantId: string, filtro: FiltroCatalogo): Promise<Prisma.ProdutoWhereInput> {
   const where: Prisma.ProdutoWhereInput = { tenantId };
   const busca = filtro.busca?.trim();
   const categoria = filtro.categoria?.trim();
@@ -38,7 +39,15 @@ export function condicaoDoCatalogo(tenantId: string, filtro: FiltroCatalogo): Pr
     where.AND = termosDeBusca(busca).map((termo) => ({ busca: { contains: termo } }));
   }
   if (categoria) where.categoria = { slug: categoria };
-  if (marca) where.marca = { equals: marca, mode: "insensitive" };
+  if (marca) {
+    // Cadastros legados podem ter espaços ou caixa diferentes. O seletor
+    // normalizado precisa alcançar todos esses valores, sem aceitar BGL Industrial
+    // ao escolher BGL. Os valores possíveis são lidos só no tenant da sessão.
+    const chave = marca.toLocaleLowerCase("pt-BR");
+    const valores = (await valoresDeMarcaDoCatalogo(tenantId))
+      .filter((valor) => valor.trim().toLocaleLowerCase("pt-BR") === chave);
+    where.marca = { in: valores };
+  }
 
   if (situacao === "ativo") where.ativo = true;
   else if (situacao === "inativo") where.ativo = false;
