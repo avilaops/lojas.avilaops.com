@@ -100,17 +100,19 @@ try {
   assert.equal((await contexto.request.get(`${base}/api/painel/etiquetas?pagina=0`)).status(), 422);
   assert.equal((await semSessao.request.get(`${base}/api/painel/catalogo?marca=BGL`)).status(), 403);
   await salvarProdutoNoCatalogo(loja.id, null, { nome: "Produto de outra marca", slug: "outra-marca", marca: "SKF", precoCentavos: 1000 });
-  await page.goto(`${base}/painel/produtos`);
+  console.log("QA catálogo: abrir produtos");
+  await page.goto(`${base}/painel/produtos`, { timeout: 10000 });
   const marca = page.getByRole("combobox", { name: "Marca", exact: true });
-  await marca.locator('option[value="BGL"]').waitFor({ state: "attached" });
+  await marca.locator('option[value="BGL"]').waitFor({ state: "attached", timeout: 5000 });
+  console.log("QA catálogo: selecionar BGL");
   const [respostaMarca] = await Promise.all([
-    page.waitForResponse((r) => new URL(r.url()).pathname === "/api/painel/catalogo" && new URL(r.url()).searchParams.get("marca") === "BGL"),
-    marca.selectOption("BGL"),
+    page.waitForResponse((r) => new URL(r.url()).pathname === "/api/painel/catalogo" && new URL(r.url()).searchParams.get("marca") === "BGL", { timeout: 5000 }),
+    marca.selectOption("BGL", { timeout: 5000 }),
   ]);
   assert.equal(respostaMarca.status(), 200);
   assert.deepEqual((await respostaMarca.json()).produtos.map((p: { id: string }) => p.id), [produto.id]);
-  await page.getByRole("link", { name: "Produto de outra marca", exact: true }).waitFor({ state: "hidden" });
-  assert.ok((await page.getByRole("link", { name: /CSV/ }).getAttribute("href"))?.includes("marca=BGL"));
+  await page.getByRole("link", { name: "Produto de outra marca", exact: true }).waitFor({ state: "hidden", timeout: 5000 });
+  assert.ok((await page.getByRole("link", { name: /CSV/ }).getAttribute("href", { timeout: 5000 }))?.includes("marca=BGL"));
   await page.screenshot({ path: `${pasta}/catalogo-marca-desktop.png`, fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true);
