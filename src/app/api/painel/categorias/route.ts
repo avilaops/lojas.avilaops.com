@@ -12,6 +12,7 @@ const Entrada = z.object({
   nome: z.string().trim().min(1).max(80),
   descricao: z.string().trim().max(300).nullable().optional(),
   imagemUrl: z.string().url().nullable().optional(),
+  ativo: z.boolean().optional(),
   ordem: z.number().int().min(0).max(999).optional(),
 });
 

@@ -171,6 +171,7 @@ export async function dadosDoPainel(secao: SecaoPainel) {
       slug: c.slug,
       descricao: c.descricao,
       imagemUrl: c.imagemUrl,
+      ativo: c.ativo,
       ordem: c.ordem,
       produtos: c._count.produtos,
       seoTitle: c.seoTitle,
