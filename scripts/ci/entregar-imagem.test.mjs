@@ -82,7 +82,13 @@ test("evento, ramo, operação e destino inválidos falham antes de conectar", a
   }
 });
 
-test("política do projeto exige timeout nativo de um minuto em cada job", async () => {
+test("política do projeto limita os jobs e permite exceções justificadas", async () => {
+  const excecoesDeTresMinutos = new Set([
+    "deploy-production.yml/b2b",
+    "deploy-production.yml/etiquetas",
+    "deploy-production.yml/image",
+  ]);
+
   for (const name of ["deploy-production.yml", "merge-automatico.yml"]) {
     const text = await readFile(path.resolve(".github/workflows", name), "utf8");
     const jobs = text.split(/^jobs:\r?\n/m)[1];
@@ -94,7 +100,9 @@ test("política do projeto exige timeout nativo de um minuto em cada job", async
       const block = jobs.slice(blocks[i].index, blocks[i + 1]?.index ?? jobs.length);
       const timeouts = [...block.matchAll(/^    timeout-minutes:\s*(.*?)\s*$/gm)];
       assert.equal(timeouts.length, 1, `${name}/${blocks[i][1]}: timeout obrigatório e único`);
-      assert.equal(timeouts[0][1], "1", `${name}/${blocks[i][1]}: limite da política Linear`);
+      const chave = `${name}/${blocks[i][1]}`;
+      const limiteEsperado = excecoesDeTresMinutos.has(chave) ? "3" : "1";
+      assert.equal(timeouts[0][1], limiteEsperado, `${chave}: limite da política Linear`);
     }
   }
 });
