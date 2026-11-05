@@ -14,7 +14,9 @@ runs:
     - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
       with:
         artifact-ids: ${{ inputs.ids }}
-        path: ${{ runner.temp }}/lojas-artefatos
+        # A API extrai um único ID diretamente em path; múltiplos IDs criam
+        # subpastas com seus nomes. Normalizar ambos para o mesmo protocolo.
+        path: ${{ contains(inputs.ids, ',') && format('{0}/lojas-artefatos', runner.temp) || format('{0}/lojas-artefatos/lojas-{1}-{2}', runner.temp, inputs.tipos, github.sha) }}
     - shell: bash
       env:
         ARTIFACT_TYPES: ${{ inputs.tipos }}
