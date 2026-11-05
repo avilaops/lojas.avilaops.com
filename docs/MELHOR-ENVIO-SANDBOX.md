@@ -21,7 +21,7 @@ o aplicativo. Não há prova de conexão nem de cotação autenticada no sandbox
    conexão de conta e consulta de preços/prazos; sem compra de etiquetas.
 4. Cadastrar exatamente o callback
    `https://lojas.avilaops.com/melhor-envio/callback`.
-5. Solicitar `shipping-calculate`, `shipping-checkout`, `shipping-generate`,
+5. Solicitar `cart-write`, `shipping-calculate`, `shipping-checkout`, `shipping-generate`,
    `shipping-print`, `shipping-cancel`, `shipping-tracking` e `users-read`.
 6. Preencher `client_id` e `client_secret` na credencial privada do n8n
    **Lojas - Melhor Envio**, tipo `httpCustomAuth`. Nunca enviar esses valores
