@@ -36,11 +36,9 @@ runs:
               tar --zstd -xf "$pasta/payload.tar.zst" -C .next/standalone
               ;;
             navegador)
-              mkdir -p "$RUNNER_TEMP/chromium" "$HOME/.cache/ms-playwright" "$HOME/.local/share/fonts"
+              mkdir -p "$RUNNER_TEMP/chromium" "$HOME/.cache/ms-playwright"
               tar --zstd -xf "$pasta/payload.tar.zst" -C "$RUNNER_TEMP/chromium"
               cp -a "$RUNNER_TEMP/chromium/browsers/." "$HOME/.cache/ms-playwright/"
-              cp -a "$RUNNER_TEMP/chromium/fonts/." "$HOME/.local/share/fonts/"
-              fc-cache -f "$HOME/.local/share/fonts"
               executavel=$(find "$HOME/.cache/ms-playwright" -type f -name chrome-headless-shell -print -quit)
               [[ -n "$executavel" ]]
               if ! ldd "$executavel" > "$RUNNER_TEMP/chromium-libs.txt" || grep -q 'not found' "$RUNNER_TEMP/chromium-libs.txt"; then
@@ -48,6 +46,11 @@ runs:
                 ldd "$executavel" > "$RUNNER_TEMP/chromium-libs.txt"
               fi
               ! grep -q 'not found' "$RUNNER_TEMP/chromium-libs.txt"
+              ;;
+            fontes)
+              mkdir -p "$HOME/.local/share/fonts"
+              tar --zstd -xf "$pasta/payload.tar.zst" -C "$HOME/.local/share/fonts"
+              fc-cache -f "$HOME/.local/share/fonts"
               ;;
             *) echo 'Tipo de artefato desconhecido' >&2; exit 1 ;;
           esac

@@ -23,7 +23,9 @@ contrato. Os nomes de artefatos incluem o SHA e o download não informa outro ru
 É necessário repetir a execução inteira ao mudar a tentativa: artefatos de uma
 tentativa anterior são recusados, inclusive em rerun somente dos jobs falhos.
 Jornadas e imagem recebem os IDs exatos dos produtores e baixam seus arquivos
-em paralelo. O navegador inclui as fontes preparadas uma vez; os consumidores
+em paralelo. Navegador e fontes são preparados em jobs separados: as fontes
+continuam sendo instaladas integralmente pelo Playwright, sem competir com
+download e arquivamento do Chromium no mesmo limite de tempo. Os consumidores
 reúnem quatro partes por arquivo e validam o hash completo antes de extrair.
 Isso limita o impacto de um download lento de arquivo grande. Os consumidores
 registram essas fontes no perfil do runner e conferem as bibliotecas nativas

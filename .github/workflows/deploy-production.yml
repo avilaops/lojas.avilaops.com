@@ -200,20 +200,43 @@ jobs:
         with:
           persist-credentials: false
       - uses: ./.github/actions/preparar-node
-      - run: npx playwright install --with-deps --only-shell chromium
+      - run: npx playwright install --only-shell chromium
       - name: Arquivar versão do navegador do lockfile
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/navegador"
-          mkdir -p "$RUNNER_TEMP/pacote-navegador/browsers" "$RUNNER_TEMP/pacote-navegador/fonts"
+          mkdir -p "$RUNNER_TEMP/pacote-navegador/browsers"
           cp -a "$HOME/.cache/ms-playwright/." "$RUNNER_TEMP/pacote-navegador/browsers/"
-          cp -a /usr/share/fonts/. "$RUNNER_TEMP/pacote-navegador/fonts/"
           tar -I 'zstd -T0 -1' -cf "$RUNNER_TEMP/navegador/payload.tar.zst" -C "$RUNNER_TEMP/pacote-navegador" .
       - uses: ./.github/actions/publicar-artefato
         id: arquivo
         with:
           tipo: navegador
           pasta: ${{ runner.temp }}/navegador/
+
+  fontes:
+    name: preparar fontes do navegador
+    needs: dependencias
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    outputs:
+      artifact_id: ${{ steps.arquivo.outputs.ids }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/preparar-node
+      - run: npx playwright install-deps chromium
+      - name: Arquivar todas as fontes preparadas pelo Playwright
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/fontes"
+          tar -I 'zstd -T0 -1' -cf "$RUNNER_TEMP/fontes/payload.tar.zst" -C /usr/share/fonts .
+      - uses: ./.github/actions/publicar-artefato
+        id: arquivo
+        with:
+          tipo: fontes
+          pasta: ${{ runner.temp }}/fontes/
 
   modelo:
     name: preparar modelo ONNX
@@ -242,7 +265,7 @@ jobs:
 
   b2b:
     name: navegador / cotação, HTTP e reinício
-    needs: [dependencias, build, navegador]
+    needs: [dependencias, build, navegador, fontes]
     runs-on: ubuntu-latest
     timeout-minutes: 1
     services:
@@ -270,8 +293,8 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/preparar-artefatos
         with:
-          ids: ${{ needs.dependencias.outputs.artifact_id }},${{ needs.build.outputs.artifact_id }},${{ needs.navegador.outputs.artifact_id }}
-          tipos: dependencias build navegador
+          ids: ${{ needs.dependencias.outputs.artifact_id }},${{ needs.build.outputs.artifact_id }},${{ needs.navegador.outputs.artifact_id }},${{ needs.fontes.outputs.artifact_id }}
+          tipos: dependencias build navegador fontes
       - run: npx prisma migrate deploy
       - run: node --import tsx scripts/qa-cotacoes-b2b.mts
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -293,7 +316,7 @@ jobs:
 
   etiquetas:
     name: navegador / etiquetas e PDFs
-    needs: [dependencias, build, navegador]
+    needs: [dependencias, build, navegador, fontes]
     runs-on: ubuntu-latest
     timeout-minutes: 1
     services:
@@ -321,8 +344,8 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/preparar-artefatos
         with:
-          ids: ${{ needs.dependencias.outputs.artifact_id }},${{ needs.build.outputs.artifact_id }},${{ needs.navegador.outputs.artifact_id }}
-          tipos: dependencias build navegador
+          ids: ${{ needs.dependencias.outputs.artifact_id }},${{ needs.build.outputs.artifact_id }},${{ needs.navegador.outputs.artifact_id }},${{ needs.fontes.outputs.artifact_id }}
+          tipos: dependencias build navegador fontes
       - run: npx prisma migrate deploy
       - name: Verificar etiquetas com servidor isolado
         env:
