@@ -940,6 +940,8 @@ model Pedido {
   clienteTelefone     String
   clienteDocumento    String
   entrega             Json? // EnderecoEntrega ou null (retirada)
+  /// ID da opção de frete escolhida. Para Melhor Envio é o service id da cotação.
+  freteId             String?
   freteNome           String
   freteCentavos       Int
   /// Prazo do frete escolhido, em dias úteis. Nulo em pedido anterior a
@@ -2048,6 +2050,13 @@ model Postagem {
   tenantId String
   pedidoId String @unique
 
+  /// Provedor responsável pelo saldo, etiqueta e rastreio desta postagem.
+  provedor                   String   @default("cepcerto") // cepcerto | melhorenvio
+  /// ID da etiqueta no provedor. No Melhor Envio é o ID retornado pelo carrinho.
+  provedorId                 String?
+  provedorProtocolo          String?
+  provedorStatus             String?
+  rastreioUrl                String?
   servico                    String // pac | sedex | jadlog-package | jadlog-dotcom | loggi | mini
   codigoObjeto               String? // rastreio, quando a etiqueta sai
   custoCentavos              Int
@@ -2065,6 +2074,7 @@ model Postagem {
   pedido Pedido @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, acertadaEm])
+  @@index([tenantId, provedor, provedorId])
 }
 
 /// Uma rotina agendada e o estado da última execução dela.

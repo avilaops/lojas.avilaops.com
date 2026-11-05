@@ -27,7 +27,7 @@ export async function registrarPedido(
 
   const salvo = await prisma.pedido.upsert({
     where: { referencia: pedido.referencia, tenantId: t.id },
-    update: { pagamentoId: dados.pagamentoId, pagamentoStatus: dados.status, ...(dados.credencial ? { gateway: dados.credencial.provedor, credencialId: dados.credencial.id } : {}) },
+    update: { freteId: pedido.frete.id, pagamentoId: dados.pagamentoId, pagamentoStatus: dados.status, ...(dados.credencial ? { gateway: dados.credencial.provedor, credencialId: dados.credencial.id } : {}) },
     create: {
       tenantId: t.id,
       contratoComercialId: contrato?.id ?? null,
@@ -37,6 +37,7 @@ export async function registrarPedido(
       clienteTelefone: pedido.cliente.telefone,
       clienteDocumento: pedido.cliente.documento,
       entrega: pedido.entrega ? ({ ...pedido.entrega } as Prisma.InputJsonValue) : undefined,
+      freteId: pedido.frete.id,
       freteNome: pedido.frete.nome,
       freteCentavos: totais.frete,
       fretePrazoDiasUteis: pedido.frete.prazoDiasUteis,

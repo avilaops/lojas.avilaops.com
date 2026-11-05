@@ -4,6 +4,8 @@ import { caixaDoCarrinho, pesoTotalKg } from "./frete";
 import { prisma } from "./db";
 import { emitir } from "./eventos";
 import { conectado as melhorEnvioConectado } from "./melhor-envio-conta";
+import { tokenDaLoja } from "./melhor-envio-conta";
+import { adicionarEnvioAoCarrinho } from "./melhor-envio";
 import { urlDaLoja } from "./tenant";
 
 /**
@@ -122,6 +124,107 @@ export interface ResultadoEtiqueta {
   custoCentavos: number;
 }
 
+type PedidoParaPostagem = Pedido & {
+  itens: Array<{ produtoId: string | null; nome: string; quantidade: number; precoUnitarioCentavos: number }>;
+};
+
+function enderecoParaMelhorEnvio(
+  nome: string,
+  email: string,
+  telefone: string,
+  documento: string,
+  endereco: EnderecoEntrega,
+) {
+  return {
+    nome, email, telefone, documento,
+    postalCode: endereco.cep,
+    logradouro: endereco.logradouro,
+    numero: endereco.numero,
+    complemento: endereco.complemento,
+    bairro: endereco.bairro,
+    cidade: endereco.cidade,
+    uf: endereco.uf,
+  };
+}
+
+async function emitirEtiquetaMelhorEnvio(t: Tenant, pedido: PedidoParaPostagem): Promise<ResultadoEtiqueta> {
+  const entrega = pedido.entrega as EnderecoEntrega | null;
+  if (!entrega) throw new Error("Pedido de retirada na loja não gera etiqueta.");
+  const serviceId = pedido.freteId?.match(/^melhorenvio:(\d+)$/)?.[1];
+  if (!serviceId) throw new Error("O pedido não guarda o serviço do Melhor Envio escolhido no checkout.");
+  const token = await tokenDaLoja(t);
+  if (!token) throw new PostagemIndisponivel("A conexão do Melhor Envio desta loja expirou ou não está disponível.");
+
+  const existente = await prisma.postagem.findUnique({ where: { pedidoId: pedido.id } });
+  if (existente?.provedor === "melhorenvio" && ["emitida", "comprada", "gerada", "carrinho"].includes(existente.status)) {
+    return {
+      status: existente.status === "emitida" ? "emitida" : "pendente",
+      mensagem: "A postagem do Melhor Envio já está registrada para este pedido.",
+      codigoObjeto: existente.codigoObjeto,
+      pdfEtiqueta: existente.pdfEtiqueta,
+      custoCentavos: existente.custoCentavos,
+    };
+  }
+
+  const produtos = await prisma.produto.findMany({
+    where: { id: { in: pedido.itens.map((i) => i.produtoId).filter((v): v is string => Boolean(v)) } },
+    select: { id: true, pesoKg: true, alturaCm: true, larguraCm: true, comprimentoCm: true },
+  });
+  const medidas = new Map(produtos.map((p) => [p.id, p]));
+  const paraFrete: ItemCarrinho[] = pedido.itens.map((i) => {
+    const m = i.produtoId ? medidas.get(i.produtoId) : undefined;
+    return {
+      id: i.produtoId ?? i.nome,
+      nome: i.nome,
+      quantidade: i.quantidade,
+      precoUnitario: i.precoUnitarioCentavos,
+      pesoGramas: m?.pesoKg != null ? Math.round(m.pesoKg * 1000) : undefined,
+      alturaCm: m?.alturaCm ?? undefined,
+      larguraCm: m?.larguraCm ?? undefined,
+      comprimentoCm: m?.comprimentoCm ?? undefined,
+    };
+  });
+  const caixa = caixaDoCarrinho(t, paraFrete);
+  const origem = (t.endereco as { numero?: string; complemento?: string } | null);
+  const remetente = enderecoParaMelhorEnvio(
+    t.razaoSocial ?? t.nome,
+    t.emailContato ?? t.loginEmail ?? "",
+    t.whatsapp ?? "",
+    t.cnpj ?? "",
+    {
+      logradouro: String((t.endereco as { logradouro?: string } | null)?.logradouro ?? ""),
+      numero: origem?.numero ?? "s/n",
+      complemento: origem?.complemento,
+      bairro: String((t.endereco as { bairro?: string } | null)?.bairro ?? ""),
+      cidade: String((t.endereco as { cidade?: string } | null)?.cidade ?? ""),
+      uf: String((t.endereco as { uf?: string } | null)?.uf ?? ""),
+      cep: t.cepOrigem ?? "",
+    },
+  );
+  const destinatario = enderecoParaMelhorEnvio(pedido.clienteNome, pedido.clienteEmail, pedido.clienteTelefone, pedido.clienteDocumento, entrega);
+  const criada = await adicionarEnvioAoCarrinho(token, {
+    serviceId: Number(serviceId), remetente, destinatario, caixa,
+    pesoKg: pesoTotalKg(t, paraFrete), valorDeclaradoCentavos: pedido.subtotalCentavos,
+    produtos: pedido.itens.map((i) => ({ nome: i.nome, quantidade: i.quantidade, valorUnitarioCentavos: i.precoUnitarioCentavos })),
+  });
+  const registro = await prisma.postagem.upsert({
+    where: { pedidoId: pedido.id },
+    create: {
+      tenantId: t.id, pedidoId: pedido.id, provedor: "melhorenvio", provedorId: criada.id,
+      provedorProtocolo: criada.protocolo, provedorStatus: criada.status ?? "pending",
+      servico: pedido.freteNome, custoCentavos: 0, cobradoDoCompradorCentavos: pedido.freteCentavos,
+      status: "carrinho", detalhe: "Envio inserido no carrinho do Melhor Envio; compra ainda não realizada.",
+    },
+    update: {
+      provedor: "melhorenvio", provedorId: criada.id, provedorProtocolo: criada.protocolo,
+      provedorStatus: criada.status ?? "pending", servico: pedido.freteNome,
+      cobradoDoCompradorCentavos: pedido.freteCentavos, status: "carrinho",
+      detalhe: "Envio inserido no carrinho do Melhor Envio; compra ainda não realizada.",
+    },
+  });
+  return { status: "pendente", mensagem: "Envio inserido no carrinho do Melhor Envio. Faça a compra para gerar a etiqueta.", codigoObjeto: registro.codigoObjeto, pdfEtiqueta: registro.pdfEtiqueta, custoCentavos: 0 };
+}
+
 /**
  * Emite a etiqueta de um pedido pago e guarda o que ela custou.
  *
@@ -131,20 +234,19 @@ export interface ResultadoEtiqueta {
  */
 export async function emitirEtiqueta(
   t: Tenant,
-  pedido: Pedido & { itens: Array<{ produtoId: string | null; nome: string; quantidade: number; precoUnitarioCentavos: number }> },
+  pedido: PedidoParaPostagem,
 ): Promise<ResultadoEtiqueta> {
   // Antes de qualquer consulta ou chamada à CepCerto: pedido não pago não custa nada.
   const bloqueio = bloqueioDeEtiqueta(pedido.status);
   if (bloqueio) throw new PedidoSemEtiqueta(bloqueio);
 
-  // O frete do pedido foi cotado pelo Melhor Envio, e esta emissão ainda é da
-  // CepCerto. O pedido guarda só o nome do serviço ("PAC", "Jadlog .Package"),
-  // que é igual nos dois: sem esta trava a etiqueta sairia por outro contrato,
-  // a outro preço, e a diferença sairia da carteira sem ninguém ver.
+  // O Melhor Envio tem carteira própria do lojista. Inserir no carrinho não
+  // compra nada; a compra, geração e impressão são operações explícitas.
+  if (pedido.freteId?.startsWith("melhorenvio:")) {
+    return emitirEtiquetaMelhorEnvio(t, pedido);
+  }
   if (melhorEnvioConectado(t)) {
-    throw new PostagemIndisponivel(
-      "A etiqueta pelo Melhor Envio ainda não é gerada pelo painel. Compre a etiqueta na sua conta do Melhor Envio e cole o código de rastreio no pedido.",
-    );
+    throw new PostagemIndisponivel("Este pedido não foi cotado pelo Melhor Envio; a etiqueta precisa usar o provedor registrado no pedido.");
   }
 
   // Teto de adiantamento. A Avila Ops paga a etiqueta e recebe depois; sem um

@@ -51,7 +51,7 @@ export default async function Pagina({ params }: { params: Promise<{ id: string 
           freteNome: pedido.freteNome,
           rastreio: pedido.rastreio,
           etiqueta: pedido.postagem
-            ? { status: pedido.postagem.status, codigoObjeto: pedido.postagem.codigoObjeto, pdf: pedido.postagem.pdfEtiqueta, custoCentavos: pedido.postagem.custoCentavos }
+            ? { provedor: pedido.postagem.provedor, provedorStatus: pedido.postagem.provedorStatus, rastreioUrl: pedido.postagem.rastreioUrl, status: pedido.postagem.status, codigoObjeto: pedido.postagem.codigoObjeto, pdf: pedido.postagem.pdfEtiqueta, custoCentavos: pedido.postagem.custoCentavos }
             : null,
           entrega: (pedido.entrega as { logradouro: string; numero: string; complemento?: string | null; bairro: string; cidade: string; uf: string; cep: string } | null) ?? null,
           criadoEm: pedido.criadoEm.toISOString(),

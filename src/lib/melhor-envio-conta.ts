@@ -21,7 +21,11 @@ import { emitirState as emitirStateAssinado, lerState as lerStateAssinado } from
  * na tela. Pedir permissão de compra de etiqueta antes de existir a compra
  * seria o lojista autorizando gasto que ninguém faz.
  */
-const ESCOPOS = ["shipping-calculate", "users-read"];
+/** Escopos necessários para cotar, comprar, gerar, imprimir, cancelar e rastrear. */
+const ESCOPOS = [
+  "shipping-calculate", "shipping-checkout", "shipping-generate", "shipping-print",
+  "shipping-cancel", "shipping-tracking", "users-read",
+];
 
 const CAMINHO_DE_RETORNO = "/melhor-envio/callback";
 
