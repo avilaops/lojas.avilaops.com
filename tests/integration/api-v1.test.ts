@@ -63,6 +63,36 @@ async function produto(tenantId: string, extras: Parameters<typeof salvarProduto
   });
 }
 
+test("ERP: reposição corrige esgotado, zerar corrige disponibilidade e reenviar não cria histórico", async () => {
+  const t = await loja();
+  const sk = await chave(t.id, "SECRETA", ["catalogo:escrever"]);
+  const p = await produto(t.id, { estoque: 3, disponibilidade: "out_of_stock" });
+  const repor = await enviar({ itens: [{ sku: p.sku, estoque: 3 }] }, sk);
+  assert.equal(repor.corpo.dados.atualizados, 1);
+  let atual = await prisma.produto.findUniqueOrThrow({ where: { id: p.id } });
+  assert.equal(atual.disponibilidade, "in_stock");
+  assert.equal(atual.estoque, 3);
+  const antes = await prisma.historicoCatalogo.count({ where: { produtoId: p.id } });
+  const repetido = await enviar({ itens: [{ sku: p.sku, estoque: 3 }] }, sk);
+  assert.equal(repetido.corpo.dados.semMudanca, 1);
+  assert.equal(await prisma.historicoCatalogo.count({ where: { produtoId: p.id } }), antes);
+  await enviar({ itens: [{ sku: p.sku, estoque: 0 }] }, sk);
+  atual = await prisma.produto.findUniqueOrThrow({ where: { id: p.id } });
+  assert.equal(atual.disponibilidade, "out_of_stock");
+  assert.equal(atual.estoque, 0);
+});
+
+test("ERP: saldo absoluto preserva sob encomenda e estoque nulo não muda disponibilidade", async () => {
+  const t = await loja();
+  const sk = await chave(t.id, "SECRETA", ["catalogo:escrever"]);
+  const p = await produto(t.id, { disponibilidade: "backorder" });
+  await enviar({ itens: [{ sku: p.sku, estoque: 0 }] }, sk);
+  assert.equal((await prisma.produto.findUniqueOrThrow({ where: { id: p.id } })).disponibilidade, "backorder");
+  const outro = await produto(t.id, { disponibilidade: "out_of_stock" });
+  await enviar({ itens: [{ sku: outro.sku, estoque: null }] }, sk);
+  assert.equal((await prisma.produto.findUniqueOrThrow({ where: { id: outro.id } })).disponibilidade, "out_of_stock");
+});
+
 test("chave secreta lê a própria loja e diz quais escopos tem", async () => {
   const t = await loja();
   const sk = await chave(t.id, "SECRETA", ["loja:ler"]);
