@@ -22,13 +22,13 @@ runs:
         set -euo pipefail
         for tipo in $ARTIFACT_TYPES; do
           pasta="$RUNNER_TEMP/lojas-artefatos/lojas-$tipo-$GITHUB_SHA"
-          node scripts/ci/artefato.mjs reunir "$RUNNER_TEMP/lojas-artefatos" "$tipo"
+          node scripts/ci/artefato.mjs restaurar "$RUNNER_TEMP/lojas-artefatos" "$tipo"
           case "$tipo" in
             imagem-contexto)
               mkdir -p "$RUNNER_TEMP/lojas-image"
               tar --zstd -xf "$pasta/payload.tar.zst" -C "$RUNNER_TEMP/lojas-image"
               ;;
-            dependencias|modelo)
+            dependencias|modelo|ferramenta-navegador)
               tar --zstd -xf "$pasta/payload.tar.zst"
               ;;
             build)

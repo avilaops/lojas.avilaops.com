@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { constants, createReadStream, createWriteStream } from "node:fs";
-import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
+import { access, copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { Readable } from "node:stream";
@@ -59,9 +59,23 @@ export async function reunir(root, kind, env = process.env) {
   return verificar(directory, kind, env);
 }
 
+/** Arquivo menor inteiro ou pacote grande em partes; ambos exigem o mesmo manifesto. */
+export async function restaurar(root, kind, env = process.env) {
+  if (typeof kind !== "string" || !/^[a-z-]+$/.test(kind)) throw new Error("INVALID_ARTIFACT_KIND");
+  const { sha } = contexto(env);
+  const directory = path.join(root, `lojas-${kind}-${sha}`);
+  try {
+    await access(path.join(directory, "manifest.json"));
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+    return reunir(root, kind, env);
+  }
+  return verificar(directory, kind, env);
+}
+
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
   const [command, directory, kind] = process.argv.slice(2);
-  const commands = { registrar, verificar, reunir };
+  const commands = { registrar, verificar, reunir, restaurar };
   if (!directory || !kind || !Object.hasOwn(commands, command)) throw new Error("INVALID_ARTIFACT_ARGUMENTS");
   const result = await commands[command](directory, kind);
   console.log(JSON.stringify(result));

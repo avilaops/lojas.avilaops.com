@@ -17,6 +17,7 @@ jobs:
     timeout-minutes: 1
     outputs:
       artifact_id: ${{ steps.arquivo.outputs.ids }}
+      ferramenta_id: ${{ steps.ferramenta.outputs.ids }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -46,6 +47,17 @@ jobs:
         with:
           tipo: dependencias
           pasta: ${{ runner.temp }}/dependencias/
+      - name: Arquivar somente a CLI de navegador da versão do lockfile
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/ferramenta-navegador"
+          tar -I 'zstd -T0 -1' -cf "$RUNNER_TEMP/ferramenta-navegador/payload.tar.zst" node_modules/playwright-core
+      - uses: ./.github/actions/publicar-artefato
+        id: ferramenta
+        with:
+          tipo: ferramenta-navegador
+          partes: '1'
+          pasta: ${{ runner.temp }}/ferramenta-navegador/
 
   unitarios:
     name: testes unitários / parte ${{ matrix.fatia }}
@@ -186,6 +198,7 @@ jobs:
         id: arquivo
         with:
           tipo: build
+          partes: '1'
           pasta: ${{ runner.temp }}/build/
 
   navegador:
@@ -199,8 +212,11 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           persist-credentials: false
-      - uses: ./.github/actions/preparar-node
-      - run: npx playwright install --only-shell chromium
+      - uses: ./.github/actions/preparar-artefatos
+        with:
+          ids: ${{ needs.dependencias.outputs.ferramenta_id }}
+          tipos: ferramenta-navegador
+      - run: node node_modules/playwright-core/cli.js install --only-shell chromium
       - name: Arquivar versão do navegador do lockfile
         run: |
           set -euo pipefail
@@ -212,6 +228,7 @@ jobs:
         id: arquivo
         with:
           tipo: navegador
+          partes: '1'
           pasta: ${{ runner.temp }}/navegador/
 
   fontes:
@@ -225,8 +242,11 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           persist-credentials: false
-      - uses: ./.github/actions/preparar-node
-      - run: npx playwright install-deps chromium
+      - uses: ./.github/actions/preparar-artefatos
+        with:
+          ids: ${{ needs.dependencias.outputs.ferramenta_id }}
+          tipos: ferramenta-navegador
+      - run: node node_modules/playwright-core/cli.js install-deps chromium
       - name: Arquivar todas as fontes preparadas pelo Playwright
         run: |
           set -euo pipefail
@@ -236,6 +256,7 @@ jobs:
         id: arquivo
         with:
           tipo: fontes
+          partes: '1'
           pasta: ${{ runner.temp }}/fontes/
 
   modelo:
@@ -261,6 +282,7 @@ jobs:
         id: arquivo
         with:
           tipo: modelo
+          partes: '1'
           pasta: ${{ runner.temp }}/modelo/
 
   b2b:
@@ -489,6 +511,7 @@ jobs:
         id: arquivo
         with:
           tipo: imagem-contexto
+          partes: '1'
           pasta: ${{ runner.temp }}/imagem-contexto/
 
   image:
