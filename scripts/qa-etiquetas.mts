@@ -100,15 +100,16 @@ try {
   assert.equal((await contexto.request.get(`${base}/api/painel/etiquetas?pagina=0`)).status(), 422);
   assert.equal((await semSessao.request.get(`${base}/api/painel/catalogo?marca=BGL`)).status(), 403);
   await salvarProdutoNoCatalogo(loja.id, null, { nome: "Produto de outra marca", slug: "outra-marca", marca: "SKF", precoCentavos: 1000 });
-  console.log("QA catálogo: abrir produtos");
+  // A mídia de impressão do PDF persiste nas próximas navegações da página.
+  await page.emulateMedia({ media: "screen" });
+  await page.evaluate(() => window.dispatchEvent(new Event("afterprint")));
   await page.goto(`${base}/painel/produtos`, { timeout: 10000 });
   const diagnostico = await contexto.request.get(`${base}/api/painel/catalogo`);
   const diagnosticoDados = await diagnostico.json();
-  console.log("QA catálogo: API", diagnostico.status(), JSON.stringify({ marcas: diagnosticoDados.marcas, erro: diagnosticoDados.erro }), "página", page.url());
-  await page.screenshot({ path: `${pasta}/catalogo-antes-do-filtro.png`, fullPage: true });
+  assert.equal(diagnostico.status(), 200);
+  assert.ok(diagnosticoDados.marcas.includes("BGL"));
   const marca = page.getByRole("combobox", { name: "Marca", exact: true });
   await marca.locator('option[value="BGL"]').waitFor({ state: "attached", timeout: 5000 });
-  console.log("QA catálogo: selecionar BGL");
   const [respostaMarca] = await Promise.all([
     page.waitForResponse((r) => new URL(r.url()).pathname === "/api/painel/catalogo" && new URL(r.url()).searchParams.get("marca") === "BGL", { timeout: 5000 }),
     marca.selectOption("BGL", { timeout: 5000 }),
