@@ -1,0 +1,290 @@
+[
+  {
+    "url": "https://vedashow.com.br/produtos/sav-8x14x3-7882-retentor-8-mm-x-14-mm-x-3-mm-unitario",
+    "httpStatus": 200,
+    "products": [
+      {
+        "sku": "2653",
+        "offers": {
+          "@type": "Offer",
+          "url": "https://vedashow.com.br/produtos/sav-8x14x3-7882-retentor-8-mm-x-14-mm-x-3-mm-unitario",
+          "priceCurrency": "BRL",
+          "price": "100.00",
+          "sku": "2653",
+          "itemCondition": "https://schema.org/NewCondition",
+          "availability": "https://schema.org/OutOfStock",
+          "seller": {
+            "@id": "https://vedashow.com.br/#organization"
+          },
+          "hasMerchantReturnPolicy": {
+            "@id": "https://vedashow.com.br/politicas/devolucao#policy"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "url": "https://vedashow.com.br/produtos/anel-backup-41-83x47-83x1-27-41-83-mm-x-47-83-mm-x-1-27-mm-unitario",
+    "httpStatus": 200,
+    "products": [
+      {
+        "sku": "187",
+        "offers": {
+          "@type": "Offer",
+          "url": "https://vedashow.com.br/produtos/anel-backup-41-83x47-83x1-27-41-83-mm-x-47-83-mm-x-1-27-mm-unitario",
+          "priceCurrency": "BRL",
+          "price": "8.91",
+          "sku": "187",
+          "itemCondition": "https://schema.org/NewCondition",
+          "availability": "https://schema.org/OutOfStock",
+          "seller": {
+            "@id": "https://vedashow.com.br/#organization"
+          },
+          "hasMerchantReturnPolicy": {
+            "@id": "https://vedashow.com.br/politicas/devolucao#policy"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "url": "https://vedashow.com.br/produtos/zsg-6000-2rs-rolamento-radial-esfera-fixo-unitario",
+    "httpStatus": 200,
+    "products": [
+      {
+        "sku": "1947",
+        "offers": {
+          "@type": "Offer",
+          "url": "https://vedashow.com.br/produtos/zsg-6000-2rs-rolamento-radial-esfera-fixo-unitario",
+          "priceCurrency": "BRL",
+          "price": "5.00",
+          "sku": "1947",
+          "itemCondition": "https://schema.org/NewCondition",
+          "availability": "https://schema.org/InStock",
+          "seller": {
+            "@id": "https://vedashow.com.br/#organization"
+          },
+          "hasMerchantReturnPolicy": {
+            "@id": "https://vedashow.com.br/politicas/devolucao#policy"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "url": "https://vedashow.com.br/produtos/anel-backup-4-34x7-04x1-24-4-34-mm-x-7-04-mm-x-1-24-mm-unitario",
+    "httpStatus": 200,
+    "products": [
+      {
+        "sku": "160",
+        "offers": {
+          "@type": "Offer",
+          "url": "https://vedashow.com.br/produtos/anel-backup-4-34x7-04x1-24-4-34-mm-x-7-04-mm-x-1-24-mm-unitario",
+          "priceCurrency": "BRL",
+          "price": "0.90",
+          "sku": "160",
+          "itemCondition": "https://schema.org/NewCondition",
+          "availability": "https://schema.org/OutOfStock",
+          "seller": {
+            "@id": "https://vedashow.com.br/#organization"
+          },
+          "hasMerchantReturnPolicy": {
+            "@id": "https://vedashow.com.br/politicas/devolucao#policy"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "url": "https://vedashow.com.br/produtos/retentor-38-mm-x-52-mm-x-10-mm-38x52x10-nbr-00479-unitario",
+    "httpStatus": 200,
+    "products": [
+      {
+        "sku": "2770",
+        "offers": {
+          "@type": "Offer",
+          "url": "https://vedashow.com.br/produtos/retentor-38-mm-x-52-mm-x-10-mm-38x52x10-nbr-00479-unitario",
+          "priceCurrency": "BRL",
+          "price": "5.93",
+          "sku": "2770",
+          "itemCondition": "https://schema.org/NewCondition",
+          "availability": "https://schema.org/InStock",
+          "seller": {
+            "@id": "https://vedashow.com.br/#organization"
+          },
+          "hasMerchantReturnPolicy": {
+            "@id": "https://vedashow.com.br/politicas/devolucao#policy"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "url": "https://vedashow.com.br/produtos/anel-backup-63-96x73-26x1-93-63-96-mm-x-73-26-mm-x-1-93-mm-unitario",
+    "httpStatus": 200,
+    "products": [
+      {
+        "sku": "220",
+        "offers": {
+          "@type": "Offer",
+          "url": "https://vedashow.com.br/produtos/anel-backup-63-96x73-26x1-93-63-96-mm-x-73-26-mm-x-1-93-mm-unitario",
+          "priceCurrency": "BRL",
+          "price": "21.15",
+          "sku": "220",
+          "itemCondition": "https://schema.org/NewCondition",
+          "availability": "https://schema.org/OutOfStock",
+          "seller": {
+            "@id": "https://vedashow.com.br/#organization"
+          },
+          "hasMerchantReturnPolicy": {
+            "@id": "https://vedashow.com.br/politicas/devolucao#policy"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "url": "https://vedashow.com.br/produtos/sav-45x65x8-02324-br-retentor-agricola-45-mm-x-65-mm-x-8-mm-unitario",
+    "httpStatus": 200,
+    "products": [
+      {
+        "sku": "2025",
+        "offers": {
+          "@type": "Offer",
+          "url": "https://vedashow.com.br/produtos/sav-45x65x8-02324-br-retentor-agricola-45-mm-x-65-mm-x-8-mm-unitario",
+          "priceCurrency": "BRL",
+          "price": "7.00",
+          "sku": "2025",
+          "itemCondition": "https://schema.org/NewCondition",
+          "availability": "https://schema.org/InStock",
+          "seller": {
+            "@id": "https://vedashow.com.br/#organization"
+          },
+          "hasMerchantReturnPolicy": {
+            "@id": "https://vedashow.com.br/politicas/devolucao#policy"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "url": "https://vedashow.com.br/produtos/sav-57-15x77-76x11-9-00067-retentor-57-15-mm-x-77-76-mm-x-11-9-mm-unit",
+    "httpStatus": 200,
+    "products": [
+      {
+        "sku": "2760",
+        "offers": {
+          "@type": "Offer",
+          "url": "https://vedashow.com.br/produtos/sav-57-15x77-76x11-9-00067-retentor-57-15-mm-x-77-76-mm-x-11-9-mm-unit",
+          "priceCurrency": "BRL",
+          "price": "13.60",
+          "sku": "2760",
+          "itemCondition": "https://schema.org/NewCondition",
+          "availability": "https://schema.org/InStock",
+          "seller": {
+            "@id": "https://vedashow.com.br/#organization"
+          },
+          "hasMerchantReturnPolicy": {
+            "@id": "https://vedashow.com.br/politicas/devolucao#policy"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "url": "https://vedashow.com.br/produtos/gaxeta-milimetrica-70x83x10-1411-70-mm-x-83-mm-x-10-mm-unitario",
+    "httpStatus": 200,
+    "products": [
+      {
+        "sku": "929",
+        "offers": {
+          "@type": "Offer",
+          "url": "https://vedashow.com.br/produtos/gaxeta-milimetrica-70x83x10-1411-70-mm-x-83-mm-x-10-mm-unitario",
+          "priceCurrency": "BRL",
+          "price": "29.26",
+          "sku": "929",
+          "itemCondition": "https://schema.org/NewCondition",
+          "availability": "https://schema.org/OutOfStock",
+          "seller": {
+            "@id": "https://vedashow.com.br/#organization"
+          },
+          "hasMerchantReturnPolicy": {
+            "@id": "https://vedashow.com.br/politicas/devolucao#policy"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "url": "https://vedashow.com.br/produtos/zsg-01672-10x22x7-brg-retentor-10-mm-x-22-mm-x-7-mm-unitario",
+    "httpStatus": 200,
+    "products": [
+      {
+        "sku": "3295",
+        "offers": {
+          "@type": "Offer",
+          "url": "https://vedashow.com.br/produtos/zsg-01672-10x22x7-brg-retentor-10-mm-x-22-mm-x-7-mm-unitario",
+          "priceCurrency": "BRL",
+          "price": "4.40",
+          "sku": "3295",
+          "itemCondition": "https://schema.org/NewCondition",
+          "availability": "https://schema.org/InStock",
+          "seller": {
+            "@id": "https://vedashow.com.br/#organization"
+          },
+          "hasMerchantReturnPolicy": {
+            "@id": "https://vedashow.com.br/politicas/devolucao#policy"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "url": "https://vedashow.com.br/produtos/nord-30x50x10-brg-retentor-30-mm-x-50-mm-x-10-mm-unitario",
+    "httpStatus": 200,
+    "products": [
+      {
+        "sku": "3014",
+        "offers": {
+          "@type": "Offer",
+          "url": "https://vedashow.com.br/produtos/nord-30x50x10-brg-retentor-30-mm-x-50-mm-x-10-mm-unitario",
+          "priceCurrency": "BRL",
+          "price": "7.28",
+          "sku": "3014",
+          "itemCondition": "https://schema.org/NewCondition",
+          "availability": "https://schema.org/InStock",
+          "seller": {
+            "@id": "https://vedashow.com.br/#organization"
+          },
+          "hasMerchantReturnPolicy": {
+            "@id": "https://vedashow.com.br/politicas/devolucao#policy"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "url": "https://vedashow.com.br/produtos/zsg-52x100x10-retentor-52-mm-x-100-mm-x-10-mm-unitario",
+    "httpStatus": 200,
+    "products": [
+      {
+        "sku": "3301",
+        "offers": {
+          "@type": "Offer",
+          "url": "https://vedashow.com.br/produtos/zsg-52x100x10-retentor-52-mm-x-100-mm-x-10-mm-unitario",
+          "priceCurrency": "BRL",
+          "price": "22.50",
+          "sku": "3301",
+          "itemCondition": "https://schema.org/NewCondition",
+          "availability": "https://schema.org/InStock",
+          "seller": {
+            "@id": "https://vedashow.com.br/#organization"
+          },
+          "hasMerchantReturnPolicy": {
+            "@id": "https://vedashow.com.br/politicas/devolucao#policy"
+          }
+        }
+      }
+    ]
+  }
+]

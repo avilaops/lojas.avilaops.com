@@ -26,3 +26,20 @@ test("o schema sai com frete zero para o Brasil e só o prazo de despacho", () =
   assert.equal(s.deliveryTime.handlingTime.maxValue, 2);
   assert.equal("transitTime" in s.deliveryTime, false);
 });
+
+
+test("cotação por CEP sem promoção não publica frete, mesmo com origem e despacho", () => {
+  const cotacaoPorCep = loja({ freteGratisAcima: null, tabelaFrete: [], despachoDiasUteis: 0 });
+  for (const preco of [90, 891, 10000, 999999]) {
+    assert.equal(freteGratisGarantido(cotacaoPorCep, preco), false);
+    assert.equal(envioSchema(cotacaoPorCep, preco), undefined);
+    const oferta = JSON.parse(JSON.stringify({ price: (preco / 100).toFixed(2), shippingDetails: envioSchema(cotacaoPorCep, preco) }));
+    assert.equal(Object.hasOwn(oferta, "shippingDetails"), false);
+  }
+});
+
+test("tabela paga sem promoção não vira frete grátis no schema ou no feed", () => {
+  const tabelaPaga = loja({ freteGratisAcima: null, tabelaFrete: [{ ufs: ["*"], preco: 1990, prazoDiasUteis: 3 }] });
+  assert.equal(freteGratisGarantido(tabelaPaga, 50000), false);
+  assert.equal(envioSchema(tabelaPaga, 50000), undefined);
+});
