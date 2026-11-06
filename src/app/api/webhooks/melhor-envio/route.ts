@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
-import { assinaturaMelhorEnvioValida, STATUS_MELHOR_ENVIO } from "@/lib/melhor-envio-webhook";
+import { assinaturaMelhorEnvioValida, alvoPedidoMelhorEnvio, statusPostagemMelhorEnvio, STATUS_MELHOR_ENVIO, transicoesPedidoMelhorEnvio } from "@/lib/melhor-envio-webhook";
+import { mudarStatusDoPedido } from "@/lib/pedidos-status";
 import { avisarEnvio } from "@/lib/postagem";
 
 /** Recebe apenas eventos assinados do aplicativo Melhor Envio da plataforma. */
@@ -19,17 +20,38 @@ export async function POST(request: Request) {
   if (!postagem) return Response.json({ ok: true, ignorado: true });
   const tracking = typeof dado.tracking === "string" && dado.tracking.trim() ? dado.tracking.trim() : null;
   const trackingUrl = typeof dado.tracking_url === "string" && dado.tracking_url.trim() ? dado.tracking_url.trim() : null;
-  const statusPostagem = status === "cancelled" ? "cancelada" : status === "generated" ? "gerada" : ["posted", "delivered"].includes(status) ? "emitida" : ["released", "received"].includes(status) ? "comprada" : postagem.status;
-  const statusPedido = postagem.pedido.status === "PAGO" && ["released", "received", "generated"].includes(status) ? "EM_SEPARACAO" : postagem.pedido.status === "EM_SEPARACAO" && status === "posted" ? "ENVIADO" : ["PAGO", "EM_SEPARACAO", "ENVIADO"].includes(postagem.pedido.status) && status === "delivered" ? "ENTREGUE" : undefined;
-  const notificouRastreio = await prisma.$transaction(async (tx) => {
-    await tx.postagem.update({ where: { id: postagem.id }, data: { provedorStatus: status, codigoObjeto: tracking ?? postagem.codigoObjeto, rastreioUrl: trackingUrl ?? postagem.rastreioUrl, status: statusPostagem } });
-    if (!tracking && !statusPedido) return false;
-    const atualizado = tracking
-      ? await tx.pedido.updateMany({ where: { id: postagem.pedido.id, rastreio: null }, data: { rastreio: tracking, ...(statusPedido ? { status: statusPedido } : {}) } })
-      : { count: 0 };
-    if (statusPedido) await tx.pedido.updateMany({ where: { id: postagem.pedido.id, status: postagem.pedido.status }, data: { status: statusPedido } });
-    return Boolean(tracking && atualizado.count === 1);
+  const statusPostagem = statusPostagemMelhorEnvio(postagem.status, status);
+  await prisma.postagem.update({
+    where: { id: postagem.id },
+    data: {
+      provedorStatus: status,
+      codigoObjeto: tracking ?? postagem.codigoObjeto,
+      rastreioUrl: trackingUrl ?? postagem.rastreioUrl,
+      status: statusPostagem,
+    },
   });
-  if (notificouRastreio && tracking) await avisarEnvio(postagem.tenant, postagem.pedido, tracking);
+
+  const alvoPedido = alvoPedidoMelhorEnvio(postagem.pedido.status, status);
+  const transicoes = alvoPedido ? transicoesPedidoMelhorEnvio(postagem.pedido.status, alvoPedido) : [];
+  const chaveEvento = `melhor-envio:${id}:${evento.event}:${status}:${tracking ?? ""}`;
+  for (const novoStatus of transicoes) {
+    await mudarStatusDoPedido(postagem.tenant, postagem.pedido.id, {
+      status: novoStatus,
+      rastreio: tracking && ["ENVIADO", "ENTREGUE"].includes(novoStatus) ? tracking : undefined,
+      ator: { tipo: "CANAL" },
+      origem: "webhook:melhor-envio",
+      idempotencia: `${chaveEvento}:${novoStatus}`,
+    });
+  }
+
+  if (!transicoes.length && tracking && tracking !== postagem.pedido.rastreio) {
+    await mudarStatusDoPedido(postagem.tenant, postagem.pedido.id, {
+      rastreio: tracking,
+      ator: { tipo: "CANAL" },
+      origem: "webhook:melhor-envio",
+      idempotencia: `${chaveEvento}:rastreio`,
+    });
+    await avisarEnvio(postagem.tenant, postagem.pedido, tracking);
+  }
   return Response.json({ ok: true });
 }
