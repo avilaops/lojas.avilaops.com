@@ -164,6 +164,8 @@ export default function CheckoutScreen({
   const [resultado, setResultado] = useState<ResultadoPagamento | null>(null);
 
   const tituloRef = useRef<HTMLHeadingElement>(null);
+  const consultaCep = useRef(0);
+  useEffect(() => () => { consultaCep.current++; }, []);
 
   const frete = opcoesFrete.find((f) => f.id === freteId) ?? null;
   const retirada = frete?.id === FRETE_RETIRADA_ID;
@@ -194,32 +196,34 @@ export default function CheckoutScreen({
   }
 
   async function preencherPorCep(valor: string) {
+    const consulta = ++consultaCep.current;
     const mascarado = mascararCep(valor);
-    setEndereco((atual) => ({ ...atual, cep: mascarado }));
+    setEndereco((atual) => ({ ...atual, cep: mascarado, logradouro: "", bairro: "", cidade: "", uf: "" }));
+    // Uma cotação pertence ao CEP que a gerou. Nem uma resposta vazia, nem
+    // falha de rede podem deixar selecionada a entrega do endereço anterior.
+    setOpcoesFrete(fretes.filter(f => f.id === FRETE_RETIRADA_ID));
+    setFreteId("");
+    setCepCotado(false);
+    setErros(atual => ({ ...atual, cep: "", frete: "" }));
+    setBuscandoCep(validarCep(mascarado));
     if (!validarCep(mascarado)) return;
-
-    setBuscandoCep(true);
-    const achado = await buscarEnderecoPorCep(mascarado);
-    setBuscandoCep(false);
-
-    if (achado) {
-      setEndereco((atual) => ({
-        ...atual,
-        cep: achado.cep,
-        logradouro: achado.logradouro || atual.logradouro,
-        bairro: achado.bairro || atual.bairro,
-        cidade: achado.cidade,
-        uf: achado.uf,
-      }));
-    }
-
-    if (aoInformarCep) {
-      const cotados = await aoInformarCep(apenasDigitos(mascarado));
-      setCepCotado(true);
-      if (cotados.length) {
+    try {
+      const [achado, cotados] = await Promise.all([
+        buscarEnderecoPorCep(mascarado),
+        aoInformarCep ? aoInformarCep(apenasDigitos(mascarado)) : Promise.resolve(null),
+      ]);
+      if (consulta !== consultaCep.current) return;
+      if (achado) setEndereco(atual => ({ ...atual, cep: mascarado, logradouro: achado.logradouro ?? "", bairro: achado.bairro ?? "", cidade: achado.cidade, uf: achado.uf }));
+      if (cotados) {
+        setCepCotado(true);
         setOpcoesFrete(cotados);
-        setFreteId((atual) => (cotados.some((c) => c.id === atual) ? atual : cotados[0]!.id));
+        // A retirada é sempre decisão explícita, inclusive quando não há envio.
+        setFreteId(cotados.find(c => c.id !== FRETE_RETIRADA_ID)?.id ?? "");
       }
+    } catch {
+      if (consulta === consultaCep.current) setErros(atual => ({ ...atual, cep: "Não foi possível consultar este CEP. Tente novamente ou escolha retirada, se disponível." }));
+    } finally {
+      if (consulta === consultaCep.current) setBuscandoCep(false);
     }
   }
 
@@ -253,7 +257,7 @@ export default function CheckoutScreen({
     if (endereco.bairro.trim().length < 2) novos.bairro = "Informe o bairro.";
     if (endereco.cidade.trim().length < 2) novos.cidade = "Informe a cidade.";
     if (endereco.uf.trim().length !== 2) novos.uf = "UF com duas letras.";
-    if (!freteId) novos.frete = "Escolha uma forma de entrega.";
+    if (!frete || buscandoCep) novos.frete = "Escolha uma forma de entrega confirmada para este CEP.";
     setErros(novos);
     return Object.keys(novos).length === 0;
   }
@@ -546,7 +550,7 @@ export default function CheckoutScreen({
               quando a pessoa clica no que não tokeniza. */}
           {!(passo === "pagamento" && meio === "cartao" && slotCartao) && (
             <button
-              type="button" className="ck-btn ck-btn--primary" disabled={enviando}
+              type="button" className="ck-btn ck-btn--primary" disabled={enviando || (passo === "entrega" && buscandoCep)}
               onClick={() => (passo === "pagamento" ? void finalizar() : avancar())}
             >
               {enviando
