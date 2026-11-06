@@ -7,6 +7,7 @@ export const STATUS_MELHOR_ENVIO = new Set([
 ]);
 
 export type StatusPostagemMelhorEnvio = "carrinho" | "comprada" | "gerada" | "emitida" | "cancelada";
+export type StatusPedidoMelhorEnvio = "EM_SEPARACAO" | "ENVIADO" | "ENTREGUE";
 
 const STATUS_POSTAGEM_POR_EVENTO: Partial<Record<string, StatusPostagemMelhorEnvio>> = {
   released: "comprada",
@@ -51,12 +52,12 @@ export function alvoPedidoMelhorEnvio(atual: PedidoStatus, evento: string): Pedi
 }
 
 /** Retorna somente os passos válidos entre dois estados do pedido. */
-export function transicoesPedidoMelhorEnvio(atual: PedidoStatus, alvo: PedidoStatus): PedidoStatus[] {
+export function transicoesPedidoMelhorEnvio(atual: PedidoStatus, alvo: PedidoStatus): StatusPedidoMelhorEnvio[] {
   const fluxo: PedidoStatus[] = ["PAGO", "EM_SEPARACAO", "ENVIADO", "ENTREGUE"];
   const inicio = fluxo.indexOf(atual);
   const fim = fluxo.indexOf(alvo);
   if (inicio < 0 || fim <= inicio) return [];
-  return fluxo.slice(inicio + 1, fim + 1);
+  return fluxo.slice(inicio + 1, fim + 1).filter((status): status is StatusPedidoMelhorEnvio => status !== "PAGO");
 }
 
 export function assinaturaMelhorEnvioValida(corpo: string, recebida: string | null, segredo = process.env.MELHOR_ENVIO_CLIENT_SECRET ?? ""): boolean {
