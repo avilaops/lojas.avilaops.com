@@ -130,6 +130,14 @@ try {
     try { process.kill(-servidor.pid, "SIGTERM"); } catch (e) { if ((e as NodeJS.ErrnoException).code !== "ESRCH") throw e; }
     await Promise.race([encerrado, new Promise(r => setTimeout(r, 5000))]);
   }
-  if (tenantId) await prisma.tenant.delete({ where: { id: tenantId } });
+  if (tenantId) await prisma.$transaction(async tx => {
+    // O banco conserva reservas e movimentos por variante com RESTRICT.
+    // A fixture é isolada; limpar os registros pertencentes a ela primeiro.
+    await tx.reservaEstoque.deleteMany({ where: { tenantId } });
+    await tx.movimentoEstoque.deleteMany({ where: { tenantId } });
+    await tx.tentativaCatalogo.deleteMany({ where: { tenantId } });
+    await tx.pedido.deleteMany({ where: { tenantId } });
+    await tx.tenant.delete({ where: { id: tenantId } });
+  });
   await prisma.$disconnect();
 }
