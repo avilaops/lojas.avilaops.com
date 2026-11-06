@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ofertaMerchant, imagensMerchant } from "@/lib/merchant-schema";
 import { codigoPublico, rotuloDoCodigo } from "@/lib/codigo-publico";
 import { notFound, permanentRedirect } from "next/navigation";
 import FichaTecnica from "@/components/FichaTecnica";
@@ -125,22 +126,37 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
   const ficha = fichaDoProduto((p.atributos as Record<string, unknown>) ?? {});
   const politicaDevolucao = referenciaPoliticaDevolucao(`${urlDaLoja(t)}/politicas/devolucao`);
 
+  const base = urlDaLoja(t);
+  const pagina = `${base}/produtos/${p.slug}`;
+  const imagens = imagensMerchant(p.imagens, base);
+  const montarOferta = (oferta: Parameters<typeof ofertaMerchant>[0], url: string) => {
+    const schema = ofertaMerchant(oferta, url, `${base}/#organization`, politicaDevolucao, somenteNaLoja);
+    if (!schema) return undefined;
+    const envio = !somenteNaLoja ? envioSchema(t, oferta.precoCentavos) : undefined;
+    return { ...schema, ...(envio ? { shippingDetails: envio } : {}) };
+  };
+  const ofertasSchema = escolhida
+    ? montarOferta(p, `${pagina}${!escolhida.padrao ? `?variante=${encodeURIComponent(escolhida.id)}` : ""}`)
+    : p.opcoes.length === 0
+      ? montarOferta(p, pagina)
+      : ofertas.filter(v => v.precoCentavos > 0).map(v =>
+          montarOferta(v, `${pagina}?variante=${encodeURIComponent(v.id)}`),
+        ).filter(v => v !== undefined);
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: p.nome,
     ...(marcaConfirmada(p.marca) ? { brand: { "@type": "Brand", name: marcaConfirmada(p.marca)! } } : {}),
-    ...(p.sku ? { sku: p.sku } : {}),
+    ...(p.sku && !/\s/u.test(p.sku) ? { sku: p.sku } : {}),
     ...(gtinValido(p.gtin) ? { gtin: p.gtin } : {}),
     ...(escolhida?.mpn ? { mpn: escolhida.mpn } : {}),
     ...(compat.length ? { isAccessoryOrSparePartFor: compat.map((c) => ({ "@type": "Vehicle", name: `${c.marca} ${c.modelo}`, brand: { "@type": "Brand", name: c.marca }, model: c.modelo })) } : {}),
     url: `${urlDaLoja(t)}/produtos/${p.slug}`,
-    // `image: []` é erro no teste de resultados avançados; sem foto, o campo
-    // não sai (a página já é noindex pela régua de `publicavel`).
-    ...(p.imagens.length ? { image: p.imagens } : {}),
+    image: imagens,
     // Texto puro: a descrição importada vem com HTML, e tag dentro do JSON-LD
     // aparece literal no rich result.
-    description: textoPuro(p.descricaoCurta ?? p.descricao) || undefined,
+    description: textoPuro(p.descricaoCurta) || textoPuro(p.descricao) || undefined,
     ...(p.categoria ? { category: p.categoria.nome } : {}),
     // As medidas e características que a ficha visível mostra, como
     // PropertyValue: o mesmo dado, legível por máquina. Nada aqui é inventado;
@@ -156,39 +172,14 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
         }
       : {}),
     ...(resumo.media != null ? { aggregateRating: { "@type": "AggregateRating", ratingValue: resumo.media, reviewCount: resumo.total } } : {}),
-    offers: escolhida && p.precoCentavos > 0 ? {
-      "@type": "Offer",
-      url: `${urlDaLoja(t)}/produtos/${p.slug}${escolhida&&!escolhida.padrao?`?variante=${encodeURIComponent(escolhida.id)}`:""}`,
-      priceCurrency: "BRL",
-      price: (p.precoCentavos / 100).toFixed(2),
-      // O feed diz `condition=new` para todo item; a marcação acompanha.
-      itemCondition: "https://schema.org/NewCondition",
-      availability: somenteNaLoja ? "https://schema.org/InStoreOnly" : `https://schema.org/${regras.disponibilidadeSchema(p)}`,
-      seller: { "@id": `${urlDaLoja(t)}/#organization` },
-      hasMerchantReturnPolicy: politicaDevolucao,
-      // Só quando o frete não depende do CEP. Ver lib/envio-declarado.
-      ...(!somenteNaLoja && envioSchema(t, p.precoCentavos) ? { shippingDetails: envioSchema(t, p.precoCentavos) } : {}),
-    } : ofertas.some(v=>v.precoCentavos>0) ? {
-      "@type": "AggregateOffer",
-      priceCurrency: "BRL",
-      lowPrice: (Math.min(...ofertas.filter(v=>v.precoCentavos>0).map(v=>v.precoCentavos))/100).toFixed(2),
-      highPrice: (Math.max(...ofertas.map(v=>v.precoCentavos))/100).toFixed(2),
-      offerCount: ofertas.filter(v=>v.precoCentavos>0).length,
-      offers: ofertas.filter(v=>v.precoCentavos>0).map(v=>({
-        "@type":"Offer",sku:v.sku??undefined,
-        url:`${urlDaLoja(t)}/produtos/${p.slug}?variante=${encodeURIComponent(v.id)}`,
-        priceCurrency:"BRL",price:(v.precoCentavos/100).toFixed(2),itemCondition:"https://schema.org/NewCondition",
-        availability:`https://schema.org/${regras.disponibilidadeSchema({...p,...v})}`,
-        seller: { "@id": `${urlDaLoja(t)}/#organization` },
-        hasMerchantReturnPolicy: politicaDevolucao,
-        ...(!somenteNaLoja && envioSchema(t, v.precoCentavos) ? { shippingDetails: envioSchema(t, v.precoCentavos) } : {}),
-      })),
-    } : undefined,
+    offers: ofertasSchema,
   };
 
   return (
     <div className="container-loja py-8 ap-produto">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g,"\\u003c") }} />
+      {imagens.length > 0 && ofertasSchema && (!Array.isArray(ofertasSchema) || ofertasSchema.length > 0) && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g,"\\u003c") }} />
+      )}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
         "@context": "https://schema.org",
         "@type": "BreadcrumbList",
