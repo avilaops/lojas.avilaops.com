@@ -1,10 +1,13 @@
 import { MessageCircle } from "lucide-react";
+import { numeroDeContato } from "@/lib/canais-publicos";
 
 export function linkWhatsApp(numero: string, texto: string) {
-  return `https://wa.me/${numero.replace(/\D/g, "")}?text=${encodeURIComponent(texto)}`;
+  const destino = numeroDeContato(numero);
+  return destino ? `https://wa.me/${destino.replace(/^\+/, "")}?text=${encodeURIComponent(texto)}` : "/contato";
 }
 
 export default function WhatsAppFlutuante({ numero, nome }: { numero: string; nome: string }) {
+  if (!numeroDeContato(numero)) return null;
   return (
     <a
       href={linkWhatsApp(numero, `Olá, ${nome}! Vim pelo site.`)}

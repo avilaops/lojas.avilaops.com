@@ -10,10 +10,11 @@ export function extrairPreCargas(css: string, familia: string): string[] {
     const nome = bloco.match(/font-family:\s*["']?([^;"'}]+)["']?/)?.[1]?.trim();
     if (nome !== familia || !/font-style:\s*normal/.test(bloco)) continue;
     // Recorte latino: o minificador escreve U+0000-00FF como `U+??`.
-    if (!/unicode-range:\s*(U\+\?\?|U\+0{1,4}-0{0,2}FF)/i.test(bloco)) continue;
+    // Fontes locais completas não têm unicode-range e também cobrem o latim.
+    if (/unicode-range:/.test(bloco) && !/unicode-range:\s*(U\+\?\?|U\+0{1,4}-0{0,2}FF)/i.test(bloco)) continue;
     const peso = bloco.match(/font-weight:\s*([\d ]+)/)?.[1]?.trim() ?? "";
     const [de, ate] = peso.split(/\s+/).map(Number);
-    const arquivo = bloco.match(/url\(["']?[^)"']*\/media\/([^)"']+\.woff2)["']?\)/)?.[1];
+    const arquivo = bloco.match(/url\(["']?[^)"']*\/media\/([^)"']+\.(?:woff2|ttf))["']?\)/)?.[1];
     if (!arquivo) continue;
     for (const alvo of [400, 700]) if (ate ? de <= alvo && alvo <= ate : de === alvo) achados.set(arquivo, `/_next/static/media/${arquivo}`);
   }

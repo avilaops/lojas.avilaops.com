@@ -14,6 +14,7 @@ import { mensagemDoProduto } from "@/lib/whatsapp-produto";
 import FotoDoCartao from "@/components/FotoDoCartao";
 import { hrefDoProduto } from "@/lib/retorno-catalogo";
 import { fichaCompactaDoProduto, unidadeDeVenda } from "@/lib/ficha-cartao";
+import { numeroDeContato } from "@/lib/canais-publicos";
 
 const ROTULOS_COMPACTOS: Record<string, string> = {
   diametroInternoMm: "DI", diametroExternoMm: "DE", alturaMm: "Alt.",
@@ -21,7 +22,8 @@ const ROTULOS_COMPACTOS: Record<string, string> = {
   espessuraMm: "Esp.", secaoMm: "Seção",
 };
 
-export default function ProductCard({ produto, loja, vende, whatsapp, moto = null, ocultarSeloDestaque = false, compacto = false, alternarImagem = true, retorno = null }: { produto: Produto; loja: Tenant; vende: boolean; whatsapp: string | null; moto?: Moto | null; ocultarSeloDestaque?: boolean; compacto?: boolean; alternarImagem?: boolean; retorno?: string | null }) {
+export default function ProductCard({ produto, loja, vende, whatsapp: whatsappBruto, moto = null, ocultarSeloDestaque = false, compacto = false, alternarImagem = true, retorno = null }: { produto: Produto; loja: Tenant; vende: boolean; whatsapp: string | null; moto?: Moto | null; ocultarSeloDestaque?: boolean; compacto?: boolean; alternarImagem?: boolean; retorno?: string | null }) {
+  const whatsapp = numeroDeContato(whatsappBruto);
   const tecnico = ["distribuidora", "industrial"].includes(temaDo(loja).layout);
   // Na home Indústria a imagem é a foto da linha, com fundo próprio: ocupa o
   // cartão inteiro em vez de ficar encaixada numa moldura branca.
@@ -77,7 +79,7 @@ export default function ProductCard({ produto, loja, vende, whatsapp, moto = nul
 
   return (
     <article className={`cartao-produto${tecnico ? " cartao-produto-tecnico" : ""}${fotoCheia ? " cartao-produto-foto-cheia" : ""} group flex flex-col overflow-hidden rounded-xl border border-border bg-card`}>
-      <Link href={hrefProduto} className={`cartao-produto-imagem relative block overflow-hidden bg-muted${imagem ? " aspect-square" : " cartao-produto-sem-imagem"}`}>
+      <Link href={hrefProduto} className={`cartao-produto-imagem cartao-produto-foto relative block overflow-hidden bg-muted${imagem ? " aspect-square" : " cartao-produto-sem-imagem"}`}>
         {imagem ? (
           <>
             {/* Imagem Principal */}
@@ -105,7 +107,7 @@ export default function ProductCard({ produto, loja, vende, whatsapp, moto = nul
         )}
 
         {/* Badges Flutuantes */}
-        <div className="absolute left-2.5 top-2.5 flex flex-col gap-1 z-10">
+        <div className="cartao-produto-selos absolute left-2.5 top-2.5 z-10 flex flex-col gap-1">
           {percentualDesconto && (
             <span className="rounded-md bg-red-600 px-2 py-0.5 text-[11px] font-black uppercase text-white shadow-sm">
               -{percentualDesconto}% OFF
@@ -171,9 +173,9 @@ export default function ProductCard({ produto, loja, vende, whatsapp, moto = nul
         {!tecnico && codigo && <p className="text-xs text-muted-foreground break-words">{rotuloCodigo}: {codigo}</p>}
         {tecnicos.length > 0 && <dl className="cartao-produto-tecnica">{tecnicos.map(l => <div key={l.chave}><dt>{tecnico && ROTULOS_COMPACTOS[l.chave] ? <abbr title={l.rotulo}>{ROTULOS_COMPACTOS[l.chave]}</abbr> : l.rotulo}</dt><dd>{l.valor}</dd></div>)}</dl>}
         {tecnico && <p className="cartao-produto-identificacao">{marca && <span>{marca}</span>}{codigo && <span>{rotuloCodigo}: {codigo}</span>}{unidadeVenda && <span>Venda: {unidadeVenda}</span>}</p>}
-        <div className={tecnico ? "cartao-produto-disponibilidade" : "contents"}>
+        <div className="cartao-produto-disponibilidade">
           <p className={`cartao-produto-estoque text-xs ${esgotado ? "text-muted-foreground" : "esta-disponivel"}`}>{estado.disponibilidade}</p>
-          <Link href={hrefProduto} className="text-xs underline underline-offset-4">Ver detalhes</Link>
+          <Link href={hrefProduto} className="cartao-produto-detalhes text-xs underline underline-offset-4">Ver detalhes</Link>
         </div>
         <div className="cartao-produto-preco mt-auto pt-1">
           {produto.precoDeCentavos && produto.precoDeCentavos > produto.precoCentavos && (

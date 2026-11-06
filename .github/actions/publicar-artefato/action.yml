@@ -1,0 +1,80 @@
+name: Publicar artefato em partes verificáveis
+description: Publica um arquivo ou quatro partes, preservando o manifesto e hash completo.
+inputs:
+  pasta:
+    description: Pasta contendo payload.tar.zst.
+    required: true
+  tipo:
+    description: Tipo registrado no manifesto.
+    required: true
+  partes:
+    description: Use 1 para arquivos menores; 4 para o pacote grande de dependências.
+    default: '4'
+outputs:
+  ids:
+    description: IDs das quatro partes na ordem de publicação.
+    value: ${{ inputs.partes == '1' && steps.unico.outputs.artifact-id || format('{0},{1},{2},{3}', steps.parte0.outputs.artifact-id, steps.parte1.outputs.artifact-id, steps.parte2.outputs.artifact-id, steps.parte3.outputs.artifact-id) }}
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        ARTIFACT_DIR: ${{ inputs.pasta }}
+        ARTIFACT_KIND: ${{ inputs.tipo }}
+        ARTIFACT_PARTS: ${{ inputs.partes }}
+      run: |
+        set -euo pipefail
+        node scripts/ci/artefato.mjs registrar "$ARTIFACT_DIR" "$ARTIFACT_KIND"
+        [[ "$ARTIFACT_PARTS" == 1 || "$ARTIFACT_PARTS" == 4 ]]
+        if [[ "$ARTIFACT_PARTS" == 4 ]]; then
+          split -d -n 4 "$ARTIFACT_DIR/payload.tar.zst" "$ARTIFACT_DIR/part-"
+        fi
+    - id: unico
+      if: inputs.partes == '1'
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      with:
+        name: lojas-${{ inputs.tipo }}-${{ github.sha }}
+        path: |
+          ${{ inputs.pasta }}/payload.tar.zst
+          ${{ inputs.pasta }}/manifest.json
+        if-no-files-found: error
+        compression-level: 0
+        retention-days: 7
+    - id: parte0
+      if: inputs.partes == '4'
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      with:
+        name: lojas-${{ inputs.tipo }}-00-${{ github.sha }}
+        path: |
+          ${{ inputs.pasta }}/part-00
+          ${{ inputs.pasta }}/manifest.json
+        if-no-files-found: error
+        compression-level: 0
+        retention-days: 7
+    - id: parte1
+      if: inputs.partes == '4'
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      with:
+        name: lojas-${{ inputs.tipo }}-01-${{ github.sha }}
+        path: ${{ inputs.pasta }}/part-01
+        if-no-files-found: error
+        compression-level: 0
+        retention-days: 7
+    - id: parte2
+      if: inputs.partes == '4'
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      with:
+        name: lojas-${{ inputs.tipo }}-02-${{ github.sha }}
+        path: ${{ inputs.pasta }}/part-02
+        if-no-files-found: error
+        compression-level: 0
+        retention-days: 7
+    - id: parte3
+      if: inputs.partes == '4'
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      with:
+        name: lojas-${{ inputs.tipo }}-03-${{ github.sha }}
+        path: ${{ inputs.pasta }}/part-03
+        if-no-files-found: error
+        compression-level: 0
+        retention-days: 7

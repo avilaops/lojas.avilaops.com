@@ -55,6 +55,10 @@ test("sem cidade e sem canal a frase continua inteira, sem inventar", () => {
   assert.equal(descricaoDaPagina({ nome: "Loja", endereco: { cidade: 12 } }, "sobre"), "Conheça a Loja: quem somos, o que oferecemos e como atendemos.");
 });
 
+test("descrição de contato não anuncia canais inválidos ou horário vazio", () => {
+  assert.equal(descricaoDaPagina({ nome: "Loja", endereco: null, whatsapp: "inválido", telefone: "ramal 7", emailContato: "sem-arroba", horario: "   " }, "contato"), "Fale com a Loja: canais de atendimento.");
+});
+
 test("nome longo: a cidade sai primeiro, e o que sobrar é cortado em 155", () => {
   const nome = "Distribuidora Nacional de Componentes Hidráulicos e Pneumáticos do Interior Paulista";
   const d = descricaoDaPagina({ nome, endereco: { cidade: "São José do Rio Preto", uf: "SP" } }, "envio");

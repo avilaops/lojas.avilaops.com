@@ -31,7 +31,7 @@ export const listarCategorias = cache(async (tenantId: string) => {
   // do catálogo) pedem a mesma lista na mesma requisição, e cada pedido são
   // N subconsultas de contagem. Uma ida ao banco por requisição.
   const categorias = await prisma.categoria.findMany({
-    where: { tenantId, produtos: { some: { ativo: true } } },
+    where: { tenantId, ativo: true, produtos: { some: { ativo: true } } },
     include: { _count: { select: { produtos: { where: { ativo: true } } } } },
     orderBy: [{ ordem: "asc" }, { nome: "asc" }],
   });
@@ -315,7 +315,7 @@ export function condicaoProdutos(tenantId: string, filtro?: FiltroCatalogo): Pri
       ...(filtro?.imagemOrigem ? { imagemOrigem: filtro.imagemOrigem } : {}),
       ...(typeof filtro?.fabricante === "string" && filtro.fabricante ? { marca: { equals: filtro.fabricante, mode: "insensitive" } } : {}),
       ...(Array.isArray(filtro?.fabricante) && filtro.fabricante.length ? { marca: { in: filtro.fabricante, mode: "insensitive" } } : {}),
-      ...(filtro?.categoriaSlug ? { categoria: { slug: filtro.categoriaSlug } } : {}),
+      ...(filtro?.categoriaSlug ? { categoria: { slug: filtro.categoriaSlug, ativo: true } } : {}),
       ...(filtro?.excetoId ? { id: { not: filtro.excetoId } } : {}),
       ...(filtro?.minCentavos != null || filtro?.maxCentavos != null
         ? { precoCentavos: { ...(filtro.minCentavos != null ? { gte: filtro.minCentavos } : {}), ...(filtro.maxCentavos != null ? { lte: filtro.maxCentavos } : {}) } }
@@ -495,7 +495,7 @@ export async function medidasDaLoja(tenantId: string, categoriaSlug?: string) {
 }
 
 async function medidasDaLojaSemCache(tenantId: string, categoriaSlug?: string) {
-  const linhas = await prisma.produto.findMany({ where: { tenantId, ativo: true, ...(categoriaSlug ? { categoria: { slug: categoriaSlug } } : {}) }, select: { atributos: true } });
+  const linhas = await prisma.produto.findMany({ where: { tenantId, ativo: true, ...(categoriaSlug ? { categoria: { slug: categoriaSlug, ativo: true } } : {}) }, select: { atributos: true } });
   const valores = new Map<ChaveDeMedida, number[]>();
   for (const l of linhas) {
     const attr = (l.atributos ?? {}) as Record<string, unknown>;
@@ -576,24 +576,6 @@ export async function resumoAvaliacoes(produtoId: string) {
 
 export async function buscarProduto(tenantId: string, slug: string) {
   return prisma.produto.findFirst({ where: { tenantId, slug, ativo: true }, include: INCLUIR_CATALOGO });
-}
-
-/**
- * Para onde vai o endereço de um cadastro repetido que saiu da vitrine.
- *
- * O ERP do lojista às vezes tem a mesma peça em dois ou três códigos (a
- * Vedashow tinha o anel 2007 em 307, 1445 e 4919, só um com saldo). Quem
- * importa pode tirar o repetido da vitrine declarando no produto inativo
- * `atributos.equivalenteA` = SKU do cadastro que fica. O registro continua —
- * com o mesmo SKU, que é o vínculo com o ERP —, e o endereço antigo leva ao
- * produto que fica em vez de virar 404 para quem salvou o link.
- */
-export async function slugDoEquivalente(tenantId: string, slug: string): Promise<string | null> {
-  const inativo = await prisma.produto.findFirst({ where: { tenantId, slug, ativo: false }, select: { atributos: true } });
-  const alvo = (inativo?.atributos as Record<string, unknown> | null)?.equivalenteA;
-  if (typeof alvo !== "string" || !alvo.trim()) return null;
-  const ativo = await prisma.produto.findFirst({ where: { tenantId, sku: alvo.trim(), ativo: true }, select: { slug: true } });
-  return ativo && ativo.slug !== slug ? ativo.slug : null;
 }
 
 /**
@@ -809,7 +791,7 @@ export function grafiasDaMarca(facetas: FacetaMarca[], escolhida?: string | stri
 /** Facetas pertencem à loja e à família selecionada; só valores cadastrados. */
 export async function facetasTecnicas(tenantId: string, categoriaSlug?: string) {
   const linhas = await prisma.produto.findMany({
-    where: { tenantId, ativo: true, ...(categoriaSlug ? { categoria: { slug: categoriaSlug } } : {}) },
+    where: { tenantId, ativo: true, ...(categoriaSlug ? { categoria: { slug: categoriaSlug, ativo: true } } : {}) },
     select: { marca: true, atributos: true },
   });
   const fabricantes = agruparMarcas(linhas.map(p => p.marca));

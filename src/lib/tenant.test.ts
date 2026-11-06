@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type { Tenant } from "@prisma/client";
-import { contatoConfigurado, enderecoCompleto, formatarCep, lojaVende, marcaQuadradaDa, porOndeFalarCom, prazoDeDespacho } from "./tenant";
+import { contatoConfigurado, enderecoCompleto, formatarCep, lojaVende, marcaQuadradaDa, porOndeFalarCom, prazoDeDespacho, tenantPublico } from "./tenant";
 
 /**
  * `lojaVende` decide se a loja mostra "Finalizar compra" ou "Pedir pelo
@@ -78,7 +78,15 @@ test("loja sem canal nenhum é loja sem contato, e a página precisa saber", () 
   // Com todos os campos vazios, /contato servia um <h1> e uma lista sem itens.
   assert.equal(contatoConfigurado(loja({})), false);
   assert.equal(contatoConfigurado(loja({ telefone: "1633334444" })), true);
-  assert.equal(contatoConfigurado(loja({ enderecoPublico: true })), true);
+  assert.equal(contatoConfigurado(loja({ enderecoPublico: true })), false);
+  assert.equal(contatoConfigurado(loja({ enderecoPublico: true, endereco: { logradouro: "Rua A", numero: "10", cidade: "Franca", uf: "SP", cep: "14400000" } })), true);
+});
+
+test("canais inválidos não habilitam atendimento nem chegam ao navegador", () => {
+  const t = loja({ nome: "Loja", whatsapp: "ligue 1634413180", telefone: "ramal 7", emailContato: "inválido", enderecoPublico: true });
+  assert.equal(contatoConfigurado(t), false);
+  assert.equal(tenantPublico(t).whatsapp, null);
+  assert.equal(tenantPublico(loja({ nome: "Loja", whatsapp: "(16) 3441-3180" })).whatsapp, "551634413180");
 });
 
 test("a marca do compartilhamento é o ladrilho do favicon, não o logo cru", () => {

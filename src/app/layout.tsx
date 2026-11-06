@@ -216,7 +216,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="pt-BR" data-ck-theme={tema.modo === "escuro" ? "dark" : "light"} data-template={contrato.atributoHtml ? contrato.layout : undefined} data-modo={tema.modo} suppressHydrationWarning={contrato.atributoHtml}>
       <head>
-        {preCargasDaFonte(tema.fonte).map((href) => <link key={href} rel="preload" as="font" type="font/woff2" href={href} crossOrigin="anonymous" />)}
+        {preCargasDaFonte(tema.fonte).map((href) => <link key={href} rel="preload" as="font" type={href.endsWith(".ttf") ? "font/ttf" : "font/woff2"} href={href} crossOrigin="anonymous" />)}
         <style dangerouslySetInnerHTML={{ __html: `${cssDoTema(tema, familiaHospedada(tema.fonte))}:root{--brand-support:${identidade.corApoio};--fonte-serif:${familiaSerifAtelie().replace(/</g, "")}}` }} />
         {contrato.atributoHtml && <script dangerouslySetInnerHTML={{ __html: `try{var m=localStorage.getItem(${JSON.stringify(`loja:${t.slug}:modo`).replace(/</g,"\\u003c")});if(m==='claro'||m==='escuro'){document.documentElement.dataset.modo=m;document.documentElement.dataset.ckTheme=m==='escuro'?'dark':'light'}}catch(e){}` }}/ >}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
@@ -249,10 +249,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <main id="conteudo-loja" className="flex-1">{children}</main>
           <Footer tenant={t} categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} temBlog={publicacoes > 0} />
           {carrinhoProprio && <CarrinhoLateral pedidoMinimoCentavos={publico.pedidoMinimoCentavos}/>}
-          {t.whatsapp && <WhatsAppFlutuante numero={t.whatsapp} nome={t.nome} />}
+          {identidadeComercial.whatsapp && <WhatsAppFlutuante numero={identidadeComercial.whatsapp.numero} nome={t.nome} />}
           {/* Navegação do celular. Vale para todos os layouts: é da loja, não
               do template. As abas saem do que a loja faz — ver o componente. */}
-          <BarraInferior vende={publico.vende} temContato={Boolean(t.whatsapp || t.telefone || t.emailContato)} />
+          <BarraInferior vende={publico.vende} temContato={Boolean(identidadeComercial.whatsapp || identidadeComercial.telefone || identidadeComercial.email || identidadeComercial.enderecoVisita)} />
           {t.googleMerchantId && t.googleSeloAvaliacoes && <SeloAvaliacaoGoogle merchantId={t.googleMerchantId} />}
           <Consentimento ativo={temRastreio(pixels)} />
         </CartProvider>

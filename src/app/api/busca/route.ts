@@ -22,7 +22,7 @@ export const GET = medirRota("busca", async function (request: Request) {
     listarProdutos(t.id, { busca: consulta, limite: 6 }),
     prisma.categoria.findMany({
       // Mesma regra da vitrine: não sugerir categoria sem produto ativo.
-      where: { tenantId: t.id, nome: { contains: termos[0], mode: "insensitive" }, produtos: { some: { ativo: true } } },
+      where: { tenantId: t.id, ativo: true, nome: { contains: termos[0], mode: "insensitive" }, produtos: { some: { ativo: true } } },
       select: { slug: true, nome: true },
       take: 3,
     }),

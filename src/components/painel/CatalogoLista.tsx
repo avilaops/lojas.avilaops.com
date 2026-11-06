@@ -43,7 +43,7 @@ type Item = {
   descricaoErp: string | null;
 };
 
-type Resposta = { total: number; pagina: number; paginas: number; porPagina: number; produtos: Item[] };
+type Resposta = { total: number; pagina: number; paginas: number; porPagina: number; produtos: Item[]; marcas: string[] };
 
 const brl = (c: number) => (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -105,6 +105,7 @@ export default function CatalogoLista({
   const [busca, setBusca] = useState("");
   const [aplicada, setAplicada] = useState("");
   const [categoria, setCategoria] = useState("");
+  const [marca, setMarca] = useState("");
   const [situacao, setSituacao] = useState("");
   const [pagina, setPagina] = useState(1);
   const [carregando, setCarregando] = useState(true);
@@ -121,30 +122,45 @@ export default function CatalogoLista({
     return () => { if (relogio.current) clearTimeout(relogio.current); };
   }, [busca]);
 
-  const carregar = useCallback(async () => {
+  const carregar = useCallback(async (signal?: AbortSignal) => {
     setCarregando(true);
     const p = new URLSearchParams({ pagina: String(pagina) });
     if (aplicada) p.set("q", aplicada);
     if (categoria) p.set("categoria", categoria);
+    if (marca) p.set("marca", marca);
     if (situacao) p.set("situacao", situacao);
     try {
-      const r = await fetch(`/api/painel/catalogo?${p}`);
-      if (r.ok) setDados((await r.json()) as Resposta);
+      const r = await fetch(`/api/painel/catalogo?${p}`, { signal });
+      if (r.ok) {
+        const resposta = (await r.json()) as Resposta;
+        if (!signal?.aborted) setDados(resposta);
+      }
     } catch {
       // Falha de rede não apaga a lista que já está na tela.
     } finally {
-      setCarregando(false);
+      if (!signal?.aborted) setCarregando(false);
     }
-  }, [pagina, aplicada, categoria, situacao]);
+  }, [pagina, aplicada, categoria, marca, situacao]);
 
-  useEffect(() => { void carregar(); }, [carregar]);
+  useEffect(() => {
+    const controle = new AbortController();
+    void carregar(controle.signal);
+    return () => controle.abort();
+  }, [carregar]);
 
   async function desativar(p: Item) {
     await chamar(`/api/painel/produtos?id=${p.id}`, "DELETE", undefined, "Produto desativado.");
     void carregar();
   }
 
-  const filtrando = Boolean(aplicada || categoria || situacao);
+  const filtrando = Boolean(aplicada || categoria || marca || situacao);
+  async function alterarFiltrados(ativo: boolean) {
+    if (!marca && !categoria) return;
+    const alvo = [marca && `marca ${marca}`, categoria && `categoria ${categoria}`].filter(Boolean).join(" e ");
+    if (!window.confirm(`${ativo ? "Reativar" : "Desativar"} ${dados?.total ?? 0} produto(s) filtrado(s) por ${alvo}?`)) return;
+    await chamar("/api/painel/produtos/lote", "POST", { q: aplicada || undefined, marca: marca || undefined, categoria: categoria || undefined, situacao: situacao || undefined, ativo }, `${ativo ? "Produtos reativados" : "Produtos desativados"}.`);
+    void carregar();
+  }
 
   const preco = (p: Item) =>
     p.precoCentavos > 0 ? brl(p.precoCentavos) : <span className="text-muted-foreground">sob consulta</span>;
@@ -161,29 +177,48 @@ export default function CatalogoLista({
   return (
     <Secao
       titulo="Catálogo"
-      descricao="Procure pelo nome, código ou medida. Toque no produto para editar fotos, descrição, estoque e preço."
+      descricao="Procure pelo nome, marca, código ou medida. Toque no produto para editar fotos, descrição, estoque e preço."
     >
       <Filtros
         busca={busca}
         aoBuscar={setBusca}
-        exemplo="Nome, código ou medida (ex.: 6205, 25x52x15)"
+        exemplo="Nome, marca, código ou medida (ex.: BGL, 6205, 25x52x15)"
         ativa={situacao}
         aoEscolher={(v) => { setSituacao(v); setPagina(1); }}
         fichas={SITUACOES}
         extra={
-          <select
-            className="h-11 w-full min-w-0 rounded-lg border border-border bg-background px-3 text-base sm:w-auto sm:flex-none sm:text-sm"
-            value={categoria}
-            onChange={(e) => { setCategoria(e.target.value); setPagina(1); }}
-            aria-label="Categoria"
-          >
-            <option value="">Todas as categorias</option>
-            {categorias.map((c) => (
-              <option key={c.slug} value={c.slug}>{c.nome}</option>
-            ))}
-          </select>
+          <div className="grid gap-2 sm:flex sm:flex-wrap">
+            <select
+              className="h-11 w-full min-w-0 rounded-lg border border-border bg-background px-3 text-base sm:w-auto sm:flex-none sm:text-sm"
+              value={categoria}
+              onChange={(e) => { setCategoria(e.target.value); setPagina(1); }}
+              aria-label="Categoria"
+            >
+              <option value="">Todas as categorias</option>
+              {categorias.map((c) => (
+                <option key={c.slug} value={c.slug}>{c.nome}</option>
+              ))}
+            </select>
+            <select
+              className="h-11 w-full min-w-0 rounded-lg border border-border bg-background px-3 text-base sm:w-auto sm:max-w-64 sm:flex-none sm:text-sm"
+              value={marca}
+              onChange={(e) => { setMarca(e.target.value); setPagina(1); }}
+              aria-label="Marca"
+            >
+              <option value="">Todas as marcas</option>
+              {(dados?.marcas ?? []).map((m) => <option key={m} value={m}>{m}</option>)}
+            </select>
+          </div>
         }
       />
+
+      {(marca || categoria) && dados && (
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-muted/30 p-3 text-sm">
+          <span className="mr-auto text-muted-foreground">Ações para os {dados.total.toLocaleString("pt-BR")} produtos filtrados:</span>
+          <button className="btn-secundario" disabled={ocupado || carregando || dados.total === 0} onClick={() => void alterarFiltrados(false)}>Desativar filtrados</button>
+          <button className="btn-secundario" disabled={ocupado || carregando || dados.total === 0} onClick={() => void alterarFiltrados(true)}>Reativar filtrados</button>
+        </div>
+      )}
 
       <ImportarFotosPorSku ocupado={ocupado} aoConcluir={() => void carregar()} />
 
@@ -202,7 +237,7 @@ export default function CatalogoLista({
                 {!p.ativo && " (inativo)"}
               </>
             )}
-            subtitulo={(p) => [p.descricaoErp && p.descricaoErp !== p.nome && `ERP: ${p.descricaoErp}`, p.categoria, p.sku && `Código ${p.sku}`].filter(Boolean).join(" · ") || null}
+            subtitulo={(p) => [p.descricaoErp && p.descricaoErp !== p.nome && `ERP: ${p.descricaoErp}`, p.marca, p.categoria, p.sku && `Código ${p.sku}`].filter(Boolean).join(" · ") || null}
             selo={(p) => (
               <>
                 <b className="tabular-nums">{preco(p)}</b>
@@ -224,6 +259,7 @@ export default function CatalogoLista({
                 ? [{ rotulo: "Descrição no ERP", celula: (p: Item) => <span className="text-muted-foreground">{p.descricaoErp ?? "—"}</span> }]
                 : []),
               { rotulo: "Categoria", celula: (p) => p.categoria ?? "—", largura: "w-32" },
+              { rotulo: "Marca", celula: (p) => p.marca ?? "—", largura: "w-28" },
               { rotulo: "Código", celula: (p) => p.sku ?? "—", largura: "w-24" },
               { rotulo: "Preço", celula: preco, largura: "w-28", numero: true },
               { rotulo: "Estoque", celula: estoque, largura: "w-32", numero: true },
@@ -250,7 +286,7 @@ export default function CatalogoLista({
                 }
                 acao={
                   filtrando
-                    ? { rotulo: "Limpar filtros", onClick: () => { setBusca(""); setCategoria(""); setSituacao(""); } }
+                    ? { rotulo: "Limpar filtros", onClick: () => { setBusca(""); setCategoria(""); setMarca(""); setSituacao(""); setPagina(1); } }
                     : undefined
                 }
               />
@@ -274,7 +310,7 @@ export default function CatalogoLista({
             <BaixarPlanilha
               tipo="produtos"
               total={dados.total}
-              filtros={{ q: aplicada, categoria, situacao }}
+              filtros={{ q: aplicada, categoria, marca, situacao }}
               rotulo={
                 filtrando
                   ? `Baixar estes ${dados.total.toLocaleString("pt-BR")} produtos:`

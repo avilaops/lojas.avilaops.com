@@ -1,6 +1,7 @@
 import { diagnosticarProduto, midiasDaOferta, type OcorrenciaCatalogo, type ProdutoCatalogo } from "./catalogo-qualidade";
 import { ofertaDaVariante } from "./catalogo-oferta";
 import { marcaConfirmada } from "./marca-confirmada";
+import { medidaValida } from "./catalogo";
 
 const CAMPOS = ["nome", "categoria", "marca", "sku", "unidade", "ncm", "descricao", "imagem", "estoque", "preco", "medidas"] as const;
 type CampoGovernanca = typeof CAMPOS[number];
@@ -53,23 +54,23 @@ export function normalizarSku(valor: string | null | undefined): string | null {
 function familiaDaCategoria(nome: string | null | undefined): FamiliaCatalogo {
   const categoria = normalizar(nome);
   if (/\bretentor(?:es)?\b/.test(categoria)) return "retentor";
-  if (/\b(?:o[ -]?rings?|aneis? o)\b/.test(categoria)) return "oring";
+  if (/\b(?:o[ -]?rings?|an(?:el|eis) o)\b/.test(categoria)) return "oring";
   if (/\brolamento(?:s)?\b/.test(categoria)) return "rolamento";
   return "outra";
 }
 
 function preenchido(valor: unknown): boolean {
-  return valor !== null && valor !== undefined && String(valor).trim() !== "";
+  return typeof valor === "string" && valor.trim() !== "";
 }
 
 function ncmValido(...valores: unknown[]): boolean {
-  return valores.some((valor) => typeof valor === "string" && /^\d{8}$/.test(valor.replace(/\D/g, "")));
+  return valores.some((valor) => typeof valor === "string" && /^(?:\d{8}|\d{4}\.\d{2}\.\d{2})$/.test(valor.trim()));
 }
 
 function medidaPositiva(atributos: Record<string, unknown>, ...chaves: string[]): boolean {
   return chaves.some((chave) => {
-    const valor = Number(atributos[chave]);
-    return Number.isFinite(valor) && valor > 0;
+    const valor = atributos[chave];
+    return (typeof valor === "number" || typeof valor === "string") && medidaValida(Number(valor));
   });
 }
 
@@ -85,9 +86,10 @@ function medidasPreenchidas(familia: FamiliaCatalogo, atributos: Record<string, 
       && medidaPositiva(atributos, "larguraMm", "alturaMm");
   }
   return Object.entries(atributos).some(([chave, valor]) => {
+    if (["comprimentoCm", "larguraCm", "alturaCm"].includes(chave)) return false;
     if (!/(?:Mm|medida|bitola|diametro|altura|largura|comprimento|espessura|secao)/i.test(chave)) return false;
-    if (/Mm$/i.test(chave)) return Number.isFinite(Number(valor)) && Number(valor) > 0;
-    return preenchido(valor);
+    if (/Mm$/i.test(chave)) return medidaPositiva(atributos, chave);
+    return medidaPositiva(atributos, chave) || preenchido(valor);
   });
 }
 

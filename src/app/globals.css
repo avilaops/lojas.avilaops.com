@@ -1225,17 +1225,72 @@ html[data-cookies-respondido] .aviso-cookies { display: none; }
 .cartao-produto-tecnico .cartao-produto-preco { padding-top: .5rem; }
 .cartao-produto-tecnico .btn-primario, .cartao-produto-tecnico .btn-secundario { min-height: 44px; padding: .5rem; }
 [data-layout="distribuidora"] .marca-loja img { height: 62px; max-width: 190px; }
-/* A arte de campanha é 8:3 no computador e 4:5 no celular. A altura acompanha
-   a proporção da arte até um teto, para o catálogo aparecer na primeira tela;
-   `contain` preserva o texto da arte, e a faixa lateral usa a cor do fundo. */
+/* A arte de campanha ocupa o hero sem sobras de fundo. Quando há copy, um
+   degradê próprio assegura leitura; campanhas que só contêm a arte não mudam. */
+[data-layout="distribuidora"] .campanhas-hero-com-conteudo { position: relative; isolation: isolate; overflow: hidden; background: #101d39; }
+[data-layout="distribuidora"] .campanhas-hero-com-conteudo::after { position: absolute; z-index: 1; inset: 0; pointer-events: none; background: linear-gradient(90deg, rgba(8, 18, 42, .82) 0%, rgba(8, 18, 42, .54) 34%, rgba(8, 18, 42, .08) 66%, rgba(8, 18, 42, .1) 100%); content: ""; }
 [data-layout="distribuidora"] .banner-campanha picture { height: min(calc(100vw * 3 / 8), 340px); min-height: 180px; }
-[data-layout="distribuidora"] .banner-campanha img { height: 100%; object-fit: contain; }
+[data-layout="distribuidora"] .banner-campanha img { height: 100%; object-fit: cover; object-position: center; }
+[data-layout="distribuidora"] .campanhas-hero-conteudo { position: absolute; z-index: 2; inset: 0; display: flex; align-items: center; pointer-events: none; }
+[data-layout="distribuidora"] .campanhas-hero-conteudo > div { display: grid; gap: .75rem; width: min(100% - 2rem, 37rem); color: #fff; pointer-events: auto; }
+[data-layout="distribuidora"] .campanhas-hero-conteudo h1 { max-width: 17ch; font-size: clamp(1.65rem, 3.3vw, 3rem); font-weight: 800; line-height: 1.05; letter-spacing: -.045em; text-wrap: balance; }
+[data-layout="distribuidora"] .campanhas-hero-conteudo p { max-width: 56ch; font-size: clamp(.9rem, 1.4vw, 1.05rem); line-height: 1.55; }
+[data-layout="distribuidora"] .campanhas-hero-conteudo .btn-primario { width: fit-content; margin-top: .35rem; background: #fff; color: #101d39; }
+[data-layout="distribuidora"] .campanhas-hero-conteudo .btn-primario:hover { background: #f2f5fb; }
+[data-layout="distribuidora"] .banner-campanhas-seta, [data-layout="distribuidora"] .banner-campanhas-pontos { z-index: 3; }
 [data-layout="distribuidora"] .home-campanhas { gap: 1.5rem; padding-bottom: 0; }
 [data-layout="distribuidora"] .rodape-loja { margin-top: 2rem; }
 [data-layout="distribuidora"] .campanhas-ver-todos { margin-top: .75rem; margin-bottom: 0; }
+/* Catálogo Domi-Rio: a ação continua com 44px de toque, mas deixa de formar
+   uma faixa roxa pesada sob todos os produtos. A mistura mantém contraste e
+   a cor plena retorna no hover/foco como confirmação da ação. */
+[data-layout="distribuidora"] .cartao-produto button.btn-primario {
+  border: 1px solid color-mix(in srgb, var(--primary) 74%, var(--border));
+  background: color-mix(in srgb, var(--primary) 86%, var(--background));
+  box-shadow: none;
+}
+[data-layout="distribuidora"] .cartao-produto button.btn-primario:hover {
+  background: var(--primary);
+}
+[data-layout="distribuidora"] .cartao-produto button.btn-primario:focus-visible {
+  background: var(--primary);
+}
+/* A moldura continua quadrada, mas a pequena escala neutraliza fotos de
+   fornecedor com margens brancas internas sem cortar a embalagem. */
+[data-layout="distribuidora"] .cartao-produto-foto {
+  background: color-mix(in srgb, var(--muted) 58%, #fff);
+}
+[data-layout="distribuidora"] .cartao-produto-foto > img {
+  padding: .65rem;
+  transform: scale(1.05);
+}
+[data-layout="distribuidora"] .cartao-produto-selos {
+  left: .75rem;
+  top: .75rem;
+}
+[data-layout="distribuidora"] .cartao-produto-disponibilidade {
+  align-items: baseline;
+  min-height: 1.5rem;
+}
+[data-layout="distribuidora"] .cartao-produto-detalhes {
+  color: color-mix(in srgb, var(--primary) 84%, var(--foreground));
+  font-size: .6875rem;
+  font-weight: 650;
+  text-underline-offset: 3px;
+}
+@media (min-width: 641px) {
+  [data-layout="distribuidora"] .cartao-produto-detalhes {
+    padding: .25rem 0 .25rem .5rem;
+  }
+}
 @media (max-width: 640px) {
   [data-layout="distribuidora"] .marca-loja img { height: 60px; max-width: 170px; }
   [data-layout="distribuidora"] .banner-campanha picture { aspect-ratio: auto; height: min(calc(100vw * 5 / 4), 42svh); min-height: 0; }
+  [data-layout="distribuidora"] .campanhas-hero-com-conteudo::after { background: linear-gradient(0deg, rgba(8, 18, 42, .84) 0%, rgba(8, 18, 42, .34) 58%, rgba(8, 18, 42, .05) 100%); }
+  [data-layout="distribuidora"] .campanhas-hero-conteudo { align-items: end; padding-bottom: 2rem; }
+  [data-layout="distribuidora"] .campanhas-hero-conteudo > div { gap: .55rem; }
+  [data-layout="distribuidora"] .campanhas-hero-conteudo h1 { font-size: clamp(1.5rem, 7vw, 2.15rem); }
+  [data-layout="distribuidora"] .campanhas-hero-conteudo p { font-size: .875rem; }
   [data-layout="distribuidora"] .home-campanhas { gap: 1.25rem; }
   .cartao-produto-tecnico .cartao-produto-conteudo { padding: .625rem; }
   .cartao-produto-tecnico .cartao-produto-nome { font-size: .875rem; }

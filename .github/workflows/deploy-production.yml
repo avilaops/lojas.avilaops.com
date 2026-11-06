@@ -7,94 +7,131 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+env:
+  NEXT_TELEMETRY_DISABLED: '1'
+  ROTINAS_AGENDADOR: '0'
 jobs:
-  contratos:
-    name: contratos / API v1 e inventário Experiments
-    needs: integracao
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
+  dependencias:
+    name: preparar dependências
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    outputs:
+      artifact_id: ${{ steps.arquivo.outputs.ids }}
+      ferramenta_id: ${{ steps.ferramenta.outputs.ids }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
-          path: lojas
-          persist-credentials: false
-      - name: Obter baseline explícito
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-        with:
-          path: baseline
-          ref: ${{ github.event.pull_request.base.sha || github.sha }}
-          persist-credentials: false
-      - name: Obter analisador Experiments fixado
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-        with:
-          repository: avilaops/experiments
-          ref: fb2262d1e30575a466b81fd91be323e931f43164
-          path: experiments
           persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
-          node-version: 24
+          node-version: 22
           cache: npm
-          cache-dependency-path: experiments/package-lock.json
-      - name: Instalar dependências do analisador
-        run: npm ci --ignore-scripts --no-audit --no-fund
-        working-directory: experiments
-      - name: Testar proteção de compatibilidade
-        run: node --test lojas/scripts/contracts/compatibility.test.mjs
-      - name: Construir contrato do consumidor Experiments
-        run: npm run build
-        working-directory: experiments
-      - name: Validar captura e importação com consumidor fixado
-        run: node --test lojas/scripts/contracts/capture.test.mjs
+      - run: npm ci --no-audit --no-fund
         env:
-          EXPERIMENTS_ROOT: ${{ github.workspace }}/experiments
-      - name: Capturar e comparar contratos
-        run: node lojas/scripts/contracts/capture.mjs lojas baseline experiments artifacts/contracts
-      - name: Testar estrutura de desenvolvimento, responsáveis e observações
-        run: node --test lojas/scripts/mlops/*.test.mjs
-        env:
-          EXPERIMENTS_ROOT: ${{ github.workspace }}/experiments
-      - name: Obter observações da integração desta execução
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+          # O motor existente exige CPU; o pacote já inclui esse binário.
+          ONNXRUNTIME_NODE_INSTALL: skip
+      - run: npx prisma generate
+      - name: Arquivar dependências com identidade e hash
+        run: |
+          set -euo pipefail
+          du -sh node_modules
+          mkdir -p "$RUNNER_TEMP/dependencias"
+          tar -I 'zstd -T0 -1' \
+            --exclude='node_modules/onnxruntime-node/bin/napi-v6/darwin' \
+            --exclude='node_modules/onnxruntime-node/bin/napi-v6/win32' \
+            --exclude='node_modules/onnxruntime-node/bin/napi-v6/linux/arm64' \
+            --exclude='node_modules/@next/swc-linux-x64-musl' \
+            -cf "$RUNNER_TEMP/dependencias/payload.tar.zst" node_modules
+      - uses: ./.github/actions/publicar-artefato
+        id: arquivo
         with:
-          name: lojas-runtime-${{ github.sha }}
-          path: runtime-checks
-      - name: Gerar estrutura MLOps e avaliar observações reais
-        run: node lojas/scripts/mlops/report.mjs lojas experiments artifacts/contracts runtime-checks '${{ github.run_id }}-${{ github.run_attempt }}'
-      - name: Preservar inventário, baseline e diferenças
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+          tipo: dependencias
+          pasta: ${{ runner.temp }}/dependencias/
+      - name: Arquivar somente a CLI de navegador da versão do lockfile
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/ferramenta-navegador"
+          tar -I 'zstd -T0 -1' -cf "$RUNNER_TEMP/ferramenta-navegador/payload.tar.zst" node_modules/playwright-core
+      - uses: ./.github/actions/publicar-artefato
+        id: ferramenta
         with:
-          name: lojas-contracts-${{ github.sha }}
-          path: artifacts/contracts/
-          if-no-files-found: error
-          retention-days: 14
+          tipo: ferramenta-navegador
+          partes: '1'
+          pasta: ${{ runner.temp }}/ferramenta-navegador/
 
-  # Construção e implantação moram aqui, e não em `uses: avilaops/infra/...`:
-  # este repositório é público e o avilaops/infra é privado, e o GitHub não
-  # deixa repositório público chamar workflow reutilizável de repositório
-  # privado — o run termina em `startup_failure` sem executar nada (06/10/2026).
-  #
-  # Os dois jobs abaixo são cópia fiel de avilaops/infra@5fc768f
-  # (`.github/workflows/container.yml` e `deploy-ssh.yml`), com as mesmas
-  # actions fixadas por SHA. Mudou lá, traga para cá.
-  #
-  # Tipos, testes e build já rodam dentro do `Dockerfile` (estágio `build`),
-  # em pull request também — não há gate a acrescentar antes da imagem.
-  # Provas de banco (`npm run test:integracao`) contra um Postgres 18 de
-  # verdade, na mesma porta e com o mesmo nome `_test` que os guardas dos
-  # testes exigem. Sem elas verdes, não há imagem nem deploy.
+  unitarios:
+    name: testes unitários / parte ${{ matrix.fatia }}
+    needs: dependencias
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    strategy:
+      fail-fast: false
+      matrix:
+        fatia: [1/2, 2/2]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/preparar-node
+      - run: npx tsx --test --test-shard=${{ matrix.fatia }} src/lib/*.test.ts packages/checkout/src/core/*.test.ts packages/checkout/src/server/*.test.ts packages/checkout/src/providers/*.test.ts
+
+  qualidade:
+    name: qualidade / ${{ matrix.comando }}
+    needs: dependencias
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    strategy:
+      fail-fast: false
+      matrix:
+        comando: [typecheck, lint]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/preparar-node
+      - if: matrix.comando == 'typecheck'
+        run: npx next typegen
+      - run: npm run ${{ matrix.comando }}
+
+  payloads:
+    name: contratos de payload e infraestrutura de CI
+    needs: dependencias
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/preparar-node
+      - run: node --test scripts/ci/*.test.mjs
+      - run: node --import tsx --test src/lib/langfuse.test.ts
+      - run: node --import tsx --test tests/contracts/*.test.*
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          path: .contract-baseline
+          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+          persist-credentials: false
+      - run: node --import tsx scripts/contracts/payload-report.mjs .contract-baseline artifacts/payloads
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: lojas-payloads-${{ github.sha }}
+          path: artifacts/payloads/
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 7
+
   integracao:
-    name: testes de integração
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    permissions:
-      contents: read
+    name: integração PostgreSQL / parte ${{ matrix.fatia }}
+    needs: dependencias
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        fatia: [1, 2, 3]
     services:
       postgres:
-        # O espelho público da AWS passou a bloquear o runner por cota antes
-        # de qualquer teste (`toomanyrequests: Data limit exceeded`). A imagem
-        # oficial já é publicada no Docker Hub e mantém a mesma tag.
         image: postgres:18-alpine
         env:
           POSTGRES_USER: postgres
@@ -104,128 +141,406 @@ jobs:
           - 5548:5432
         options: >-
           --health-cmd "pg_isready -U postgres -d lojas_test"
-          --health-interval 5s
+          --health-interval 1s
           --health-timeout 5s
           --health-retries 10
     env:
       DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5548/lojas_test
+      LOJAS_SECRET: '0000000000000000000000000000000000000000000000000000000000000000'
+      MLOPS_EVIDENCE_DIR: ${{ github.workspace }}/artifacts/runtime-checks
+      MLOPS_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           persist-credentials: false
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: ./.github/actions/preparar-artefatos
         with:
-          node-version: 22
-          cache: npm
-      - run: npm ci --no-audit --no-fund
-      - name: Testar observabilidade e privacidade sem LLM
-        run: node --import tsx --test src/lib/langfuse.test.ts
-      - name: Testar contratos de payload e consumidores
-        run: node --import tsx --test tests/contracts/*.test.*
-      - name: Obter baseline de payload da base do PR
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-        with:
-          path: .contract-baseline
-          ref: ${{ github.event.pull_request.base.sha || github.sha }}
-          persist-credentials: false
-      - name: Exportar e comparar payload de cupom
-        run: node --import tsx scripts/contracts/payload-report.mjs .contract-baseline artifacts/payloads
-      - name: Preservar contrato de cupom e diferenças
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: lojas-payloads-${{ github.sha }}
-          path: artifacts/payloads/
-          if-no-files-found: warn
-          retention-days: 14
-      - name: Tirar baseline da raiz do Turbopack
-        run: mv .contract-baseline "$RUNNER_TEMP/lojas-contract-baseline"
-      - run: npx prisma generate
+          ids: ${{ needs.dependencias.outputs.artifact_id }}
+          tipos: dependencias
       - run: npx prisma migrate deploy
-      - name: Executar integrações e preservar evidência TAP e runtime
+      - name: Executar integrações e preservar TAP completo
         run: |
-          set -o pipefail
+          set -euo pipefail
           mkdir -p artifacts/flow-observations
-          npm run test:integracao 2>&1 | tee artifacts/flow-observations/integration.tap
-        env:
-          MLOPS_EVIDENCE_DIR: ${{ github.workspace }}/artifacts/runtime-checks
-          MLOPS_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
-      - name: Instalar Chromium para a jornada B2B
-        run: npx playwright install --with-deps chromium
-      - name: Construir aplicação para verificação funcional isolada
+          npx tsx --test --test-shard=${{ matrix.fatia }}/3 tests/integration/*.test.ts 2>&1 | tee artifacts/flow-observations/integration.tap
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: lojas-integracao-${{ matrix.fatia }}-${{ github.sha }}
+          path: artifacts/
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 7
+
+  build:
+    name: compilar aplicação
+    needs: [dependencias, qualidade]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    outputs:
+      artifact_id: ${{ steps.arquivo.outputs.ids }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/preparar-artefatos
+        with:
+          ids: ${{ needs.dependencias.outputs.artifact_id }}
+          tipos: dependencias
+      - name: Compilar após o gate de tipos gerados
         run: npm run build
         env:
-          LOJAS_BASE_DOMAIN: 127.0.0.1
-          LOJAS_SECRET: '0000000000000000000000000000000000000000000000000000000000000000'
-          NEXT_TELEMETRY_DISABLED: '1'
-          ROTINAS_AGENDADOR: '0'
-      - name: Preparar arquivos estáticos do servidor standalone
+          LOJAS_DEPLOY_ID: ${{ github.sha }}
+          LOJAS_CI_TIPOS_VERIFICADOS: '1'
+      - name: Arquivar servidor e arquivos públicos
         run: |
+          set -euo pipefail
           cp -R public .next/standalone/public
+          mkdir -p .next/standalone/.next
           cp -R .next/static .next/standalone/.next/static
-      - name: Verificar jornada B2B, HTTP e reinício em serviço isolado
-        run: node --import tsx scripts/qa-cotacoes-b2b.mts
+          mkdir -p "$RUNNER_TEMP/build"
+          tar -I 'zstd -T0 -1' -cf "$RUNNER_TEMP/build/payload.tar.zst" -C .next/standalone .
+      - uses: ./.github/actions/publicar-artefato
+        id: arquivo
+        with:
+          tipo: build
+          partes: '1'
+          pasta: ${{ runner.temp }}/build/
+
+  navegador:
+    name: preparar Chromium headless
+    needs: dependencias
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    outputs:
+      artifact_id: ${{ steps.arquivo.outputs.ids }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/preparar-artefatos
+        with:
+          ids: ${{ needs.dependencias.outputs.ferramenta_id }}
+          tipos: ferramenta-navegador
+      - run: node node_modules/playwright-core/cli.js install --only-shell chromium
+      - name: Arquivar versão do navegador do lockfile
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/navegador"
+          mkdir -p "$RUNNER_TEMP/pacote-navegador/browsers"
+          cp -a "$HOME/.cache/ms-playwright/." "$RUNNER_TEMP/pacote-navegador/browsers/"
+          tar -I 'zstd -T0 -1' -cf "$RUNNER_TEMP/navegador/payload.tar.zst" -C "$RUNNER_TEMP/pacote-navegador" .
+      - uses: ./.github/actions/publicar-artefato
+        id: arquivo
+        with:
+          tipo: navegador
+          partes: '1'
+          pasta: ${{ runner.temp }}/navegador/
+
+  fontes:
+    name: preparar fontes do navegador
+    needs: dependencias
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      artifact_id: ${{ steps.arquivo.outputs.ids }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/preparar-artefatos
+        with:
+          ids: ${{ needs.dependencias.outputs.ferramenta_id }}
+          tipos: ferramenta-navegador
+      - run: node node_modules/playwright-core/cli.js install-deps chromium
+      - name: Arquivar todas as fontes preparadas pelo Playwright
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/fontes"
+          tar -I 'zstd -T0 -1' -cf "$RUNNER_TEMP/fontes/payload.tar.zst" -C /usr/share/fonts .
+      - uses: ./.github/actions/publicar-artefato
+        id: arquivo
+        with:
+          tipo: fontes
+          partes: '1'
+          pasta: ${{ runner.temp }}/fontes/
+
+  modelo:
+    name: preparar modelo ONNX
+    needs: dependencias
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    outputs:
+      artifact_id: ${{ steps.arquivo.outputs.ids }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/preparar-node
+      - name: Baixar e conferir modelo de runtime
         env:
-          MLOPS_EVIDENCE_DIR: ${{ github.workspace }}/artifacts/runtime-checks
-          MLOPS_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
-      - name: Preservar capturas e resumo da jornada B2B
+          FUNDO_MODELOS_DIR: ${{ github.workspace }}/modelos
+        run: |
+          node --import tsx --input-type=module -e "import { baixarModelo, conferirModelo } from './packages/removedor-de-fundo/src/modelo.ts'; await baixarModelo('u2netp'); if (await conferirModelo('u2netp')) throw new Error('MODEL_HASH_MISMATCH');"
+          mkdir -p "$RUNNER_TEMP/modelo"
+          tar -I 'zstd -T0 -1' -cf "$RUNNER_TEMP/modelo/payload.tar.zst" modelos
+      - uses: ./.github/actions/publicar-artefato
+        id: arquivo
+        with:
+          tipo: modelo
+          partes: '1'
+          pasta: ${{ runner.temp }}/modelo/
+
+  b2b:
+    name: navegador / cotação, HTTP e reinício
+    needs: [dependencias, build, navegador, fontes]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: lojas_test
+        ports:
+          - 5548:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d lojas_test"
+          --health-interval 1s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5548/lojas_test
+      LOJAS_SECRET: '0000000000000000000000000000000000000000000000000000000000000000'
+      MLOPS_EVIDENCE_DIR: ${{ github.workspace }}/artifacts/runtime-checks
+      MLOPS_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/preparar-artefatos
+        with:
+          ids: ${{ needs.dependencias.outputs.artifact_id }},${{ needs.build.outputs.artifact_id }},${{ needs.navegador.outputs.artifact_id }},${{ needs.fontes.outputs.artifact_id }}
+          tipos: dependencias build navegador fontes
+      - run: npx prisma migrate deploy
+      - run: node --import tsx scripts/qa-cotacoes-b2b.mts
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: lojas-b2b-browser-${{ github.sha }}
           path: artifacts/b2b-browser/
           if-no-files-found: warn
-          retention-days: 14
-      - name: Preservar observações e artefatos do piloto B2B
+          compression-level: 0
+          retention-days: 7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: lojas-runtime-browser-${{ github.sha }}
+          path: artifacts/runtime-checks/
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 7
+
+  etiquetas:
+    name: navegador / etiquetas e PDFs
+    needs: [dependencias, build, navegador, fontes]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: lojas_test
+        ports:
+          - 5548:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d lojas_test"
+          --health-interval 1s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5548/lojas_test
+      LOJAS_SECRET: '0000000000000000000000000000000000000000000000000000000000000000'
+      MLOPS_EVIDENCE_DIR: ${{ github.workspace }}/artifacts/runtime-checks
+      MLOPS_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/preparar-artefatos
+        with:
+          ids: ${{ needs.dependencias.outputs.artifact_id }},${{ needs.build.outputs.artifact_id }},${{ needs.navegador.outputs.artifact_id }},${{ needs.fontes.outputs.artifact_id }}
+          tipos: dependencias build navegador fontes
+      - run: npx prisma migrate deploy
+      - name: Verificar etiquetas com servidor isolado
+        env:
+          LOJAS_BASE_DOMAIN: 127.0.0.1
+          HOSTNAME: 127.0.0.1
+          PORT: '3089'
+        run: |
+          set -euo pipefail
+          node .next/standalone/server.js > "$RUNNER_TEMP/lojas-etiquetas.log" 2>&1 &
+          etiquetas_pid=$!
+          trap 'kill "$etiquetas_pid" 2>/dev/null || true' EXIT
+          for tentativa in {1..20}; do
+            if curl --fail --silent http://127.0.0.1:3089/api/health > /dev/null; then break; fi
+            sleep 1
+          done
+          node --import tsx scripts/qa-etiquetas.mts
+      - name: Decodificar PDFs reais a 203 dpi
+        run: |
+          python -m pip install --disable-pip-version-check pymupdf==1.28.0 pillow==12.2.0 zxing-cpp==3.1.1
+          python scripts/qa-etiquetas-pdf.py
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: lojas-etiquetas-${{ github.sha }}
+          path: output/playwright/etiquetas/
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 7
+
+  contratos:
+    name: contratos / API v1, Experiments e evidências
+    needs: [integracao, b2b]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          path: .baseline
+          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: avilaops/experiments
+          ref: fb2262d1e30575a466b81fd91be323e931f43164
+          path: .experiments
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24
+      - run: npm ci --ignore-scripts --no-audit --no-fund && npm run build
+        working-directory: .experiments
+      - run: node --test scripts/contracts/compatibility.test.mjs scripts/contracts/capture.test.mjs scripts/mlops/*.test.mjs
+        env:
+          EXPERIMENTS_ROOT: ${{ github.workspace }}/.experiments
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          pattern: lojas-integracao-*-${{ github.sha }}
+          path: artifacts/integracao
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          name: lojas-runtime-browser-${{ github.sha }}
+          path: artifacts/runtime-checks
+      - name: Reunir evidências sem sobrescrever checks
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          entradas=(artifacts/integracao/*)
+          [[ ${#entradas[@]} == 3 ]]
+          mkdir -p artifacts/flow-observations artifacts/runtime-checks
+          for entrada in "${entradas[@]}"; do
+            cat "$entrada/flow-observations/integration.tap" >> artifacts/flow-observations/integration.tap
+            for arquivo in "$entrada"/runtime-checks/*; do
+              destino="artifacts/runtime-checks/$(basename "$arquivo")"
+              [[ ! -e "$destino" ]]
+              cp "$arquivo" "$destino"
+            done
+          done
+      - run: node scripts/contracts/capture.mjs . .baseline .experiments artifacts/contracts
+      - run: node scripts/mlops/report.mjs . .experiments artifacts/contracts artifacts/runtime-checks '${{ github.run_id }}-${{ github.run_attempt }}'
+      - run: node scripts/mlops/flow-observations.mjs . .experiments artifacts/flow-observations/integration.tap artifacts/flow-observations
+        env:
+          FLOW_RUN_ID: github-${{ github.run_id }}-${{ github.run_attempt }}
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: lojas-contracts-${{ github.sha }}
+          path: artifacts/contracts/
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
         with:
           name: lojas-runtime-${{ github.sha }}
           path: artifacts/runtime-checks/
           if-no-files-found: warn
-          retention-days: 14
-      - name: Obter avaliador Experiments para as observações
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-        with:
-          repository: avilaops/experiments
-          ref: fb2262d1e30575a466b81fd91be323e931f43164
-          path: .flow-experiments
-          persist-credentials: false
-      - name: Instalar e construir avaliador das observações
-        run: npm ci --ignore-scripts --no-audit --no-fund && npm run build
-        working-directory: .flow-experiments
-      - name: Vincular observações reais ao plano cotação → pedido
-        env:
-          FLOW_RUN_ID: github-${{ github.run_id }}-${{ github.run_attempt }}
-        run: node scripts/mlops/flow-observations.mjs . .flow-experiments artifacts/flow-observations/integration.tap artifacts/flow-observations
-      - name: Preservar observações do fluxo B2B
+          compression-level: 0
+          retention-days: 7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: lojas-flow-observations-${{ github.sha }}
           path: artifacts/flow-observations/
-          if-no-files-found: error
-          retention-days: 14
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 7
+
+  contexto_imagem:
+    name: imagem / preparar contexto verificado
+    needs: [dependencias, build, modelo]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    outputs:
+      artifact_id: ${{ steps.arquivo.outputs.ids }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/preparar-artefatos
+        with:
+          ids: ${{ needs.dependencias.outputs.artifact_id }},${{ needs.build.outputs.artifact_id }},${{ needs.modelo.outputs.artifact_id }}
+          tipos: dependencias build modelo
+      - name: Montar contexto somente com os artefatos verificados
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/lojas-image/runtime"
+          cp Dockerfile.ci "$RUNNER_TEMP/lojas-image/Dockerfile"
+          cp -a .next/standalone/. "$RUNNER_TEMP/lojas-image/runtime/"
+          cp -a modelos "$RUNNER_TEMP/lojas-image/runtime/"
+          for modulo in .prisma @prisma/client onnxruntime-node; do
+            mkdir -p "$RUNNER_TEMP/lojas-image/runtime/node_modules/$modulo"
+            cp -a "node_modules/$modulo/." "$RUNNER_TEMP/lojas-image/runtime/node_modules/$modulo/"
+          done
+          cp -a prisma "$RUNNER_TEMP/lojas-image/runtime/"
+          mkdir -p "$RUNNER_TEMP/imagem-contexto"
+          tar -I 'zstd -T0 -1' -cf "$RUNNER_TEMP/imagem-contexto/payload.tar.zst" -C "$RUNNER_TEMP/lojas-image" .
+      - uses: ./.github/actions/publicar-artefato
+        id: arquivo
+        with:
+          tipo: imagem-contexto
+          partes: '1'
+          pasta: ${{ runner.temp }}/imagem-contexto/
 
   image:
-    name: image / build
-    needs: [integracao, contratos]
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
+    name: imagem / empacotar bundle aprovado
+    needs: [contexto_imagem, unitarios, qualidade, payloads, integracao, b2b, etiquetas, contratos]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     permissions:
       contents: read
       packages: write
     env:
-      # Pull request constrói e valida; só o push na main publica a imagem.
       PUBLISH: ${{ github.event_name != 'pull_request' }}
     outputs:
       image: ${{ steps.result.outputs.image }}
     steps:
-      - name: Obter codigo do commit
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           persist-credentials: false
-      - name: Validar publicacao
+      - uses: ./.github/actions/preparar-artefatos
+        with:
+          ids: ${{ needs.contexto_imagem.outputs.artifact_id }}
+          tipos: imagem-contexto
+      - name: Validar destino da publicação
         env:
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
@@ -235,42 +550,36 @@ jobs:
             [[ "$GITHUB_REF" == "refs/heads/$DEFAULT_BRANCH" ]]
           fi
           printf 'IMAGE_NAME=ghcr.io/%s\n' "${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
-      - name: Preparar Docker
-        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f
-      - name: Autenticar no GHCR
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9
         if: env.PUBLISH == 'true'
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Construir e validar imagem
-        id: build
-        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8
-        with:
-          context: .
-          file: Dockerfile
-          platforms: linux/amd64
-          push: ${{ env.PUBLISH == 'true' }}
-          tags: ${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
-          labels: |
-            org.opencontainers.image.source=https://github.com/${{ github.repository }}
-            org.opencontainers.image.revision=${{ github.sha }}
-          build-args: |
-            GIT_SHA=${{ github.sha }}
-          cache-from: type=gha,scope=container
-          cache-to: type=gha,mode=max,scope=container
-      - name: Identificar imagem publicada
+      - name: Empacotar e verificar runtime ONNX
+        env:
+          DOCKER_BUILDKIT: '1'
+        run: |
+          set -euo pipefail
+          docker build --platform linux/amd64 --progress plain \
+            --file "$RUNNER_TEMP/lojas-image/Dockerfile" \
+            --tag "$IMAGE_NAME:sha-$GITHUB_SHA" \
+            --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
+            --label "org.opencontainers.image.revision=$GITHUB_SHA" \
+            "$RUNNER_TEMP/lojas-image"
+      - name: Publicar e identificar imagem por digest
         if: env.PUBLISH == 'true'
         id: result
-        env:
-          DIGEST: ${{ steps.build.outputs.digest }}
         run: |
-          [[ "$DIGEST" =~ ^sha256:[a-f0-9]{64}$ ]]
-          printf 'image=%s@%s\n' "$IMAGE_NAME" "$DIGEST" >> "$GITHUB_OUTPUT"
+          set -euo pipefail
+          docker push "$IMAGE_NAME:sha-$GITHUB_SHA"
+          publicada=$(docker image inspect --format '{{index .RepoDigests 0}}' "$IMAGE_NAME:sha-$GITHUB_SHA")
+          [[ "$publicada" == "$IMAGE_NAME"@sha256:* ]]
+          [[ "$publicada" =~ @sha256:[a-f0-9]{64}$ ]]
+          printf 'image=%s\n' "$publicada" >> "$GITHUB_OUTPUT"
 
-  deploy:
-    name: deploy
+  preparar_entrega:
+    name: entrega / baixar imagem no servidor
     needs: image
     # Só a main, só por push ou disparo manual, e só com o deploy ligado na
     # variável do repositório. Pull request — inclusive de fork, agora que o
@@ -279,8 +588,8 @@ jobs:
       github.event_name != 'pull_request' && github.event_name != 'pull_request_target'
       && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
       && vars.DEPLOY_ENABLED == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
     environment: production
     permissions:
       contents: read
@@ -289,80 +598,67 @@ jobs:
     concurrency:
       group: deploy-production-lojas.avilaops.com
       cancel-in-progress: false
+    outputs:
+      publicado: ${{ steps.entrega.outputs.publicar }}
     steps:
-      # Só o run mais novo publica.
-      #
-      # Em 08/10/2026 dois pushes seguidos correram em paralelo; o build do
-      # commit mais antigo demorou mais e o deploy dele terminou por último.
-      # Produção ficou na versão ANTERIOR à que o painel do GitHub mostrava
-      # como publicada, sem o PR que tinha acabado de entrar. O `concurrency`
-      # acima não pega isso: ele enfileira os deploys, não os ordena por commit.
-      #
-      # A pergunta é "existe um run mais novo deste workflow na main que ainda
-      # vai publicar, ou já publicou?", e não "este commit é a ponta da main?":
-      # commit com `[skip ci]` vira a ponta sem ter run nenhum, e por essa
-      # segunda regra ninguém publicaria o código que veio antes dele.
-      - name: Conferir que nenhum deploy mais novo passou na frente
-        id: vez
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/entregar-imagem
+        id: entrega
+        with:
+          operacao: prepare
+          imagem: ${{ needs.image.outputs.image }}
         env:
-          GH_TOKEN: ${{ github.token }}
-          RAMO: ${{ github.event.repository.default_branch }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          mais_novos=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/deploy-production.yml/runs?branch=${RAMO}&per_page=50" \
-            --jq "[.workflow_runs[] | select(.id > ${GITHUB_RUN_ID} and .event != \"pull_request\" and (.conclusion == null or .conclusion == \"success\"))] | length")
-          if (( mais_novos > 0 )); then
-            echo "::notice::Há ${mais_novos} run(s) mais novo(s) deste workflow na ${RAMO}. Este não publica: publicar agora poria uma versão mais antiga por cima."
-            echo "publicar=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "publicar=true" >> "$GITHUB_OUTPUT"
-          fi
-      - name: Enviar imagem ao servidor
-        if: steps.vez.outputs.publicar == 'true'
-        env:
-          APPLICATION: lojas.avilaops.com
-          IMAGE: ${{ needs.image.outputs.image }}
-          DEPLOY_PORT: 22
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          [[ "$APPLICATION" =~ ^[a-z0-9][a-z0-9.-]*$ ]]
-          [[ "$IMAGE" =~ ^ghcr\.io/avilaops/[a-z0-9][a-z0-9._/-]*@sha256:[a-f0-9]{64}$ ]]
-          [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]]
-          [[ "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
-          [[ "$DEPLOY_PORT" =~ ^[0-9]{1,5}$ ]]
-          (( DEPLOY_PORT > 0 && DEPLOY_PORT < 65536 ))
-          temporary_ssh=$(mktemp -d)
-          trap 'rm -rf "$temporary_ssh"' EXIT
-          chmod 700 "$temporary_ssh"
-          printf '%s\n' "$SSH_KEY" > "$temporary_ssh/key"
-          printf '%s\n' "$KNOWN_HOSTS" > "$temporary_ssh/known_hosts"
-          chmod 600 "$temporary_ssh/key" "$temporary_ssh/known_hosts"
-          printf '%s\n' "$GHCR_TOKEN" | ssh -T -i "$temporary_ssh/key" -p "$DEPLOY_PORT" \
-            -o BatchMode=yes -o IdentitiesOnly=yes \
-            -o StrictHostKeyChecking=yes \
-            -o UserKnownHostsFile="$temporary_ssh/known_hosts" \
-            -o ConnectTimeout=20 -o ServerAliveInterval=15 \
-            -o ServerAliveCountMax=3 \
-            "$DEPLOY_USER@$DEPLOY_HOST" "deploy $APPLICATION $IMAGE"
+
+  deploy:
+    name: deploy
+    needs: [image, preparar_entrega]
+    if: needs.preparar_entrega.outputs.publicado == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    environment: production
+    permissions:
+      contents: read
+      packages: read
+      actions: read
+    concurrency:
+      group: deploy-production-lojas.avilaops.com
+      cancel-in-progress: false
+    outputs:
+      publicado: ${{ steps.entrega.outputs.publicar }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/entregar-imagem
+        id: entrega
+        with:
+          operacao: deploy
+          imagem: ${{ needs.image.outputs.image }}
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
 
   # Depois do deploy, o que o navegador faria: /api/health com banco,
   # /v1/health e a folha de estilo seguida a partir do HTML da vitrine.
   # Sem dependência instalada — é o node do runner e `fetch`.
   fumaca:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
     needs: deploy
+    if: needs.deploy.outputs.publicado == 'true'
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
+      - uses: ./.github/actions/node-do-runner
       - run: node scripts/smoke-publicacao.mjs "${{ vars.SMOKE_URL || 'https://lojas.avilaops.com' }}"
       # O domínio da plataforma não tem /uploads, então a conferência da foto
       # só mede alguma coisa contra uma loja. O endereço é variável de CI e não

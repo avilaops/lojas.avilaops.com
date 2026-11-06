@@ -7,6 +7,7 @@ import { lerTema, type TemaLoja } from "./tema";
 import { lerIdentidade, type IdentidadeLoja } from "./identidade";
 import { retiradaPublicaDisponivel } from "./retirada-publica";
 import { vendaOnlineDisponivel } from "./venda-online";
+import { identidadePublica } from "./identidade-publica";
 export { retiradaPublicaDisponivel } from "./retirada-publica";
 
 /**
@@ -124,7 +125,8 @@ export function marcaQuadradaDa(t: Tenant): string | null {
 
 /** A loja tem ao menos um jeito de ser contatada? Se não, `/contato` mente. */
 export function contatoConfigurado(t: Tenant): boolean {
-  return Boolean(t.whatsapp || t.telefone || t.emailContato || t.enderecoPublico);
+  const identidade = identidadePublica(t);
+  return Boolean(identidade.whatsapp || identidade.telefone || identidade.email || identidade.enderecoVisita);
 }
 
 export function enderecoCompleto(t: Tenant): string {
@@ -189,7 +191,7 @@ export function tenantPublico(t: Tenant) {
     nome: t.nome,
     plano: t.plano,
     status: t.status,
-    whatsapp: t.whatsapp,
+    whatsapp: identidadePublica(t).whatsapp?.numero ?? null,
     mpPublicKey: t.mpPublicKey,
     // Pix na conta da loja só tem Pix: cartão e boleto não passam por ele.
     meiosPagamento: meiosAceitos(t),

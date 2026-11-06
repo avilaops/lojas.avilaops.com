@@ -123,6 +123,26 @@ export async function salvarProdutoNoCatalogo(tenantId: string, id: string | nul
   }, { timeout: 20000 });
 }
 
+/**
+ * Altera apenas o estado de vários produtos numa transação única.
+ * Cada item ainda passa pela mesma trava, histórico e outbox da escrita individual.
+ */
+export async function alterarAtivoEmLote(tenantId: string, ids: string[], ativo: boolean, origem: string): Promise<number> {
+  if (!ids.length) return 0;
+  return prisma.$transaction(async tx => {
+    await permitirProjecao(tx);
+    let alterados = 0;
+    for (const id of ids) {
+      const anterior = await travarProduto(tx, tenantId, id);
+      if (anterior.ativo === ativo) continue;
+      await tx.produto.update({ where: { id }, data: { ativo } });
+      await registrar(tx, tenantId, id, anterior, ["ativo"], origem);
+      alterados++;
+    }
+    return alterados;
+  }, { timeout: 120000 });
+}
+
 export type AjusteDeOferta = { precoCentavos?: number; precoDeCentavos?: number | null; estoque?: number | null };
 
 /**
@@ -182,7 +202,14 @@ export async function ajustarOfertaNoCatalogo(tenantId: string, varianteId: stri
     const mudaPreco = ajuste.precoCentavos !== undefined && ajuste.precoCentavos !== v.preco?.valorCentavos;
     const mudaPrecoDe = ajuste.precoDeCentavos !== undefined && ajuste.precoDeCentavos !== (v.preco?.comparacaoCentavos ?? null);
     const mudaEstoque = ajuste.estoque !== undefined && (!saldo || ajuste.estoque !== saldo.fisico);
-    if (!mudaPreco && !mudaPrecoDe && !mudaEstoque) return { mudou: false, produtoId: p.id };
+    // O ERP informa saldo físico: uma reposição precisa também retirar o
+    // esgotado da vitrine, inclusive quando o saldo já foi corrigido por outro
+    // caminho. Sob encomenda continua sendo uma escolha explícita da loja.
+    const disponibilidade = ajuste.estoque != null && v.disponibilidade !== "backorder"
+      ? ajuste.estoque > 0 ? "in_stock" : "out_of_stock"
+      : v.disponibilidade;
+    const mudaDisponibilidade = disponibilidade !== v.disponibilidade;
+    if (!mudaPreco && !mudaPrecoDe && !mudaEstoque && !mudaDisponibilidade) return { mudou: false, produtoId: p.id };
 
     if (mudaPreco || mudaPrecoDe) {
       const valorCentavos = ajuste.precoCentavos ?? v.preco?.valorCentavos ?? 0;
@@ -190,8 +217,9 @@ export async function ajustarOfertaNoCatalogo(tenantId: string, varianteId: stri
       await tx.precoVariante.upsert({ where: { varianteId }, create: { tenantId, varianteId, valorCentavos, comparacaoCentavos }, update: { valorCentavos, comparacaoCentavos } });
     }
     if (mudaEstoque) await gravarSaldo(tx, tenantId, varianteId, ajuste.estoque!, origem);
+    if (mudaDisponibilidade) await tx.variante.update({ where: { id: varianteId }, data: { disponibilidade } });
     await atualizarProjecao(tx, tenantId, p.id);
-    const campos = [...(mudaPreco ? ["precoCentavos"] : []), ...(mudaPrecoDe ? ["precoDeCentavos"] : []), ...(mudaEstoque ? ["estoque"] : [])];
+    const campos = [...(mudaPreco ? ["precoCentavos"] : []), ...(mudaPrecoDe ? ["precoDeCentavos"] : []), ...(mudaEstoque ? ["estoque"] : []), ...(mudaDisponibilidade ? ["disponibilidade"] : [])];
     const registrado = await registrar(tx, tenantId, p.id, p, campos, origem);
     return { mudou: true, produtoId: p.id, versao: registrado.versaoCatalogo };
   }, { timeout: 20000 });
