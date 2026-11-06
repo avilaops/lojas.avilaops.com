@@ -1,7 +1,11 @@
 # AVL-417 — decisão de integração do visualizador MRG
 
 Data: 03/11/2026. Autor: agente Codex, engenharia AVL-417.
+<<<<<<< HEAD
 Estado: implementação em PR; sem merge, deploy ou aceite de produção.
+=======
+Estado: análise arquitetural concluída; implementação do novo visualizador pendente.
+>>>>>>> origin/main
 Issue: https://linear.app/avilaops/issue/AVL-417/mrg-adotar-motor-3d-detalhado-no-configurador-sob-medida
 
 ## Escopo e evidência
@@ -219,10 +223,9 @@ Implementação da evolução:
 Esta implementação está em branch e ainda não comprova CI, aprovação visual
 responsiva, merge, deploy ou comportamento em produção.
 
-Menor próximo passo técnico: coordenar na AVL-417 uma alteração de
-`gerador-3d` que aceite um modelo visual neutro e omita overlays de academia,
-com versão fixada e teste do consumidor Lojas. Isso libera a integração dos
-campos já persistidos sem falsificar uma família.
+O próximo passo de verificação é aguardar a CI da PR e executar a inspeção
+visual responsiva associada ao mesmo SHA. Não há merge nem deploy automático
+enquanto a PR permanecer em draft.
 
 Para o aceite integral: vincular à issue as opções industriais aprovadas
 pela MRG ou uma decisão explícita de que isolamento/ferragens serão somente
