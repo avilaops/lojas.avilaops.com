@@ -29,6 +29,41 @@
       "blocker": "Aceite integral depende de opções industriais de isolamento/ferragens, adiadas expressamente na AVL-400. Reuso tipado do viewer requer coordenação de contrato neutro ou família MRG no gerador-3d."
     },
     {
+      "id": "BRILHAX-CONVERSAO-20261106",
+      "title": "Melhorar descoberta, consulta de entrega e checkout da Brilhax",
+      "objective": "Reduzir atrito antes da identificação e preservar pagamentos, cotações e medição corretos.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "Produto, carrinho e checkout consultam entrega por CEP sem cadastro.",
+        "Trocar CEP, carrinho ou cupom invalida a estimativa anterior; erro nunca vira frete grátis.",
+        "Checkout não preserva entrega de CEP anterior nem permite repetir pagamento cuja resposta se perdeu.",
+        "Vitrine automotiva apresenta kits e atendimento com dados reais; catálogo Brilhax não destaca itens fora do segmento.",
+        "Taxas de avanço medem as mesmas sessões em ambas as etapas, sem inventar eventos.",
+        "CI e verificação publicada têm evidências separadas; preços, frete subsidiado e anúncios pagos dependem de decisão comercial."
+      ],
+      "environment": "github-ci",
+      "evidence": "PR #217 publicada no commit c82b56c469f1f3edb99148c6af5f3dca4f7f81e2. CI/deploy/fumaça 42240400965 aprovados; home, produto, carrinho e consulta antes da identidade conferidos em produção. AVL-408 registra bloqueio CepCerto. Continuação autorizada: sugestões respeitam estoque e escolha de opções, evitam repetição e mostram confirmação; local público de retirada e horário junto da cotação; distinguir preparo de prazo de transporte. Validação da continuação no GitHub CI.",
+      "history": [{ "at": "2026-11-06", "status": "em-andamento", "note": "Autorização explícita do proprietário após auditoria da vitrine, carrinho, checkout e dados de sessões." }, { "at": "2026-11-06", "status": "em-revisao", "note": "Primeira entrega publicada e validada. Proprietário pediu continuar melhorando; segunda entrega em validação. Envio permanece bloqueado no fornecedor de frete." }]
+    },
+    {
+      "id": "MERCHANT-SCHEMA-20261106",
+      "title": "Corrigir marcação de produtos do comerciante",
+      "objective": "Ofertas e promoções coerentes com variantes e dados visíveis, sem marcação incompleta.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "Ofertas concretas substituem AggregateOffer.",
+        "Promoção publica StrikethroughPrice apenas com preço anterior maior.",
+        "Produto sem imagem ou oferta não emite Product de comerciante.",
+        "Testes, lint, typecheck e build aprovados no GitHub CI."
+      ],
+      "evidence": "Regressões adicionadas; execução e validação em produção pendentes.",
+      "environment": "github-ci"
+    },
+    {
       "id": "PROCOMMERCE-API-20261105",
       "title": "Automatizar reconciliação do ProCommerce pela API da Vedashow",
       "objective": "Atualizar preço, saldo e disponibilidade por SKU e receber novos itens como rascunhos, com recibo confirmado por execução.",
@@ -92,7 +127,16 @@
       ],
       "evidence": "Infra PR 12 e Lojas PRs 203/206 publicadas. CI 42069220351 tentativa 2: 20 jobs aprovados com timeout de um minuto. Digest sha256:1d32e30d3c2415b609c67e76825f0947dc3b082b7f4d8c9b6db27e04011899c3; container saudável na revisão c1ef9c80e6855e7d5458eecf2d37dd0b6a823e29. Preparação 28s, deploy 57s, backup pré-migração verificado e 15 verificações públicas aprovadas.",
       "environment": "producao",
-      "history": [{ "at": "2026-11-05", "note": "Continuação autorizada; PRs concorrentes de aparência e timeout preservados em outros checkouts. Política Linear reconfirmada: todos os jobs com um minuto." }, { "at": "2026-11-05", "note": "Publicação confirmada em produção, sem relaxar gates. Primeira tentativa teve cancelamentos por timeout; a execução completa seguinte foi aprovada." }]
+      "history": [
+        {
+          "at": "2026-11-05",
+          "note": "Continuação autorizada; PRs concorrentes de aparência e timeout preservados em outros checkouts. Política Linear reconfirmada: todos os jobs com um minuto."
+        },
+        {
+          "at": "2026-11-05",
+          "note": "Publicação confirmada em produção, sem relaxar gates. Primeira tentativa teve cancelamentos por timeout; a execução completa seguinte foi aprovada."
+        }
+      ]
     },
     {
       "id": "ETIQUETAS-PRODUTOS-20261103",
@@ -108,7 +152,12 @@
         "CI aprovada e imagem publicada pelo workflow; verificação de produção registrada separadamente."
       ],
       "evidence": "PR 195 aprovado e integrado em a7efa21; CI 41669320491 aprovada. Deploy 41671439585 iniciado. Revisão complementar trata recuperação da impressão e inclui QA de navegador no CI. Procedimentos em docs/ETIQUETAS-PRODUTOS.md; aceite físico ainda depende da impressora e leitor do cliente.",
-      "history": [{ "at": "2026-11-03", "note": "Preparação de PR para publicação pelo workflow existente, sem alteração de schema ou dados comerciais." }]
+      "history": [
+        {
+          "at": "2026-11-03",
+          "note": "Preparação de PR para publicação pelo workflow existente, sem alteração de schema ou dados comerciais."
+        }
+      ]
     },
     {
       "id": "AVL-261",
@@ -176,7 +225,12 @@
         "Módulo só é concluído após comprovar todas as dimensões; CI estrutural verde não basta."
       ],
       "evidence": "Correção atômica e adaptador aprovados na CI 40643539608. A CI 40649735969 aprovou integração e contratos e registrou cinco dimensões; lint revelou Date.now em renderização, corrigido em 18267b1. Jornada Playwright reproduziu clique sem abertura do formulário em Next dev nas CIs 40650343283 e 40650960015; API de referências retornou empresa e logs registraram falhas HMR. Verificação sobre build de produção em andamento na CI 40651466891, HEAD 694b733. Módulo permanece em implementação; telas e oito dimensões ainda exigem aprovação conjunta.",
-      "history": [{ "at": "2026-10-28", "note": "Objetivo permanente ativado: continuar até o fim de cada módulo. Trabalho isolado para preservar checkouts concorrentes." }]
+      "history": [
+        {
+          "at": "2026-10-28",
+          "note": "Objetivo permanente ativado: continuar até o fim de cada módulo. Trabalho isolado para preservar checkouts concorrentes."
+        }
+      ]
     },
     {
       "id": "MLOPS-PAYLOAD-CUPOM-20261028",

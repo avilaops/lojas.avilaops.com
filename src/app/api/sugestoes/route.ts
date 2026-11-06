@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { tenantAtual } from "@/lib/tenant";
 import { prisma } from "@/lib/db";
+import { WHERE_COMPRAVEL, dispensavelADistancia } from "@/lib/produto-regras";
 
 /**
  * "Leve também" do carrinho. O carrinho vive no navegador, então quem pergunta
@@ -26,8 +27,8 @@ export async function POST(request: Request) {
   const noCarrinho = ids.length ? await prisma.produto.findMany({ where: { tenantId: t.id, id: { in: ids } }, select: { categoriaId: true } }) : [];
   const categorias = [...new Set(noCarrinho.map((p) => p.categoriaId).filter((c): c is string => Boolean(c)))];
 
-  const comum = { tenantId: t.id, ativo: true, precoCentavos: { gt: 0 }, disponibilidade: { not: "out_of_stock" }, id: { notIn: ids } };
-  const seleciona = { id: true, slug: true, nome: true, precoCentavos: true, imagens: true } as const;
+  const comum = { ...WHERE_COMPRAVEL, tenantId: t.id, id: { notIn: ids } };
+  const seleciona = { id: true, slug: true, nome: true, precoCentavos: true, imagens: true, opcoes: true, tarja: true } as const;
 
   // Primeiro o que combina com o carrinho; se a loja ainda tem poucas
   // categorias, completa com os destaques para a área nunca ficar pela metade.
@@ -46,6 +47,6 @@ export async function POST(request: Request) {
     : [];
 
   return Response.json({
-    produtos: [...daCategoria, ...complemento].map((p) => ({ id: p.id, slug: p.slug, nome: p.nome, precoCentavos: p.precoCentavos, imagem: p.imagens[0] ?? null })),
+    produtos: [...daCategoria, ...complemento].map((p) => ({ id: p.id, slug: p.slug, nome: p.nome, precoCentavos: p.precoCentavos, imagem: p.imagens[0] ?? null, adicionarDireto: p.opcoes.length === 0 && dispensavelADistancia(p) })),
   });
 }

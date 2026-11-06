@@ -69,11 +69,14 @@ export function calcularFunil(sessoes: SessaoDoFunil[], clientesRecorrentes: Set
     taxas: {
       buscaSemResultado: taxa(contagens.buscasSemResultado, contagens.buscas),
       produto: taxa(contagens.produtos, contagens.sessoes),
-      carrinho: taxa(contagens.carrinhosAdicionados, contagens.produtos),
-      checkout: taxa(contagens.checkouts, contagens.carrinhosAdicionados),
+      // As contagens são marcos independentes (uma visita pode retomar o
+      // checkout). A taxa de avanço compara a mesma coorte nas duas etapas.
+      carrinho: taxa(sessoes.filter(s => s.viuProduto && s.adicionouCarrinho).length, contagens.produtos),
+      checkout: taxa(sessoes.filter(s => s.adicionouCarrinho && s.iniciouCheckout).length, contagens.carrinhosAdicionados),
+      pedido: taxa(sessoes.filter(s => s.iniciouCheckout && s.pedidos.length > 0).length, contagens.checkouts),
       compra: taxa(contagens.compras, contagens.sessoes),
       pagamento: taxa(contagens.pagamentosAprovados, contagens.pedidosCriados),
-      contatoTecnico: taxa(contagens.contatosTecnicos, contagens.produtos),
+      contatoTecnico: taxa(sessoes.filter(s => s.viuProduto && s.contatoTecnico).length, contagens.produtos),
       recompra: taxa(contagens.clientesRecorrentes, contagens.clientesCompradores),
     },
   };

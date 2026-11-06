@@ -5,15 +5,16 @@ import { useCart } from "./CartProvider";
 import { formatarBRL } from "@/lib/catalogo";
 import { adicionarAoCarrinho } from "@/lib/eventos-loja";
 
-interface Sugestao { id: string; slug: string; nome: string; precoCentavos: number; imagem: string | null }
+interface Sugestao { id: string; slug: string; nome: string; precoCentavos: number; imagem: string | null; adicionarDireto?: boolean }
 
 /**
- * "Leve também" no carrinho. Mostra itens que costumam sair junto e ajudam
- * a completar o pedido.
+ * Produtos das mesmas categorias e destaques. Não pressupõe venda conjunta
+ * nem compatibilidade; apresentações com opções são escolhidas na ficha.
  */
 export default function Sugestoes() {
   const { itens, adicionar, pronto } = useCart();
   const [sugestoes, setSugestoes] = useState<Sugestao[]>([]);
+  const [ultimoAdicionado, setUltimoAdicionado] = useState<{ id: string; nome: string } | null>(null);
 
   // Busca uma vez, com o carrinho que existia ao abrir a página: a lista
   // pulando a cada item adicionado atrapalharia mais do que ajudaria.
@@ -33,14 +34,19 @@ export default function Sugestoes() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- só na abertura
   }, [pronto]);
 
-  if (sugestoes.length === 0) return null;
+  const noCarrinho = new Set(itens.map(i => i.id.split(":")[0]));
+  const disponiveis = sugestoes.filter(s => !noCarrinho.has(s.id));
+  const confirmacao = ultimoAdicionado && noCarrinho.has(ultimoAdicionado.id) ? `${ultimoAdicionado.nome} adicionado ao carrinho.` : "";
+  if (disponiveis.length === 0 && !confirmacao) return null;
 
   return (
     <section className="mt-8">
-      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Outros produtos do catálogo</h2>
-      <p className="mb-3 text-sm text-muted-foreground">Confira as características de cada produto. Esta lista não confirma compatibilidade entre as peças.</p>
+      <p role="status" className="text-sm text-emerald-700">{confirmacao}</p>
+      {disponiveis.length > 0 && <>
+      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Explore também</h2>
+      <p className="mb-3 text-sm text-muted-foreground">Veja outros produtos da loja. Confira a aplicação e as características antes de escolher.</p>
       <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {sugestoes.map((s) => (
+        {disponiveis.map((s) => (
           <li key={s.id} className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
             <a href={`/produtos/${s.slug}`} className="block aspect-square bg-muted" aria-label={`Ver ${s.nome}`}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -49,19 +55,22 @@ export default function Sugestoes() {
             <div className="flex flex-1 flex-col gap-2 p-3">
               <a href={`/produtos/${s.slug}`} className="line-clamp-2 text-xs font-semibold">{s.nome}</a>
               <p className="mt-auto text-sm font-bold">{formatarBRL(s.precoCentavos)}</p>
-              <button
-                className="btn-secundario h-9 w-full text-xs"
+              {s.adicionarDireto === true ? <button
+                aria-label={`Adicionar sugestão: ${s.nome}`}
+                className="btn-secundario min-h-11 w-full text-xs"
                 onClick={() => {
                   adicionar({ id: s.id, slug: s.slug, nome: s.nome, precoCentavos: s.precoCentavos, imagem: s.imagem ?? undefined });
                   adicionarAoCarrinho({ id: s.id, nome: s.nome, precoCentavos: s.precoCentavos });
+                  setUltimoAdicionado({ id: s.id, nome: s.nome });
                 }}
               >
                 Adicionar
-              </button>
+              </button> : <a className="btn-secundario flex min-h-11 items-center justify-center text-xs" href={`/produtos/${s.slug}`}>Ver opções e detalhes</a>}
             </div>
           </li>
         ))}
       </ul>
+      </>}
     </section>
   );
 }

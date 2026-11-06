@@ -98,7 +98,9 @@ test("CI mantém o baseline em job separado do build Turbopack", () => {
   assert.ok(payloads, "job de comparação de payloads não encontrado");
   assert.match(payloads, /path: \.contract-baseline/u);
   assert.match(payloads, /payload-report\.mjs \.contract-baseline/u);
-  assert.match(build, /run: npm run build/u);
+  assert.match(build, /run: node node_modules\/next\/dist\/bin\/next build/u);
+  assert.doesNotMatch(build, /prisma generate/u);
+  assert.match(workflow.split("  unitarios:")[0], /run: npx prisma generate/u);
   assert.doesNotMatch(build, /baseline|payload-report/u, "outro checkout não pode entrar na raiz da compilação");
   assert.doesNotMatch(ler(".github/actions/preparar-node/action.yml"), /baseline/u);
 });

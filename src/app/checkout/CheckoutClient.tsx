@@ -11,6 +11,8 @@ import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
 import PixNaConta from "@/components/checkout/PixNaConta";
 import { TEXTO_PENDENCIA_NO_CHECKOUT, desfechoDoCheckout, encerraPendencia, esquecerPendencia, guardaDoNavegador, guardarPendencia, lerPendencia, situacaoAposConsulta } from "@/lib/pedido-a-confirmar";
 import type { TenantPublico } from "@/lib/tenant";
+import ConsultarEntrega from "@/components/checkout/ConsultarEntrega";
+import { consultarFrete } from "@/lib/cotacao-frete";
 
 /**
  * A tela é a do @avilaops/checkout — a mesma em todas as lojas. O que este
@@ -68,10 +70,10 @@ export default function CheckoutClient({ loja, conta }: { loja: TenantPublico; c
   // Um begin_checkout por visita à tela, quando o carrinho já carregou.
   const jaAvisou = useRef(false);
   useEffect(() => {
-    if (!pronto || jaAvisou.current || itens.length === 0) return;
+    if (!pronto || !anteriorLida || anterior || jaAvisou.current || itens.length === 0) return;
     jaAvisou.current = true;
     iniciarCheckout(itens.map((i) => ({ id: i.id, nome: i.nome, precoCentavos: i.precoCentavos, quantidade: i.quantidade })));
-  }, [pronto, itens]);
+  }, [pronto, itens, anteriorLida, anterior]);
 
   const conferirAnterior = useCallback(async (ref: string) => {
     setAnterior({ referencia: ref, situacao: "conferindo" });
@@ -190,8 +192,7 @@ export default function CheckoutClient({ loja, conta }: { loja: TenantPublico; c
   }
 
   async function aoInformarCep(cep: string) {
-    const r = await fetch("/api/frete", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ cep, itens: ids, cupom: cupom?.codigo }) });
-    const opcoes = (await r.json()) as OpcaoFrete[];
+    const opcoes = await consultarFrete({ cep, itens: ids, cupom: cupom?.codigo }, AbortSignal.timeout(30_000));
     setFretes(opcoes);
     return opcoes;
   }
@@ -203,7 +204,9 @@ export default function CheckoutClient({ loja, conta }: { loja: TenantPublico; c
     // com referência nova. Ela só é esquecida quando a resposta é conclusiva.
     const guarda = guardaDoNavegador();
     guardarPendencia(guarda, loja.slug, referencia);
-    const r = await fetch("/api/checkout", {
+    let r: Response;
+    try {
+      r = await fetch("/api/checkout", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
@@ -216,7 +219,13 @@ export default function CheckoutClient({ loja, conta }: { loja: TenantPublico; c
         meioPagamento: dados.meioPagamento,
         cartao: dados.cartaoToken ? { token: dados.cartaoToken, parcelas: dados.parcelas, bandeira: dados.bandeira } : undefined,
       }),
-    });
+      });
+    } catch {
+      // A rede pode cair depois de o provedor cobrar. Conserva a referência
+      // e leva à consulta; nunca promete que não houve cobrança nem repete.
+      setAConfirmar(`/pedido/${encodeURIComponent(referencia)}`);
+      return new Promise<ResultadoPagamento>(() => {});
+    }
     const corpo = await r.json().catch(() => null);
     const desfecho = desfechoDoCheckout(r.ok, corpo, referencia);
     if (encerraPendencia(desfecho)) esquecerPendencia(guarda, loja.slug);
@@ -290,6 +299,10 @@ export default function CheckoutClient({ loja, conta }: { loja: TenantPublico; c
   return (
     <div className="container-loja py-8">
       <h1 className="mb-6 text-2xl font-bold">Finalizar compra</h1>
+      <details className="mb-6 rounded-xl border border-border p-4" open>
+        <summary className="cursor-pointer text-sm font-semibold">Consulte a entrega antes de preencher seus dados</summary>
+        <ConsultarEntrega itens={ids} subtotal={itensCheckout.reduce((s, i) => s + i.precoUnitario * i.quantidade, 0)} desconto={cupom?.desconto} cupom={cupom?.codigo} whatsapp={loja.whatsapp} localRetirada={loja.localRetirada} />
+      </details>
       <CheckoutScreen
         itens={itensCheckout}
         fretes={fretes}
