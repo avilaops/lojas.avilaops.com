@@ -111,14 +111,28 @@ try {
     await page.getByRole("button", { name: "Continuar", exact: true }).click();
     await page.getByRole("heading", { name: "Como você prefere pagar", exact: true }).waitFor();
     await captura(page, `pagamento-${width}`);
+    if (width === 1440) await page.route("**/api/checkout", async route => {
+      // O servidor cria a cobrança de teste, mas o navegador perde a resposta.
+      const resposta = await route.fetch();
+      assert.ok(resposta.ok());
+      await route.abort("failed");
+    });
     await page.getByRole("button", { name: /Pagar R\$\s*100,00/ }).click();
-    await page.getByRole("heading", { name: "Pague com Pix", exact: true }).waitFor();
+    if (width === 1440) {
+      await page.getByRole("heading", { name: "Estamos confirmando o pagamento", exact: true }).waitFor();
+      assert.equal(await page.getByText(/Nada foi cobrado/).count(), 0);
+      await page.reload();
+      await page.getByRole("heading", { name: "Sua compra anterior já virou pedido", exact: true }).waitFor();
+      assert.equal(await page.getByRole("button", { name: /^Pagar / }).count(), 0);
+      assert.equal(await prisma.pedido.count({ where: { tenantId: t.id, clienteEmail: `qa-${width}@example.test` } }), 1);
+      await captura(page, `resposta-perdida-${width}`);
+    } else await page.getByRole("heading", { name: "Pague com Pix", exact: true }).waitFor();
     const pedido = await prisma.pedido.findFirstOrThrow({ where: { tenantId: t.id, clienteEmail: `qa-${width}@example.test` } });
     assert.equal(pedido.status, "AGUARDANDO_PAGAMENTO");
     assert.equal(pedido.totalCentavos, 10000);
     assert.equal(pedido.gateway, "pix_manual");
     assert.deepEqual(erros, []);
-    relatorio.push({ width, cotacaoSemIdentidade: true, invalidaAoAlterarQuantidade: true, trocaCepSemCotacaoAntiga: true, pixGerado: true, pagamentoReal: false });
+    relatorio.push({ width, cotacaoSemIdentidade: true, invalidaAoAlterarQuantidade: true, trocaCepSemCotacaoAntiga: true, pixGerado: true, respostaPerdidaSemRepetirCobranca: width === 1440, pagamentoReal: false });
     await contexto.close();
   }
   await writeFile(`${pasta}/resultado.json`, JSON.stringify({ commit: process.env.GITHUB_SHA, ambiente: "github-ci-postgresql-isolado", verificacoes: relatorio }, null, 2));

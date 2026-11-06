@@ -192,7 +192,7 @@ export default function CheckoutClient({ loja, conta }: { loja: TenantPublico; c
   }
 
   async function aoInformarCep(cep: string) {
-    const opcoes = await consultarFrete({ cep, itens: ids, cupom: cupom?.codigo });
+    const opcoes = await consultarFrete({ cep, itens: ids, cupom: cupom?.codigo }, AbortSignal.timeout(30_000));
     setFretes(opcoes);
     return opcoes;
   }

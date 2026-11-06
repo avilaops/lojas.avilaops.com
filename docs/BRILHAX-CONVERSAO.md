@@ -47,3 +47,33 @@ Os testes de pagamento usam provedor Pix manual em tenant efêmero, nunca
 credenciais reais. Pix gerado não é pagamento aprovado. A comprovação do
 gateway real e a definição de orçamento de mídia permanecem independentes
 das alterações de interface.
+
+## Curadoria aplicada e bloqueio da entrega
+
+Em produção foram selecionados oito destaques automotivos (dois kits, V-Floc
+500 ml, Sintra Fast 500 ml, Delet 500 ml, pincel Zacs, V-Eco Fast e aromatizante
+Bugatti). O item de Natal e as categorias Enfeites para Árvores e Mouses foram
+desativados. Preços e estoques foram preservados por releitura do catálogo.
+
+A consulta pública real retornou somente retirada. A chave pública CepCerto
+está vazia e o tenant não conectou Melhor Envio. A credencial operacional
+existente retornou HTTP 500 na cotação de uma rota com CEP válido. A chave
+de consultas existente retornou HTTP 422: cliente sem ciclo transacional
+ativo. Nenhuma etiqueta ou cobrança foi criada. É necessário regularizar
+o acesso/plano da CepCerto e fornecer a chave pública com origem autorizada,
+ou configurar uma alternativa de entrega real. Não preencher tabela fictícia.
+
+## Distribuição com origem identificada
+
+Usar cinco destinos para a primeira divulgação orgânica. Os parâmetros abaixo
+já são interpretados pelo mecanismo de atribuição existente; não criam anúncios.
+
+- Lavagem: `/produtos/v-floc-500ml?utm_source=instagram&utm_medium=social&utm_campaign=primeira_compra&utm_content=lavagem`
+- Interior: `/produtos/sintra-fast-500ml?utm_source=instagram&utm_medium=social&utm_campaign=primeira_compra&utm_content=interior`
+- Pneus: `/produtos/delet-500ml?utm_source=instagram&utm_medium=social&utm_campaign=primeira_compra&utm_content=pneus`
+- Kits: `/categoria/kits-completos?utm_source=instagram&utm_medium=social&utm_campaign=primeira_compra&utm_content=kits`
+- Atendimento local: `/categoria/kits-completos?utm_source=whatsapp&utm_medium=messaging&utm_campaign=primeira_compra&utm_content=retirada`
+
+Concentrar a divulgação local em retirada até restabelecer envio. Comparar
+preço final da cesta antes de mídia paga. Não substituir prova de vendas
+por cliques, não inventar metas de receita ou prometer conversão.
