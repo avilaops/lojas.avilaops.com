@@ -32,7 +32,7 @@ O ID ausente no tenant não comprova ausência de conta/políticas no Google. N�
 
 Somente testes de regressão, evidência e orientação operacional. Nenhuma mudança funcional comprovada se justifica para essa configuração. Testes asseguram que origem e despacho não inventam frete grátis e que tabela paga não passa a declarar gratuidade. PR deve permanecer em rascunho: o repositório tem merge/deploy automáticos para PR pronta. Sem merge/deploy autorizado.
 
-Resultado local: 12/12 testes focados passaram. Lint foi bloqueado por dependência ESLint quebrada (`Cannot find module ./utils/lazy-loading-rule-map`) no ambiente preexistente. A tentativa de instalação limpa foi interrompida por custo de recursos do servidor; lint/typecheck não estão certificados nesta entrega. Conferir a CI da PR antes de qualquer aprovação.
+Resultado local: 12/12 testes focados passaram. Lint foi bloqueado por dependência ESLint quebrada (`Cannot find module ./utils/lazy-loading-rule-map`) no ambiente preexistente. A tentativa de instalação limpa foi interrompida por custo de recursos do servidor; Typecheck com as dependências reaproveitadas falhou fora dos arquivos alterados, incluindo `TS2305` em `tests/integration/pix-manual.test.ts` (exports `crc16Pix` e `valorPixEmReais` ausentes). Não foi atribuída regressão a esses erros; lint/typecheck não estão certificados nesta entrega. Conferir a CI da PR antes de qualquer aprovação.
 
 Comandos: `tsx --test src/lib/envio-declarado.test.ts src/lib/merchant-schema.test.ts`; `eslint src/lib/envio-declarado.test.ts`; `npm run typecheck`.
 
