@@ -18,7 +18,7 @@
       "objective": "Reduzir atrito antes da identificação e preservar pagamentos, cotações e medição corretos.",
       "assignee": "codex",
       "priority": "alta",
-      "status": "em-andamento",
+      "status": "em-revisao",
       "acceptanceCriteria": [
         "Produto, carrinho e checkout consultam entrega por CEP sem cadastro.",
         "Trocar CEP, carrinho ou cupom invalida a estimativa anterior; erro nunca vira frete grátis.",
@@ -28,8 +28,8 @@
         "CI e verificação publicada têm evidências separadas; preços, frete subsidiado e anúncios pagos dependem de decisão comercial."
       ],
       "environment": "github-ci",
-      "evidence": "Plano em docs/BRILHAX-CONVERSAO.md; execução e publicação pendentes.",
-      "history": [{ "at": "2026-11-06", "status": "em-andamento", "note": "Autorização explícita do proprietário após auditoria da vitrine, carrinho, checkout e dados de sessões." }]
+      "evidence": "PR #217 publicada no commit c82b56c469f1f3edb99148c6af5f3dca4f7f81e2. CI/deploy/fumaça 42240400965 aprovados; home, produto, carrinho e consulta antes da identidade conferidos em produção. AVL-408 registra bloqueio CepCerto. Continuação autorizada: sugestões respeitam estoque e escolha de opções, evitam repetição e mostram confirmação; local público de retirada e horário junto da cotação; distinguir preparo de prazo de transporte. Validação da continuação no GitHub CI.",
+      "history": [{ "at": "2026-11-06", "status": "em-andamento", "note": "Autorização explícita do proprietário após auditoria da vitrine, carrinho, checkout e dados de sessões." }, { "at": "2026-11-06", "status": "em-revisao", "note": "Primeira entrega publicada e validada. Proprietário pediu continuar melhorando; segunda entrega em validação. Envio permanece bloqueado no fornecedor de frete." }]
     },
     {
       "id": "MERCHANT-SCHEMA-20261106",

@@ -40,6 +40,8 @@ import { retornoSeguroDoCatalogo } from "@/lib/retorno-catalogo";
 import { referenciaPoliticaDevolucao } from "@/lib/politicas";
 import { numeroDeContato } from "@/lib/canais-publicos";
 import ConsultarEntrega from "@/components/checkout/ConsultarEntrega";
+import { localPublicoDeRetirada } from "@/lib/retirada-publica";
+import { prazoDeDespacho } from "@/lib/textos-loja";
 
 const MEIOS: Record<string, string> = { pix: "Pix", cartao: "Cartão", boleto: "Boleto" };
 
@@ -306,7 +308,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
             <div className="mt-4"><EstoqueBaixo estoque={p.estoque} limite={t.estoqueBaixoEm} /></div>
           )}
 
-          {p.opcoes.length === 0 && !somenteNaLoja && estado.acao === "carrinho" && <ConsultarEntrega itens={[{ id: escolhida ? `${p.id}:${escolhida.id}` : p.id, quantidade: 1 }]} subtotal={p.precoCentavos} whatsapp={whatsapp} />}
+          {p.opcoes.length === 0 && !somenteNaLoja && estado.acao === "carrinho" && <ConsultarEntrega itens={[{ id: escolhida ? `${p.id}:${escolhida.id}` : p.id, quantidade: 1 }]} subtotal={p.precoCentavos} whatsapp={whatsapp} localRetirada={localPublicoDeRetirada(t)} />}
 
           <Medicamento produto={p} precoCentavos={p.precoCentavos} equivalentes={equivalentes} />
 
@@ -314,9 +316,8 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
 
           <ul className="mt-6 space-y-1 text-sm text-muted-foreground">
             {retiradaPublicaDisponivel(t) && <li>✔ Retirada na loja sem custo</li>}
-            <li>✔ {t.despachoDiasUteis === 0
-              ? "Despacho no mesmo dia útil para pagamentos confirmados durante o expediente"
-              : `Envio em até ${t.despachoDiasUteis} ${t.despachoDiasUteis === 1 ? "dia útil" : "dias úteis"} após o pagamento`}</li>
+            <li>✔ Preparo do pedido {prazoDeDespacho(t.despachoDiasUteis)} após a confirmação do pagamento</li>
+            <li>✔ Opções de entrega e prazo de transporte conforme o CEP</li>
             {t.freteGratisAcima != null && <li>✔ Frete grátis acima de {formatarBRL(t.freteGratisAcima)}</li>}
             {codigoPublico(p.sku) && <li className="text-xs">{rotuloDoCodigo(p.sku, p.gtin)} {codigoPublico(p.sku)}</li>}
           </ul>

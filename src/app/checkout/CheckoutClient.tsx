@@ -301,7 +301,7 @@ export default function CheckoutClient({ loja, conta }: { loja: TenantPublico; c
       <h1 className="mb-6 text-2xl font-bold">Finalizar compra</h1>
       <details className="mb-6 rounded-xl border border-border p-4" open>
         <summary className="cursor-pointer text-sm font-semibold">Consulte a entrega antes de preencher seus dados</summary>
-        <ConsultarEntrega itens={ids} subtotal={itensCheckout.reduce((s, i) => s + i.precoUnitario * i.quantidade, 0)} desconto={cupom?.desconto} cupom={cupom?.codigo} whatsapp={loja.whatsapp} />
+        <ConsultarEntrega itens={ids} subtotal={itensCheckout.reduce((s, i) => s + i.precoUnitario * i.quantidade, 0)} desconto={cupom?.desconto} cupom={cupom?.codigo} whatsapp={loja.whatsapp} localRetirada={loja.localRetirada} />
       </details>
       <CheckoutScreen
         itens={itensCheckout}

@@ -4,7 +4,7 @@ import { spawn, type ChildProcess } from "node:child_process";
 import { mkdir, writeFile } from "node:fs/promises";
 import { chromium, type Page } from "playwright";
 import { prisma } from "../src/lib/db.ts";
-import { salvarProdutoNoCatalogo } from "../src/lib/catalogo-escrita.ts";
+import { salvarProdutoNoCatalogo, salvarGradeNoCatalogo } from "../src/lib/catalogo-escrita.ts";
 import { contratoPadraoAninhado } from "../src/lib/contratos-comerciais.ts";
 import { definirPadrao, salvarCredencial } from "../src/lib/credenciais.ts";
 import { provedoresDePagamento } from "../src/lib/provedores-pagamento.ts";
@@ -30,6 +30,7 @@ try {
     slug, nome: "Automotiva QA", status: "ATIVA", plano: "LOJA", dominioPrincipal: `${slug}.localhost`, dominios: [`${slug}.localhost`],
     tema: { layout: "automotivo", categoriaSemImagem: "icone" }, recursos: ["pagamentos_pix_manual", "recebimento_v2"],
     retiradaNaLoja: true, enderecoPublico: true, despachoDiasUteis: 1,
+    horario: "Segunda a sexta, das 9h às 18h",
     endereco: { logradouro: "Rua QA", numero: "100", bairro: "Centro", cidade: "Ribeirão Preto", uf: "SP", cep: "14010000" },
     entregaLocal: [{ prefixos: ["14"], nome: "Entrega QA", preco: 1500, prazoDiasUteis: 2 }],
     contratosComerciais: { create: contratoPadraoAninhado("LOJA", { aceiteEm: null, aceiteReferencia: null, origem: "QA isolado" }) },
@@ -37,6 +38,10 @@ try {
   tenantId = t.id;
   const categoria = await prisma.categoria.create({ data: { tenantId: t.id, slug: "kits", nome: "Kits Completos" } });
   await salvarProdutoNoCatalogo(t.id, null, { nome: "Kit lavagem QA", slug: "kit-qa", sku: "KIT-QA", precoCentavos: 5000, estoque: 30, categoriaId: categoria.id, imagens: [`${origem}/lojas-mark.svg`] });
+  await salvarProdutoNoCatalogo(t.id, null, { nome: "Pano QA", slug: "pano-qa", sku: "PANO-QA", precoCentavos: 500, estoque: 4, categoriaId: categoria.id });
+  await salvarProdutoNoCatalogo(t.id, null, { nome: "Esgotado QA", slug: "esgotado-qa", sku: "ESGOTADO-QA", precoCentavos: 500, estoque: 0, categoriaId: categoria.id });
+  const comOpcoes = await salvarProdutoNoCatalogo(t.id, null, { nome: "Apresentação QA", slug: "apresentacao-qa", sku: "APRESENTACAO-QA", precoCentavos: 1000, estoque: 4, categoriaId: categoria.id });
+  await salvarGradeNoCatalogo(t.id, comOpcoes.id, ["Volume"], [{ valores: { Volume: "500ml" }, precoCentavos: 1000, estoque: 4 }, { valores: { Volume: "1L" }, precoCentavos: 2000, estoque: 4 }]);
   const provedor = provedoresDePagamento.obter("pix_manual");
   const publicos = { chavePix: randomUUID(), nomeRecebedor: "QA sem pagamento real" };
   const teste = await provedor.testarConexao({ segredos: {}, publicos });
@@ -77,9 +82,20 @@ try {
     await captura(page, `produto-${width}`);
     await page.getByRole("button", { name: "Adicionar ao carrinho: Kit lavagem QA", exact: true }).click();
     await page.waitForURL(/\/carrinho$/);
+    await page.getByRole("button", { name: "Adicionar sugestão: Pano QA", exact: true }).waitFor();
+    assert.equal(await page.getByRole("link", { name: "Esgotado QA", exact: true }).count(), 0);
+    assert.equal(await page.getByRole("button", { name: "Adicionar sugestão: Apresentação QA", exact: true }).count(), 0);
+    assert.equal(await page.getByRole("link", { name: "Ver opções e detalhes", exact: true }).count(), 1);
+    await page.getByRole("button", { name: "Adicionar sugestão: Pano QA", exact: true }).click();
+    await page.getByText("Pano QA adicionado ao carrinho.", { exact: true }).waitFor();
+    assert.equal(await page.getByRole("button", { name: "Adicionar sugestão: Pano QA", exact: true }).count(), 0);
+    await captura(page, `sugestoes-${width}`);
+    await page.getByRole("listitem").filter({ has: page.getByRole("link", { name: "Pano QA", exact: true }) }).getByRole("button", { name: "Remover", exact: true }).click();
     await page.getByLabel("CEP para calcular a entrega").fill("14075240");
     await page.getByRole("button", { name: "Calcular entrega", exact: true }).click();
     await page.getByText("Entrega QA", { exact: true }).waitFor();
+    await page.getByRole("region", { name: "Calcule entrega e prazo", exact: true }).getByText("Rua QA, 100 · Centro · Ribeirão Preto - SP · 14010-000", { exact: false }).waitFor();
+    await page.getByText("Aguarde a confirmação de que o pedido está pronto antes de ir à loja.", { exact: true }).waitFor();
     await page.getByRole("button", { name: "Mais", exact: true }).click();
     assert.equal(await page.getByText("Entrega QA", { exact: true }).count(), 0, "Quantidade nova invalida cotação");
     await page.getByRole("button", { name: "Calcular entrega", exact: true }).click();

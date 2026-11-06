@@ -1,13 +1,14 @@
 import { BadgeCheck, PackageCheck, Store, Truck } from "lucide-react";
 import type { Tenant } from "@prisma/client";
 import { retiradaPublicaDisponivel } from "@/lib/tenant";
+import { prazoDeDespacho } from "@/lib/textos-loja";
 
 export default function BeneficiosBarra({ t }: { t: Tenant }) {
   const itens = [
     {
       Icone: PackageCheck,
-      titulo: `Despacho em até ${t.despachoDiasUteis} ${t.despachoDiasUteis === 1 ? "dia útil" : "dias úteis"}`,
-      texto: "Prazo informado antes da compra",
+      titulo: `Preparo ${prazoDeDespacho(t.despachoDiasUteis)}`,
+      texto: "Após a confirmação do pagamento",
     },
     t.freteGratisAcima != null
       ? {
@@ -17,8 +18,8 @@ export default function BeneficiosBarra({ t }: { t: Tenant }) {
         }
       : {
           Icone: Truck,
-          titulo: "Frete calculado pelo CEP",
-          texto: "Opções e prazo antes do pagamento",
+          titulo: "Consulte a entrega pelo CEP",
+          texto: "Veja as opções disponíveis para sua região",
         },
     retiradaPublicaDisponivel(t)
       ? { Icone: Store, titulo: "Retirada disponível", texto: "Economize no frete quando preferir" }

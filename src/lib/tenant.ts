@@ -5,7 +5,7 @@ import type { Tenant } from "@prisma/client";
 import { prisma } from "./db";
 import { lerTema, type TemaLoja } from "./tema";
 import { lerIdentidade, type IdentidadeLoja } from "./identidade";
-import { retiradaPublicaDisponivel } from "./retirada-publica";
+import { retiradaPublicaDisponivel, localPublicoDeRetirada } from "./retirada-publica";
 import { vendaOnlineDisponivel } from "./venda-online";
 import { identidadePublica } from "./identidade-publica";
 export { retiradaPublicaDisponivel } from "./retirada-publica";
@@ -197,6 +197,7 @@ export function tenantPublico(t: Tenant) {
     meiosPagamento: meiosAceitos(t),
     pixNaConta: pixNaConta(t),
     retiradaNaLoja: retiradaPublicaDisponivel(t),
+    localRetirada: localPublicoDeRetirada(t),
     despachoDiasUteis: t.despachoDiasUteis,
     estoqueBaixoEm: t.estoqueBaixoEm,
     freteGratisAcima: t.freteGratisAcima,

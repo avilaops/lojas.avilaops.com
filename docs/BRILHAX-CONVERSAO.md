@@ -63,6 +63,22 @@ ativo. Nenhuma etiqueta ou cobrança foi criada. É necessário regularizar
 o acesso/plano da CepCerto e fornecer a chave pública com origem autorizada,
 ou configurar uma alternativa de entrega real. Não preencher tabela fictícia.
 
+## Continuação de 06/11/2026
+
+A primeira entrega foi publicada pelo PR #217, commit
+`c82b56c469f1f3edb99148c6af5f3dca4f7f81e2`. O run `42240400965` aprovou CI,
+deploy e fumaça. Home, produto, carrinho e consulta antes do cadastro foram
+conferidos na loja real; a imagem em execução corresponde ao digest do CI.
+As evidências e o impedimento CepCerto estão registrados na AVL-408.
+
+Após novo pedido para continuar, a segunda entrega corrige as sugestões:
+estoque zero é filtrado pela regra comum; itens com opções exigem abrir a ficha;
+itens já no carrinho deixam de aparecer e a adição tem confirmação acessível.
+O local público de retirada e o horário cadastrado acompanham a cotação, com
+orientação para aguardar o pedido ficar pronto. Endereço privado não é exposto.
+Os textos distinguem preparo do pedido de prazo de transporte; consultar o CEP
+não promete disponibilidade de envio. Preços, estoque e condições são preservados.
+
 ## Distribuição com origem identificada
 
 Usar cinco destinos para a primeira divulgação orgânica. Os parâmetros abaixo
