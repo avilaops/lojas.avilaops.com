@@ -10,12 +10,13 @@ import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
 type Cotacao = { chave: string; opcoes?: OpcaoFrete[]; erro?: string; buscando?: boolean };
 
 /** Consulta pública: não cria contato, pedido, reserva nem cobrança. */
-export default function ConsultarEntrega({ itens, subtotal, desconto = 0, cupom, whatsapp }: {
+export default function ConsultarEntrega({ itens, subtotal, desconto = 0, cupom, whatsapp, localRetirada }: {
   itens: ItemParaFrete[];
   subtotal: number;
   desconto?: number;
   cupom?: string;
   whatsapp?: string | null;
+  localRetirada?: { endereco: string; horario: string | null } | null;
 }) {
   const id = useId();
   const [cep, setCep] = useState("");
@@ -70,6 +71,11 @@ export default function ConsultarEntrega({ itens, subtotal, desconto = 0, cupom,
             {atual.opcoes.map(opcao => <li key={opcao.id} className="border-t border-border pt-3">
               <div className="flex flex-wrap justify-between gap-2"><strong>{opcao.nome}</strong><strong>{opcao.preco === 0 ? (opcao.id === FRETE_RETIRADA_ID ? "Retirada grátis" : "Grátis") : formatarBRL(opcao.preco)}</strong></div>
               <p className="mt-1 text-xs text-muted-foreground">{opcao.prazoDiasUteis === 0 ? "Prazo conforme disponibilidade da loja" : `Até ${opcao.prazoDiasUteis} ${opcao.prazoDiasUteis === 1 ? "dia útil" : "dias úteis"}`}</p>
+              {opcao.id === FRETE_RETIRADA_ID && localRetirada && <div className="mt-2 text-xs">
+                <p><b>Local de retirada:</b> {localRetirada.endereco}</p>
+                {localRetirada.horario && <p className="mt-1"><b>Horário:</b> {localRetirada.horario}</p>}
+                <p className="mt-1 text-muted-foreground">Aguarde a confirmação de que o pedido está pronto antes de ir à loja.</p>
+              </div>}
               <p className="mt-1 text-xs">Produtos + {opcao.id === FRETE_RETIRADA_ID ? "retirada" : "entrega"}: <b>{formatarBRL(Math.max(0, subtotal - desconto) + opcao.preco)}</b></p>
             </li>)}
           </ul>

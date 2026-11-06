@@ -56,6 +56,7 @@ function renderizarCabecalho(slug: string, nome: string, categoriasDaLoja: typeo
     meiosPagamento: [],
     pixNaConta: false,
     retiradaNaLoja: true,
+    localRetirada: null,
     despachoDiasUteis: 1,
     estoqueBaixoEm: 3,
     freteGratisAcima: null,
