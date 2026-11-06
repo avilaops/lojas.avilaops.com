@@ -1,7 +1,7 @@
 # AVL-417 — decisão de integração do visualizador MRG
 
 Data: 03/11/2026. Autor: agente Codex, engenharia AVL-417.
-Estado: análise arquitetural concluída; implementação do novo visualizador pendente.
+Estado: implementação em PR; sem merge, deploy ou aceite de produção.
 Issue: https://linear.app/avilaops/issue/AVL-417/mrg-adotar-motor-3d-detalhado-no-configurador-sob-medida
 
 ## Escopo e evidência
@@ -203,9 +203,21 @@ permitiram inspecionar as fontes. get_agent_context retornou
 `Tool get_agent_context not found`; o contexto foi recuperado por projeto,
 issues, comentários e código.
 
-Entrega desta rodada: documento de comparação, decisão de integração e
-registro da demanda. Nenhum código runtime, dependência, banco, regra
-industrial ou ambiente de produção foi alterado.
+Implementação da evolução:
+
+- `gerador-3d`, branch `feat/thermal-box-visualizer`, commit `3238a9d`:
+  contrato visual neutro `thermal-box`, modelo paramétrico de caixa, tampa
+  superior/frontal/dupla, pés/rodízios/sem base, divisórias e wrapper React.
+- Lojas, branch `feat/avl-417-motor-3d`: dependência fixada no SHA `3238a9d`,
+  adaptador `configuracaoParaThermalBoxVisual` e substituição do palco CSS por
+  `ThermalBoxViewerView` carregado somente no cliente.
+- O viewer oferece OrbitControls para rotação e zoom por gesto, botões
+  focáveis de restaurar/aproximar/afastar e fallback textual quando WebGL falha.
+- Quantidade e observações continuam exclusivamente na ficha; nenhum campo
+  industrial ausente foi inferido.
+
+Esta implementação está em branch e ainda não comprova CI, aprovação visual
+responsiva, merge, deploy ou comportamento em produção.
 
 Menor próximo passo técnico: coordenar na AVL-417 uma alteração de
 `gerador-3d` que aceite um modelo visual neutro e omita overlays de academia,
