@@ -17,11 +17,14 @@ import { emitirState as emitirStateAssinado, lerState as lerStateAssinado } from
  */
 
 /**
- * Só o que a plataforma usa hoje: cotar, e ler de quem é a conta para mostrar
- * na tela. Pedir permissão de compra de etiqueta antes de existir a compra
- * seria o lojista autorizando gasto que ninguém faz.
+ * O aplicativo usa o ciclo operacional explícito da postagem, incluindo a
+ * escrita no carrinho, compra, geração, impressão, cancelamento e rastreio.
  */
-const ESCOPOS = ["shipping-calculate", "users-read"];
+/** Escopos necessários para cotar, comprar, gerar, imprimir, cancelar e rastrear. */
+const ESCOPOS = [
+  "cart-write", "shipping-calculate", "shipping-checkout", "shipping-generate", "shipping-print",
+  "shipping-cancel", "shipping-tracking", "users-read",
+];
 
 const CAMINHO_DE_RETORNO = "/melhor-envio/callback";
 

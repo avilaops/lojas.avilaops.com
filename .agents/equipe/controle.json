@@ -13,6 +13,22 @@
   ],
   "tasks": [
     {
+      "id": "AVL-417",
+      "title": "MRG — adotar motor 3D detalhado no configurador sob medida",
+      "objective": "Integrar o visualizador compartilhado preservando configuração, retomada e ficha versionada.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-andamento",
+      "acceptanceCriteria": [
+        "Comparar Lojas, Ludus, motor-web e gerador-3d antes da escolha.",
+        "Modelo detalhado, gestos móveis e fallback acessível sincronizados com a ficha.",
+        "Testes, TypeScript, lint, build e validação visual móvel aprovados na CI."
+      ],
+      "evidence": "docs/AVL-417-MOTOR-3D.md: comparação de quatro commits e contratos concluída por inspeção em 03/11/2026. Novo visualizador e testes não executados; sem publicação.",
+      "environment": "local",
+      "blocker": "Aceite integral depende de opções industriais de isolamento/ferragens, adiadas expressamente na AVL-400. Reuso tipado do viewer requer coordenação de contrato neutro ou família MRG no gerador-3d."
+    },
+    {
       "id": "BRILHAX-CONVERSAO-20261106",
       "title": "Melhorar descoberta, consulta de entrega e checkout da Brilhax",
       "objective": "Reduzir atrito antes da identificação e preservar pagamentos, cotações e medição corretos.",

@@ -2,9 +2,11 @@
 
 ## Escopo autorizado
 
-Esta etapa atende conexão OAuth e cotação de fretes em sandbox. Não habilita
-produção no Melhor Envio, compra de etiquetas, consumo de carteira, geração,
-impressão, rastreio integrado ou webhooks. A hospedagem do Lojas pode continuar
+Esta etapa atende conexão OAuth e cotação de fretes em sandbox. A implementação
+agora também contém o ciclo operacional explícito de uma postagem — carrinho,
+compra, geração, impressão, consulta de rastreio e webhook assinado — mas não
+habilita produção no Melhor Envio nem executa compra de etiqueta sozinha. A
+hospedagem do Lojas pode continuar
 no domínio público habitual; o ambiente da API de frete é sandbox.
 
 As credenciais do aplicativo e a autorização da conta são requisitos distintos.
@@ -19,7 +21,8 @@ o aplicativo. Não há prova de conexão nem de cotação autenticada no sandbox
    conexão de conta e consulta de preços/prazos; sem compra de etiquetas.
 4. Cadastrar exatamente o callback
    `https://lojas.avilaops.com/melhor-envio/callback`.
-5. Solicitar somente `shipping-calculate` e `users-read`.
+5. Solicitar `cart-write`, `shipping-calculate`, `shipping-checkout`, `shipping-generate`,
+   `shipping-print`, `shipping-cancel`, `shipping-tracking` e `users-read`.
 6. Preencher `client_id` e `client_secret` na credencial privada do n8n
    **Lojas - Melhor Envio**, tipo `httpCustomAuth`. Nunca enviar esses valores
    no chat, commit, gravação ou apresentação. A existência da credencial não
@@ -81,6 +84,16 @@ simuladas de prova de acesso ao Melhor Envio.
 - Somente os domínios oficiais de produção e sandbox são aceitos na configuração;
   o padrão é sandbox. Produção requer configuração explícita e etapa posterior.
 - O painel mostra a conexão separada do resultado do teste de cotação.
+- O pedido persiste o `freteId` escolhido, e a postagem persiste o provedor, o
+  ID da etiqueta, protocolo, status externo e URL de rastreio.
+- `POST /api/painel/pedidos/{id}/etiqueta` insere o envio no carrinho. Essa
+  chamada não paga a etiqueta.
+- `POST /api/painel/pedidos/{id}/etiqueta/operacao` recebe uma ação explícita:
+  `comprar`, `gerar`, `imprimir`, `cancelar` ou `rastrear`. Todas as consultas
+  usam a sessão e o tenant do painel.
+- `POST /api/webhooks/melhor-envio` valida `X-ME-Signature` com HMAC-SHA256,
+  deduz a postagem pelo ID do provedor e atualiza o status/rastreio do pedido.
+  Evento repetido é seguro porque a escrita converge para o mesmo registro.
 
 Há uma inconsistência na referência publicada: o texto demonstra `volumes` com
 `height`/`length`, mas o schema contém `heigth`/`lenght` e ainda marca `products`

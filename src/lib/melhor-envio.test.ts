@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { ambienteDoMelhorEnvio, baseDoMelhorEnvio, cotarMelhorEnvio, extrairCotacoes, lojaPermitidaNoMelhorEnvio, type PedidoDeCotacao } from "./melhor-envio";
+import { adicionarEnvioAoCarrinho, ambienteDoMelhorEnvio, baseDoMelhorEnvio, comprarEnviosMelhorEnvio, cotarMelhorEnvio, extrairCotacoes, gerarEtiquetasMelhorEnvio, imprimirEtiquetasMelhorEnvio, lerResultadoRastreioMelhorEnvio, lojaPermitidaNoMelhorEnvio, rastrearEnviosMelhorEnvio, cancelarEnviosMelhorEnvio, type PedidoDeCotacao } from "./melhor-envio";
 
 delete process.env.MELHOR_ENVIO_URL;
 
@@ -163,4 +163,55 @@ test("sem token não cota e não chama a rede", async () => {
   } finally {
     globalThis.fetch = fetchAntes;
   }
+});
+
+test("insere no carrinho com o service id persistido e produtos fiscais", async (t) => {
+  t.mock.method(globalThis, "fetch", async (_url: string, init: RequestInit) => {
+    const corpo = JSON.parse(String(init.body));
+    assert.equal(corpo.service, 17);
+    assert.equal(corpo.from.document, "12345678909");
+    assert.equal(corpo.to.document, "52998224725");
+    assert.deepEqual(corpo.products, [{ name: "Produto QA", quantity: 2, unitary_value: 12.34 }]);
+    return Response.json({ id: "shipment-1", protocol: "ORD-QA", status: "pending" });
+  });
+  const r = await adicionarEnvioAoCarrinho("token", {
+    serviceId: 17,
+    remetente: { nome: "Loja", email: "loja@example.test", telefone: "16999999999", documento: "12345678909", postalCode: "14010000", logradouro: "Rua A", numero: "1", bairro: "Centro", cidade: "Ribeirão Preto", uf: "SP" },
+    destinatario: { nome: "Cliente", email: "cliente@example.test", telefone: "11999999999", documento: "52998224725", postalCode: "01310100", logradouro: "Avenida B", numero: "2", bairro: "Bela Vista", cidade: "São Paulo", uf: "SP" },
+    caixa: { altura: 10, largura: 15, comprimento: 20 }, pesoKg: 1, valorDeclaradoCentavos: 2468,
+    produtos: [{ nome: "Produto QA", quantidade: 2, valorUnitarioCentavos: 1234 }],
+  });
+  assert.deepEqual({ id: r.id, protocolo: r.protocolo, status: r.status }, { id: "shipment-1", protocolo: "ORD-QA", status: "pending" });
+});
+
+test("operações de carteira usam os endpoints e IDs da postagem", async (t) => {
+  const urls: string[] = [];
+  t.mock.method(globalThis, "fetch", async (url: string) => { urls.push(url); return Response.json({ ok: true }); });
+  await comprarEnviosMelhorEnvio("token", ["shipment-1"]);
+  await gerarEtiquetasMelhorEnvio("token", ["shipment-1"]);
+  await imprimirEtiquetasMelhorEnvio("token", ["shipment-1"]);
+  await rastrearEnviosMelhorEnvio("token", ["shipment-1"]);
+  assert.deepEqual(urls.map((u) => u.split("/api/v2")[1]), [
+    "/me/shipment/checkout", "/me/shipment/generate", "/me/shipment/print", "/me/shipment/tracking",
+  ]);
+});
+
+test("impressão é pública e cancelamento informa motivo", async (t) => {
+  const corpos: Record<string, unknown>[] = [];
+  t.mock.method(globalThis, "fetch", async (_url: string, init: RequestInit) => {
+    corpos.push(JSON.parse(String(init.body)));
+    return Response.json({ ok: true });
+  });
+  await imprimirEtiquetasMelhorEnvio("token", ["shipment-1"]);
+  await cancelarEnviosMelhorEnvio("token", ["shipment-1"]);
+  assert.deepEqual(corpos, [
+    { orders: ["shipment-1"], mode: "public" },
+    { order: { id: "shipment-1", reason_id: "2", description: "Cancelamento solicitado no painel da loja." } },
+  ]);
+});
+
+test("aceita rastreio em objeto indexado pelo ID", () => {
+  assert.deepEqual(lerResultadoRastreioMelhorEnvio({ "shipment-1": { status: "posted", tracking: "AB123", tracking_url: "https://rastreio.test/AB123" } }), [
+    { id: "shipment-1", status: "posted", tracking: "AB123", trackingUrl: "https://rastreio.test/AB123" },
+  ]);
 });

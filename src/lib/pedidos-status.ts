@@ -30,6 +30,7 @@ export class MudancaDeStatusRecusada extends Error {
 export interface MudancaDeStatus {
   status?: StatusDaLoja;
   rastreio?: string | null;
+  notificar?: boolean;
   idempotencia?: string;
   origem?: string;
   ator?: AtorPedido;
@@ -113,6 +114,7 @@ export async function mudarStatusDoPedido(loja: Tenant, idOuReferencia: string, 
   if (!resultado.mudou || !mudanca.status) return resultado;
   const a = resultado.pedido;
   const comum = { slug: loja.slug, referencia: a.referencia, numero: a.numero, clienteNome: a.clienteNome, clienteEmail: a.clienteEmail, clienteTelefone: a.clienteTelefone, linkPedido: `${urlDaLoja(loja)}/pedido/${a.referencia}`, lojaNome: loja.nome, lojaUrl: urlDaLoja(loja), lojistaEmail: loja.loginEmail ?? loja.emailContato, lojistaWhatsapp: loja.whatsapp, emailRemetente: loja.emailRemetente };
+  if (mudanca.notificar === false) return resultado;
   if (mudanca.status === "EM_SEPARACAO") await emitir({ tipo: "pedido.em-separacao", ...comum }, { chave: `em-separacao:${a.referencia}` });
   if (mudanca.status === "ENVIADO") await emitir({ tipo: "pedido.enviado", transportadora: a.freteNome, rastreio: a.rastreio, ...comum }, { chave: `enviado:${a.referencia}` });
   if (mudanca.status === "ENTREGUE") await emitir({ tipo: "pedido.entregue", ...comum }, { chave: `entregue:${a.referencia}` });

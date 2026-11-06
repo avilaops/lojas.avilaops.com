@@ -48,13 +48,13 @@ test("state vencido é recusado", (t) => {
   assert.equal(lerState(state), null);
 });
 
-test("a autorização pede só cotação e leitura da conta, e volta para o retorno da plataforma", () => {
+test("a autorização pede o ciclo operacional e leitura da conta, e volta para o retorno da plataforma", () => {
   const url = new URL(urlDeAutorizacao({ ...LOJA_TESTE, slug: "brilhax" }, "https://lojas.avilaops.com"));
   assert.equal(url.origin + url.pathname, "https://sandbox.melhorenvio.com.br/oauth/authorize");
   assert.equal(url.searchParams.get("client_id"), "123");
   assert.equal(url.searchParams.get("response_type"), "code");
   assert.equal(url.searchParams.get("redirect_uri"), "https://lojas.avilaops.com/melhor-envio/callback");
-  assert.equal(url.searchParams.get("scope"), "shipping-calculate users-read");
+  assert.equal(url.searchParams.get("scope"), "cart-write shipping-calculate shipping-checkout shipping-generate shipping-print shipping-cancel shipping-tracking users-read");
   assert.equal(lerState(url.searchParams.get("state")), "brilhax");
 });
 

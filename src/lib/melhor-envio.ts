@@ -120,6 +120,167 @@ export interface PedidoDeCotacao {
   valorDeclarado: number;
 }
 
+export interface EnderecoDeEnvio {
+  nome: string;
+  email: string;
+  telefone: string;
+  documento: string;
+  postalCode: string;
+  logradouro: string;
+  numero: string;
+  complemento?: string | null;
+  bairro: string;
+  cidade: string;
+  uf: string;
+}
+
+export interface ProdutoDeEnvio {
+  nome: string;
+  quantidade: number;
+  valorUnitarioCentavos: number;
+}
+
+export interface CriarEnvioMelhorEnvio {
+  serviceId: number;
+  remetente: EnderecoDeEnvio;
+  destinatario: EnderecoDeEnvio;
+  caixa: { altura: number; largura: number; comprimento: number };
+  pesoKg: number;
+  valorDeclaradoCentavos: number;
+  produtos: ProdutoDeEnvio[];
+}
+
+export interface ResultadoCarrinhoMelhorEnvio {
+  id: string;
+  protocolo: string | null;
+  status: string | null;
+  raw: Record<string, unknown>;
+}
+
+function inteiroPositivo(v: unknown): number | null {
+  const n = typeof v === "number" ? v : typeof v === "string" && /^\d+$/.test(v) ? Number(v) : NaN;
+  return Number.isSafeInteger(n) && n > 0 ? n : null;
+}
+
+function texto(v: unknown): string | null {
+  return typeof v === "string" && v.trim() ? v.trim() : null;
+}
+
+function respostaObjeto(v: unknown): Record<string, unknown> {
+  return v && typeof v === "object" && !Array.isArray(v) ? v as Record<string, unknown> : {};
+}
+
+async function chamarOperacaoMelhorEnvio<T>(
+  token: string,
+  caminho: string,
+  corpo: Record<string, unknown>,
+): Promise<T> {
+  if (!token) throw new Error("Melhor Envio sem token válido.");
+  const r = await fetch(`${baseDoMelhorEnvio()}${caminho}`, {
+    method: "POST",
+    headers: cabecalhosDoMelhorEnvio(token),
+    body: JSON.stringify(corpo),
+    signal: AbortSignal.timeout(30_000),
+    cache: "no-store",
+    redirect: "error",
+  });
+  const dados = await r.json().catch(() => ({})) as unknown;
+  if (!r.ok) throw new Error(`Melhor Envio recusou a operação (HTTP ${r.status}).`);
+  return dados as T;
+}
+
+function pessoaParaApi(p: EnderecoDeEnvio): Record<string, unknown> {
+  const documento = p.documento.replace(/\D/g, "");
+  return {
+    name: p.nome,
+    email: p.email,
+    phone: p.telefone.replace(/\D/g, ""),
+    ...(documento.length === 14 ? { company_document: documento } : { document: documento }),
+    postal_code: p.postalCode.replace(/\D/g, ""),
+    address: p.logradouro,
+    number: p.numero,
+    complement: p.complemento || undefined,
+    district: p.bairro,
+    city: p.cidade,
+    state_abbr: p.uf.toUpperCase(),
+  };
+}
+
+function validarEnvio(p: CriarEnvioMelhorEnvio): void {
+  if (!Number.isSafeInteger(p.serviceId) || p.serviceId <= 0) throw new Error("Serviço de frete inválido.");
+  if (!p.produtos.length) throw new Error("O envio precisa de ao menos um produto.");
+  if (![p.pesoKg, p.caixa.altura, p.caixa.largura, p.caixa.comprimento].every((n) => Number.isFinite(n) && n > 0)) {
+    throw new Error("Peso ou dimensões inválidos para o envio.");
+  }
+  if (!Number.isFinite(p.valorDeclaradoCentavos) || p.valorDeclaradoCentavos < 0) throw new Error("Valor declarado inválido.");
+}
+
+/** Insere uma postagem no carrinho do Melhor Envio e não consome saldo. */
+export async function adicionarEnvioAoCarrinho(token: string, p: CriarEnvioMelhorEnvio): Promise<ResultadoCarrinhoMelhorEnvio> {
+  validarEnvio(p);
+  const dados = await chamarOperacaoMelhorEnvio<Record<string, unknown>>(token, "/api/v2/me/cart", {
+    service: p.serviceId,
+    agency: null,
+    from: pessoaParaApi(p.remetente),
+    to: pessoaParaApi(p.destinatario),
+    products: p.produtos.map((produto) => ({
+      name: produto.nome.slice(0, 120),
+      quantity: produto.quantidade,
+      unitary_value: Number((produto.valorUnitarioCentavos / 100).toFixed(2)),
+    })),
+    volumes: [{
+      height: p.caixa.altura,
+      width: p.caixa.largura,
+      length: p.caixa.comprimento,
+      weight: p.pesoKg,
+    }],
+    options: { insurance_value: Number((p.valorDeclaradoCentavos / 100).toFixed(2)), receipt: false, own_hand: false },
+  });
+  const id = texto(dados.id) ?? texto(dados.order_id) ?? texto(dados.shipment_id);
+  if (!id) throw new Error("Melhor Envio não devolveu o ID da postagem.");
+  return { id, protocolo: texto(dados.protocol), status: texto(dados.status), raw: dados };
+}
+
+export async function comprarEnviosMelhorEnvio(token: string, ids: string[]): Promise<Record<string, unknown>> {
+  if (!ids.length || ids.some((id) => !/^[\w-]+$/.test(id))) throw new Error("IDs de postagem inválidos.");
+  return chamarOperacaoMelhorEnvio(token, "/api/v2/me/shipment/checkout", { orders: ids });
+}
+
+export async function gerarEtiquetasMelhorEnvio(token: string, ids: string[]): Promise<Record<string, unknown>> {
+  if (!ids.length) throw new Error("Nenhuma postagem informada.");
+  return chamarOperacaoMelhorEnvio(token, "/api/v2/me/shipment/generate", { orders: ids });
+}
+
+export async function imprimirEtiquetasMelhorEnvio(token: string, ids: string[]): Promise<Record<string, unknown>> {
+  if (!ids.length) throw new Error("Nenhuma postagem informada.");
+  return chamarOperacaoMelhorEnvio(token, "/api/v2/me/shipment/print", { orders: ids, mode: "public" });
+}
+
+export async function cancelarEnviosMelhorEnvio(token: string, ids: string[]): Promise<Record<string, unknown>> {
+  if (ids.length !== 1 || !/^[\w-]+$/.test(ids[0])) throw new Error("O cancelamento exige uma postagem válida.");
+  return chamarOperacaoMelhorEnvio(token, "/api/v2/me/shipment/cancel", {
+    order: { id: ids[0], reason_id: "2", description: "Cancelamento solicitado no painel da loja." },
+  });
+}
+
+export async function rastrearEnviosMelhorEnvio(token: string, ids: string[]): Promise<Record<string, unknown>> {
+  if (!ids.length) throw new Error("Nenhuma postagem informada.");
+  return chamarOperacaoMelhorEnvio(token, "/api/v2/me/shipment/tracking", { orders: ids });
+}
+
+export function lerResultadoRastreioMelhorEnvio(dados: unknown): Array<{ id: string; status: string | null; tracking: string | null; trackingUrl: string | null }> {
+  const raiz = respostaObjeto(dados);
+  const lista = Array.isArray(dados) ? dados : Array.isArray(raiz.data) ? raiz.data : Object.entries(raiz).flatMap(([id, valor]) => {
+    const item = respostaObjeto(valor);
+    return item.id == null ? [{ ...item, id }] : [item];
+  });
+  return lista.flatMap((item) => {
+    const d = respostaObjeto(item);
+    const id = texto(d.id) ?? (inteiroPositivo(d.id)?.toString() ?? null);
+    return id ? [{ id, status: texto(d.status), tracking: texto(d.tracking), trackingUrl: texto(d.tracking_url) }] : [];
+  });
+}
+
 /**
  * Cota o trecho com o token da loja. Devolve `null` quando não dá para cotar
  * — API fora do ar ou nenhum serviço atendendo —, e quem chama cai na tabela
