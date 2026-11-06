@@ -209,10 +209,10 @@ issues, comentários e código.
 
 Implementação da evolução:
 
-- `gerador-3d`, branch `feat/thermal-box-visualizer`, commit `3238a9d`:
+- `gerador-3d`, branch `feat/thermal-box-visualizer`, commit `3a8397c`:
   contrato visual neutro `thermal-box`, modelo paramétrico de caixa, tampa
   superior/frontal/dupla, pés/rodízios/sem base, divisórias e wrapper React.
-- Lojas, branch `feat/avl-417-motor-3d`: dependência fixada no SHA `3238a9d`,
+- Lojas, branch `feat/avl-417-motor-3d`: dependência fixada no SHA `3a8397c`,
   adaptador `configuracaoParaThermalBoxVisual` e substituição do palco CSS por
   `ThermalBoxViewerView` carregado somente no cliente.
 - O viewer oferece OrbitControls para rotação e zoom por gesto, botões
