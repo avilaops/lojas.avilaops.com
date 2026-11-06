@@ -41,7 +41,7 @@ export function alvoPedidoMelhorEnvio(atual: PedidoStatus, evento: string): Pedi
   if (evento === "delivered") {
     return ["PAGO", "EM_SEPARACAO", "ENVIADO"].includes(atual) ? "ENTREGUE" : null;
   }
-  if (["posted", "undelivered"].includes(evento)) {
+  if (evento === "posted") {
     return ["PAGO", "EM_SEPARACAO"].includes(atual) ? "ENVIADO" : null;
   }
   if (["released", "received", "generated"].includes(evento)) {

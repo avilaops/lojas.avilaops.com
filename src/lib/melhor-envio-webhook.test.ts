@@ -29,6 +29,7 @@ test("não regride o status local da postagem com webhook atrasado", () => {
 
 test("traduz eventos do provedor em transições válidas do pedido", () => {
   assert.equal(alvoPedidoMelhorEnvio("PAGO", "pending"), null);
+  assert.equal(alvoPedidoMelhorEnvio("PAGO", "undelivered"), null);
   assert.equal(alvoPedidoMelhorEnvio("PAGO", "posted"), "ENVIADO");
   assert.equal(alvoPedidoMelhorEnvio("CANCELADO", "delivered"), null);
   assert.deepEqual(transicoesPedidoMelhorEnvio("PAGO", "ENTREGUE"), ["EM_SEPARACAO", "ENVIADO", "ENTREGUE"]);

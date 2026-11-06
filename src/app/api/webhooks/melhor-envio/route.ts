@@ -20,6 +20,7 @@ export async function POST(request: Request) {
   if (!postagem) return Response.json({ ok: true, ignorado: true });
   const tracking = typeof dado.tracking === "string" && dado.tracking.trim() ? dado.tracking.trim() : null;
   const trackingUrl = typeof dado.tracking_url === "string" && dado.tracking_url.trim() ? dado.tracking_url.trim() : null;
+  const rastreio = tracking ?? postagem.codigoObjeto ?? postagem.pedido.rastreio;
   const statusPostagem = statusPostagemMelhorEnvio(postagem.status, status);
   await prisma.postagem.update({
     where: { id: postagem.id },
@@ -34,24 +35,32 @@ export async function POST(request: Request) {
   const alvoPedido = alvoPedidoMelhorEnvio(postagem.pedido.status, status);
   const transicoes = alvoPedido ? transicoesPedidoMelhorEnvio(postagem.pedido.status, alvoPedido) : [];
   const chaveEvento = `melhor-envio:${id}:${evento.event}:${status}:${tracking ?? ""}`;
+  let ultimoPedido = postagem.pedido;
+  let avisouEnvio = false;
   for (const novoStatus of transicoes) {
-    await mudarStatusDoPedido(postagem.tenant, postagem.pedido.id, {
+    const resultado = await mudarStatusDoPedido(postagem.tenant, postagem.pedido.id, {
       status: novoStatus,
-      rastreio: tracking && ["ENVIADO", "ENTREGUE"].includes(novoStatus) ? tracking : undefined,
+      rastreio: rastreio ?? undefined,
+      notificar: novoStatus === "ENVIADO" && !rastreio ? false : undefined,
       ator: { tipo: "CANAL" },
       origem: "webhook:melhor-envio",
       idempotencia: `${chaveEvento}:${novoStatus}`,
     });
+    ultimoPedido = resultado.pedido;
+    if (novoStatus === "ENVIADO" && rastreio) avisouEnvio = true;
   }
 
-  if (!transicoes.length && tracking && tracking !== postagem.pedido.rastreio) {
+  if (!transicoes.length && rastreio && rastreio !== postagem.pedido.rastreio) {
     await mudarStatusDoPedido(postagem.tenant, postagem.pedido.id, {
-      rastreio: tracking,
+      rastreio,
       ator: { tipo: "CANAL" },
       origem: "webhook:melhor-envio",
       idempotencia: `${chaveEvento}:rastreio`,
     });
-    await avisarEnvio(postagem.tenant, postagem.pedido, tracking);
+    ultimoPedido = { ...postagem.pedido, rastreio };
+  }
+  if (!avisouEnvio && rastreio && postagem.pedido.rastreio !== rastreio && ["ENVIADO", "ENTREGUE"].includes(ultimoPedido.status)) {
+    await avisarEnvio(postagem.tenant, ultimoPedido, rastreio);
   }
   return Response.json({ ok: true });
 }
