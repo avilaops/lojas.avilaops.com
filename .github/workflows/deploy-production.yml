@@ -187,8 +187,8 @@ jobs:
         with:
           ids: ${{ needs.dependencias.outputs.artifact_id }}
           tipos: dependencias
-      - name: Compilar após o gate de tipos gerados
-        run: npm run build
+      - name: Compilar com o cliente Prisma já gerado nas dependências
+        run: node node_modules/next/dist/bin/next build
         env:
           LOJAS_DEPLOY_ID: ${{ github.sha }}
           LOJAS_CI_TIPOS_VERIFICADOS: '1'
