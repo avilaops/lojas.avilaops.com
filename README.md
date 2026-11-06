@@ -1,20 +1,31 @@
 # lojas.avilaops.com: um código, N lojas
 
-Plataforma multi-tenant de lojas virtuais da Avila Ops. Nasceu em 24/08/2026 da
-pergunta "como a C2TI vende loja a R$ 497 + R$ 92/mês?", resposta: um único
-app (`c2tiapps.com/sites/013/…`) com N clientes. Isto é o nosso, mais barato de
-operar (Hetzner + Docker) e com mais coisa dentro (PIX transparente, frete por
-CEP, e-mail próprio, automações n8n).
+Plataforma multi-tenant de comércio digital da Avila Ops: vitrine, catálogo,
+checkout, pedidos e operação compartilhados, com identidade, domínio e dados
+próprios de cada loja.
 
-**Posicionamento (25/08/2026):** concorrer com Nuvemshop e Shopify no pequeno
-lojista brasileiro, mais barato, PIX nativo, WhatsApp e automação de fábrica,
-dinheiro na conta do lojista. Não é um produto para um cliente só.
+**Documentação revisada em 06/11/2026.** A presença de código não comprova
+ativação de uma integração, homologação do provedor ou funcionamento em produção.
+Consulte as evidências do ambiente e da versão antes de declarar uma entrega.
+
+## Stack e estrutura
+
+- Next.js 16.2.10, React 19.2.8, TypeScript 5 e Tailwind CSS 4.
+- PostgreSQL e Prisma 6; migrações em `prisma/migrations`.
+- Node.js 22 na preparação de dependências da CI; npm com `package-lock.json`.
+- `src/app`: vitrine, plataforma e APIs; `src/lib`: regras de negócio.
+- `packages/checkout`: contrato de pagamentos e adaptadores.
+- `packages/removedor-de-fundo`: processamento de imagens com ONNX em CPU.
+- `scripts`, `tests` e `.github/workflows`: verificações e entrega.
 
 **Regra do produto:** o que varia entre lojas é *dado*, nunca *código*. Layout
 único; tema por tokens; políticas padronizadas; checkout único. Pedido fora do
 padrão não é "ajuste", é o plano Pro ou um projeto à parte.
 
-## O que já está aqui
+## Capacidades e histórico
+
+A tabela abaixo conserva os marcos históricos. Datas e estados descrevem o
+registro da época; não substituem uma verificação atual de produção.
 
 | Peça | Origem | Estado |
 |---|---|---|
@@ -23,7 +34,7 @@ padrão não é "ajuste", é o plano Pro ou um projeto à parte.
 | Vitrine: home, catálogo, busca, categoria, produto (JSON-LD), sobre, contato, políticas | herdado da Brilhax, generalizado | pronto |
 | Carrinho local (sem servidor de carrinho) | novo, `src/components/cart` | pronto |
 | Checkout transparente PIX/cartão/boleto | `packages/checkout` (Mercado Pago) | pronto |
-| Frete por CEP (CepCerto no servidor, uma conta para todas) + tabela por UF + retirada | `Websites/brilhax.com/src/lib/frete.ts`, generalizado | pronto |
+| Frete por CEP: Melhor Envio da loja conectada; CepCerto da plataforma para loja sem conexão; tabela por UF, entrega local e retirada conforme cadastro | `src/lib/frete.ts` | implementação existente; operação depende de configuração e prova por provedor |
 | **Entrega da própria loja** por faixa de CEP (motoboy, frota): `Tenant.entregaLocal`, com preço, prazo e grátis-acima próprios; concorre em preço com a transportadora e é a única opção que continua de pé quando a cotação online cai | `src/lib/frete.ts` (`entregaLocal`), painel → Entrega | pronto (17/09/2026) |
 | Pedidos, webhook de pagamento, status | novo, `src/lib/pedidos.ts` | pronto |
 | API administrativa (criar loja, importar produtos, provisionar, listar pedidos) | novo, `src/app/api/admin` | pronto |
@@ -54,46 +65,53 @@ padrão não é "ajuste", é o plano Pro ou um projeto à parte.
 | **Marca Lojas** (13/10/2026): símbolo do toldo (três cores da Avila Ops sobre a fachada com porta em arco), logotipo desenhado, tokens `--lj-*` num arquivo só, componente único de marca, site e painel na tinta em vez do azul-marinho, favicon/manifesto/OG próprios, selo monocromático no rodapé das lojas e manual em `/marca` | `docs/MARCA-LOJAS.md`, `src/app/plataforma/marca-lojas.css`, `src/components/marca/MarcaLojas.tsx`, `public/media/marca/`, `public/media/lojas/` | pronto (13/10/2026) |
 | **Direção de marca por loja**: diagnóstico de público, diferencial, personalidade, voz, objetivo e fotografia; geração determinística de paleta/tipografia/layout; persistência no tenant e revisão via n8n/Todoist | `src/lib/identidade.ts`, `Tenant.identidade`, wizard e aba Marca | publicado em produção (25/08/2026) |
 
-## O que falta (ordem sugerida)
+## Integrações e pendências
 
-1. ~~Tela de onboarding~~ - o portal `cliente.avilaops.com` foi apagado do servidor
-   em 24/08/2026; a tela agora vive na própria plataforma (`/criar`, `/entrar`,
-   `/painel`). Recuperação de senha (`/recuperar` → evento `lojista.recuperar-senha`
-   no n8n → e-mail) e upload de foto/logo (`/api/painel/imagens`, servido em
-   `/uploads/<slug>/<arquivo>`, volume `/opt/lojas/uploads`) feitos em 25/08/2026.
-2. ~~Fluxo n8n `lojas-onboarding`~~ - fonte de verdade é o fluxo vivo
-   `ruVn7ddvPQB949p9` (regras em `docs/ROTINAS.md`); webhook e token de produção
-   configurados e conectividade HTTP 200 verificada em 25/08/2026. A versão da
-   fonte trata `loja.identidade-atualizada` criando a revisão visual no Todoist.
-   Ao alterar a fonte, reimportar/publicar a versão na instância n8n e confirmar as credenciais
-   Twilio, Todoist e Lojas Admin Token no próprio n8n.
-3. ~~Upload de imagem~~ - feito 25/08/2026. Falta ligar o removedor de fundo
-   (`/opt/removedor-de-fundo`) para padronizar a foto.
-4. Consolidar e validar o adaptador **Mercado Pago** no `packages/checkout`.
-5. ~~Cobrança da mensalidade~~ - feita 25/08/2026: assinatura (preapproval) no
-   Mercado Pago da Avila Ops por plano (79/119/349), aba "Assinatura" no painel,
-   webhook idempotente em `/api/webhooks/mercadopago-assinatura` (tabelas `Fatura`
-   e `CobrancaEvento`), 14 dias de teste + `LOJAS_DIAS_TOLERANCIA`, suspensão
-   automática pela rotina diária do n8n (`POST /api/admin/cobranca/verificar`);
-   `SUSPENSA` some o checkout e mantém a vitrine; pagamento reativa na hora.
-   **Falta só preencher `MP_ACCESS_TOKEN`/`MP_WEBHOOK_SECRET` da conta Avila Ops
-   em `/opt/lojas/.env` e cadastrar o webhook no painel MP.** Setup R$ 497 é
-   marcado à parte: `POST /api/admin/tenants/:slug/setup`.
-6. ~~Contrato server-side da CepCerto~~ - riscado em 08/10/2026: a Ávila Ops não
-   tem contrato com a CepCerto. A cotação já é do Melhor Envio (`src/lib/frete.ts`).
-7. ~~Marcar pedido como enviado + rastreio pelo painel~~ - feito em 24/08/2026
-   (`PATCH /api/admin/tenants/:slug/pedidos/:id` + botões Separar / Marcar
-   enviado / Marcar entregue no portal).
+- **Frete:** `src/lib/frete.ts` seleciona Melhor Envio para a loja conectada e
+  CepCerto para loja sem conexão. Falha do Melhor Envio não troca para a conta
+  CepCerto. Tabela, entrega local e retirada dependem do cadastro da loja.
+- **Melhor Envio:** o roteiro versionado mantém sandbox como padrão e descreve
+  OAuth, cotação e operações explícitas de postagem. Configuração privada,
+  autorização da loja e prova autenticada são etapas distintas. Consulte
+  [sandbox e demonstração](docs/MELHOR-ENVIO-SANDBOX.md); o guia
+  [histórico de frete](docs/MELHOR-ENVIO.md) contém instruções antigas e não
+  comprova o estado atual do servidor.
+- **Mercado Pago:** checkout e conexão OAuth possuem documentação própria em
+  [Mercado Pago OAuth](docs/MERCADO-PAGO-OAUTH.md). Credenciais e webhooks
+  precisam ser verificados por conta e ambiente.
+- **Mercado Livre:** [canais](docs/CANAIS-MARKETPLACES.md) e
+  [integração](docs/MERCADO-LIVRE.md). Vincular anúncio existente transfere
+  responsabilidades operacionais e exige revisão da correspondência.
+- **CMS e B2B:** acompanhe lacunas de contrato e evidências no
+  [desenvolvimento MLOps](docs/DESENVOLVIMENTO-MLOPS.md).
+- **Planejamento:** o [roadmap](docs/ROADMAP-PLATAFORMA.md) e o
+  [controle da equipe](.agents/equipe/README.md) registram escopo, responsáveis
+  e critérios. Pendências históricas devem ser revalidadas antes de execução.
 
-## Rodando local
+## Desenvolvimento
+
+Leia [AGENTS.md](AGENTS.md) antes de alterar o projeto. Builds e testes são
+executados no GitHub CI, conforme a política do repositório. Não compile nem
+execute rotinas de configuração ad hoc nos servidores.
+
+Para preparar um ambiente de desenvolvimento isolado:
 
 ```bash
-npm install
-cp .env.example .env            # DATABASE_URL, LOJAS_SECRET, LOJAS_ADMIN_TOKEN, LOJAS_BASE_DOMAIN=localhost
-npx prisma migrate dev --name inicial
-npm run seed:demo               # cria demo.localhost
-npm run dev                     # http://demo.localhost:3080
+npm ci
+cp .env.example .env
+npx prisma generate
+npm run dev
 ```
+
+Preencha somente no ambiente privado as variáveis necessárias. Use banco
+isolado e siga [banco de teste](docs/BANCO-DE-TESTE.md) para preparar dados e
+migrações; não aponte desenvolvimento para o banco de produção. A aplicação de
+desenvolvimento usa a porta 3080 e o host depende de `LOJAS_BASE_DOMAIN` e do
+tenant cadastrado.
+
+Scripts disponíveis para a CI incluem `typecheck`, `lint`, `test`,
+`test:integracao`, `test:auditoria` e `banco:ensaio`. A lista exata está em
+[package.json](package.json); a existência do script não significa que passou.
 
 Criar loja pela API:
 
@@ -120,66 +138,35 @@ o que deixaria qualquer um marcar pedido como pago. Isso foi corrigido antes de
 saírem de cena (PayPal passou a usar o verificador oficial; Éfi confirma o txid
 na API), para que ninguém os religue achando que estão prontos.
 
-## Deploy (Hetzner, Docker): em produção desde 24/08/2026
+## CI e deploy
 
-**O deploy normal é o pipeline**: `.github/workflows/deploy-production.yml`
-constrói a imagem e o `avila-deploy` do repositório `avilaops/infra` migra o
-banco, troca o container e volta sozinho se a saúde falhar. O fluxo de pacote
-descrito abaixo (`standalone.tgz` + `deploy/deploy.sh`) é o manual, legado e
-parado no servidor desde 28/09/2026. Como o banco é copiado, migrado e
-revertido, e o ensaio que prova isso (`npm run banco:ensaio`), está em
-`docs/BACKUP-E-ROLLBACK.md`.
+O fluxo vigente está em
+[Build e deploy](.github/workflows/deploy-production.yml). Ele prepara
+dependências, executa testes unitários, tipos, lint, contratos, integração
+PostgreSQL e verificações de navegador; reúne os artefatos e empacota a imagem
+aprovada. Publicações fora de pull requests usam GHCR e identificam a imagem
+por digest.
 
-O servidor (CX23, 4 GB, disco Docker sempre perto de 95%) **não builda**: o
-build Next `standalone` é feito aqui no Windows e sobe pronto. Fluxo:
+A entrega exige a branch padrão, evento permitido e `DEPLOY_ENABLED=true`,
+com ambiente `production`. Pull requests executam verificações sem publicar
+a imagem nem entregar ao servidor. A preparação e o deploy usam a ação local
+`.github/actions/entregar-imagem`.
 
-```bash
-# 1. build local (Prisma gera também o engine debian-openssl-3.0.x: ver schema.prisma)
-npx prisma generate && npx next build
-cd .next/standalone && rm -rf lojas.avilaops.com/.next/static   && cp -r ../static lojas.avilaops.com/.next/static   && cp -r ../../public lojas.avilaops.com/public; cp -r ../../prisma lojas.avilaops.com/prisma   && tar --force-local -czf "$TMP/lojas-standalone.tgz" .
-# 2. envia e reinicia
-scp -i ~/.ssh/hetzner_avilaops "$TMP/lojas-standalone.tgz" root@178.105.82.48:/opt/lojas/standalone.tgz
-ssh -i ~/.ssh/hetzner_avilaops root@178.105.82.48 '/opt/lojas/deploy.sh'
-# 3. migração nova? (do próprio servidor, contra o Postgres do host)
-ssh ... 'cd /opt/lojas && tar xzf standalone.tgz ./lojas.avilaops.com/prisma && DATABASE_URL=$(grep ^DATABASE_URL= .env | cut -d= -f2- | sed s/host.docker.internal/127.0.0.1/) npx -y prisma@6 migrate deploy --schema lojas.avilaops.com/prisma/schema.prisma'
-```
+Após a entrega, o job `fumaca` executa
+`scripts/smoke-publicacao.mjs` contra `SMOKE_URL` ou a plataforma. A verificação
+adicional de uma loja só roda com `SMOKE_LOJA_URL` definido; sem essa variável,
+a foto do catálogo de um tenant não é verificada por esse passo.
 
-No servidor (`/opt/lojas`): imagem base `lojas-base` (`deploy/Dockerfile.base`: node + openssl + sharp linux-x64, construída **uma vez**) (o `Dockerfile` de runtime que assava o `standalone.tgz` numa imagem saiu: hoje o container é a própria `lojas-base` com `/opt/lojas/app` montado, ver o cabeçalho de `deploy/deploy.sh`), o deploy não baixa nem instala nada, e o disco não infla a cada build. O runtime cria o
-symlink `@prisma/client-<hash>` que o Turbopack referencia e que o Windows não
-gera), `docker-compose.yml` com `network_mode: bridge` (o Postgres do host escuta
-em 172.17.0.1), `.env` (segredos gerados no servidor, chmod 600). Container
-`lojas-avilaops`, porta `127.0.0.1:3080` (3070 é do Migdolus).
+Consulte [backup e rollback](docs/BACKUP-E-ROLLBACK.md) e
+[etapas da CI](docs/CI-ETAPAS-CURTAS.md). Os comandos antigos de build no
+Windows, envio de `standalone.tgz` e execução manual de `deploy.sh` foram
+retirados deste guia para não serem confundidos com o fluxo vigente.
 
-**Nunca rode `docker image prune -af` neste servidor.** Ele apaga a imagem
-`lojas-base` (nenhum container a usa; ela só é base de build) e o deploy passa a
-falhar tentando baixá-la do Docker Hub, em silêncio, com o container antigo
-seguindo no ar. O `deploy/deploy.sh` reconstrói a base se faltar, confere o
-healthcheck e limpa só imagens dangling; foi escrito depois de isso acontecer
-em 26/08/2026.
+## Registros operacionais históricos
 
-**Verificação depois de publicar (17/09/2026):** tipos, testes e build já
-rodam dentro do `Dockerfile` (estágio `build`), inclusive em pull request. O
-que faltava era depois: o pipeline
-(`.github/workflows/deploy-production.yml`) roda, ao fim do deploy,
-`node scripts/smoke-publicacao.mjs https://lojas.avilaops.com` — que confere
-`/api/health` (com banco e `no-store`), `/v1/health`, **a folha de estilo
-seguida a partir do HTML da vitrine** e **a primeira foto de produto que a
-vitrine referencia** — essa última porque a foto não vem do pacote, vem do
-volume `/uploads`: volume não montado, remontado vazio ou com dono errado
-depois do `chown` do deploy deixa a loja de pé, respondendo 200 em tudo, com
-o catálogo inteiro de imagens quebradas. A foto é buscada pelo **caminho**,
-no alvo do smoke (a URL gravada é absoluta para o domínio da plataforma, e
-segui-la mediria o site público), e com parâmetro que fura o cache, porque
-`/uploads` responde `immutable` e um 200 de borda esconderia origem vazia.
-**Essa conferência só mede algo contra uma loja**: o domínio da plataforma
-não tem `/uploads`. Defina a variável de CI `SMOKE_LOJA_URL` com o endereço
-de uma loja no ar para o pipeline rodar o smoke também contra ela; sem a
-variável, a conferência da foto não tem efeito no deploy. O `deploy/deploy.sh` faz a mesma
-conferência de CSS contra `127.0.0.1:3080` antes de declarar sucesso, e volta
-para a versão anterior se ela falhar: em 02/09/2026 subiu um pacote sem
-`.next/static`, tudo respondeu 200 e a loja ficou no ar sem CSS nenhum. O
-script roda com o node do sistema, sem instalar nada, e aceita qualquer URL
-(`node scripts/smoke-publicacao.mjs https://brilhax.com`).
+Os registros abaixo preservam contexto de agosto e setembro. IPs, caminhos,
+configurações e workflows mencionados precisam ser conferidos no ambiente
+antes de qualquer ação.
 
 **Cloudflare (29/08/2026):** o apex `lojas.avilaops.com` (landing, `/criar`, `/painel`, webhooks) passou a ser **proxied** — o TTFB do Brasil caiu de ~0,9 s para ~0,4 s. O `*.lojas` continua DNS-only (o Universal SSL não cobre dois níveis). Zona `ssl=full`, `always_use_https=on`.
 
@@ -232,3 +219,16 @@ vigente quando ele existe. Relatório de migração e recuperação estão em
 
 Custo por loja na infra compartilhada: < R$ 10/mês. Lock-in é pelo padrão:
 domínio, DNS, e-mail, automações e painel são da plataforma.
+
+## Documentação por assunto
+
+| Assunto | Referência |
+| --- | --- |
+| APIs e acesso por agentes | [API](docs/API.md), [MCP](docs/MCP.md) |
+| Entrada de lojas e identidade | [Onboarding](docs/ONBOARDING.md), [marca Lojas](docs/MARCA-LOJAS.md) |
+| Catálogo e comércio B2B | [Catálogo padronizado](docs/CATALOGO-PADRONIZADO.md), [contrato B2B](docs/CONTRATO-CATALOGO-B2B.md) |
+| Google Merchant e descoberta | [Merchant Center](docs/MERCHANT-CENTER.md), [descoberta](docs/DESCOBERTA.md) |
+| Automações e mensagens | [Rotinas](docs/ROTINAS.md), [mensagens](docs/MENSAGENS.md) |
+| Fiscal e armazenamento | [Fluxos fiscais](docs/FLUXOS-FISCAIS.md), [cache R2](docs/FISCAL-CACHE-R2.md) |
+| Observabilidade | [Métricas](docs/METRICAS.md), [Langfuse](docs/LANGFUSE.md) |
+| Contratos e desenvolvimento | [Experiments](docs/CONTRATOS-EXPERIMENTS.md), [MLOps](docs/DESENVOLVIMENTO-MLOPS.md) |
