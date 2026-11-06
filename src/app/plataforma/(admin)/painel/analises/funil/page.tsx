@@ -22,7 +22,7 @@ export default async function PaginaFunil({ searchParams }: { searchParams: Prom
     { nome: "Viram produto", valor: c.produtos, taxa: percentual(t.produto), ajuda: "sobre sessões" },
     { nome: "Adicionaram", valor: c.carrinhosAdicionados, taxa: percentual(t.carrinho), ajuda: "sobre quem viu produto" },
     { nome: "Iniciaram checkout", valor: c.checkouts, taxa: percentual(t.checkout), ajuda: "sobre quem adicionou" },
-    { nome: "Criaram pedido", valor: c.pedidosCriados, taxa: percentual(c.checkouts ? c.pedidosCriados / c.checkouts * 100 : null), ajuda: "sobre quem iniciou checkout" },
+    { nome: "Criaram pedido", valor: c.pedidosCriados, taxa: percentual(t.pedido), ajuda: "sobre quem iniciou checkout" },
     { nome: "Pagamento aprovado", valor: c.pagamentosAprovados, taxa: percentual(t.pagamento), ajuda: "sobre pedidos criados" },
   ];
 
@@ -71,7 +71,7 @@ export default async function PaginaFunil({ searchParams }: { searchParams: Prom
         <article className="an-kpi"><div className="an-kpi-titulo"><span>Clientes recorrentes</span><span title="Compradores do período com compra paga anterior">?</span></div><strong>{percentual(t.recompra)}</strong><small>{c.clientesRecorrentes} de {c.clientesCompradores} comprador(es)</small></article>
       </div>
 
-      <p className="an-nota">Medição first-party: sem IP, user-agent, termo buscado ou conteúdo de mensagens. Sem consentimento, uma sessão não é ligada à próxima visita.</p>
+      <p className="an-nota">As contagens são marcos independentes: uma sessão pode retomar o carrinho ou checkout. As taxas de avanço consideram somente sessões presentes nas duas etapas comparadas. Medição first-party: sem IP, user-agent, termo buscado ou conteúdo de mensagens. Sem consentimento, uma sessão não é ligada à próxima visita.</p>
     </>
   );
 }

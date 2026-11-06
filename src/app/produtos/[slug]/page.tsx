@@ -39,6 +39,7 @@ import { LinkContatoMedido } from "@/components/EventoFunil";
 import { retornoSeguroDoCatalogo } from "@/lib/retorno-catalogo";
 import { referenciaPoliticaDevolucao } from "@/lib/politicas";
 import { numeroDeContato } from "@/lib/canais-publicos";
+import ConsultarEntrega from "@/components/checkout/ConsultarEntrega";
 
 const MEIOS: Record<string, string> = { pix: "Pix", cartao: "Cartão", boleto: "Boleto" };
 
@@ -304,6 +305,8 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
           {p.opcoes.length === 0 && !estado.esgotado && (
             <div className="mt-4"><EstoqueBaixo estoque={p.estoque} limite={t.estoqueBaixoEm} /></div>
           )}
+
+          {p.opcoes.length === 0 && !somenteNaLoja && estado.acao === "carrinho" && <ConsultarEntrega itens={[{ id: escolhida ? `${p.id}:${escolhida.id}` : p.id, quantidade: 1 }]} subtotal={p.precoCentavos} whatsapp={whatsapp} />}
 
           <Medicamento produto={p} precoCentavos={p.precoCentavos} equivalentes={equivalentes} />
 

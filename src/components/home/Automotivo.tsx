@@ -8,6 +8,8 @@ import BeneficiosBarra from "./BeneficiosBarra";
 import AtalhosCategorias from "./AtalhosCategorias";
 import { montarTrilha } from "@/lib/trilha-automotiva";
 import type { DadosHome } from "./tipos";
+import { LinkContatoMedido } from "@/components/EventoFunil";
+import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
 
 /**
  * Estética automotiva, autopeças de cuidado e oficina.
@@ -30,6 +32,7 @@ import type { DadosHome } from "./tipos";
 export default function Automotivo({ t, identidade, categorias, vitrine, temDestaques, vende, moto }: DadosHome) {
   const { trilha, restantes, mostrar: mostrarTrilha } = montarTrilha(categorias);
   const tema = temaDo(t);
+  const kits = categorias.find(c => /\bkit|combo/i.test(c.nome));
   const categoriasDosAtalhos = new Set(
     categoriasParaVitrine(categorias, temaDo(t).categoriaSemImagem)
       .slice(0, PRINCIPAIS)
@@ -79,6 +82,14 @@ export default function Automotivo({ t, identidade, categorias, vitrine, temDest
         )}
       </section>
 
+      {(kits || t.whatsapp) && <section className="container-loja my-6 rounded-xl border border-border bg-card p-5 sm:flex sm:items-center sm:justify-between sm:gap-6" aria-labelledby="montar-rotina">
+        <div><p className="text-xs font-semibold uppercase tracking-wide text-primary">Comece pelo que seu carro precisa</p><h2 id="montar-rotina" className="mt-1 text-xl font-bold">Escolha um kit ou monte sua rotina</h2><p className="mt-2 text-sm text-muted-foreground">Veja os itens de cada conjunto ou peça ajuda para escolher produtos para lavagem, acabamento e proteção.</p></div>
+        <div className="mt-4 flex shrink-0 flex-wrap gap-3 sm:mt-0">
+          {kits && <Link href={`/categoria/${kits.slug}`} className="btn-primario">Ver kits disponíveis <ArrowRight size={17} aria-hidden="true" /></Link>}
+          {t.whatsapp && <LinkContatoMedido href={linkWhatsApp(t.whatsapp, "Olá! Quero montar um kit de cuidados automotivos. Pode me ajudar a escolher os produtos?")} target="_blank" rel="noopener noreferrer" className="btn-secundario">Montar com ajuda</LinkContatoMedido>}
+        </div>
+      </section>}
+
       <AtalhosCategorias categorias={categorias} semImagem={temaDo(t).categoriaSemImagem} destaque />
 
       <div className="container-loja"><BeneficiosBarra t={t} /></div>
@@ -118,7 +129,7 @@ export default function Automotivo({ t, identidade, categorias, vitrine, temDest
           <header>
             <div>
               <p className="home-selo text-primary">{mostrarTrilha ? "Também na loja" : "Categorias"}</p>
-              <h2>{mostrarTrilha ? "Acessórios, kits e o resto do catálogo" : "Compre por categoria"}</h2>
+              <h2>{mostrarTrilha ? "Complete seu cuidado" : "Compre por categoria"}</h2>
             </div>
             <Link href="/produtos">Ver tudo <ArrowRight /></Link>
           </header>

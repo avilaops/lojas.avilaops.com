@@ -13,6 +13,25 @@
   ],
   "tasks": [
     {
+      "id": "BRILHAX-CONVERSAO-20261106",
+      "title": "Melhorar descoberta, consulta de entrega e checkout da Brilhax",
+      "objective": "Reduzir atrito antes da identificação e preservar pagamentos, cotações e medição corretos.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-andamento",
+      "acceptanceCriteria": [
+        "Produto, carrinho e checkout consultam entrega por CEP sem cadastro.",
+        "Trocar CEP, carrinho ou cupom invalida a estimativa anterior; erro nunca vira frete grátis.",
+        "Checkout não preserva entrega de CEP anterior nem permite repetir pagamento cuja resposta se perdeu.",
+        "Vitrine automotiva apresenta kits e atendimento com dados reais; catálogo Brilhax não destaca itens fora do segmento.",
+        "Taxas de avanço medem as mesmas sessões em ambas as etapas, sem inventar eventos.",
+        "CI e verificação publicada têm evidências separadas; preços, frete subsidiado e anúncios pagos dependem de decisão comercial."
+      ],
+      "environment": "github-ci",
+      "evidence": "Plano em docs/BRILHAX-CONVERSAO.md; execução e publicação pendentes.",
+      "history": [{ "at": "2026-11-06", "status": "em-andamento", "note": "Autorização explícita do proprietário após auditoria da vitrine, carrinho, checkout e dados de sessões." }]
+    },
+    {
       "id": "MERCHANT-SCHEMA-20261106",
       "title": "Corrigir marcação de produtos do comerciante",
       "objective": "Ofertas e promoções coerentes com variantes e dados visíveis, sem marcação incompleta.",

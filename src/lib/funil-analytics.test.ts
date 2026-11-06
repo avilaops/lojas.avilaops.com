@@ -50,7 +50,24 @@ test("funil usa sessões únicas e pedido pago vinculado", () => {
   assert.equal(resumo.taxas.checkout, 50);
   assert.equal(resumo.taxas.compra, 33.3);
   assert.equal(resumo.taxas.pagamento, 100);
-  assert.equal(resumo.taxas.contatoTecnico, 100);
+  assert.equal(resumo.taxas.contatoTecnico, 50);
   assert.equal(resumo.taxas.recompra, 50);
+});
+
+test("retomadas e compras sem etapas anteriores não inflam taxas nem inventam eventos", () => {
+  const base = { buscou: false, buscaSemResultado: false, filtrou: false, viuProduto: false, contatoTecnico: false, adicionouCarrinho: false, abriuCarrinho: false, iniciouCheckout: false, pedidos: [] };
+  const resumo = calcularFunil([
+    { ...base, id: "nova", viuProduto: true, adicionouCarrinho: true, iniciouCheckout: true },
+    { ...base, id: "retomada1", iniciouCheckout: true },
+    { ...base, id: "retomada2", iniciouCheckout: true },
+    { ...base, id: "adicao-direta", adicionouCarrinho: true },
+    { ...base, id: "contato-direto", contatoTecnico: true },
+  ], new Set(), new Set());
+  assert.equal(resumo.contagens.checkouts, 3);
+  assert.equal(resumo.contagens.produtos, 1);
+  assert.equal(resumo.taxas.checkout, 50);
+  assert.equal(resumo.taxas.carrinho, 100);
+  assert.equal(resumo.taxas.contatoTecnico, 0);
+  assert.equal(resumo.taxas.pedido, 0);
 });
 
