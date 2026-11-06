@@ -56,7 +56,7 @@ export default function ConsultarEntrega({ itens, subtotal, desconto = 0, cupom,
       <form className="mt-3 flex flex-wrap gap-2" onSubmit={calcular}>
         <label className="sr-only" htmlFor={`${id}-cep`}>CEP para calcular a entrega</label>
         <input id={`${id}-cep`} type="text" inputMode="numeric" autoComplete="postal-code" placeholder="00000-000"
-          className="h-11 min-w-0 flex-1 rounded-lg border border-border bg-background px-3 text-sm"
+          className="h-11 min-w-[9rem] flex-1 rounded-lg border border-border bg-background px-3 text-sm"
           value={cep.length > 5 ? `${cep.slice(0, 5)}-${cep.slice(5)}` : cep}
           onChange={e => setCep(e.target.value.replace(/\D/g, "").slice(0, 8))} />
         <button type="submit" className="btn-secundario min-h-11 shrink-0 px-3 text-sm" disabled={atual?.buscando}>
