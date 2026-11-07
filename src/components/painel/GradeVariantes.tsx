@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Campo, inputClasse } from "./campos";
 
-interface Linha { id?: string; valores: Record<string, string>; sku: string; gtin: string; mpn: string; preco: string; estoque: string; pesoKg: string; alturaCm: string; larguraCm: string; comprimentoCm: string; imagem: string }
+interface Linha { id?: string; valores: Record<string, string>; sku: string; gtin: string; mpn: string; preco: string; estoque: string; pesoKg: string; alturaCm: string; larguraCm: string; comprimentoCm: string; imagem: string; imagemAlterada?: boolean; estoqueAlterado?: boolean }
 
 /**
  * Grade de variações de um produto: até 3 opções (Tamanho, Cor…), valores
@@ -52,7 +52,7 @@ export default function GradeVariantes({ produtoId, produtoNome, aoFechar, aoSal
       const corpo = {
         produtoId, versaoCatalogo:versao,
         opcoes: linhas.length?opcoesValidas.map((o) => o.nome):[],
-        variantes: linhas.map((l) => ({ id: l.id, valores: l.valores, sku: l.sku || null, gtin:l.gtin||null, mpn:l.mpn||null, alturaCm:l.alturaCm?Number(l.alturaCm.replace(",", ".")):null, larguraCm:l.larguraCm?Number(l.larguraCm.replace(",", ".")):null, comprimentoCm:l.comprimentoCm?Number(l.comprimentoCm.replace(",", ".")):null, precoCentavos: centavos(l.preco), estoque: l.estoque.trim() ? Number(l.estoque) : null, pesoKg: l.pesoKg.trim() ? Number.parseFloat(l.pesoKg.replace(",", ".")) : null, imagem: l.imagem || null })),
+        variantes: linhas.map((l) => ({ id: l.id, valores: l.valores, sku: l.sku || null, gtin:l.gtin||null, mpn:l.mpn||null, alturaCm:l.alturaCm?Number(l.alturaCm.replace(",", ".")):null, larguraCm:l.larguraCm?Number(l.larguraCm.replace(",", ".")):null, comprimentoCm:l.comprimentoCm?Number(l.comprimentoCm.replace(",", ".")):null, precoCentavos: centavos(l.preco), estoque: l.estoqueAlterado ? (l.estoque.trim() ? Number(l.estoque) : null) : undefined, pesoKg: l.pesoKg.trim() ? Number.parseFloat(l.pesoKg.replace(",", ".")) : null, imagem: l.imagemAlterada ? l.imagem || null : undefined })),
       };
       const r = await fetch("/api/painel/variantes", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(corpo) });
       const d = await r.json();
@@ -65,7 +65,9 @@ export default function GradeVariantes({ produtoId, produtoNome, aoFechar, aoSal
     }
   }
 
-  const atualizar = (i: number, campo: keyof Linha, valor: string) => setLinhas((ls) => ls.map((l, j) => (j === i ? { ...l, [campo]: valor } : l)));
+  const atualizar = (i: number, campo: Exclude<keyof Linha, "imagemAlterada" | "estoqueAlterado">, valor: string) => setLinhas((ls) => ls.map((l, j) => (
+    j === i ? { ...l, [campo]: valor, ...(campo === "imagem" ? { imagemAlterada: true } : {}), ...(campo === "estoque" ? { estoqueAlterado: true } : {}) } : l
+  )));
 
   return (
     <div className="rounded-2xl border border-primary/40 bg-card p-6">

@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "./db";
-import { ErroCatalogo, INCLUIR_OFERTA, ofertaDaVariante, validarGrade } from "./catalogo-oferta";
+import { ErroCatalogo, INCLUIR_OFERTA, ofertaDaVariante, pertenceAGrade, validarGrade } from "./catalogo-oferta";
 
 type Tx = Prisma.TransactionClient;
 type CamposProduto = Partial<Omit<Prisma.ProdutoUncheckedCreateInput, "id" | "tenantId" | "variantes" | "itens" | "midias" | "historicoCatalogo" | "versaoCatalogo" | "criadoEm" | "atualizadoEm">> & { mpn?: string|null; identificadoresEstado?: string };
@@ -237,13 +237,17 @@ export async function salvarGradeNoCatalogo(tenantId: string, produtoId: string,
     await permitirProjecao(tx);
     const p = await travarProduto(tx, tenantId, produtoId);
     if (versao !== undefined && p.versaoCatalogo !== versao) throw new ErroCatalogo("O produto mudou. Recarregue a grade antes de salvar.", 409);
+    const padraoDaGrade = p.variantes.find(v => v.padrao && pertenceAGrade(p.opcoes, v));
+    if (variantes.length && padraoDaGrade && !variantes.some(v => v.id === padraoDaGrade.id)) {
+      throw new ErroCatalogo("Mantenha a apresentação padrão ao salvar a grade.");
+    }
     const mantidos: string[] = [];
     for (const [ordem, entrada] of variantes.entries()) {
-      const anterior = entrada.id ? p.variantes.find(v=>v.id===entrada.id && !v.padrao) : null;
+      const anterior = entrada.id ? p.variantes.find(v=>v.id===entrada.id && pertenceAGrade(p.opcoes, v)) : null;
       if (entrada.id && !anterior) throw new ErroCatalogo("Variação não pertence a este produto.", 404);
       const { precoCentavos, precoDeCentavos, estoque, ...dados } = entrada;
-      const identificacao = { ...dados, id: undefined, sku: dados.sku || null, nome: opcoes.map(o=>entrada.valores[o]).join(" / "), ativo: true, ordem,
-        identificadoresEstado: dados.identificadoresEstado ?? (dados.gtin ? "informado" : "desconhecido") };
+      const identificacao = { ...dados, id: undefined, sku: dados.sku === undefined ? anterior?.sku : dados.sku || null, nome: opcoes.map(o=>entrada.valores[o]).join(" / "), ativo: true, ordem,
+        identificadoresEstado: dados.identificadoresEstado ?? (anterior && (dados.gtin === undefined || dados.gtin === anterior.gtin) && (dados.mpn === undefined || dados.mpn === anterior.mpn) ? anterior.identificadoresEstado : dados.gtin ? "informado" : "desconhecido") };
       const v = anterior ? await tx.variante.update({ where: { id: anterior.id }, data: identificacao }) : await tx.variante.create({ data: { ...identificacao, tenantId, produtoId } });
       if (entrada.imagem !== undefined) {
         const url = entrada.imagem?.trim() || null;
@@ -253,14 +257,14 @@ export async function salvarGradeNoCatalogo(tenantId: string, produtoId: string,
       }
       await tx.precoVariante.upsert({ where: { varianteId: v.id }, create: { tenantId, varianteId: v.id, valorCentavos: precoCentavos!, comparacaoCentavos: precoDeCentavos ?? null }, update: { valorCentavos: precoCentavos!, ...(precoDeCentavos !== undefined ? { comparacaoCentavos: precoDeCentavos } : {}) } });
       if (estoque !== undefined || !anterior) await gravarSaldo(tx, tenantId, v.id, estoque ?? null, "grade");
-      await tx.publicacaoCanal.upsert({ where: { tenantId_varianteId_canal_contaExterna: { tenantId, varianteId: v.id, canal: "google", contaExterna: "" } }, create: { tenantId, varianteId: v.id, canal: "google", idExterno: `${produtoId}:${v.id}` }, update: {} });
+      await tx.publicacaoCanal.upsert({ where: { tenantId_varianteId_canal_contaExterna: { tenantId, varianteId: v.id, canal: "google", contaExterna: "" } }, create: { tenantId, varianteId: v.id, canal: "google", idExterno: v.padrao ? produtoId : `${produtoId}:${v.id}` }, update: {} });
       mantidos.push(v.id);
     }
     if (!variantes.length) {
       const padrao = p.variantes.find(v=>v.padrao);
       if (!padrao) throw new ErroCatalogo("Escolha os dados comerciais da apresentação única antes de retirar as variações.");
       mantidos.push(padrao.id);
-      await tx.variante.update({ where: { id: padrao.id }, data: { ativo: true } });
+      await tx.variante.update({ where: { id: padrao.id }, data: { ativo: true, ...(padraoDaGrade ? { valores: {} } : {}) } });
     }
     if (await tx.reservaEstoque.count({ where: { tenantId, varianteId: { in: p.variantes.filter(v=>!mantidos.includes(v.id)).map(v=>v.id) }, estado: "ATIVA" } })) throw new ErroCatalogo("Há reservas nas variações removidas. Aguarde a conclusão dos pedidos.");
     await tx.variante.updateMany({ where: { tenantId, produtoId, id: { notIn: mantidos } }, data: { ativo: false } });

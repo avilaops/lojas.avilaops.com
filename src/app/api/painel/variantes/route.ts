@@ -4,6 +4,7 @@ import { lojistaAtual } from "@/lib/sessao";
 import { exigir } from "@/lib/operadores";
 import { salvarGradeNoCatalogo, respostaErroCatalogo } from "@/lib/catalogo-escrita";
 import { invalidarCatalogo } from "@/lib/catalogo-cache";
+import { INCLUIR_OFERTA, pertenceAGrade } from "@/lib/catalogo-oferta";
 
 const medida = z.number().positive().nullable().optional();
 const Entrada = z.object({
@@ -27,7 +28,7 @@ export async function PUT(request: Request) {
   try {
     const p = await salvarGradeNoCatalogo(s.tenant.id, r.data.produtoId, r.data.opcoes, r.data.variantes, r.data.versaoCatalogo);
     invalidarCatalogo(s.tenant.id);
-    return Response.json({ opcoes: p.opcoes, variantes: p.variantes.filter(v=>!v.padrao), versaoCatalogo: p.versaoCatalogo });
+    return Response.json({ opcoes: p.opcoes, variantes: p.variantes.filter(v=>pertenceAGrade(p.opcoes, v)), versaoCatalogo: p.versaoCatalogo });
   } catch(e) { return respostaErroCatalogo(e); }
 }
 
@@ -35,7 +36,10 @@ export async function GET(request: Request) {
   const loja = await lojistaAtual();
   if (!loja) return Response.json({ erro: "Sessão expirada." }, { status: 401 });
   const produtoId = new URL(request.url).searchParams.get("produtoId") ?? "";
-  const p = await prisma.produto.findFirst({ where: { id: produtoId, tenantId: loja.id }, include: { variantes: { where: { ativo: true, padrao: false }, orderBy: { ordem: "asc" }, include: { saldos: true } } } });
+  const p = await prisma.produto.findFirst({ where: { id: produtoId, tenantId: loja.id }, include: { variantes: { where: { OR: [{ ativo: true }, { padrao: true }] }, orderBy: { ordem: "asc" }, include: INCLUIR_OFERTA } } });
   if (!p) return Response.json({ erro: "Produto não encontrado." }, { status: 404 });
-  return Response.json({ opcoes: p.opcoes, variantes: p.variantes.map(v=>({ ...v, estoque: v.saldos.find(s=>s.local==="principal")?.fisico ?? null })), versaoCatalogo: p.versaoCatalogo });
+  const variantes = p.variantes.filter(v => pertenceAGrade(p.opcoes, v)).map(({ preco, saldos, ...v }) => ({
+    ...v, precoCentavos: preco?.valorCentavos ?? null, estoque: saldos.find(s => s.local === "principal")?.fisico ?? null,
+  }));
+  return Response.json({ opcoes: p.opcoes, variantes, versaoCatalogo: p.versaoCatalogo });
 }

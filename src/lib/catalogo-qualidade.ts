@@ -10,8 +10,10 @@ export type OcorrenciaCatalogo = { regra: string; versao: 1; campo: string; seve
 
 export function midiasDaOferta(p: ProdutoCatalogo, varianteId: string) {
   const vistas = new Set<string>();
-  return p.midias.filter(m=>(m.varianteId===varianteId || m.varianteId===null) && m.tipo==="imagem")
-    .sort((a,b)=>Number(b.varianteId===varianteId)-Number(a.varianteId===varianteId) || a.ordem-b.ordem)
+  const imagensPorVolume = (p.atributos as Record<string, unknown> | null)?.imagensPorVolume === true;
+  return p.midias.filter(m=>(m.varianteId===varianteId || (!imagensPorVolume && m.varianteId===null)) && m.tipo==="imagem")
+    .sort((a,b)=>Number(b.varianteId===varianteId)-Number(a.varianteId===varianteId)
+      || (imagensPorVolume ? Number(b.finalidade==="principal")-Number(a.finalidade==="principal") : 0) || a.ordem-b.ordem)
     .filter(m => vistas.has(m.url) ? false : (vistas.add(m.url), true));
 }
 

@@ -13,6 +13,21 @@
   ],
   "tasks": [
     {
+      "id": "DOMIRIO-PR208-REGRESSOES",
+      "title": "Corrigir regressões do agrupamento por volume da Domi-Rio",
+      "objective": "Separar fotos por volume e preservar a variante padrão e os vínculos comerciais.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "Vitrine e Merchant usam a foto da apresentação correta.",
+        "Salvar a grade mantém a variante padrão e seus dados comerciais.",
+        "Versões B2B aprovadas ficam intactas e famílias independentes podem ser agrupadas."
+      ],
+      "environment": "teste-isolado",
+      "evidence": "Testes de regressão em tests/integration/catalogo-domirio.test.ts. Execução operacional, alterações em produção e merge dependem de aprovação explícita."
+    },
+    {
       "id": "CADASTRO-CONTRATO-20261106",
       "title": "Desbloquear cadastro com contrato comercial preexistente",
       "objective": "Concluir primeiros passos sem duplicar tenantId/versao e preservar histórico e atomicidade.",
