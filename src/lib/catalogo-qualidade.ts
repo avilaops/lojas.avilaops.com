@@ -8,9 +8,13 @@ export const INCLUIR_CATALOGO = { categoria: true, midias: { orderBy: { ordem: "
 export type ProdutoCatalogo = Prisma.ProdutoGetPayload<{ include: typeof INCLUIR_CATALOGO }>;
 export type OcorrenciaCatalogo = { regra: string; versao: 1; campo: string; severidade: "erro"|"aviso"; canal: "loja"|"google"; mensagem: string; acao: string; varianteId?: string };
 
-export function midiasDaOferta(p: ProdutoCatalogo, varianteId: string) {
+export function usaImagensPorVolume(p: Pick<ProdutoCatalogo, "atributos">) {
+  return (p.atributos as Record<string, unknown> | null)?.imagensPorVolume === true;
+}
+
+export function midiasDaOferta(p: Pick<ProdutoCatalogo, "atributos" | "midias">, varianteId: string) {
   const vistas = new Set<string>();
-  const imagensPorVolume = (p.atributos as Record<string, unknown> | null)?.imagensPorVolume === true;
+  const imagensPorVolume = usaImagensPorVolume(p);
   return p.midias.filter(m=>(m.varianteId===varianteId || (!imagensPorVolume && m.varianteId===null)) && m.tipo==="imagem")
     .sort((a,b)=>Number(b.varianteId===varianteId)-Number(a.varianteId===varianteId)
       || (imagensPorVolume ? Number(b.finalidade==="principal")-Number(a.finalidade==="principal") : 0) || a.ordem-b.ordem)

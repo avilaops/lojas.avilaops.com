@@ -6,6 +6,7 @@ import { salvarGradeNoCatalogo, salvarProdutoNoCatalogo } from "../../src/lib/ca
 import { itensMerchant } from "../../src/lib/catalogo-merchant";
 import { pertenceAGrade } from "../../src/lib/catalogo-oferta";
 import { INCLUIR_CATALOGO, midiasDaOferta, type ProdutoCatalogo } from "../../src/lib/catalogo-qualidade";
+import { resolverItensPadronizados } from "../../src/lib/catalogo-resolver";
 
 const url = new URL(process.env.DATABASE_URL ?? "http://invalid");
 if (!["127.0.0.1", "localhost"].includes(url.hostname) || url.port !== "5548" || !url.pathname.endsWith("_test")) {
@@ -94,6 +95,8 @@ test("Domi-Rio isola fotos no Merchant, conserva a grade e respeita versões B2B
     assert.ok(!anuncio.includes("<g:additional_image_link>"));
   }
   assert.deepEqual((await carregar(rascunho.id)).midias, rascunho.midias);
+  const carrinho = await resolverItensPadronizados(tenant.id, grade.map(v => ({ id: `${raiz.id}:${v.id}`, quantidade: 1 })));
+  assert.deepEqual(carrinho.map(item => item.imagem), [foto("ISO155"), foto("ISO202"), undefined]);
   converter();
   assert.deepEqual(await carregar(raiz.id), raiz);
 

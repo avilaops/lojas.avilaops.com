@@ -30,7 +30,7 @@ import { minhaMoto } from "@/lib/minha-moto";
 import { lerCompatibilidade } from "@/lib/motos";
 import { descricaoDoProduto, textoPuro } from "@/lib/seo-texto";
 import { ofertaDaVariante,gtinValido } from "@/lib/catalogo-oferta";
-import { midiasDaOferta } from "@/lib/catalogo-qualidade";
+import { midiasDaOferta, usaImagensPorVolume } from "@/lib/catalogo-qualidade";
 import { paragrafosDaDescricao } from "@/lib/descricao-produto";
 import { marcaConfirmada } from "@/lib/marca-confirmada";
 import { envioSchema } from "@/lib/envio-declarado";
@@ -239,9 +239,9 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
               <SeletorVariante
                 key={escolhida?.id??p.id}
                 varianteInicial={escolhida?.id}
-                produto={{ id: p.id, slug: p.slug, nome: p.nome, precoCentavos: p.precoCentavos, imagem: p.imagens[0] }}
+                produto={{ id: p.id, slug: p.slug, nome: p.nome, precoCentavos: p.precoCentavos, imagem: usaImagensPorVolume(p) ? undefined : p.imagens[0] }}
                 opcoes={p.opcoes}
-                variantes={variacoesVisiveis.map((v) => ({ id: v.id, nome: v.nome, valores: v.valores as Record<string, string>, precoCentavos: v.precoCentavos, estoque: v.estoque, imagem: v.imagem, disponivel:v.compravel }))}
+                variantes={variacoesVisiveis.map((v) => ({ id: v.id, nome: v.nome, valores: v.valores as Record<string, string>, precoCentavos: v.precoCentavos, estoque: v.estoque, imagem: usaImagensPorVolume(p) ? midiasDaOferta(p, v.id)[0]?.url ?? null : v.imagem, disponivel:v.compravel }))}
                 vende={vende && !somenteNaLoja}
                 retorno={retorno}
               />
