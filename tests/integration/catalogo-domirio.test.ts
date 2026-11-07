@@ -20,9 +20,10 @@ const skus = [
   "ISO283", "ISO009", "ISO011", "ISO150", "ISO013", "ISO017", "ISO018", "ISO019",
 ];
 const foto = (sku: string) => `https://qa.example/${sku}.webp`;
-const converter = () => execFileSync("psql", [
-  "-X", "-v", "ON_ERROR_STOP=1", "--dbname", url.toString(), "--file", "scripts/catalogo/agrupar-apresentacoes-domirio.sql",
+const executarSql = (script: string) => execFileSync("psql", [
+  "-X", "-v", "ON_ERROR_STOP=1", "--dbname", url.toString(), "--file", `scripts/catalogo/${script}.sql`,
 ], { encoding: "utf8" });
+const converter = () => executarSql("agrupar-apresentacoes-domirio");
 
 test("Domi-Rio isola fotos no Merchant, conserva a grade e respeita versões B2B aprovadas", async () => {
   const tenant = await prisma.tenant.create({ data: { slug: "domi-rio", nome: "QA Domi-Rio", status: "ATIVA" } });
@@ -108,4 +109,37 @@ test("Domi-Rio isola fotos no Merchant, conserva a grade e respeita versões B2B
   const atual = await carregar(raiz.id);
   assert.deepEqual(atual.variantes, raiz.variantes);
   assert.deepEqual(atual.midias, raiz.midias);
+
+  const fichasCypertryne = [
+    ["ISO014", "100 mL", "cypertryne-100", "mw3zdh0l-c28efd58", "mw3ze4tc-a1400f1e"],
+    ["ISO140", "35 mL", "cypertryne-35", "mw1jk2dz-cc45b336"],
+    ["ISO015", "1 L", "cypertryne-1000", "mw1jhopy-b5cf84a9", "mw3zfcc1-a30a8292"],
+  ];
+  const urlFoto = (nome: string) => `https://lojas.avilaops.com/uploads/domi-rio/${nome}.webp`;
+  let raizCypertryne = "";
+  for (const [sku, volume, slug, ...arquivos] of fichasCypertryne) {
+    const ficha = await salvarProdutoNoCatalogo(tenant.id, null, {
+      nome: `CYPERTRYNE ${volume}`, sku, slug, precoCentavos: 1000, imagens: arquivos.map(urlFoto),
+    });
+    const variante = await prisma.variante.findFirstOrThrow({ where: { produtoId: ficha.id, padrao: true } });
+    if (!raizCypertryne) {
+      raizCypertryne = ficha.id;
+      await prisma.produto.update({ where: { id: ficha.id }, data: { opcoes: ["Volume"] } });
+    } else {
+      await prisma.produto.update({ where: { id: ficha.id }, data: { ativo: false } });
+    }
+    await prisma.variante.update({ where: { id: variante.id }, data: {
+      produtoId: raizCypertryne, padrao: ficha.id === raizCypertryne, valores: { Volume: volume },
+    } });
+  }
+  executarSql("vincular-fotos-cypertryne-domirio");
+  const cypertryne = await carregar(raizCypertryne);
+  assert.equal(cypertryne.nome, "CYPERTRYNE");
+  for (const [sku, , , ...arquivos] of fichasCypertryne) {
+    const variante = cypertryne.variantes.find(v => v.sku === sku);
+    assert.ok(variante);
+    assert.deepEqual(midiasDaOferta(cypertryne, variante.id).map(m => m.url), arquivos.map(urlFoto));
+  }
+  executarSql("vincular-fotos-cypertryne-domirio");
+  assert.equal((await carregar(raizCypertryne)).versaoCatalogo, cypertryne.versaoCatalogo);
 });
