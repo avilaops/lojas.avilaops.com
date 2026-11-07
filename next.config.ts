@@ -21,7 +21,7 @@ const nextConfig: NextConfig = {
   turbopack: { root: process.cwd() },
   outputFileTracingRoot: process.cwd(),
   // O pacote de checkout é consumido direto do fonte (.ts), sem build próprio.
-  transpilePackages: ["@avilaops/checkout"],
+  transpilePackages: ["@avilaops/checkout", "@avilaops/gerador-3d"],
   // O Prisma tem binário nativo; carregado por nome em runtime, não empacotado
   // (sem isto o Turbopack gera um alias com hash que não existe no standalone).
   serverExternalPackages: ["@prisma/client", "onnxruntime-node", "sharp"],

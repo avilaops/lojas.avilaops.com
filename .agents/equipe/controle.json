@@ -18,15 +18,15 @@
       "objective": "Integrar o visualizador compartilhado preservando configuração, retomada e ficha versionada.",
       "assignee": "codex",
       "priority": "alta",
-      "status": "em-andamento",
+      "status": "em-revisao",
       "acceptanceCriteria": [
         "Comparar Lojas, Ludus, motor-web e gerador-3d antes da escolha.",
         "Modelo detalhado, gestos móveis e fallback acessível sincronizados com a ficha.",
         "Testes, TypeScript, lint, build e validação visual móvel aprovados na CI."
       ],
-      "evidence": "docs/AVL-417-MOTOR-3D.md: comparação de quatro commits e contratos concluída por inspeção em 03/11/2026. Novo visualizador e testes não executados; sem publicação.",
+      "evidence": "PR draft #222 em https://github.com/avilaops/lojas.avilaops.com/pull/222 e PR draft #1 do motor em https://github.com/avilaops/gerador-3d/pull/1. CI run 42316354651 passou no SHA a318457 com lint, typecheck, testes, PostgreSQL, build, navegador e empacotamento; deploy/fumaça ignorados por draft. Inspeção visual autenticada específica da rota MRG e aceite de produção ainda pendentes.",
       "environment": "local",
-      "blocker": "Aceite integral depende de opções industriais de isolamento/ferragens, adiadas expressamente na AVL-400. Reuso tipado do viewer requer coordenação de contrato neutro ou família MRG no gerador-3d."
+      "blocker": "Aceite integral depende de revisão visual responsiva autenticada da rota MRG e aprovação das PRs. Opções industriais de isolamento/ferragens continuam fora do contrato, conforme AVL-400; não foram inventadas."
     },
     {
       "id": "BRILHAX-CONVERSAO-20261106",
