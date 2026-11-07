@@ -255,7 +255,9 @@ export async function salvarGradeNoCatalogo(tenantId: string, produtoId: string,
         if (url) await tx.midiaProduto.upsert({ where: { produtoId_escopo_url: { produtoId, escopo: v.id, url } },
           create: { tenantId, produtoId, varianteId: v.id, escopo: v.id, url, finalidade: "principal", fonte: "grade" }, update: { finalidade: "principal", ordem: 0 } });
       }
-      await tx.precoVariante.upsert({ where: { varianteId: v.id }, create: { tenantId, varianteId: v.id, valorCentavos: precoCentavos!, comparacaoCentavos: precoDeCentavos ?? null }, update: { valorCentavos: precoCentavos!, ...(precoDeCentavos !== undefined ? { comparacaoCentavos: precoDeCentavos } : {}) } });
+      if (anterior?.preco?.valorCentavos !== precoCentavos || (precoDeCentavos !== undefined && anterior?.preco?.comparacaoCentavos !== precoDeCentavos)) {
+        await tx.precoVariante.upsert({ where: { varianteId: v.id }, create: { tenantId, varianteId: v.id, valorCentavos: precoCentavos!, comparacaoCentavos: precoDeCentavos ?? null }, update: { valorCentavos: precoCentavos!, ...(precoDeCentavos !== undefined ? { comparacaoCentavos: precoDeCentavos } : {}) } });
+      }
       if (estoque !== undefined || !anterior) await gravarSaldo(tx, tenantId, v.id, estoque ?? null, "grade");
       await tx.publicacaoCanal.upsert({ where: { tenantId_varianteId_canal_contaExterna: { tenantId, varianteId: v.id, canal: "google", contaExterna: "" } }, create: { tenantId, varianteId: v.id, canal: "google", idExterno: v.padrao ? produtoId : `${produtoId}:${v.id}` }, update: {} });
       mantidos.push(v.id);
