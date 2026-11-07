@@ -1,11 +1,7 @@
 # AVL-417 — decisão de integração do visualizador MRG
 
 Data: 03/11/2026. Autor: agente Codex, engenharia AVL-417.
-<<<<<<< HEAD
 Estado: implementação em PR; sem merge, deploy ou aceite de produção.
-=======
-Estado: análise arquitetural concluída; implementação do novo visualizador pendente.
->>>>>>> origin/main
 Issue: https://linear.app/avilaops/issue/AVL-417/mrg-adotar-motor-3d-detalhado-no-configurador-sob-medida
 
 ## Escopo e evidência
@@ -209,23 +205,31 @@ issues, comentários e código.
 
 Implementação da evolução:
 
-- `gerador-3d`, branch `feat/thermal-box-visualizer`, commit `3a8397c`:
+- `gerador-3d`, branch `feat/thermal-box-visualizer`, commit `bbbbbf1`:
   contrato visual neutro `thermal-box`, modelo paramétrico de caixa, tampa
   superior/frontal/dupla, pés/rodízios/sem base, divisórias e wrapper React.
-- Lojas, branch `feat/avl-417-motor-3d`: dependência fixada no SHA `3a8397c`,
+- Lojas, branch `feat/avl-417-motor-3d`: dependência fixada no SHA `bbbbbf1`,
   adaptador `configuracaoParaThermalBoxVisual` e substituição do palco CSS por
   `ThermalBoxViewerView` carregado somente no cliente.
 - O viewer oferece OrbitControls para rotação e zoom por gesto, botões
-  focáveis de restaurar/aproximar/afastar e fallback textual quando WebGL falha.
+  focáveis de restaurar/aproximar/afastar e fallback textual quando WebGL
+  falha ou perde o contexto.
 - Quantidade e observações continuam exclusivamente na ficha; nenhum campo
   industrial ausente foi inferido.
 
-Esta implementação está em branch e ainda não comprova CI, aprovação visual
-responsiva, merge, deploy ou comportamento em produção.
+Esta implementação está nas PRs draft
+[#222](https://github.com/avilaops/lojas.avilaops.com/pull/222) e
+[#1](https://github.com/avilaops/gerador-3d/pull/1). A CI do SHA
+`c8fb4f2` da Lojas passou integralmente no run
+`42315420016`, incluindo lint, typecheck, testes, integrações PostgreSQL,
+build, jornadas de navegador e empacotamento. Os jobs de entrega, fumaça e
+deploy foram ignorados porque a PR permaneceu draft.
 
-O próximo passo de verificação é aguardar a CI da PR e executar a inspeção
-visual responsiva associada ao mesmo SHA. Não há merge nem deploy automático
-enquanto a PR permanecer em draft.
+Os jobs de navegador aprovados validam jornadas existentes de cotação,
+etiquetas e PDFs; não constituem uma captura visual autenticada específica da
+rota MRG. A inspeção visual responsiva do configurador ainda requer revisão
+manual em navegador autorizado antes do aceite. Não há merge nem deploy
+automático enquanto as PRs permanecerem em draft.
 
 Para o aceite integral: vincular à issue as opções industriais aprovadas
 pela MRG ou uma decisão explícita de que isolamento/ferragens serão somente
