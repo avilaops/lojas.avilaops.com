@@ -92,6 +92,10 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
   }));
   const escolhida=ofertas.find(v=>v.id===varianteId)??ofertas.find(v=>v.padrao);
   if(varianteId&&!ofertas.some(v=>v.id===varianteId))notFound();
+  const volume = usaImagensPorVolume(p) && escolhida
+    ? (escolhida.valores as Record<string, unknown> | null)?.Volume
+    : undefined;
+  const titulo = typeof volume === "string" && volume ? `${p.nome} ${volume}` : p.nome;
   if(escolhida)Object.assign(p,{precoCentavos:escolhida.precoCentavos,precoDeCentavos:escolhida.precoDeCentavos,estoque:escolhida.estoque,sku:escolhida.sku,gtin:escolhida.gtin,disponibilidade:escolhida.disponibilidade,imagens:midiasDaOferta(p,escolhida.id).map(m=>m.url)});
   const vende = lojaVende(t);
   // Preço zero é "ainda não precificado", não "de graça": item de referência
@@ -149,7 +153,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
-    name: p.nome,
+    name: titulo,
     ...(marcaConfirmada(p.marca) ? { brand: { "@type": "Brand", name: marcaConfirmada(p.marca)! } } : {}),
     ...(p.sku && !/\s/u.test(p.sku) ? { sku: p.sku } : {}),
     ...(gtinValido(p.gtin) ? { gtin: p.gtin } : {}),
@@ -226,11 +230,11 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
       )}
 
       <div className="grid items-start gap-8 md:grid-cols-2 ap-produto-grade">
-        {usaBlocoProprio(temaDo(t), "produto") ? <GaleriaPremium imagens={p.imagens} alt={p.nome} origem={p.imagemOrigem}/> : <GaleriaProduto imagens={p.imagens} alt={p.nome} origem={p.imagemOrigem} />}
+        {usaBlocoProprio(temaDo(t), "produto") ? <GaleriaPremium key={escolhida?.id} imagens={p.imagens} alt={titulo} origem={p.imagemOrigem}/> : <GaleriaProduto key={escolhida?.id} imagens={p.imagens} alt={titulo} origem={p.imagemOrigem} />}
 
         <div className="ap-produto-info">
           {p.marca && <p className="ap-produto-marca text-xs uppercase tracking-wide text-muted-foreground">{p.marca}</p>}
-          <h1 className="mt-1 text-2xl font-bold">{p.nome}</h1>
+          <h1 className="mt-1 text-2xl font-bold">{titulo}</h1>
           {p.descricaoCurta && <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{textoPuro(p.descricaoCurta)}</p>}
 
           {p.opcoes.length > 0 ? (
