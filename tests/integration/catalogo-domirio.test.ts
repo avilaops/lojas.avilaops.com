@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { after, test } from "node:test";
 import { prisma } from "../../src/lib/db";
-import { salvarGradeNoCatalogo, salvarProdutoNoCatalogo } from "../../src/lib/catalogo-escrita";
+import { permitirProjecao, salvarGradeNoCatalogo, salvarProdutoNoCatalogo } from "../../src/lib/catalogo-escrita";
 import { itensMerchant } from "../../src/lib/catalogo-merchant";
 import { pertenceAGrade } from "../../src/lib/catalogo-oferta";
 import { INCLUIR_CATALOGO, midiasDaOferta, type ProdutoCatalogo } from "../../src/lib/catalogo-qualidade";
@@ -124,7 +124,10 @@ test("Domi-Rio isola fotos no Merchant, conserva a grade e respeita versões B2B
     const variante = await prisma.variante.findFirstOrThrow({ where: { produtoId: ficha.id, padrao: true } });
     if (!raizCypertryne) {
       raizCypertryne = ficha.id;
-      await prisma.produto.update({ where: { id: ficha.id }, data: { opcoes: ["Volume"] } });
+      await prisma.$transaction(async tx => {
+        await permitirProjecao(tx);
+        await tx.produto.update({ where: { id: ficha.id }, data: { opcoes: ["Volume"] } });
+      });
     } else {
       await prisma.produto.update({ where: { id: ficha.id }, data: { ativo: false } });
     }
