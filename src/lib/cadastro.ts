@@ -135,21 +135,44 @@ export async function concluirPrimeirosPassos(
   instante = new Date(),
 ): Promise<Tenant> {
   const slug = await slugLivre(entrada.nome, t.id);
-  return prisma.tenant.update({
-    where: { id: t.id },
-    data: {
-      slug,
-      nome: entrada.nome.trim(),
-      whatsapp: entrada.whatsapp,
-      plano: entrada.plano,
-      status: "ATIVA",
-      contratosComerciais: {
-        create: contratoPadraoAninhado(entrada.plano, {
-          aceiteEm: instante,
-          aceiteReferencia: `${TERMO_COMERCIAL_VERSAO}:checkbox`,
-          origem: "CADASTRO",
-        }, instante),
+  return prisma.$transaction(async (tx) => {
+    // Serializa a conclusão por loja, inclusive dois envios da mesma tela.
+    await tx.$queryRaw`SELECT id FROM "Tenant" WHERE id = ${t.id} FOR UPDATE`;
+    const atual = await tx.tenant.findUniqueOrThrow({ where: { id: t.id } });
+    if (!precisaDosPrimeirosPassos(atual)) return atual;
+
+    const contratos = await tx.contratoComercial.findMany({
+      where: { tenantId: t.id },
+      orderBy: { versao: "desc" },
+    });
+    if (contratos.some((c) => c.vigenteDesde >= instante)) {
+      throw new Error("Já existe contrato comercial nesta vigência ou depois dela.");
+    }
+    // Uma conta provisionada pode já ter contrato. Preserva o histórico e
+    // encerra a vigência anterior na mesma transação que ativa a loja.
+    await tx.contratoComercial.updateMany({
+      where: { tenantId: t.id, OR: [{ vigenteAte: null }, { vigenteAte: { gt: instante } }] },
+      data: { vigenteAte: instante, situacao: "ENCERRADO" },
+    });
+    return tx.tenant.update({
+      where: { id: t.id },
+      data: {
+        slug,
+        nome: entrada.nome.trim(),
+        whatsapp: entrada.whatsapp,
+        plano: entrada.plano,
+        status: "ATIVA",
+        contratosComerciais: {
+          create: {
+            ...contratoPadraoAninhado(entrada.plano, {
+              aceiteEm: instante,
+              aceiteReferencia: `${TERMO_COMERCIAL_VERSAO}:checkbox`,
+              origem: "CADASTRO",
+            }, instante),
+            versao: (contratos[0]?.versao ?? 0) + 1,
+          },
+        },
       },
-    },
+    });
   });
 }
