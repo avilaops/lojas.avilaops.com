@@ -13,6 +13,22 @@
   ],
   "tasks": [
     {
+      "id": "CADASTRO-CONTRATO-20261106",
+      "title": "Desbloquear cadastro com contrato comercial preexistente",
+      "objective": "Concluir primeiros passos sem duplicar tenantId/versao e preservar histórico e atomicidade.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-andamento",
+      "acceptanceCriteria": [
+        "Contrato preexistente é encerrado e a próxima versão registra o aceite.",
+        "Envios simultâneos não duplicam contratos nem substituem cadastro concluído.",
+        "Falha de vigência preserva conta e contrato.",
+        "Correção validada e publicada em produção."
+      ],
+      "environment": "teste-isolado",
+      "evidence": "Falha P2002 confirmada no container lojas-avilaops. PostgreSQL 18 isolado: 11/11 testes de cadastro e contratos aprovados; ESLint dos arquivos alterados aprovado. CI e publicação pendentes."
+    },
+    {
       "id": "AVL-417",
       "title": "MRG — adotar motor 3D detalhado no configurador sob medida",
       "objective": "Integrar o visualizador compartilhado preservando configuração, retomada e ficha versionada.",

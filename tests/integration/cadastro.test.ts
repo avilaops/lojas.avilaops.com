@@ -87,3 +87,55 @@ test("quem se cadastrou sai e entra de novo com a mesma senha, digitando o e-mai
   assert.equal(quem?.tenant.id, conta.id);
   assert.equal(await autenticar(loja, email, "senha-errada-1"), null);
 });
+
+test("primeiros passos preservam contrato preexistente e registram a próxima versão", async () => {
+  const conta = (await criarConta({ email: `qa-${sufixo()}@cadastro.example`, senha: null }))!;
+  const anterior = await prisma.contratoComercial.create({
+    data: { tenantId: conta.id, versao: 3, plano: "SITE", mensalidadeCentavos: 25000,
+      comissaoPontosBase: 500, vigenteDesde: new Date("2026-01-01"), situacao: "ATIVO", origem: "ADMIN" },
+  });
+  const instante = new Date();
+  const entrada = { nome: `Imperial QA ${sufixo()}`, whatsapp: "5516999990000", plano: "LOJA" as const, aceitouTermosComerciais: true as const };
+  const loja = await concluirPrimeirosPassos(conta, entrada, instante);
+  const contratos = await prisma.contratoComercial.findMany({ where: { tenantId: conta.id }, orderBy: { versao: "asc" } });
+  assert.equal(loja.status, "ATIVA");
+  assert.equal(contratos.length, 2);
+  assert.equal(contratos[0].id, anterior.id);
+  assert.equal(contratos[0].mensalidadeCentavos, 25000);
+  assert.equal(contratos[0].situacao, "ENCERRADO");
+  assert.equal(contratos[0].vigenteAte?.getTime(), instante.getTime());
+  assert.equal(contratos[1].versao, 4);
+  assert.equal(contratos[1].vigenteDesde.getTime(), instante.getTime());
+  assert.equal(contratos[1].aceiteEm?.getTime(), instante.getTime());
+  assert.equal(contratos[1].mensalidadeCentavos, 26900);
+  // Reenvio com a conta antiga não altera a loja nem duplica o aceite.
+  const repetida = await concluirPrimeirosPassos(conta, { ...entrada, nome: "Não substituir" });
+  assert.equal(repetida.nome, loja.nome);
+  assert.equal(await prisma.contratoComercial.count({ where: { tenantId: conta.id } }), 2);
+});
+
+test("dois envios simultâneos ativam a loja com um único contrato", async () => {
+  const conta = (await criarConta({ email: `qa-${sufixo()}@cadastro.example`, senha: null }))!;
+  const entrada = { nome: `Simultânea QA ${sufixo()}`, whatsapp: "5516999990000", plano: "SITE" as const, aceitouTermosComerciais: true as const };
+  const [a, b] = await Promise.all([concluirPrimeirosPassos(conta, entrada), concluirPrimeirosPassos(conta, entrada)]);
+  assert.equal(a.slug, b.slug);
+  assert.equal(a.status, "ATIVA");
+  assert.equal(await prisma.contratoComercial.count({ where: { tenantId: conta.id } }), 1);
+});
+
+test("conflito de vigência preserva os dados da conta e seu contrato", async () => {
+  const conta = (await criarConta({ email: `qa-${sufixo()}@cadastro.example`, senha: null }))!;
+  const instante = new Date();
+  const contrato = await prisma.contratoComercial.create({
+    data: { tenantId: conta.id, versao: 1, plano: "SITE", mensalidadeCentavos: 11000,
+      comissaoPontosBase: 500, vigenteDesde: instante, situacao: "ATIVO", origem: "ADMIN" },
+  });
+  await assert.rejects(concluirPrimeirosPassos(conta, {
+    nome: "Não gravar", whatsapp: "5516999990000", plano: "LOJA", aceitouTermosComerciais: true,
+  }, instante), /vigência/);
+  const preservada = await prisma.tenant.findUniqueOrThrow({ where: { id: conta.id } });
+  assert.equal(preservada.slug, conta.slug);
+  assert.equal(preservada.status, "PROVISIONANDO");
+  assert.equal(preservada.whatsapp, null);
+  assert.equal((await prisma.contratoComercial.findUniqueOrThrow({ where: { id: contrato.id } })).vigenteAte, null);
+});
