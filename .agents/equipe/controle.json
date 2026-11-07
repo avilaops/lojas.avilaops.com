@@ -24,7 +24,7 @@
         "Modelo detalhado, gestos móveis e fallback acessível sincronizados com a ficha.",
         "Testes, TypeScript, lint, build e validação visual móvel aprovados na CI."
       ],
-      "evidence": "PR draft #222 em https://github.com/avilaops/lojas.avilaops.com/pull/222 e PR draft #1 do motor em https://github.com/avilaops/gerador-3d/pull/1. CI run 42315420016 passou no SHA c8fb4f2 com lint, typecheck, testes, PostgreSQL, build, navegador e empacotamento; deploy/fumaça ignorados por draft. Inspeção visual autenticada específica da rota MRG e aceite de produção ainda pendentes.",
+      "evidence": "PR draft #222 em https://github.com/avilaops/lojas.avilaops.com/pull/222 e PR draft #1 do motor em https://github.com/avilaops/gerador-3d/pull/1. CI run 42316354651 passou no SHA a318457 com lint, typecheck, testes, PostgreSQL, build, navegador e empacotamento; deploy/fumaça ignorados por draft. Inspeção visual autenticada específica da rota MRG e aceite de produção ainda pendentes.",
       "environment": "local",
       "blocker": "Aceite integral depende de revisão visual responsiva autenticada da rota MRG e aprovação das PRs. Opções industriais de isolamento/ferragens continuam fora do contrato, conforme AVL-400; não foram inventadas."
     },

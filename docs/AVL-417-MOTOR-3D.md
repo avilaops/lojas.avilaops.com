@@ -220,8 +220,8 @@ Implementação da evolução:
 Esta implementação está nas PRs draft
 [#222](https://github.com/avilaops/lojas.avilaops.com/pull/222) e
 [#1](https://github.com/avilaops/gerador-3d/pull/1). A CI do SHA
-`c8fb4f2` da Lojas passou integralmente no run
-`42315420016`, incluindo lint, typecheck, testes, integrações PostgreSQL,
+`a318457` da Lojas passou integralmente no run
+`42316354651`, incluindo lint, typecheck, testes, integrações PostgreSQL,
 build, jornadas de navegador e empacotamento. Os jobs de entrega, fumaça e
 deploy foram ignorados porque a PR permaneceu draft.
 
