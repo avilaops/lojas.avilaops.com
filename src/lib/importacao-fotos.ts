@@ -10,6 +10,8 @@ function oficial(valor: string, imagem = false) {
     if (!imagem && url.hostname === "www.pneufree.com.br") return url.pathname.startsWith("/pneu/");
     if (imagem && url.hostname === "cdn.allopneus.com") return /^\/produit\/\d+\/threeQuarterView\/tire_full\/\d+\/[A-Za-z0-9_-]+$/.test(url.pathname);
     if (!imagem && url.hostname === "www.allopneus.com") return /^\/(modele|produit)\/pneu-auto\//.test(url.pathname);
+    if (imagem && url.hostname === "magento.rodasdeligaleve.com.br") return url.pathname.startsWith("/media/catalog/product/") && /\.(png|jpe?g|webp)$/i.test(url.pathname);
+    if (!imagem && url.hostname === "rodasdeligaleve.com.br") return url.pathname.startsWith("/produtos/");
     return HOSTS.has(url.hostname) && (!imagem || (url.pathname.includes("/wp-content/uploads/") && /\.(png|jpe?g|webp)$/i.test(url.pathname)));
   } catch { return false; }
 }

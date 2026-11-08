@@ -2,6 +2,14 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { acabamentoDoNome, imagemKrmai, planejar } from "../catalogo/planejar-fotos-bereta.mjs";
 import { mesmoPneu } from "../catalogo/fotos-pneus.mjs";
+import { corDaRoda } from "../catalogo/fotos-rodas.mjs";
+
+test("variante de cor não confunde prata comum com diamantado ou fumê", () => {
+  assert.equal(corDaRoda("Preta Diamantada", "KRMAI"), corDaRoda("RODA KRMAI S47 BD", "KRMAI"));
+  assert.notEqual(corDaRoda("Prata", "KRMAI"), corDaRoda("Grafite Diamantada", "KRMAI"));
+  assert.equal(corDaRoda("RODA KRMAI S47 PRETA DIAM. SMOKE", "KRMAI"), null);
+  assert.equal(corDaRoda("RODA BRW S47 BD", "BRW"), null);
+});
 
 test("pneus não confundem família incompleta, geração, medida ou índice", () => {
   assert.equal(mesmoPneu("PNEU 195/60/15 PIRELLI P7 88H", "Pirelli", "PNEU PIRELLI 195/60R15 88H P7"), true);
