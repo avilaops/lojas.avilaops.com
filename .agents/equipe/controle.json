@@ -18,7 +18,7 @@
       "objective": "Permitir lista de cotação com quantidades, importação do carrinho e mensagem única para o comercial.",
       "assignee": "codex",
       "priority": "alta",
-      "status": "em-andamento",
+      "status": "concluida",
       "acceptanceCriteria": [
         "Página e catálogo exclusivos da Domi-Rio.",
         "Variantes e códigos resolvidos sem dados internos.",
@@ -27,7 +27,7 @@
         "Conteúdo em MDX, links públicos, CI e revisão mobile/desktop."
       ],
       "environment": "desenvolvimento isolado, CI e produção",
-      "evidence": "Plano em docs/superpowers/plans/2026-11-08-domirio-cotacao-lista.md; implementação em andamento."
+      "evidence": "Commit e77a815 publicado pela CI 42498692977 com deploy e fumaça aprovados. Página pública com 43 apresentações, links em home/ficha/carrinho/rodapé/sitemap/llms; 404 em PK e Bereta. Revisão pública 390/1440 px sem overflow ou erros: adicionar, restaurar, editar, remover e importar carrinho conferidos; CEP não salvo. Mensagem inspecionada com ISO015/1 L/12 unidades e ISO276/3 unidades, URLs corretas e disponibilidade a confirmar. Nenhum WhatsApp enviado. Evidências em docs/DOMIRIO-COTACAO-LISTA.md."
     },
     {
       "id": "PK-JORNADA-VISUAL-20261108",
