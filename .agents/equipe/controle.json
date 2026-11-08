@@ -13,6 +13,17 @@
   ],
   "tasks": [
     {
+      "id": "DOMIRIO-CONVERSAO-20261108",
+      "title": "Melhorar descoberta, fichas e cotação da Domi-Rio",
+      "objective": "Publicar home comercial em MDX, vitrine diversificada e cotação com apresentação e quantidade.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-andamento",
+      "acceptanceCriteria": ["Composição isolada da Domi-Rio e responsiva.", "Seleção por categorias e famílias, sem ranking comercial inventado.", "Cotação com código, apresentação e quantidade corretos.", "Links para fabricante verificado e atendimento nos guias.", "CI e produção verificadas."],
+      "environment": "cópia isolada de desenvolvimento, GitHub CI e produção",
+      "evidence": "Catálogo lido sem escrita: 41 produtos ativos com fotos. Plano em docs/superpowers/plans/2026-11-08-domirio-conversao.md. Implementação e verificação em andamento."
+    },
+    {
       "id": "PK-BENEFICIOS-APLICACOES-20261108",
       "title": "Benefícios, aplicações e ferramentas de seleção PK",
       "objective": "Apresentar benefícios por função e segmentos atendidos, comparação, cotação por lote e demanda técnica sem resultado, com códigos relacionados discretos.",

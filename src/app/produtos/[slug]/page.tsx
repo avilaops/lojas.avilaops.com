@@ -46,6 +46,8 @@ import { numeroDeContato } from "@/lib/canais-publicos";
 import ConsultarEntrega from "@/components/checkout/ConsultarEntrega";
 import { localPublicoDeRetirada } from "@/lib/retirada-publica";
 import { prazoDeDespacho } from "@/lib/textos-loja";
+import ResumoProdutoDomiRio from "@/components/domirio/ResumoProduto";
+import CotacaoProdutoDomiRio from "@/components/domirio/CotacaoProduto";
 
 const MEIOS: Record<string, string> = { pix: "Pix", cartao: "Cartão", boleto: "Boleto" };
 
@@ -239,6 +241,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
         <div className="ap-produto-info">
           {p.marca && <p className="ap-produto-marca text-xs uppercase tracking-wide text-muted-foreground">{p.marca}</p>}
           <h1 className="mt-1 text-2xl font-bold">{titulo}</h1>
+          {t.slug === "domi-rio" && <ResumoProdutoDomiRio marca={p.marca} sku={p.sku} atributos={p.atributos} apresentacao={p.opcoes.length ? (escolhida?.nome ?? "Selecione abaixo") : undefined} />}
           {p.descricaoCurta && <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{textoPuro(p.descricaoCurta)}</p>}
           {t.slug === "pkvedacoes" && <div className="mt-4 space-y-4">
             <BeneficiosProduto tenantSlug={t.slug} nome={p.nome} atributos={p.atributos} />
@@ -324,6 +327,10 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
           {p.opcoes.length === 0 && !somenteNaLoja && estado.acao === "carrinho" && <ConsultarEntrega itens={[{ id: escolhida ? `${p.id}:${escolhida.id}` : p.id, quantidade: 1 }]} subtotal={p.precoCentavos} whatsapp={whatsapp} localRetirada={localPublicoDeRetirada(t)} />}
 
           <Medicamento produto={p} precoCentavos={p.precoCentavos} equivalentes={equivalentes} />
+          {t.slug === "domi-rio" && !estado.esgotado && <CotacaoProdutoDomiRio key={escolhida?.id ?? p.id} baseUrl={base} whatsapp={whatsapp}
+            produto={{ nome: p.nome, slug: p.slug, sku: p.sku, apresentacao: typeof (p.atributos as Record<string, unknown> | null)?.apresentacaoComercial === "string" ? String((p.atributos as Record<string, unknown>).apresentacaoComercial) : undefined }}
+            apresentacoes={p.opcoes.length ? variacoesVisiveis.filter(v => regras.emEstoque(v)).map(v => ({ id: v.id, nome: v.nome, sku: v.sku })) : []}
+            varianteInicial={escolhida?.id} />}
 
           <Compatibilidade compatibilidade={p.compatibilidade} codigoOriginal={p.codigoOriginal} codigosEquivalentes={p.codigosEquivalentes} moto={moto} />
           <ReferenciasAgelPk tenantSlug={t.slug} produto={p} />
