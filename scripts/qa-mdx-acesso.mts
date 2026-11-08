@@ -1,7 +1,13 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { chromium } from "playwright";
+import { createElement, type ComponentType } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import ModuloSeletor from "../src/components/plataforma/SeletorLojasEquipe";
+
+type PropsSeletor = Parameters<typeof ModuloSeletor>[0];
+const Seletor = (typeof ModuloSeletor === "function" ? ModuloSeletor : (ModuloSeletor as { default: ComponentType<PropsSeletor> }).default) as ComponentType<PropsSeletor>;
 
 assert.equal(process.env.CI, "true", "Verificação exclusiva da CI");
 const origem = "http://localhost:3099";
@@ -20,6 +26,9 @@ try {
     await new Promise((resolve) => setTimeout(resolve, 500));
   }
   assert.ok(pronto, "Aplicação compilada iniciou");
+  const cssEquipe = (await Promise.all([
+    "src/app/plataforma/marca-lojas.css", "src/app/plataforma/(acesso)/acesso.css",
+  ].map((caminho) => readFile(caminho, "utf8")))).join("\n");
   for (const largura of [360, 768, 1440]) {
     const contexto = await browser.newContext({ viewport: { width: largura, height: 900 } });
     // A página é local; nenhuma integração ou rastreador externo pode ser chamado.
@@ -44,7 +53,20 @@ try {
     await page.goto(`${origem}/entrar/equipe`);
     assert.equal(new URL(page.url()).pathname, "/entrar", "Acesso sem autorização continua bloqueado");
     assert.deepEqual(erros, [], "Sem erros de JavaScript");
-    resultados.push({ largura, ajuda: "pass", ancoras: "pass", semAutorizacao: "redirect" });
+    // Fixture de apresentação: renderiza o componente real sem conta ou SSO.
+    // Não representa uma sessão autenticada nem verifica hidratação da busca.
+    const htmlSeletor = renderToStaticMarkup(createElement(Seletor, { base: "localhost", lojas: [
+      { slug: "qa-vedacoes", nome: "Vedações QA", dominioPrincipal: "vedacoes-qa.example", status: "ATIVA" },
+      { slug: "qa-nome-longo", nome: "Distribuidora de peças e acessórios com nome extenso QA", dominioPrincipal: null, status: "PROVISIONANDO" },
+    ] }));
+    await page.setContent(`<html lang="pt-BR"><head><style>body{margin:0}${cssEquipe}</style></head><body><div class="eq-shell"><main><div class="eq-conteudo"><h1>Escolha a loja para continuar.</h1>${htmlSeletor}</div></main></div></body></html>`);
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `Seletor sem overflow a ${largura}px`);
+    assert.equal(await page.locator('form[method="post"][action="/api/painel/entrar/equipe"]').count(), 2);
+    for (const botao of await page.locator("button[type=submit]").all()) {
+      assert.ok((await botao.boundingBox())!.height >= 44, "Alvo de toque de pelo menos 44px");
+    }
+    await page.screenshot({ path: `${pasta}/seletor-fixture-${largura}.png`, fullPage: true });
+    resultados.push({ largura, ajuda: "pass", ancoras: "pass", semAutorizacao: "redirect", seletorFixture: "layout-pass" });
     await contexto.close();
   }
   await writeFile(`${pasta}/resultado.json`, JSON.stringify({ commit: process.env.GITHUB_SHA, ambiente: "github-ci-isolado", resultados }, null, 2));
