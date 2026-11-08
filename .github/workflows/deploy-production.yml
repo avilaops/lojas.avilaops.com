@@ -14,11 +14,9 @@ jobs:
   dependencias:
     name: preparar dependências
     runs-on: ubuntu-24.04
-    # Instalação, cinco uploads verificados e limpeza atingiram exatamente 60s.
-    timeout-minutes: 2
+    timeout-minutes: 1
     outputs:
       artifact_id: ${{ steps.arquivo.outputs.ids }}
-      ferramenta_id: ${{ steps.ferramenta.outputs.ids }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -48,6 +46,18 @@ jobs:
         with:
           tipo: dependencias
           pasta: ${{ runner.temp }}/dependencias/
+  ferramenta-navegador:
+    name: preparar CLI do navegador
+    needs: dependencias
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    outputs:
+      artifact_id: ${{ steps.ferramenta.outputs.ids }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/preparar-node
       - name: Arquivar somente a CLI de navegador da versão do lockfile
         run: |
           set -euo pipefail
@@ -210,7 +220,7 @@ jobs:
 
   navegador:
     name: preparar Chromium headless
-    needs: dependencias
+    needs: [dependencias, ferramenta-navegador]
     runs-on: ubuntu-24.04
     timeout-minutes: 1
     outputs:
@@ -221,7 +231,7 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/preparar-artefatos
         with:
-          ids: ${{ needs.dependencias.outputs.ferramenta_id }}
+          ids: ${{ needs.ferramenta-navegador.outputs.artifact_id }}
           tipos: ferramenta-navegador
       - run: node node_modules/playwright-core/cli.js install --only-shell chromium
       - name: Arquivar versão do navegador do lockfile
@@ -240,7 +250,7 @@ jobs:
 
   fontes:
     name: preparar fontes do navegador
-    needs: dependencias
+    needs: [dependencias, ferramenta-navegador]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     outputs:
@@ -251,7 +261,7 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/preparar-artefatos
         with:
-          ids: ${{ needs.dependencias.outputs.ferramenta_id }}
+          ids: ${{ needs.ferramenta-navegador.outputs.artifact_id }}
           tipos: ferramenta-navegador
       - run: node node_modules/playwright-core/cli.js install-deps chromium
       - name: Arquivar todas as fontes preparadas pelo Playwright
