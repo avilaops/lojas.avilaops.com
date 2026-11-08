@@ -1,21 +1,26 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
+import { createHash } from "node:crypto";
 import path from "node:path";
 import { artigosDomiRio, artigoDomiRio, filtrarArtigosDomiRio, navegacaoArtigoDomiRio, temasDomiRio } from "./artigos-domirio";
 
-test("coleção tem os 50 artigos ordenados e sete capas válidas", () => {
+test("coleção tem os 50 artigos ordenados e uma capa diferente por artigo", () => {
   const artigos = artigosDomiRio("domi-rio");
   assert.equal(artigos.length, 50);
   assert.equal(new Set(artigos.map(p => p.slug)).size, 50);
   assert.deepEqual(artigos.map(p => p.order), Array.from({ length: 50 }, (_, i) => i + 1));
   assert.equal(temasDomiRio.length, 7);
-  assert.equal(new Set(artigos.map(p => p.cover)).size, 7);
+  assert.equal(new Set(artigos.map(p => p.cover)).size, 50);
+  const hashes = new Set<string>();
   for (const p of artigos) {
     assert.match(p.slug, /^[a-z0-9]+(?:-[a-z0-9]+)*$/);
     assert.ok(p.title.length > 10 && p.description.length > 20);
+    assert.ok(p.coverAlt.trim().length > 10);
+    assert.doesNotMatch(p.coverAlt, /\uFFFD/);
     assert.doesNotMatch(`${p.title} ${p.description} ${p.category}`, /\uFFFD/);
     assert.ok(existsSync(path.join(process.cwd(), "public", p.cover)));
+    hashes.add(createHash("sha256").update(readFileSync(path.join(process.cwd(), "public", p.cover))).digest("hex"));
     const corpo = readFileSync(path.join(process.cwd(), "src/content/domirio/posts", p.slug + ".mdx"), "utf8");
     assert.doesNotMatch(corpo, /^---|^# /m);
     assert.match(corpo, /^## Fontes/m);
@@ -24,6 +29,7 @@ test("coleção tem os 50 artigos ordenados e sete capas válidas", () => {
     assert.equal(new Set(p.sections.map(s => s.id)).size, p.sections.length);
     assert.ok(p.readingMinutes >= 1);
   }
+  assert.equal(hashes.size, 50, "as capas não podem ser cópias idênticas com nomes diferentes");
 });
 
 test("artigos estáticos não vazam entre lojas", () => {

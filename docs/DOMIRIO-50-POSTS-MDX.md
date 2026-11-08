@@ -60,3 +60,20 @@ na cópia isolada, incluindo `50-paginas.json`, `leituras.json` e `producao.json
 O lockfile truncado herdado da base foi recuperado e reconciliado com o npm,
 preservando o commit do gerador 3D já declarado; a preparação de dependências
 da CI confirmou o resultado.
+
+## Capas próprias por artigo
+
+Após solicitação de substituir as imagens repetidas, foram criadas 43 capas
+pela ferramenta integrada `image_gen`. A primeira ocorrência de cada uma das
+sete capas fornecidas foi mantida. A coleção passou a ter 50 caminhos e 50
+hashes de imagem distintos. Os artigos, seus slugs e suas fontes não mudaram.
+
+As imagens geradas são editoriais e ilustrativas, sem apresentar dosagens,
+marcas ou evidências de diagnóstico e eficácia. Foram revisadas visualmente
+em três pranchas e exportadas como WebP pelo Sharp. Os cards usam `next/image`
+com tamanhos responsivos e carregamento sob demanda; os cabeçalhos e metadados
+de compartilhamento leem as mesmas capas atualizadas.
+
+Prompts completos, caminhos finais, dimensões, peso e SHA-256 ficam em
+`docs/assets/domirio-capas-geradas.json`. Os 43 arquivos finais estão em
+`public/media/domirio/blog`, junto às sete imagens originais preservadas.

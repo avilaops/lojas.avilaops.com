@@ -13,6 +13,23 @@
   ],
   "tasks": [
     {
+      "id": "DOMIRIO-CAPAS-UNICAS-20261108",
+      "title": "Substituir capas repetidas por imagens próprias de cada artigo",
+      "objective": "Gerar 43 capas e manter uma ocorrência de cada uma das sete originais, resultando em 50 artigos com imagens diferentes.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "50 caminhos de capa e 50 hashes de imagem distintos.",
+        "43 imagens editoriais geradas, revisadas e salvas no projeto em WebP.",
+        "Imagem e texto alternativo coerentes com o assunto de cada artigo.",
+        "Cards responsivos com carregamento sob demanda; capas dos artigos e compartilhamento atualizadas.",
+        "Prompts e evidências registrados; CI e produção conferidas."
+      ],
+      "environment": "ferramenta integrada image_gen, cópia isolada de desenvolvimento e CI",
+      "evidence": "43 capas geradas individualmente por image_gen, revisadas em três pranchas e salvas em WebP. Metadados atualizados com 50 caminhos e 50 hashes distintos; prompts e arquivos em docs/assets/domirio-capas-geradas.json. Inspeção local em 1440 e 390px: 50 cards com srcset, capas visíveis carregadas e sem overflow horizontal. CI e publicação pendentes."
+    },
+    {
       "id": "PK-REFERENCIAS-AGEL-20261108",
       "title": "Relacionar referências Agel verificadas aos produtos PK",
       "objective": "Permitir busca por código Agel e publicar referência documental visível em MDX na ficha PK, sem prometer intercambiabilidade.",

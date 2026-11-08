@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
+import Image from "next/image";
 import { ArrowUpRight, Search, X } from "lucide-react";
 import Link from "@/components/LinkLoja";
 import { filtrarArtigosDomiRio, temasDomiRio, type ArtigoDomiRio } from "@/lib/artigos-domirio";
@@ -30,8 +31,7 @@ export default function IndiceArtigos({ artigos }: { artigos: ArtigoDomiRio[] })
       {resultados.length ? <ul className={styles.grade}>
         {resultados.map(p => <li key={p.slug}><article className={styles.card}>
           <Link href={`/blog/${p.slug}`} prefetch={false}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={p.cover} alt="" width={640} height={400} loading="lazy" />
+            <Image src={p.cover} alt="" width={640} height={400} sizes="(max-width: 700px) calc(100vw - 36px), (max-width: 1000px) 50vw, 380px" loading="lazy" />
             <div className={styles.cardConteudo}>
               <span className={styles.categoria}>{p.category}</span>
               <h3>{p.title}</h3>
