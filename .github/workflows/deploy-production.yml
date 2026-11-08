@@ -291,6 +291,7 @@ jobs:
       - name: Baixar e conferir modelo de runtime
         env:
           FUNDO_MODELOS_DIR: ${{ github.workspace }}/modelos
+          FUNDO_DOWNLOAD_TIMEOUT_MS: '15000'
         run: |
           node --import tsx --input-type=module -e "import { baixarModelo, conferirModelo } from './packages/removedor-de-fundo/src/modelo.ts'; await baixarModelo('u2netp'); if (await conferirModelo('u2netp')) throw new Error('MODEL_HASH_MISMATCH');"
           mkdir -p "$RUNNER_TEMP/modelo"

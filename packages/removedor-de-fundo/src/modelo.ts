@@ -67,12 +67,14 @@ export async function baixarModelo(
 
   const personalizada = urlPersonalizada()
   const fontes = personalizada ? [personalizada, ...catalogo.fontes] : catalogo.fontes
+  const prazoConfigurado = Number(process.env.FUNDO_DOWNLOAD_TIMEOUT_MS ?? 180_000)
+  const prazoMs = Number.isFinite(prazoConfigurado) && prazoConfigurado > 0 ? Math.max(1, Math.trunc(prazoConfigurado)) : 180_000
   const falhas: string[] = []
 
   for (const fonte of fontes) {
     const temporario = `${destino}.parcial`
     try {
-      const resposta = await fetch(fonte, { redirect: 'follow' })
+      const resposta = await fetch(fonte, { redirect: 'follow', signal: AbortSignal.timeout(prazoMs) })
       if (!resposta.ok || !resposta.body) {
         falhas.push(`${fonte} -> HTTP ${resposta.status}`)
         continue
