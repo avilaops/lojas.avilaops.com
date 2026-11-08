@@ -3,6 +3,13 @@ import type { Prisma } from "@prisma/client";
 export const INCLUIR_OFERTA = { preco: true, saldos: true } satisfies Prisma.VarianteInclude;
 export type VarianteOferta = Prisma.VarianteGetPayload<{ include: typeof INCLUIR_OFERTA }>;
 
+export function pertenceAGrade(opcoes: string[], v: { padrao: boolean; valores: Prisma.JsonValue }) {
+  return !v.padrao || (opcoes.length > 0 && opcoes.every(opcao => {
+    const valor = (v.valores as Record<string, unknown> | null)?.[opcao];
+    return typeof valor === "string" && Boolean(valor.trim());
+  }));
+}
+
 export function ofertaDaVariante<T extends VarianteOferta>(v: T) {
   const controlados = v.saldos.filter(s => s.fisico != null);
   const estoque = v.saldos.some(s => s.fisico == null) ? null : controlados.reduce((total, s) => total + s.fisico! - s.reservado, 0);

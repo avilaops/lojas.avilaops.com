@@ -30,7 +30,7 @@ import { minhaMoto } from "@/lib/minha-moto";
 import { lerCompatibilidade } from "@/lib/motos";
 import { descricaoDoProduto, textoPuro } from "@/lib/seo-texto";
 import { ofertaDaVariante,gtinValido } from "@/lib/catalogo-oferta";
-import { midiasDaOferta } from "@/lib/catalogo-qualidade";
+import { midiasDaOferta, usaImagensPorVolume } from "@/lib/catalogo-qualidade";
 import { paragrafosDaDescricao } from "@/lib/descricao-produto";
 import { marcaConfirmada } from "@/lib/marca-confirmada";
 import { envioSchema } from "@/lib/envio-declarado";
@@ -92,6 +92,10 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
   }));
   const escolhida=ofertas.find(v=>v.id===varianteId)??ofertas.find(v=>v.padrao);
   if(varianteId&&!ofertas.some(v=>v.id===varianteId))notFound();
+  const volume = usaImagensPorVolume(p) && escolhida
+    ? (escolhida.valores as Record<string, unknown> | null)?.Volume
+    : undefined;
+  const titulo = typeof volume === "string" && volume ? `${p.nome} ${volume}` : p.nome;
   if(escolhida)Object.assign(p,{precoCentavos:escolhida.precoCentavos,precoDeCentavos:escolhida.precoDeCentavos,estoque:escolhida.estoque,sku:escolhida.sku,gtin:escolhida.gtin,disponibilidade:escolhida.disponibilidade,imagens:midiasDaOferta(p,escolhida.id).map(m=>m.url)});
   const vende = lojaVende(t);
   // Preço zero é "ainda não precificado", não "de graça": item de referência
@@ -149,7 +153,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
-    name: p.nome,
+    name: titulo,
     ...(marcaConfirmada(p.marca) ? { brand: { "@type": "Brand", name: marcaConfirmada(p.marca)! } } : {}),
     ...(p.sku && !/\s/u.test(p.sku) ? { sku: p.sku } : {}),
     ...(gtinValido(p.gtin) ? { gtin: p.gtin } : {}),
@@ -226,11 +230,11 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
       )}
 
       <div className="grid items-start gap-8 md:grid-cols-2 ap-produto-grade">
-        {usaBlocoProprio(temaDo(t), "produto") ? <GaleriaPremium imagens={p.imagens} alt={p.nome} origem={p.imagemOrigem}/> : <GaleriaProduto imagens={p.imagens} alt={p.nome} origem={p.imagemOrigem} />}
+        {usaBlocoProprio(temaDo(t), "produto") ? <GaleriaPremium key={escolhida?.id} imagens={p.imagens} alt={titulo} origem={p.imagemOrigem}/> : <GaleriaProduto key={escolhida?.id} imagens={p.imagens} alt={titulo} origem={p.imagemOrigem} />}
 
         <div className="ap-produto-info">
           {p.marca && <p className="ap-produto-marca text-xs uppercase tracking-wide text-muted-foreground">{p.marca}</p>}
-          <h1 className="mt-1 text-2xl font-bold">{p.nome}</h1>
+          <h1 className="mt-1 text-2xl font-bold">{titulo}</h1>
           {p.descricaoCurta && <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{textoPuro(p.descricaoCurta)}</p>}
 
           {p.opcoes.length > 0 ? (
@@ -239,9 +243,9 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
               <SeletorVariante
                 key={escolhida?.id??p.id}
                 varianteInicial={escolhida?.id}
-                produto={{ id: p.id, slug: p.slug, nome: p.nome, precoCentavos: p.precoCentavos, imagem: p.imagens[0] }}
+                produto={{ id: p.id, slug: p.slug, nome: p.nome, precoCentavos: p.precoCentavos, imagem: usaImagensPorVolume(p) ? undefined : p.imagens[0] }}
                 opcoes={p.opcoes}
-                variantes={variacoesVisiveis.map((v) => ({ id: v.id, nome: v.nome, valores: v.valores as Record<string, string>, precoCentavos: v.precoCentavos, estoque: v.estoque, imagem: v.imagem, disponivel:v.compravel }))}
+                variantes={variacoesVisiveis.map((v) => ({ id: v.id, nome: v.nome, valores: v.valores as Record<string, string>, precoCentavos: v.precoCentavos, estoque: v.estoque, imagem: usaImagensPorVolume(p) ? midiasDaOferta(p, v.id)[0]?.url ?? null : v.imagem, disponivel:v.compravel }))}
                 vende={vende && !somenteNaLoja}
                 retorno={retorno}
               />
