@@ -295,7 +295,7 @@ test("referência Agel amplia a busca sem remover tenant, categoria ou disponibi
   assert.equal(where.ativo, true);
   assert.deepEqual(where.categoria, { slug: "anel-guia", ativo: true });
   const regras = where.AND as Array<{ OR?: unknown[] }>;
-  for (const regra of regras.filter(r => r.OR)) {
+  for (const regra of regras.slice(0, termosDeBusca("AGEL 5721").length)) {
     assert.ok(regra.OR!.some(r => JSON.stringify(r) === JSON.stringify(condicoesBuscaAgelPk("5721")[0])));
   }
   assert.ok(regras.length > termosDeBusca("AGEL 5721").length);
