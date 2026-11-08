@@ -12,7 +12,7 @@ export default function SeletorLojasEquipe({ lojas, base }: { lojas: Loja[]; bas
   const [entrando, setEntrando] = useState<string | null>(null);
   const envioIniciado = useRef(false);
   const campo = useRef<HTMLInputElement>(null);
-  const filtradas = filtrarLojas(lojas, busca);
+  const filtradas = filtrarLojas(lojas, busca, base);
 
   function limpar() {
     setBusca("");

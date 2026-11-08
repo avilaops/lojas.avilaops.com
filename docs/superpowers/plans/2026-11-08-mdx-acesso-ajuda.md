@@ -43,4 +43,10 @@ As demais aplicações e a integração com o CMS ficam fora deste primeiro reco
 
 ## Estado
 
-Em implementação. Builds e testes exclusivamente no GitHub CI.
+Implementado para revisão no PR
+<https://github.com/avilaops/lojas.avilaops.com/pull/227>.
+Builds e testes exclusivamente no GitHub CI; checks identificam o commit
+verificado e o artefato `lojas-mdx-acesso-browser-<sha>` guarda screenshots
+da Ajuda e da fixture do seletor em 360, 768 e 1440 px.
+A fixture verifica apresentação; a busca tem testes unitários, e acesso real
+autenticado continua dependente de conta autorizada. Nenhuma publicação em produção.

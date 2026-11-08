@@ -14,6 +14,7 @@ test("busca lojas ignorando caixa, acentos e espaços externos", () => {
 test("encontra pelo domínio ou slug sem domínio próprio", () => {
   assert.deepEqual(filtrarLojas(lojas, "pkvedacoes.com"), [lojas[0]]);
   assert.deepEqual(filtrarLojas(lojas, "demo"), [lojas[1]]);
+  assert.deepEqual(filtrarLojas(lojas, "demo.localhost", "localhost"), [lojas[1]]);
 });
 
 test("consulta vazia conserva todas as lojas e sua ordem", () => {
