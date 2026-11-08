@@ -7,6 +7,8 @@ Arquitetura: dados versionados com página e edição do PDF; seleção restrita
 - [x] Importar os 34 registros verificados, preservando evidências e excluindo os 24 casos divergentes.
 - [x] Criar regra pura de consulta/validação com testes de isolamento entre lojas, normalização e medidas divergentes.
 - [x] Integrar a busca do catálogo e o bloco MDX visível na página do produto.
-- [ ] Validar testes, tipos e build no GitHub CI conforme instruções do projeto.
+- [x] Validar testes, tipos e build no GitHub CI conforme instruções do projeto.
 
 Não alterar preço, estoque, fabricante, MPN nem códigos legados. Não criar páginas duplicadas para cada código. Não usar texto oculto.
+
+Evidência: CI 42485749340 aprovado em 08/11/2026; 1.415 testes unitários, integrações PostgreSQL, navegador, TypeScript, ESLint e build aprovados. Revisão técnica corrigiu divergência entre critérios de busca e ficha e drift de material. Publicação e verificação em produção ainda pendentes do fluxo automático.
