@@ -1,4 +1,5 @@
 import { consultaDimensional, confereDimensoes, codigoExato, consultaParDeMedidas, confereParNoNome } from "./busca-tecnica";
+import { condicoesBuscaAgelPk } from "./referencias-agel-pk";
 import type { Prisma, Produto, Categoria } from "@prisma/client";
 import type { ItemCarrinho } from "@avilaops/checkout";
 import { cache } from "react";
@@ -300,6 +301,7 @@ export function condicaoProdutos(tenantId: string, filtro?: FiltroCatalogo): Pri
   // os atributos. Medidas são conferidas no JSON, sem um pré-filtro textual
   // que descartaria valores numericamente equivalentes.
   const termos = termosDeBusca(dimensional?.texto ?? par?.texto ?? filtro?.busca ?? "");
+  const referenciasAgel = condicoesBuscaAgelPk(filtro?.busca ?? "");
   const atributos = {
     ...(filtro?.perfil ? { perfil: filtro.perfil } : {}),
     ...filtro?.atributos,
@@ -329,6 +331,7 @@ export function condicaoProdutos(tenantId: string, filtro?: FiltroCatalogo): Pri
                 OR: [
                   { busca: { contains: t } },
                   { categoria: { nome: { contains: t, mode: "insensitive" as const } } },
+                  ...referenciasAgel,
                 ],
               })),
               ...(filtro?.somenteDisponiveis ? [WHERE_EM_ESTOQUE] : []),
