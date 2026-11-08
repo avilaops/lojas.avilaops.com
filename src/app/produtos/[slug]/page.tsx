@@ -236,6 +236,15 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
           {p.marca && <p className="ap-produto-marca text-xs uppercase tracking-wide text-muted-foreground">{p.marca}</p>}
           <h1 className="mt-1 text-2xl font-bold">{titulo}</h1>
           {p.descricaoCurta && <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{textoPuro(p.descricaoCurta)}</p>}
+          {t.slug === "domi-rio" && p.slug === "cypertryne-100" && (
+            <aside className="mt-4 rounded-xl border border-border bg-muted p-4 text-sm" aria-label="Documentação do Cypertryne">
+              <p className="font-semibold">Venda restrita a entidades especializadas</p>
+              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2">
+                <a className="text-primary underline underline-offset-4" href="https://www.isorgan.com.br/fds/cypertryne.pdf">FDS da Isorgan (PDF)</a>
+                <Link className="text-primary underline underline-offset-4" href="/blog/cypertryne-35-100-1-l-diferencas">Guia de apresentações</Link>
+              </div>
+            </aside>
+          )}
 
           {p.opcoes.length > 0 ? (
             <div className="mt-5 max-w-sm">

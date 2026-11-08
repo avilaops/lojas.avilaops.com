@@ -11,6 +11,7 @@ import { comporHome } from "@/components/home/composicao";
 import { identidadePublica } from "@/lib/identidade-publica";
 import { dadosDaHomeIndustrial } from "@/lib/home-industrial";
 import { usaBlocoProprio } from "@/lib/templates";
+import GuiasDomiRio from "@/components/home/GuiasDomiRio";
 
 /**
  * Página inicial: um dos layouts fixos (Tenant.tema.layout), todos
@@ -95,6 +96,7 @@ export default async function Home() {
   return (
     <>
       {comporHome(publicado, dados)}
+      {t.slug === "domi-rio" && <GuiasDomiRio tenantId={t.id} whatsapp={dados.identidadePublica.whatsapp?.numero} />}
       {motos && <Garagem moto={moto} motos={motos} marcas={marcas} nomeDaLoja={t.nome} />}
       {!campanhaVisual && <ProvaSocial dados={prova} nomeDaLoja={t.nome} />}
       {!campanhaVisual && prova.media !== null && prova.total >= 3 && (

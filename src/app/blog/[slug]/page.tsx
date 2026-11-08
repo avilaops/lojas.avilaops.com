@@ -60,6 +60,19 @@ export default async function Publicacao({ params }: { params: Promise<{ slug: s
             <p key={i} className="whitespace-pre-line">{p}</p>
           ))}
         </div>
+        {t.slug === "domi-rio" && (
+          <aside className="mt-8 rounded-xl border border-border bg-muted p-5" aria-label="Continue na Domi-Rio">
+            <h2 className="font-semibold">Documentação e atendimento</h2>
+            <ul className="mt-3 grid gap-3 text-sm">
+              {post.slug === "cypertryne-35-100-1-l-diferencas" && <>
+                <li><Link className="text-primary underline" href="/produtos/cypertryne-100">Comparar volumes do Cypertryne</Link></li>
+                <li><a className="text-primary underline" href="https://www.isorgan.com.br/fds/cypertryne.pdf">Consultar a FDS oficial da Isorgan (PDF)</a></li>
+              </>}
+              <li><a className="text-primary underline" href="https://www.gov.br/anvisa/pt-br/setorregulado/regularizacao/saneantes/classificacao-de-saneantes">Consultar a classificação de saneantes na Anvisa</a></li>
+              <li><Link className="text-primary underline" href="/contato">Falar com o comercial da Domi-Rio</Link></li>
+            </ul>
+          </aside>
+        )}
       </article>
 
       {/* Article em JSON-LD: é o que faz o texto aparecer como artigo na busca,
