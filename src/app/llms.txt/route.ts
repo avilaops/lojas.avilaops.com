@@ -105,6 +105,7 @@ políticas dela. Este arquivo descreve a plataforma, não uma loja.
     vende && pedidoMinimo != null ? `- Pedido mínimo de ${formatarBRL(pedidoMinimo)} em produtos` : "",
     "",
     "## Contato",
+      ...(t.slug === "domi-rio" ? [`- [Cotação para empresas e revendedores](${base}/cotacao): reúna produtos, apresentações e quantidades; o comercial confirma valores e disponibilidade.`] : []),
     identidadeComercial.whatsapp ? `- WhatsApp: ${identidadeComercial.whatsapp.url}` : "",
     identidadeComercial.telefone ? `- Telefone: ${identidadeComercial.telefone.exibicao}` : "",
     identidadeComercial.email ? `- E-mail: ${identidadeComercial.email}` : "",

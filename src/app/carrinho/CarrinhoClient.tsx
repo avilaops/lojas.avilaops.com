@@ -169,6 +169,7 @@ export default function CarrinhoClient({ loja, vende }: { loja: TenantPublico; v
         <Link href="/produtos" className="btn-secundario mt-2 w-full">
           Continuar comprando
         </Link>
+        {loja.slug === "domi-rio" && <div className="mt-5 border-t border-border pt-4"><p className="text-sm font-semibold">Compra para sua empresa?</p><p className="mt-2 text-xs leading-relaxed text-muted-foreground">Monte uma cotação com os itens do carrinho e confirme as condições com o comercial.</p><Link href="/cotacao" className="btn-secundario mt-3 min-h-11 w-full">Cotar produtos do carrinho</Link></div>}
       </aside>
     </div>
   );

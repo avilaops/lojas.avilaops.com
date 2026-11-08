@@ -49,6 +49,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const temPromocoes = lojaTemPromocoes(temaDo(t), produtos.some(emPromocao));
   return [
     { url: base, changeFrequency: "daily", priority: 1 },
+    ...(t.slug === "domi-rio" ? [{ url: `${base}/cotacao`, changeFrequency: "weekly" as const, priority: 0.7 }] : []),
     ...caminhosEditorialPk(t.slug).map(caminho => ({ url: `${base}${caminho}`, changeFrequency: "monthly" as const, priority: 0.6 })),
     ...(t.slug === "pkvedacoes" ? [{ url: `${base}/cotacao-lote`, priority: 0.7 }, { url: `${base}/como-escolher`, priority: 0.7 }] : []),
     { url: `${base}/produtos`, changeFrequency: "daily", priority: 0.9 },

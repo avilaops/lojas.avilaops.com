@@ -69,6 +69,7 @@ export default function Footer({ tenant, categorias, temBlog = false }: { tenant
           <ul className="space-y-1 text-muted-foreground">
             <li><Link href="/sobre">Sobre</Link></li>
             <li><Link href="/contato">Contato</Link></li>
+            {tenant.slug === "domi-rio" && <li><Link href="/cotacao">Cotação para empresas</Link></li>}
             {tenant.slug === "pkvedacoes" && <>
               <li><Link href="/como-escolher">Como escolher sua vedação</Link></li>
               <li><Link href="/aplicacoes">Aplicações por segmento</Link></li>
