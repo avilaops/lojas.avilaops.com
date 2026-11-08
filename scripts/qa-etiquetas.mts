@@ -79,6 +79,11 @@ try {
   await page.getByRole("combobox", { name: /^Papel/ }).selectOption("termica");
   await page.getByRole("button", { name: "Imprimir / salvar PDF" }).click();
   await page.locator("#etiquetas-impressao .etiqueta-produto").first().waitFor({ state: "attached" });
+  // Aguarde as barras, como nas verificações A4/GTIN: o print real só ocorre após decode().
+  await page.waitForFunction(() => {
+    const imagens = Array.from(document.querySelectorAll<HTMLImageElement>("#etiquetas-impressao img"));
+    return imagens.length === 3 && imagens.every(i => i.complete && i.naturalWidth > 0);
+  });
   await page.emulateMedia({ media: "print" });
   await page.pdf({ path: `${pasta}/termica.pdf`, preferCSSPageSize: true, printBackground: true });
   await page.emulateMedia({ media: "screen" });
