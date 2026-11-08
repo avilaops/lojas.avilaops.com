@@ -55,6 +55,10 @@ try {
     const erros: string[] = [];
     page.on("pageerror", e => erros.push(e.message));
     page.setDefaultTimeout(15_000);
+    assert.equal((await page.goto(origem))?.status(), 200);
+    await page.getByRole("heading", { name: "Vedar, retirar sujeira e apoiar o movimento", exact: true }).waitFor();
+    await page.getByRole("heading", { name: "Perfis e detalhes dos produtos", exact: true }).waitFor();
+    await captura(page, `home-beneficios-${width}`);
     for (const documento of [
       { caminho: "/guias/medir-vedacoes", trecho: /medida nominal|diâmetro|paquímetro/i, nome: "guia-medidas" },
       { caminho: "/guias/perfis-b-bs-std", trecho: /êmbolo ou haste/, nome: "guia-perfis" },
@@ -113,9 +117,13 @@ try {
     for (const caminho of ["/guias", "/aplicacoes/agricultura", "/comparar", "/cotacao-lote"]) {
       assert.equal((await page.goto(`${outraOrigem}${caminho}`))?.status(), 404, `Ferramenta PK isolada: ${caminho}`);
     }
-    assert.equal((await contexto.request.post(`${outraOrigem}/api/pk/cotacao-lote`, { data: { itens: [{ codigo: "PKQA1", quantidade: 1 }] } })).status(), 404);
-    assert.equal((await contexto.request.post(`${origem}/api/pk/demandas`, { data: { consulta: "nome@email.com", consentido: true }, headers: { origin: origem } })).status(), 422);
-    assert.equal((await contexto.request.post(`${outraOrigem}/api/pk/demandas`, { data: { consulta: "PK998877", consentido: true }, headers: { origin: outraOrigem } })).status(), 404);
+    // Cliente HTTP Node usa localhost; cabeçalhos reproduzem o host resolvido pelo proxy.
+    const baseHttp = `http://localhost:${porta}`;
+    const cabecalhosPk = { "x-forwarded-host": new URL(origem).host, origin: origem };
+    const cabecalhosOutra = { "x-forwarded-host": new URL(outraOrigem).host, origin: outraOrigem };
+    assert.equal((await contexto.request.post(`${baseHttp}/api/pk/cotacao-lote`, { data: { itens: [{ codigo: "PKQA1", quantidade: 1 }] }, headers: cabecalhosOutra })).status(), 404);
+    assert.equal((await contexto.request.post(`${baseHttp}/api/pk/demandas`, { data: { consulta: "nome@email.com", consentido: true }, headers: cabecalhosPk })).status(), 422);
+    assert.equal((await contexto.request.post(`${baseHttp}/api/pk/demandas`, { data: { consulta: "PK998877", consentido: true }, headers: cabecalhosOutra })).status(), 404);
     assert.deepEqual(erros, [], "Sem erros JavaScript na jornada");
     resultados.push({ width, mdxGuiasSetores: "pass", esquemaDadosDb: "pass", limiteComparacao: "pass", comparacaoEntrePaginas: "pass", cotacaoApiRealCsv: "pass", isolamentoTenant: "pass", semPedidos: true });
     await contexto.close();
