@@ -21,7 +21,7 @@ interface Categoria { slug: string; nome: string }
  * não sabe que dá para digitar a medida, e é justamente a busca que entende
  * "25x52x15" e "ROL6205". Um exemplo real ensina o gesto sem texto de ajuda.
  */
-export default function BuscaLoja({ exemplo }: { exemplo?: string | null }) {
+export default function BuscaLoja({ exemplo, id, className = "", placeholder, mostrarBotao = false }: { exemplo?: string | null; id?: string; className?: string; placeholder?: string; mostrarBotao?: boolean }) {
   const router = useRouter();
   const listaId = useId();
   const [termo, setTermo] = useState("");
@@ -42,6 +42,7 @@ export default function BuscaLoja({ exemplo }: { exemplo?: string | null }) {
       fetch(`/api/busca?q=${encodeURIComponent(q)}`, { signal: cancelar.signal })
         .then((r) => (r.ok ? r.json() : { produtos: [], categorias: [] }))
         .then((d) => {
+          if (cancelar.signal.aborted) return;
           setResultado({ termo: q, produtos: d.produtos ?? [], categorias: d.categorias ?? [] });
           setAtivo(-1);
         })
@@ -70,11 +71,12 @@ export default function BuscaLoja({ exemplo }: { exemplo?: string | null }) {
 
   function aoTeclar(e: React.KeyboardEvent) {
     if (e.key === "Escape") return setAberto(false);
-    if (!mostrar) return;
+    if (!itens.length) return;
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       e.preventDefault();
+      setAberto(true);
       setAtivo((i) => (e.key === "ArrowDown" ? (i + 1) % itens.length : (i <= 0 ? itens.length : i) - 1));
-    } else if (e.key === "Enter" && ativo >= 0) {
+    } else if (e.key === "Enter" && mostrar && ativo >= 0 && itens[ativo]) {
       e.preventDefault();
       setAberto(false);
       router.push(itens[ativo]);
@@ -86,7 +88,7 @@ export default function BuscaLoja({ exemplo }: { exemplo?: string | null }) {
     // Antes era `hidden md:block`: quem abria a loja pelo telefone só tinha uma
     // lupa que levava para outra página, quando buscar é o primeiro gesto de
     // quem compra peça por código.
-    <div ref={caixa} className="busca-loja-caixa order-last w-full max-w-none flex-1 md:order-none md:ml-auto md:w-auto md:max-w-sm">
+    <div ref={caixa} className={`busca-loja-caixa order-last w-full max-w-none flex-1 md:order-none md:ml-auto md:w-auto md:max-w-sm ${className}`} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setAberto(false); }}>
       <form
         action="/produtos"
         className="busca-loja flex items-center gap-2 rounded-full border border-border bg-card px-4"
@@ -95,15 +97,17 @@ export default function BuscaLoja({ exemplo }: { exemplo?: string | null }) {
       >
         <Search className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
         <input
+          id={id}
           name="q"
           value={termo}
           onChange={(e) => {
             setTermo(e.target.value);
+            setAtivo(-1);
             setAberto(true);
           }}
           onFocus={() => setAberto(true)}
           onKeyDown={aoTeclar}
-          placeholder={exemplo ? `Ex.: ${exemplo}` : "O que você procura?"}
+          placeholder={placeholder ?? (exemplo ? `Ex.: ${exemplo}` : "O que você procura?")}
           aria-label="Buscar produtos"
           className="h-10 w-full bg-transparent text-sm outline-none"
           autoComplete="off"
@@ -111,17 +115,19 @@ export default function BuscaLoja({ exemplo }: { exemplo?: string | null }) {
           aria-expanded={mostrar}
           aria-controls={listaId}
           aria-autocomplete="list"
+          aria-activedescendant={mostrar && ativo >= 0 ? `${listaId}-${ativo}` : undefined}
         />
+        {mostrarBotao && <button type="submit" className="busca-loja-enviar">Buscar</button>}
       </form>
 
       {mostrar && (
         <ul id={listaId} role="listbox" aria-label="Sugestões" className="busca-sugestoes">
           {produtos.map((p, i) => (
-            <li key={p.slug} role="option" aria-selected={ativo === i}>
+            <li id={`${listaId}-${i}`} key={p.slug} role="option" aria-selected={ativo === i}>
               <a href={`/produtos/${p.slug}`} className={ativo === i ? "ativo" : undefined} onMouseEnter={() => setAtivo(i)}>
                 <span className="busca-miniatura">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  {p.imagem && <img src={`${p.imagem}?w=480`} alt="" loading="lazy" />}
+                  {p.imagem && <img src={`${p.imagem}${p.imagem.includes("?") ? "&" : "?"}w=480`} alt="" loading="lazy" />}
                 </span>
                 <span className="busca-nome">{p.nome}</span>
                 <span className="busca-preco">{p.esgotado ? "esgotado" : sobConsulta(p) ? "sob consulta" : formatarBRL(p.precoCentavos)}</span>
@@ -129,7 +135,7 @@ export default function BuscaLoja({ exemplo }: { exemplo?: string | null }) {
             </li>
           ))}
           {categorias.map((c, i) => (
-            <li key={c.slug} role="option" aria-selected={ativo === produtos.length + i}>
+            <li id={`${listaId}-${produtos.length + i}`} key={c.slug} role="option" aria-selected={ativo === produtos.length + i}>
               <a href={`/categoria/${c.slug}`} className={ativo === produtos.length + i ? "ativo" : undefined} onMouseEnter={() => setAtivo(produtos.length + i)}>
                 <span className="busca-nome">Ver tudo em <b>{c.nome}</b></span>
               </a>

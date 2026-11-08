@@ -1,0 +1,60 @@
+export const capitulos = [
+  {
+    "id": "secao-1",
+    "titulo": "Por que o nome do produto não basta"
+  },
+  {
+    "id": "secao-2",
+    "titulo": "Como montar um código que se lê sozinho"
+  },
+  {
+    "id": "secao-3",
+    "titulo": "Variação também tem SKU"
+  },
+  {
+    "id": "secao-4",
+    "titulo": "O código do fabricante não é o seu SKU"
+  }
+];
+
+export const leituraMinutos = 2;
+
+SKU é o código que identifica cada produto dentro da sua operação. A sigla vem do inglês (unidade de manutenção de estoque), mas a função é simples: dar a cada item, e a cada variação de item, um nome curto e único que serve para conferir, contar, separar e importar planilha sem duplicar cadastro.
+
+<section id="secao-1">
+
+## Por que o nome do produto não basta
+
+Nome muda. 'Camiseta Branca P' pode virar 'Camiseta Básica Branca Tamanho P' quando alguém resolve melhorar a descrição, e nesse momento qualquer planilha antiga deixa de casar com o cadastro. O SKU não muda. É por isso que ele é a chave usada na importação: com SKU, reimportar a planilha atualiza o produto; sem SKU, cria um segundo cadastro igual, com estoque separado.
+
+</section>
+
+<section id="secao-2">
+
+## Como montar um código que se lê sozinho
+
+Use partes com significado, separadas por hífen, em maiúsculas, sem acento e sem espaço. Uma estrutura que funciona é marca, produto, variação. 'MICH-CTX-27518' diz muito mais em conferência do que '00417'. Evite números sequenciais puros: eles não ajudam quem está no depósito com a caixa na mão, que é exatamente onde o SKU precisa funcionar.
+
+- Só letras, números e hífen
+- Sem acento, espaço ou barra
+- Partes com significado: marca, produto, variação
+- Único em toda a loja, inclusive entre variações
+- O mesmo código no site, na planilha e na prateleira
+
+</section>
+
+<section id="secao-3">
+
+## Variação também tem SKU
+
+Camiseta P, M e G são três unidades de estoque, não uma. Se as três dividirem o mesmo código, o sistema não consegue dizer que acabou o M enquanto sobra G, e a loja continua vendendo um tamanho que você não tem. Cada combinação de tamanho, cor ou voltagem precisa do seu próprio código, normalmente o código do produto mais um sufixo.
+
+</section>
+
+<section id="secao-4">
+
+## O código do fabricante não é o seu SKU
+
+Guarde os dois. O código do fabricante serve para comprar, comparar e achar equivalência entre peças. O seu SKU serve para a sua operação, e continua valendo se você trocar de fornecedor ou se o fabricante mudar a numeração. Confundir os dois é o motivo comum de um mesmo produto entrar duas vezes no catálogo com nomes ligeiramente diferentes.
+
+</section>

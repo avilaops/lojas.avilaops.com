@@ -1,13 +1,13 @@
-import { cookies } from "next/headers";
+import { consultarIdentidadeSSO } from "@/lib/sso-servidor";
 import { redirect } from "next/navigation";
-import { configSSO, consultarSSO, COOKIE_SSO } from "@/lib/sso";
+import { configSSO, } from "@/lib/sso";
 import { lojasAutorizadas } from "@/lib/acessos-loja";
 
 export const dynamic = "force-dynamic";
 export default async function EscolherLoja() {
   const cfg = configSSO();
   if (!cfg) redirect("/entrar");
-  const r = await consultarSSO(cfg, (await cookies()).get(COOKIE_SSO)?.value);
+  const r = await consultarIdentidadeSSO(cfg);
   if (r.tipo !== "ok") redirect("/entrar");
   const lojas = await lojasAutorizadas(r.email);
   if (!lojas.length) redirect("/entrar?sso=sem-loja");

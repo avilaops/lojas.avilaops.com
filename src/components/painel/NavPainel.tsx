@@ -9,6 +9,9 @@ import {
 } from "lucide-react";
 import { LogoLojas } from "@/components/marca/MarcaLojas";
 import { abrirBusca } from "./BuscaPainel";
+import { secoesDoPainel, type ItemNav } from "@/lib/navegacao-painel";
+export { SECOES, secoesDoPainel } from "@/lib/navegacao-painel";
+export type { ItemNav } from "@/lib/navegacao-painel";
 
 /**
  * A navegação do painel, no formato de administração de e-commerce.
@@ -21,7 +24,6 @@ import { abrirBusca } from "./BuscaPainel";
  * Duas formas, um mesmo mapa: barra lateral fixa a partir de 1024px, e no
  * celular uma folha que entra por cima, do jeito que o resto do app funciona.
  */
-export type ItemNav = { rotulo: string; href: string; icone: keyof typeof ICONES; filhos?: Array<{ rotulo: string; href: string }> };
 
 const ICONES = {
   visao: LayoutDashboard,
@@ -40,55 +42,7 @@ const ICONES = {
   config: Settings,
 } as const;
 
-export const SECOES: ItemNav[] = [
-  { rotulo: "Visão geral", href: "/painel", icone: "visao" },
-  {
-    rotulo: "Análises",
-    href: "/painel/analises",
-    icone: "analises",
-    filhos: [
-      { rotulo: "Visão de vendas", href: "/painel/analises" },
-      { rotulo: "Funil da loja", href: "/painel/analises/funil" },
-      { rotulo: "Atribuição", href: "/painel/analises/atribuicao" },
-    ],
-  },
-  { rotulo: "Pedidos", href: "/painel/pedidos", icone: "pedidos" },
-  { rotulo: "Cotações B2B", href: "/painel/cotacoes", icone: "pedidos" },
-  {
-    rotulo: "Produtos",
-    href: "/painel/produtos",
-    icone: "produtos",
-    filhos: [
-      { rotulo: "Produtos", href: "/painel/produtos" },
-      { rotulo: "Categorias", href: "/painel/produtos/categorias" },
-    ],
-  },
-  { rotulo: "Inventário", href: "/painel/estoque", icone: "estoque" },
-  { rotulo: "Clientes", href: "/painel/clientes", icone: "clientes" },
-  { rotulo: "Promoções", href: "/painel/promocoes", icone: "promocoes" },
-  { rotulo: "Avaliações", href: "/painel/avaliacoes", icone: "avaliacoes" },
-  {
-    rotulo: "Marketing",
-    href: "/painel/marketing",
-    icone: "marketing",
-    filhos: [
-      { rotulo: "Buscadores", href: "/painel/marketing" },
-      { rotulo: "Anúncios", href: "/painel/marketing/anuncios" },
-      { rotulo: "Blog", href: "/painel/marketing/blog" },
-    ],
-  },
-  { rotulo: "IA e API", href: "/painel/ia", icone: "ia" },
-  { rotulo: "Conexões", href: "/painel/conexoes", icone: "conexoes" },
-];
-
-export function secoesDoPainel({ pixManual, configuradorSobMedida }: { pixManual: boolean; configuradorSobMedida: boolean }): ItemNav[] {
-  return SECOES.flatMap((secao) => {
-    const adicionais: ItemNav[] = [];
-    if (secao.href === "/painel/pedidos" && configuradorSobMedida) adicionais.push({ rotulo: "Projetos sob medida", href: "/painel/sob-medida", icone: "sobMedida" });
-    if (secao.href === "/painel/pedidos" && pixManual) adicionais.push({ rotulo: "Pix a conferir", href: "/painel/pedidos/pix", icone: "pedidos" });
-    return [secao, ...adicionais];
-  });
-}
+const GRUPOS: Record<string, string> = { "/painel": "Sua loja", "/painel/pedidos": "Operação", "/painel/marketing": "Crescimento", "/painel/ia": "Ferramentas" };
 
 /** Ativo por prefixo, para a rota de detalhe acender a seção que a contém. */
 function ativo(pathname: string, href: string): boolean {
@@ -106,7 +60,8 @@ function Lista({ pathname, aoNavegar, aSeparar, pixAConferir = 0, secoes }: { pa
         const aberto = ativo(pathname, s.href);
         return (
           <div key={s.href}>
-            <Link href={s.href} onClick={aoNavegar} className={`pnav-item${aberto ? " pnav-item-ativo" : ""}`} aria-current={aberto ? "page" : undefined}>
+            {GRUPOS[s.href] && <p className="pnav-grupo">{GRUPOS[s.href]}</p>}
+            <Link href={s.href} onClick={aoNavegar} className={`pnav-item${aberto ? " pnav-item-ativo" : ""}`} aria-current={pathname === s.href ? "page" : aberto ? "true" : undefined}>
               <Icone size={16} aria-hidden="true" />
               <span>{s.rotulo}</span>
               {/* Só em Pedidos, e só quando existe: selo que aparece sempre vira
@@ -122,7 +77,7 @@ function Lista({ pathname, aoNavegar, aSeparar, pixAConferir = 0, secoes }: { pa
             {aberto && s.filhos && (
               <div className="pnav-filhos">
                 {s.filhos.map((f) => (
-                  <Link key={f.href} href={f.href} onClick={aoNavegar} className={`pnav-filho${pathname === f.href ? " pnav-filho-ativo" : ""}`}>
+                  <Link key={f.href} href={f.href} onClick={aoNavegar} aria-current={pathname === f.href && f.href !== s.href ? "page" : undefined} className={`pnav-filho${pathname === f.href ? " pnav-filho-ativo" : ""}`}>
                     {f.rotulo}
                   </Link>
                 ))}
@@ -135,7 +90,7 @@ function Lista({ pathname, aoNavegar, aSeparar, pixAConferir = 0, secoes }: { pa
   );
 }
 
-function Rodape({ pathname, aoNavegar, urlLoja, podeTrocarLoja }: { pathname: string; aoNavegar?: () => void; urlLoja: string; podeTrocarLoja: boolean }) {
+function Rodape({ pathname, aoNavegar, urlLoja, trocarLojaHref }: { pathname: string; aoNavegar?: () => void; urlLoja: string; trocarLojaHref?: string }) {
   const emConfig = ativo(pathname, "/painel/configuracoes");
   // O nome da loja fica só no topo. Aqui embaixo ficam as três ações que não
   // são seção: configurar, abrir a loja e sair, todas com texto. "Abrir a
@@ -146,8 +101,8 @@ function Rodape({ pathname, aoNavegar, urlLoja, podeTrocarLoja }: { pathname: st
         <Settings size={16} aria-hidden="true" />
         <span>Configurações</span>
       </Link>
-      {podeTrocarLoja && (
-        <Link href="/entrar/lojas" onClick={aoNavegar} className="pnav-item">
+      {trocarLojaHref && (
+        <Link href={trocarLojaHref} onClick={aoNavegar} className="pnav-item">
           <ArrowLeftRight size={16} aria-hidden="true" />
           <span>Trocar loja</span>
         </Link>
@@ -167,12 +122,14 @@ function Rodape({ pathname, aoNavegar, urlLoja, podeTrocarLoja }: { pathname: st
   );
 }
 
-export default function NavPainel({ nome, urlLoja, aSeparar = 0, pixManual = false, pixAConferir = 0, configuradorSobMedida = false, podeTrocarLoja = false }: { nome: string; urlLoja: string; aSeparar?: number; pixManual?: boolean; pixAConferir?: number; configuradorSobMedida?: boolean; podeTrocarLoja?: boolean }) {
+export default function NavPainel({ nome, urlLoja, aSeparar = 0, pixManual = false, pixAConferir = 0, configuradorSobMedida = false, podeTrocarLoja = false, trocarLojaHref }: { nome: string; urlLoja: string; aSeparar?: number; pixManual?: boolean; pixAConferir?: number; configuradorSobMedida?: boolean; podeTrocarLoja?: boolean; trocarLojaHref?: string }) {
   const pathname = usePathname().replace(/^\/plataforma(?=\/|$)/, "");
   const secoes = secoesDoPainel({ pixManual, configuradorSobMedida });
   const [aberto, setAberto] = useState(false);
   const botaoMenu = useRef<HTMLButtonElement>(null);
   const primeiroItem = useRef<HTMLDivElement>(null);
+  const folha = useRef<HTMLDialogElement>(null);
+  const destinoTroca = trocarLojaHref ?? (podeTrocarLoja ? "/entrar/lojas" : undefined);
 
   // Folha aberta: o fundo não rola (senão o dedo que arrasta o menu arrasta a
   // página atrás), o foco entra na folha e, ao fechar, volta para o botão que
@@ -181,10 +138,13 @@ export default function NavPainel({ nome, urlLoja, aSeparar = 0, pixManual = fal
     if (!aberto) return;
     const anterior = document.body.style.overflow;
     const botao = botaoMenu.current;
+    const dialogo = folha.current;
+    if (dialogo && !dialogo.open) dialogo.showModal();
     document.body.style.overflow = "hidden";
     primeiroItem.current?.querySelector<HTMLElement>("a, button")?.focus();
     return () => {
       document.body.style.overflow = anterior;
+      dialogo?.close();
       botao?.focus();
     };
   }, [aberto]);
@@ -195,12 +155,14 @@ export default function NavPainel({ nome, urlLoja, aSeparar = 0, pixManual = fal
 
   useEffect(() => {
     if (!aberto) return;
-    const aoTeclar = (e: KeyboardEvent) => e.key === "Escape" && setAberto(false);
-    document.addEventListener("keydown", aoTeclar);
-    return () => document.removeEventListener("keydown", aoTeclar);
+    const desktop = window.matchMedia("(min-width: 1024px)");
+    const aoMudar = () => { if (desktop.matches) setAberto(false); };
+    desktop.addEventListener("change", aoMudar);
+    return () => desktop.removeEventListener("change", aoMudar);
   }, [aberto]);
 
-  const secaoAtual = [...secoes].reverse().find((s) => ativo(pathname, s.href))?.rotulo
+  const secaoAberta = [...secoes].reverse().find((s) => ativo(pathname, s.href));
+  const secaoAtual = secaoAberta?.filhos?.find((filho) => filho.href === pathname)?.rotulo ?? secaoAberta?.rotulo
     ?? (ativo(pathname, "/painel/configuracoes") ? "Configurações" : "Painel");
 
   return (
@@ -212,11 +174,11 @@ export default function NavPainel({ nome, urlLoja, aSeparar = 0, pixManual = fal
         </div>
         <button className="pnav-busca" onClick={abrirBusca}>
           <Search size={15} aria-hidden="true" />
-          <span>Buscar</span>
-          <kbd>⌘K</kbd>
+          <span>Buscar no painel</span>
+          <kbd>Ctrl / ⌘ K</kbd>
         </button>
         <Lista pathname={pathname} aSeparar={aSeparar} pixAConferir={pixAConferir} secoes={secoes} />
-        <Rodape pathname={pathname} urlLoja={urlLoja} podeTrocarLoja={podeTrocarLoja} />
+        <Rodape pathname={pathname} urlLoja={urlLoja} trocarLojaHref={destinoTroca} />
       </aside>
 
       <header className="pnav-barra">
@@ -230,8 +192,8 @@ export default function NavPainel({ nome, urlLoja, aSeparar = 0, pixManual = fal
       </header>
 
       {aberto && (
-        <div id="pnav-folha" className="pnav-folha" role="dialog" aria-modal="true" aria-label="Menu do painel">
-          <button className="pnav-folha-fundo" aria-label="Fechar menu" onClick={() => setAberto(false)} />
+        <dialog ref={folha} id="pnav-folha" className="pnav-folha" aria-label="Menu do painel" onCancel={(evento) => { evento.preventDefault(); setAberto(false); }}>
+          <button className="pnav-folha-fundo" tabIndex={-1} aria-label="Fechar menu" onClick={() => setAberto(false)} />
           <div className="pnav-folha-painel">
             <div className="pnav-marca">
               <span className="pnav-avatar" aria-hidden="true">{nome.trim().charAt(0).toUpperCase() || "L"}</span>
@@ -241,9 +203,9 @@ export default function NavPainel({ nome, urlLoja, aSeparar = 0, pixManual = fal
             <div ref={primeiroItem} className="contents">
               <Lista pathname={pathname} aoNavegar={() => setAberto(false)} aSeparar={aSeparar} pixAConferir={pixAConferir} secoes={secoes} />
             </div>
-            <Rodape pathname={pathname} urlLoja={urlLoja} podeTrocarLoja={podeTrocarLoja} aoNavegar={() => setAberto(false)} />
+            <Rodape pathname={pathname} urlLoja={urlLoja} trocarLojaHref={destinoTroca} aoNavegar={() => setAberto(false)} />
           </div>
-        </div>
+        </dialog>
       )}
     </>
   );

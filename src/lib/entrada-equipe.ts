@@ -19,7 +19,7 @@ export async function registrarEntradaEquipe() {
   const mac = assinatura(payload);
   if (!mac) throw new Error("LOJAS_SECRET ausente para entrada de equipe");
   (await cookies()).set(COOKIE, payload + "." + mac, {
-    httpOnly: true, sameSite: "lax", secure: true, path: "/", maxAge: 600,
+    httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 600,
   });
 }
 

@@ -1,10 +1,12 @@
-import { cookies, headers } from "next/headers";
+import { configOIDC } from "@/lib/oidc";
+import { consultarIdentidadeSSO } from "@/lib/sso-servidor";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { identificarPorEmail } from "@/lib/operadores";
 import { lojasAutorizadas } from "@/lib/acessos-loja";
 import { entradaEquipeFoiIniciada } from "@/lib/entrada-equipe";
 import { abrirSessao } from "@/lib/sessao";
-import { COOKIE_SSO, configSSO, consultarSSO, destinoDaEntradaSSO, podeEntrarComoEquipe, urlDeLoginSSO } from "@/lib/sso";
+import { configSSO, destinoDaEntradaSSO, podeEntrarComoEquipe, urlDeLoginSSO } from "@/lib/sso";
 import { normalizarHost } from "@/lib/tenant";
 
 export const dynamic = "force-dynamic";
@@ -29,8 +31,7 @@ export async function GET(request: Request) {
 
   if (!(await entradaEquipeFoiIniciada())) redirect("/entrar");
   const jaVoltou = new URL(request.url).searchParams.get("volta") === "1";
-  const token = (await cookies()).get(COOKIE_SSO)?.value;
-  const r = await consultarSSO(cfg, token);
+  const r = await consultarIdentidadeSSO(cfg);
 
   const lojas = r.tipo === "ok" ? await lojasAutorizadas(r.email) : [];
   const quem = r.tipo === "ok" && lojas.length === 0 ? await identificarPorEmail(r.email) : null;
@@ -40,7 +41,7 @@ export async function GET(request: Request) {
     temLoja: !!quem || lojas.length === 1,
     equipe: !quem && podeEntrarComoEquipe(r),
     jaVoltou,
-    urlLogin: urlDeLoginSSO(cfg, base),
+    urlLogin: configOIDC() ? "/api/painel/entrar/iniciar-sso" : urlDeLoginSSO(cfg, base),
   });
   // Sem loja com este e-mail, `/criar/sso` pergunta antes de criar. Nunca cria
   // sozinho: o cookie do login único chega de qualquer sistema da Avila Ops.

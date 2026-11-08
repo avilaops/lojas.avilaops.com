@@ -13,6 +13,89 @@
   ],
   "tasks": [
     {
+      "id": "BERETA-VITRINE-20261108",
+      "title": "Melhorar descoberta de produtos na vitrine da Bereta Rodas",
+      "objective": "Corrigir categorias gigantes no catálogo, oferecer busca nas páginas internas, preparar versão clara e conteúdo editorial MDX.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "Categorias do catálogo usam navegação compacta com rolagem horizontal no celular.",
+        "Busca com sugestões disponível na home e nas páginas internas do template premium.",
+        "Versão clara acessível localmente, mantendo alternância para escuro e sem salvar tema em produção.",
+        "Guia de escolha e textos dos destaques versionados em MDX.",
+        "Marcas em carrossel com logos locais e filtro por fabricante; fontes e formatos documentados, sem inventar logo ausente.",
+        "Preservar marca, catálogo e dados de produção; alterações somente locais."
+      ],
+      "environment": "desenvolvimento local; navegação somente leitura",
+      "evidence": "Inspeção visual de home e catálogo em 390 e 1440px; requisições de escrita bloqueadas no navegador de revisão. Verificação formal reservada ao CI conforme AGENTS.md."
+    },
+    {
+      "id": "PAINEL-NAVEGACAO-BUSCA-20261108",
+      "title": "Melhorar navegação e busca do painel em web e mobile",
+      "objective": "Facilitar a localização de seções, corrigir respostas obsoletas na busca e manter operação acessível por teclado.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "Menu e busca compartilham seções e recursos habilitados, incluindo subseções e configurações.",
+        "Equipe encontra Trocar loja sem mudar contratos de autorização.",
+        "Busca cancela requisições antigas, distingue falha de sessão e conserva atalhos úteis.",
+        "Diálogos nativos mantêm foco, fechamento por Esc e retorno ao elemento anterior.",
+        "Alterações somente locais e sem edição de dados de loja."
+      ],
+      "environment": "desenvolvimento local; prévia visual com dados fictícios",
+      "evidence": "Capturas de componentes em desktop e mobile, sem autenticação ou consultas a dados. Testes de navegação preparados em src/lib/navegacao-painel.test.ts; não executados localmente. Acesso autenticado ao painel real ainda depende das credenciais OIDC locais."
+    },
+    {
+      "id": "MDX-BLOG-20261108",
+      "title": "Migrar Blog e artigos para MDX com apresentação responsiva",
+      "objective": "Continuar a migração editorial preservando os sete artigos, suas URLs, capas, datas e compartilhamento.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "Corpos dos artigos em MDX e metadados utilizáveis por sitemap e scripts sem carregar MDX.",
+        "Artigos futuros bloqueados na listagem, acesso direto e links relacionados.",
+        "Listagem e leitura com capas existentes, índice responsivo e tempo de leitura.",
+        "Continuar somente local, sem operações Git ou mudanças nos dados das lojas."
+      ],
+      "environment": "desenvolvimento local",
+      "evidence": "Listagem e artigo o-que-e-sku responderam HTTP 200; capturas de desktop e mobile revisadas. Sete corpos MDX, índice de metadados e registro explícito de loaders implementados localmente. Testes preparados em src/lib/blog.test.ts; sem execução de suíte local ou novas operações Git."
+    },
+    {
+      "id": "LOGIN-LOCAL-OIDC-20261108",
+      "title": "Conectar login local ao Auth central por OIDC",
+      "objective": "Permitir login em localhost sem compartilhar o cookie de produção nem contornar autenticação central.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-andamento",
+      "acceptanceCriteria": [
+        "Cliente local exclusivo do Lojas com callback exato cadastrado pelo painel administrativo do Auth.",
+        "Validar state, nonce, PKCE, assinatura, issuer, audience, expiração e subject.",
+        "Revalidar aplicação autorizada e manter regras existentes de equipe e loja.",
+        "Servidor local supervisionado; sem operações Git ou publicação em produção."
+      ],
+      "environment": "desenvolvimento local; Auth central consultado somente para diagnóstico",
+      "evidence": "Implementação e roteiro em docs/LOGIN-LOCAL.md; testes preparados sem executar localmente. Cadastro do cliente local e login interativo com conta autorizada pendentes."
+    },
+    {
+      "id": "MDX-DOCUMENTACAO-20261108",
+      "title": "Migrar Desenvolvedores e Privacidade do conector para MDX",
+      "objective": "Continuar a migração editorial com apresentação responsiva e referências técnicas ligadas ao código.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "Preservar /developers e /developers/privacidade com conteúdo MDX versionado.",
+        "Rotas, ferramentas, escopos e prazos continuam vindo das fontes existentes.",
+        "Apresentação compartilhada com índice recolhível, navegação entre páginas e cartões responsivos.",
+        "Manter a continuação somente local, sem novas operações Git e sem alterar dados de produção."
+      ],
+      "environment": "desenvolvimento local",
+      "evidence": "As duas URLs responderam HTTP 200 localmente; capturas de desktop e mobile revisadas. Referências dinâmicas preservadas; smoke de CI preparado, sem execução nesta continuação. Continuação somente local. Plano em docs/superpowers/plans/2026-11-08-mdx-acesso-ajuda.md."
+    },
+    {
       "id": "MDX-ACESSO-AJUDA-20261108",
       "title": "Iniciar migração MDX e melhorar navegação de acesso e Ajuda",
       "objective": "Separar acesso da equipe do site comercial, facilitar a escolha de lojas e publicar Ajuda a partir de MDX versionado.",

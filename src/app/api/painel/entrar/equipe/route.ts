@@ -1,8 +1,10 @@
-import { cookies, headers } from "next/headers";
+import { consultarIdentidadeSSO } from "@/lib/sso-servidor";
+import { configOIDC } from "@/lib/oidc";
+import { headers } from "next/headers";
 import { prisma } from "@/lib/db";
 import { entradaEquipeFoiIniciada } from "@/lib/entrada-equipe";
 import { abrirSessao } from "@/lib/sessao";
-import { CAMINHO_DA_EQUIPE, COOKIE_SSO, configSSO, consultarSSO, podeEntrarComoEquipe } from "@/lib/sso";
+import { CAMINHO_DA_EQUIPE, configSSO, podeEntrarComoEquipe } from "@/lib/sso";
 import { normalizarHost } from "@/lib/tenant";
 
 export const dynamic = "force-dynamic";
@@ -34,9 +36,10 @@ export async function POST(request: Request) {
   if (!cfg || normalizarHost(h.get("host")) !== base) return new Response(null, { status: 404 });
 
   const origem = h.get("origin");
-  if (!origem || normalizarHost(origem.replace(/^https?:\/\//, "")) !== base) return new Response(null, { status: 403 });
+  const oidc = configOIDC();
+  if (oidc ? origem !== oidc.origem : !origem || normalizarHost(origem.replace(/^https?:\/\//, "")) !== base) return new Response(null, { status: 403 });
 
-  const r = await consultarSSO(cfg, (await cookies()).get(COOKIE_SSO)?.value);
+  const r = await consultarIdentidadeSSO(cfg);
   if (!podeEntrarComoEquipe(r)) return para("/entrar?sso=sem-loja");
 
   const slug = String((await request.formData().catch(() => null))?.get("slug") ?? "");

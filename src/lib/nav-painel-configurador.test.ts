@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { secoesDoPainel } from "@/components/painel/NavPainel";
+import { secoesDoPainel } from "./navegacao-painel";
 
 test("fila sob medida aparece somente para loja com configurador ativo", () => {
   assert.equal(secoesDoPainel({ pixManual: false, configuradorSobMedida: false }).some((item) => item.href === "/painel/sob-medida"), false);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Search, Store, X } from "lucide-react";
 import { filtrarLojas } from "@/lib/busca-lojas";
 
@@ -13,6 +13,17 @@ export default function SeletorLojasEquipe({ lojas, base }: { lojas: Loja[]; bas
   const envioIniciado = useRef(false);
   const campo = useRef<HTMLInputElement>(null);
   const filtradas = filtrarLojas(lojas, busca, base);
+
+  useEffect(() => {
+    // O navegador pode restaurar esta tela com os botões ainda desabilitados.
+    function restaurar(evento: PageTransitionEvent) {
+      if (!evento.persisted) return;
+      envioIniciado.current = false;
+      setEntrando(null);
+    }
+    window.addEventListener("pageshow", restaurar);
+    return () => window.removeEventListener("pageshow", restaurar);
+  }, []);
 
   function limpar() {
     setBusca("");

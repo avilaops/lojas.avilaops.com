@@ -1,0 +1,98 @@
+import { recurso } from "@/lib/mcp-oauth";
+import { FERRAMENTAS } from "@/lib/mcp-permissoes";
+import { FerramentasConector, ResumoApi, RotasApi, CompraApi, WebhooksApi, EscoposApi, ErrosApi } from "@/components/plataforma/ReferenciaApi";
+
+export const capitulos = [
+  { id: "conector", titulo: "Conector MCP" },
+  { id: "ferramentas", titulo: "Ferramentas disponíveis" },
+  { id: "api", titulo: "Autenticação e respostas" },
+  { id: "rotas", titulo: "Rotas da API" },
+  { id: "compra", titulo: "Compra pelo seu site" },
+  { id: "webhooks", titulo: "Webhooks" },
+  { id: "escopos", titulo: "Escopos" },
+  { id: "erros", titulo: "Códigos de erro" },
+];
+
+<section id="conector">
+
+## Conector MCP
+
+Conecte um assistente de IA para consultar e operar a loja por conversa. Use este endereço:
+
+<code>{recurso()}</code>
+
+Adicione este endereço como conector no Claude, no ChatGPT ou no Codex e autorize a loja pelo login do painel. O assistente descobre o fluxo sozinho (OAuth 2.1 com PKCE e registro dinâmico de cliente). Na autorização você escolhe o que ele pode: consultar e alterar, só consultar, ou área por área. Exclusivo do plano Loja Pro.
+
+Para automações sem tela, como n8n e scripts, crie no painel uma chave secreta com o escopo `mcp:usar` e envie no cabeçalho `Authorization: Bearer lojas_sk_…`.
+
+> Antes de conectar, consulte [que dados o conector lê e guarda](/developers/privacidade).
+
+</section>
+
+<section id="ferramentas">
+
+## Ferramentas do conector
+
+{Object.keys(FERRAMENTAS).length} ferramentas, agrupadas por área da loja.
+
+<FerramentasConector />
+
+</section>
+
+<section id="api">
+
+## Autenticação e respostas
+
+Use a API para integrar um ERP, um PDV ou um site próprio. Confira o formato das chaves, dos valores e das respostas antes da primeira requisição.
+
+<ResumoApi />
+
+</section>
+
+<section id="rotas">
+
+## Rotas da API
+
+Cada rota indica o método HTTP, o caminho e o escopo exigido pela chave.
+
+<RotasApi />
+
+</section>
+
+<section id="compra">
+
+## Compra pelo site ou app próprio
+
+<CompraApi />
+
+</section>
+
+<section id="webhooks">
+
+## Webhooks
+
+Receba eventos da loja no seu sistema e trate as tentativas repetidas pelo identificador do evento.
+
+<WebhooksApi />
+
+</section>
+
+<section id="escopos">
+
+## Escopos
+
+Escolha os acessos necessários para a integração. As permissões da chave determinam quais operações ela pode executar.
+
+<EscoposApi />
+
+</section>
+
+<section id="erros">
+
+## Códigos de erro
+
+Use o código do erro para decidir como a integração deve responder. Guarde o identificador da requisição ao acionar o suporte.
+
+<ErrosApi />
+
+</section>

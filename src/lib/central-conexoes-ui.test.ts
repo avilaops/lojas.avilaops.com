@@ -1,10 +1,11 @@
 import assert from "node:assert/strict"
 import { readFile } from "node:fs/promises"
 import test from "node:test"
+import { secoesDoPainel } from "./navegacao-painel"
 
 test("navegação expõe a Central de Conexões", async () => {
-  const fonte = await readFile(new URL("../components/painel/NavPainel.tsx", import.meta.url), "utf8")
-  assert.match(fonte, /rotulo: "Conexões", href: "\/painel\/conexoes"/)
+  const secoes = secoesDoPainel({ pixManual: false, configuradorSobMedida: false })
+  assert.ok(secoes.some(secao => secao.rotulo === "Conexões" && secao.href === "/painel/conexoes"))
 })
 
 test("central apresenta todos os estados e destinos operacionais", async () => {

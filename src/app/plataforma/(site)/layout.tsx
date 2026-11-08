@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Menu } from "lucide-react";
+import NavegacaoPublica from "@/components/plataforma/NavegacaoPublica";
 import Consentimento from "@/components/Consentimento";
 import Pixels from "@/components/Pixels";
 import { pixelsDaPlataforma, temRastreio } from "@/lib/pixels";
@@ -17,48 +17,14 @@ export default async function PlataformaLayout({ children }: { children: React.R
   return (
     <div className="plataforma-shell">
       <Pixels p={pixels} />
+      <a href="#conteudo-principal" className="pl-pular-conteudo">Pular para o conteúdo</a>
       <header className="pl-header">
         <div className="pl-container pl-header-inner">
           <Link href="/" aria-label="Lojas por Avila Ops"><MarcaLojas /></Link>
-          <nav className="pl-nav" aria-label="Navegação principal">
-            <Link href="/#recursos">Como funciona</Link>
-            <Link href="/#modelos">Layouts</Link>
-            <Link href="/#planos">Planos</Link>
-            <Link href="/blog">Blog</Link>
-            <Link href="/ajuda">Ajuda</Link>
-          </nav>
-          <div className="pl-header-acoes">
-            {lojista ? (
-              <>
-                <Link href="/painel" className="pl-header-entrar">Painel · {lojista.nome}</Link>
-                {sessao?.equipe && <Link href="/entrar/equipe" className="pl-header-entrar">Trocar loja</Link>}
-                <form action="/api/painel/sair" method="post"><button className="pl-header-sair">Sair</button></form>
-              </>
-            ) : (
-              <>
-                <Link href="/entrar" className="pl-header-entrar">Entrar</Link>
-                <Link href="/criar" className="pl-header-cta">Criar minha loja <ArrowRight size={14} /></Link>
-              </>
-            )}
-          </div>
-          <details className="pl-menu-mobile">
-            <summary aria-label="Abrir menu"><Menu size={20} /></summary>
-            <nav>
-              <Link href="/#recursos">Como funciona</Link><Link href="/#modelos">Layouts</Link><Link href="/#planos">Planos</Link><Link href="/blog">Blog</Link><Link href="/ajuda">Ajuda</Link>
-              {lojista ? (
-                <>
-                  <Link href="/painel">Painel · {lojista.nome}</Link>
-                  {sessao?.equipe && <Link href="/entrar/equipe">Trocar loja</Link>}
-                  <form action="/api/painel/sair" method="post"><button className="pl-menu-sair">Sair</button></form>
-                </>
-              ) : (
-                <><Link href="/entrar">Entrar</Link><Link href="/criar">Criar minha loja</Link></>
-              )}
-            </nav>
-          </details>
+          <NavegacaoPublica loja={lojista?.nome ?? null} equipe={sessao?.equipe === true} />
         </div>
       </header>
-      <main>{children}</main>
+      <main id="conteudo-principal" tabIndex={-1}>{children}</main>
       <Consentimento ativo={temRastreio(pixels)} plataforma />
       <footer className="pl-footer">
         <div className="pl-container pl-footer-grid">

@@ -137,7 +137,12 @@ export function enderecoCompleto(t: Tenant): string {
 }
 
 export function temaDo(t: Tenant): TemaLoja {
-  return lerTema(t.tema);
+  const tema = lerTema(t.tema);
+  // Prévia local por loja; nunca substitui a preferência salva em produção.
+  if (process.env.NODE_ENV !== "production" && process.env.LOJAS_PREVIA_TEMA_CLARO === t.slug) {
+    return { ...tema, modo: "claro" };
+  }
+  return tema;
 }
 
 export function identidadeDa(t: Tenant): IdentidadeLoja {

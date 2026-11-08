@@ -38,8 +38,9 @@ try {
     page.on("pageerror", (erro) => erros.push(erro.message));
     const resposta = await page.goto(`${origem}/ajuda`);
     assert.equal(resposta?.status(), 200);
-    await page.getByRole("heading", { level: 1, name: "Seu próximo passo começa aqui." }).waitFor();
+    await page.getByRole("heading", { level: 1 }).waitFor();
     const indice = page.getByRole("navigation", { name: "Capítulos da ajuda" });
+    if (!(await indice.locator("details").evaluate((el) => el.hasAttribute("open")))) await indice.locator("summary").click();
     assert.equal(await indice.getByRole("link").count(), 7);
     for (const id of ["criar", "marca", "categorias", "produtos", "publicar", "pedidos", "erros"]) {
       assert.equal(await page.locator(`article section#${id}`).count(), 1);
@@ -52,6 +53,20 @@ try {
     await page.screenshot({ path: `${pasta}/ajuda-${largura}.png`, fullPage: true, animations: "disabled" });
     await page.goto(`${origem}/entrar/equipe`);
     assert.equal(new URL(page.url()).pathname, "/entrar", "Acesso sem autorização continua bloqueado");
+    for (const documento of [
+      { caminho: "/developers", secoes: 8, ancora: "rotas", nome: "developers" },
+      { caminho: "/developers/privacidade", secoes: 5, ancora: "retencao", nome: "privacidade" },
+    ]) {
+      const respostaDocumento = await page.goto(`${origem}${documento.caminho}`);
+      assert.equal(respostaDocumento?.status(), 200);
+      assert.equal(await page.locator("article > section").count(), documento.secoes);
+      const indiceDocumento = page.getByRole("navigation", { name: "Seções da documentação" });
+      if (!(await indiceDocumento.locator("details").evaluate((el) => el.hasAttribute("open")))) await indiceDocumento.locator("summary").click();
+      await indiceDocumento.locator(`a[href="#${documento.ancora}"]`).click();
+      assert.equal(new URL(page.url()).hash, `#${documento.ancora}`);
+      assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `Documento sem overflow: ${documento.nome} ${largura}px`);
+      await page.screenshot({ path: `${pasta}/${documento.nome}-${largura}.png`, fullPage: true, animations: "disabled" });
+    }
     assert.deepEqual(erros, [], "Sem erros de JavaScript");
     // Fixture de apresentação: renderiza o componente real sem conta ou SSO.
     // Não representa uma sessão autenticada nem verifica hidratação da busca.

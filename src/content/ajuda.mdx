@@ -1,3 +1,5 @@
+import { DIAS_DE_TESTE } from "@/lib/planos";
+
 export const capitulos = [
   {
     "id": "criar",
@@ -41,7 +43,7 @@ Comece pela conta e complete os dados da loja no painel.
 
 3. No painel, informe o nome da loja, o WhatsApp e o plano. O WhatsApp é obrigatório: é por ele que avisamos pedido pago.
 
-4. Pronto: a loja responde em seunome.lojas.avilaops.com na hora, com SSL. São 7 dias de teste, sem cartão; a mensalidade começa quando você ativa a cobrança em Configurações → Assinatura.
+4. Ao concluir o cadastro, confira o endereço da loja no painel. São {DIAS_DE_TESTE} dias de teste, sem cartão. Consulte a cobrança em Configurações → Assinatura.
 
 5. Marca, catálogo, entrega e recebimento você completa nas seções do painel, no seu ritmo. Os capítulos abaixo explicam cada uma.
 
@@ -55,7 +57,7 @@ Comece pela conta e complete os dados da loja no painel.
 
 Aba Marca do painel. É o que o cliente vê primeiro.
 
-1. Entre em lojas.avilaops.com/entrar com o e-mail e a senha que você criou. O painel abre na Visão geral; clique em Marca.
+1. Abra [Entrar](/entrar) e conclua o acesso com sua conta Ávila Ops. No painel da loja, abra Marca.
 
 2. Logo: envie um PNG ou SVG com fundo transparente, de preferência com pelo menos 512 px de largura. Ele aparece no topo da loja, no ícone da aba do navegador e ao compartilhar links.
 
@@ -137,9 +139,9 @@ Produto ativo aparece na hora. O Google leva dias.
 
 ## 6. Pedidos: do Pix à entrega
 
-Você recebe no WhatsApp. O resto é clicar.
+Acompanhe o pagamento, a separação e o envio pelo painel.
 
-1. Pedido pago chega no WhatsApp da loja com itens, valor e endereço. O cliente recebe a confirmação por e-mail.
+1. Confira os pedidos pagos na aba Pedidos. Os avisos por WhatsApp e e-mail dependem da configuração dos canais de comunicação.
 
 2. Na aba Pedidos, clique em Separar quando começar a montar o pacote.
 
@@ -149,7 +151,7 @@ Você recebe no WhatsApp. O resto é clicar.
 
 5. Ao entregar, Marcar entregue. Na Visão geral você vê a receita dos últimos 30 dias, os mais vendidos e o que ainda falta separar.
 
-> Pix não pago em 30 minutos vira um lembrete automático para o cliente. Carrinho abandonado também recebe um aviso.
+> Lembretes de Pix e carrinho abandonado dependem das automações e dos canais configurados para a loja.
 
 </section>
 
@@ -157,7 +159,7 @@ Você recebe no WhatsApp. O resto é clicar.
 
 ## 7. Erros comuns e como resolver
 
-Os cinco que mais aparecem no suporte.
+Confira estes pontos antes de tentar novamente.
 
 1. Foto ruim: fotografe o produto sozinho, com luz do dia, e use "Tratar com IA". Foto de catálogo do fabricante também serve, desde que seja do produto certo.
 
@@ -165,7 +167,7 @@ Os cinco que mais aparecem no suporte.
 
 3. Preço zerado ou errado: na planilha, o preço precisa vir como 59,90 (com vírgula) ou 59.90. Confira a coluna preco antes de enviar.
 
-4. Checkout sumiu da loja: a mensalidade está em atraso. Na aba Assinatura você cadastra o cartão e a loja volta a vender na hora.
+4. Checkout indisponível: confira a situação da assinatura e a configuração dos meios de pagamento no painel. Se estiver tudo regular, fale com o suporte.
 
 5. Domínio próprio não abre: é do plano Loja Pro e leva até 48 h para o DNS propagar depois que a Avila Ops configura. Enquanto isso, seunome.lojas.avilaops.com continua funcionando.
 

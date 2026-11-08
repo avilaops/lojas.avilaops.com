@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { Menu, X, Moon, Sun, UserRound, ChevronDown, Search } from "lucide-react";
 import type { TenantPublico } from "@/lib/tenant";
 import CartButton from "@/components/cart/CartButton";
+import BuscaLoja from "@/components/BuscaLoja";
 
 function observarModo(avisar: () => void) {
   const observer = new MutationObserver(avisar);
@@ -40,6 +41,7 @@ export default function Cabecalho({ loja, logo, logoCompacta, logoEscuro, mostra
         <nav className="ap-nav" aria-label="Navegação principal">{links.map(l => l.href === "/produtos" ? <details className="ap-megamenu" key={l.href}><summary>Produtos <ChevronDown size={13}/></summary><div><Link href="/produtos">Ver todos os produtos</Link>{categorias.map(c => <Link key={c.slug} href={`/categoria/${c.slug}`} onClick={e => e.currentTarget.closest("details")?.removeAttribute("open")}>{c.nome}</Link>)}</div></details> : <Link key={l.href} href={l.href} aria-current={caminho === l.href ? "page" : undefined}>{l.nome}</Link>)}</nav>
         <div className="ap-cabecalho-acoes"><button className="ap-icone" onClick={alternar} aria-label={escuro ? "Ativar tema claro" : "Ativar tema escuro"}>{escuro ? <Sun size={18}/> : <Moon size={18}/>}</button>{loja.vende && <><Link href="/conta" className="ap-icone ap-conta" aria-label="Minha conta"><UserRound size={19}/></Link><CartButton/></>}</div>
       </div>
+      {caminho !== "/" && <div className="container-loja ap-busca-cabecalho"><BuscaLoja className="ap-busca-integrada" placeholder="Produto, marca ou aplicação…" mostrarBotao /></div>}
     </header>
     <dialog ref={dialog} className="ap-dialog ap-menu-dialog" aria-label={`Menu de ${loja.nome}`} onClick={e => { if(e.target === e.currentTarget) dialog.current?.close(); }}>
       <div className="ap-dialog-topo"><strong>Explore {loja.nome}</strong><button className="ap-icone" aria-label="Fechar menu" onClick={() => dialog.current?.close()}><X/></button></div>

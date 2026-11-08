@@ -7,11 +7,31 @@ html[data-template="automotivo-premium"][data-modo="escuro"] {
   --ck-fg-muted:#a4a4ae; --ck-border:#303035; color-scheme:dark;
 }
 html[data-template="automotivo-premium"][data-modo="claro"] {
-  --background:#f7f5f2; --foreground:#19191c; --card:#fff; --card-foreground:#19191c;
-  --muted:#eeebe6; --muted-foreground:#67636a; --border:#dbd8d3; --input:#d1cdca;
-  --ck-bg:#f7f5f2; --ck-surface:#fff; --ck-surface-muted:#eeebe6; --ck-fg:#19191c;
-  --ck-fg-muted:#67636a; --ck-border:#dbd8d3; color-scheme:light;
+  --background:#f8f9fb; --foreground:#191b20; --card:#fff; --card-foreground:#191b20;
+  --muted:#eff1f4; --muted-foreground:#555c68; --border:#dfe3e9; --input:#cbd1db;
+  --ck-bg:#f8f9fb; --ck-surface:#fff; --ck-surface-muted:#eff1f4; --ck-fg:#191b20;
+  --ck-fg-muted:#555c68; --ck-border:#dfe3e9; color-scheme:light;
 }
+[data-template="automotivo-premium"][data-modo="claro"] .ap-cabecalho { background:#fff; }
+[data-template="automotivo-premium"][data-modo="claro"] .ap-nav a:hover,
+[data-template="automotivo-premium"][data-modo="claro"] .ap-nav a[aria-current],
+[data-template="automotivo-premium"][data-modo="claro"] .ap-nav summary:hover { color:var(--foreground); text-decoration:underline; text-decoration-color:var(--primary); text-underline-offset:7px; }
+[data-template="automotivo-premium"][data-modo="claro"] .ap-categorias[data-contexto="catalogo"] .ap-categoria[aria-current="page"] { background:var(--primary); color:var(--primary-foreground); }
+[data-template="automotivo-premium"][data-modo="claro"] .cartao-produto { box-shadow:0 4px 18px #19202b06; }
+.ap-guia-compra { padding-block:36px 44px; }
+[data-template="automotivo-premium"][data-modo="claro"] .barra-inferior-aba[aria-current="page"] { color:var(--foreground); background:color-mix(in srgb,var(--primary) 22%,white); box-shadow:inset 0 3px var(--primary); }
+[data-template="automotivo-premium"][data-modo="claro"] .ap-secao-titulo>a:hover,
+[data-template="automotivo-premium"][data-modo="claro"] .rodape-loja a:hover { color:var(--foreground); text-decoration:underline; text-underline-offset:4px; }
+.ap-guia-intro { max-width:650px; margin-bottom:24px; }
+.ap-guia-intro h2 { font-size:clamp(24px,3vw,32px); font-weight:850; letter-spacing:-.8px; line-height:1.2; margin-bottom:12px; text-wrap:balance; }
+.ap-guia-intro>p:last-child { color:var(--muted-foreground); font-size:14px; line-height:1.75; }
+.ap-guia-passos { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
+.ap-guia-passos article { padding:24px; border:1px solid var(--border); border-radius:14px; background:var(--card); }
+.ap-guia-numero { display:grid; place-items:center; width:38px; height:38px; border-radius:50%; background:var(--primary); color:var(--primary-foreground); font-size:12px; font-weight:800; margin-bottom:18px; }
+.ap-guia-passos h3 { font-size:17px; font-weight:800; margin-bottom:10px; }
+.ap-guia-passos p { font-size:13px; line-height:1.75; color:var(--muted-foreground); }
+.ap-guia-passos a { display:inline-flex; align-items:center; min-height:44px; font-weight:750; color:var(--foreground); text-decoration:underline; text-decoration-color:var(--primary); text-underline-offset:5px; }
+@media(max-width:767px) { .ap-guia-passos { grid-template-columns:1fr; gap:12px; } .ap-guia-passos article { padding:20px; } }
 [data-template="automotivo-premium"] body { background:var(--background); color:var(--foreground); }
 [data-template="automotivo-premium"] .container-loja { width:100%; max-width:var(--ap-max); margin-inline:auto; padding-inline:28px; }
 [data-template="automotivo-premium"] :is(button,a,input,summary,select,textarea):focus-visible { outline:2px solid var(--primary); outline-offset:4px; }
@@ -108,10 +128,26 @@ html[data-template="automotivo-premium"][data-modo="claro"] {
 [data-template="automotivo-premium"] :is(.cartao-produto-marca,.ap-produto-marca) { display:inline-flex; align-self:flex-start; width:fit-content; max-width:100%; padding:5px 9px; border-radius:5px; background:var(--primary); color:var(--primary-foreground); font-weight:850; line-height:1.3; letter-spacing:.04em; }
 .ap-marcas { display:grid; gap:16px; padding-block:28px 8px; }
 .ap-marcas h2 { margin:0; font-size:22px; font-weight:800; letter-spacing:-.5px; }
+.ap-marcas-continuas { background:#fff; color:#191b20; border-block:1px solid #e4e7ec; }
+.ap-marcas-faixa { position:relative; padding-block:22px; }
+.ap-marcas-janela { overflow:hidden; mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent); }
+.ap-marcas-movimento { display:flex; width:max-content; animation:ap-marcas-rolar 65s linear infinite; }
+.ap-marcas-grupo { display:flex; align-items:center; gap:64px; padding-right:64px; flex-shrink:0; }
+.ap-marca-item { display:flex; align-items:center; justify-content:center; flex:0 0 144px; width:144px; height:60px; text-decoration:none; }
+.ap-marca-item img { width:144px; height:52px; object-fit:contain; }
+.ap-marca-item strong { font-size:24px; font-weight:850; }
+.ap-marcas-faixa:hover .ap-marcas-movimento,.ap-marcas-faixa:focus-within .ap-marcas-movimento,.ap-marcas-faixa[data-pausado] .ap-marcas-movimento { animation-play-state:paused; }
+.ap-marcas-pausa { position:absolute; right:8px; bottom:5px; display:grid; place-items:center; width:28px; height:28px; border-radius:50%; background:#fff; color:#555c68; border:1px solid #e4e7ec; cursor:pointer; }
+@keyframes ap-marcas-rolar { to { transform:translateX(-50%); } }
+@media(max-width:767px) { .ap-marcas-faixa { padding-block:18px; } .ap-marcas-grupo { gap:32px; padding-right:32px; } .ap-marca-item { width:120px; flex-basis:120px; height:48px; } .ap-marca-item img { width:120px; height:44px; } }
+@media(prefers-reduced-motion:reduce) { .ap-marcas-movimento { animation:none; } .ap-marcas-grupo[aria-hidden] { display:none; } .ap-marcas-janela { overflow-x:auto; mask-image:none; } .ap-marcas-pausa { display:none; } }
+.ap-marca-invertida { filter:brightness(0); }
 .ap-marcas nav { display:flex; gap:9px; overflow-x:auto; max-width:100%; padding-block:4px 10px; scroll-snap-type:x proximity; }
 .ap-marcas nav a { flex-shrink:0; scroll-snap-align:start; display:inline-flex; align-items:center; min-height:44px; border:1px solid var(--border); border-radius:8px; padding:10px 16px; background:var(--card); color:var(--foreground); font-size:12px; font-weight:800; }
 .ap-marcas nav a:hover { border-color:var(--primary); }
 .ap-faixa-categorias .ap-categorias-grade:has(>:nth-child(3):last-child) { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.ap-faixa-categorias .ap-categorias-grade:has(>:nth-child(2):last-child) { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.ap-faixa-categorias .ap-categorias-grade:has(>:only-child) { grid-template-columns:minmax(0,1fr); }
 @media (min-width:768px) { .ap-marcas nav { flex-wrap:wrap; } }
 .ap-beneficios .beneficios-barra { margin:0; box-shadow:none; border-radius:0; border-width:1px 0; background:transparent; }
 .ap-etapas { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1px; background:var(--border); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
@@ -208,6 +244,23 @@ html[data-template="automotivo-premium"][data-modo="claro"] {
 [data-template="automotivo-premium"] .ck-button { border-radius:999px; }
 [data-template="automotivo-premium"] main>.container-loja>h1 { letter-spacing:-.7px; font-weight:850; }
 [data-template="automotivo-premium"] .ap-catalogo>.ap-categorias { padding-inline:0; padding-top:0; padding-bottom:28px; }
+.ap-busca-integrada.busca-loja-caixa { width:100%; max-width:740px; margin:0; min-width:0; position:relative; }
+.ap-busca-integrada .busca-loja { min-height:56px; padding:5px 6px 5px 18px; gap:10px; border-color:var(--border); }
+.ap-busca-integrada input { min-width:0; height:44px; font-size:14px; }
+.ap-busca-integrada .busca-loja-enviar { min-height:44px; padding:10px 22px; border-radius:999px; background:var(--primary); color:var(--primary-foreground); font-size:12px; font-weight:750; cursor:pointer; }
+.ap-busca-integrada .busca-loja:focus-within { outline:2px solid var(--primary); outline-offset:3px; }
+.ap-busca-integrada .busca-sugestoes { text-align:left; }
+.ap-busca-cabecalho { display:flex; justify-content:center; padding-block:0 14px; }
+.ap-categorias[data-contexto="catalogo"] .ap-categorias-grade { position:relative; display:flex; flex-wrap:wrap; gap:8px; }
+.ap-categorias[data-contexto="catalogo"] .ap-categoria { display:inline-flex; align-items:center; flex-shrink:0; min-height:44px; aspect-ratio:auto; padding:10px 16px; border-radius:999px; background:var(--card); color:var(--muted-foreground); }
+.ap-categorias[data-contexto="catalogo"] .ap-categoria>span { display:none; }
+.ap-categorias[data-contexto="catalogo"] .ap-categoria strong { position:static; font-size:12px; line-height:1.5; font-weight:650; text-shadow:none; white-space:nowrap; }
+.ap-categorias[data-contexto="catalogo"] .ap-categoria:hover,.ap-categorias[data-contexto="catalogo"] .ap-categoria[aria-current="page"] { border-color:var(--primary); color:var(--primary); background:color-mix(in srgb,var(--primary) 8%,var(--card)); }
+@media (max-width:767px) {
+  .ap-categorias[data-contexto="catalogo"] .ap-categorias-grade { flex-wrap:nowrap; overflow-x:auto; padding:2px 1px 8px; overscroll-behavior-x:contain; scrollbar-width:thin; }
+  .ap-categorias[data-contexto="catalogo"] .ap-categoria { padding-inline:14px; }
+  [data-template="automotivo-premium"] .ap-catalogo>.ap-categorias { padding-bottom:18px; }
+}
 [data-template="automotivo-premium"] .filtros-produtos>div:first-child { grid-template-columns:minmax(160px,1fr) repeat(6,auto); }
 [data-template="automotivo-premium"] .filtros-produtos select { max-width:190px; }
 [data-template="automotivo-premium"] .filtros-produtos .btn-primario { min-height:40px; padding:8px 17px; }

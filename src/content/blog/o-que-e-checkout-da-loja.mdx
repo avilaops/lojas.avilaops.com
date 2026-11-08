@@ -1,0 +1,66 @@
+export const capitulos = [
+  {
+    "id": "secao-1",
+    "titulo": "O que o checkout pede, e por quê"
+  },
+  {
+    "id": "secao-2",
+    "titulo": "Comprar sem criar conta"
+  },
+  {
+    "id": "secao-3",
+    "titulo": "O que a loja precisa fazer se o pagamento não estiver pronto"
+  },
+  {
+    "id": "secao-4",
+    "titulo": "Onde olhar quando o checkout está perdendo gente"
+  }
+];
+
+export const leituraMinutos = 3;
+
+Checkout é a tela final da compra, onde o cliente informa entrega e pagamento e confirma o pedido. Ela decide a venda porque é o único lugar da loja onde o cliente já quis comprar e ainda pode desistir. Todo obstáculo aqui custa dinheiro que já estava praticamente na mão: cadastro longo, frete surpresa, campo que recusa o CEP, forma de pagamento que falta.
+
+<section id="secao-1">
+
+## O que o checkout pede, e por quê
+
+Ele pede quem é (nome, e-mail, telefone), para onde vai (endereço e CEP), como entrega (frete escolhido) e como paga. Cada campo além desses precisa se justificar. Perguntar CPF é comum e costuma ser exigência da emissão de nota ou do meio de pagamento, mas perguntar data de nascimento, sexo ou 'como conheceu a loja' na hora de pagar é trocar venda por dado que você provavelmente nunca vai usar.
+
+- Nome, e-mail e telefone
+- CEP com preenchimento automático de rua, bairro e cidade
+- Número e complemento separados
+- Escolha de frete com prazo visível
+- Forma de pagamento com Pix, cartão e boleto
+
+</section>
+
+<section id="secao-2">
+
+## Comprar sem criar conta
+
+Obrigar cadastro antes de comprar é um dos custos mais caros e mais invisíveis de uma loja. O comprador de primeira viagem não quer criar senha para levar um produto de sessenta reais. A saída é deixar comprar como visitante e oferecer a conta depois da compra, quando ele já tem motivo para querer acompanhar o pedido. Você não perde o cadastro: o pedido já traz nome, e-mail, telefone e endereço.
+
+</section>
+
+<section id="secao-3">
+
+## O que a loja precisa fazer se o pagamento não estiver pronto
+
+Loja sem credencial de pagamento configurada não deveria oferecer 'finalizar compra'. Parece óbvio, e é um erro comum: a vitrine fica pronta, alguém mostra para o cliente, ele escolhe o produto, preenche endereço e só no último passo aparece um aviso de que o pagamento ainda não foi configurado. Quem paga esse vexame é o lojista, na frente do cliente dele. O certo é a vitrine continuar inteira e o pedido sair por WhatsApp até a credencial existir.
+
+</section>
+
+<section id="secao-4">
+
+## Onde olhar quando o checkout está perdendo gente
+
+Antes de mexer no visual, olhe três números: quantos chegam ao checkout, quantos escolhem frete e quantos concluem. A maior queda costuma estar entre chegar e escolher frete, e nesse caso o problema quase nunca é a tela. É o valor do frete, o prazo, ou a caixa padrão da loja cotando um produto pequeno como se fosse grande porque ninguém cadastrou as medidas.
+
+- Medir quantos entram e quantos concluem
+- Conferir o frete cotado para os produtos mais vendidos
+- Cadastrar peso e medida de cada produto
+- Testar a compra inteira no celular, como cliente
+- Conferir se aparece Pix, cartão e boleto
+
+</section>

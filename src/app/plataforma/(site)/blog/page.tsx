@@ -1,66 +1,42 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Metadata } from "next";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, BookOpen } from "lucide-react";
 import { postsPublicados } from "@/lib/blog";
+import "./blog.css";
 
 export const metadata: Metadata = {
   title: "Blog: como vender pela internet sem se perder no caminho",
-  description:
-    "Textos curtos sobre loja virtual, frete, Pix, estoque e pedido, na linguagem de quem vende. Um por dia, com exemplo brasileiro e sem promessa fácil.",
+  description: "Guias sobre loja virtual, frete, Pix, estoque e pedidos, na linguagem de quem vende.",
   alternates: { canonical: "https://lojas.avilaops.com/blog" },
 };
-
 export const dynamic = "force-dynamic";
-
-const dia = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString("pt-BR", { day: "2-digit", month: "long" });
+const dia = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
 
 export default function BlogPage() {
-  const posts = postsPublicados();
-  const [primeiro, ...resto] = posts;
-
-  return (
-    <div className="pl-container pl-blog">
-      <header className="pl-blog-topo">
-        <span>Blog</span>
-        <h1>Vender pela internet, explicado por quem opera</h1>
-        <p>
-          Um texto por dia sobre o que decide a venda: frete, prazo, pagamento, estoque e o que a lei exige de
-          quem vende online. Sem promessa de enriquecer rápido e sem tradução de artigo americano.
-        </p>
+  const [primeiro, ...resto] = postsPublicados();
+  return <div className="pl-site-claro blog-shell">
+    <div className="blog-container">
+      <header className="blog-intro">
+        <span><BookOpen size={15} aria-hidden="true" /> Blog do lojista</span>
+        <h1>Vender online começa<br /> por entender o caminho.</h1>
+        <p>Catálogo, pagamento, estoque e pedidos. Explicações práticas para cuidar da sua loja e dar o próximo passo.</p>
       </header>
-
-      {!primeiro ? (
-        <p className="pl-blog-vazio">O primeiro texto entra em breve.</p>
-      ) : (
-        <>
-          <Link href={`/blog/${primeiro.slug}`} className="pl-blog-destaque">
-            <time dateTime={primeiro.publicadoEm}>{dia(primeiro.publicadoEm)}</time>
-            <h2>{primeiro.title}</h2>
-            <p>{primeiro.description}</p>
-            <span>Ler <ArrowRight size={14} /></span>
+      {!primeiro ? <div className="blog-vazio"><BookOpen size={28} aria-hidden="true" /><h2>Estamos preparando os primeiros artigos.</h2><p>Enquanto isso, confira o guia para começar sua loja.</p><Link href="/ajuda">Ir para a Ajuda <ArrowRight size={16} aria-hidden="true" /></Link></div> : <>
+        <section aria-label="Artigo em destaque">
+          <Link href={`/blog/${primeiro.slug}`} className="blog-destaque">
+            <div className="blog-destaque-imagem">{primeiro.capa ? <Image src={primeiro.capa} alt="" fill sizes="(max-width: 760px) 100vw, 560px" priority /> : <BookOpen size={48} aria-hidden="true" />}</div>
+            <div className="blog-destaque-texto"><span className="blog-etiqueta">Em destaque</span><time dateTime={primeiro.publicadoEm}>{dia(primeiro.publicadoEm)}</time><h2>{primeiro.title}</h2><p>{primeiro.description}</p><span className="blog-ler">Ler artigo <ArrowRight size={16} aria-hidden="true" /></span></div>
           </Link>
-
-          {resto.length > 0 && (
-            <div className="pl-blog-grade">
-              {resto.map((p) => (
-                <Link key={p.slug} href={`/blog/${p.slug}`} className="pl-blog-item">
-                  <time dateTime={p.publicadoEm}>{dia(p.publicadoEm)}</time>
-                  <h3>{p.title}</h3>
-                  <p>{p.description}</p>
-                </Link>
-              ))}
-            </div>
-          )}
-        </>
-      )}
-
-      <section className="pl-blog-cta">
-        <div>
-          <h2>Sua loja no ar hoje</h2>
-          <p>Vitrine, carrinho, frete calculado e Pix direto na sua conta, com mensalidade mais 5% sobre vendas na plataforma.</p>
-        </div>
-        <Link href="/criar" className="pl-header-cta">Criar minha loja <ArrowRight size={14} /></Link>
-      </section>
+        </section>
+        {resto.length > 0 && <section aria-labelledby="mais-artigos"><header className="blog-secao-cabecalho"><h2 id="mais-artigos">Mais para o seu dia a dia</h2><span>{resto.length} artigos</span></header>
+          <div className="blog-grade">{resto.map((post) => <article key={post.slug} className="blog-cartao"><Link href={`/blog/${post.slug}`}>
+            <div className="blog-cartao-imagem">{post.capa ? <Image src={post.capa} alt="" fill sizes="(max-width: 640px) 100vw, (max-width: 1050px) 50vw, 360px" /> : <BookOpen size={36} aria-hidden="true" />}</div>
+            <div className="blog-cartao-texto"><time dateTime={post.publicadoEm}>{dia(post.publicadoEm)}</time><h3>{post.title}</h3><p>{post.description}</p><span className="blog-ler">Ler artigo <ArrowRight size={15} aria-hidden="true" /></span></div>
+          </Link></article>)}</div>
+        </section>}
+      </>}
+      <aside className="blog-convite"><div><span>Da leitura à prática</span><h2>Um passo de cada vez, com a sua loja.</h2><p>O guia do lojista mostra onde encontrar cada recurso no painel.</p></div><Link href="/ajuda">Explorar o guia <ArrowRight size={17} aria-hidden="true" /></Link></aside>
     </div>
-  );
+  </div>;
 }

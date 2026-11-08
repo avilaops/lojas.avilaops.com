@@ -1,9 +1,9 @@
+import { consultarIdentidadeSSO } from "@/lib/sso-servidor";
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { entradaEquipeFoiIniciada } from "@/lib/entrada-equipe";
-import { CAMINHO_RETORNO, COOKIE_SSO, configSSO, consultarSSO, podeEntrarComoEquipe } from "@/lib/sso";
+import { CAMINHO_RETORNO, configSSO, podeEntrarComoEquipe } from "@/lib/sso";
 import { ShieldCheck } from "lucide-react";
 import SeletorLojasEquipe from "@/components/plataforma/SeletorLojasEquipe";
 
@@ -23,7 +23,7 @@ export default async function EntrarComoEquipePage() {
   if (!(await entradaEquipeFoiIniciada())) redirect("/entrar");
   const cfg = configSSO();
   if (!cfg) redirect("/entrar");
-  const r = await consultarSSO(cfg, (await cookies()).get(COOKIE_SSO)?.value);
+  const r = await consultarIdentidadeSSO(cfg);
   if (r.tipo === "sem_sessao") redirect(CAMINHO_RETORNO);
   if (!podeEntrarComoEquipe(r)) redirect("/entrar?sso=sem-loja");
 

@@ -1,5 +1,7 @@
-import { cookies, headers } from "next/headers";
-import { configSSO, consultarSSO, COOKIE_SSO } from "@/lib/sso";
+import { configOIDC } from "@/lib/oidc";
+import { consultarIdentidadeSSO } from "@/lib/sso-servidor";
+import { headers } from "next/headers";
+import { configSSO } from "@/lib/sso";
 import { lojasAutorizadas } from "@/lib/acessos-loja";
 import { abrirSessao } from "@/lib/sessao";
 import { normalizarHost } from "@/lib/tenant";
@@ -7,10 +9,10 @@ import { normalizarHost } from "@/lib/tenant";
 export async function POST(request: Request) {
   const base = (process.env.LOJAS_BASE_DOMAIN ?? "lojas.avilaops.com").toLowerCase();
   const h = await headers();
-  if (normalizarHost(h.get("host")) !== base || h.get("origin") !== `https://${base}`) return new Response(null, { status: 403 });
+  if (normalizarHost(h.get("host")) !== base || h.get("origin") !== (configOIDC()?.origem ?? `https://${base}`)) return new Response(null, { status: 403 });
   const cfg = configSSO();
   if (!cfg) return new Response(null, { status: 404 });
-  const r = await consultarSSO(cfg, (await cookies()).get(COOKIE_SSO)?.value);
+  const r = await consultarIdentidadeSSO(cfg);
   if (r.tipo !== "ok") return new Response(null, { status: 401 });
   const slug = (await request.formData()).get("slug");
   if (typeof slug !== "string" || !/^[a-z0-9][a-z0-9-]{0,62}$/.test(slug)) return new Response(null, { status: 400 });

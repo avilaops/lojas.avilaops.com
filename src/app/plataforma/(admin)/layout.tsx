@@ -43,9 +43,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="padm">
-      <NavPainel nome={loja.nome} urlLoja={urlDaLoja(loja)} aSeparar={aSeparar} pixManual={pixLigado} pixAConferir={pixAConferir} configuradorSobMedida={recursoAtivo(loja, "configurador_sob_medida")} podeTrocarLoja={!sessao.equipe && sessao.papel === "DONO" && Boolean(loja.loginEmail)} />
-      <BuscaPainel />
-      <main className="padm-conteudo pl-workspace">{children}</main>
+      <a href="#conteudo-painel" className="padm-pular">Pular para o conteúdo</a>
+      <NavPainel nome={loja.nome} urlLoja={urlDaLoja(loja)} aSeparar={aSeparar} pixManual={pixLigado} pixAConferir={pixAConferir} configuradorSobMedida={recursoAtivo(loja, "configurador_sob_medida")} podeTrocarLoja={!sessao.equipe && sessao.papel === "DONO" && Boolean(loja.loginEmail)} trocarLojaHref={sessao.equipe ? "/entrar/equipe" : undefined} />
+      <BuscaPainel pixManual={pixLigado} configuradorSobMedida={recursoAtivo(loja, "configurador_sob_medida")} />
+      <main id="conteudo-painel" tabIndex={-1} className="padm-conteudo pl-workspace">{children}</main>
     </div>
   );
 }

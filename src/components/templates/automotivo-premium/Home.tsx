@@ -1,33 +1,34 @@
 import Link from "@/components/LinkLoja";
 import Image from "next/image";
-import { ArrowRight, Search, MessageCircle, Instagram } from "lucide-react";
+import { ArrowRight, MessageCircle, Instagram } from "lucide-react";
 import type { DadosHome } from "@/components/home/tipos";
 import ProductCard from "@/components/ProductCard";
 import BeneficiosBarra from "@/components/home/BeneficiosBarra";
 import { temaDo } from "@/lib/tenant";
 import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
 import { categoriaPorPictograma, etapasDoPremium } from "@/lib/etapas-premium";
-import Categorias from "./Categorias";
 import Trilho from "./Trilho";
 import IconeCuidado from "./IconeCuidado";
+import BuscaLoja from "@/components/BuscaLoja";
+import GuiaAutomotivo, { textos } from "@/content/vitrine/guia-automotivo.mdx";
+import Marcas from "./Marcas";
 
 export default function HomePremium({ t, identidade, categorias, marcas = [], vitrine, vende }: DadosHome) {
   const conteudo = temaDo(t).premium ?? {};
   const etapas = etapasDoPremium(conteudo, categorias);
   const acessorios = categoriaPorPictograma("acessorios", categorias);
-  const categoriasVisiveis = [...categorias].filter(c=>c.imagemUrl || temaDo(t).categoriaSemImagem === "icone").sort((a,b)=>a.ordem-b.ordem);
   const bannerMobileUrl = t.bannerUrl?.replace(/-desktop(?=\.[a-z0-9]+(?:[?#]|$))/i, "-mobile");
   const mostrarEditorialSecundaria = Boolean(conteudo.editorialImagemSecundaria && conteudo.editorialImagemSecundaria !== conteudo.editorialImagem);
-  const atendimento = t.whatsapp ? linkWhatsApp(t.whatsapp, "Olá! Quero ajuda para escolher os produtos e montar meu kit de cuidados.") : "/contato";
+  const atendimento = t.whatsapp ? linkWhatsApp(t.whatsapp, "Olá! Vim pela loja e quero ajuda para escolher um produto e confirmar a aplicação no meu veículo.") : "/contato";
   return <div className="ap-home">
-    <section className="ap-busca container-loja" aria-label="Encontrar produtos"><label htmlFor="ap-busca">{conteudo.buscaTitulo ?? "O que você procura para o seu carro?"}</label><form action="/produtos" className="ap-busca-form"><Search size={19}/><input id="ap-busca" type="search" name="q" placeholder={conteudo.buscaExemplo ?? "Produto, marca ou aplicação…"}/><button type="submit">Buscar</button></form></section>
+    <section className="ap-busca container-loja" aria-label="Encontrar produtos"><label htmlFor="ap-busca">{conteudo.buscaTitulo ?? "O que você procura para o seu carro?"}</label><BuscaLoja id="ap-busca" className="ap-busca-integrada" placeholder={conteudo.buscaExemplo ?? "Produto, marca ou aplicação…"} mostrarBotao /></section>
     <section className="ap-hero-area"><div className="ap-hero">
       {t.bannerUrl && <picture className="ap-hero-midia">{bannerMobileUrl && bannerMobileUrl !== t.bannerUrl && <source media="(max-width: 767px)" srcSet={bannerMobileUrl}/>}<Image src={t.bannerUrl} alt="" fill sizes="100vw" preload unoptimized className="ap-hero-imagem"/></picture>}
-      <div className="ap-hero-conteudo">{conteudo.heroSelo && <p className="ap-selo">{conteudo.heroSelo}</p>}<h1>{conteudo.heroTitulo ?? t.slogan ?? t.nome}</h1><p>{conteudo.heroTexto ?? identidade.diferencial}</p><div className="ap-hero-acoes"><Link className="btn-primario" href="/produtos">Explorar produtos <ArrowRight size={17}/></Link><a href={atendimento} {...(t.whatsapp ? { target: "_blank", rel: "noopener noreferrer" } : {})}>Montar meu kit <ArrowRight size={14}/></a></div></div>
+      <div className="ap-hero-conteudo">{conteudo.heroSelo && <p className="ap-selo">{conteudo.heroSelo}</p>}<h1>{conteudo.heroTitulo ?? t.slogan ?? t.nome}</h1><p>{conteudo.heroTexto ?? identidade.diferencial}</p><div className="ap-hero-acoes"><Link className="btn-primario" href="/produtos">Explorar produtos <ArrowRight size={17}/></Link><a href={atendimento} {...(t.whatsapp ? { target: "_blank", rel: "noopener noreferrer" } : {})}>Falar com a equipe <ArrowRight size={14}/></a></div></div>
     </div></section>
-    {categoriasVisiveis.length > 0 && <div className="ap-faixa-categorias"><Categorias categorias={categoriasVisiveis}/></div>}
-    {marcas.length > 0 && <section className="container-loja ap-marcas" aria-labelledby="ap-marcas-titulo"><div><p className="ap-sobretitulo">Encontre sua referência</p><h2 id="ap-marcas-titulo">Compre por marca</h2></div><nav aria-label="Marcas do catálogo">{marcas.map(marca => <Link key={marca} href={`/produtos?fabricante=${encodeURIComponent(marca)}`}>{marca}</Link>)}</nav></section>}
-    {vitrine.length > 0 && <section className="container-loja ap-secao"><div className="ap-secao-titulo"><div><p className="ap-sobretitulo">Escolhidos para a sua rotina</p><h2>Destaques</h2></div><Link href="/produtos">Ver catálogo <ArrowRight size={16}/></Link></div><Trilho titulo="Produtos em destaque">{vitrine.map(p => <ProductCard loja={t} key={p.id} produto={p} vende={vende} whatsapp={t.whatsapp}/>)}</Trilho></section>}
+    <Marcas marcas={marcas} />
+    {vitrine.length > 0 && <section className="container-loja ap-secao"><div className="ap-secao-titulo"><div><p className="ap-sobretitulo">{textos.destaquesSelo}</p><h2>{textos.destaquesTitulo}</h2></div><Link href="/produtos">Ver catálogo <ArrowRight size={16}/></Link></div><Trilho titulo="Produtos em destaque">{vitrine.map(p => <ProductCard loja={t} key={p.id} produto={p} vende={vende} whatsapp={t.whatsapp}/>)}</Trilho></section>}
+    <GuiaAutomotivo />
     <div className="container-loja ap-beneficios"><BeneficiosBarra t={t}/></div>
     {etapas.length > 0 && <section className="container-loja ap-secao"><div className="ap-secao-titulo"><div><p className="ap-sobretitulo">Cada etapa tem seu produto</p><h2>O cuidado começa na escolha.</h2><p>Encontre o que precisa pelo que você quer fazer.</p></div></div><div className="ap-etapas">{etapas.map((e,i) => <Link href={`/categoria/${e.categoria}`} key={e.categoria}><span className="ap-etapa-numero">0{i+1}</span><IconeCuidado tipo={e.icone}/><h3>{e.titulo}</h3><p>{e.texto}</p><ArrowRight className="ap-etapa-seta" size={19}/></Link>)}</div></section>}
     {conteudo.editorialImagem && <section className="container-loja ap-secao"><div className="ap-editorial"><div className="ap-editorial-foto"><Image src={conteudo.editorialImagem} alt="Seleção automotiva em destaque" fill sizes="(max-width: 768px) 100vw, 600px" unoptimized/></div><div className="ap-editorial-texto"><p className="ap-sobretitulo">Atenção em cada detalhe</p><h2>{conteudo.editorialTitulo ?? "Seu carro merece uma escolha bem feita."}</h2><p>{conteudo.editorialTexto ?? "Encontre produtos para cada etapa e fale com a equipe quando precisar de orientação."}</p><a href={atendimento} className="btn-primario" {...(t.whatsapp ? {target:"_blank",rel:"noopener noreferrer"} : {})}><MessageCircle size={18}/> Falar com a equipe</a><Link href="/sobre">Conheça {t.nome} <ArrowRight size={16}/></Link></div></div></section>}

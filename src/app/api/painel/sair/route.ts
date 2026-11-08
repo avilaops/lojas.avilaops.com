@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { randomBytes } from "node:crypto";
 import { fecharSessao } from "@/lib/sessao";
 import { COOKIE_SSO, configSSO } from "@/lib/sso";
+import { COOKIE_SESSAO_OIDC, COOKIE_FLUXO_OIDC } from "@/lib/oidc";
 
 /**
  * Logout local + global. Auth requires POST: a 303 redirect changes the method
@@ -9,7 +10,11 @@ import { COOKIE_SSO, configSSO } from "@/lib/sso";
  * The intermediate page submits an explicit POST from the browser.
  */
 export async function POST() {
-  const hadSso = Boolean((await cookies()).get(COOKIE_SSO)?.value);
+  const store = await cookies();
+  const hadSso = Boolean(store.get(COOKIE_SSO)?.value || store.get(COOKIE_SESSAO_OIDC)?.value);
+  store.delete(COOKIE_SESSAO_OIDC);
+  store.delete(COOKIE_FLUXO_OIDC);
+  store.delete("lojas_equipe_intencao");
   await fecharSessao();
 
   const cfg = configSSO();

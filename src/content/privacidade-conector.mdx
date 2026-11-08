@@ -1,0 +1,59 @@
+import { RETENCAO_DIAS } from "@/lib/mcp-historico";
+import { recurso, VALIDADE } from "@/lib/mcp-oauth";
+import FerramentasComDadosPessoais from "@/components/plataforma/FerramentasComDadosPessoais";
+
+export const capitulos = [
+  { id: "controle-acesso", titulo: "Quem controla o acesso" },
+  { id: "dados-lidos", titulo: "Dados que o assistente lê" },
+  { id: "retencao", titulo: "Armazenamento e prazos" },
+  { id: "destino-dados", titulo: "Para onde os dados vão" },
+  { id: "contato", titulo: "Direitos e contato" },
+];
+
+<section id="controle-acesso">
+
+## Quem controla o acesso
+
+Como o conector <code>{recurso()}</code> trata dados quando um assistente de IA (Claude, ChatGPT, Codex ou automações como n8n) opera uma loja da plataforma Lojas por Avila Ops. Complementa a [política de privacidade da Avila Ops](https://avilaops.com/politica-de-privacidade/).
+
+A loja controla o acesso. A conexão só existe depois que alguém da equipe entra no painel e autoriza; na autorização a pessoa escolhe o que o assistente pode fazer (consultar e alterar, só consultar, ou área por área), e ele nunca pode mais do que ela mesma pode no painel: se o acesso dela diminui, o do assistente diminui junto. O dono e os gerentes mudam ou desligam qualquer conexão em Painel, IA e API. O assistente não amplia o próprio acesso.
+
+</section>
+
+<section id="dados-lidos">
+
+## Que dados o assistente lê
+
+Os da loja autorizada: catálogo, estoque, pedidos, cupons, avaliações e resumos de vendas. Com acesso a clientes ou pedidos, as ferramentas <FerramentasComDadosPessoais /> devolvem dados pessoais de quem comprou na loja, como nome, e-mail e endereço de entrega.
+
+Esses dados já estão na plataforma por causa das vendas da loja. O conector entrega ao assistente só o que a ferramenta pedida devolve e não faz cópia deles.
+
+</section>
+
+<section id="retencao">
+
+## O que fica guardado e por quanto tempo
+
+- **Histórico de uso:** uma linha por chamada, com a ferramenta, o horário, se alterou a loja, se deu certo e o código do item tocado (SKU, número do pedido). Sem argumentos e sem resultados: nome, e-mail ou endereço de cliente não entram. Uma faxina diária apaga, de todas as lojas, o que passou de {RETENCAO_DIAS} dias.
+
+- **O que o assistente cria ou altera** (produto, preço, estoque, cupom, status de pedido) passa a fazer parte da loja e fica como qualquer alteração feita pelo painel.
+
+- **Credenciais:** o acesso vale {VALIDADE.acessoMs / 3_600_000} hora e se renova enquanto a conexão é usada; conexão parada por {VALIDADE.renovacaoMs / 86_400_000} dias vence. Guardamos só o hash das credenciais, nunca o valor.
+
+</section>
+
+<section id="destino-dados">
+
+## Para onde os dados vão
+
+Só para o assistente que o lojista conectou, como resposta às ferramentas que ele chamou. O conector não envia dados da loja a outros serviços. O que o assistente faz com a resposta segue a política do provedor dele (para o Claude, a da Anthropic).
+
+</section>
+
+<section id="contato">
+
+## Direitos e contato
+
+Clientes de uma loja exercem os direitos da LGPD com a própria loja, que é a controladora dos dados dos seus compradores. Para dúvidas sobre o conector, escreva para [nicolas@avilaops.com](mailto:nicolas@avilaops.com).
+
+</section>

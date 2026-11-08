@@ -1,0 +1,59 @@
+export const capitulos = [
+  {
+    "id": "secao-1",
+    "titulo": "O código tem prazo, e isso é bom"
+  },
+  {
+    "id": "secao-2",
+    "titulo": "Como a loja sabe que o dinheiro caiu"
+  },
+  {
+    "id": "secao-3",
+    "titulo": "Comprovante não é pagamento"
+  },
+  {
+    "id": "secao-4",
+    "titulo": "Pix não elimina a conciliação"
+  }
+];
+
+export const leituraMinutos = 2;
+
+O Pix numa loja serve para receber à vista, com taxa baixa e confirmação em minutos. O cliente escolhe Pix, a loja gera um código com validade, ele paga pelo aplicativo do banco e o pagamento avisa a loja automaticamente, que então confirma o pedido e libera a separação. Nada disso depende de você conferir comprovante na mão.
+
+<section id="secao-1">
+
+## O código tem prazo, e isso é bom
+
+O código Pix de uma compra costuma valer poucos minutos ou algumas horas. O prazo curto protege duas coisas: o preço, que pode mudar, e o estoque, que fica reservado enquanto o pedido está aberto. Prazo longo demais em loja pequena vira produto preso esperando alguém que já desistiu. Trinta minutos costuma ser suficiente para quem realmente vai pagar.
+
+</section>
+
+<section id="secao-2">
+
+## Como a loja sabe que o dinheiro caiu
+
+O meio de pagamento envia um aviso automático para a loja assim que o Pix é compensado. Esse aviso é o que muda o pedido de 'aguardando pagamento' para 'pago'. Quando ele não está configurado, o pedido só é confirmado numa verificação periódica, e o cliente que pagou fica olhando uma tela dizendo que está pendente. É a origem da maior parte das mensagens de 'já paguei, e agora?'.
+
+- Configurar o aviso automático de pagamento
+- Guardar o segredo que valida esse aviso
+- Testar com uma compra real de valor baixo
+- Definir em quanto tempo o pedido expira sem pagamento
+
+</section>
+
+<section id="secao-3">
+
+## Comprovante não é pagamento
+
+Nunca libere pedido contra print de comprovante. O golpe do falso comprovante é rotina no comércio pequeno, e a imagem enviada pelo WhatsApp é trivial de forjar. Quem confirma o pagamento é o extrato ou o aviso automático da loja, nunca a captura de tela mandada pelo comprador. Vale escrever essa regra para a equipe, porque na correria a tendência é aceitar para não parecer desconfiado.
+
+</section>
+
+<section id="secao-4">
+
+## Pix não elimina a conciliação
+
+Receber rápido não é o mesmo que saber o que entrou. Ao fim do mês você ainda precisa cruzar pedidos com recebimentos, achar o que foi estornado, o que foi pago duas vezes e o que foi pago fora do sistema. Loja pequena resolve isso com um relatório mensal simples. O que não funciona é conferir a conta pela memória, que é o método mais comum e o mais caro.
+
+</section>

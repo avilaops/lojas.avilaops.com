@@ -1,10 +1,10 @@
+import { consultarIdentidadeSSO } from "@/lib/sso-servidor";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { identificarPorEmail } from "@/lib/operadores";
 import { lojistaAtual } from "@/lib/sessao";
-import { CAMINHO_RETORNO, COOKIE_SSO, configSSO, consultarSSO } from "@/lib/sso";
+import { CAMINHO_RETORNO, configSSO, } from "@/lib/sso";
 import { emitirSelo } from "@/lib/sso-cadastro";
 import { DIAS_DE_TESTE } from "@/lib/planos";
 
@@ -20,7 +20,7 @@ export default async function CriarPeloSSOPage() {
   const cfg = configSSO();
   if (!cfg) redirect("/criar");
 
-  const r = await consultarSSO(cfg, (await cookies()).get(COOKIE_SSO)?.value);
+  const r = await consultarIdentidadeSSO(cfg);
   if (r.tipo === "sem_sessao") redirect(CAMINHO_RETORNO);
   if (r.tipo === "sem_email") redirect("/entrar?sso=sem-email");
   if (r.tipo === "sem_acesso") redirect("/entrar?sso=sem-acesso");

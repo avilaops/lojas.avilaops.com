@@ -1,6 +1,8 @@
-import { cookies, headers } from "next/headers";
+import { consultarIdentidadeSSO } from "@/lib/sso-servidor";
+import { configOIDC } from "@/lib/oidc";
+import { headers } from "next/headers";
 import { abrirSessao } from "@/lib/sessao";
-import { COOKIE_SSO, configSSO, consultarSSO } from "@/lib/sso";
+import { configSSO, } from "@/lib/sso";
 import { criarLojaPeloSSO, origemConfere } from "@/lib/sso-cadastro";
 import { normalizarHost } from "@/lib/tenant";
 
@@ -16,11 +18,12 @@ export async function POST(request: Request) {
   const base = (process.env.LOJAS_BASE_DOMAIN ?? "lojas.avilaops.com").toLowerCase();
   const h = await headers();
   if (!cfg || normalizarHost(h.get("host")) !== base) return new Response(null, { status: 404 });
-  if (!origemConfere(h.get("origin"), base)) return new Response("Origem não permitida.", { status: 403 });
+  const oidc = configOIDC();
+  if (oidc ? h.get("origin") !== oidc.origem : !origemConfere(h.get("origin"), base)) return new Response("Origem não permitida.", { status: 403 });
 
   const form = await request.formData().catch(() => null);
   const selo = form?.get("selo");
-  const r = await consultarSSO(cfg, (await cookies()).get(COOKIE_SSO)?.value);
+  const r = await consultarIdentidadeSSO(cfg);
   const res = await criarLojaPeloSSO(r, typeof selo === "string" ? selo : null);
 
   if (res.tipo === "criada") {
