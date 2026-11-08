@@ -241,7 +241,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           )}
           {cabecalhoProprio ? <CabecalhoPremium loja={publico} logo={t.logoUrl} logoCompacta={marcaQuadradaDa(t)} logoEscuro={tema.premium?.logoEscuroUrl} mostrarNome={tema.premium?.mostrarNome} categorias={[...categorias].sort((a,b)=>a.ordem-b.ordem).map(c=>({slug:c.slug,nome:c.nome}))} modo={tema.modo}/> : <Header loja={publico} logoUrl={t.logoUrl} mostrarNome={tema.mostrarNomeNoCabecalho} categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} exemploBusca={exemploBusca} mostrarPromocoes={temPromocoes} />}
           {t.segmento === "motopecas" && <BarraGaragem tenantId={t.id} />}
-          {t.pedidoMinimoCentavos != null && t.pedidoMinimoCentavos > 0 && (
+          {t.slug !== "pkvedacoes" && t.pedidoMinimoCentavos != null && t.pedidoMinimoCentavos > 0 && (
             <p className="container-loja py-2 text-center text-sm">
               Pedido mínimo de <strong>{formatarBRL(t.pedidoMinimoCentavos)} em produtos</strong>, sem contar o frete.
             </p>
