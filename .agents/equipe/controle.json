@@ -34,7 +34,7 @@
       "objective": "Disponibilizar os 50 textos, sete capas e fontes no blog exclusivo da Domi-Rio, com busca por assunto, leitura responsiva e descoberta pelo sitemap.",
       "assignee": "codex",
       "priority": "alta",
-      "status": "em-andamento",
+      "status": "concluida",
       "acceptanceCriteria": [
         "50 páginas MDX com os textos e fontes fornecidos, capas locais e sem H1 duplicado.",
         "Índice pesquisável em sete assuntos, sumário e navegação anterior, próxima e relacionada.",
@@ -43,7 +43,7 @@
         "Build, tipos e testes na CI; conferência manual em desktop e mobile."
       ],
       "environment": "cópia isolada existente; implementação local e validação formal no GitHub CI",
-      "evidence": "Plano em docs/superpowers/plans/2026-11-08-domi-rio-50-posts-mdx.md. Coleção em src/content/domirio; teste src/lib/artigos-domirio.test.ts. Verificação runtime e CI pendentes."
+      "evidence": "Implementação abbbe07 na main. Unitários, tipos, lint, build, integração, contratos e navegador aprovados no run 42486895808; deploy concluiu a troca do container, mas a limpeza do job foi cancelada após atualização concorrente da main. Produção conferida em 2026-11-08T13:59:46Z: 50 páginas HTTP 200, H1 único, canonical, capas e fontes; sete capas WebP HTTP 200; índice e sitemap com 50 slugs. Desktop 1440 e mobile 390 sem overflow; busca sem acentos e filtro por assunto conferidos. Slugs ausentes em outros tenants. Evidências e limites em docs/DOMIRIO-50-POSTS-MDX.md; relatório operacional em .work/domirio-inspecao/producao.json."
     },
     {
       "id": "BERETA-FOTOS-CATALOGO-20261108",

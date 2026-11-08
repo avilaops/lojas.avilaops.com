@@ -30,12 +30,12 @@
 
 ## Tarefas
 
-- [ ] 1. Criar testes de integridade do conjunto, isolamento, busca e navegação; execução reservada à CI.
-- [ ] 2. Importar os 50 MDX e sete capas; criar metadados e mapa de imports explícitos.
-- [ ] 3. Construir índice por tema e página editorial responsiva com sumário, fontes e leitura relacionada.
-- [ ] 4. Integrar rotas, metadados, menu, sitemap, home e descoberta em texto.
-- [ ] 5. Conferir manualmente desktop/mobile, todos os slugs e recursos sem executar build/testes locais.
-- [ ] 6. Publicar commit na main, acompanhar CI e corrigir falhas; registrar evidências verificadas.
+- [x] 1. Criar testes de integridade do conjunto, isolamento, busca e navegação; execução reservada à CI.
+- [x] 2. Importar os 50 MDX e sete capas; criar metadados e mapa de imports explícitos.
+- [x] 3. Construir índice por tema e página editorial responsiva com sumário, fontes e leitura relacionada.
+- [x] 4. Integrar rotas, metadados, menu, sitemap, home e descoberta em texto.
+- [x] 5. Conferir manualmente desktop/mobile, todos os slugs e recursos sem executar build/testes locais.
+- [x] 6. Publicar commit na main, acompanhar CI e corrigir falhas; registrar evidências verificadas.
 
 ## Decisões de execução
 
@@ -43,3 +43,5 @@
 - Metadados sem datas permanecem sem data editorial exibida; a autoria é organizacional.
 - O ciclo de testes acontece exclusivamente na CI; não executar uma etapa vermelha local.
 - O blog existente armazena texto puro; não convertê-lo em MDX nem modificar a interpretação desse conteúdo.
+- O lockfile da base estava truncado e não era JSON válido. Recuperar a versão íntegra e reconciliar pelo npm foi necessário para compilar; o commit do gerador 3D declarado no manifesto foi preservado.
+- Evidências e estado final: `docs/DOMIRIO-50-POSTS-MDX.md`.
