@@ -19,7 +19,13 @@
       "assignee": "codex",
       "priority": "alta",
       "status": "em-andamento",
-      "acceptanceCriteria": ["Página e catálogo exclusivos da Domi-Rio.", "Variantes e códigos resolvidos sem dados internos.", "Adicionar, editar, remover e restaurar lista; importar carrinho.", "CEP opcional apenas na mensagem; envio confirmado pelo comprador.", "Conteúdo em MDX, links públicos, CI e revisão mobile/desktop."],
+      "acceptanceCriteria": [
+        "Página e catálogo exclusivos da Domi-Rio.",
+        "Variantes e códigos resolvidos sem dados internos.",
+        "Adicionar, editar, remover e restaurar lista; importar carrinho.",
+        "CEP opcional apenas na mensagem; envio confirmado pelo comprador.",
+        "Conteúdo em MDX, links públicos, CI e revisão mobile/desktop."
+      ],
       "environment": "desenvolvimento isolado, CI e produção",
       "evidence": "Plano em docs/superpowers/plans/2026-11-08-domirio-cotacao-lista.md; implementação em andamento."
     },
@@ -29,14 +35,14 @@
       "objective": "Mapa navegável exclusivo PK com três entradas, quatro etapas e cinco grupos de segmentos, da identificação à cotação.",
       "assignee": "codex",
       "priority": "normal",
-      "status": "em-revisao",
+      "status": "concluida",
       "acceptanceCriteria": [
         "Entradas por código, amostra e aplicação com destinos reais.",
         "Dez segmentos agrupados sem duplicação.",
         "Navegação por teclado e telas 390/1440 verificadas no GitHub CI.",
         "Página canônica exclusiva PK, descoberta na home e sitemap; Mermaid versionado."
       ],
-      "evidence": "Plano docs/superpowers/plans/2026-11-08-pk-jornada-visual.md; diagramas docs/PK-JORNADA-MERMAID.md. Testes e build exclusivamente GitHub CI.",
+      "evidence": "PR #233 mesclado em 47c1bc3. CI 42496937583 aprovado; entrega, deploy e fumaça do run 42497355599 aprovados. /como-escolher, home e cinco grupos de aplicações verificados publicamente. Navegador 390/1440 com três entradas e teclado.",
       "environment": "github"
     },
     {
@@ -1694,6 +1700,21 @@
         "As regras de pedido mínimo no carrinho e checkout e a exibição nas demais lojas são preservadas."
       ],
       "evidence": "Aviso e cabeçalho confirmados no HTML de produção antes da alteração. O diff limita a mudança de comportamento à condição de exibição no layout.",
+      "environment": "github"
+    },
+    {
+      "id": "PK-REMOVER-ESQUEMA-20261108",
+      "title": "Remover esquema dimensional sem proporção das fichas PK",
+      "objective": "Atender pedido explícito do proprietário: retirar desenho genérico, preservando medidas e material da ficha técnica.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "Nenhum esquema genérico nas fichas.",
+        "Medidas e material cadastrados preservados.",
+        "CI e verificação pública após publicação."
+      ],
+      "evidence": "PR #234. Componente removido. Navegador verifica ausência do desenho e presença das medidas/material. CI inicial 42498385841 parou no resolvedor de fonte Inter do Next, fora da remoção.",
       "environment": "github"
     }
   ],

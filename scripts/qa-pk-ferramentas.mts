@@ -100,10 +100,17 @@ try {
       await captura(page, `${documento.nome}-${width}`);
     }
     await page.goto(`${origem}/produtos/${produtos[0].slug}`);
-    const esquema = page.getByRole("img", { name: /Diâmetro interno: 20 mm; diâmetro externo: 30 mm; altura: 4 mm; seção: 2 mm/ });
-    await esquema.waitFor();
+    await page.getByRole("heading", { name: "Características", exact: true }).waitFor();
+    assert.equal(await page.getByText("Esquema dimensional", { exact: true }).count(), 0);
+    assert.equal(await page.getByRole("img", { name: /Diâmetro interno:/ }).count(), 0);
+    const ficha = await page.locator(".ficha-tecnica").innerText();
+    assert.match(ficha, /Diâmetro interno/);
+    assert.match(ficha, /20 mm/);
+    assert.match(ficha, /30 mm/);
+    assert.match(ficha, /4 mm/);
+    assert.match(ficha, /Poliuretano \(PU\)/);
     assert.match(await page.getByText("Função e seleção", { exact: true }).locator("..").innerText(), /vedação da haste/);
-    await captura(page, `ficha-cotas-${width}`);
+    await captura(page, `ficha-sem-esquema-${width}`);
     await page.goto(`${origem}/produtos`);
     for (const produto of produtos.slice(0, 3)) {
       const selecionar = page.getByRole("button", { name: `Comparar: ${produto.nome}`, exact: true });
@@ -153,7 +160,7 @@ try {
     assert.equal((await contexto.request.post(`${baseHttp}/api/pk/demandas`, { data: { consulta: "nome@email.com", consentido: true }, headers: cabecalhosPk })).status(), 422);
     assert.equal((await contexto.request.post(`${baseHttp}/api/pk/demandas`, { data: { consulta: "PK998877", consentido: true }, headers: cabecalhosOutra })).status(), 404);
     assert.deepEqual(erros, [], "Sem erros JavaScript na jornada");
-    resultados.push({ width, jornadaTresEntradasTeclado: "pass", mapaDezSegmentos: "pass", mdxGuiasSetores: "pass", esquemaDadosDb: "pass", limiteComparacao: "pass", comparacaoEntrePaginas: "pass", cotacaoApiRealCsv: "pass", isolamentoTenant: "pass", semPedidos: true });
+    resultados.push({ width, jornadaTresEntradasTeclado: "pass", mapaDezSegmentos: "pass", mdxGuiasSetores: "pass", fichaSemEsquema: "pass", limiteComparacao: "pass", comparacaoEntrePaginas: "pass", cotacaoApiRealCsv: "pass", isolamentoTenant: "pass", semPedidos: true });
     await contexto.close();
     ultimaPagina = undefined;
   }
