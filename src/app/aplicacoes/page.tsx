@@ -12,6 +12,6 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function Pagina() {
   const t = await exigirTenant();
   if (t.slug !== "pkvedacoes") notFound();
-  return <ListaEditorialPk itens={listarEditorialPk(t.slug, "aplicacoes")} titulo="Aplicações de vedações por segmento" resumo="Casos de uso de cilindros, sintomas de falha e informações necessárias para avaliar cada aplicação." />;
+  return <ListaEditorialPk itens={listarEditorialPk(t.slug, "aplicacoes")} titulo="Aplicações de vedações por segmento" resumo="Encontre o contexto do seu equipamento: produzir, cultivar, construir, movimentar ou sustentar a infraestrutura." porFinalidade />;
 }
 

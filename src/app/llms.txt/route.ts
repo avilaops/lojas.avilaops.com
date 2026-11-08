@@ -88,6 +88,7 @@ políticas dela. Este arquivo descreve a plataforma, não uma loja.
     "",
     "## Como comprar",
     ...(t.slug === "pkvedacoes" ? [
+      `- [Como escolher sua vedação](${base}/como-escolher): jornada por código, amostra ou aplicação até a cotação`,
       `- [Cotação por lote](${base}/cotacao-lote): organizar uma lista de medidas, perfis e quantidades`,
       `- [Comparar produtos](${base}/comparar): conferir diferenças entre referências selecionadas`,
     ] : []),
