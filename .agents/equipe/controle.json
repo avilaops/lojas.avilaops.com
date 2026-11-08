@@ -13,19 +13,34 @@
   ],
   "tasks": [
     {
+      "id": "PK-REMOVER-ESQUEMA-20261108",
+      "title": "Remover esquema dimensional sem proporção das fichas PK",
+      "objective": "Atender pedido explícito do proprietário: retirar desenho genérico, preservando medidas e material da ficha técnica.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "Nenhum esquema genérico nas fichas.",
+        "Medidas e material cadastrados preservados.",
+        "CI e verificação pública após publicação."
+      ],
+      "evidence": "Remoção do componente e de sua montagem. Navegador existente verifica ausência do desenho e presença de medidas/material.",
+      "environment": "github"
+    },
+    {
       "id": "PK-JORNADA-VISUAL-20261108",
       "title": "Implementar jornada visual PK aprovada em Mermaid",
       "objective": "Mapa navegável exclusivo PK com três entradas, quatro etapas e cinco grupos de segmentos, da identificação à cotação.",
       "assignee": "codex",
       "priority": "normal",
-      "status": "em-revisao",
+      "status": "concluida",
       "acceptanceCriteria": [
         "Entradas por código, amostra e aplicação com destinos reais.",
         "Dez segmentos agrupados sem duplicação.",
         "Navegação por teclado e telas 390/1440 verificadas no GitHub CI.",
         "Página canônica exclusiva PK, descoberta na home e sitemap; Mermaid versionado."
       ],
-      "evidence": "Plano docs/superpowers/plans/2026-11-08-pk-jornada-visual.md; diagramas docs/PK-JORNADA-MERMAID.md. Testes e build exclusivamente GitHub CI.",
+      "evidence": "PR #233 mesclado em 47c1bc3. CI 42496937583 aprovado; entrega, deploy e fumaça do run 42497355599 aprovados. /como-escolher, home e cinco grupos de aplicações verificados publicamente. Navegador 390/1440 com três entradas e teclado.",
       "environment": "github"
     },
     {

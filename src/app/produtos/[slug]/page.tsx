@@ -4,7 +4,6 @@ import { codigoPublico, rotuloDoCodigo } from "@/lib/codigo-publico";
 import { notFound, permanentRedirect } from "next/navigation";
 import FichaTecnica from "@/components/FichaTecnica";
 import ReferenciasAgelPk from "@/components/ReferenciasAgelPk";
-import { DesenhoTecnico } from "@/components/pk/DesenhoTecnico";
 import { BeneficiosProduto } from "@/components/pk/BeneficiosProduto";
 import { CompararProduto } from "@/components/pk/CompararProduto";
 import { lerDefinicoes, lerValores } from "@/lib/campos-personalizados";
@@ -356,7 +355,6 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
             definicoes={lerDefinicoes(t.camposPersonalizados)}
             valores={lerValores(p.camposPersonalizados)}
           />
-          <DesenhoTecnico tenantSlug={t.slug} atributos={p.atributos} />
           {p.descricao && (
             <section className="prosa mt-8 text-sm leading-relaxed">
               <h2 className="mb-2 text-base font-bold">Descrição</h2>
