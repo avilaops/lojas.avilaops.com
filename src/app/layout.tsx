@@ -33,6 +33,7 @@ import { prisma } from "@/lib/db";
 import { lerRegrasDevolucao, politicaDevolucaoSchema } from "@/lib/politicas";
 import { lojaTemPromocoes } from "@/lib/promocoes";
 import { contarPublicadas } from "@/lib/publicacoes-consulta";
+import { artigosDomiRio } from "@/lib/artigos-domirio";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -247,7 +248,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </p>
           )}
           <main id="conteudo-loja" className="flex-1">{children}</main>
-          <Footer tenant={t} categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} temBlog={publicacoes > 0} />
+          <Footer tenant={t} categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} temBlog={publicacoes > 0 || artigosDomiRio(t.slug).length > 0} />
           {carrinhoProprio && <CarrinhoLateral pedidoMinimoCentavos={publico.pedidoMinimoCentavos}/>}
           {identidadeComercial.whatsapp && <WhatsAppFlutuante numero={identidadeComercial.whatsapp.numero} nome={t.nome} />}
           {/* Navegação do celular. Vale para todos os layouts: é da loja, não

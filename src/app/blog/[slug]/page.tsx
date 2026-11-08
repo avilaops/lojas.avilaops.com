@@ -5,6 +5,8 @@ import { ArrowLeft } from "lucide-react";
 import { exigirTenant, urlDaLoja } from "@/lib/tenant";
 import { dataLegivel, emParagrafos, minutosDeLeitura } from "@/lib/publicacoes";
 import { publicacaoPorSlug } from "@/lib/publicacoes-consulta";
+import { artigoDomiRio } from "@/lib/artigos-domirio";
+import ArtigoDomiRio from "@/components/domirio/ArtigoDomiRio";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +20,18 @@ const linhasDosGuiasDomiRio: Readonly<Record<string, string>> = {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const [{ slug }, t] = await Promise.all([params, exigirTenant()]);
+  const artigo = artigoDomiRio(t.slug, slug);
+  if (artigo) {
+    const base = urlDaLoja(t);
+    const capa = new URL(artigo.cover, base).href;
+    return {
+      title: artigo.title,
+      description: artigo.description,
+      alternates: { canonical: `${base}/blog/${artigo.slug}` },
+      openGraph: { type: "article", title: artigo.title, description: artigo.description, images: [{ url: capa, alt: artigo.coverAlt }] },
+      twitter: { card: "summary_large_image", title: artigo.title, description: artigo.description, images: [capa] },
+    };
+  }
   const post = await publicacaoPorSlug(t.id, slug);
   if (!post) return { title: "Publicação não encontrada", robots: { index: false } };
   return {
@@ -36,6 +50,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function Publicacao({ params }: { params: Promise<{ slug: string }> }) {
   const [{ slug }, t] = await Promise.all([params, exigirTenant()]);
+  const artigo = artigoDomiRio(t.slug, slug);
+  if (artigo) return <ArtigoDomiRio artigo={artigo} baseUrl={urlDaLoja(t)} />;
   // `publicacaoPorSlug` já exige estado publicada e data passada: rascunho e
   // post agendado devolvem 404 também por URL direta, não só na listagem.
   const post = await publicacaoPorSlug(t.id, slug);

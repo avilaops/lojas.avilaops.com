@@ -6,6 +6,7 @@ import { temPromocoes as lojaTemPromocoes } from "@/lib/promocoes";
 import { emPromocao, imagensDoSitemap } from "@/lib/produto-regras";
 import { postsPublicados } from "@/lib/blog";
 import { listarPublicadas } from "@/lib/publicacoes-consulta";
+import { artigosDomiRio } from "@/lib/artigos-domirio";
 import { politicasPublicadas } from "@/lib/politicas";
 import { visivelNaBusca } from "@/lib/descoberta";
 import { listarProdutosDoSitemap } from "@/lib/sitemap-produtos";
@@ -41,6 +42,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (!t || !visivelNaBusca(t)) return [];
   const base = urlDaLoja(t);
   const [categorias, produtos, publicacoes] = await Promise.all([listarCategorias(t.id), listarProdutosDoSitemap(t.id), listarPublicadas(t.id, 500)]);
+  const artigosEditoriais = artigosDomiRio(t.slug);
+  const slugsEditoriais = new Set(artigosEditoriais.map(p => p.slug));
   // A mesma regra do menu e da página: ver `src/lib/promocoes.ts`.
   const temPromocoes = lojaTemPromocoes(temaDo(t), produtos.some(emPromocao));
   return [
@@ -59,8 +62,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }),
     // As publicações do blog da loja: só as que já estão no ar (rascunho e
     // post agendado não existem para o Google, como não existem na vitrine).
-    ...(publicacoes.length ? [{ url: `${base}/blog`, changeFrequency: "weekly" as const, priority: 0.5 }] : []),
-    ...publicacoes.map((p) => ({ url: `${base}/blog/${p.slug}`, lastModified: p.publicadoEm, changeFrequency: "monthly" as const, priority: 0.6 })),
+    ...(publicacoes.length || artigosEditoriais.length ? [{ url: `${base}/blog`, changeFrequency: "weekly" as const, priority: 0.5 }] : []),
+    ...publicacoes.filter(p => !slugsEditoriais.has(p.slug)).map((p) => ({ url: `${base}/blog/${p.slug}`, lastModified: p.publicadoEm, changeFrequency: "monthly" as const, priority: 0.6 })),
+    ...artigosEditoriais.map(p => ({ url: `${base}/blog/${p.slug}`, changeFrequency: "monthly" as const, priority: 0.6, images: [new URL(p.cover, base).href] })),
     ...["sobre", "contato"].map((s) => ({ url: `${base}/${s}`, priority: 0.3 })),
     // Lista o que esta loja publica: o aviso legal só existe quando escrito, e
     // apontar o Google para um 404 gasta orçamento de rastreio à toa.

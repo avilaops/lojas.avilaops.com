@@ -13,6 +13,23 @@
   ],
   "tasks": [
     {
+      "id": "DOMIRIO-50-POSTS-MDX-20261108",
+      "title": "Implementar as 50 postagens MDX fornecidas da Domi-Rio",
+      "objective": "Disponibilizar os 50 textos, sete capas e fontes no blog exclusivo da Domi-Rio, com busca por assunto, leitura responsiva e descoberta pelo sitemap.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-andamento",
+      "acceptanceCriteria": [
+        "50 páginas MDX com os textos e fontes fornecidos, capas locais e sem H1 duplicado.",
+        "Índice pesquisável em sete assuntos, sumário e navegação anterior, próxima e relacionada.",
+        "Metadados e sitemap canônicos da Domi-Rio, sem conteúdo estático em outras lojas.",
+        "Preservar as publicações existentes e o blog da plataforma.",
+        "Build, tipos e testes na CI; conferência manual em desktop e mobile."
+      ],
+      "environment": "cópia isolada existente; implementação local e validação formal no GitHub CI",
+      "evidence": "Plano em docs/superpowers/plans/2026-11-08-domi-rio-50-posts-mdx.md. Coleção em src/content/domirio; teste src/lib/artigos-domirio.test.ts. Verificação runtime e CI pendentes."
+    },
+    {
       "id": "BERETA-FOTOS-CATALOGO-20261108",
       "title": "Pesquisar e importar fotos de rodas e pneus sem imagem",
       "objective": "Percorrer inventário, localizar fontes verificáveis e importar exclusivamente mídia com identidade e versão conferidas.",

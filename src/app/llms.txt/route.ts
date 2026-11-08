@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import { artigosDomiRio } from "@/lib/artigos-domirio";
 import { tenantAtual, urlDaLoja, identidadeDa, lojaVende, prazoDeDespacho, retiradaPublicaDisponivel } from "@/lib/tenant";
 import { listarCategorias, listarProdutos, formatarBRL } from "@/lib/catalogo";
 import { descricaoDaLoja } from "@/lib/textos-loja";
@@ -112,6 +113,7 @@ políticas dela. Este arquivo descreve a plataforma, não uma loja.
       ? ["", "## Destaques", ...destaques.map((p) => `- [${p.nome}](${base}/produtos/${p.slug})${p.precoCentavos > 0 ? `: ${formatarBRL(p.precoCentavos)}` : ": preço sob consulta"}`)]
       : []),
     "",
+    ...(artigosDomiRio(t.slug).length ? ["## Guias Domi-Rio — Defensivos na prática", `- [Índice dos 50 artigos](${base}/blog)`, ...artigosDomiRio(t.slug).map(p => `- [${p.title}](${base}/blog/${p.slug})`)] : []),
     "## Políticas",
     `- [Envio e retirada](${base}/politicas/envio)`,
     `- [Trocas e devoluções](${base}/politicas/devolucao)`,

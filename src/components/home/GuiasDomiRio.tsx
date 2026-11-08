@@ -2,6 +2,7 @@ import Link from "@/components/LinkLoja";
 import { ArrowUpRight, BookOpen, MessageCircle } from "lucide-react";
 import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
 import { listarPublicadas } from "@/lib/publicacoes-consulta";
+import { artigosDomiRio } from "@/lib/artigos-domirio";
 
 const linhas = [
   { slug: "controle-de-pragas", nome: "Controle de pragas" },
@@ -11,15 +12,20 @@ const linhas = [
 ];
 
 export default async function GuiasDomiRio({ tenantId, whatsapp }: { tenantId: string; whatsapp?: string }) {
-  const guias = await listarPublicadas(tenantId, 3);
+  const publicados = await listarPublicadas(tenantId, 3);
+  const editoriais = artigosDomiRio("domi-rio");
+  const guias = [
+    ...publicados.filter(p => !editoriais.some(a => a.slug === p.slug)),
+    ...[1, 6, 15].map(ordem => editoriais.find(p => p.order === ordem)!).map(p => ({ slug: p.slug, titulo: p.title, resumo: p.description })),
+  ];
   if (!guias.length) return null;
   return (
     <section className="container-loja py-12" aria-labelledby="guias-domi-rio">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="max-w-2xl">
           <p className="text-xs font-semibold uppercase tracking-widest text-primary">Central Domi-Rio</p>
-          <h2 id="guias-domi-rio" className="mt-2 text-2xl font-bold sm:text-3xl">Guias de saneantes e controle de pragas</h2>
-          <p className="mt-2 text-sm text-muted-foreground">Compare apresentações, confira o que procurar no rótulo e saiba como preparar sua cotação.</p>
+          <h2 id="guias-domi-rio" className="mt-2 text-2xl font-bold sm:text-3xl">Guias e orientações Domi-Rio</h2>
+          <p className="mt-2 text-sm text-muted-foreground">Confira os guias da loja e explore a série Defensivos na prática: 50 artigos em sete assuntos.</p>
         </div>
         <Link href="/blog" className="btn-secundario inline-flex min-h-11 items-center gap-2">Todos os guias <ArrowUpRight size={16} aria-hidden="true" /></Link>
       </div>
