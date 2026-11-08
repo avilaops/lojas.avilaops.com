@@ -13,6 +13,22 @@
   ],
   "tasks": [
     {
+      "id": "BERETA-FOTOS-CATALOGO-20261108",
+      "title": "Pesquisar e importar fotos de rodas e pneus sem imagem",
+      "objective": "Percorrer inventário, localizar fontes verificáveis e importar exclusivamente mídia com identidade e versão conferidas.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-andamento",
+      "acceptanceCriteria": [
+        "Inventariar todas as rodas e pneus sem foto, preservando existentes.",
+        "Modelo e acabamento não podem ser inferidos por similaridade; usados exigem foto real.",
+        "Importação não envia preço, estoque, categoria ou ativação e exige versão atual.",
+        "Registrar origem, família e pendências por produto; foto de série é representativa."
+      ],
+      "environment": "pesquisa pública; inventário de produção somente leitura; aplicação posterior por API administrativa",
+      "evidence": "Inventário em .work: 7.806 rodas e pneus sem foto, 6.939 ativos. Coletadas bibliotecas oficiais KRMAI, BRW e Zunky. Fontes de pneus em pesquisa. Sem alegação de cobertura completa."
+    },
+    {
       "id": "BERETA-VITRINE-20261108",
       "title": "Melhorar descoberta de produtos na vitrine da Bereta Rodas",
       "objective": "Corrigir categorias gigantes no catálogo, oferecer busca nas páginas internas, preparar versão clara e conteúdo editorial MDX.",
