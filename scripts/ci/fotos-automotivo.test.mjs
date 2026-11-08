@@ -22,6 +22,7 @@ test("modelo tem fronteira e acabamento; banner e código parcial não são foto
   assert.equal(imagemKrmai(midia("Banner K16")), null);
   assert.equal(imagemKrmai(midia("K16")), null);
   assert.equal(imagemKrmai(midia("K160_BD_G")).modelo, "K160");
+  assert.equal(imagemKrmai({ title: { rendered: "R10" }, source_url: "https://kr-wheels.com/wp-content/uploads/R10-G-SS.png" }).acabamento, "SS");
 });
 test("produto usado e acabamento diferente não recebem foto nova de outro item", () => {
   const produto = { id: "1", nome: "RODA 15 KRMAI K16 GD", marca: "KRMAI", imagens: [], categoria: { slug: "rodas" }, atributos: { modelo: "K16" } };

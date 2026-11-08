@@ -14,8 +14,8 @@ export function acabamentoDoNome(nome) {
 
 export function imagemKrmai(midia) {
   if (!/\.(png|jpe?g|webp)$/i.test(new URL(midia.source_url).pathname)) return null;
-  const nome = midia.title.rendered.replace(/\s+/g, "").toUpperCase();
-  const m = nome.match(/^([KMRS]\d+)[_-]?(?:G[_-])?(BD|GD|HD|HG|SS|GF|BF|B)(?:[_-]([GP]))?[_-]?$/);
+  const nomes = [midia.title.rendered, path.basename(new URL(midia.source_url).pathname).replace(/\.(png|jpe?g|webp)$/i, "").replace(/-scaled$/i, "").replace(/-\d+$/, "")];
+  const m = nomes.map(nome => nome.replace(/\s+/g, "").toUpperCase().match(/^([KMRS]\d+)[_-]?(?:G[_-])?(BD|GD|HD|HG|SS|GF|BF|B)(?:[_-]([GP]))?[_-]?$/)).find(Boolean);
   if (!m) return null;
   return { modelo: m[1], acabamento: m[2], tamanho: m[3], url: midia.source_url, pagina: `https://kr-wheels.com/rodas/${m[1].toLowerCase()}/` };
 }

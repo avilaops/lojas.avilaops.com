@@ -8,6 +8,8 @@ function oficial(valor: string, imagem = false) {
     if (url.protocol !== "https:" || url.username || url.password || url.port) return false;
     if (imagem && url.hostname === "cdn.pneufree.com.br") return /^\/CMS\/images\/ModelosPneu\/[^/]+\/shopping\.jpg$/.test(url.pathname);
     if (!imagem && url.hostname === "www.pneufree.com.br") return url.pathname.startsWith("/pneu/");
+    if (imagem && url.hostname === "cdn.allopneus.com") return /^\/produit\/\d+\/threeQuarterView\/tire_full\/\d+\/[A-Za-z0-9_-]+$/.test(url.pathname);
+    if (!imagem && url.hostname === "www.allopneus.com") return /^\/(modele|produit)\/pneu-auto\//.test(url.pathname);
     return HOSTS.has(url.hostname) && (!imagem || (url.pathname.includes("/wp-content/uploads/") && /\.(png|jpe?g|webp)$/i.test(url.pathname)));
   } catch { return false; }
 }
@@ -16,8 +18,8 @@ export const ImportacaoFotosSchema = z.object({
   sku: z.string().min(1),
   nome: z.string().min(1),
   versaoCatalogo: z.number().int().positive(),
-  imagemUrl: z.string().url().refine(valor => oficial(valor, true), "Use uma foto raster do catálogo oficial revisado."),
-  pagina: z.string().url().refine(valor => oficial(valor), "Informe a página oficial revisada."),
+  imagemUrl: z.string().url().refine(valor => oficial(valor, true), "Use uma foto raster do catálogo revisado."),
+  pagina: z.string().url().refine(valor => oficial(valor), "Informe a página do catálogo revisado."),
   familia: z.string().trim().min(3).max(40),
   criterio: z.string().trim().min(10).max(500),
 }).strict();
