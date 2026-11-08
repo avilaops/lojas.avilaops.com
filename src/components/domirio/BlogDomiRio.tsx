@@ -13,13 +13,13 @@ export default function BlogDomiRio({ publicacoes }: { publicacoes: PublicacaoRe
       <div>
         <p className={styles.sobreTitulo}><BookOpen size={16} aria-hidden="true" /> Central Domi-Rio</p>
         <h1>Informação para começar pela decisão certa.</h1>
-        <p className={styles.descricao}>Do reconhecimento do problema ao planejamento do manejo. Explore 50 leituras sobre defensivos, aplicação, segurança e tecnologia no campo.</p>
+        <p className={styles.descricao}>Do reconhecimento do problema ao planejamento do manejo. Orientações sobre defensivos, aplicação, segurança e tecnologia no campo.</p>
         <a href="#defensivos" className={styles.linkDestaque}>Explorar os artigos <ArrowUpRight size={18} aria-hidden="true" /></a>
       </div>
       <div className={styles.heroImagem}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/media/domirio/blog/01-fundamentos.webp" alt="Pessoa inspeciona plantas em uma lavoura ao amanhecer" width={960} height={600} fetchPriority="high" />
-        <p><strong>50 artigos. 7 assuntos.</strong><span>Para ler no seu ritmo e consultar quando precisar.</span></p>
+        <p><strong>Herbicida, inseticida ou fungicida?</strong><span>Saiba o que observar antes de pesquisar a categoria do produto.</span></p>
       </div>
     </header>
     <IndiceArtigos artigos={artigos} />
