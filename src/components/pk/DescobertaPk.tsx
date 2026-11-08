@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/LinkLoja";
 import { listarEditorialPk } from "@/lib/pk-editorial";
 export default function DescobertaPk() {
   return <section className="container-loja py-12" aria-labelledby="descoberta-pk">

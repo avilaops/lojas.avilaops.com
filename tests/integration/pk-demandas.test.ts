@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { after, test } from "node:test";
 import { prisma } from "../../src/lib/db";
+import { salvarProdutoNoCatalogo } from "../../src/lib/catalogo-escrita";
 import { buscarProduto, listarProdutos } from "../../src/lib/catalogo";
 import { registrarDemandaPk, relatorioDemandasPk, expurgarDemandasPk } from "../../src/lib/pk-demanda-consulta";
 import { chaveDemandaPk } from "../../src/lib/pk-demanda-busca";
@@ -24,7 +25,7 @@ test("PK: agregação PostgreSQL, retenção e leitura de catálogo respeitam te
   const idsProdutos: string[] = [];
   const pedidosAntes = await prisma.pedido.count({ where: { tenantId: pk.id } });
   const criarProduto = async (tenantId: string, sku: string, ativo = true) => {
-    const produto = await prisma.produto.create({ data: { tenantId, nome: `Gaxeta QA ${randomUUID()}`, slug: `qa-pk-${randomUUID()}`, sku, precoCentavos: 0, ativo, imagens: [], atributos: { perfil: "BS", material: "NBR", diametroInternoMm: 20, diametroExternoMm: 30, alturaMm: 4 } } });
+    const produto = await salvarProdutoNoCatalogo(tenantId, null, { nome: `Gaxeta QA ${randomUUID()}`, slug: `qa-pk-${randomUUID()}`, sku, precoCentavos: 0, ativo, imagens: [], atributos: { perfil: "BS", material: "NBR", diametroInternoMm: 20, diametroExternoMm: 30, alturaMm: 4 } });
     idsProdutos.push(produto.id);
     return produto;
   };

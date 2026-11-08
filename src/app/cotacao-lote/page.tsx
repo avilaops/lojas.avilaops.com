@@ -4,7 +4,7 @@ import { tenantAtual } from "@/lib/tenant";
 import { identidadePublica } from "@/lib/identidade-publica";
 import CotacaoLote from "@/components/pk/CotacaoLote";
 
-export const metadata: Metadata = { title: "Cotação em lote", description: "Consulte códigos e quantidades no catálogo da PK Vedações e leve sua lista ao atendimento técnico." };
+export const metadata: Metadata = { title: "Cotação em lote", description: "Consulte códigos e quantidades no catálogo da PK Vedações e leve sua lista ao atendimento técnico.", alternates: { canonical: "/cotacao-lote" } };
 
 export default async function PaginaCotacaoLote() {
   const tenant = await tenantAtual();

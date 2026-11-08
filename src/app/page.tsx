@@ -98,7 +98,7 @@ export default async function Home() {
   return (
     <>
       {comporHome(publicado, dados)}
-      {t.slug === "pkvedacoes" && <><DescobertaPk /><FotosPk /></>}
+      {t.slug === "pkvedacoes" && <>{layoutAtual !== "industrial" && <DescobertaPk />}<FotosPk /></>}
       {t.slug === "domi-rio" && <GuiasDomiRio tenantId={t.id} whatsapp={dados.identidadePublica.whatsapp?.numero} />}
       {motos && <Garagem moto={moto} motos={motos} marcas={marcas} nomeDaLoja={t.nome} />}
       {!campanhaVisual && <ProvaSocial dados={prova} nomeDaLoja={t.nome} />}

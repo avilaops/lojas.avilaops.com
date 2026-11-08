@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/LinkLoja";
 import { useEffect, useState } from "react";
 import { chaveComparacaoPk, eventoComparacaoPk, lerSelecaoPk, LIMITE_COMPARACAO, TENANT_PK } from "@/lib/pk-produtos";
 

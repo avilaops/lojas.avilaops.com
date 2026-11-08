@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import Link from "@/components/LinkLoja";
 import { csvCotacao, lerListaCotacao, LIMITES_COTACAO, mensagemCotacao, ROTULOS_COTACAO, type ResultadoCotacao } from "@/lib/pk-cotacao-lote";
 
 export default function CotacaoLote({ whatsappUrl }: { whatsappUrl: string | null }) {

@@ -7,6 +7,7 @@ import BuscaTecnica from "./BuscaTecnica";
 import BeneficiosBarra from "./BeneficiosBarra";
 import { LinkContatoMedido } from "@/components/EventoFunil";
 import type { DadosHome } from "./tipos";
+import DescobertaPk from "@/components/pk/DescobertaPk";
 
 /** Imagem enviada à plataforma sai na largura pedida (`?w=`); as de fora ficam como estão. */
 function reduzida(url: string, largura: 320 | 1200): string {
@@ -49,6 +50,8 @@ export default function Industrial({ t, identidadePublica, categorias, marcas = 
           </div>
         </div>
       </section>
+
+      {t.slug === "pkvedacoes" && <DescobertaPk />}
 
       {categorias.length > 0 && (
         <section className="container-loja industrial-linhas" aria-labelledby="industrial-linhas-titulo">
