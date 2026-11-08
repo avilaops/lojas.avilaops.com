@@ -1,6 +1,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { acabamentoDoNome, imagemKrmai, planejar } from "../catalogo/planejar-fotos-bereta.mjs";
+import { mesmoPneu } from "../catalogo/fotos-pneus.mjs";
+
+test("pneus não confundem família incompleta, geração, medida ou índice", () => {
+  assert.equal(mesmoPneu("PNEU 195/60/15 PIRELLI P7 88H", "Pirelli", "PNEU PIRELLI 195/60R15 88H P7"), true);
+  assert.equal(mesmoPneu("PNEU 295/30/18 CONTINENTAL CONTACT", "Continental", "PNEU CONTINENTAL 295/30R18 94Y CONTISPORTCONTACT 2"), false);
+  assert.equal(mesmoPneu("PNEU 195/60/15 PIRELLI P7 88H", "Pirelli", "PNEU PIRELLI 195/60R15 88H P7 C2"), false);
+  assert.equal(mesmoPneu("PNEU 195/60/15 PIRELLI P7 88H", "Pirelli", "PNEU PIRELLI 195/60R15 88V P7"), false);
+});
 
 test("acabamento não transforma prata comum em prata diamantada", () => {
   assert.equal(acabamentoDoNome("RODA KRMAI K16 PRATA"), null);

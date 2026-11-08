@@ -20,6 +20,7 @@
 // Sai 0 com tudo verde, 1 na primeira falha. Sem dependência: roda no
 // runner do pipeline antes de `npm ci`, e no servidor com o node do sistema.
 
+import { temRegrasCss } from "./lib/css-publicado.mjs";
 const base = (process.argv[2] ?? process.env.SMOKE_URL ?? "http://127.0.0.1:3080").replace(/\/+$/, "");
 const TENTATIVAS = Number(process.env.SMOKE_TENTATIVAS ?? 10);
 const ESPERA_MS = Number(process.env.SMOKE_ESPERA_MS ?? 3000);
@@ -84,15 +85,18 @@ async function vitrineComEstilo() {
     .map((m) => m[0].match(/href="([^"]+)"/)?.[1])
     .filter((href) => href && !href.startsWith("https://fonts."));
   if (folhas.length === 0) falhar("a página inicial não referencia nenhuma folha de estilo própria (pacote sem .next/static?)");
+  let tamanhoTotalCss = 0;
   for (const href of folhas) {
     const css = await buscar(href.startsWith("/") ? href : `/${href}`);
     if (!css.ok) falhar(`a folha ${href} devolveu ${css.status}: a loja abriria sem CSS`);
     const tipo = css.headers.get("content-type") ?? "";
     const texto = await css.text();
     if (!tipo.includes("css")) falhar(`a folha ${href} veio como ${tipo}`);
-    if (texto.length < 1000) falhar(`a folha ${href} veio com ${texto.length} bytes; o build não terminou`);
+    if (!temRegrasCss(texto)) falhar(`a folha ${href} não contém regras CSS válidas`);
+    tamanhoTotalCss += texto.length;
     ok(`${href} servida com ${Math.round(texto.length / 1024)} kB de CSS`);
   }
+  if (tamanhoTotalCss < 1000) falhar("o conjunto das folhas não contém o CSS completo da aplicação");
   return html;
 }
 

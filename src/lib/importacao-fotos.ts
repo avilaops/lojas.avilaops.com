@@ -1,11 +1,14 @@
 import { z } from "zod";
 
-/** Somente mídia de catálogos oficiais revisados; novos fornecedores exigem revisão. */
+/** Somente catálogos revisados; novos fornecedores exigem revisão. */
 const HOSTS = new Set(["kr-wheels.com", "brwrodas.com.br", "www.zunkyrodas.com", "www.motorcrazy.com.br"]);
 function oficial(valor: string, imagem = false) {
   try {
     const url = new URL(valor);
-    return url.protocol === "https:" && !url.username && !url.password && !url.port && HOSTS.has(url.hostname) && (!imagem || (url.pathname.includes("/wp-content/uploads/") && /\.(png|jpe?g|webp)$/i.test(url.pathname)));
+    if (url.protocol !== "https:" || url.username || url.password || url.port) return false;
+    if (imagem && url.hostname === "cdn.pneufree.com.br") return /^\/CMS\/images\/ModelosPneu\/[^/]+\/shopping\.jpg$/.test(url.pathname);
+    if (!imagem && url.hostname === "www.pneufree.com.br") return url.pathname.startsWith("/pneu/");
+    return HOSTS.has(url.hostname) && (!imagem || (url.pathname.includes("/wp-content/uploads/") && /\.(png|jpe?g|webp)$/i.test(url.pathname)));
   } catch { return false; }
 }
 export const ImportacaoFotosSchema = z.object({
