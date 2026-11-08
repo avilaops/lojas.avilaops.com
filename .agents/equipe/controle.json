@@ -1556,6 +1556,20 @@
       ],
       "evidence": "Inspeção de package.json, workflow Build e deploy, src/lib/frete.ts e documentação MLOps/Melhor Envio em 06/11/2026; links Markdown relativos conferidos contra a árvore do repositório. Alteração documental; testes e builds não executados localmente.",
       "environment": "github"
+    },
+    {
+      "id": "PK-AVISO-PEDIDO-MINIMO-20261108",
+      "title": "Ocultar aviso de pedido mínimo no cabeçalho da PK Vedações",
+      "objective": "Remover a faixa de pedido mínimo da vitrine da PK Vedações.",
+      "assignee": "codex",
+      "priority": "normal",
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "A faixa deixa de aparecer no cabeçalho da PK Vedações.",
+        "As regras de pedido mínimo no carrinho e checkout e a exibição nas demais lojas são preservadas."
+      ],
+      "evidence": "Aviso e cabeçalho confirmados no HTML de produção antes da alteração. O diff limita a mudança de comportamento à condição de exibição no layout.",
+      "environment": "github"
     }
   ],
   "decisions": [
