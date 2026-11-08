@@ -76,3 +76,21 @@ cadastros sem fabricante, 1.552 rodas sem modelo identificado e 1.226 acabamento
 não confirmados. Nos demais casos não foi confirmada uma imagem nas fontes
 consultadas ou faltam dados do pneu. A pesquisa e o lote revisado não representam
 conclusão da cobertura de todas as fotos.
+
+## Fotos próprias fornecidas pelo proprietário
+
+O proprietário compartilhou 59 fotos no Google Drive e autorizou associação
+visual sem confirmação do SKU físico. Essa autorização permite foto
+representativa por família; não transforma medida, furação ou fabricante da
+peça fotografada em informação confirmada.
+
+O primeiro lote associou três fotografias a oito anúncios sem imagem:
+Rotiform R140 RSE prata (4211, 4212), Giovanna cinco raios preta (4358, 4359)
+e Orbital prata (159, 190, 8356, 616). A associação é visual e representativa;
+os nomes e demais dados comerciais dos anúncios foram preservados.
+
+Os arquivos originais foram armazenados na infraestrutura da loja, com hash
+conferido após envio. Origem, nome do arquivo e critério ficam nos atributos;
+a escrita canônica registra histórico e correspondência não confirmada. O
+plano com retrato anterior e a conferência pública ficam em `.work/bereta-drive-*`.
+As outras fotos ainda não foram publicadas por essa operação.

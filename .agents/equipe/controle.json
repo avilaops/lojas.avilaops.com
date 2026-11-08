@@ -21,12 +21,12 @@
       "status": "em-andamento",
       "acceptanceCriteria": [
         "Inventariar todas as rodas e pneus sem foto, preservando existentes.",
-        "Modelo e acabamento não podem ser inferidos por similaridade; usados exigem foto real.",
+        "Fotos coletadas de terceiros exigem modelo/acabamento conferidos. Para fotos próprias do Drive, o proprietário autorizou associação visual por família sem confirmar SKU físico; registrar como representativa e manter a incerteza explícita.",
         "Importação não envia preço, estoque, categoria ou ativação e exige versão atual.",
         "Registrar origem, família e pendências por produto; foto de série é representativa."
       ],
       "environment": "pesquisa pública e importação de mídia pela API administrativa de produção, autorizada pelo proprietário",
-      "evidence": "Inventário: 7.806 rodas e pneus sem foto, 6.939 ativos. Dossiê revisado com 791 associações; 362 aplicadas na primeira etapa, demais dependem da versão que aceita os formatos das fontes. Pendências individuais em .work/bereta-pendencias-fotos.csv. Não há cobertura completa: 34 usados/serviços exigem foto própria e 6.981 itens não tiveram identidade/acabamento/imagem suficientemente confirmados nas fontes consultadas."
+      "evidence": "Inventário inicial: 7.806 rodas e pneus sem foto, 6.939 ativos. As 791 associações revisadas foram aplicadas; 574 anúncios sem marca foram desativados por orientação explícita. Consulta posterior: 5.574 anúncios ativos ainda sem foto. O proprietário forneceu 59 fotos e autorizou não confirmar SKU físico: primeiro lote de 3 fotos próprias associado visualmente a 8 anúncios das famílias Rotiform R140 RSE prata, Giovanna cinco raios preta e Orbital prata, todos representativos. Fonte, arquivo, hash e critério registrados; escrita canônica com versão e ausência de imagem conferidas. Evidências privadas em .work/bereta-drive-plano-aplicacao.json, bereta-drive-resultado.json e bereta-drive-verificacao.json. A cobertura completa permanece em andamento."
     },
     {
       "id": "BERETA-VITRINE-20261108",
