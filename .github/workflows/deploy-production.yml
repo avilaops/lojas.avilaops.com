@@ -14,7 +14,8 @@ jobs:
   dependencias:
     name: preparar dependências
     runs-on: ubuntu-24.04
-    timeout-minutes: 1
+    # Instalação, cinco uploads verificados e limpeza atingiram exatamente 60s.
+    timeout-minutes: 2
     outputs:
       artifact_id: ${{ steps.arquivo.outputs.ids }}
       ferramenta_id: ${{ steps.ferramenta.outputs.ids }}
