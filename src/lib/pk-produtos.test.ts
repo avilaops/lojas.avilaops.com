@@ -24,3 +24,11 @@ test("benefícios exigem PK e família identificável, sem prometer desempenho",
   assert.ok(beneficiosPk("pkvedacoes", "Raspador D", {}).length);
   assert.deepEqual(beneficiosPk("pkvedacoes", "Raspador desconhecido", {}), []);
 });
+
+test("benefícios distinguem posições B, BS e STD e funções de guia e raspador", () => {
+  assert.match(beneficiosPk("pkvedacoes", "Gaxeta B", {}).join(" "), /êmbolo ou haste/);
+  assert.match(beneficiosPk("pkvedacoes", "Gaxeta BS", {}).join(" "), /vedação da haste/);
+  assert.match(beneficiosPk("pkvedacoes", "Gaxeta STD", {}).join(" "), /vedação do êmbolo/);
+  assert.match(beneficiosPk("pkvedacoes", "Anel guia", {}).join(" "), /contato entre superfícies metálicas/);
+  assert.match(beneficiosPk("pkvedacoes", "Raspador D", {}).join(" "), /entrada de contaminantes/);
+});

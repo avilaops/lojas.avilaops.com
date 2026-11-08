@@ -25,6 +25,7 @@ import { reconciliarReservas } from "./reservas-reconciliar";
 import { receberNotasPeriodicamente } from "./fiscal-loja";
 import { arquivarXmlFiscal } from "./fiscal-arquivo";
 import { expurgarHistoricoMcp } from "./mcp-historico";
+import { expurgarDemandasPk } from "./pk-demanda-consulta";
 
 /** Quantas falhas seguidas de uma rotina viram alerta para gente. */
 export const FALHAS_ATE_ALERTAR = 3;
@@ -62,7 +63,10 @@ const TRABALHOS: Record<NomeDeRotina, () => Promise<unknown>> = {
   "pedidos.verificar": () => reconciliarPagamentosPendentes(),
   "mercadopago.renovar": () => renovarAcessosDoMercadoPago(),
   "seo.categorias": () => processarSeoCategoriasPendentes({ limite: 10 }),
-  "mcp.historico": () => expurgarHistoricoMcp(),
+  "mcp.historico": async () => {
+    const [mcp, demandasPk] = await Promise.all([expurgarHistoricoMcp(), expurgarDemandasPk()]);
+    return { mcp, demandasPk };
+  },
   "cobranca.verificar": () => verificarInadimplencia(),
   "relatorios.semanal": () => emitirRelatoriosSemanais(),
 };

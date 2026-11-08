@@ -15,6 +15,7 @@ import FotoDoCartao from "@/components/FotoDoCartao";
 import { hrefDoProduto } from "@/lib/retorno-catalogo";
 import { fichaCompactaDoProduto, unidadeDeVenda } from "@/lib/ficha-cartao";
 import { numeroDeContato } from "@/lib/canais-publicos";
+import { CompararProduto } from "@/components/pk/CompararProduto";
 
 const ROTULOS_COMPACTOS: Record<string, string> = {
   diametroInternoMm: "DI", diametroExternoMm: "DE", alturaMm: "Alt.",
@@ -177,6 +178,7 @@ export default function ProductCard({ produto, loja, vende, whatsapp: whatsappBr
           <p className={`cartao-produto-estoque text-xs ${esgotado ? "text-muted-foreground" : "esta-disponivel"}`}>{estado.disponibilidade}</p>
           <Link href={hrefProduto} className="cartao-produto-detalhes text-xs underline underline-offset-4">Ver detalhes</Link>
         </div>
+        {loja.slug === "pkvedacoes" && loja.status === "ATIVA" && <CompararProduto tenantSlug={loja.slug} slug={produto.slug} nome={produto.nome} />}
         <div className="cartao-produto-preco mt-auto pt-1">
           {produto.precoDeCentavos && produto.precoDeCentavos > produto.precoCentavos && (
             <p className="text-xs text-muted-foreground line-through">{formatarBRL(produto.precoDeCentavos)}</p>

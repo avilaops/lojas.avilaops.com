@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import { artigosDomiRio } from "@/lib/artigos-domirio";
+import { listarEditorialPk } from "@/lib/pk-editorial";
 import { tenantAtual, urlDaLoja, identidadeDa, lojaVende, prazoDeDespacho, retiradaPublicaDisponivel } from "@/lib/tenant";
 import { listarCategorias, listarProdutos, formatarBRL } from "@/lib/catalogo";
 import { descricaoDaLoja } from "@/lib/textos-loja";
@@ -86,6 +87,10 @@ políticas dela. Este arquivo descreve a plataforma, não uma loja.
     `- [Contato](${base}/contato)`,
     "",
     "## Como comprar",
+    ...(t.slug === "pkvedacoes" ? [
+      `- [Cotação por lote](${base}/cotacao-lote): organizar uma lista de medidas, perfis e quantidades`,
+      `- [Comparar produtos](${base}/comparar): conferir diferenças entre referências selecionadas`,
+    ] : []),
     `- [Catálogo completo](${base}/produtos): busca por nome, código, medida ou marca; filtros por categoria, preço e medida`,
     // Só o que é verdade hoje: loja sem gateway ligado não "aceita PIX".
     vende
@@ -107,6 +112,13 @@ políticas dela. Este arquivo descreve a plataforma, não uma loja.
     identidadeComercial.razaoSocial ? `- Razão social: ${identidadeComercial.razaoSocial}` : "",
     identidadeComercial.cnpj ? `- CNPJ: ${identidadeComercial.cnpj}` : "",
     "",
+    ...(t.slug === "pkvedacoes" ? [
+      "## Seleção e aplicações de vedações",
+      `- [Guias de seleção](${base}/guias): medidas, materiais, funções e preparação da cotação`,
+      `- [Aplicações por segmento](${base}/aplicacoes): cilindros, sintomas e dados necessários à avaliação`,
+      "A adequação de cada referência depende do perfil, das dimensões e das condições do equipamento.",
+      ...listarEditorialPk(t.slug).map(item => `- [${item.titulo}](${base}/${item.tipo}/${item.slug}): ${item.resumo}`),
+    ] : []),
     "## Categorias principais",
     ...categorias.slice(0, 30).map((c) => `- [${c.nome}](${base}/categoria/${c.slug})${c.seoDescription ?? c.descricao ? `: ${(c.seoDescription ?? c.descricao ?? "").slice(0, 120)}` : ""}`),
     ...(destaques.length

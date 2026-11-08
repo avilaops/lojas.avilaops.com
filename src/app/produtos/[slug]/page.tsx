@@ -4,6 +4,9 @@ import { codigoPublico, rotuloDoCodigo } from "@/lib/codigo-publico";
 import { notFound, permanentRedirect } from "next/navigation";
 import FichaTecnica from "@/components/FichaTecnica";
 import ReferenciasAgelPk from "@/components/ReferenciasAgelPk";
+import { DesenhoTecnico } from "@/components/pk/DesenhoTecnico";
+import { BeneficiosProduto } from "@/components/pk/BeneficiosProduto";
+import { CompararProduto } from "@/components/pk/CompararProduto";
 import { lerDefinicoes, lerValores } from "@/lib/campos-personalizados";
 import { exigirTenant, lojaVende, urlDaLoja, temaDo, retiradaPublicaDisponivel } from "@/lib/tenant";
 import GaleriaPremium from "@/components/templates/automotivo-premium/Galeria";
@@ -237,6 +240,11 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
           {p.marca && <p className="ap-produto-marca text-xs uppercase tracking-wide text-muted-foreground">{p.marca}</p>}
           <h1 className="mt-1 text-2xl font-bold">{titulo}</h1>
           {p.descricaoCurta && <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{textoPuro(p.descricaoCurta)}</p>}
+          {t.slug === "pkvedacoes" && <div className="mt-4 space-y-4">
+            <BeneficiosProduto tenantSlug={t.slug} nome={p.nome} atributos={p.atributos} />
+            <CompararProduto tenantSlug={t.slug} slug={p.slug} nome={p.nome} />
+            <Link className="ml-4 text-sm underline" href="/comparar">Abrir comparação</Link>
+          </div>}
 
           {p.opcoes.length > 0 ? (
             <div className="mt-5 max-w-sm">
@@ -341,6 +349,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
             definicoes={lerDefinicoes(t.camposPersonalizados)}
             valores={lerValores(p.camposPersonalizados)}
           />
+          <DesenhoTecnico tenantSlug={t.slug} atributos={p.atributos} />
           {p.descricao && (
             <section className="prosa mt-8 text-sm leading-relaxed">
               <h2 className="mb-2 text-base font-bold">Descrição</h2>

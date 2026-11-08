@@ -9,6 +9,7 @@ import { urlDaLoja } from "@/lib/tenant";
 import AddToCartButton from "@/components/cart/AddToCartButton";
 import { fichaDoProduto } from "@/lib/ficha";
 import { numeroDeContato } from "@/lib/canais-publicos";
+import { CompararProduto } from "@/components/pk/CompararProduto";
 
 function celula(linha: LinhaTecnica, coluna: Coluna) {
   if (coluna === "equivalentes") return linha.equivalentes.join(", ") || "—";
@@ -70,6 +71,7 @@ export default function TabelaTecnica({ produtos, vende, titulo, nomeDaLoja, loj
                     <div key={item.chave}><dt className="inline">{item.rotulo}: </dt><dd className="inline">{item.valor}</dd></div>
                   ))}
                 </dl>
+                {loja?.slug === "pkvedacoes" && loja.status === "ATIVA" && <div className="mt-2 font-normal"><CompararProduto tenantSlug={loja.slug} slug={produto.slug} nome={produto.nome} /></div>}
               </th>
               {colunas.map((coluna) => <td key={coluna} className={`ct-${coluna}`}>{celula(linha, coluna)}</td>)}
               <td className="ct-preco">{preco(produto, vende)}</td>

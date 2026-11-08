@@ -40,6 +40,12 @@ test("exportação neutraliza fórmulas e mensagem conserva pendências", () => 
   assert.ok(csvCotacao(itens).includes('"\'=SUM(A1)"'));
   assert.ok(mensagemCotacao(itens).includes("Quantidade: 4 | Não encontrado"));
   assert.ok(mensagemCotacao(itens).includes("Confirmar quantidade disponível"));
+  for (const codigo of ["+123", "-123", "@SUM(A1)", " =1+1"]) {
+    const [item] = resolverCotacao([{ codigo, quantidade: 1 }], [], false);
+    assert.ok(csvCotacao([item]).includes(`"'${codigo}"`));
+  }
+  assert.ok(!mensagemCotacao(itens).includes("R$"));
+  assert.ok(!mensagemCotacao(itens).includes("Total"));
 });
 test("referência relacionada só resolve enquanto o cadastro confere com a documentação", () => {
   const referencia = referencias.referencias[0];

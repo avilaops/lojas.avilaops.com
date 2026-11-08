@@ -409,8 +409,22 @@ model Tenant {
   publicacoes           PublicacaoLoja[]
   sessoesVitrine        SessaoVitrine[]
   solicitacoesSobMedida SolicitacaoSobMedida[]
+  demandasBuscaPk      DemandaBuscaPk[]
 
   @@index([status])
+}
+
+/// Contagem diária técnica, sem identificador de visitante ou consulta livre.
+model DemandaBuscaPk {
+  tenantId   String
+  tipo       String
+  consulta   String
+  dia        DateTime @db.Date
+  ocorrencias Int @default(1)
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@id([tenantId, tipo, consulta, dia])
+  @@index([tenantId, dia])
 }
 
 model SolicitacaoSobMedida {

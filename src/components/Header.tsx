@@ -81,6 +81,16 @@ export default function Header({ loja, logoUrl, categorias, exemploBusca, mostra
           </div>
         </nav>
       )}
+      {loja.slug === "pkvedacoes" && (
+        <nav className="border-t border-border" aria-label="Seleção e atendimento PK">
+          <div className="container-loja flex flex-wrap gap-x-5 gap-y-1 py-2 text-sm">
+            <Link href="/aplicacoes" className="py-2 hover:underline">Aplicações</Link>
+            <Link href="/guias" className="py-2 hover:underline">Guias de seleção</Link>
+            <Link href="/cotacao-lote" className="py-2 font-semibold hover:underline">Cotação por lote</Link>
+            <Link href="/comparar" className="py-2 hover:underline">Comparar produtos</Link>
+          </div>
+        </nav>
+      )}
     </header>
   );
 }

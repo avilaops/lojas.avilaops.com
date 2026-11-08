@@ -10,6 +10,7 @@ import { artigosDomiRio } from "@/lib/artigos-domirio";
 import { politicasPublicadas } from "@/lib/politicas";
 import { visivelNaBusca } from "@/lib/descoberta";
 import { listarProdutosDoSitemap } from "@/lib/sitemap-produtos";
+import { caminhosEditorialPk } from "@/lib/pk-editorial";
 
 export const dynamic = "force-dynamic";
 
@@ -48,6 +49,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const temPromocoes = lojaTemPromocoes(temaDo(t), produtos.some(emPromocao));
   return [
     { url: base, changeFrequency: "daily", priority: 1 },
+    ...caminhosEditorialPk(t.slug).map(caminho => ({ url: `${base}${caminho}`, changeFrequency: "monthly" as const, priority: 0.6 })),
+    ...(t.slug === "pkvedacoes" ? [{ url: `${base}/cotacao-lote`, priority: 0.7 }] : []),
     { url: `${base}/produtos`, changeFrequency: "daily", priority: 0.9 },
     ...(temPromocoes ? [{ url: `${base}/promocoes`, changeFrequency: "daily" as const, priority: 0.8 }] : []),
     ...categorias.map((c) => ({ url: `${base}/categoria/${c.slug}`, lastModified: c.atualizadoEm, changeFrequency: "weekly" as const, priority: 0.7 })),

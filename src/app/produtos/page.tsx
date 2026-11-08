@@ -16,8 +16,10 @@ import { minhaMoto } from "@/lib/minha-moto";
 import { nomeDaMoto } from "@/lib/motos";
 import { usaBlocoProprio } from "@/lib/templates";
 import { EventoFunil } from "@/components/EventoFunil";
+import { EventoDemandaBusca } from "@/components/pk/EventoDemandaBusca";
 import { retornoDaListagem } from "@/lib/retorno-catalogo";
 import { configuracaoBuscaTecnica } from "@/lib/busca-tecnica-familia";
+import FerramentasPk from "@/components/pk/FerramentasPk";
 
 type SP = Record<string, string | undefined>;
 
@@ -73,6 +75,8 @@ export default async function Produtos({ searchParams }: { searchParams: Promise
   return (
     <div className="container-loja py-8 ap-catalogo">
       <EventoFunil eventos={eventos} />
+      {t.slug === "pkvedacoes" && t.status === "ATIVA" && <FerramentasPk tenantSlug={t.slug} />}
+      {t.slug === "pkvedacoes" && lote.total === 0 && buscou && <EventoDemandaBusca tenantSlug={t.slug} consulta={sp.q ?? ""} />}
       {premium && <CategoriasPremium categorias={[...categorias].sort((a,b)=>a.ordem-b.ordem)} atual={sp.categoria ?? "todas"}/>}
       <h1 className="mb-1 text-2xl font-bold">{titulo}</h1>
       <p className="mb-4 text-sm text-muted-foreground">
