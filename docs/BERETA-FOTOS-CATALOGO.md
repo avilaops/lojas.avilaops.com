@@ -94,3 +94,22 @@ conferido após envio. Origem, nome do arquivo e critério ficam nos atributos;
 a escrita canônica registra histórico e correspondência não confirmada. O
 plano com retrato anterior e a conferência pública ficam em `.work/bereta-drive-*`.
 As outras fotos ainda não foram publicadas por essa operação.
+
+## Retomada da pesquisa pela planilha
+
+Após orientação de voltar à planilha, foram aplicadas mais 77 associações de
+fotos de pneus, nos lotes privados 5 (46), 6 (15) e 7 (16). A busca passou a
+considerar fotos da mesma série em outras medidas, mantendo modelo e marca
+conferidos no Product estruturado ou na página da série. Equivalências de nome
+como NS-2/Sportnex NS-2, PS71/Ecsta PS71, PS91/Ecsta PS91 e ES32/BluEarth-Es
+ES32 têm fonte de fabricante registrada. Não há confirmação de SKU físico.
+
+Os 77 registros foram relidos após a aplicação; todos têm a foto esperada e
+origem representativa. Foram conferidas três páginas públicas, uma por lote,
+com HTTP 200 e foto presente. Preços, estoque e categorias foram preservados;
+a comparação com o inventário anterior mantém apenas as 574 desativações já
+autorizadas de anúncios sem marca. Evidência: `.work/bereta-retomada-verificacao.json`.
+
+A consulta de 2026-11-08 após esses lotes encontrou 5.489 anúncios ativos sem
+foto: 2.237 pneus e 3.252 rodas. A lista individual atualizada está em
+`.work/bereta-pendencias-ativas.csv`. A operação não concluiu a cobertura total.
