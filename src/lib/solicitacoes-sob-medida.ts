@@ -1,10 +1,13 @@
 import { createHash, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import type { Prisma } from "@prisma/client";
 import { z } from "zod";
+import sharp from "sharp";
 import { prisma } from "./db";
 import {
   ConfiguracaoSobMedidaSchema,
+  DIMENSAO_LOGO_SOB_MEDIDA,
   EntradaSolicitacaoSobMedidaSchema,
+  IdentidadeSobMedidaSchema,
   resumoDaConfiguracao,
   VERSAO_CONFIGURADOR_SOB_MEDIDA,
 } from "./configurador-sob-medida";
@@ -46,6 +49,13 @@ export class RetomadaNaoEncontradaError extends Error {
   constructor() {
     super("Configuração ou chave de retomada inválida.");
     this.name = "RetomadaNaoEncontradaError";
+  }
+}
+
+export class LogoSobMedidaInvalidaError extends Error {
+  constructor() {
+    super("A logo não pôde ser processada. Escolha outra imagem.");
+    this.name = "LogoSobMedidaInvalidaError";
   }
 }
 
@@ -102,6 +112,26 @@ export async function criarSolicitacaoSobMedida(
   buscarParaRetomada: BuscarParaRetomada = buscarParaRetomadaNoBanco,
 ) {
   const entrada = EntradaSolicitacaoSobMedidaSchema.parse(entradaBruta);
+  const identidade = entrada.configuracao.identidadeVisual;
+  if (identidade?.logo) {
+    try {
+      const imagem = sharp(Buffer.from(identidade.logo.split(",")[1], "base64"), {
+        limitInputPixels: DIMENSAO_LOGO_SOB_MEDIDA ** 2,
+      });
+      const metadados = await imagem.metadata();
+      if (!identidade.logo.startsWith(`data:image/${metadados.format};`) || (metadados.pages ?? 1) > 1) {
+        throw new LogoSobMedidaInvalidaError();
+      }
+      const logo = await imagem.resize(DIMENSAO_LOGO_SOB_MEDIDA, DIMENSAO_LOGO_SOB_MEDIDA, {
+        fit: "inside", withoutEnlargement: true,
+      }).webp({ quality: 85 }).toBuffer();
+      identidade.logo = IdentidadeSobMedidaSchema.parse({
+        logo: `data:image/webp;base64,${logo.toString("base64")}`,
+      }).logo;
+    } catch {
+      throw new LogoSobMedidaInvalidaError();
+    }
+  }
   const origem = entrada.codigoRetomadaOrigem
     ? await validarRetomada(tenantId, entrada.codigoRetomadaOrigem, buscarParaRetomada)
     : null;

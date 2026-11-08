@@ -17,6 +17,8 @@ export function configuracaoParaThermalBoxVisual(configuracao: ConfiguracaoSobMe
     lid: configuracao.tampa,
     mobility: configuracao.mobilidade,
     dividers: configuracao.divisorias,
+    ...(configuracao.identidadeVisual?.cor && { exteriorColor: configuracao.identidadeVisual.cor }),
+    ...(configuracao.identidadeVisual?.logo && { frontLogo: configuracao.identidadeVisual.logo }),
   };
 }
 

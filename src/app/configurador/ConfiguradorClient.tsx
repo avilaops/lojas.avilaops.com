@@ -7,7 +7,7 @@ import Link from "next/link";
 import { ArrowRight, Box, CheckCircle2, Rotate3D } from "lucide-react";
 import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
 import { armazenamentoLocalSeguro, lerUltimoCodigoRetomada, salvarUltimoCodigoRetomada } from "@/lib/configurador-retomada";
-import { LIMITES_EDITOR_SOB_MEDIDA, OPCOES_CONFIGURADOR, resumoDaConfiguracao, type ConfiguracaoSobMedida } from "@/lib/configurador-sob-medida";
+import { DIMENSAO_LOGO_SOB_MEDIDA, IdentidadeSobMedidaSchema, LIMITES_EDITOR_SOB_MEDIDA, OPCOES_CONFIGURADOR, resumoDaConfiguracao, type ConfiguracaoSobMedida } from "@/lib/configurador-sob-medida";
 import { configuracaoParaThermalBoxVisual } from "@/lib/configurador-visual";
 
 const INICIAL: ConfiguracaoSobMedida = {
@@ -47,6 +47,32 @@ function salvarCodigoNoNavegador(slug: string, codigo: string): void {
   if (armazenamento) salvarUltimoCodigoRetomada(slug, codigo, armazenamento);
 }
 
+async function prepararLogo(arquivo: File): Promise<string> {
+  if (!["image/png", "image/jpeg", "image/webp"].includes(arquivo.type) || arquivo.size > 5 * 1024 * 1024) {
+    throw new Error("Escolha uma imagem PNG, JPG ou WebP de até 5 MB.");
+  }
+  const url = URL.createObjectURL(arquivo);
+  try {
+    const imagem = new Image();
+    imagem.src = url;
+    await imagem.decode();
+    const canvas = document.createElement("canvas");
+    const contexto = canvas.getContext("2d");
+    if (!contexto) throw new Error("Não foi possível preparar a imagem.");
+    for (const limite of [DIMENSAO_LOGO_SOB_MEDIDA, 160]) {
+      const escala = Math.min(1, limite / Math.max(imagem.naturalWidth, imagem.naturalHeight));
+      canvas.width = Math.max(1, Math.round(imagem.naturalWidth * escala));
+      canvas.height = Math.max(1, Math.round(imagem.naturalHeight * escala));
+      contexto.drawImage(imagem, 0, 0, canvas.width, canvas.height);
+      const logo = canvas.toDataURL("image/webp", 0.85);
+      if (IdentidadeSobMedidaSchema.safeParse({ logo }).success) return logo;
+    }
+    throw new Error("Não foi possível preparar a imagem.");
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
 export default function ConfiguradorClient({ nomeDaLoja, slugDaLoja, whatsapp }: { nomeDaLoja: string; slugDaLoja: string; whatsapp: string | null }) {
   const [configuracao, setConfiguracao] = useState(INICIAL);
   const [contato, setContato] = useState({ nome: "", email: "", telefone: "", consentimento: false });
@@ -57,6 +83,8 @@ export default function ConfiguradorClient({ nomeDaLoja, slugDaLoja, whatsapp }:
   const [codigoRetomadaOrigem, setCodigoRetomadaOrigem] = useState("");
   const [retomando, setRetomando] = useState(false);
   const [mensagemRetomada, setMensagemRetomada] = useState("");
+  const [processandoLogo, setProcessandoLogo] = useState(false);
+  const [erroLogo, setErroLogo] = useState("");
 
   const codigoSalvo = useSyncExternalStore(
     assinarMudancasNoStorage,
@@ -67,6 +95,27 @@ export default function ConfiguradorClient({ nomeDaLoja, slugDaLoja, whatsapp }:
 
   const resumo = useMemo(() => resumoDaConfiguracao(configuracao), [configuracao]);
   const visualConfig = useMemo(() => configuracaoParaThermalBoxVisual(configuracao), [configuracao]);
+  const identidade = configuracao.identidadeVisual;
+
+  function editarIdentidade(campo: "cor" | "logo", valor: string | undefined) {
+    setResposta(null);
+    setConfiguracao((atual) => {
+      const identidadeVisual = { ...atual.identidadeVisual, [campo]: valor };
+      return { ...atual, identidadeVisual: identidadeVisual.cor || identidadeVisual.logo ? identidadeVisual : undefined };
+    });
+  }
+
+  async function selecionarLogo(arquivo: File) {
+    setProcessandoLogo(true);
+    setErroLogo("");
+    try {
+      editarIdentidade("logo", await prepararLogo(arquivo));
+    } catch {
+      setErroLogo("Não foi possível usar esta imagem. Escolha um arquivo PNG, JPG ou WebP de até 5 MB.");
+    } finally {
+      setProcessandoLogo(false);
+    }
+  }
 
   function dimensao(campo: keyof ConfiguracaoSobMedida["dimensoes"], valor: string) {
     setResposta(null);
@@ -113,6 +162,7 @@ export default function ConfiguradorClient({ nomeDaLoja, slugDaLoja, whatsapp }:
       if (!requisicao.ok) throw new Error(corpo.erro ?? "Não foi possível retomar a configuração.");
       const retomada = corpo as RespostaRetomada;
       setConfiguracao(retomada.configuracao);
+      setErroLogo("");
       setCodigoRetomadaOrigem(codigoRetomada);
       setResposta(null);
       setMensagemRetomada(`Configuração ${retomada.referencia} retomada. Confira a ficha e informe o contato para enviar uma nova solicitação.`);
@@ -143,7 +193,7 @@ export default function ConfiguradorClient({ nomeDaLoja, slugDaLoja, whatsapp }:
         </div>
         <form onSubmit={retomar}>
           <label>Código privado de retomada<input required autoComplete="off" spellCheck={false} value={codigoRetomada} onChange={(evento) => setCodigoDigitado(evento.target.value.trim())} /></label>
-          <button className="btn-secundario" type="submit" disabled={retomando}>{retomando ? "Retomando…" : "Retomar ficha"}</button>
+          <button className="btn-secundario" type="submit" disabled={retomando || enviando || processandoLogo}>{retomando ? "Retomando…" : "Retomar ficha"}</button>
         </form>
         {mensagemRetomada && <p className="configurador-retomada-status" role="status">{mensagemRetomada}</p>}
       </section>
@@ -157,8 +207,34 @@ export default function ConfiguradorClient({ nomeDaLoja, slugDaLoja, whatsapp }:
           <div className="configurador-palco">
             <ThermalBoxViewerView config={visualConfig} />
           </div>
+          <fieldset className="configurador-identidade" disabled={processandoLogo || retomando || enviando}>
+            <legend>Identidade visual da sua empresa</legend>
+            <p>Envie sua logo para aplicar na frente da caixa e escolha a cor externa. A fábrica confirma o acabamento no orçamento.</p>
+            <label>Logo da empresa
+              <input type="file" accept="image/png,image/jpeg,image/webp" aria-describedby="configurador-logo-ajuda" onChange={(evento) => {
+                const arquivo = evento.currentTarget.files?.[0];
+                evento.currentTarget.value = "";
+                if (arquivo) void selecionarLogo(arquivo);
+              }} />
+            </label>
+            <small id="configurador-logo-ajuda">PNG, JPG ou WebP de até 5 MB.</small>
+            {processandoLogo && <p role="status">Preparando logo…</p>}
+            {erroLogo && <p role="alert" className="configurador-erro">{erroLogo}</p>}
+            {identidade?.logo && <button type="button" className="btn-secundario" onClick={() => {
+              editarIdentidade("logo", undefined);
+              setErroLogo("");
+            }}>Remover logo</button>}
+            <div className="configurador-identidade-cor">
+              <label>Cor externa<input type="color" value={identidade?.cor ?? "#b8c2cc"} onChange={(evento) => editarIdentidade("cor", evento.target.value)} /></label>
+              {identidade?.cor && <button type="button" className="btn-secundario" onClick={() => editarIdentidade("cor", undefined)}>Usar cor do material</button>}
+            </div>
+          </fieldset>
           <p className="sr-only">Modelo de {resumo}.</p>
-          <div className="configurador-resumo"><strong>Ficha atual</strong><p>{resumo}</p><small>Representação conceitual, sem escala de fabricação.</small></div>
+          <div className="configurador-resumo"><strong>Ficha atual</strong><p>{resumo}</p>
+            {identidade?.cor && <p>Cor externa solicitada: {identidade.cor.toUpperCase()}</p>}
+            {identidade?.logo && <p>Logo na frente da caixa</p>}
+            <small>Representação conceitual, sem escala de fabricação.</small>
+          </div>
         </section>
 
         <form className="configurador-formulario" onSubmit={enviar}>
@@ -203,7 +279,7 @@ export default function ConfiguradorClient({ nomeDaLoja, slugDaLoja, whatsapp }:
               {whatsapp && <a href={linkWhatsApp(whatsapp, mensagemWhatsApp)} target="_blank" rel="noopener">Continuar no WhatsApp <ArrowRight aria-hidden="true" /></a>}
             </div>
           )}
-          <button className="btn-primario configurador-enviar" type="submit" disabled={enviando}>{enviando ? "Enviando…" : "Enviar para análise da fábrica"} <ArrowRight aria-hidden="true" /></button>
+          <button className="btn-primario configurador-enviar" type="submit" disabled={enviando || retomando || processandoLogo}>{enviando ? "Enviando…" : "Enviar para análise da fábrica"} <ArrowRight aria-hidden="true" /></button>
         </form>
       </div>
     </main>

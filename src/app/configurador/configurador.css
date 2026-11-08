@@ -21,6 +21,14 @@
 .configurador-visual-cabecalho > svg { color: var(--primary); }
 .configurador-palco { min-height: 390px; overflow: hidden; padding: 1rem; background: linear-gradient(160deg, color-mix(in srgb, var(--muted) 70%, transparent), var(--card)); }
 .configurador-palco > div { min-width: 0; }
+.configurador-identidade { display: grid; gap: .65rem; min-width: 0; margin: 0 1.5rem 1.25rem; border: 1px solid var(--border); border-radius: var(--radius); padding: .85rem; }
+.configurador-identidade legend { padding: 0 .3rem; font-weight: 750; }
+.configurador-identidade p, .configurador-identidade small { font-size: .85rem; color: var(--muted-foreground); }
+.configurador-identidade label { display: grid; gap: .35rem; min-width: 0; font-size: .85rem; font-weight: 700; }
+.configurador-identidade input { min-height: 44px; max-width: 100%; }
+.configurador-identidade button { min-height: 44px; justify-self: start; }
+.configurador-identidade-cor { display: flex; flex-wrap: wrap; align-items: end; gap: .5rem; }
+.configurador-identidade-cor input { width: 4rem; cursor: pointer; }
 .configurador-3d-carregando { display: grid; min-height: 320px; place-items: center; color: var(--muted-foreground); }
 .configurador-resumo { margin: 0 1.5rem 1.5rem; border-radius: var(--radius); background: var(--muted); padding: 1rem; }
 .configurador-resumo strong { font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; }

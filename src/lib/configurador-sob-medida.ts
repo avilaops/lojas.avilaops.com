@@ -31,6 +31,14 @@ const texto = (maximo: number) => z.string().trim().max(maximo);
 const numeroInteiro = (minimo: number, maximo: number) => z.coerce.number().int().min(minimo).max(maximo);
 const chaves = <T extends Record<string, string>>(opcoes: T) => Object.keys(opcoes) as [keyof T & string, ...(keyof T & string)[]];
 
+export const LIMITE_LOGO_SOB_MEDIDA = 160_000;
+export const DIMENSAO_LOGO_SOB_MEDIDA = 384;
+export const IdentidadeSobMedidaSchema = z.object({
+  cor: z.string().regex(/^#[0-9a-f]{6}$/i).optional(),
+  logo: z.string().max(LIMITE_LOGO_SOB_MEDIDA)
+    .regex(/^data:image\/(webp|png);base64,[A-Za-z0-9+/]+={0,2}$/).optional(),
+});
+
 export const ConfiguracaoSobMedidaSchema = z.object({
   dimensoes: z.object({
     larguraCm: numeroInteiro(LIMITES_EDITOR_SOB_MEDIDA.dimensaoMinimaCm, LIMITES_EDITOR_SOB_MEDIDA.dimensaoMaximaCm),
@@ -44,6 +52,7 @@ export const ConfiguracaoSobMedidaSchema = z.object({
   divisorias: numeroInteiro(0, LIMITES_EDITOR_SOB_MEDIDA.divisoriasMaximas),
   quantidade: numeroInteiro(1, LIMITES_EDITOR_SOB_MEDIDA.quantidadeMaxima),
   observacoes: texto(1_000).default(""),
+  identidadeVisual: IdentidadeSobMedidaSchema.optional(),
 });
 
 const emailOpcional = texto(160).transform((valor) => valor.toLowerCase()).refine((valor) => !valor || z.string().email().safeParse(valor).success, "E-mail inválido.");

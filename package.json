@@ -28,7 +28,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",
     "@avilaops/checkout": "file:./packages/checkout",
-    "@avilaops/gerador-3d": "github:avilaops/gerador-3d#bbbbbf18932c4dcebcbc3a0c07338099797d7c9b",
+    "@avilaops/gerador-3d": "github:avilaops/gerador-3d#b4717c44ffa1fdc41abca80d9b06a4b0ea8f679e",
     "@aws-sdk/client-s3": "^3.1153.0",
     "@google/genai": "^2.19.0",
     "@langfuse/otel": "6.0.2",
