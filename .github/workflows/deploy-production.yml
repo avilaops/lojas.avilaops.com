@@ -45,6 +45,7 @@ jobs:
         id: arquivo
         with:
           tipo: dependencias
+          partes: '1'
           pasta: ${{ runner.temp }}/dependencias/
   ferramenta-navegador:
     name: preparar CLI do navegador

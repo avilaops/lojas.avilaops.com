@@ -6,10 +6,10 @@ runs:
     - uses: ./.github/actions/node-do-runner
     - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
       with:
-        pattern: lojas-dependencias-*-${{ github.sha }}
-        path: ${{ runner.temp }}/lojas-artefatos
+        name: lojas-dependencias-${{ github.sha }}
+        path: ${{ runner.temp }}/lojas-artefatos/lojas-dependencias-${{ github.sha }}
     - shell: bash
       run: |
         set -euo pipefail
-        node scripts/ci/artefato.mjs reunir "$RUNNER_TEMP/lojas-artefatos" dependencias
+        node scripts/ci/artefato.mjs restaurar "$RUNNER_TEMP/lojas-artefatos" dependencias
         tar --zstd -xf "$RUNNER_TEMP/lojas-artefatos/lojas-dependencias-$GITHUB_SHA/payload.tar.zst"
