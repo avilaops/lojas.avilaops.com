@@ -25,8 +25,25 @@
         "HTML visível no endereço canônico existente, sem alterar preço, estoque, fabricante ou MPN.",
         "Testes e build exclusivamente no GitHub CI."
       ],
-      "evidence": "PDF Agel 02/2019: 41 páginas, 552 linhas ANG, 34 relações verificadas e 24 divergências excluídas. PR #231. CI inicial parou no npm ci: lockfile remoto continha aviso de saída truncada. Lock íntegro recuperado preservando revisão b4717c44 do motor; grafo de dependências conferido. Revisão técnica corrigiu drift de material e alinhou os critérios da busca e da ficha. CI 42485749340 aprovado sobre a2418c2: 1.415 unitários, três partes PostgreSQL, navegador, TypeScript, ESLint e build. PR pronto; publicação ainda pendente.",
+      "evidence": "PDF Agel 02/2019: 41 páginas, 552 linhas ANG, 34 relações verificadas e 24 divergências excluídas. PR #231. CI inicial parou no npm ci: lockfile remoto continha aviso de saída truncada. Lock íntegro recuperado preservando revisão b4717c44 do motor; grafo de dependências conferido. Revisão técnica corrigiu drift de material e alinhou os critérios da busca e da ficha. CI 42485749340 aprovado sobre a2418c2: 1.415 unitários, três partes PostgreSQL, navegador, TypeScript, ESLint e build. PR pronto; publicação ainda pendente. CI 42486516411 também aprovado; conciliação com abbbe07 preserva o editorial Domi-Rio e o lockfile íntegro da main.",
       "environment": "github"
+    },
+    {
+      "id": "DOMIRIO-50-POSTS-MDX-20261108",
+      "title": "Implementar as 50 postagens MDX fornecidas da Domi-Rio",
+      "objective": "Disponibilizar os 50 textos, sete capas e fontes no blog exclusivo da Domi-Rio, com busca por assunto, leitura responsiva e descoberta pelo sitemap.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-andamento",
+      "acceptanceCriteria": [
+        "50 páginas MDX com os textos e fontes fornecidos, capas locais e sem H1 duplicado.",
+        "Índice pesquisável em sete assuntos, sumário e navegação anterior, próxima e relacionada.",
+        "Metadados e sitemap canônicos da Domi-Rio, sem conteúdo estático em outras lojas.",
+        "Preservar as publicações existentes e o blog da plataforma.",
+        "Build, tipos e testes na CI; conferência manual em desktop e mobile."
+      ],
+      "environment": "cópia isolada existente; implementação local e validação formal no GitHub CI",
+      "evidence": "Plano em docs/superpowers/plans/2026-11-08-domi-rio-50-posts-mdx.md. Coleção em src/content/domirio; teste src/lib/artigos-domirio.test.ts. Verificação runtime e CI pendentes."
     },
     {
       "id": "BERETA-FOTOS-CATALOGO-20261108",

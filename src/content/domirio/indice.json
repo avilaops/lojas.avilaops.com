@@ -1,0 +1,1252 @@
+[
+  {
+    "title": "Herbicida, inseticida ou fungicida: como saber qual categoria procurar",
+    "slug": "herbicida-inseticida-ou-fungicida-como-saber-qual-categoria-procurar",
+    "description": "Uma lavoura com manchas, folhas comidas ou plantas competidoras apresenta três problemas diferentes. A categoria do defensivo depende do alvo identificado…",
+    "category": "Fundamentos dos defensivos",
+    "series": 1,
+    "order": 1,
+    "cover": "/media/domirio/blog/01-fundamentos.webp",
+    "coverAlt": "Pessoa inspeciona plantas em uma lavoura ao amanhecer",
+    "sections": [
+      {
+        "title": "No talhão",
+        "id": "no-talhao"
+      },
+      {
+        "title": "Antes de comprar",
+        "id": "antes-de-comprar"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Defensivos agrícolas: onde entram no planejamento da produtividade",
+    "slug": "defensivos-agricolas-onde-entram-no-planejamento-da-produtividade",
+    "description": "Um talhão perde rendimento por vários motivos. O defensivo pode proteger parte do potencial produtivo quando o diagnóstico indica um alvo manejável e…",
+    "category": "Fundamentos dos defensivos",
+    "series": 1,
+    "order": 2,
+    "cover": "/media/domirio/blog/01-fundamentos.webp",
+    "coverAlt": "Pessoa inspeciona plantas em uma lavoura ao amanhecer",
+    "sections": [
+      {
+        "title": "A conta começa na lavoura",
+        "id": "a-conta-comeca-na-lavoura"
+      },
+      {
+        "title": "Na próxima safra",
+        "id": "na-proxima-safra"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Faixas de cor dos defensivos: o que o rótulo realmente informa",
+    "slug": "faixas-de-cor-dos-defensivos-o-que-o-rotulo-realmente-informa",
+    "description": "A faixa é uma pista de classificação toxicológica aguda. Uma embalagem com faixa de outra cor pode exigir cuidados diferentes, e a cor sozinha é…",
+    "category": "Fundamentos dos defensivos",
+    "series": 1,
+    "order": 3,
+    "cover": "/media/domirio/blog/01-fundamentos.webp",
+    "coverAlt": "Pessoa inspeciona plantas em uma lavoura ao amanhecer",
+    "sections": [
+      {
+        "title": "Como ler",
+        "id": "como-ler"
+      },
+      {
+        "title": "Na prática",
+        "id": "na-pratica"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Mecanismo de ação: por que dois produtos diferentes podem repetir a mesma pressão de seleção",
+    "slug": "mecanismo-de-acao-por-que-dois-produtos-diferentes-podem-repetir-a-mesma-pressao-de-selecao",
+    "description": "A troca de marca pode dar a impressão de que o manejo mudou. Se o grupo de ação permanece igual, a população-alvo pode continuar exposta à mesma pressão…",
+    "category": "Fundamentos dos defensivos",
+    "series": 1,
+    "order": 4,
+    "cover": "/media/domirio/blog/01-fundamentos.webp",
+    "coverAlt": "Pessoa inspeciona plantas em uma lavoura ao amanhecer",
+    "sections": [
+      {
+        "title": "Como conferir",
+        "id": "como-conferir"
+      },
+      {
+        "title": "Exemplo de rotina",
+        "id": "exemplo-de-rotina"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Modo e mecanismo de ação: a diferença na prática",
+    "slug": "modo-e-mecanismo-de-acao-a-diferenca-na-pratica",
+    "description": "A terminologia varia entre manuais e comitês. Para interpretar uma ficha, ajuda separar três perguntas: onde o produto entra, que processo biológico ele…",
+    "category": "Fundamentos dos defensivos",
+    "series": 1,
+    "order": 5,
+    "cover": "/media/domirio/blog/01-fundamentos.webp",
+    "coverAlt": "Pessoa inspeciona plantas em uma lavoura ao amanhecer",
+    "sections": [
+      {
+        "title": "Leia em camadas",
+        "id": "leia-em-camadas"
+      },
+      {
+        "title": "Na compra",
+        "id": "na-compra"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Manejo de resistência a inseticidas: como usar a classificação IRAC",
+    "slug": "manejo-de-resistencia-a-inseticidas-como-usar-a-classificacao-irac",
+    "description": "O controle caiu depois de várias aplicações no mesmo talhão? Uma hipótese é resistência, que surge pela seleção de indivíduos menos sensíveis ao longo das…",
+    "category": "Inseticidas e controle de pragas",
+    "series": 2,
+    "order": 6,
+    "cover": "/media/domirio/blog/02-inseticidas.webp",
+    "coverAlt": "Detalhe de vistoria de uma folha no campo",
+    "sections": [
+      {
+        "title": "Veja o histórico",
+        "id": "veja-o-historico"
+      },
+      {
+        "title": "Antes de repetir",
+        "id": "antes-de-repetir"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Inseticidas sistêmicos e de contato: o que observar antes de decidir",
+    "slug": "inseticidas-sistemicos-e-de-contato-o-que-observar-antes-de-decidir",
+    "description": "Um inseto pode ficar no verso da folha, dentro do cartucho ou em brotações protegidas. Saber onde o alvo vive ajuda a avaliar como ele entrará em contato…",
+    "category": "Inseticidas e controle de pragas",
+    "series": 2,
+    "order": 7,
+    "cover": "/media/domirio/blog/02-inseticidas.webp",
+    "coverAlt": "Detalhe de vistoria de uma folha no campo",
+    "sections": [
+      {
+        "title": "Leia a bula pensando no alvo",
+        "id": "leia-a-bula-pensando-no-alvo"
+      },
+      {
+        "title": "Antes de escolher",
+        "id": "antes-de-escolher"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Lagartas na soja: o que avaliar antes de escolher um inseticida",
+    "slug": "lagartas-na-soja-o-que-avaliar-antes-de-escolher-um-inseticida",
+    "description": "Encontrar folhas comidas é motivo para vistoriar o talhão. O dano visível pode ser antigo, e espécies diferentes de lagarta podem exigir decisões…",
+    "category": "Inseticidas e controle de pragas",
+    "series": 2,
+    "order": 8,
+    "cover": "/media/domirio/blog/02-inseticidas.webp",
+    "coverAlt": "Detalhe de vistoria de uma folha no campo",
+    "sections": [
+      {
+        "title": "Amostre antes de cotar",
+        "id": "amostre-antes-de-cotar"
+      },
+      {
+        "title": "O que levar ao agrônomo",
+        "id": "o-que-levar-ao-agronomo"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Mosca-branca e pulgões: como sair do ciclo de aplicações repetidas",
+    "slug": "mosca-branca-e-pulgoes-como-sair-do-ciclo-de-aplicacoes-repetidas",
+    "description": "Insetos sugadores podem se concentrar em reboleiras. Se o manejo parte só de uma foto ou de uma planta da borda, é fácil errar a dimensão do problema.",
+    "category": "Inseticidas e controle de pragas",
+    "series": 2,
+    "order": 9,
+    "cover": "/media/domirio/blog/02-inseticidas.webp",
+    "coverAlt": "Detalhe de vistoria de uma folha no campo",
+    "sections": [
+      {
+        "title": "Separe identificação e decisão",
+        "id": "separe-identificacao-e-decisao"
+      },
+      {
+        "title": "Evite repetir por impulso",
+        "id": "evite-repetir-por-impulso"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Reguladores de crescimento de insetos: por que o estágio importa",
+    "slug": "reguladores-de-crescimento-de-insetos-por-que-o-estagio-importa",
+    "description": "Uma vistoria feita logo após o tratamento pode mostrar insetos ainda ativos. Para interpretar isso, é preciso entender o efeito esperado e o momento em…",
+    "category": "Inseticidas e controle de pragas",
+    "series": 2,
+    "order": 10,
+    "cover": "/media/domirio/blog/02-inseticidas.webp",
+    "coverAlt": "Detalhe de vistoria de uma folha no campo",
+    "sections": [
+      {
+        "title": "O que o produto altera",
+        "id": "o-que-o-produto-altera"
+      },
+      {
+        "title": "Como acompanhar",
+        "id": "como-acompanhar"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Diamidas e neonicotinoides: o que os grupos dizem sobre a escolha",
+    "slug": "diamidas-e-neonicotinoides-o-que-os-grupos-dizem-sobre-a-escolha",
+    "description": "A família química ajuda a interpretar a ficha, mas cada formulação tem indicações próprias. Um nome de grupo não define onde o produto pode ser aplicado.",
+    "category": "Inseticidas e controle de pragas",
+    "series": 2,
+    "order": 11,
+    "cover": "/media/domirio/blog/02-inseticidas.webp",
+    "coverAlt": "Detalhe de vistoria de uma folha no campo",
+    "sections": [
+      {
+        "title": "O que diferencia",
+        "id": "o-que-diferencia"
+      },
+      {
+        "title": "O que conferir no campo",
+        "id": "o-que-conferir-no-campo"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Pragas de solo: o que conferir antes de tratar o sulco",
+    "slug": "pragas-de-solo-o-que-conferir-antes-de-tratar-o-sulco",
+    "description": "Falhas na emergência podem parecer ataque de pragas de solo. Profundidade irregular, compactação, semente e umidade também entram no diagnóstico.",
+    "category": "Inseticidas e controle de pragas",
+    "series": 2,
+    "order": 12,
+    "cover": "/media/domirio/blog/02-inseticidas.webp",
+    "coverAlt": "Detalhe de vistoria de uma folha no campo",
+    "sections": [
+      {
+        "title": "Abra a linha de plantio",
+        "id": "abra-a-linha-de-plantio"
+      },
+      {
+        "title": "Se o sulco for indicado",
+        "id": "se-o-sulco-for-indicado"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Clima e inseticidas: o que registrar antes de pulverizar",
+    "slug": "clima-e-inseticidas-o-que-registrar-antes-de-pulverizar",
+    "description": "Uma tarde quente ou umidade baixa pode mudar o comportamento das gotas. Chuva próxima também pode interferir na deposição ou permanência de algumas…",
+    "category": "Inseticidas e controle de pragas",
+    "series": 2,
+    "order": 13,
+    "cover": "/media/domirio/blog/02-inseticidas.webp",
+    "coverAlt": "Detalhe de vistoria de uma folha no campo",
+    "sections": [
+      {
+        "title": "Meça no local",
+        "id": "meca-no-local"
+      },
+      {
+        "title": "Quando adiar",
+        "id": "quando-adiar"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Nem todo inseto é praga: como preservar inimigos naturais",
+    "slug": "nem-todo-inseto-e-praga-como-preservar-inimigos-naturais",
+    "description": "Joaninhas, crisopídeos e outros organismos benéficos podem estar no mesmo ponto onde a praga aparece. Reconhecê-los melhora a leitura do talhão.",
+    "category": "Inseticidas e controle de pragas",
+    "series": 2,
+    "order": 14,
+    "cover": "/media/domirio/blog/02-inseticidas.webp",
+    "coverAlt": "Detalhe de vistoria de uma folha no campo",
+    "sections": [
+      {
+        "title": "Observe junto com a praga",
+        "id": "observe-junto-com-a-praga"
+      },
+      {
+        "title": "Na decisão",
+        "id": "na-decisao"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Pré e pós-emergentes: como acertar o momento do manejo",
+    "slug": "pre-e-pos-emergentes-como-acertar-o-momento-do-manejo",
+    "description": "O mesmo talhão pode ter plantas já emergidas e sementes prestes a germinar. A decisão depende do estágio do alvo e da cultura, além da forma como o…",
+    "category": "Herbicidas e plantas daninhas",
+    "series": 3,
+    "order": 15,
+    "cover": "/media/domirio/blog/03-herbicidas.webp",
+    "coverAlt": "Plantas espontâneas junto às linhas da cultura",
+    "sections": [
+      {
+        "title": "O que muda",
+        "id": "o-que-muda"
+      },
+      {
+        "title": "Antes da operação",
+        "id": "antes-da-operacao"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Capim-amargoso resistente: o que fazer quando sobra a mesma reboleira",
+    "slug": "capim-amargoso-resistente-o-que-fazer-quando-sobra-a-mesma-reboleira",
+    "description": "A mesma mancha sobreviveu de novo? Antes de tentar corrigir com outra aplicação, investigue se o capim estava grande, se houve falha de cobertura ou se a…",
+    "category": "Herbicidas e plantas daninhas",
+    "series": 3,
+    "order": 16,
+    "cover": "/media/domirio/blog/03-herbicidas.webp",
+    "coverAlt": "Plantas espontâneas junto às linhas da cultura",
+    "sections": [
+      {
+        "title": "Mapeie os escapes",
+        "id": "mapeie-os-escapes"
+      },
+      {
+        "title": "Planeje o ano inteiro",
+        "id": "planeje-o-ano-inteiro"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Herbicida seletivo ou não seletivo: como proteger a cultura",
+    "slug": "herbicida-seletivo-ou-nao-seletivo-como-proteger-a-cultura",
+    "description": "A seletividade tem condições. Um produto pode ser tolerado por certa cultura em um estádio e causar injúria se usado em outro, ou em uma variedade sem a…",
+    "category": "Herbicidas e plantas daninhas",
+    "series": 3,
+    "order": 17,
+    "cover": "/media/domirio/blog/03-herbicidas.webp",
+    "coverAlt": "Plantas espontâneas junto às linhas da cultura",
+    "sections": [
+      {
+        "title": "Confira a cultura e a tecnologia",
+        "id": "confira-a-cultura-e-a-tecnologia"
+      },
+      {
+        "title": "Na troca de talhão",
+        "id": "na-troca-de-talhao"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Dessecação pré-plantio: como montar uma janela para o plantio direto",
+    "slug": "dessecacao-pre-plantio-como-montar-uma-janela-para-o-plantio-direto",
+    "description": "Se a vegetação ainda está competindo perto da semeadura, o calendário pode apertar. O manejo começa com uma vistoria antecipada do talhão e a confirmação…",
+    "category": "Herbicidas e plantas daninhas",
+    "series": 3,
+    "order": 18,
+    "cover": "/media/domirio/blog/03-herbicidas.webp",
+    "coverAlt": "Plantas espontâneas junto às linhas da cultura",
+    "sections": [
+      {
+        "title": "Organize o diagnóstico",
+        "id": "organize-o-diagnostico"
+      },
+      {
+        "title": "Planeje a semeadura junto",
+        "id": "planeje-a-semeadura-junto"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Herbicidas sistêmicos e plantas perenes: por que o rebrote importa",
+    "slug": "herbicidas-sistemicos-e-plantas-perenes-por-que-o-rebrote-importa",
+    "description": "A parte aérea pode murchar enquanto raízes, rizomas ou outros órgãos de reserva continuam vivos. Para plantas perenes, a avaliação precisa incluir a…",
+    "category": "Herbicidas e plantas daninhas",
+    "series": 3,
+    "order": 19,
+    "cover": "/media/domirio/blog/03-herbicidas.webp",
+    "coverAlt": "Plantas espontâneas junto às linhas da cultura",
+    "sections": [
+      {
+        "title": "Observe o ciclo",
+        "id": "observe-o-ciclo"
+      },
+      {
+        "title": "Como avaliar a decisão",
+        "id": "como-avaliar-a-decisao"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Carryover: como evitar injúria na cultura seguinte",
+    "slug": "carryover-como-evitar-injuria-na-cultura-seguinte",
+    "description": "A planta seguinte pode sentir o efeito de resíduo de uma aplicação feita meses antes. Esse risco entra no planejamento antes de escolher o herbicida e a…",
+    "category": "Herbicidas e plantas daninhas",
+    "series": 3,
+    "order": 20,
+    "cover": "/media/domirio/blog/03-herbicidas.webp",
+    "coverAlt": "Plantas espontâneas junto às linhas da cultura",
+    "sections": [
+      {
+        "title": "O que muda a persistência",
+        "id": "o-que-muda-a-persistencia"
+      },
+      {
+        "title": "Antes de plantar",
+        "id": "antes-de-plantar"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Pontas de pulverização: como escolher sem aumentar a deriva",
+    "slug": "pontas-de-pulverizacao-como-escolher-sem-aumentar-a-deriva",
+    "description": "A ponta determina parte do tamanho das gotas e da distribuição na barra. Um mesmo modelo pode trabalhar de forma diferente conforme pressão e vazão.",
+    "category": "Herbicidas e plantas daninhas",
+    "series": 3,
+    "order": 21,
+    "cover": "/media/domirio/blog/03-herbicidas.webp",
+    "coverAlt": "Plantas espontâneas junto às linhas da cultura",
+    "sections": [
+      {
+        "title": "Comece pelas exigências",
+        "id": "comece-pelas-exigencias"
+      },
+      {
+        "title": "No talhão",
+        "id": "no-talhao"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Plantas daninhas de folha larga e estreita: como evitar erro de identificação",
+    "slug": "plantas-daninhas-de-folha-larga-e-estreita-como-evitar-erro-de-identificacao",
+    "description": "Separar folhas largas e estreitas ajuda na vistoria. A identificação por espécie continua necessária para escolher o manejo e reconhecer escapes.",
+    "category": "Herbicidas e plantas daninhas",
+    "series": 3,
+    "order": 22,
+    "cover": "/media/domirio/blog/03-herbicidas.webp",
+    "coverAlt": "Plantas espontâneas junto às linhas da cultura",
+    "sections": [
+      {
+        "title": "O que fotografar",
+        "id": "o-que-fotografar"
+      },
+      {
+        "title": "Antes de decidir",
+        "id": "antes-de-decidir"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Tabela HRAC: como conferir se a rotação muda o mecanismo de ação",
+    "slug": "tabela-hrac-como-conferir-se-a-rotacao-muda-o-mecanismo-de-acao",
+    "description": "Dois produtos com nomes e ingredientes ativos diferentes podem pertencer ao mesmo grupo. O histórico por código ajuda a reconhecer essa repetição.",
+    "category": "Herbicidas e plantas daninhas",
+    "series": 3,
+    "order": 23,
+    "cover": "/media/domirio/blog/03-herbicidas.webp",
+    "coverAlt": "Plantas espontâneas junto às linhas da cultura",
+    "sections": [
+      {
+        "title": "Monte o histórico por talhão",
+        "id": "monte-o-historico-por-talhao"
+      },
+      {
+        "title": "Planeje com eficácia real",
+        "id": "planeje-com-eficacia-real"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Mistura em tanque: o que conferir para evitar incompatibilidade",
+    "slug": "mistura-em-tanque-o-que-conferir-para-evitar-incompatibilidade",
+    "description": "Grumos, espuma persistente e filtro entupido podem interromper uma aplicação e deixar o talhão com cobertura irregular. A prevenção começa antes de abrir…",
+    "category": "Tecnologia de aplicação",
+    "series": 4,
+    "order": 24,
+    "cover": "/media/domirio/blog/04-aplicacao.webp",
+    "coverAlt": "Pulverizador agrícola estacionado para inspeção",
+    "sections": [
+      {
+        "title": "Antes de preparar",
+        "id": "antes-de-preparar"
+      },
+      {
+        "title": "Se aparecer separação ou precipitado",
+        "id": "se-aparecer-separacao-ou-precipitado"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Como calibrar um pulverizador de arrasto com água limpa",
+    "slug": "como-calibrar-um-pulverizador-de-arrasto-com-agua-limpa",
+    "description": "Uma barra pode apresentar falha em um lado mesmo quando a pressão do painel parece correta. A calibração permite verificar a entrega real antes de colocar…",
+    "category": "Tecnologia de aplicação",
+    "series": 4,
+    "order": 25,
+    "cover": "/media/domirio/blog/04-aplicacao.webp",
+    "coverAlt": "Pulverizador agrícola estacionado para inspeção",
+    "sections": [
+      {
+        "title": "Sequência de conferência",
+        "id": "sequencia-de-conferencia"
+      },
+      {
+        "title": "Feche a conta",
+        "id": "feche-a-conta"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Pulverização com drones: como decidir se vale contratar ou investir",
+    "slug": "pulverizacao-com-drones-como-decidir-se-vale-contratar-ou-investir",
+    "description": "Um drone pode facilitar o acesso a reboleiras ou áreas de relevo difícil. Antes de decidir pelo equipamento, compare custo total, capacidade operacional e…",
+    "category": "Tecnologia de aplicação",
+    "series": 4,
+    "order": 26,
+    "cover": "/media/domirio/blog/04-aplicacao.webp",
+    "coverAlt": "Pulverizador agrícola estacionado para inspeção",
+    "sections": [
+      {
+        "title": "Compare cenários",
+        "id": "compare-cenarios"
+      },
+      {
+        "title": "Confira a operação autorizada",
+        "id": "confira-a-operacao-autorizada"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Adjuvantes agrícolas: quando fazem sentido no plano de aplicação",
+    "slug": "adjuvantes-agricolas-quando-fazem-sentido-no-plano-de-aplicacao",
+    "description": "Espalhamento, retenção, espuma e qualidade da água são problemas diferentes. Antes de adicionar algo à calda, defina qual deles precisa ser resolvido.",
+    "category": "Tecnologia de aplicação",
+    "series": 4,
+    "order": 27,
+    "cover": "/media/domirio/blog/04-aplicacao.webp",
+    "coverAlt": "Pulverizador agrícola estacionado para inspeção",
+    "sections": [
+      {
+        "title": "Escolha pela função",
+        "id": "escolha-pela-funcao"
+      },
+      {
+        "title": "Verifique o conjunto",
+        "id": "verifique-o-conjunto"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "pH da água: quando ele pode interferir na calda",
+    "slug": "ph-da-agua-quando-ele-pode-interferir-na-calda",
+    "description": "Dois lotes preparados com água de fontes diferentes podem se comportar de forma diferente. pH, dureza e partículas em suspensão precisam ser analisados…",
+    "category": "Tecnologia de aplicação",
+    "series": 4,
+    "order": 28,
+    "cover": "/media/domirio/blog/04-aplicacao.webp",
+    "coverAlt": "Pulverizador agrícola estacionado para inspeção",
+    "sections": [
+      {
+        "title": "Meça a fonte real",
+        "id": "meca-a-fonte-real"
+      },
+      {
+        "title": "Quando houver dúvida",
+        "id": "quando-houver-duvida"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Vento e pulverização: como reduzir a deriva e saber quando parar",
+    "slug": "vento-e-pulverizacao-como-reduzir-a-deriva-e-saber-quando-parar",
+    "description": "O vento pode mudar durante uma passada. O que interessa é o comportamento no talhão e o que existe na direção para onde as gotas podem se deslocar.",
+    "category": "Tecnologia de aplicação",
+    "series": 4,
+    "order": 29,
+    "cover": "/media/domirio/blog/04-aplicacao.webp",
+    "coverAlt": "Pulverizador agrícola estacionado para inspeção",
+    "sections": [
+      {
+        "title": "Antes de iniciar",
+        "id": "antes-de-iniciar"
+      },
+      {
+        "title": "Durante o trabalho",
+        "id": "durante-o-trabalho"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Embalagem vazia de defensivo: quando lavar e como devolver",
+    "slug": "embalagem-vazia-de-defensivo-quando-lavar-e-como-devolver",
+    "description": "O destino depende do tipo de embalagem e das instruções do produto. Separar os materiais desde o começo evita que embalagens laváveis e não laváveis sejam…",
+    "category": "Tecnologia de aplicação",
+    "series": 4,
+    "order": 30,
+    "cover": "/media/domirio/blog/04-aplicacao.webp",
+    "coverAlt": "Pulverizador agrícola estacionado para inspeção",
+    "sections": [
+      {
+        "title": "Após o uso",
+        "id": "apos-o-uso"
+      },
+      {
+        "title": "Na devolução",
+        "id": "na-devolucao"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Receituário agronômico: o que levar para a compra",
+    "slug": "receituario-agronomico-o-que-levar-para-a-compra",
+    "description": "Um bom diagnóstico reduz retrabalho na cotação. Para comprar um defensivo, comece com os dados da área e a orientação de um profissional legalmente…",
+    "category": "Legislação e segurança",
+    "series": 5,
+    "order": 31,
+    "cover": "/media/domirio/blog/05-seguranca.webp",
+    "coverAlt": "Luvas e óculos em bancada de trabalho",
+    "sections": [
+      {
+        "title": "O que a receita formaliza",
+        "id": "o-que-a-receita-formaliza"
+      },
+      {
+        "title": "Prepare a documentação",
+        "id": "prepare-a-documentacao"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "EPI na aplicação rural: o que conferir antes de começar",
+    "slug": "epi-na-aplicacao-rural-o-que-conferir-antes-de-comecar",
+    "description": "Uma luva rasgada ou um respirador inadequado pode comprometer a proteção. A preparação da calda, a aplicação e a limpeza do equipamento podem exigir…",
+    "category": "Legislação e segurança",
+    "series": 5,
+    "order": 32,
+    "cover": "/media/domirio/blog/05-seguranca.webp",
+    "coverAlt": "Luvas e óculos em bancada de trabalho",
+    "sections": [
+      {
+        "title": "Monte a proteção por tarefa",
+        "id": "monte-a-protecao-por-tarefa"
+      },
+      {
+        "title": "Se a proteção falhar",
+        "id": "se-a-protecao-falhar"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Armazenamento de defensivos: como organizar o depósito da fazenda",
+    "slug": "armazenamento-de-defensivos-como-organizar-o-deposito-da-fazenda",
+    "description": "Estoque desorganizado dificulta localizar o lote certo e agir em caso de vazamento. Uma inspeção periódica ajuda a encontrar problemas antes da próxima…",
+    "category": "Legislação e segurança",
+    "series": 5,
+    "order": 33,
+    "cover": "/media/domirio/blog/05-seguranca.webp",
+    "coverAlt": "Luvas e óculos em bancada de trabalho",
+    "sections": [
+      {
+        "title": "Na chegada do produto",
+        "id": "na-chegada-do-produto"
+      },
+      {
+        "title": "Na vistoria",
+        "id": "na-vistoria"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Bula de inseticida ou herbicida: como encontrar as informações que importam",
+    "slug": "bula-de-inseticida-ou-herbicida-como-encontrar-as-informacoes-que-importam",
+    "description": "A bula do produto formulado responde perguntas que o nome do ingrediente ativo não resolve. O primeiro filtro é verificar se ela cobre exatamente a sua…",
+    "category": "Legislação e segurança",
+    "series": 5,
+    "order": 34,
+    "cover": "/media/domirio/blog/05-seguranca.webp",
+    "coverAlt": "Luvas e óculos em bancada de trabalho",
+    "sections": [
+      {
+        "title": "Leia na ordem da decisão",
+        "id": "leia-na-ordem-da-decisao"
+      },
+      {
+        "title": "Crie um registro simples",
+        "id": "crie-um-registro-simples"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Fitotoxicidade: o que registrar quando a cultura reage mal",
+    "slug": "fitotoxicidade-o-que-registrar-quando-a-cultura-reage-mal",
+    "description": "Folhas deformadas, manchas ou crescimento travado merecem investigação. Sintomas parecidos podem resultar de deriva, resíduo no solo, contaminação do…",
+    "category": "Legislação e segurança",
+    "series": 5,
+    "order": 35,
+    "cover": "/media/domirio/blog/05-seguranca.webp",
+    "coverAlt": "Luvas e óculos em bancada de trabalho",
+    "sections": [
+      {
+        "title": "Reconstrua o padrão",
+        "id": "reconstrua-o-padrao"
+      },
+      {
+        "title": "Evite agravar o quadro",
+        "id": "evite-agravar-o-quadro"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Intervalo de carência: como planejar a colheita após uma aplicação",
+    "slug": "intervalo-de-carencia-como-planejar-a-colheita-apos-uma-aplicacao",
+    "description": "Uma área pode parecer pronta para colher antes de cumprir a condição registrada do produto. O planejamento precisa considerar o histórico de aplicações de…",
+    "category": "Legislação e segurança",
+    "series": 5,
+    "order": 36,
+    "cover": "/media/domirio/blog/05-seguranca.webp",
+    "coverAlt": "Luvas e óculos em bancada de trabalho",
+    "sections": [
+      {
+        "title": "Entenda os dois intervalos",
+        "id": "entenda-os-dois-intervalos"
+      },
+      {
+        "title": "Na operação",
+        "id": "na-operacao"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Milho safrinha: como organizar o manejo de pragas e plantas daninhas",
+    "slug": "milho-safrinha-como-organizar-o-manejo-de-pragas-e-plantas-daninhas",
+    "description": "O milho de segunda safra entra com pouco espaço no calendário. O histórico da soja anterior e a vistoria no estabelecimento ajudam a priorizar o que fazer…",
+    "category": "Manejo por cultura",
+    "series": 6,
+    "order": 37,
+    "cover": "/media/domirio/blog/06-culturas.webp",
+    "coverAlt": "Linhas de milho sob luz da manhã",
+    "sections": [
+      {
+        "title": "Antes e depois da emergência",
+        "id": "antes-e-depois-da-emergencia"
+      },
+      {
+        "title": "Planeje duas frentes",
+        "id": "planeje-duas-frentes"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Herbicidas em pastagens: como planejar o manejo com o gado fora da área",
+    "slug": "herbicidas-em-pastagens-como-planejar-o-manejo-com-o-gado-fora-da-area",
+    "description": "Infestação no pasto costuma aparecer junto com falhas na cobertura. Identificar as invasoras e entender por que a forrageira perdeu espaço muda o plano.",
+    "category": "Manejo por cultura",
+    "series": 6,
+    "order": 38,
+    "cover": "/media/domirio/blog/06-culturas.webp",
+    "coverAlt": "Linhas de milho sob luz da manhã",
+    "sections": [
+      {
+        "title": "Comece pelo piquete",
+        "id": "comece-pelo-piquete"
+      },
+      {
+        "title": "Organize a movimentação do rebanho",
+        "id": "organize-a-movimentacao-do-rebanho"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Herbicidas em hortas: o que conferir antes de tratar plantas invasoras",
+    "slug": "herbicidas-em-hortas-o-que-conferir-antes-de-tratar-plantas-invasoras",
+    "description": "Hortaliças de folhas largas podem ser sensíveis à deriva e a resíduos. Em áreas com espécies lado a lado, uma recomendação feita para uma cultura pode não…",
+    "category": "Manejo por cultura",
+    "series": 6,
+    "order": 39,
+    "cover": "/media/domirio/blog/06-culturas.webp",
+    "coverAlt": "Linhas de milho sob luz da manhã",
+    "sections": [
+      {
+        "title": "Planeje por canteiro",
+        "id": "planeje-por-canteiro"
+      },
+      {
+        "title": "Proteja os canteiros vizinhos",
+        "id": "proteja-os-canteiros-vizinhos"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Citricultura: como decidir entre manejo de insetos e ácaros",
+    "slug": "citricultura-como-decidir-entre-manejo-de-insetos-e-acaros",
+    "description": "Uma lesão no fruto e a presença de um inseto na brotação são sinais diferentes. No pomar, o manejo começa identificando o organismo e o problema associado.",
+    "category": "Manejo por cultura",
+    "series": 6,
+    "order": 40,
+    "cover": "/media/domirio/blog/06-culturas.webp",
+    "coverAlt": "Linhas de milho sob luz da manhã",
+    "sections": [
+      {
+        "title": "Separe os protocolos",
+        "id": "separe-os-protocolos"
+      },
+      {
+        "title": "Quando houver indicação de controle",
+        "id": "quando-houver-indicacao-de-controle"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Dessecação pré-colheita: quando discutir essa operação com o agrônomo",
+    "slug": "dessecacao-pre-colheita-quando-discutir-essa-operacao-com-o-agronomo",
+    "description": "Grãos amadurecendo de forma desigual podem complicar a operação. A dessecação pré-colheita depende de indicação específica e precisa ser planejada…",
+    "category": "Manejo por cultura",
+    "series": 6,
+    "order": 41,
+    "cover": "/media/domirio/blog/06-culturas.webp",
+    "coverAlt": "Linhas de milho sob luz da manhã",
+    "sections": [
+      {
+        "title": "Confira a finalidade",
+        "id": "confira-a-finalidade"
+      },
+      {
+        "title": "Antes de marcar a máquina",
+        "id": "antes-de-marcar-a-maquina"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Manejo Integrado de Pragas: como unir monitoramento, biológico e químico",
+    "slug": "manejo-integrado-de-pragas-como-unir-monitoramento-biologico-e-quimico",
+    "description": "O MIP ajuda a decidir quando agir e como medir se a intervenção funcionou. A unidade de trabalho é o talhão observado ao longo do tempo.",
+    "category": "Manejo integrado e tecnologia",
+    "series": 7,
+    "order": 42,
+    "cover": "/media/domirio/blog/07-manejo-integrado.webp",
+    "coverAlt": "Pessoa com tablet durante vistoria em lavoura",
+    "sections": [
+      {
+        "title": "Monte uma rotina",
+        "id": "monte-uma-rotina"
+      },
+      {
+        "title": "Se o nível de ação for atingido",
+        "id": "se-o-nivel-de-acao-for-atingido"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Bioinseticidas: onde podem ajudar no manejo da lavoura",
+    "slug": "bioinseticidas-onde-podem-ajudar-no-manejo-da-lavoura",
+    "description": "Um produto biológico tem alvo, formulação e janela de uso próprios. O desempenho depende da identificação da praga e de como o produto chega ao organismo.",
+    "category": "Manejo integrado e tecnologia",
+    "series": 7,
+    "order": 43,
+    "cover": "/media/domirio/blog/07-manejo-integrado.webp",
+    "coverAlt": "Pessoa com tablet durante vistoria em lavoura",
+    "sections": [
+      {
+        "title": "Entenda a especificidade",
+        "id": "entenda-a-especificidade"
+      },
+      {
+        "title": "Comece com acompanhamento",
+        "id": "comece-com-acompanhamento"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Aplicação localizada: como validar um mapa de plantas daninhas",
+    "slug": "aplicacao-localizada-como-validar-um-mapa-de-plantas-daninhas",
+    "description": "Uma tecnologia que aciona a pulverização apenas em pontos detectados pode reduzir área tratada. O benefício depende de o sistema reconhecer o alvo e de a…",
+    "category": "Manejo integrado e tecnologia",
+    "series": 7,
+    "order": 44,
+    "cover": "/media/domirio/blog/07-manejo-integrado.webp",
+    "coverAlt": "Pessoa com tablet durante vistoria em lavoura",
+    "sections": [
+      {
+        "title": "Teste o reconhecimento",
+        "id": "teste-o-reconhecimento"
+      },
+      {
+        "title": "Meça o resultado",
+        "id": "meca-o-resultado"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Glifosato repetido: como revisar o programa quando começam os escapes",
+    "slug": "glifosato-repetido-como-revisar-o-programa-quando-comecam-os-escapes",
+    "description": "Sobreviventes recorrentes indicam que vale revisar a estratégia. Pressão de seleção repetida é uma hipótese, junto com identificação, estágio do mato e…",
+    "category": "Manejo integrado e tecnologia",
+    "series": 7,
+    "order": 45,
+    "cover": "/media/domirio/blog/07-manejo-integrado.webp",
+    "coverAlt": "Pessoa com tablet durante vistoria em lavoura",
+    "sections": [
+      {
+        "title": "Olhe o histórico",
+        "id": "olhe-o-historico"
+      },
+      {
+        "title": "Avalie alternativas sem trocar às cegas",
+        "id": "avalie-alternativas-sem-trocar-as-cegas"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Rotação de culturas: como quebrar ciclos de pragas e plantas daninhas",
+    "slug": "rotacao-de-culturas-como-quebrar-ciclos-de-pragas-e-plantas-daninhas",
+    "description": "Mudar a cultura pode alterar a disponibilidade de hospedeiros e as janelas de manejo. O resultado depende de quais organismos persistem e de como a…",
+    "category": "Manejo integrado e tecnologia",
+    "series": 7,
+    "order": 46,
+    "cover": "/media/domirio/blog/07-manejo-integrado.webp",
+    "coverAlt": "Pessoa com tablet durante vistoria em lavoura",
+    "sections": [
+      {
+        "title": "Planeje a sequência pelo histórico",
+        "id": "planeje-a-sequencia-pelo-historico"
+      },
+      {
+        "title": "Compare safras",
+        "id": "compare-safras"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Refúgio em culturas Bt: como planejar antes de semear",
+    "slug": "refugio-em-culturas-bt-como-planejar-antes-de-semear",
+    "description": "O refúgio estruturado ajuda a preservar insetos suscetíveis e retardar a evolução da resistência. Sua área precisa entrar no mapa e no pedido de sementes…",
+    "category": "Manejo integrado e tecnologia",
+    "series": 7,
+    "order": 47,
+    "cover": "/media/domirio/blog/07-manejo-integrado.webp",
+    "coverAlt": "Pessoa com tablet durante vistoria em lavoura",
+    "sections": [
+      {
+        "title": "Confira a tecnologia específica",
+        "id": "confira-a-tecnologia-especifica"
+      },
+      {
+        "title": "Manejo dentro do refúgio",
+        "id": "manejo-dentro-do-refugio"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Defensivo de origem irregular: o que verificar antes de receber",
+    "slug": "defensivo-de-origem-irregular-o-que-verificar-antes-de-receber",
+    "description": "Oferta barata sem nota ou com embalagem sem rastreabilidade deixa a equipe sem informações para confirmar conteúdo, uso e procedência.",
+    "category": "Manejo integrado e tecnologia",
+    "series": 7,
+    "order": 48,
+    "cover": "/media/domirio/blog/07-manejo-integrado.webp",
+    "coverAlt": "Pessoa com tablet durante vistoria em lavoura",
+    "sections": [
+      {
+        "title": "Na compra e no recebimento",
+        "id": "na-compra-e-no-recebimento"
+      },
+      {
+        "title": "Se houver suspeita",
+        "id": "se-houver-suspeita"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "Concentrado emulsionável ou grânulos dispersíveis: o que muda no preparo",
+    "slug": "concentrado-emulsionavel-ou-granulos-dispersiveis-o-que-muda-no-preparo",
+    "description": "As siglas EC e WG descrevem como o produto é formulado. Dois produtos com a mesma finalidade podem exigir procedimentos diferentes de manuseio e preparo.",
+    "category": "Manejo integrado e tecnologia",
+    "series": 7,
+    "order": 49,
+    "cover": "/media/domirio/blog/07-manejo-integrado.webp",
+    "coverAlt": "Pessoa com tablet durante vistoria em lavoura",
+    "sections": [
+      {
+        "title": "Compare as apresentações",
+        "id": "compare-as-apresentacoes"
+      },
+      {
+        "title": "Na preparação",
+        "id": "na-preparacao"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  },
+  {
+    "title": "IA no campo: como usar alertas de pragas sem perder a confirmação no talhão",
+    "slug": "ia-no-campo-como-usar-alertas-de-pragas-sem-perder-a-confirmacao-no-talhao",
+    "description": "Câmeras e sensores podem ajudar a apontar onde procurar primeiro. Um alerta é mais útil quando vira uma vistoria com resultado registrado.",
+    "category": "Manejo integrado e tecnologia",
+    "series": 7,
+    "order": 50,
+    "cover": "/media/domirio/blog/07-manejo-integrado.webp",
+    "coverAlt": "Pessoa com tablet durante vistoria em lavoura",
+    "sections": [
+      {
+        "title": "Monte um piloto",
+        "id": "monte-um-piloto"
+      },
+      {
+        "title": "Transforme alerta em ação de campo",
+        "id": "transforme-alerta-em-acao-de-campo"
+      },
+      {
+        "title": "Fontes",
+        "id": "fontes"
+      }
+    ],
+    "readingMinutes": 1
+  }
+]

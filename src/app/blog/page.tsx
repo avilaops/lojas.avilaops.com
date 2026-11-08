@@ -3,6 +3,7 @@ import Link from "next/link";
 import { exigirTenant } from "@/lib/tenant";
 import { dataLegivel } from "@/lib/publicacoes";
 import { listarPublicadas } from "@/lib/publicacoes-consulta";
+import BlogDomiRio from "@/components/domirio/BlogDomiRio";
 
 /**
  * Blog da loja.
@@ -16,8 +17,8 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata(): Promise<Metadata> {
   const t = await exigirTenant();
   return {
-    title: "Blog",
-    description: `Artigos e novidades da ${t.nome}.`,
+    title: t.slug === "domi-rio" ? "Central Domi-Rio | Defensivos na prática" : "Blog",
+    description: t.slug === "domi-rio" ? "50 artigos sobre defensivos, manejo, tecnologia de aplicação e segurança no campo, organizados em sete assuntos." : `Artigos e novidades da ${t.nome}.`,
     alternates: { canonical: "/blog" },
   };
 }
@@ -25,6 +26,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function Blog() {
   const t = await exigirTenant();
   const posts = await listarPublicadas(t.id, 30);
+  if (t.slug === "domi-rio") return <BlogDomiRio publicacoes={posts} />;
 
   return (
     <div className="container-loja max-w-3xl py-10">
