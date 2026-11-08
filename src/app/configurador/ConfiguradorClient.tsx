@@ -1,12 +1,14 @@
 "use client";
 
-import type { CSSProperties, FormEvent } from "react";
+import type { FormEvent } from "react";
 import { useMemo, useState, useSyncExternalStore } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { ArrowRight, Box, CheckCircle2, Rotate3D } from "lucide-react";
 import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
 import { armazenamentoLocalSeguro, lerUltimoCodigoRetomada, salvarUltimoCodigoRetomada } from "@/lib/configurador-retomada";
 import { LIMITES_EDITOR_SOB_MEDIDA, OPCOES_CONFIGURADOR, resumoDaConfiguracao, type ConfiguracaoSobMedida } from "@/lib/configurador-sob-medida";
+import { configuracaoParaThermalBoxVisual } from "@/lib/configurador-visual";
 
 const INICIAL: ConfiguracaoSobMedida = {
   dimensoes: { larguraCm: 80, alturaCm: 60, profundidadeCm: 120 },
@@ -21,7 +23,10 @@ const INICIAL: ConfiguracaoSobMedida = {
 
 type Resposta = { referencia: string; criadoEm: string; codigoRetomada: string };
 type RespostaRetomada = { referencia: string; contratoVersao: number; configuracao: ConfiguracaoSobMedida };
-type Variaveis3D = CSSProperties & Record<`--${string}`, string>;
+const ThermalBoxViewerView = dynamic(
+  () => import("@avilaops/gerador-3d/thermal-box/react").then((modulo) => modulo.ThermalBoxViewerView),
+  { ssr: false, loading: () => <div className="configurador-3d-carregando" role="status">Carregando visualização 3D…</div> },
+);
 
 function Opcoes({ valores }: { valores: Record<string, string> }) {
   return Object.entries(valores).map(([valor, rotulo]) => <option key={valor} value={valor}>{rotulo}</option>);
@@ -44,7 +49,6 @@ function salvarCodigoNoNavegador(slug: string, codigo: string): void {
 
 export default function ConfiguradorClient({ nomeDaLoja, slugDaLoja, whatsapp }: { nomeDaLoja: string; slugDaLoja: string; whatsapp: string | null }) {
   const [configuracao, setConfiguracao] = useState(INICIAL);
-  const [rotacao, setRotacao] = useState({ x: -18, y: 32 });
   const [contato, setContato] = useState({ nome: "", email: "", telefone: "", consentimento: false });
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState("");
@@ -62,18 +66,7 @@ export default function ConfiguradorClient({ nomeDaLoja, slugDaLoja, whatsapp }:
   const codigoRetomada = codigoDigitado || codigoSalvo || "";
 
   const resumo = useMemo(() => resumoDaConfiguracao(configuracao), [configuracao]);
-  const visual = useMemo<Variaveis3D>(() => {
-    const { larguraCm, alturaCm, profundidadeCm } = configuracao.dimensoes;
-    const maior = Math.max(larguraCm, alturaCm, profundidadeCm);
-    const escala = 190 / maior;
-    return {
-      "--box-w": `${Math.max(68, larguraCm * escala)}px`,
-      "--box-h": `${Math.max(58, alturaCm * escala)}px`,
-      "--box-d": `${Math.max(68, profundidadeCm * escala)}px`,
-      "--box-rx": `${rotacao.x}deg`,
-      "--box-ry": `${rotacao.y}deg`,
-    };
-  }, [configuracao.dimensoes, rotacao]);
+  const visualConfig = useMemo(() => configuracaoParaThermalBoxVisual(configuracao), [configuracao]);
 
   function dimensao(campo: keyof ConfiguracaoSobMedida["dimensoes"], valor: string) {
     setResposta(null);
@@ -161,21 +154,10 @@ export default function ConfiguradorClient({ nomeDaLoja, slugDaLoja, whatsapp }:
             <div><span>Prévia interativa</span><h2 id="titulo-visual">Seu modelo em 3D</h2></div>
             <Rotate3D aria-hidden="true" />
           </div>
-          <div className="configurador-palco" style={visual}>
-            <div className={`caixa-3d tampa-${configuracao.tampa} base-${configuracao.mobilidade}`} aria-hidden="true">
-              <div className="face frente">
-                {Array.from({ length: configuracao.divisorias }, (_, indice) => <i key={indice} style={{ left: `${((indice + 1) / (configuracao.divisorias + 1)) * 100}%` }} />)}
-              </div>
-              <div className="face tras" /><div className="face direita" /><div className="face esquerda" />
-              <div className="face topo" /><div className="face fundo" />
-              {configuracao.mobilidade === "rodizios" && <><b className="rodizio r1" /><b className="rodizio r2" /><b className="rodizio r3" /><b className="rodizio r4" /></>}
-            </div>
+          <div className="configurador-palco">
+            <ThermalBoxViewerView config={visualConfig} />
           </div>
           <p className="sr-only">Modelo de {resumo}.</p>
-          <div className="configurador-rotacao">
-            <label>Giro horizontal <input type="range" min="-65" max="65" value={rotacao.y} onChange={(e) => setRotacao((r) => ({ ...r, y: Number(e.target.value) }))} /></label>
-            <label>Giro vertical <input type="range" min="-35" max="20" value={rotacao.x} onChange={(e) => setRotacao((r) => ({ ...r, x: Number(e.target.value) }))} /></label>
-          </div>
           <div className="configurador-resumo"><strong>Ficha atual</strong><p>{resumo}</p><small>Representação conceitual, sem escala de fabricação.</small></div>
         </section>
 

@@ -1,7 +1,7 @@
 # AVL-417 — decisão de integração do visualizador MRG
 
 Data: 03/11/2026. Autor: agente Codex, engenharia AVL-417.
-Estado: análise arquitetural concluída; implementação do novo visualizador pendente.
+Estado: implementação em PR; sem merge, deploy ou aceite de produção.
 Issue: https://linear.app/avilaops/issue/AVL-417/mrg-adotar-motor-3d-detalhado-no-configurador-sob-medida
 
 ## Escopo e evidência
@@ -203,14 +203,33 @@ permitiram inspecionar as fontes. get_agent_context retornou
 `Tool get_agent_context not found`; o contexto foi recuperado por projeto,
 issues, comentários e código.
 
-Entrega desta rodada: documento de comparação, decisão de integração e
-registro da demanda. Nenhum código runtime, dependência, banco, regra
-industrial ou ambiente de produção foi alterado.
+Implementação da evolução:
 
-Menor próximo passo técnico: coordenar na AVL-417 uma alteração de
-`gerador-3d` que aceite um modelo visual neutro e omita overlays de academia,
-com versão fixada e teste do consumidor Lojas. Isso libera a integração dos
-campos já persistidos sem falsificar uma família.
+- `gerador-3d`, branch `feat/thermal-box-visualizer`, commit `bbbbbf1`:
+  contrato visual neutro `thermal-box`, modelo paramétrico de caixa, tampa
+  superior/frontal/dupla, pés/rodízios/sem base, divisórias e wrapper React.
+- Lojas, branch `feat/avl-417-motor-3d`: dependência fixada no SHA `bbbbbf1`,
+  adaptador `configuracaoParaThermalBoxVisual` e substituição do palco CSS por
+  `ThermalBoxViewerView` carregado somente no cliente.
+- O viewer oferece OrbitControls para rotação e zoom por gesto, botões
+  focáveis de restaurar/aproximar/afastar e fallback textual quando WebGL
+  falha ou perde o contexto.
+- Quantidade e observações continuam exclusivamente na ficha; nenhum campo
+  industrial ausente foi inferido.
+
+Esta implementação está nas PRs draft
+[#222](https://github.com/avilaops/lojas.avilaops.com/pull/222) e
+[#1](https://github.com/avilaops/gerador-3d/pull/1). A CI do SHA
+`a318457` da Lojas passou integralmente no run
+`42316354651`, incluindo lint, typecheck, testes, integrações PostgreSQL,
+build, jornadas de navegador e empacotamento. Os jobs de entrega, fumaça e
+deploy foram ignorados porque a PR permaneceu draft.
+
+Os jobs de navegador aprovados validam jornadas existentes de cotação,
+etiquetas e PDFs; não constituem uma captura visual autenticada específica da
+rota MRG. A inspeção visual responsiva do configurador ainda requer revisão
+manual em navegador autorizado antes do aceite. Não há merge nem deploy
+automático enquanto as PRs permanecerem em draft.
 
 Para o aceite integral: vincular à issue as opções industriais aprovadas
 pela MRG ou uma decisão explícita de que isolamento/ferragens serão somente
