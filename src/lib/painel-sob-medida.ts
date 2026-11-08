@@ -1,4 +1,5 @@
 import { prisma } from "./db";
+import { IdentidadeSobMedidaSchema, type ConfiguracaoSobMedida } from "./configurador-sob-medida";
 import {
   analisarFichaTecnicaSobMedida,
   criarFichaTecnicaSobMedida,
@@ -24,6 +25,7 @@ export interface RegistroProjetoSobMedida {
 
 export interface ProjetoSobMedidaPainel extends Omit<RegistroProjetoSobMedida, "fichaTecnica" | "configuracao"> {
   fichaTecnica: FichaTecnicaSobMedida;
+  identidadeVisual?: ConfiguracaoSobMedida["identidadeVisual"];
 }
 
 export type BuscarRegistroProjetoSobMedida = (tenantId: string, id: string) => Promise<RegistroProjetoSobMedida | null>;
@@ -89,6 +91,10 @@ export async function buscarProjetoSobMedidaNoPainel(
     && registro.previaVersao === null;
   const fichaTecnica = semSnapshot ? fichaLegada(registro) : fichaPersistidaValida(registro);
   if (!fichaTecnica) return null;
+  const configuracao = registro.configuracao;
+  const identidadeVisual = configuracao && typeof configuracao === "object" && "identidadeVisual" in configuracao
+    ? IdentidadeSobMedidaSchema.safeParse(configuracao.identidadeVisual).data
+    : undefined;
 
   return {
     id: registro.id,
@@ -104,5 +110,6 @@ export async function buscarProjetoSobMedidaNoPainel(
     telefone: registro.telefone,
     criadoEm: registro.criadoEm,
     fichaTecnica,
+    ...(identidadeVisual && { identidadeVisual }),
   };
 }

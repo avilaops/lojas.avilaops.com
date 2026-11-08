@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { createHash } from "node:crypto";
+import sharp from "sharp";
 import {
   criarSolicitacaoSobMedida,
+  LogoSobMedidaInvalidaError,
   RetomadaNaoEncontradaError,
   retomarConfiguracaoSobMedida,
   type DadosPersistenciaSolicitacao,
@@ -58,6 +60,43 @@ test("criação persiste revisão validada no tenant informado", async () => {
   assert.equal(resposta.referencia, gravado?.referencia);
   assert.deepEqual(resposta.criadoEm, new Date("2026-10-31T14:00:00Z"));
   assert.match(resposta.codigoRetomada, /^CFG-[A-Z0-9]{12}\.[A-Za-z0-9_-]{22}$/);
+});
+
+test("logo e cor acompanham o orçamento e são restauradas pelo código privado", async () => {
+  const png = await sharp({
+    create: { width: 8, height: 4, channels: 4, background: "#12345680" },
+  }).png().toBuffer();
+  const identidadeVisual = { cor: "#123456", logo: `data:image/png;base64,${png.toString("base64")}` };
+  let gravado: DadosPersistenciaSolicitacao | undefined;
+  const resposta = await criarSolicitacaoSobMedida(
+    "tenant-mrg",
+    { ...entrada, configuracao: { ...entrada.configuracao, identidadeVisual } },
+    async (dados) => {
+      gravado = dados;
+      return { id: "sol-logo", referencia: dados.referencia, criadoEm: new Date() };
+    },
+  );
+  assert.ok(gravado);
+  const { configuracao, contratoVersao, referencia, chaveRetomadaHash } = gravado;
+  const retomada = await retomarConfiguracaoSobMedida(
+    "tenant-mrg",
+    { codigoRetomada: resposta.codigoRetomada },
+    async () => ({ configuracao, contratoVersao, referencia, chaveRetomadaHash }),
+  );
+  assert.equal(retomada.configuracao.identidadeVisual?.cor, identidadeVisual.cor);
+  assert.match(retomada.configuracao.identidadeVisual?.logo ?? "", /^data:image\/webp;base64,/);
+  assert.equal(retomada.configuracao.observacoes, "");
+});
+
+test("logo com bytes inválidos é recusada antes da persistência", async () => {
+  await assert.rejects(
+    criarSolicitacaoSobMedida(
+      "tenant-mrg",
+      { ...entrada, configuracao: { ...entrada.configuracao, identidadeVisual: { logo: "data:image/webp;base64,AAAA" } } },
+      async () => { throw new Error("não deveria gravar"); },
+    ),
+    LogoSobMedidaInvalidaError,
+  );
 });
 
 test("criação recusa payload inválido antes de chamar persistência", async () => {

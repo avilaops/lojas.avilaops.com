@@ -48,6 +48,20 @@ export default function FichaTecnicaSobMedida({ projeto }: { projeto: ProjetoSob
         </dl>
       </section>
 
+      {projeto.identidadeVisual && (
+        <section className="ficha-sob-medida-bloco">
+          <h3>Identidade visual solicitada</h3>
+          {projeto.identidadeVisual.cor && <p>Cor externa {projeto.identidadeVisual.cor.toUpperCase()}</p>}
+          {projeto.identidadeVisual.logo && (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={projeto.identidadeVisual.logo} alt="Logo enviada para a frente da caixa" className="my-3 max-h-32 max-w-full object-contain" />
+              <a className="btn-secundario ficha-sob-medida-nao-imprimir" href={projeto.identidadeVisual.logo} download={`logo-${projeto.referencia}.webp`}>Baixar logo de referência</a>
+            </>
+          )}
+        </section>
+      )}
+
       {ficha.observacoes && (
         <section className="ficha-sob-medida-bloco">
           <h3>Observações técnicas</h3>
