@@ -1708,13 +1708,13 @@
       "objective": "Atender pedido explícito do proprietário: retirar desenho genérico, preservando medidas e material da ficha técnica.",
       "assignee": "codex",
       "priority": "alta",
-      "status": "em-revisao",
+      "status": "concluida",
       "acceptanceCriteria": [
         "Nenhum esquema genérico nas fichas.",
         "Medidas e material cadastrados preservados.",
         "CI e verificação pública após publicação."
       ],
-      "evidence": "PR #234. Componente removido. Navegador verifica ausência do desenho e presença das medidas/material. CI inicial 42498385841 parou no resolvedor de fonte Inter do Next, fora da remoção.",
+      "evidence": "PR #234 mesclado em 56937f7. CI 42498915859 aprovado, incluindo navegador 390/1440: desenho ausente e medidas/material presentes. Entrega, deploy e fumaça do run 42499399903 aprovados após repetição da entrega por timeout. Ficha pública gny-5030-w2-3250-500 conferida: sem Esquema dimensional/Sem escala, mantendo DI76,2, DE82,55, altura12,7mm e material Nylon com fibra de vidro.",
       "environment": "github"
     }
   ],
