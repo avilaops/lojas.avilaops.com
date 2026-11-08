@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/LinkLoja";
 import { ArrowUpRight, BookOpen, MessageCircle } from "lucide-react";
 import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
 import { listarPublicadas } from "@/lib/publicacoes-consulta";
