@@ -88,14 +88,22 @@ jobs:
       - run: npx tsx --test --test-shard=${{ matrix.fatia }} src/lib/*.test.ts packages/checkout/src/core/*.test.ts packages/checkout/src/server/*.test.ts packages/checkout/src/providers/*.test.ts
 
   qualidade:
-    name: qualidade / ${{ matrix.comando }}
+    name: qualidade / ${{ matrix.comando }} / ${{ matrix.grupo }}
     needs: dependencias
     runs-on: ubuntu-24.04
     timeout-minutes: 1
     strategy:
       fail-fast: false
       matrix:
-        comando: [typecheck, lint]
+        include:
+          - comando: typecheck
+            grupo: tipos
+          - comando: lint
+            grupo: paginas
+          - comando: lint
+            grupo: componentes
+          - comando: lint
+            grupo: restante
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -103,7 +111,14 @@ jobs:
       - uses: ./.github/actions/preparar-node
       - if: matrix.comando == 'typecheck'
         run: npx next typegen
-      - run: npm run ${{ matrix.comando }}
+      - if: matrix.comando == 'typecheck'
+        run: npm run typecheck
+      - if: matrix.grupo == 'paginas'
+        run: npx eslint src/app
+      - if: matrix.grupo == 'componentes'
+        run: npx eslint src/components
+      - if: matrix.grupo == 'restante'
+        run: npx eslint . --ignore-pattern 'src/app/**' --ignore-pattern 'src/components/**'
 
   payloads:
     name: contratos de payload e infraestrutura de CI

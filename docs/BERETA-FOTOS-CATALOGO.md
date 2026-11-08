@@ -60,6 +60,16 @@ sem remover as verificações de integridade e identidade dos artefatos.
 
 ## Limites atuais
 
+Após o levantamento, o proprietário determinou retirar produtos sem marca da
+vitrine. Foram identificados 574 anúncios ativos de rodas/pneus nessa condição.
+A operação usa desativação com histórico/outbox, preservando o cadastro e pedidos,
+com backup privado antes da execução. O tema claro também foi salvo na loja
+para refletir a versão visual já revisada, preservando as demais propriedades.
+
+A preparação de dependências usa um artefato único verificado para reduzir o
+custo de publicação. O lint foi dividido por páginas, componentes e restante,
+mantendo a cobertura integral e o limite nativo de um minuto de cada job.
+
 7.015 itens do inventário ainda não têm associação revisada: 34 exigem foto
 própria e 6.981 permanecem pendentes. Entre os motivos registrados estão 1.407
 cadastros sem fabricante, 1.552 rodas sem modelo identificado e 1.226 acabamentos
