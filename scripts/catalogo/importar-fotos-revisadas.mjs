@@ -22,12 +22,17 @@ for (const item of dossie.itens) {
 await writeFile(`${arquivo}.plano.json`, JSON.stringify(plano, null, 2));
 console.log(`Fotos revisadas elegíveis: ${plano.length}`);
 if (process.argv.includes("--aplicar")) {
-  const resultados = [];
+  let resultados = [];
+  try { resultados = JSON.parse(await readFile(`${arquivo}.resultado.json`, "utf8")); }
+  catch (erro) { if (erro.code !== "ENOENT") throw erro; }
   for (let i = 0; i < plano.length; i += 5) {
     const r = await fetch(`${origem}/api/admin/tenants/${dossie.loja}/produtos/fotos`, { method: "POST", headers, body: JSON.stringify(plano.slice(i,i+5)), signal: AbortSignal.timeout(150000) });
-    if (!r.ok) throw new Error(`Importação: HTTP ${r.status}; execução interrompida sem repetir o lote.`);
+    if (!r.ok) {
+      const erro = await r.json().catch(() => ({}));
+      throw new Error(`Importação: HTTP ${r.status}; ${JSON.stringify(erro.detalhes ?? erro.erro ?? {})}; execução interrompida sem repetir o lote.`);
+    }
     const lote = await r.json(); resultados.push(...lote.resultados);
     await writeFile(`${arquivo}.resultado.json`, JSON.stringify(resultados, null, 2));
-    console.log(`Processados ${resultados.length}/${plano.length}`);
+    console.log(`Processados ${Math.min(i+5,plano.length)}/${plano.length} nesta execução`);
   }
 }

@@ -9,9 +9,11 @@ test("variante de cor não confunde prata comum com diamantado ou fumê", () => 
   assert.notEqual(corDaRoda("Prata", "KRMAI"), corDaRoda("Grafite Diamantada", "KRMAI"));
   assert.equal(corDaRoda("RODA KRMAI S47 PRETA DIAM. SMOKE", "KRMAI"), null);
   assert.equal(corDaRoda("RODA BRW S47 BD", "BRW"), null);
+  assert.notEqual(corDaRoda("Prata", "KRMAI"), corDaRoda("Prata Polida", "KRMAI"));
 });
 
 test("pneus não confundem família incompleta, geração, medida ou índice", () => {
+  assert.equal(mesmoPneu("PNEU 185/60/15 DELINTE DH2 84H", "Delinte", "185/60 R15 PNEU DELINTE DH2 84H"), true);
   assert.equal(mesmoPneu("PNEU 195/60/15 PIRELLI P7 88H", "Pirelli", "PNEU PIRELLI 195/60R15 88H P7"), true);
   assert.equal(mesmoPneu("PNEU 295/30/18 CONTINENTAL CONTACT", "Continental", "PNEU CONTINENTAL 295/30R18 94Y CONTISPORTCONTACT 2"), false);
   assert.equal(mesmoPneu("PNEU 195/60/15 PIRELLI P7 88H", "Pirelli", "PNEU PIRELLI 195/60R15 88H P7 C2"), false);

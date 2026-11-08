@@ -10,7 +10,7 @@ export function corDaRoda(texto, marca) {
     if (/\bBD\b/.test(n)) return "preto-diamantado";
     if (/\bGD\b/.test(n)) return "grafite-diamantado";
   }
-  if (/\bPRATA\b/.test(n) && !/DIAM|HYPER|FOSC|GLOSS/.test(n)) return "prata";
+  if (/\bPRATA\b/.test(n) && !/DIAM|HYPER|FOSC|GLOSS/.test(n)) return /POLID/.test(n) ? "prata-polida" : "prata";
   if (/\bBLACK\s+PIANO\b/.test(n)) return "black-piano";
   return null;
 }

@@ -6,7 +6,7 @@ export function identidadePneu(nome, marca) {
   const medida = nome.match(/\b(\d{3})\s*\/\s*(\d{2})\s*(?:\/|ZR?|R)\s*(\d{2})\b/i);
   if (!medida) return null;
   const indice = nome.match(/\b(\d{2,3})\s*\(?([A-Z])\)?\b/i);
-  let modelo = nome.replace(medida[0], " ").replace(/^PNEU\s*/i, "").replace(/\b\d{2,3}\s*\(?[A-Z]\)?\b/gi, " ").replace(/\b(?:XL|TL|EXTRA\s*LOAD)\b/gi, " ");
+  let modelo = nome.replace(medida[0], " ").replace(/\bPNEU\b/gi, " ").replace(/\b\d{2,3}\s*\(?[A-Z]\)?\b/gi, " ").replace(/\b(?:XL|TL|EXTRA\s*LOAD)\b/gi, " ");
   const aliases = [marca, ...(marca === "Michelin" ? ["MICHELLIN"] : []), ...(marca === "Accelera" ? ["ACELLERA"] : []), ...(marca === "Linglong" ? ["LING LONG"] : [])];
   for (const alias of aliases) modelo = modelo.replace(new RegExp(escapar(alias), "ig"), " ");
   modelo = normalizar(modelo);
