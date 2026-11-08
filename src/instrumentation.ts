@@ -10,12 +10,13 @@ import type { Instrumentation } from "next";
  */
 export async function register(): Promise<void> {
   // O runtime Edge não tem timers longos nem Prisma; só o nodejs agenda.
-  if (process.env.NEXT_RUNTIME !== "nodejs") return;
-  const { iniciarLangfuse } = await import("./lib/langfuse");
-  await iniciarLangfuse();
-  // Importação tardia para o build e o runtime Edge não carregarem o Prisma.
-  const { iniciarAgendador } = await import("./lib/rotinas-agendador");
-  iniciarAgendador();
+  if (process.env.NEXT_RUNTIME === "nodejs") {
+    const { iniciarLangfuse } = await import("./lib/langfuse");
+    await iniciarLangfuse();
+    // Importação tardia para o build e o runtime Edge não carregarem o Prisma.
+    const { iniciarAgendador } = await import("./lib/rotinas-agendador");
+    iniciarAgendador();
+  }
 }
 
 /**
@@ -27,16 +28,17 @@ export async function register(): Promise<void> {
  * dado do pedido: nenhum dos dois é lido aqui. Ver docs/METRICAS.md.
  */
 export const onRequestError: Instrumentation.onRequestError = async (erro, request, contexto) => {
-  if (process.env.NEXT_RUNTIME !== "nodejs") return;
-  try {
-    const { erroJaContado } = await import("./lib/metricas-rota");
-    // O `medirRota` já contou este erro no grupo certo, com a duração.
-    if (erroJaContado(erro)) return;
-    const { registroGlobal } = await import("./lib/metricas-tenant");
-    const cabecalho = request.headers["x-forwarded-host"] ?? request.headers["host"];
-    const grupo = contexto.routeType === "render" ? "render" : contexto.routeType === "action" ? "acao" : "outra";
-    registroGlobal().registrarErro({ host: Array.isArray(cabecalho) ? cabecalho[0] : cabecalho, grupo });
-  } catch {
-    // Métrica que falha não pode virar um segundo erro em cima do primeiro.
+  if (process.env.NEXT_RUNTIME === "nodejs") {
+    try {
+      const { erroJaContado } = await import("./lib/metricas-rota");
+      // O `medirRota` já contou este erro no grupo certo, com a duração.
+      if (erroJaContado(erro)) return;
+      const { registroGlobal } = await import("./lib/metricas-tenant");
+      const cabecalho = request.headers["x-forwarded-host"] ?? request.headers["host"];
+      const grupo = contexto.routeType === "render" ? "render" : contexto.routeType === "action" ? "acao" : "outra";
+      registroGlobal().registrarErro({ host: Array.isArray(cabecalho) ? cabecalho[0] : cabecalho, grupo });
+    } catch {
+      // Métrica que falha não pode virar um segundo erro em cima do primeiro.
+    }
   }
 };

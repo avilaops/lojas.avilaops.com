@@ -1,0 +1,34 @@
+.ajuda-shell { padding: 56px 0 80px; }
+.plataforma-shell:has(.ajuda-shell) { overflow: clip; }
+.ajuda-intro { max-width: 760px; margin-bottom: 48px; }
+.ajuda-intro > span { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; color: var(--lj-azul-forte); text-transform: uppercase; letter-spacing: .08em; }
+.ajuda-intro h1 { margin: 16px 0; font-size: clamp(30px, 5vw, 50px); line-height: 1.1; letter-spacing: -.04em; }
+.ajuda-intro p { max-width: 600px; color: var(--lj-tinta-suave); font-size: 17px; line-height: 1.7; }
+.ajuda-shell :is(a, button):focus-visible { outline: 3px solid var(--lj-azul-forte); outline-offset: 4px; }
+.ajuda-intro > a, .ajuda-proximo > a { min-height: 44px; display: inline-flex; gap: 8px; align-items: center; color: var(--lj-azul-forte); font-weight: 650; margin-top: 12px; }
+.ajuda-layout { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 56px; align-items: start; }
+.ajuda-indice { position: sticky; top: 96px; padding: 20px 0; }
+.ajuda-indice h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 16px; color: var(--lj-tinta-suave); }
+.ajuda-indice ol { list-style: none; margin: 0; padding: 0; }
+.ajuda-indice a { display: flex; align-items: center; min-height: 48px; padding: 10px 12px; border-radius: 8px; line-height: 1.5; font-size: 14px; }
+.ajuda-indice a:hover { background: var(--lj-papel-2); color: var(--lj-azul-forte); }
+.ajuda-conteudo { min-width: 0; }
+.ajuda-conteudo > section { scroll-margin-top: 100px; border-top: 1px solid var(--lj-linha); padding: 32px 0; }
+.ajuda-conteudo h2 { font-size: clamp(22px, 3vw, 30px); line-height: 1.3; letter-spacing: -.025em; margin: 0 0 16px; }
+.ajuda-conteudo p, .ajuda-conteudo li { font-size: 16px; line-height: 1.8; overflow-wrap: anywhere; }
+.ajuda-conteudo section > p { color: var(--lj-tinta-suave); margin-bottom: 24px; }
+.ajuda-conteudo ol { list-style: decimal; padding-left: 26px; }
+.ajuda-conteudo li { padding-left: 8px; margin-bottom: 18px; }
+.ajuda-conteudo li::marker { color: var(--lj-azul-forte); font-weight: 700; }
+.ajuda-conteudo blockquote { border-left: 3px solid var(--lj-azul-forte); background: var(--lj-azul-suave); padding: 16px 20px; margin: 24px 0 0; border-radius: 0 8px 8px 0; }
+.ajuda-conteudo blockquote p { margin: 0; font-size: 14px; }
+.ajuda-proximo { border-top: 1px solid var(--lj-linha); padding-top: 32px; }
+.ajuda-proximo > a { margin-right: 24px; }
+@media (max-width: 760px) {
+  .ajuda-shell { padding: 32px 0 48px; }
+  .ajuda-layout { grid-template-columns: 1fr; gap: 12px; }
+  .ajuda-intro { margin-bottom: 24px; }
+  .ajuda-indice { position: static; border: 1px solid var(--lj-linha); border-radius: 12px; padding: 16px; background: #fff; }
+  .ajuda-indice a { padding: 10px 0; }
+  .ajuda-conteudo > section { padding: 28px 0; }
+}

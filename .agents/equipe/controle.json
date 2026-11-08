@@ -13,6 +13,22 @@
   ],
   "tasks": [
     {
+      "id": "MDX-ACESSO-AJUDA-20261108",
+      "title": "Iniciar migração MDX e melhorar navegação de acesso e Ajuda",
+      "objective": "Separar acesso da equipe do site comercial, facilitar a escolha de lojas e publicar Ajuda a partir de MDX versionado.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-andamento",
+      "acceptanceCriteria": [
+        "Seleção de lojas responsiva com busca por nome, slug ou domínio e estados vazios.",
+        "Autorização SSO, POST de entrada e auditoria existentes preservados.",
+        "Ajuda em MDX mantém URL e sete âncoras e oferece índice em web e mobile.",
+        "Tipos, lint, testes e build verificados exclusivamente no GitHub CI."
+      ],
+      "environment": "branch de desenvolvimento; sem publicação em produção",
+      "evidence": "Plano: docs/superpowers/plans/2026-11-08-mdx-acesso-ajuda.md. Verificação de CI pendente."
+    },
+    {
       "id": "DOMIRIO-PR208-REGRESSOES",
       "title": "Corrigir regressões do agrupamento por volume da Domi-Rio",
       "objective": "Separar fotos por volume e preservar a variante padrão e os vínculos comerciais.",

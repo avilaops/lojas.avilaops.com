@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import createMDX from "@next/mdx";
 
 /**
  * Um servidor, N lojas.
@@ -12,6 +13,7 @@ import type { NextConfig } from "next";
 // nesses casos (em vez de erro silencioso) e o cliente recarrega; ver
 // ErroDeVersao em src/app/layout.tsx.
 const nextConfig: NextConfig = {
+  pageExtensions: ["js", "jsx", "ts", "tsx", "mdx"],
   deploymentId: process.env.LOJAS_DEPLOY_ID || undefined,
   output: "standalone",
   // No CI o job de tipos (incluindo next typegen) precisa passar antes do build.
@@ -39,4 +41,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default createMDX()(nextConfig);

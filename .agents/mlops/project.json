@@ -20,6 +20,18 @@
         },
         {
           "kind": "code",
+          "path": "src/components/plataforma/SeletorLojasEquipe.tsx"
+        },
+        {
+          "kind": "test",
+          "path": "src/lib/busca-lojas.test.ts"
+        },
+        {
+          "kind": "contract",
+          "path": "docs/superpowers/plans/2026-11-08-mdx-acesso-ajuda.md"
+        },
+        {
+          "kind": "code",
           "path": "src/lib/tenant.ts"
         },
         {
