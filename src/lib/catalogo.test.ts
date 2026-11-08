@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { condicaoProdutos, dicaDeMedidas, medidaResumida, ordenarPorMedida, termosDeBusca } from "./catalogo";
 import type { ChaveDeMedida } from "./catalogo";
+import { condicoesBuscaAgelPk } from "./referencias-agel-pk";
 
 /**
  * Em catálogo técnico a pessoa digita a peça como ela é falada na oficina.
@@ -285,4 +286,17 @@ test("sem o trio, a dica não promete medida que a loja não cadastrou", () => {
   const dica = dicaDeMedidas([medida("espessuraMm", "Espessura"), medida("secaoMm", "Seção do cordão")]);
   assert.equal(dica, "Medidas em mm: espessura, seção do cordão.");
   assert.ok(!dica!.includes("interno"));
+});
+
+
+test("referência Agel amplia a busca sem remover tenant, categoria ou disponibilidade", () => {
+  const where = condicaoProdutos("pk-id", { busca: "AGEL 5721", categoriaSlug: "anel-guia", somenteDisponiveis: true });
+  assert.equal(where.tenantId, "pk-id");
+  assert.equal(where.ativo, true);
+  assert.deepEqual(where.categoria, { slug: "anel-guia", ativo: true });
+  const regras = where.AND as Array<{ OR?: unknown[] }>;
+  for (const regra of regras.filter(r => r.OR)) {
+    assert.ok(regra.OR!.some(r => JSON.stringify(r) === JSON.stringify(condicoesBuscaAgelPk("5721")[0])));
+  }
+  assert.ok(regras.length > termosDeBusca("AGEL 5721").length);
 });

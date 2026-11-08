@@ -13,6 +13,22 @@
   ],
   "tasks": [
     {
+      "id": "PK-REFERENCIAS-AGEL-20261108",
+      "title": "Relacionar referências Agel verificadas aos produtos PK",
+      "objective": "Permitir busca por código Agel e publicar referência documental visível em MDX na ficha PK, sem prometer intercambiabilidade.",
+      "assignee": "codex",
+      "priority": "normal",
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "Somente 34 relações com referência e medidas iguais são associadas.",
+        "Consulta e ficha exigem tenant PK, slug, referência, material e medidas atuais.",
+        "HTML visível no endereço canônico existente, sem alterar preço, estoque, fabricante ou MPN.",
+        "Testes e build exclusivamente no GitHub CI."
+      ],
+      "evidence": "PDF Agel 02/2019: 41 páginas, 552 linhas ANG, 34 relações verificadas e 24 divergências excluídas. PR #231. CI inicial parou no npm ci: lockfile remoto continha aviso de saída truncada. Lock íntegro recuperado preservando revisão b4717c44 do motor; grafo de dependências conferido. Revisão técnica corrigiu drift de material e alinhou os critérios da busca e da ficha.",
+      "environment": "github"
+    },
+    {
       "id": "BERETA-FOTOS-CATALOGO-20261108",
       "title": "Pesquisar e importar fotos de rodas e pneus sem imagem",
       "objective": "Percorrer inventário, localizar fontes verificáveis e importar exclusivamente mídia com identidade e versão conferidas.",
