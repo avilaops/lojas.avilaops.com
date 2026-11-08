@@ -13,13 +13,35 @@
   ],
   "tasks": [
     {
+      "id": "PK-JORNADA-VISUAL-20261108",
+      "title": "Implementar jornada visual PK aprovada em Mermaid",
+      "objective": "Mapa navegável exclusivo PK com três entradas, quatro etapas e cinco grupos de segmentos, da identificação à cotação.",
+      "assignee": "codex",
+      "priority": "normal",
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "Entradas por código, amostra e aplicação com destinos reais.",
+        "Dez segmentos agrupados sem duplicação.",
+        "Navegação por teclado e telas 390/1440 verificadas no GitHub CI.",
+        "Página canônica exclusiva PK, descoberta na home e sitemap; Mermaid versionado."
+      ],
+      "evidence": "Plano docs/superpowers/plans/2026-11-08-pk-jornada-visual.md; diagramas docs/PK-JORNADA-MERMAID.md. Testes e build exclusivamente GitHub CI.",
+      "environment": "github"
+    },
+    {
       "id": "DOMIRIO-CONVERSAO-20261108",
       "title": "Melhorar descoberta, fichas e cotação da Domi-Rio",
       "objective": "Publicar home comercial em MDX, vitrine diversificada e cotação com apresentação e quantidade.",
       "assignee": "codex",
       "priority": "alta",
       "status": "em-andamento",
-      "acceptanceCriteria": ["Composição isolada da Domi-Rio e responsiva.", "Seleção por categorias e famílias, sem ranking comercial inventado.", "Cotação com código, apresentação e quantidade corretos.", "Links para fabricante verificado e atendimento nos guias.", "CI e produção verificadas."],
+      "acceptanceCriteria": [
+        "Composição isolada da Domi-Rio e responsiva.",
+        "Seleção por categorias e famílias, sem ranking comercial inventado.",
+        "Cotação com código, apresentação e quantidade corretos.",
+        "Links para fabricante verificado e atendimento nos guias.",
+        "CI e produção verificadas."
+      ],
       "environment": "cópia isolada de desenvolvimento, GitHub CI e produção",
       "evidence": "Catálogo lido sem escrita: 41 produtos ativos com fotos. Plano em docs/superpowers/plans/2026-11-08-domirio-conversao.md. Implementação e verificação em andamento."
     },

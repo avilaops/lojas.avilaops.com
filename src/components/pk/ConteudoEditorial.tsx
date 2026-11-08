@@ -1,20 +1,21 @@
 import Link from "@/components/LinkLoja";
 import type { ReactNode } from "react";
 import type { EditorialPk, TipoEditorialPk } from "@/lib/pk-editorial";
+import SegmentosPk from "./SegmentosPk";
 
-export function ListaEditorialPk({ itens, titulo, resumo }: { itens: readonly EditorialPk[]; titulo: string; resumo: string }) {
+export function ListaEditorialPk({ itens, titulo, resumo, porFinalidade = false }: { itens: readonly EditorialPk[]; titulo: string; resumo: string; porFinalidade?: boolean }) {
   return <main className="container-loja py-10">
     <Link href="/" className="text-sm underline">Início da PK</Link>
     <h1 className="mt-4 text-3xl font-bold">{titulo}</h1>
     <p className="mt-3 max-w-3xl text-muted-foreground">{resumo}</p>
-    <ul className="mt-8 grid gap-5 md:grid-cols-2">
+    {porFinalidade ? <SegmentosPk tenantSlug="pkvedacoes" /> : <ul className="mt-8 grid gap-5 md:grid-cols-2">
       {itens.map(item => <li key={item.slug} className="rounded-xl border border-border p-6">
         <h2 className="text-xl font-semibold"><Link href={`/${item.tipo}/${item.slug}`} className="hover:underline">{item.titulo}</Link></h2>
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{item.resumo}</p>
       </li>)}
-    </ul>
+    </ul>}
     <nav className="mt-8 flex flex-wrap gap-5 text-sm underline" aria-label="Conteúdo e cotação PK">
-      <Link href="/guias">Guias de seleção</Link><Link href="/aplicacoes">Aplicações por segmento</Link><Link href="/cotacao-lote">Preparar cotação por lote</Link>
+      <Link href="/como-escolher">Como escolher sua vedação</Link><Link href="/guias">Guias de seleção</Link><Link href="/aplicacoes">Aplicações por segmento</Link><Link href="/cotacao-lote">Preparar cotação por lote</Link>
     </nav>
   </main>;
 }

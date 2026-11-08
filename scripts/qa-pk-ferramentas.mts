@@ -59,6 +59,30 @@ try {
     await page.getByRole("heading", { name: "Vedar, retirar sujeira e apoiar o movimento", exact: true }).waitFor();
     await page.getByRole("heading", { name: "Perfis e detalhes dos produtos", exact: true }).waitFor();
     await captura(page, `home-beneficios-${width}`);
+    await page.getByRole("radio", { name: /Tenho a peça usada/ }).check();
+    await page.getByRole("link", { name: "Aprender a medir", exact: true }).waitFor();
+    await page.getByRole("radio", { name: /Conheço a aplicação/ }).check();
+    await page.getByRole("link", { name: "Explorar aplicações", exact: true }).waitFor();
+    await page.getByRole("link", { name: "Ver o caminho completo", exact: true }).click();
+    await page.waitForURL("**/como-escolher");
+    assert.equal(new URL(page.url()).pathname, "/como-escolher");
+    await page.getByRole("heading", { level: 1, name: "Da dúvida sobre a peça à cotação bem identificada.", exact: true }).waitFor();
+    assert.ok((await page.locator('link[rel="canonical"]').getAttribute("href"))?.endsWith("/como-escolher"));
+    const codigo = page.getByRole("radio", { name: /Tenho um código/ });
+    await codigo.focus();
+    await page.keyboard.press("ArrowRight");
+    assert.equal(await page.getByRole("radio", { name: /Tenho a peça usada/ }).isChecked(), true);
+    await page.getByRole("link", { name: "Aprender a medir", exact: true }).waitFor();
+    await page.getByRole("radio", { name: /Conheço a aplicação/ }).check();
+    await page.getByRole("link", { name: "Explorar aplicações", exact: true }).waitFor();
+    const segmentos = page.getByRole("region", { name: "Aplicações organizadas por finalidade", exact: true });
+    assert.equal(await segmentos.getByRole("link").count(), 10);
+    for (const grupo of ["Produzir", "Cultivar", "Construir", "Movimentar", "Sustentar a infraestrutura"]) assert.equal(await segmentos.getByRole("heading", { name: grupo, exact: true }).count(), 1);
+    await captura(page, `jornada-visual-${width}`);
+    await page.getByRole("radio", { name: /Tenho a peça usada/ }).check();
+    await page.getByRole("link", { name: "Aprender a medir", exact: true }).click();
+    await page.waitForURL("**/guias/medir-vedacoes");
+    assert.equal(new URL(page.url()).pathname, "/guias/medir-vedacoes");
     for (const documento of [
       { caminho: "/guias/medir-vedacoes", trecho: /medida nominal|diâmetro|paquímetro/i, nome: "guia-medidas" },
       { caminho: "/guias/perfis-b-bs-std", trecho: /êmbolo ou haste/, nome: "guia-perfis" },
@@ -118,7 +142,7 @@ try {
     assert.match(await readFile(destinoCsv, "utf8"), /Não encontrado/);
     assert.equal(await prisma.pedido.count({ where: { tenantId: pk.id } }), 0);
     await captura(page, `cotacao-csv-${width}`);
-    for (const caminho of ["/guias", "/aplicacoes/agricultura", "/comparar", "/cotacao-lote"]) {
+    for (const caminho of ["/guias", "/aplicacoes/agricultura", "/comparar", "/cotacao-lote", "/como-escolher"]) {
       assert.equal((await page.goto(`${outraOrigem}${caminho}`))?.status(), 404, `Ferramenta PK isolada: ${caminho}`);
     }
     // Cliente HTTP Node usa localhost; cabeçalhos reproduzem o host resolvido pelo proxy.
@@ -129,7 +153,7 @@ try {
     assert.equal((await contexto.request.post(`${baseHttp}/api/pk/demandas`, { data: { consulta: "nome@email.com", consentido: true }, headers: cabecalhosPk })).status(), 422);
     assert.equal((await contexto.request.post(`${baseHttp}/api/pk/demandas`, { data: { consulta: "PK998877", consentido: true }, headers: cabecalhosOutra })).status(), 404);
     assert.deepEqual(erros, [], "Sem erros JavaScript na jornada");
-    resultados.push({ width, mdxGuiasSetores: "pass", esquemaDadosDb: "pass", limiteComparacao: "pass", comparacaoEntrePaginas: "pass", cotacaoApiRealCsv: "pass", isolamentoTenant: "pass", semPedidos: true });
+    resultados.push({ width, jornadaTresEntradasTeclado: "pass", mapaDezSegmentos: "pass", mdxGuiasSetores: "pass", esquemaDadosDb: "pass", limiteComparacao: "pass", comparacaoEntrePaginas: "pass", cotacaoApiRealCsv: "pass", isolamentoTenant: "pass", semPedidos: true });
     await contexto.close();
     ultimaPagina = undefined;
   }

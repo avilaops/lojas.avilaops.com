@@ -70,6 +70,7 @@ export default function Footer({ tenant, categorias, temBlog = false }: { tenant
             <li><Link href="/sobre">Sobre</Link></li>
             <li><Link href="/contato">Contato</Link></li>
             {tenant.slug === "pkvedacoes" && <>
+              <li><Link href="/como-escolher">Como escolher sua vedação</Link></li>
               <li><Link href="/aplicacoes">Aplicações por segmento</Link></li>
               <li><Link href="/guias">Guias de seleção</Link></li>
               <li><Link href="/cotacao-lote">Cotação por lote</Link></li>
