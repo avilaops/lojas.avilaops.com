@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/LinkLoja";
 import { ArrowRight, ChevronRight, Code2, ShieldCheck } from "lucide-react";
 import type { ReactNode } from "react";
 import IndiceAjuda from "./IndiceAjuda";
