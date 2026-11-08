@@ -145,4 +145,15 @@ test("Domi-Rio isola fotos no Merchant, conserva a grade e respeita versões B2B
   }
   executarSql("vincular-fotos-cypertryne-domirio");
   assert.equal((await carregar(raizCypertryne)).versaoCatalogo, cypertryne.versaoCatalogo);
+  const variante = cypertryne.variantes.find(v => v.sku === "ISO014")!;
+  const contexto = urlFoto("cypertryne-contexto");
+  await prisma.midiaProduto.create({ data: {
+    tenantId: tenant.id, produtoId: raizCypertryne, varianteId: variante.id, escopo: variante.id,
+    url: contexto, finalidade: "contexto", origem: "ilustracao",
+  } });
+  const comContexto = await carregar(raizCypertryne);
+  const galeria = midiasDaOferta(comContexto, variante.id, { incluirContexto: true }).map(m => m.url);
+  assert.equal(galeria.at(-1), contexto);
+  assert.deepEqual(galeria.slice(0, -1), midiasDaOferta(comContexto, variante.id).map(m => m.url));
+  assert.ok(itensMerchant(comContexto, "https://qa.example").every(item => !item.includes(contexto)));
 });

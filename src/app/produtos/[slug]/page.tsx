@@ -97,6 +97,9 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
     : undefined;
   const titulo = typeof volume === "string" && volume ? `${p.nome} ${volume}` : p.nome;
   if(escolhida)Object.assign(p,{precoCentavos:escolhida.precoCentavos,precoDeCentavos:escolhida.precoDeCentavos,estoque:escolhida.estoque,sku:escolhida.sku,gtin:escolhida.gtin,disponibilidade:escolhida.disponibilidade,imagens:midiasDaOferta(p,escolhida.id).map(m=>m.url)});
+  const imagensDaGaleria = escolhida
+    ? midiasDaOferta(p, escolhida.id, { incluirContexto: true }).map(m => m.url)
+    : p.imagens;
   const vende = lojaVende(t);
   // Preço zero é "ainda não precificado", não "de graça": item de referência
   // vindo do ERP entra no catálogo para ser encontrado, e o preço vem por
@@ -230,7 +233,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
       )}
 
       <div className="grid items-start gap-8 md:grid-cols-2 ap-produto-grade">
-        {usaBlocoProprio(temaDo(t), "produto") ? <GaleriaPremium key={escolhida?.id} imagens={p.imagens} alt={titulo} origem={p.imagemOrigem}/> : <GaleriaProduto key={escolhida?.id} imagens={p.imagens} alt={titulo} origem={p.imagemOrigem} />}
+        {usaBlocoProprio(temaDo(t), "produto") ? <GaleriaPremium key={escolhida?.id} imagens={imagensDaGaleria} alt={titulo} origem={p.imagemOrigem}/> : <GaleriaProduto key={escolhida?.id} imagens={imagensDaGaleria} alt={titulo} origem={p.imagemOrigem} />}
 
         <div className="ap-produto-info">
           {p.marca && <p className="ap-produto-marca text-xs uppercase tracking-wide text-muted-foreground">{p.marca}</p>}

@@ -12,11 +12,17 @@ export function usaImagensPorVolume(p: Pick<ProdutoCatalogo, "atributos">) {
   return (p.atributos as Record<string, unknown> | null)?.imagensPorVolume === true;
 }
 
-export function midiasDaOferta(p: Pick<ProdutoCatalogo, "atributos" | "midias">, varianteId: string) {
+export function midiasDaOferta(
+  p: Pick<ProdutoCatalogo, "atributos" | "midias">,
+  varianteId: string,
+  { incluirContexto = false } = {},
+) {
   const vistas = new Set<string>();
   const imagensPorVolume = usaImagensPorVolume(p);
-  return p.midias.filter(m=>(m.varianteId===varianteId || (!imagensPorVolume && m.varianteId===null)) && m.tipo==="imagem")
-    .sort((a,b)=>Number(b.varianteId===varianteId)-Number(a.varianteId===varianteId)
+  return p.midias.filter(m=>(m.varianteId===varianteId || (!imagensPorVolume && m.varianteId===null))
+    && m.tipo==="imagem" && (incluirContexto || m.finalidade!=="contexto"))
+    .sort((a,b)=>Number(a.finalidade==="contexto")-Number(b.finalidade==="contexto")
+      || Number(b.varianteId===varianteId)-Number(a.varianteId===varianteId)
       || (imagensPorVolume ? Number(b.finalidade==="principal")-Number(a.finalidade==="principal") : 0) || a.ordem-b.ordem)
     .filter(m => vistas.has(m.url) ? false : (vistas.add(m.url), true));
 }
