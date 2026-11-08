@@ -68,7 +68,11 @@ try {
       assert.equal(resposta?.status(), 200);
       await page.locator("article .prosa h2").first().waitFor();
       assert.match(await page.locator("article .prosa").innerText(), documento.trecho, "MDX renderiza conteúdo técnico além do título");
-      assert.equal(await page.locator('script[type="application/ld+json"]').filter({ hasText: '"@type":"Article"' }).count(), 1);
+      // O motor de texto do Playwright ignora <script>; examine o JSON-LD diretamente.
+      await page.waitForFunction(() => [...document.querySelectorAll('script[type="application/ld+json"]')].some(el => {
+        try { return (JSON.parse(el.textContent ?? "{}")["@graph"] ?? []).some((item: { "@type"?: string }) => item["@type"] === "Article"); }
+        catch { return false; }
+      }));
       await captura(page, `${documento.nome}-${width}`);
     }
     await page.goto(`${origem}/produtos/${produtos[0].slug}`);
