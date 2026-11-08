@@ -34,7 +34,7 @@
       "objective": "Publicar home comercial em MDX, vitrine diversificada e cotação com apresentação e quantidade.",
       "assignee": "codex",
       "priority": "alta",
-      "status": "em-andamento",
+      "status": "concluida",
       "acceptanceCriteria": [
         "Composição isolada da Domi-Rio e responsiva.",
         "Seleção por categorias e famílias, sem ranking comercial inventado.",
@@ -43,7 +43,7 @@
         "CI e produção verificadas."
       ],
       "environment": "cópia isolada de desenvolvimento, GitHub CI e produção",
-      "evidence": "Catálogo lido sem escrita: 41 produtos ativos com fotos. Plano em docs/superpowers/plans/2026-11-08-domirio-conversao.md. Implementação e verificação em andamento."
+      "evidence": "Commit edde997 e CI 42496618338 aprovados com deploy e fumaça. Produção: 41/41 fichas HTTP 200 com resumo/cotação, 37 com links oficiais, home com seis categorias e 12 produtos diversificados. Revisão pública em 390/1440 px sem overflow, fotos quebradas ou erros de página. Cotação de Cypertryne 1 L com 12 unidades, ISO015 e URL correta da variante conferida por navegação interceptada sem envio. Transformação de e-mail Cloudflare desativada somente na zona Domi-Rio para corrigir erro de hidratação confirmado; repetição pública sem erros. Documentação em docs/DOMIRIO-CONVERSAO.md."
     },
     {
       "id": "PK-BENEFICIOS-APLICACOES-20261108",
