@@ -64,6 +64,7 @@ try {
     await page.getByRole("radio", { name: /Conheço a aplicação/ }).check();
     await page.getByRole("link", { name: "Explorar aplicações", exact: true }).waitFor();
     await page.getByRole("link", { name: "Ver o caminho completo", exact: true }).click();
+    await page.waitForURL("**/como-escolher");
     assert.equal(new URL(page.url()).pathname, "/como-escolher");
     await page.getByRole("heading", { level: 1, name: "Da dúvida sobre a peça à cotação bem identificada.", exact: true }).waitFor();
     assert.ok((await page.locator('link[rel="canonical"]').getAttribute("href"))?.endsWith("/como-escolher"));
@@ -80,6 +81,7 @@ try {
     await captura(page, `jornada-visual-${width}`);
     await page.getByRole("radio", { name: /Tenho a peça usada/ }).check();
     await page.getByRole("link", { name: "Aprender a medir", exact: true }).click();
+    await page.waitForURL("**/guias/medir-vedacoes");
     assert.equal(new URL(page.url()).pathname, "/guias/medir-vedacoes");
     for (const documento of [
       { caminho: "/guias/medir-vedacoes", trecho: /medida nominal|diâmetro|paquímetro/i, nome: "guia-medidas" },
