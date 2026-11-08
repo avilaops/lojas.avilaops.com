@@ -10,10 +10,10 @@
 
 ## Tarefas
 
-- [ ] Dados das três entradas e cinco grupos; verificar cobertura sem duplicação dos dez segmentos.
-- [ ] Mapa navegável e página /como-escolher: seleção acessível, links reais, quatro etapas e orientação técnica.
-- [ ] Integrar home, índice de aplicações, cabeçalho, rodapé, sitemap e llms.txt somente PK.
-- [ ] Versionar fluxograma e mindmap Mermaid da jornada aprovada.
+- [x] Dados das três entradas e cinco grupos; verificar cobertura sem duplicação dos dez segmentos.
+- [x] Mapa navegável e página /como-escolher: seleção acessível, links reais, quatro etapas e orientação técnica.
+- [x] Integrar home, índice de aplicações, cabeçalho, rodapé, sitemap e llms.txt somente PK.
+- [x] Versionar fluxograma e mindmap Mermaid da jornada aprovada.
 - [ ] Ampliar o navegador CI para entradas, teclado, rotas e telas 390/1440; revisão final.
 - [ ] Publicar por PR/CI e conferir o domínio público.
 

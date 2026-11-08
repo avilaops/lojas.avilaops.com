@@ -7,6 +7,8 @@ import { dataLegivel, emParagrafos, minutosDeLeitura } from "@/lib/publicacoes";
 import { publicacaoPorSlug } from "@/lib/publicacoes-consulta";
 import { artigoDomiRio } from "@/lib/artigos-domirio";
 import ArtigoDomiRio from "@/components/domirio/ArtigoDomiRio";
+import { listarCategorias } from "@/lib/catalogo";
+import { numeroDeContato } from "@/lib/canais-publicos";
 
 export const dynamic = "force-dynamic";
 
@@ -51,7 +53,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function Publicacao({ params }: { params: Promise<{ slug: string }> }) {
   const [{ slug }, t] = await Promise.all([params, exigirTenant()]);
   const artigo = artigoDomiRio(t.slug, slug);
-  if (artigo) return <ArtigoDomiRio artigo={artigo} baseUrl={urlDaLoja(t)} />;
+  if (artigo) return <ArtigoDomiRio artigo={artigo} baseUrl={urlDaLoja(t)} whatsapp={numeroDeContato(t.whatsapp)} categorias={(await listarCategorias(t.id)).map(c => ({ slug: c.slug, nome: c.nome }))} />;
   // `publicacaoPorSlug` já exige estado publicada e data passada: rascunho e
   // post agendado devolvem 404 também por URL direta, não só na listagem.
   const post = await publicacaoPorSlug(t.id, slug);

@@ -4,8 +4,9 @@ import { ArrowLeft, ArrowRight, ArrowUpRight, Clock } from "lucide-react";
 import { CONTEUDOS_DOMIRIO } from "@/content/domirio/carregar";
 import { navegacaoArtigoDomiRio, type ArtigoDomiRio as Artigo } from "@/lib/artigos-domirio";
 import styles from "./editorial.module.css";
+import AtendimentoArtigo from "./AtendimentoArtigo";
 
-export default async function ArtigoDomiRio({ artigo, baseUrl }: { artigo: Artigo; baseUrl: string }) {
+export default async function ArtigoDomiRio({ artigo, baseUrl, whatsapp = null, categorias = [] }: { artigo: Artigo; baseUrl: string; whatsapp?: string | null; categorias?: { slug: string; nome: string }[] }) {
   const carregar = CONTEUDOS_DOMIRIO[artigo.slug as keyof typeof CONTEUDOS_DOMIRIO];
   const { default: Conteudo } = await carregar();
   const navegacao = navegacaoArtigoDomiRio(artigo.slug);
@@ -35,6 +36,7 @@ export default async function ArtigoDomiRio({ artigo, baseUrl }: { artigo: Artig
         <div className={styles.corpo}><Conteudo components={{ h2 }} /></div>
       </div>
     </article>
+    <AtendimentoArtigo serie={artigo.series} titulo={artigo.title} whatsapp={whatsapp} categorias={categorias} />
     <nav className={styles.anteriorProximo} aria-label="Navegar entre os 50 artigos">
       {navegacao.anterior ? <Link href={`/blog/${navegacao.anterior.slug}`}><span><ArrowLeft size={15} aria-hidden="true" /> Artigo anterior</span><strong>{navegacao.anterior.title}</strong></Link> : <Link href="/blog"><span><ArrowLeft size={15} aria-hidden="true" /> Central Domi-Rio</span><strong>Explorar todos os assuntos</strong></Link>}
       {navegacao.proximo && <Link href={`/blog/${navegacao.proximo.slug}`}><span>Próximo artigo <ArrowRight size={15} aria-hidden="true" /></span><strong>{navegacao.proximo.title}</strong></Link>}

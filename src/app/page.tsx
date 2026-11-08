@@ -12,6 +12,7 @@ import { identidadePublica } from "@/lib/identidade-publica";
 import { dadosDaHomeIndustrial } from "@/lib/home-industrial";
 import { usaBlocoProprio } from "@/lib/templates";
 import GuiasDomiRio from "@/components/home/GuiasDomiRio";
+import { selecionarVitrineDomiRio } from "@/lib/domirio-comercial";
 import DescobertaPk from "@/components/pk/DescobertaPk";
 import FotosPk from "@/components/pk/FotosPk";
 
@@ -34,6 +35,7 @@ import FotosPk from "@/components/pk/FotosPk";
  */
 export async function generateMetadata() {
   const t = await exigirTenant();
+  if (t.slug === "domi-rio") return { alternates: { canonical: "/" }, description: "Domi-Rio Distribuidora: compare produtos para controle de pragas, odores e roedores. Confira apresentações, compre pelo site ou peça uma cotação para sua empresa." };
   if (temaNaVitrine(temaDo(t)).layout !== "industrial") return { alternates: { canonical: "/" } };
   const categorias = await listarCategorias(t.id);
   const familias = categorias.slice(0, 3).map((categoria) => categoria.nome).join(", ");
@@ -59,7 +61,9 @@ export default async function Home() {
     motopecas || layoutAtual === "industrial" || usaBlocoProprio(publicado, "categorias") ? marcasDaLoja(t.id) : [],
     t.segmento === "farmacia" ? necessidadesDaLoja(t.id) : undefined,
   ]);
-  const vitrine = campanhaVisual
+  const vitrine = t.slug === "domi-rio"
+    ? selecionarVitrineDomiRio(await listarProdutos(t.id, { compraveis: true, limite: 120 }))
+    : campanhaVisual
       ? await (async () => {
         const destaquesProntos = destaques.filter((produto) => produto.imagemOrigem === "propria" && produto.imagens.length > 0 && regrasProduto.compravel(produto));
         const completas = (await vitrineDaLoja(t.id, { moto, limite: 24, imagemOrigem: "propria", compraveis: true }))
