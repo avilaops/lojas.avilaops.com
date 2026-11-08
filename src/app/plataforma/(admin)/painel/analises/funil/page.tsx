@@ -29,6 +29,7 @@ export default async function PaginaFunil({ searchParams }: { searchParams: Prom
   return (
     <>
       <CabecalhoSecao titulo="Funil da loja" descricao="Da descoberta do catálogo até a compra paga" />
+      {loja.slug === "pkvedacoes" && <p className="mb-4"><Link href="/painel/analises/buscas-pk" className="underline">Ver demandas técnicas das buscas sem resultado</Link></p>}
       <section className="an-filtros" aria-label="Período do funil">
         <nav aria-label="Períodos rápidos">
           {[["Hoje", "hoje"], ["7 dias", "7d"], ["30 dias", "30d"], ["90 dias", "90d"]].map(([rotulo, chave]) => (

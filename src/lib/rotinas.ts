@@ -182,8 +182,8 @@ export const ROTINAS = {
     falhasAteAlerta: 2,
   },
   "mcp.historico": {
-    titulo: "Histórico do MCP",
-    descricao: "Apaga de todas as lojas o histórico do conector MCP que passou da retenção",
+    titulo: "Retenção de históricos",
+    descricao: "Apaga o histórico MCP vencido de todas as lojas e os agregados de buscas PK após 90 dias",
     cadencia: { tipo: "diaria", hora: 2 },
     travaMinutos: 15,
     // A política de privacidade promete o prazo; dois dias seguidos sem faxina já é aviso.

@@ -12,6 +12,8 @@ import { identidadePublica } from "@/lib/identidade-publica";
 import { dadosDaHomeIndustrial } from "@/lib/home-industrial";
 import { usaBlocoProprio } from "@/lib/templates";
 import GuiasDomiRio from "@/components/home/GuiasDomiRio";
+import DescobertaPk from "@/components/pk/DescobertaPk";
+import FotosPk from "@/components/pk/FotosPk";
 
 /**
  * Página inicial: um dos layouts fixos (Tenant.tema.layout), todos
@@ -96,6 +98,7 @@ export default async function Home() {
   return (
     <>
       {comporHome(publicado, dados)}
+      {t.slug === "pkvedacoes" && <>{layoutAtual !== "industrial" && <DescobertaPk />}<FotosPk /></>}
       {t.slug === "domi-rio" && <GuiasDomiRio tenantId={t.id} whatsapp={dados.identidadePublica.whatsapp?.numero} />}
       {motos && <Garagem moto={moto} motos={motos} marcas={marcas} nomeDaLoja={t.nome} />}
       {!campanhaVisual && <ProvaSocial dados={prova} nomeDaLoja={t.nome} />}

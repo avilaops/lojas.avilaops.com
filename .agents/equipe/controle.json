@@ -13,6 +13,22 @@
   ],
   "tasks": [
     {
+      "id": "PK-BENEFICIOS-APLICACOES-20261108",
+      "title": "Benefícios, aplicações e ferramentas de seleção PK",
+      "objective": "Apresentar benefícios por função e segmentos atendidos, comparação, cotação por lote e demanda técnica sem resultado, com códigos relacionados discretos.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "Seis guias e dez segmentos MDX exclusivos PK.",
+        "Ferramentas usam cadastro real sem inventar compatibilidade ou disponibilidade.",
+        "Fotos próprias representativas, sem associação indevida a SKU.",
+        "Testes, build, tipos e lint exclusivamente no GitHub CI."
+      ],
+      "evidence": "PR #232; docs/PK-BENEFICIOS-APLICACOES.md. CI vermelho inicial 42491462606 confirmou módulos ausentes antes da implementação.",
+      "environment": "github"
+    },
+    {
       "id": "DOMIRIO-CAPAS-UNICAS-20261108",
       "title": "Substituir capas repetidas por imagens próprias de cada artigo",
       "objective": "Gerar 43 capas e manter uma ocorrência de cada uma das sete originais, resultando em 50 artigos com imagens diferentes.",

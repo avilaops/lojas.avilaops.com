@@ -69,6 +69,12 @@ export default function Footer({ tenant, categorias, temBlog = false }: { tenant
           <ul className="space-y-1 text-muted-foreground">
             <li><Link href="/sobre">Sobre</Link></li>
             <li><Link href="/contato">Contato</Link></li>
+            {tenant.slug === "pkvedacoes" && <>
+              <li><Link href="/aplicacoes">Aplicações por segmento</Link></li>
+              <li><Link href="/guias">Guias de seleção</Link></li>
+              <li><Link href="/cotacao-lote">Cotação por lote</Link></li>
+              <li><Link href="/comparar">Comparar produtos</Link></li>
+            </>}
             {/* Só com publicação no ar: sem nenhuma, `/blog` é uma página
                 vazia, e por isso também fica fora do sitemap. */}
             {temBlog && <li><Link href="/blog">Blog</Link></li>}
