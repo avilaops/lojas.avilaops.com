@@ -40,5 +40,6 @@ export default function CotacaoProduto({ produto, baseUrl, whatsapp, apresentaco
       <button type="submit" className="btn-secundario"><MessageCircle size={18} aria-hidden="true" />Preparar cotação no WhatsApp</button>
       <p>Você revisa e envia a mensagem no WhatsApp. Cotar não reserva estoque nem conclui uma compra.</p>
     </form> : <Link href="/contato" className={styles.link}>Ver canais de atendimento</Link>}
+    <Link href={`/cotacao?produto=${encodeURIComponent(produto.slug)}${varianteInicial ? `&variante=${encodeURIComponent(varianteInicial)}` : ""}`} className={styles.link}>Cotar vários produtos em uma lista</Link>
   </section>;
 }

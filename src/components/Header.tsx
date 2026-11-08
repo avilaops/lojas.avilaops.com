@@ -68,6 +68,7 @@ export default function Header({ loja, logoUrl, categorias, exemploBusca, mostra
             </Link>
             {loja.configuradorSobMedida && <Link href="/configurador" className="nav-loja-item font-semibold text-primary">Projeto sob medida</Link>}
             {mostrarPromocoes && <Link href="/promocoes" className="nav-loja-item font-semibold text-primary">Promoções</Link>}
+            {loja.slug === "domi-rio" && <Link href="/cotacao" className="nav-loja-item font-semibold text-primary">Pedir cotação</Link>}
             {categorias.slice(0, PRINCIPAIS).map((c) => (
               <Link key={c.slug} href={`/categoria/${c.slug}`} className="nav-loja-item text-muted-foreground hover:text-foreground">
                 {c.nome}
