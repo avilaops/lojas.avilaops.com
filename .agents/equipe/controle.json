@@ -25,8 +25,8 @@
         "Importação não envia preço, estoque, categoria ou ativação e exige versão atual.",
         "Registrar origem, família e pendências por produto; foto de série é representativa."
       ],
-      "environment": "pesquisa pública; inventário de produção somente leitura; aplicação posterior por API administrativa",
-      "evidence": "Inventário em .work: 7.806 rodas e pneus sem foto, 6.939 ativos. Coletadas bibliotecas oficiais KRMAI, BRW e Zunky. Fontes de pneus em pesquisa. Sem alegação de cobertura completa."
+      "environment": "pesquisa pública e importação de mídia pela API administrativa de produção, autorizada pelo proprietário",
+      "evidence": "Inventário: 7.806 rodas e pneus sem foto, 6.939 ativos. Dossiê revisado com 791 associações; 362 aplicadas na primeira etapa, demais dependem da versão que aceita os formatos das fontes. Pendências individuais em .work/bereta-pendencias-fotos.csv. Não há cobertura completa: 34 usados/serviços exigem foto própria e 6.981 itens não tiveram identidade/acabamento/imagem suficientemente confirmados nas fontes consultadas."
     },
     {
       "id": "BERETA-VITRINE-20261108",
