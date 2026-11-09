@@ -7,6 +7,7 @@ import Comercial, { abertura } from "@/content/domirio/comercial.mdx";
 import BuscaCatalogo from "@/components/domirio/BuscaCatalogo";
 import styles from "@/components/domirio/comercial.module.css";
 import type { DadosHome } from "./tipos";
+import CategoriasHome from "@/components/domirio/CategoriasHome";
 
 export default function DomiRio({ t, categorias, vitrine, vende, apresentacoes }: DadosHome) {
   const contato = t.whatsapp ? linkWhatsApp(t.whatsapp, "Olá, Domi-Rio! Gostaria de cotar produtos para minha empresa ou revenda.") : null;
@@ -26,9 +27,7 @@ export default function DomiRio({ t, categorias, vitrine, vende, apresentacoes }
       </div>
     </section>
     <div className={`container-loja ${styles.beneficios}`}><p><PackageCheck size={20} aria-hidden="true" />Compra pelo site</p><p><Truck size={20} aria-hidden="true" />Frete e prazo pelo CEP</p><p><MessageCircle size={20} aria-hidden="true" />Cotação com o comercial</p><Link href="/politicas/envio"><FileText size={20} aria-hidden="true" />Conheça a entrega</Link></div>
-    <section className={`container-loja ${styles.secao}`} aria-labelledby="categorias-domirio"><header><div><p className={styles.selo}>Encontre sua linha</p><h2 id="categorias-domirio">O que você está procurando?</h2></div><Link href="/produtos" className={styles.link}>Todo o catálogo <ArrowRight size={16} aria-hidden="true" /></Link></header>
-      <nav className={styles.categorias} aria-label="Categorias Domi-Rio">{categorias.map(c => <Link key={c.id} href={`/categoria/${c.slug}`}>{c.nome}<ArrowRight size={17} aria-hidden="true" /></Link>)}</nav>
-    </section>
+    <CategoriasHome categorias={categorias} />
     <section className={`container-loja ${styles.secao}`} id="produtos-domirio" aria-labelledby="titulo-produtos-domirio"><header><div><p className={styles.selo}>Explore o catálogo</p><h2 id="titulo-produtos-domirio">Produtos de diferentes linhas, em um só lugar.</h2></div><Link href="/produtos" className={styles.link}>Ver todos <ArrowRight size={16} aria-hidden="true" /></Link></header>
       {vitrine.length ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">{vitrine.map(p => <ProductCard key={p.id} loja={t} produto={p} vende={vende} whatsapp={t.whatsapp} apresentacoes={apresentacoes?.[p.id]} />)}</div> : <p>Consulte o catálogo ou fale com a equipe para localizar um produto.</p>}
       <div className={styles.rodapeSecao}><Link href="/produtos" className="btn-secundario">Ver catálogo completo <ArrowRight size={18} aria-hidden="true" /></Link></div>

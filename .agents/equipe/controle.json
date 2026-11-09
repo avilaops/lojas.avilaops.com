@@ -13,6 +13,17 @@
   ],
   "tasks": [
     {
+      "id": "DOMIRIO-CATEGORIAS-VISUAIS-20261109",
+      "title": "Compactar categorias da Domi-Rio com ícones SVG",
+      "objective": "Melhorar leitura dos atalhos e antecipar a grade de produtos.",
+      "assignee": "codex",
+      "priority": "normal",
+      "status": "em-andamento",
+      "acceptanceCriteria": ["Ícones SVG por categoria, nomes e destinos preservados.", "Layout compacto em desktop/tablet/mobile, sem overflow.", "Título em MDX e foco de teclado visível.", "CI e produção verificadas."],
+      "environment": "desenvolvimento isolado, GitHub CI e produção",
+      "evidence": "Plano em docs/superpowers/plans/2026-11-09-domirio-categorias-visuais.md."
+    },
+    {
       "id": "DOMIRIO-APRESENTACOES-HOME-20261109",
       "title": "Exibir volumes Cypertryne e as duas apresentações Glifosato na home",
       "objective": "Dar acesso direto aos volumes cadastrados e preservar 21 mL e kit na seleção inicial.",
