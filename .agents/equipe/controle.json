@@ -18,10 +18,10 @@
       "objective": "Melhorar leitura dos atalhos e antecipar a grade de produtos.",
       "assignee": "codex",
       "priority": "normal",
-      "status": "em-andamento",
+      "status": "concluida",
       "acceptanceCriteria": ["Ícones SVG por categoria, nomes e destinos preservados.", "Layout compacto em desktop/tablet/mobile, sem overflow.", "Título em MDX e foco de teclado visível.", "CI e produção verificadas."],
       "environment": "desenvolvimento isolado, GitHub CI e produção",
-      "evidence": "Plano em docs/superpowers/plans/2026-11-09-domirio-categorias-visuais.md."
+      "evidence": "Commit 18e297c publicado e CI 42683021326 aprovada. Revisão pública 390/923/1440 px: seis categorias com SVGs e destinos preservados, sem overflow/erros. Altura reduzida de 402,5 para 282 px no celular e 296,5 para 194 px no desktop. Capturas revisadas e plano em docs/superpowers/plans/2026-11-09-domirio-categorias-visuais.md."
     },
     {
       "id": "DOMIRIO-APRESENTACOES-HOME-20261109",
