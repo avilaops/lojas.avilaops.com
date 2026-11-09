@@ -18,10 +18,10 @@
       "objective": "Dar acesso direto aos volumes cadastrados e preservar 21 mL e kit na seleção inicial.",
       "assignee": "codex",
       "priority": "alta",
-      "status": "em-andamento",
+      "status": "concluida",
       "acceptanceCriteria": ["Links para 35 mL, 100 mL e 1 L do Cypertryne na home.", "Glifosato 21 mL e kit na seleção, respeitando estoque e foto.", "Sem alterar preços, estoque ou outras lojas.", "CI e navegação pública conferidas."],
       "environment": "desenvolvimento isolado, CI e produção",
-      "evidence": "Ficha pública já contém os três volumes; cartão só mostra o padrão. Plano em docs/superpowers/plans/2026-11-09-domirio-apresentacoes.md."
+      "evidence": "Commit 7dcca40 publicado, CI 42679615114 aprovada com deploy/fumaça. Revisão pública em 390/1440 px: Cypertryne 35 mL ISO140, 100 mL ISO014 e 1 L ISO015 por links diretos da home, ambos os Glifosatos presentes; sem overflow ou erros. Plano e evidências em docs/superpowers/plans/2026-11-09-domirio-apresentacoes.md. Preços/estoque preservados."
     },
     {
       "id": "DOMIRIO-COTACAO-LISTA-20261108",
