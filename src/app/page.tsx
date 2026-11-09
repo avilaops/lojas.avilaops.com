@@ -85,6 +85,13 @@ export default async function Home() {
     : [];
   const looks = publicado.layout === "atelie" ? resolverLooks(tema, pecasDoLook) : [];
   const industrial = dadosDaHomeIndustrial(categorias, marcas);
+  const variantesHome = t.slug === "domi-rio" ? await prisma.variante.findMany({
+    where: { tenantId: t.id, ativo: true, produtoId: { in: vitrine.filter(p => p.opcoes.length > 0).map(p => p.id) } },
+    select: { id: true, produtoId: true, nome: true, valores: true, padrao: true },
+  }) : [];
+  const apresentacoes = Object.fromEntries(vitrine.filter(p => p.opcoes.length > 0).map(p => [p.id, variantesHome
+    .filter(v => v.produtoId === p.id && (!v.padrao || p.opcoes.every(o => typeof (v.valores as Record<string, unknown> | null)?.[o] === "string")))
+    .map(v => ({ nome: v.nome, href: `/produtos/${p.slug}?variante=${encodeURIComponent(v.id)}` }))]));
   const dados = {
     t,
     identidade: identidadeDa(t),
@@ -92,6 +99,7 @@ export default async function Home() {
     categorias: layoutAtual === "industrial" ? industrial.categorias : categorias,
     marcas: industrial.marcas,
     vitrine,
+    apresentacoes,
     temDestaques: destaques.length > 0,
     vende: lojaVende(t),
     moto,

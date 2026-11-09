@@ -13,6 +13,17 @@
   ],
   "tasks": [
     {
+      "id": "DOMIRIO-APRESENTACOES-HOME-20261109",
+      "title": "Exibir volumes Cypertryne e as duas apresentações Glifosato na home",
+      "objective": "Dar acesso direto aos volumes cadastrados e preservar 21 mL e kit na seleção inicial.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-andamento",
+      "acceptanceCriteria": ["Links para 35 mL, 100 mL e 1 L do Cypertryne na home.", "Glifosato 21 mL e kit na seleção, respeitando estoque e foto.", "Sem alterar preços, estoque ou outras lojas.", "CI e navegação pública conferidas."],
+      "environment": "desenvolvimento isolado, CI e produção",
+      "evidence": "Ficha pública já contém os três volumes; cartão só mostra o padrão. Plano em docs/superpowers/plans/2026-11-09-domirio-apresentacoes.md."
+    },
+    {
       "id": "DOMIRIO-COTACAO-LISTA-20261108",
       "title": "Reunir produtos e apresentações em uma cotação Domi-Rio",
       "objective": "Permitir lista de cotação com quantidades, importação do carrinho e mensagem única para o comercial.",

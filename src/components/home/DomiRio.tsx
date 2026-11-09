@@ -8,7 +8,7 @@ import BuscaCatalogo from "@/components/domirio/BuscaCatalogo";
 import styles from "@/components/domirio/comercial.module.css";
 import type { DadosHome } from "./tipos";
 
-export default function DomiRio({ t, categorias, vitrine, vende }: DadosHome) {
+export default function DomiRio({ t, categorias, vitrine, vende, apresentacoes }: DadosHome) {
   const contato = t.whatsapp ? linkWhatsApp(t.whatsapp, "Olá, Domi-Rio! Gostaria de cotar produtos para minha empresa ou revenda.") : null;
   return <main className={styles.home}>
     <section className={styles.hero}>
@@ -30,7 +30,7 @@ export default function DomiRio({ t, categorias, vitrine, vende }: DadosHome) {
       <nav className={styles.categorias} aria-label="Categorias Domi-Rio">{categorias.map(c => <Link key={c.id} href={`/categoria/${c.slug}`}>{c.nome}<ArrowRight size={17} aria-hidden="true" /></Link>)}</nav>
     </section>
     <section className={`container-loja ${styles.secao}`} id="produtos-domirio" aria-labelledby="titulo-produtos-domirio"><header><div><p className={styles.selo}>Explore o catálogo</p><h2 id="titulo-produtos-domirio">Produtos de diferentes linhas, em um só lugar.</h2></div><Link href="/produtos" className={styles.link}>Ver todos <ArrowRight size={16} aria-hidden="true" /></Link></header>
-      {vitrine.length ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">{vitrine.map(p => <ProductCard key={p.id} loja={t} produto={p} vende={vende} whatsapp={t.whatsapp} />)}</div> : <p>Consulte o catálogo ou fale com a equipe para localizar um produto.</p>}
+      {vitrine.length ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">{vitrine.map(p => <ProductCard key={p.id} loja={t} produto={p} vende={vende} whatsapp={t.whatsapp} apresentacoes={apresentacoes?.[p.id]} />)}</div> : <p>Consulte o catálogo ou fale com a equipe para localizar um produto.</p>}
       <div className={styles.rodapeSecao}><Link href="/produtos" className="btn-secundario">Ver catálogo completo <ArrowRight size={18} aria-hidden="true" /></Link></div>
     </section>
     <section className={`container-loja ${styles.secao}`} id="comercial-domirio" aria-labelledby="titulo-comercial-domirio"><div className={styles.empresas}><div className={styles.textoMdx}><p className={styles.selo}>Atendimento comercial</p><Comercial components={{ h2: props => <h2 {...props} id="titulo-comercial-domirio" /> }} /></div><div className={styles.passos}><ol><li><span>01</span>Escolha os produtos e as apresentações.</li><li><span>02</span>Informe a quantidade e seu CEP no atendimento.</li><li><span>03</span>Receba a cotação antes de decidir.</li></ol><Link href="/cotacao" className="btn-primario">Montar lista de cotação <ArrowRight size={18} aria-hidden="true" /></Link>{contato && <LinkContatoMedido href={contato} target="_blank" rel="noopener noreferrer" className={styles.link}><MessageCircle size={16} aria-hidden="true" />Falar direto no WhatsApp</LinkContatoMedido>}<p>Reúna os itens e revise a mensagem antes de enviar.</p></div></div></section>

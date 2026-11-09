@@ -1,6 +1,6 @@
 import { compravel } from "./produto-regras";
 
-type CandidatoVitrine = Parameters<typeof compravel>[0] & { id: string; categoriaId: string | null; imagens: string[]; atributos: unknown };
+type CandidatoVitrine = Parameters<typeof compravel>[0] & { id: string; slug?: string; categoriaId: string | null; imagens: string[]; atributos: unknown };
 
 /** Primeiro uma família por categoria; depois outras famílias, antes de repetir volumes. */
 export function selecionarVitrineDomiRio<T extends CandidatoVitrine>(produtos: T[], limite = 12): T[] {
@@ -13,6 +13,12 @@ export function selecionarVitrineDomiRio<T extends CandidatoVitrine>(produtos: T
     const a = p.atributos as Record<string, unknown> | null;
     return typeof a?.familia === "string" && a.familia.trim() ? a.familia.trim().toLocaleLowerCase("pt-BR") : p.id;
   };
+  // Apresentações solicitadas pelo lojista não podem desaparecer no corte por família.
+  for (const slug of ["cypertryne-100", "glifosato-21ml", "glifosato-kit10-4un-x-21ml"]) {
+    const p = prontos.find(p => p.slug === slug);
+    if (!p || selecionados.length >= limite) continue;
+    selecionados.push(p); ids.add(p.id); categorias.add(p.categoriaId); familias.add(familia(p));
+  }
   for (const etapa of [0, 1, 2]) {
     for (const p of prontos) {
       if (selecionados.length >= limite) return selecionados;

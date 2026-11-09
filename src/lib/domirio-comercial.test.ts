@@ -22,6 +22,15 @@ test("cotação preserva código, apresentação, quantidade e URL da variante",
   assert.throws(() => mensagemCotacaoDomiRio({ nome: "A", slug: "a", sku: null }, "https://loja.com", 1.5));
 });
 
+test("home preserva Glifosato 21 mL e kit mesmo pertencendo à mesma família", () => {
+  const p = (slug: string, familia: string, estoque = 10) => ({ id: slug, slug, categoriaId: familia, atributos: { familia }, ativo: true, imagens: ["/foto.webp"], precoCentavos: 100, estoque, disponibilidade: "in_stock" });
+  const catalogo = [...Array.from({ length: 20 }, (_, i) => p(`outro-${i}`, `fam-${i}`)), p("glifosato-kit10-4un-x-21ml", "Glifosato"), p("glifosato-21ml", "Glifosato"), p("cypertryne-100", "Cypertryne")];
+  const home = selecionarVitrineDomiRio(catalogo);
+  assert.equal(home.length, 12);
+  for (const slug of ["cypertryne-100", "glifosato-21ml", "glifosato-kit10-4un-x-21ml"]) assert.ok(home.some(p => p.slug === slug));
+  assert.equal(selecionarVitrineDomiRio(catalogo.map(p => p.slug === "glifosato-21ml" ? { ...p, estoque: 0 } : p)).some(p => p.slug === "glifosato-21ml"), false);
+});
+
 test("documentação aceita somente HTTPS do fabricante confirmado", () => {
   assert.equal(fonteOficialDomiRio({ _fonteTecnicaVerificada: "https://isorgan.com.br/produtos/cypertryne" }), "https://isorgan.com.br/produtos/cypertryne");
   for (const url of ["javascript:alert(1)", "https://isorgan.com.br.evil.test/a", "http://isorgan.com.br/a", "https://evil.test/", "https://user:secret@isorgan.com.br/a"]) {

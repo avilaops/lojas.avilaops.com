@@ -13,6 +13,7 @@ export interface DadosHome {
   categorias: Categoria[];
   marcas?: string[];
   vitrine: Produto[];
+  apresentacoes?: Record<string, { nome: string; href: string }[]>;
   temDestaques: boolean;
   vende: boolean;
   moto?: Moto | null;

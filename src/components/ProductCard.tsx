@@ -23,7 +23,7 @@ const ROTULOS_COMPACTOS: Record<string, string> = {
   espessuraMm: "Esp.", secaoMm: "Seção",
 };
 
-export default function ProductCard({ produto, loja, vende, whatsapp: whatsappBruto, moto = null, ocultarSeloDestaque = false, compacto = false, alternarImagem = true, retorno = null }: { produto: Produto; loja: Tenant; vende: boolean; whatsapp: string | null; moto?: Moto | null; ocultarSeloDestaque?: boolean; compacto?: boolean; alternarImagem?: boolean; retorno?: string | null }) {
+export default function ProductCard({ produto, loja, vende, whatsapp: whatsappBruto, moto = null, ocultarSeloDestaque = false, compacto = false, alternarImagem = true, retorno = null, apresentacoes = [] }: { produto: Produto; loja: Tenant; vende: boolean; whatsapp: string | null; moto?: Moto | null; ocultarSeloDestaque?: boolean; compacto?: boolean; alternarImagem?: boolean; retorno?: string | null; apresentacoes?: { nome: string; href: string }[] }) {
   const whatsapp = numeroDeContato(whatsappBruto);
   const tecnico = ["distribuidora", "industrial"].includes(temaDo(loja).layout);
   // Na home Indústria a imagem é a foto da linha, com fundo próprio: ocupa o
@@ -163,6 +163,7 @@ export default function ProductCard({ produto, loja, vende, whatsapp: whatsappBr
         <Link href={hrefProduto} className="cartao-produto-nome text-sm font-semibold hover:text-primary transition-colors">
           {produto.nome}
         </Link>
+        {apresentacoes.length > 0 && <div><p className="mb-2 text-xs text-muted-foreground">Escolha a apresentação</p><nav aria-label={`Apresentações de ${produto.nome}`} className="flex flex-wrap gap-1.5">{apresentacoes.map(a => <Link key={a.href} href={a.href} className="inline-flex min-h-11 items-center rounded-lg border border-border px-2 text-xs font-semibold text-primary hover:border-primary">{a.nome}</Link>)}</nav><p className="mt-2 text-[11px] text-muted-foreground">Confira o preço de cada volume.</p></div>}
         {/* A medida do balcão fica fora do modo técnico: lá o `dl` compacto
             abaixo já diz as mesmas medidas, com rótulo abreviado e feito para
             aquele layout — as duas juntas seriam a mesma medida duas vezes. */}
