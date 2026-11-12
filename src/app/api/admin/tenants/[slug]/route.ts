@@ -11,11 +11,9 @@ export async function GET(request: Request, { params }: Ctx) {
   const { slug } = await params;
   const t = await prisma.tenant.findUnique({ where: { slug }, include: { _count: { select: { produtos: true, pedidos: true, categorias: true } } } });
   if (!t) return Response.json({ erro: "loja não encontrada" }, { status: 404 });
-  // Nenhum segredo sai daqui, nem cifrado. A lista era escrita campo a campo
-  // e ficou para trás quando entraram `mlAccessTokenEnc`, `mlRefreshTokenEnc`
-  // e `apiKeyEnc`, que passaram a ser devolvidos. Agora a regra é pelo nome:
-  // toda coluna `…Enc` é segredo cifrado, as de hoje e as que vierem.
-  const publico = Object.fromEntries(Object.entries(t).filter(([campo]) => !campo.endsWith("Enc")));
+  // Tokens cifrados e o hash de senha pertencem só ao servidor. O hash não
+  // termina em Enc; conferir apenas o sufixo deixava essa credencial na API.
+  const publico = Object.fromEntries(Object.entries(t).filter(([campo]) => !campo.endsWith("Enc") && campo !== "senhaHash"));
   return Response.json(publico);
 }
 

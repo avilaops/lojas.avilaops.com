@@ -79,6 +79,11 @@ o contrato de criação de loja não recebem permissão para conceder recursos.
    a configuração, inclusive códigos legados; `{"recursos":[]}` revoga todos.
    Para revogar somente o sandbox, enviar a lista completa sem esse código.
 
+A leitura administrativa deve omitir tanto as colunas cifradas terminadas em
+`Enc` quanto `senhaHash`. A regressão usa valores sintéticos não nulos para
+conferir essas exclusões; nenhum hash de senha deve ser copiado para logs ou
+evidências operacionais.
+
 Os códigos aceitos são os de `src/lib/recursos.ts`. Nome desconhecido,
 duplicado, `null`, tipo incorreto ou lista maior que o catálogo retornam 422
 sem salvar os demais campos da requisição. Um código legado precisa ser

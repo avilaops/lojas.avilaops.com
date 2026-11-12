@@ -27,7 +27,7 @@
         "Regressões HTTP/PostgreSQL, unidade, tipos, lint, build e navegador aprovados no GitHub CI."
       ],
       "environment": "branch exclusiva e GitHub CI com banco isolado",
-      "evidence": "PR #237 em rascunho. Regressão comprovada no commit 1a0fb890a22868750d9bbde5f245555107aefb0e: CI 43299500617, job 131467418877, cinco falhas de contrato entre 71 testes PostgreSQL; unidade, tipos e lint aprovados. Correção usa schema exclusivo da API administrativa. Resultados finais e revisão vinculados ao commit no PR e na AVL-241. Plano docs/superpowers/plans/2026-11-12-avl241-recursos-admin.md; não há implantação ou cotação autenticada comprovada neste incremento.",
+      "evidence": "PR #237 em rascunho. Regressão de recursos: CI 43299500617, job 131467418877, cinco falhas de contrato entre 71 testes PostgreSQL. Correção d0674d1: CI 43300123962, job 131469464082, 71/71 aprovados incluindo os sete casos novos. Schema exclusivo administrativo; painel e criação preservados. Revisão detectou exposição preexistente de senhaHash no GET; CI 43300715166, job 131471714257, comprovou uma falha exata de presença do campo entre 71 testes antes de excluí-lo. Resultados finais e revisão vinculados ao commit no PR e na AVL-241. Plano docs/superpowers/plans/2026-11-12-avl241-recursos-admin.md; não há implantação ou cotação autenticada comprovada neste incremento.",
       "review": "Revisão independente e CI do HEAD são requisitos antes da integração; evidências finais ficam no PR #237 e na AVL-241.",
       "blocker": "A homologação de cotação permanece dependente da conexão OAuth da conta de testes na demo.",
       "history": [

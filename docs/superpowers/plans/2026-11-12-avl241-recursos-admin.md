@@ -37,6 +37,7 @@
 - [x] Acrescentar regressão de unidade comprovando que os schemas de criação e do painel continuam descartando recursos.
 - [x] Publicar apenas testes e este contrato; ler a falha real no CI antes de corrigir o produto. CI 43299500617, job 131467418877: cinco falhas de contrato, 66/71 aprovados.
 - [x] Criar o schema administrativo com array opcional, limitado a `RECURSOS.length`, enum conhecido e sem duplicatas; tipar o escritor e trocar apenas o parser administrativo.
+- [x] Reproduzir a exposição de `senhaHash` com fixture sintético não nulo e excluir esse campo da resposta administrativa. CI 43300715166, job 131471714257: 70/71 aprovados e uma falha exata de presença indevida do campo antes da correção.
 - [ ] Executar as suítes completas, tipos, lint, build e navegador no CI; obter revisão independente.
 
 ## Task 2: Operação documentada e rastreável
