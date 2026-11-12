@@ -147,8 +147,8 @@ const CONECTADA = {
 async function comMelhorEnvio<T>(resposta: unknown, corpo: (chamadas: Array<Record<string, unknown>>) => Promise<T>): Promise<T> {
   const fetchAntes = globalThis.fetch;
   const chamadas: Array<Record<string, unknown>> = [];
-  globalThis.fetch = (async (_url: unknown, init?: RequestInit) => {
-    chamadas.push(JSON.parse(String(init?.body ?? "{}")));
+  globalThis.fetch = (async (url: unknown, init?: RequestInit) => {
+    chamadas.push({ ...JSON.parse(String(init?.body ?? "{}")), url: String(url) });
     return Response.json(resposta);
   }) as typeof fetch;
   try {
@@ -197,16 +197,16 @@ test("loja que não conectou o Melhor Envio não chama a transportadora", async 
  * A loja que não conectou o Melhor Envio cota pela CepCerto da plataforma, e
  * as duas contas nunca se misturam na mesma loja.
  */
-const CEPCERTO = { status: "sucesso", cotacoes: [{ transportadora: "Correios", servico: "PAC", valor: "21,40", prazo: "até 6 dias" }] };
+const CEPCERTO = { valorpac_desconto_cepcerto: "21,40", prazopac: "6" };
 
 async function comCepCerto<T>(corpo: () => Promise<T>): Promise<T> {
-  const antes = process.env.CEPCERTO_PUBLIC_KEY;
-  process.env.CEPCERTO_PUBLIC_KEY = "pk_live_0123456789abcdef0123";
+  const antes = process.env.CEPCERTO_CONSULTA_KEY;
+  process.env.CEPCERTO_CONSULTA_KEY = "token-consulta-de-teste";
   try {
     return await corpo();
   } finally {
-    if (antes === undefined) delete process.env.CEPCERTO_PUBLIC_KEY;
-    else process.env.CEPCERTO_PUBLIC_KEY = antes;
+    if (antes === undefined) delete process.env.CEPCERTO_CONSULTA_KEY;
+    else process.env.CEPCERTO_CONSULTA_KEY = antes;
   }
 }
 
@@ -215,8 +215,7 @@ test("loja sem Melhor Envio cota pela CepCerto da plataforma, com o CEP de orige
     comMelhorEnvio(CEPCERTO, async (chamadas) => {
       const opcoes = await cotarFrete(loja({ cepOrigem: "14075-240" }), "01310-100", [item({ quantidade: 1, precoUnitario: 1380 })]);
       assert.equal(chamadas.length, 1);
-      assert.equal(chamadas[0].cep_remetente, "14075240");
-      assert.equal(chamadas[0].cep_destinatario, "01310100");
+      assert.ok(String(chamadas[0].url).startsWith("https://cepcerto.com/ws/json-frete/14075240/01310100/"));
       assert.deepEqual(opcoes.filter((o) => o.id.startsWith("cepcerto:")), [{ id: "cepcerto:pac", nome: "PAC", preco: 2140, prazoDiasUteis: 6 }]);
     }),
   );
