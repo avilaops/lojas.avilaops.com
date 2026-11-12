@@ -26,6 +26,7 @@ async function loja(recursos = ["recebimento_v2", "pagamentos_pix_manual"]) {
   const t = await prisma.tenant.create({ data: {
     slug: `qa-rec-${randomUUID().replace(/-/g, "").slice(0, 12)}`,
     nome: "Loja de recursos QA", status: "ATIVA", recursos,
+    senhaHash: "hash-sintetico-que-nao-deve-sair-na-api",
     melhorEnvioAccessTokenEnc: "segredo-cifrado-sintetico",
     melhorEnvioRefreshTokenEnc: "refresh-cifrado-sintetico",
   } });
@@ -62,6 +63,7 @@ test("admin persiste recursos de sandbox, preserva outros campos e a resolução
   const publico = await resposta.json();
   assert.deepEqual(publico.recursos, recursos);
   assert.equal(Object.keys(publico).some((campo) => campo.endsWith("Enc")), false);
+  assert.equal("senhaHash" in publico, false);
 });
 
 test("PATCH sem recursos preserva até códigos legados ignorados pelo runtime", async () => {

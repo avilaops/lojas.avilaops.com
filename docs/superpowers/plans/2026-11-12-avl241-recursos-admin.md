@@ -25,6 +25,7 @@
 - Lista inválida deve recusar a requisição inteira, inclusive os demais campos enviados.
 - O slug no corpo não pode mudar a loja escolhida pela URL.
 - O bloqueio global prevalece sobre a lista persistida e respostas não expõem colunas cifradas.
+- A resposta administrativa também omite `senhaHash`, que não termina em `Enc`; fixture com hash não nulo e regressão HTTP devem comprovar essa exclusão.
 
 ## Task 1: Regressão e correção do contrato administrativo
 
