@@ -33,6 +33,7 @@ export const ESCOPOS = {
   "loja:ler": "Dados da loja (nome, plano, endereço da vitrine)",
   "catalogo:ler": "Produtos e variações, inclusive inativos, com estoque",
   "catalogo:escrever": "Preço e estoque por SKU (o que o ERP sincroniza)",
+  "estoque:escrever": "Registrar entradas, saídas e transferências imediatas entre locais",
   "pedidos:ler": "Pedidos com cliente, itens, valores e rastreio",
   "vitrine:ler": "O que a vitrine pública mostra: produtos ativos e dados da loja",
   // O único escopo de escrita que uma chave publicável pode ter, e só quando o
@@ -62,7 +63,7 @@ export const ESCOPOS_PUBLICAVEL: readonly Escopo[] = ["vitrine:ler", "vitrine:co
 
 /** Escopos que uma chave secreta pode receber; a vitrine vem junto sempre. */
 export const ESCOPOS_SECRETA: readonly Escopo[] = [
-  "loja:ler", "catalogo:ler", "catalogo:escrever", "pedidos:ler", "vitrine:ler",
+  "loja:ler", "catalogo:ler", "catalogo:escrever", "estoque:escrever", "pedidos:ler", "vitrine:ler",
   "produtos:escrever", "loja:escrever", "pedidos:escrever", "clientes:ler", "promocoes:ler", "promocoes:escrever", "analises:ler", "mcp:usar",
 ];
 

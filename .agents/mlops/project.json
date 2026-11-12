@@ -179,6 +179,27 @@
       ]
     },
     {
+      "id": "estoque-multilocal",
+      "name": "Movimentações físicas por local e razão auditável",
+      "state": "existing",
+      "dependsOn": ["fundacao"],
+      "sources": [
+        { "kind": "contract", "path": "docs/AVL-236-ESTOQUE-MULTILOCAL.md" },
+        { "kind": "code", "path": "prisma/migrations/20261103010000_avl236_estoque_multilocal/migration.sql" },
+        { "kind": "code", "path": "src/lib/estoque-multilocal-schema.ts" },
+        { "kind": "code", "path": "src/lib/estoque-multilocal.ts" },
+        { "kind": "code", "path": "src/lib/catalogo-oferta.ts" },
+        { "kind": "code", "path": "src/app/api/v1/estoque/movimentos/route.ts" },
+        { "kind": "code", "path": "src/app/api/v1/estoque/saldos/route.ts" },
+        { "kind": "code", "path": "src/app/api/v1/estoque/razao/route.ts" },
+        { "kind": "test", "path": "src/lib/estoque-multilocal.test.ts" },
+        { "kind": "test", "path": "tests/integration/estoque-multilocal.test.ts" },
+        { "kind": "test", "path": "tests/contracts/estoque-oferta.test.mjs" },
+        { "kind": "test", "path": "tests/sql/avl236-abertura.sql" }
+      ],
+      "flows": []
+    },
+    {
       "id": "fiscal",
       "name": "Recebimento e integração fiscal",
       "state": "existing",

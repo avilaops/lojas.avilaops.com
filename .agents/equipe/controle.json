@@ -13,6 +13,24 @@
   ],
   "tasks": [
     {
+      "id": "AVL-236-RETOMADA-20261112",
+      "title": "Integrar a entrega preservada de estoque multilocal à versão atual",
+      "objective": "Recuperar o incremento de 03/11 com razão imutável, movimentos idempotentes por local, proteção de reservas e evidências atuais no GitHub CI.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-andamento",
+      "acceptanceCriteria": [
+        "Hashes dos artefatos recuperados conferem com o recibo original.",
+        "Oferta considera o principal, sem prometer unidades de locais que o checkout não reserva.",
+        "Entradas e transferências recebidas reabrem oferta esgotada, preservando venda sob encomenda.",
+        "CI cobre replay, concorrência, rollback, tenant, imutabilidade e abertura sobre saldo preexistente.",
+        "PR permanece em rascunho; nenhuma migração, escrita comercial ou publicação em produção."
+      ],
+      "environment": "desenvolvimento local para edição e GitHub CI para toda validação",
+      "evidence": "delivery.patch SHA-256 556139e32e0b8ff8b51195f74ef67bac0495204faa11cd128bd1d29220d121db conferido. CI 43277562248 confirmou cinco regressões reais de disponibilidade antes da correção (sete casos, dois aprovados). Revisão independente identificou reposição com disponibilidade obsoleta; nova integração adicionada antes da correção. Resultados globais ainda pendentes.",
+      "blocker": "A issue ampla continua parcial: depósitos, condições, trânsito, recebimento parcial, rastreabilidade, inventário, backorder e integração ERP/WMS não pertencem a este incremento."
+    },
+    {
       "id": "DOMIRIO-CATEGORIAS-VISUAIS-20261109",
       "title": "Compactar categorias da Domi-Rio com ícones SVG",
       "objective": "Melhorar leitura dos atalhos e antecipar a grade de produtos.",

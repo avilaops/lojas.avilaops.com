@@ -1,0 +1,232 @@
+TAP version 13
+# Subtest: simples tem variante, preço, saldo, mídia, histórico e evento; id antigo resolve a mesma oferta
+ok 1 - simples tem variante, preço, saldo, mídia, histórico e evento; id antigo resolve a mesma oferta
+  ---
+  duration_ms: 263.44651
+  type: 'test'
+  ...
+# prisma:error
+# Invalid `assert.rejects(()=>prisma.produto.update()` invocation in
+# /home/avops/agent-manager/lotes/20261103-urgentes-5-01/AVL-236/worktree/tests/integration/catalogo.test.ts:39:43
+#   36 assert.equal(alterado.precoCentavos,6990);
+#   37 assert.equal((await resolverItensPadronizados(t.id,[{id:p.id,quantidade:1}]))[0].precoUnitario,6990);
+#   38 await assert.rejects(()=>salvarProdutoNoCatalogo(t.id,p.id,{nome:"Antigo"},{versao:p.versaoCatalogo}),/mudou/);
+# → 39 await assert.rejects(()=>prisma.produto.update(
+# Error occurred during query execution:
+# ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "P0001", message: "Use a API do catálogo: os campos comerciais de Produto são projeções", severity: "ERROR", detail: None, column: None, hint: None }), transient: false })
+# Subtest: edição tem versão, preço oficial e projeções consistentes; escrita legada é rejeitada
+ok 2 - edição tem versão, preço oficial e projeções consistentes; escrita legada é rejeitada
+  ---
+  duration_ms: 152.638006
+  type: 'test'
+  ...
+# prisma:error
+# Invalid `prisma.produto.create()` invocation:
+# Unique constraint failed on the fields: (`tenantId`,`sku`)
+# prisma:error
+# Invalid `assert.rejects(()=>prisma.saldoEstoque.create()` invocation in
+# /home/avops/agent-manager/lotes/20261103-urgentes-5-01/AVL-236/worktree/tests/integration/catalogo.test.ts:51:48
+#   48 const categoria=await prisma.categoria.create({data:{tenantId:a.id,slug:"teste",nome:"Categoria"}});
+#   49 await assert.rejects(()=>produto(b.id,{categoriaId:categoria.id}),/não pertence/);
+#   50 const v=await prisma.variante.findFirstOrThrow({where:{produtoId:p.id}});
+# → 51 await assert.rejects(()=>prisma.saldoEstoque.create(
+# Foreign key constraint violated on the constraint: `SaldoEstoque_tenantId_varianteId_fkey`
+# Subtest: duas lojas não compartilham produto, categoria, SKU ou variante
+ok 3 - duas lojas não compartilham produto, categoria, SKU ou variante
+  ---
+  duration_ms: 165.758734
+  type: 'test'
+  ...
+# Subtest: variações exigem preço próprio e combinação única; GTIN do pai não é replicado
+ok 4 - variações exigem preço próprio e combinação única; GTIN do pai não é replicado
+  ---
+  duration_ms: 205.722433
+  type: 'test'
+  ...
+# Subtest: feed mantém identidade externa e não afirma ausência de identificador nem aprovação
+ok 5 - feed mantém identidade externa e não afirma ausência de identificador nem aprovação
+  ---
+  duration_ms: 101.603397
+  type: 'test'
+  ...
+# prisma:error
+# Invalid `tx.tentativaCatalogo.create()` invocation in
+# /home/avops/agent-manager/lotes/20261103-urgentes-5-01/AVL-236/worktree/src/lib/catalogo-reservas.ts:26:30
+#   23 await permitirProjecao(tx);
+#   24 if (await tx.pedido.findUnique({ where: { referencia }, select: { id: true } })) throw new ErroCatalogo("Esta tentativa já foi recebida. Consulte o pedido antes de tentar pagar novamente.", 409);
+#   25 // Unicidade impede duas cobranças concorrentes da mesma tentativa.
+# → 26 await tx.tentativaCatalogo.create(
+# Unique constraint failed on the fields: (`referencia`)
+# Subtest: disputa pela última unidade e aliases duplicados: só uma reserva
+ok 6 - disputa pela última unidade e aliases duplicados: só uma reserva
+  ---
+  duration_ms: 151.163818
+  type: 'test'
+  ...
+# Subtest: pagamento repetido só baixa uma vez e conserva os snapshots do pedido
+ok 7 - pagamento repetido só baixa uma vez e conserva os snapshots do pedido
+  ---
+  duration_ms: 159.270317
+  type: 'test'
+  ...
+# Subtest: foto própria e identificadores da variação alimentam feed, carrinho e busca
+ok 8 - foto própria e identificadores da variação alimentam feed, carrinho e busca
+  ---
+  duration_ms: 123.745937
+  type: 'test'
+  ...
+# Subtest: a busca acha por cada origem do texto: produto, motopeças, medidas, atributo e farmácia
+ok 9 - a busca acha por cada origem do texto: produto, motopeças, medidas, atributo e farmácia
+  ---
+  duration_ms: 86.669065
+  type: 'test'
+  ...
+# prisma:error
+# Invalid `tx.tentativaCatalogo.create()` invocation in
+# /home/avops/agent-manager/lotes/20261103-urgentes-5-01/AVL-236/worktree/src/lib/catalogo-reservas.ts:26:30
+#   23 await permitirProjecao(tx);
+#   24 if (await tx.pedido.findUnique({ where: { referencia }, select: { id: true } })) throw new ErroCatalogo("Esta tentativa já foi recebida. Consulte o pedido antes de tentar pagar novamente.", 409);
+#   25 // Unicidade impede duas cobranças concorrentes da mesma tentativa.
+# → 26 await tx.tentativaCatalogo.create(
+# Unique constraint failed on the fields: (`referencia`)
+# Subtest: referência de cobrança não pode ser reutilizada por outra loja
+ok 10 - referência de cobrança não pode ser reutilizada por outra loja
+  ---
+  duration_ms: 143.684314
+  type: 'test'
+  ...
+# Subtest: entrada idempotente concorrente tem um recibo e uma alteração física
+ok 11 - entrada idempotente concorrente tem um recibo e uma alteração física
+  ---
+  duration_ms: 259.38433
+  type: 'test'
+  ...
+# Subtest: transferência imediata conserva total e não anuncia saldo remoto na vitrine
+ok 12 - transferência imediata conserva total e não anuncia saldo remoto na vitrine
+  ---
+  duration_ms: 168.586518
+  type: 'test'
+  ...
+# Subtest: falha na transferência reverte destino criado, razão, recibo e evento
+ok 13 - falha na transferência reverte destino criado, razão, recibo e evento
+  ---
+  duration_ms: 242.337287
+  type: 'test'
+  ...
+# Subtest: saldo remoto não controlado não transforma oferta do principal em ilimitada
+ok 14 - saldo remoto não controlado não transforma oferta do principal em ilimitada
+  ---
+  duration_ms: 121.528138
+  type: 'test'
+  ...
+# Subtest: transferências em sentidos opostos não perdem unidades nem duplicam o razão
+ok 15 - transferências em sentidos opostos não perdem unidades nem duplicam o razão
+  ---
+  duration_ms: 152.86188
+  type: 'test'
+  ...
+# Subtest: saídas simultâneas não consomem duas vezes a última unidade
+ok 16 - saídas simultâneas não consomem duas vezes a última unidade
+  ---
+  duration_ms: 98.040136
+  type: 'test'
+  ...
+# Subtest: reserva concorrente com saída disputa a mesma unidade e razão registra liberação
+ok 17 - reserva concorrente com saída disputa a mesma unidade e razão registra liberação
+  ---
+  duration_ms: 194.514422
+  type: 'test'
+  ...
+# Subtest: reserva/liberação e ajuste legados são auditados sem alteração dos seus escritores
+ok 18 - reserva/liberação e ajuste legados são auditados sem alteração dos seus escritores
+  ---
+  duration_ms: 150.249609
+  type: 'test'
+  ...
+# prisma:error
+# Invalid `prisma.razaoEstoque.updateMany()` invocation in
+# /home/avops/agent-manager/lotes/20261103-urgentes-5-01/AVL-236/worktree/tests/integration/estoque-multilocal.test.ts:137:50
+#   134 test("razão e recibo recusam UPDATE, DELETE e TRUNCATE; identidade do saldo é estável", async () => {
+#   135   const { t, v } = await fixture();
+#   136   const r = await mover(t.id, comando(v.id));
+# → 137   await assert.rejects(() => prisma.razaoEstoque.updateMany(
+# Error occurred during query execution:
+# ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "P0001", message: "Razão e recibos de estoque são imutáveis; registre uma nova operação", severity: "ERROR", detail: None, column: None, hint: None }), transient: false })
+# prisma:error
+# Invalid `prisma.razaoEstoque.deleteMany()` invocation in
+# /home/avops/agent-manager/lotes/20261103-urgentes-5-01/AVL-236/worktree/tests/integration/estoque-multilocal.test.ts:138:50
+#   135 const { t, v } = await fixture();
+#   136 const r = await mover(t.id, comando(v.id));
+#   137 await assert.rejects(() => prisma.razaoEstoque.updateMany({ where: { tenantId: t.id }, data: { motivo: "sobrescrever" } }), /imutáveis/);
+# → 138 await assert.rejects(() => prisma.razaoEstoque.deleteMany(
+# Error occurred during query execution:
+# ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "P0001", message: "Razão e recibos de estoque são imutáveis; registre uma nova operação", severity: "ERROR", detail: None, column: None, hint: None }), transient: false })
+# prisma:error
+# Invalid `prisma.$executeRaw()` invocation:
+# Raw query failed. Code: `P0001`. Message: `ERROR: Razão e recibos de estoque são imutáveis; registre uma nova operação`
+# prisma:error
+# Invalid `prisma.$executeRaw()` invocation:
+# Raw query failed. Code: `P0001`. Message: `ERROR: Razão e recibos de estoque são imutáveis; registre uma nova operação`
+# prisma:error
+# Invalid `prisma.comandoEstoque.update()` invocation in
+# /home/avops/agent-manager/lotes/20261103-urgentes-5-01/AVL-236/worktree/tests/integration/estoque-multilocal.test.ts:141:52
+#   138 await assert.rejects(() => prisma.razaoEstoque.deleteMany({ where: { tenantId: t.id } }), /imutáveis/);
+#   139 await assert.rejects(() => prisma.$executeRaw`TRUNCATE "RazaoEstoque"`, /imutáveis/);
+#   140 await assert.rejects(() => prisma.$executeRaw`TRUNCATE "SaldoEstoque"`, /imutáveis/);
+# → 141 await assert.rejects(() => prisma.comandoEstoque.update(
+# Error occurred during query execution:
+# ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "P0001", message: "Razão e recibos de estoque são imutáveis; registre uma nova operação", severity: "ERROR", detail: None, column: None, hint: None }), transient: false })
+# prisma:error
+# Invalid `prisma.comandoEstoque.delete()` invocation in
+# /home/avops/agent-manager/lotes/20261103-urgentes-5-01/AVL-236/worktree/tests/integration/estoque-multilocal.test.ts:142:52
+#   139 await assert.rejects(() => prisma.$executeRaw`TRUNCATE "RazaoEstoque"`, /imutáveis/);
+#   140 await assert.rejects(() => prisma.$executeRaw`TRUNCATE "SaldoEstoque"`, /imutáveis/);
+#   141 await assert.rejects(() => prisma.comandoEstoque.update({ where: { id: r.comandoId }, data: { resumoHash: "alterado" } }), /imutáveis/);
+# → 142 await assert.rejects(() => prisma.comandoEstoque.delete(
+# Error occurred during query execution:
+# ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "P0001", message: "Razão e recibos de estoque são imutáveis; registre uma nova operação", severity: "ERROR", detail: None, column: None, hint: None }), transient: false })
+# prisma:error
+# Invalid `prisma.saldoEstoque.updateMany()` invocation in
+# /home/avops/agent-manager/lotes/20261103-urgentes-5-01/AVL-236/worktree/tests/integration/estoque-multilocal.test.ts:143:50
+#   140 await assert.rejects(() => prisma.$executeRaw`TRUNCATE "SaldoEstoque"`, /imutáveis/);
+#   141 await assert.rejects(() => prisma.comandoEstoque.update({ where: { id: r.comandoId }, data: { resumoHash: "alterado" } }), /imutáveis/);
+#   142 await assert.rejects(() => prisma.comandoEstoque.delete({ where: { id: r.comandoId } }), /imutáveis/);
+# → 143 await assert.rejects(() => prisma.saldoEstoque.updateMany(
+# Error occurred during query execution:
+# ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "P0001", message: "Identidade do saldo é imutável; transfira entre locais", severity: "ERROR", detail: None, column: None, hint: None }), transient: false })
+# Subtest: razão e recibo recusam UPDATE, DELETE e TRUNCATE; identidade do saldo é estável
+ok 19 - razão e recibo recusam UPDATE, DELETE e TRUNCATE; identidade do saldo é estável
+  ---
+  duration_ms: 173.21164
+  type: 'test'
+  ...
+# Subtest: tenant alheio, estoque não controlado e estouro de Int não produzem recibo
+ok 20 - tenant alheio, estoque não controlado e estouro de Int não produzem recibo
+  ---
+  duration_ms: 130.3732
+  type: 'test'
+  ...
+# [estoque/movimentos] falha na invalidação de cache
+# Subtest: API exige escopo novo, recusa chave pública, corpo inválido e chave idempotente ausente
+ok 21 - API exige escopo novo, recusa chave pública, corpo inválido e chave idempotente ausente
+  ---
+  duration_ms: 175.117427
+  type: 'test'
+  ...
+# [estoque/movimentos] falha na invalidação de cache
+# [estoque/movimentos] falha na invalidação de cache
+# Subtest: API isola consultas, serializa sequência, pagina e devolve conflito em replay divergente
+ok 22 - API isola consultas, serializa sequência, pagina e devolve conflito em replay divergente
+  ---
+  duration_ms: 167.388778
+  type: 'test'
+  ...
+1..22
+# tests 22
+# suites 0
+# pass 22
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 5414.509114

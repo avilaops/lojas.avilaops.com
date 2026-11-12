@@ -11,14 +11,16 @@ export function pertenceAGrade(opcoes: string[], v: { padrao: boolean; valores: 
 }
 
 export function ofertaDaVariante<T extends VarianteOferta>(v: T) {
-  const controlados = v.saldos.filter(s => s.fisico != null);
-  const estoque = v.saldos.some(s => s.fisico == null) ? null : controlados.reduce((total, s) => total + s.fisico! - s.reservado, 0);
+  // O checkout reserva somente no principal. Saldo remoto não é promessa de venda.
+  const saldosVendaveis = v.saldos.filter(s => s.local === "principal");
+  const controlados = saldosVendaveis.filter(s => s.fisico != null);
+  const estoque = saldosVendaveis.some(s => s.fisico == null) ? null : controlados.reduce((total, s) => total + s.fisico! - s.reservado, 0);
   return {
     ...v, precoCentavos: v.preco?.valorCentavos ?? 0,
     precoDeCentavos: v.preco?.comparacaoCentavos ?? null,
     estoque,
     // Sem saldo cadastrado, a disponibilidade é desconhecida, não infinita.
-    compravel: v.ativo && Boolean(v.preco && v.preco.valorCentavos > 0) && v.disponibilidade !== "out_of_stock" && v.saldos.length > 0 && (estoque == null || estoque > 0),
+    compravel: v.ativo && Boolean(v.preco && v.preco.valorCentavos > 0) && v.disponibilidade !== "out_of_stock" && saldosVendaveis.length > 0 && (estoque == null || estoque > 0),
   };
 }
 

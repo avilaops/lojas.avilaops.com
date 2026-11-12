@@ -185,6 +185,9 @@ jobs:
           ids: ${{ needs.dependencias.outputs.artifact_id }}
           tipos: dependencias
       - run: npx prisma migrate deploy
+      - name: Ensaiar abertura do razão sobre saldo preexistente
+        if: matrix.fatia == 1
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/sql/avl236-abertura.sql
       - name: Executar integrações e preservar TAP completo
         run: |
           set -euo pipefail
