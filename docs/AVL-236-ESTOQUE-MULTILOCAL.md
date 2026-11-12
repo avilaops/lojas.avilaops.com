@@ -24,8 +24,17 @@ Um teste concorrente real confirmou HTTP 500 quando a exclusão de produto
 vence a disputa pela trava (CI 43279591558). Essa condição agora é traduzida
 para `nao_encontrado`/404, com rollback e sem recibo; falhas desconhecidas
 continuam seguindo o tratamento de erro interno existente.
-As novas evidências serão vinculadas ao commit e ao PR em rascunho;
-não houve validação ou ativação em produção.
+Validação da fonte `7f9d4c0`: [CI 43280786250](https://github.com/avilaops/lojas.avilaops.com/actions/runs/43280786250),
+com 21 jobs aprovados, 1.454 testes unitários e 243 PostgreSQL sem falhas ou
+skips; tipos, lint, build e navegador também aprovados. O contrato rápido
+passou em 7/7 na [CI 43280786198](https://github.com/avilaops/lojas.avilaops.com/actions/runs/43280786198).
+A revisão independente terminou sem achados pendentes.
+
+O [PR #236](https://github.com/avilaops/lojas.avilaops.com/pull/236) permanece
+em rascunho. Os jobs de entrega, deploy e fumaça foram ignorados por se tratar
+de PR; não houve validação ou ativação em produção. O workflow geral ainda
+contém limites preexistentes de dez minutos; o job novo usa um minuto. O
+resultado aprovado não declara conformidade global dessa política.
 
 ## Autoridade e compatibilidade
 
@@ -168,7 +177,7 @@ e `catalogo-reservas.ts`, sem atualização de biblioteca.
 | Inventário e aprovação de ajuste | Ausentes; nenhuma API nova de contagem/ajuste sem aprovação. |
 | Segurança, backorder, promessa | Ausentes; não há promessa automática sobre locais remotos. |
 | API ERP/WMS | Endpoints entregues; integração real e fila de divergências com ERP AVL-251 pendentes. |
-| CI e operação | CI do novo commit não executada; sem push, PR, deploy ou operação real. |
+| CI e operação | Retomada aprovada na CI 43280786250 e revisão independente; PR #236 em rascunho. Sem deploy, migração publicada, recálculo ou operação real. |
 
 AVL-251 exige que divergências entrem em fila e não escolham vencedor
 silenciosamente. As novas rotas não implementam sincronização absoluta externa
