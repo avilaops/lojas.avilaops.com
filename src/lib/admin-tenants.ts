@@ -3,14 +3,14 @@ import { prisma } from "./db";
 import { cifrar } from "./cofre";
 import { slugificar } from "./catalogo";
 import { esquecerTenantEmCache } from "./tenant";
-import type { ProdutoPlanilha, TenantEntrada } from "./admin-schemas";
+import type { ProdutoPlanilha, TenantEntrada, TenantAtualizacaoAdmin } from "./admin-schemas";
 import { invalidarCatalogo } from "./catalogo-cache";
 import { salvarProdutoNoCatalogo } from "./catalogo-escrita";
 import { ErroCampo, lerDefinicoes, normalizarValor } from "./campos-personalizados";
 import { categoriaDePlanilhaValida } from "./planilha-produtos";
 import { contratoPadraoAninhado } from "./contratos-comerciais";
 
-function dadosDoTenant(entrada: Partial<TenantEntrada>): Prisma.TenantUpdateInput {
+function dadosDoTenant(entrada: TenantAtualizacaoAdmin): Prisma.TenantUpdateInput {
   const { mercadoPago, tema, identidade, endereco, tabelaFrete, entregaLocal, ...resto } = entrada;
   const dados: Prisma.TenantUpdateInput = { ...resto };
   if (tema) dados.tema = tema;
@@ -61,7 +61,7 @@ export async function criarTenant(entrada: TenantEntrada) {
   });
 }
 
-export async function atualizarTenant(slug: string, entrada: Partial<TenantEntrada> & { status?: "PROVISIONANDO" | "ATIVA" | "SUSPENSA" | "CANCELADA" }) {
+export async function atualizarTenant(slug: string, entrada: TenantAtualizacaoAdmin) {
   const { slug: _ignorado, ...resto } = entrada;
   void _ignorado;
   // Tema é JSON: um PATCH parcial ({ tema: { layout } }) não pode apagar a cor.

@@ -50,6 +50,50 @@ código não constitui ativação do provedor.
 
 ## Demonstração reproduzível
 
+### Configurar a liberação pela API administrativa
+
+O incremento do PR #237 corrige o PATCH que descartava `recursos` apesar de
+responder 200. O procedimento abaixo depende da publicação dessa versão;
+aprovação de CI e PR em rascunho não comprovam implantação. A liberação já
+conferida da `demo` permanece um registro operacional separado da correção.
+
+Somente o chamador administrativo, autenticado com o Bearer de
+`LOJAS_ADMIN_TOKEN`, pode alterar essa configuração. O formulário do lojista e
+o contrato de criação de loja não recebem permissão para conceder recursos.
+
+1. Consultar `GET /api/admin/tenants/demo` e revisar a lista `recursos` atual.
+2. Enviar `PATCH /api/admin/tenants/demo` com a **lista completa desejada**.
+   Este exemplo corresponde aos recursos previamente conferidos na demo:
+
+   ```json
+   {
+     "recursos": [
+       "recebimento_v2",
+       "pagamentos_pix_manual",
+       "frete_melhor_envio_sandbox"
+     ]
+   }
+   ```
+
+3. Repetir o GET e conferir os recursos persistidos. Omitir o campo preserva
+   a configuração, inclusive códigos legados; `{"recursos":[]}` revoga todos.
+   Para revogar somente o sandbox, enviar a lista completa sem esse código.
+
+Os códigos aceitos são os de `src/lib/recursos.ts`. Nome desconhecido,
+duplicado, `null`, tipo incorreto ou lista maior que o catálogo retornam 422
+sem salvar os demais campos da requisição. Um código legado precisa ser
+retirado explicitamente de uma substituição; não se deve reenviar a lista
+antiga de forma automática. Alterações simultâneas seguem a semântica de
+substituição: prevalece a última escrita válida, portanto coordenar a edição
+e conferir a leitura posterior.
+
+O slug da URL determina a loja e o bloqueio global
+`LOJAS_RECURSOS_DESLIGADOS` continua prevalecendo sobre o dado salvo. Habilitar
+o recurso não cria token OAuth nem comprova cotação autenticada. Não registrar
+o Bearer administrativo ou os segredos retornados por outras ferramentas.
+
+### Conectar a conta e testar cotações
+
 1. Entrar no painel da loja de teste e abrir **Configurações → Entrega**.
 2. Conferir o aviso **Sandbox**. A loja deve ter o recurso de teste habilitado.
 3. Usar **Conectar Melhor Envio**, conferir o domínio sandbox na autorização,

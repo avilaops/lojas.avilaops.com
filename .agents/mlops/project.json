@@ -43,6 +43,34 @@
           "path": "src/lib/tenant.test.ts"
         },
         {
+          "kind": "code",
+          "path": "src/lib/admin-schemas.ts"
+        },
+        {
+          "kind": "code",
+          "path": "src/lib/admin-tenants.ts"
+        },
+        {
+          "kind": "code",
+          "path": "src/app/api/admin/tenants/[slug]/route.ts"
+        },
+        {
+          "kind": "test",
+          "path": "src/lib/admin-schemas.test.ts"
+        },
+        {
+          "kind": "test",
+          "path": "tests/integration/admin-recursos.test.ts"
+        },
+        {
+          "kind": "contract",
+          "path": "docs/MELHOR-ENVIO-SANDBOX.md"
+        },
+        {
+          "kind": "contract",
+          "path": "docs/superpowers/plans/2026-11-12-avl241-recursos-admin.md"
+        },
+        {
           "kind": "contract",
           "path": "docs/API.md"
         },

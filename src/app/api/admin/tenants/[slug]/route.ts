@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { autorizado, naoAutorizado } from "@/lib/admin-auth";
-import { TenantAtualizacaoSchema } from "@/lib/admin-schemas";
+import { TenantAtualizacaoAdminSchema } from "@/lib/admin-schemas";
 import { atualizarTenant } from "@/lib/admin-tenants";
 import { recusarLayoutBloqueado } from "@/lib/flags";
 
@@ -23,7 +23,7 @@ export async function GET(request: Request, { params }: Ctx) {
 export async function PATCH(request: Request, { params }: Ctx) {
   if (!autorizado(request)) return naoAutorizado();
   const { slug } = await params;
-  const r = TenantAtualizacaoSchema.safeParse(await request.json().catch(() => null));
+  const r = TenantAtualizacaoAdminSchema.safeParse(await request.json().catch(() => null));
   if (!r.success) return Response.json({ erro: "dados inválidos", detalhes: r.error.flatten() }, { status: 422 });
   if (r.data.tema?.layout === "atelie") {
     const atual = await prisma.tenant.findUnique({ where: { slug }, select: { tema: true } });

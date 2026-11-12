@@ -32,18 +32,18 @@
 
 **Interfaces:** Consumir `RECURSOS`, `TenantAtualizacaoSchema`, `atualizarTenant`, `buscarTenantPorHost` e a rota GET/PATCH existente. Produzir `TenantAtualizacaoAdminSchema` e seu tipo inferido somente para escrita administrativa.
 
-- [ ] Adicionar testes HTTP/PostgreSQL: persistir/liberar sandbox; omissão preserva; lista vazia revoga; inválidos não alteram nada; autenticação negada; slug/tenant isolados; bloqueio global; leitura sem segredos.
-- [ ] Acrescentar regressão de unidade comprovando que os schemas de criação e do painel continuam descartando recursos.
-- [ ] Publicar apenas testes e este contrato; ler a falha real no CI antes de corrigir o produto.
-- [ ] Criar o schema administrativo com array opcional, limitado a `RECURSOS.length`, enum conhecido e sem duplicatas; tipar o escritor e trocar apenas o parser administrativo.
+- [x] Adicionar testes HTTP/PostgreSQL: persistir/liberar sandbox; omissão preserva; lista vazia revoga; inválidos não alteram nada; autenticação negada; slug/tenant isolados; bloqueio global; leitura sem segredos.
+- [x] Acrescentar regressão de unidade comprovando que os schemas de criação e do painel continuam descartando recursos.
+- [x] Publicar apenas testes e este contrato; ler a falha real no CI antes de corrigir o produto. CI 43299500617, job 131467418877: cinco falhas de contrato, 66/71 aprovados.
+- [x] Criar o schema administrativo com array opcional, limitado a `RECURSOS.length`, enum conhecido e sem duplicatas; tipar o escritor e trocar apenas o parser administrativo.
 - [ ] Executar as suítes completas, tipos, lint, build e navegador no CI; obter revisão independente.
 
 ## Task 2: Operação documentada e rastreável
 
 **Files:** `docs/MELHOR-ENVIO-SANDBOX.md`, `.agents/mlops/project.json`, `.agents/equipe/controle.json`.
 
-- [ ] Documentar leitura da lista atual, substituição explícita por PATCH e confirmação por GET, sem exemplos com credenciais reais.
-- [ ] Registrar fontes/testes no módulo de fundação e atualizar a pendência do sandbox sem declarar a correção implantada.
+- [x] Documentar leitura da lista atual, substituição explícita por PATCH e confirmação por GET, sem exemplos com credenciais reais.
+- [x] Registrar fontes/testes no módulo de fundação e atualizar a pendência do sandbox sem declarar a correção implantada.
 - [ ] Atualizar o PR e a AVL-241 com commit, resultado real e limite da evidência; manter cotação autenticada pendente de OAuth.
 
 ## Decisões de execução

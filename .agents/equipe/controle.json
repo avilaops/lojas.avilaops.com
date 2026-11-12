@@ -13,6 +13,28 @@
   ],
   "tasks": [
     {
+      "id": "AVL-241-RECURSOS-ADMIN-20261112",
+      "title": "Corrigir configuração administrativa dos recursos de sandbox",
+      "objective": "Persistir a lista explícita de recursos pelo PATCH administrativo sem conceder essa permissão ao painel do lojista.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "Recurso sandbox persiste e é confirmado pela leitura administrativa e resolução por host.",
+        "Campo ausente preserva, lista vazia revoga e entrada inválida rejeita o PATCH inteiro.",
+        "Autenticação, slug da URL, exclusão de segredos e bloqueio global são preservados.",
+        "Schema do painel e criação não concedem recursos.",
+        "Regressões HTTP/PostgreSQL, unidade, tipos, lint, build e navegador aprovados no GitHub CI."
+      ],
+      "environment": "branch exclusiva e GitHub CI com banco isolado",
+      "evidence": "PR #237 em rascunho. Regressão comprovada no commit 1a0fb890a22868750d9bbde5f245555107aefb0e: CI 43299500617, job 131467418877, cinco falhas de contrato entre 71 testes PostgreSQL; unidade, tipos e lint aprovados. Correção usa schema exclusivo da API administrativa. Resultados finais e revisão vinculados ao commit no PR e na AVL-241. Plano docs/superpowers/plans/2026-11-12-avl241-recursos-admin.md; não há implantação ou cotação autenticada comprovada neste incremento.",
+      "review": "Revisão independente e CI do HEAD são requisitos antes da integração; evidências finais ficam no PR #237 e na AVL-241.",
+      "blocker": "A homologação de cotação permanece dependente da conexão OAuth da conta de testes na demo.",
+      "history": [
+        { "at": "2026-11-12", "status": "em-andamento", "note": "Continuação autorizada; reproduzir e corrigir o descarte silencioso de recursos, mantendo estoque no PR #236 separado e execução de testes exclusivamente na CI." }
+      ]
+    },
+    {
       "id": "DOMIRIO-CATEGORIAS-VISUAIS-20261109",
       "title": "Compactar categorias da Domi-Rio com ícones SVG",
       "objective": "Melhorar leitura dos atalhos e antecipar a grade de produtos.",
