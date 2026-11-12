@@ -2,145 +2,99 @@ import type { OpcaoFrete } from "@avilaops/checkout";
 import type { PedidoDeCotacao } from "@/lib/melhor-envio";
 
 /**
- * Cotação de frete pela CepCerto, na conta da plataforma.
- *
- * É a cotação da loja que não conectou o próprio Melhor Envio: uma conta só
- * cota para todas, com o CEP de origem de cada uma. Este arquivo só conhece o
- * contrato da API e não toca no banco.
- *
- * **Qual porta.** A CepCerto tem três, e só esta serve hoje:
- *   - `api-cotacao-frete`, com o token de postagem: aceita o token e devolve
- *     500 "Não foi possível calcular o frete" até para o exemplo da própria
- *     documentação (conferido em 13/10/2026, com saldo R$ 0,00 na carteira);
- *   - `ws/json-frete`, com a chave de consumo: só Correios;
- *   - **`widget_frete/api/cotacao`, com a chave pública**: é a do "Frete no seu
- *     site", que cota Correios, Jadlog e Loggi no plano de consumo da conta. A
- *     chave é pública por definição (vai no HTML de quem usa o widget); o que
- *     protege a conta é a lista de domínios e IPs do painel deles. Como a
- *     chamada sai do servidor, **o IP de saída do servidor precisa estar
- *     autorizado lá** (CepCerto, Frete no seu site, Domínios e IPs). Sem isso a
- *     resposta é 401 "Chave pública, domínio ou IP não autorizado".
- *
- * A chamada fica no servidor, e não no navegador com o widget, porque o preço
- * do frete entra no total do pedido: o que o navegador calcula o comprador
- * pode alterar.
+ * PAC e SEDEX pela API de consumo da conta da plataforma.
+ * Produto, carrinho e checkout consultam pelo servidor com o token de consulta.
+ * A API básica não recebe valor declarado e não confirma seguro adicional.
+ * O contrato das lojas conectadas ao Melhor Envio é resolvido em frete.ts.
  */
-const ENDPOINT = "https://cepcerto.com/widget_frete/api/cotacao";
+const ENDPOINT = "https://cepcerto.com/ws/json-frete";
 
 export function chaveDaCepCerto(env: Record<string, string | undefined> = process.env): string {
-  const chave = (env.CEPCERTO_PUBLIC_KEY ?? "").trim();
-  return /^pk_[A-Za-z0-9_]{16,120}$/.test(chave) ? chave : "";
+  const chave = (env.CEPCERTO_CONSULTA_KEY ?? "").trim();
+  return chave && !/\s/u.test(chave) ? chave : "";
 }
 
-/** A plataforma tem a cotação da CepCerto configurada? */
+/** A plataforma tem o token de consulta da CepCerto configurado? */
 export function cepCertoConfigurada(env: Record<string, string | undefined> = process.env): boolean {
   return Boolean(chaveDaCepCerto(env));
 }
 
-const semAcento = (v: unknown) => String(v ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
-const temPalavra = (texto: string, palavra: string) => new RegExp(`(^|[^a-z0-9])${palavra}([^a-z0-9]|$)`).test(texto);
-
-/**
- * Que serviço é, pela mesma leitura que o widget da CepCerto faz do par
- * `servico` / `transportadora`. `null` é o que a loja não oferece:
- *
- *   - **preço de balcão** dos Correios: é a tabela cheia, sem o desconto do
- *     contrato. Mostrar os dois deixaria o comprador escolher o mais caro pelo
- *     mesmo serviço;
- *   - **Mini Envios**: a CepCerto cota mas não posta. Oferecer seria cobrar o
- *     Mini Envios e emitir uma etiqueta PAC, mais cara, em toda venda que
- *     escolhesse a opção mais barata;
- *   - drop-off e o que não for reconhecido.
- *
- * Os nomes são os que `servicoDoPedido` (`postagem.ts`) sabe despachar.
- */
-function servicoDaCotacao(c: Record<string, unknown>): { id: string; nome: string } | null {
-  const servico = semAcento(c.servico);
-  const transportadora = semAcento(c.transportadora);
-  if (servico.includes("balcao") || servico.includes("mini") || servico.includes("dropoff")) return null;
-  if (transportadora.includes("loggi") || servico.includes("loggi")) return { id: "loggi", nome: "Loggi" };
-  if (servico.includes("dotcom") || servico.includes(".com")) return { id: "jadlog-dotcom", nome: "Jadlog .com" };
-  if (transportadora.includes("jadlog") || servico.includes("jadlog") || servico.includes("package")) return { id: "jadlog-package", nome: "Jadlog Package" };
-  if (temPalavra(servico, "sedex")) return { id: "sedex", nome: "SEDEX" };
-  if (temPalavra(servico, "pac")) return { id: "pac", nome: "PAC" };
-  return null;
-}
-
-/** "15,90" → 1590. Vírgula decimal, como a CepCerto escreve. */
+/** Valores em reais, sem aceitar preço parcial, infinito ou sem confirmação. */
 function centavos(v: unknown): number | undefined {
-  const n = typeof v === "number" ? v : Number.parseFloat(String(v ?? "").replace(/[^\d,.-]/g, "").replace(/\.(?=\d{3}(\D|$))/g, "").replace(",", "."));
-  return Number.isFinite(n) && n > 0 ? Math.round(n * 100) : undefined;
+  const bruto = typeof v === "number" ? String(v) : typeof v === "string" ? v.trim() : "";
+  const decimal = /^\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?$/.test(bruto)
+    ? bruto.replace(/\./g, "").replace(",", ".")
+    : bruto.replace(",", ".");
+  if (!/^\d+(?:\.\d{1,2})?$/.test(decimal)) return undefined;
+  const n = Math.round(Number(decimal) * 100);
+  return Number.isSafeInteger(n) && n > 0 ? n : undefined;
 }
 
-/** "até 5 dias" → 5. Sem número reconhecível, assume uma semana. */
-function diasDoPrazo(v: unknown): number {
-  const n = Number.parseInt(String(v ?? "").replace(/\D+/g, " ").trim().split(" ")[0] ?? "", 10);
-  return Number.isFinite(n) && n > 0 ? n : 7;
+function diasDoPrazo(v: unknown): number | undefined {
+  const texto = typeof v === "number" || typeof v === "string" ? String(v).trim() : "";
+  const prazo = /^(?:até\s+)?(\d+)(?:\s+dias?(?:\s+(?:útil|úteis))?)?$/iu.exec(texto);
+  const n = prazo ? Number(prazo[1]) : NaN;
+  return Number.isSafeInteger(n) && n > 0 ? n : undefined;
 }
 
 /**
- * Converte a resposta da CepCerto nas opções que o checkout mostra. A resposta
- * é `{ status: "sucesso", cotacoes: [{ servico, transportadora, valor, prazo }] }`.
- * Serviço repetido fica com o menor preço.
+ * A API /ws/json-frete retorna um objeto plano.
+ * Oferece apenas o preço com desconto da conta; balcão e Mini Envios não
+ * correspondem às etiquetas oferecidas pela plataforma.
  */
 export function extrairCotacoesCepCerto(dados: unknown): OpcaoFrete[] {
-  const d = (dados ?? {}) as { status?: unknown; cotacoes?: unknown };
-  if (d.status !== "sucesso" || !Array.isArray(d.cotacoes)) return [];
+  if (!dados || typeof dados !== "object" || Array.isArray(dados)) return [];
+  const d = dados as Record<string, unknown>;
+  if (d.erro || d.status === "erro") return [];
 
-  const porServico = new Map<string, OpcaoFrete>();
-  for (const bruto of d.cotacoes) {
-    const c = (bruto ?? {}) as Record<string, unknown>;
-    const servico = servicoDaCotacao(c);
-    const preco = centavos(c.valor);
-    if (!servico || preco === undefined) continue;
-    const atual = porServico.get(servico.id);
-    if (atual && atual.preco <= preco) continue;
-    porServico.set(servico.id, { id: `cepcerto:${servico.id}`, nome: servico.nome, preco, prazoDiasUteis: diasDoPrazo(c.prazo) });
+  const opcoes: OpcaoFrete[] = [];
+  for (const [id, nome] of [["pac", "PAC"], ["sedex", "SEDEX"]] as const) {
+    const preco = centavos(d["valor" + id + "_desconto_cepcerto"]);
+    const prazoDiasUteis = diasDoPrazo(d["prazo" + id]);
+    if (preco === undefined || prazoDiasUteis === undefined) continue;
+    opcoes.push({ id: "cepcerto:" + id, nome, preco, prazoDiasUteis });
   }
-  return [...porServico.values()].sort((a, b) => a.preco - b.preco);
+  return opcoes.sort((a, b) => a.preco - b.preco);
 }
 
-/**
- * Cota o trecho na conta da plataforma. Devolve `null` quando não dá para
- * cotar, e quem chama cai na tabela da loja. A falha vai para o log com o
- * motivo: foi por falhar calada que esta cotação ficou meses devolvendo nada.
- */
+/** Falha de consulta retorna null para manter as alternativas cadastradas. */
 export async function cotarCepCerto(p: PedidoDeCotacao): Promise<OpcaoFrete[] | null> {
   const chave = chaveDaCepCerto();
   if (!chave) return null;
 
+  const origem = p.cepOrigem.replace(/\D/g, "");
+  const destino = p.cepDestino.replace(/\D/g, "");
+  const medidas = [p.caixa.altura, p.caixa.largura, p.caixa.comprimento];
+  const gramas = Math.round(p.pesoKg * 1000);
+  if (!/^\d{8}$/.test(origem) || !/^\d{8}$/.test(destino)
+    || !Number.isFinite(p.pesoKg) || p.pesoKg <= 0 || p.pesoKg > 30 || gramas < 1
+    || !medidas.every(n => Number.isFinite(n) && n > 0 && n <= 100)
+    || medidas.reduce((soma, n) => soma + n, 0) > 200) return null;
+
+  const caminho = [origem, destino, gramas, ...medidas, chave]
+    .map(v => encodeURIComponent(String(v))).join("/");
   try {
-    const r = await fetch(ENDPOINT, {
-      method: "POST",
-      headers: { "content-type": "application/json", accept: "application/json", "x-cepcerto-public-key": chave },
-      body: JSON.stringify({
-        public_key: chave,
-        cep_remetente: p.cepOrigem,
-        cep_destinatario: p.cepDestino,
-        peso: String(p.pesoKg),
-        altura: String(p.caixa.altura),
-        largura: String(p.caixa.largura),
-        comprimento: String(p.caixa.comprimento),
-        // O seguro da CepCerto vai de R$ 50 a R$ 35.000: fora disso a cotação
-        // inteira é recusada, e o pedido barato ficaria sem frete.
-        valor_encomenda: Math.min(Math.max(p.valorDeclarado, 50), 35_000).toFixed(2),
-      }),
+    const r = await fetch(ENDPOINT + "/" + caminho, {
+      method: "GET",
+      headers: { accept: "application/json" },
+      cache: "no-store",
+      redirect: "error",
       signal: AbortSignal.timeout(8000),
     });
-
-    const dados: unknown = await r.json().catch(() => null);
     if (!r.ok) {
-      console.error(`[frete] CepCerto respondeu ${r.status}:`, String((dados as { mensagem?: unknown } | null)?.mensagem ?? "").slice(0, 300));
+      console.error("[frete] CepCerto respondeu HTTP " + r.status + " na API de consulta.");
       return null;
     }
+    const dados: unknown = await r.json().catch(() => null);
     const cotacoes = extrairCotacoesCepCerto(dados);
     if (!cotacoes.length) {
-      console.error(`[frete] CepCerto sem serviço para ${p.cepOrigem} → ${p.cepDestino}:`, JSON.stringify(dados ?? null).slice(0, 300));
+      console.error("[frete] CepCerto sem PAC ou SEDEX com preço e prazo confirmados.");
       return null;
     }
     return cotacoes;
-  } catch (erro) {
-    console.error("[frete] CepCerto indisponível:", erro instanceof Error ? erro.message : erro);
+  } catch {
+    // A URL contém o token: nunca registrar erro bruto, corpo ou endereço da chamada.
+    console.error("[frete] CepCerto indisponível na API de consulta.");
     return null;
   }
 }

@@ -27,7 +27,7 @@ APPS='
 mercado-livre|tmCn4vuIaDwLCXHn|client_id=ML_APP_ID,client_secret=ML_APP_SECRET
 melhor-envio|4tVMMl4ZiDxpHyrP|client_id=MELHOR_ENVIO_CLIENT_ID,client_secret=MELHOR_ENVIO_CLIENT_SECRET
 mercado-pago|TQmPlfr8XkAfqMSZ|client_id=MP_APP_ID,client_secret=MP_APP_SECRET,webhook_secret=MP_APP_WEBHOOK_SECRET
-cepcerto|e6Nn4mafJ916JpbG|public_key=CEPCERTO_PUBLIC_KEY
+cepcerto|e6Nn4mafJ916JpbG|consumption_key=CEPCERTO_CONSULTA_KEY
 '
 
 case "$pedido" in todos|mercado-livre|melhor-envio|mercado-pago|cepcerto) ;; *) echo "Uso: $0 [todos|mercado-livre|melhor-envio|mercado-pago|cepcerto]"; exit 2 ;; esac
@@ -80,25 +80,29 @@ JS
   fi
   [ "$saida" = 0 ] || exit 1
 
-  # A chave da CepCerto só entra se a CepCerto estiver cotando de verdade.
+  # O token de consulta só entra se a CepCerto estiver cotando de verdade.
   # Com a chave no .env o painel passa a dar a Entrega como pronta para toda
   # loja com CEP de origem; se a cotação falha lá, a loja fica sem frete e o
-  # painel diz que está tudo certo. A prova sai deste servidor, que é o IP que
-  # a CepCerto precisa ter autorizado.
+  # painel diz que está tudo certo. A prova usa a API de consumo, sem widget.
   if [ "$nome" = cepcerto ]; then
     if ! prova=$(CHAVE=$(cut -d= -f2- "$temp/$nome.env") node -e '
 const chave = process.env.CHAVE;
-fetch("https://cepcerto.com/widget_frete/api/cotacao", {
-  method: "POST",
-  headers: { "content-type": "application/json", accept: "application/json", "x-cepcerto-public-key": chave },
-  body: JSON.stringify({ public_key: chave, cep_remetente: "01310100", cep_destinatario: "20040002", peso: "0.5", altura: "10", largura: "15", comprimento: "20", valor_encomenda: "50.00" }),
+fetch("https://cepcerto.com/ws/json-frete/01310100/20040002/500/10/15/20/" + encodeURIComponent(chave), {
+  method: "GET",
+  headers: { accept: "application/json" },
+  cache: "no-store",
+  redirect: "error",
   signal: AbortSignal.timeout(25000),
 }).then(async (r) => {
   const d = await r.json().catch(() => ({}));
-  const n = Array.isArray(d.cotacoes) ? d.cotacoes.length : 0;
-  console.log(`${r.status} ${n ? n + " cotações na prova" : d.mensagem ?? "sem cotação"}`);
+  const n = r.ok && !d.erro && d.status !== "erro" ? ["pac", "sedex"].filter((s) => {
+    const preco = Number(String(d[`valor${s}_desconto_cepcerto`] ?? "").replace(/\.(?=\d{3}(\D|$))/g, "").replace(",", "."));
+    const prazo = Number(d[`prazo${s}`]);
+    return Number.isFinite(preco) && preco > 0 && Number.isInteger(prazo) && prazo > 0;
+  }).length : 0;
+  console.log(`${r.status} ${n ? n + " cotações na prova" : "sem cotação confirmada"}`);
   process.exit(n ? 0 : 1);
-}).catch((e) => { console.log(`sem resposta (${e.message})`); process.exit(1); });' 2>&1); then
+}).catch(() => { console.log("sem resposta da API de consulta"); process.exit(1); });' 2>&1); then
       echo "==> cepcerto: a CepCerto não cotou a prova ($prova); a chave NÃO foi gravada"
       [ "$pedido" = todos ] && continue
       exit 1

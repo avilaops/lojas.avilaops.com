@@ -11,12 +11,12 @@ produto, carrinho e checkout, mantendo a credencial no servidor.
 
 ## Tarefa 1: contrato de consulta
 
-- [ ] Atualizar `src/lib/cepcerto.test.ts` e a integração de `frete.test.ts`:
+- [x] Atualizar `src/lib/cepcerto.test.ts` e a integração de `frete.test.ts`:
   token exclusivo, GET, CEPs normalizados, gramas e caixa, PAC/SEDEX com desconto,
   ausência de chave, parâmetros inválidos e falhas sem vazamento de credenciais.
-- [ ] Abrir PR em rascunho e observar a falha desses testes no GitHub CI.
-- [ ] Adaptar `src/lib/cepcerto.ts`, mantendo as assinaturas públicas existentes.
-- [ ] Atualizar `.env.example`, comentários do `.env` local, sincronização n8n
+- [x] Abrir PR em rascunho e observar a falha desses testes no GitHub CI.
+- [x] Adaptar `src/lib/cepcerto.ts`, mantendo as assinaturas públicas existentes.
+- [x] Atualizar `.env.example`, comentários do `.env` local, sincronização n8n
   e `docs/MELHOR-ENVIO.md` para o campo `consumption_key` do token de consulta.
 - [ ] Verificar testes, tipos, lint e build pelo CI existente.
 - [ ] Revisar o diff, registrar commit/ambiente/execução e entregar o PR em rascunho.
@@ -31,4 +31,7 @@ conectado preserva sua conta; nenhuma chamada real integra os testes.
 ## Evidências
 
 Preparação: branch isolada `feat/cepcerto-token-consulta`, base `5748f59`.
-Execuções de CI e revisão serão registradas após os resultados reais.
+RED: commit `db3abe7`, run `43276484581`, testes unitários das duas partes
+falharam. O job `131386617839` registrou a falha da integração de `frete.test.ts`:
+esperava uma consulta da conta da plataforma e recebeu zero chamadas.
+GREEN e revisão serão registrados após os resultados reais.
