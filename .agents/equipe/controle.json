@@ -13,6 +13,29 @@
   ],
   "tasks": [
     {
+      "id": "AVL-244-SHOPEE-OAUTH-20261112",
+      "title": "Completar autorização Shopee para os lojistas no backend TypeScript",
+      "objective": "Permitir a autorização por loja com o aplicativo da plataforma, validando ambientes, respostas e persistência sem expor credenciais.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-andamento",
+      "acceptanceCriteria": [
+        "Backend TypeScript/Next.js preservado por decisão explícita do proprietário.",
+        "Conexão disponível aos tenants elegíveis, com autorização e tokens separados por loja; demo é somente homologação.",
+        "Ambientes oficiais coerentes, IDs exatos e HTTP/tokens/validade inválidos recusados.",
+        "State, sessão, permissão e cifragem preservados; erros não propagam segredos.",
+        "Cifragem, renovação, concorrência, isolamento e preservação da conexão anterior comprovados no PostgreSQL da CI.",
+        "Homologação autenticada registrada somente após configurar app e autorizar a loja."
+      ],
+      "environment": "GitHub CI com PostgreSQL isolado; sandbox real pendente de app/consentimento",
+      "evidence": "PR #238 em rascunho. Guias oficiais 4/20/739/644 conferidos. CI 43312831944 no commit 5ecd355: dez falhas de unidade no job131513795395 e duas falhas reais PostgreSQL no job131513795617 antes da correção. Fontes oficiais e logs preservados em outputs/shopee-oauth-20261112 no workspace. Evidência final será vinculada ao HEAD no PR e na AVL-244.",
+      "blocker": "Aguardar configuração privada do aplicativo Open Platform e autorização da loja para homologação autenticada. Sandbox/demo é ambiente de testes, não limitação do produto.",
+      "review": "CI do HEAD e revisão independente são requisitos antes da integração.",
+      "history": [
+        { "at": "2026-11-12", "status": "em-andamento", "note": "Proprietário pediu conexão Shopee/OAuth para todos os lojistas e manteve backend TypeScript. Regressões demonstradas antes de alterar o adaptador." }
+      ]
+    },
+    {
       "id": "DOMIRIO-CATEGORIAS-VISUAIS-20261109",
       "title": "Compactar categorias da Domi-Rio com ícones SVG",
       "objective": "Melhorar leitura dos atalhos e antecipar a grade de produtos.",

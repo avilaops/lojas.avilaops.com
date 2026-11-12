@@ -16,10 +16,11 @@
 - Builds e testes somente no GitHub CI; integrações usam PostgreSQL isolado `:5548/*_test` e respostas Shopee sintéticas.
 - Credenciais reais não entram em código, logs, testes ou relatórios. Não criar conta, autorizar loja, publicar anúncios ou operar pedidos sem o acesso e a ação correspondentes do proprietário.
 - Preservar state assinado com propósito/expiração, sessão, permissão de configurações, isolamento de tenant e cifragem existente.
+- OAuth atende todos os lojistas elegíveis, com uma autorização independente por tenant; sandbox/demo é somente homologação, conforme esclarecimento posterior do proprietário.
 - Produção: API `https://partner.shopeemobile.com`; autorização BR `https://open.shopee.com.br/auth` ou global `https://open.shopee.com/auth`.
 - Sandbox: API `https://openplatform.sandbox.test-stable.shopee.sg`; autorização BR `https://open.sandbox.test-stable.shopee.com.br/auth` ou global `https://open.sandbox.test-stable.shopee.com/auth`.
 - Overrides aceitam somente esses endpoints HTTPS, sem credenciais, porta não padrão, query, fragmento ou caminhos adicionais. API sandbox escolhe autorização sandbox por padrão; ambientes explicitamente misturados são indisponíveis.
-- Partner/shop IDs são inteiros positivos representáveis sem perda em JSON Number. Tokens são texto não vazio e validade positiva inteira; resposta HTTP de erro não vira credencial.
+- Partner/shop IDs são inteiros positivos representáveis sem perda em JSON Number. Tokens são texto não vazio e validade positiva inteira até quatro horas; resposta HTTP de erro não vira credencial.
 - Reutilizar os dois arquivos do transporte de CI já validado; manter limites, testes e regras de entrega. PR separado em rascunho contra main.
 
 ## Review Focus
@@ -36,18 +37,18 @@
 
 **Interfaces:** Preservar `shopee: ProvedorDeCanal`, `assinar`, `validadeEmSegundos`, `conectar`, `tokenDoCanal`, `contasDaLoja` e `desconectar`. ContaCanal continua com tokens cifrados e seleção por `(tenantId,canal)`.
 
-- [ ] Criar regressões de unidade para ambientes inválidos, sandbox automático, IDs inválidos, HTTP de erro com tokens, corpos/tokens/validades inválidos, redirecionamentos/cache e mensagens sanitizadas.
-- [ ] Criar integração real PostgreSQL: salvar isoladamente, cifrar, renovar refresh, compartilhar renovação concorrente e preservar conta anterior em recusa HTTP.
-- [ ] Publicar testes/contrato e ler falhas de asserção reais na CI antes de alterar o produto.
-- [ ] Implementar validação e guards no adaptador Shopee, preservando o fluxo oficial já implementado e os demais provedores.
+- [x] Criar regressões de unidade para ambientes inválidos, sandbox automático, IDs inválidos, HTTP de erro com tokens, corpos/tokens/validades inválidos, redirecionamentos/cache e mensagens sanitizadas.
+- [x] Criar integração real PostgreSQL: salvar isoladamente, cifrar, renovar refresh, compartilhar renovação concorrente e preservar conta anterior em recusa HTTP.
+- [x] Publicar testes/contrato e ler falhas de asserção reais na CI antes de alterar o produto. CI43312831944: dez falhas de unidade e duas PostgreSQL nos cenários do contrato.
+- [x] Implementar validação e guards no adaptador Shopee, preservando o fluxo oficial já implementado e os demais provedores.
 - [ ] Conferir suítes completas, tipos, lint, build, navegador e revisão independente no HEAD final.
 
 ## Task 2: Configuração e passagem operacional
 
 **Files:** `AGENTS.md`, `.agents/equipe/CONTEXTO.md`, `.agents/equipe/controle.json`, `.agents/mlops/project.json`, `docs/SHOPEE-OAUTH.md`.
 
-- [ ] Registrar a decisão de manter backend TypeScript/Next.js para trabalhos futuros.
-- [ ] Documentar cadastro do app, ambiente, credenciais privadas e callback `https://lojas.avilaops.com/canais/shopee/callback`; a conta de desenvolvedor e consentimento são distintos do código pronto.
+- [x] Registrar a decisão de manter backend TypeScript/Next.js para trabalhos futuros.
+- [x] Documentar cadastro do app, ambiente, credenciais privadas e callback `https://lojas.avilaops.com/canais/shopee/callback`; a conta de desenvolvedor e consentimento são distintos do código pronto.
 - [ ] Vincular fontes e testes ao módulo de fundação; atualizar PR e AVL-244 com evidência por commit.
 - [ ] Homologar conta real somente após configuração privada do app e autorização da loja; até lá, declarar a pendência e manter PR em rascunho.
 

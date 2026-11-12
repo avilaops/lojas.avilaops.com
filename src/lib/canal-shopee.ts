@@ -25,16 +25,47 @@ import { CanalRecusou, lerJson, type ProvedorDeCanal, type TokensRenovados } fro
 
 const AUTORIZACAO = "https://open.shopee.com.br/auth";
 const API = "https://partner.shopeemobile.com";
+const API_SANDBOX = "https://openplatform.sandbox.test-stable.shopee.sg";
+const AUTORIZACAO_SANDBOX = "https://open.sandbox.test-stable.shopee.com.br/auth";
 const TRINTA_DIAS = 30 * 86_400;
+const QUATRO_HORAS = 4 * 3600;
 
-/** Host das chamadas de API. `SHOPEE_URL` aponta para o ambiente de testes. */
-function base(): string {
-  return (process.env.SHOPEE_URL || API).replace(/\/+$/, "");
+type Configuracao = { id: string; chave: string; api: string; autorizacao: string };
+
+function idValido(id: string | null): id is string {
+  return typeof id === "string" && /^[1-9]\d*$/.test(id) && Number.isSafeInteger(Number(id));
 }
 
-/** Página em que o lojista autoriza. `SHOPEE_AUTH_URL` aponta para a de testes. */
-function autorizacao(): string {
-  return (process.env.SHOPEE_AUTH_URL || AUTORIZACAO).replace(/\/+$/, "");
+/** O segredo e os tokens só podem sair para os endpoints oficiais declarados. */
+function endpoint(valor: string, permitidos: readonly string[]): string | null {
+  try {
+    const url = new URL(valor);
+    if (url.protocol !== "https:" || url.username || url.password || url.port || url.search || url.hash) return null;
+    const normalizado = `${url.origin}${url.pathname}`.replace(/\/+$/, "");
+    return permitidos.includes(normalizado) ? normalizado : null;
+  } catch {
+    return null;
+  }
+}
+
+function configuracao(): Configuracao | null {
+  const id = (process.env.SHOPEE_PARTNER_ID ?? "").trim();
+  const chave = (process.env.SHOPEE_PARTNER_KEY ?? "").trim();
+  if (!idValido(id) || !chave) return null;
+  const api = endpoint(process.env.SHOPEE_URL?.trim() || API, [API, API_SANDBOX]);
+  if (!api) return null;
+  const sandbox = api === API_SANDBOX;
+  const paginas = sandbox
+    ? [AUTORIZACAO_SANDBOX, "https://open.sandbox.test-stable.shopee.com/auth"]
+    : [AUTORIZACAO, "https://open.shopee.com/auth"];
+  const autorizacao = endpoint(process.env.SHOPEE_AUTH_URL?.trim() || paginas[0], paginas);
+  return autorizacao ? { id, chave, api, autorizacao } : null;
+}
+
+function exigirConfiguracao(): Configuracao {
+  const config = configuracao();
+  if (!config) throw new CanalRecusou("A integração Shopee não está configurada corretamente.");
+  return config;
 }
 
 /**
@@ -46,13 +77,10 @@ function autorizacao(): string {
  * pararia de renovar sem erro nenhum.
  */
 export function validadeEmSegundos(expireIn: unknown, agoraEmSegundos = Math.floor(Date.now() / 1000)): number {
-  const n = typeof expireIn === "number" && Number.isFinite(expireIn) ? expireIn : 4 * 3600;
-  const duracao = n > 1_000_000_000 ? n - agoraEmSegundos : n;
-  return duracao > 0 ? duracao : 4 * 3600;
-}
-
-function parceiro(): { id: string; chave: string } {
-  return { id: (process.env.SHOPEE_PARTNER_ID ?? "").trim(), chave: (process.env.SHOPEE_PARTNER_KEY ?? "").trim() };
+  if (typeof expireIn !== "number" || !Number.isSafeInteger(expireIn)) throw new CanalRecusou("A Shopee devolveu validade inválida.");
+  const duracao = expireIn > 1_000_000_000 ? expireIn - agoraEmSegundos : expireIn;
+  if (duracao <= 0 || duracao > QUATRO_HORAS) throw new CanalRecusou("A Shopee devolveu validade inválida.");
+  return duracao;
 }
 
 /**
@@ -63,7 +91,10 @@ function parceiro(): { id: string; chave: string } {
  * são chamadas do parceiro, e não levam os dois. A hora vale cinco minutos.
  */
 export function assinar(caminho: string, timestamp: number, daLoja?: { accessToken: string; shopId: string }): string {
-  const { id, chave } = parceiro();
+  return assinarCom(exigirConfiguracao(), caminho, timestamp, daLoja);
+}
+
+function assinarCom({ id, chave }: Configuracao, caminho: string, timestamp: number, daLoja?: { accessToken: string; shopId: string }): string {
   const texto = `${id}${caminho}${timestamp}${daLoja ? `${daLoja.accessToken}${daLoja.shopId}` : ""}`;
   return createHmac("sha256", chave).update(texto).digest("hex");
 }
@@ -73,9 +104,9 @@ function agora(): number {
 }
 
 /** Query comum a toda chamada: quem é o parceiro, quando, e a prova. */
-function assinada(caminho: string, daLoja?: { accessToken: string; shopId: string }): URLSearchParams {
+function assinada(config: Configuracao, caminho: string, daLoja?: { accessToken: string; shopId: string }): URLSearchParams {
   const timestamp = agora();
-  const p = new URLSearchParams({ partner_id: parceiro().id, timestamp: String(timestamp), sign: assinar(caminho, timestamp, daLoja) });
+  const p = new URLSearchParams({ partner_id: config.id, timestamp: String(timestamp), sign: assinarCom(config, caminho, timestamp, daLoja) });
   if (daLoja) {
     p.set("access_token", daLoja.accessToken);
     p.set("shop_id", daLoja.shopId);
@@ -83,42 +114,54 @@ function assinada(caminho: string, daLoja?: { accessToken: string; shopId: strin
   return p;
 }
 
-interface RespostaToken {
-  access_token?: string;
-  refresh_token?: string;
-  expire_in?: number;
-  /** Vazio quando deu certo: a Shopee manda o campo mesmo sem erro. */
-  error?: string;
-  message?: string;
+function objeto(valor: unknown): valor is Record<string, unknown> {
+  return valor !== null && typeof valor === "object" && !Array.isArray(valor);
 }
 
-async function pedirToken(caminho: string, corpo: Record<string, unknown>): Promise<TokensRenovados> {
-  const r = await fetch(`${base()}${caminho}?${assinada(caminho)}`, {
-    method: "POST",
-    headers: { accept: "application/json", "content-type": "application/json" },
-    // `partner_id` e `shop_id` vão como número no corpo, e como texto na query.
-    body: JSON.stringify({ ...corpo, partner_id: Number(parceiro().id) }),
-    signal: AbortSignal.timeout(20_000),
-  });
-  const d = await lerJson<RespostaToken>(r);
-  if (d.error || !d.access_token || !d.refresh_token) {
-    throw new CanalRecusou(d.message || d.error || `A Shopee respondeu ${r.status} sem token.`);
+function texto(valor: unknown): string | null {
+  return typeof valor === "string" && valor.trim() ? valor.trim() : null;
+}
+
+async function pedirToken(config: Configuracao, caminho: string, corpo: Record<string, unknown>): Promise<TokensRenovados> {
+  let r: Response;
+  try {
+    r = await fetch(`${config.api}${caminho}?${assinada(config, caminho)}`, {
+      method: "POST",
+      headers: { accept: "application/json", "content-type": "application/json" },
+      body: JSON.stringify({ ...corpo, partner_id: Number(config.id) }),
+      signal: AbortSignal.timeout(20_000),
+      redirect: "error",
+      cache: "no-store",
+    });
+  } catch {
+    // A URL assinada, erros de rede e mensagens do provedor podem conter tokens.
+    throw new CanalRecusou("Não foi possível consultar a Shopee. Tente conectar novamente.");
   }
+  const d = await lerJson<unknown>(r);
+  if (!r.ok || !objeto(d) || (d.error !== undefined && d.error !== "")) {
+    throw new CanalRecusou(`A Shopee recusou a conexão (HTTP ${r.status}).`);
+  }
+  const accessToken = texto(d.access_token);
+  const refreshToken = texto(d.refresh_token);
+  if (!accessToken || !refreshToken) throw new CanalRecusou("A Shopee devolveu credenciais inválidas.");
   return {
-    accessToken: d.access_token,
-    refreshToken: d.refresh_token,
+    accessToken,
+    refreshToken,
     expiraEmSegundos: validadeEmSegundos(d.expire_in),
     refreshExpiraEmSegundos: TRINTA_DIAS,
   };
 }
 
 /** Nome da loja, para o lojista reconhecer na tela. Falhar aqui não derruba a conexão. */
-async function nomeDaLoja(accessToken: string, shopId: string): Promise<string | null> {
+async function nomeDaLoja(config: Configuracao, accessToken: string, shopId: string): Promise<string | null> {
   const caminho = "/api/v2/shop/get_shop_info";
   try {
-    const r = await fetch(`${base()}${caminho}?${assinada(caminho, { accessToken, shopId })}`, { signal: AbortSignal.timeout(15_000) });
-    const d = await lerJson<{ shop_name?: string }>(r);
-    return d.shop_name?.trim() || null;
+    const r = await fetch(`${config.api}${caminho}?${assinada(config, caminho, { accessToken, shopId })}`, {
+      signal: AbortSignal.timeout(15_000), redirect: "error", cache: "no-store",
+    });
+    if (!r.ok) return null;
+    const d = await lerJson<unknown>(r);
+    return objeto(d) ? texto(d.shop_name) : null;
   } catch {
     return null;
   }
@@ -128,20 +171,20 @@ export const shopee: ProvedorDeCanal = {
   canal: "shopee",
 
   configurado() {
-    const { id, chave } = parceiro();
-    return /^\d+$/.test(id) && chave.length > 0;
+    return configuracao() !== null;
   },
 
   urlDeAutorizacao(state, retorno) {
+    const config = exigirConfiguracao();
     const p = new URLSearchParams({
-      partner_id: parceiro().id,
+      partner_id: config.id,
       // `seller` é a loja; os outros tipos (`supplier`, `user`) não vendem aqui.
       auth_type: "seller",
       redirect_uri: retorno,
       response_type: "code",
       state,
     });
-    return `${autorizacao()}?${p}`;
+    return `${config.autorizacao}?${p}`;
   },
 
   // A Shopee não documenta retorno de recusa: quem desiste na tela dela não volta.
@@ -150,12 +193,13 @@ export const shopee: ProvedorDeCanal = {
   },
 
   async trocarCodigo(retorno) {
-    const code = retorno.get("code");
+    const config = exigirConfiguracao();
+    const code = texto(retorno.get("code"));
     const shopId = retorno.get("shop_id");
     // Conta principal com várias lojas volta com `main_account_id` no lugar do
     // `shop_id`. A plataforma liga uma loja por vez: dizer isso é melhor do que
     // gravar uma conta que não renova.
-    if (!code || !shopId || !/^\d+$/.test(shopId)) {
+    if (!code || !idValido(shopId)) {
       throw new CanalRecusou(
         retorno.get("main_account_id")
           ? "A autorização veio de uma conta principal, sem loja escolhida. Autorize pela loja."
@@ -163,12 +207,15 @@ export const shopee: ProvedorDeCanal = {
       );
     }
 
-    const tokens = await pedirToken("/api/v2/auth/token/get", { code, shop_id: Number(shopId) });
-    return { ...tokens, contaId: shopId, contaNome: await nomeDaLoja(tokens.accessToken, shopId) };
+    const tokens = await pedirToken(config, "/api/v2/auth/token/get", { code, shop_id: Number(shopId) });
+    return { ...tokens, contaId: shopId, contaNome: await nomeDaLoja(config, tokens.accessToken, shopId) };
   },
 
   async renovar(refreshToken, contaId) {
-    if (!contaId) throw new CanalRecusou("A conta da Shopee está sem o código da loja. Conecte de novo.");
-    return pedirToken("/api/v2/auth/access_token/get", { refresh_token: refreshToken, shop_id: Number(contaId) });
+    const config = exigirConfiguracao();
+    if (!idValido(contaId)) throw new CanalRecusou("A conta da Shopee está sem o código da loja válido. Conecte de novo.");
+    const refresh = texto(refreshToken);
+    if (!refresh) throw new CanalRecusou("A Shopee está sem credencial de renovação. Conecte de novo.");
+    return pedirToken(config, "/api/v2/auth/access_token/get", { refresh_token: refresh, shop_id: Number(contaId) });
   },
 };
