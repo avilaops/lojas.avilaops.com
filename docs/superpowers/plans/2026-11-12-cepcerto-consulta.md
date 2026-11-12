@@ -18,8 +18,8 @@ produto, carrinho e checkout, mantendo a credencial no servidor.
 - [x] Adaptar `src/lib/cepcerto.ts`, mantendo as assinaturas públicas existentes.
 - [x] Atualizar `.env.example`, comentários do `.env` local, sincronização n8n
   e `docs/MELHOR-ENVIO.md` para o campo `consumption_key` do token de consulta.
-- [ ] Verificar testes, tipos, lint e build pelo CI existente.
-- [ ] Revisar o diff, registrar commit/ambiente/execução e entregar o PR em rascunho.
+- [x] Verificar testes, tipos, lint e build pelo CI existente.
+- [x] Revisar o diff, registrar commit/ambiente/execução e entregar o PR em rascunho.
 
 ## Foco da revisão
 
@@ -34,4 +34,17 @@ Preparação: branch isolada `feat/cepcerto-token-consulta`, base `5748f59`.
 RED: commit `db3abe7`, run `43276484581`, testes unitários das duas partes
 falharam. O job `131386617839` registrou a falha da integração de `frete.test.ts`:
 esperava uma consulta da conta da plataforma e recebeu zero chamadas.
-GREEN e revisão serão registrados após os resultados reais.
+GREEN: commit `85113f7dd94454a9fe09039e589a8571e106225d`, run
+`43277249722` concluído com sucesso. As duas partes unitárias passaram
+(682/682 e 772/772); integrações PostgreSQL, contratos, tipos, lint,
+compilação, navegador e construção da imagem também passaram.
+Entrega no servidor, deploy e fumaça de produção foram pulados pelo fluxo de PR.
+
+Revisão independente do diff `5748f59..85113f7`: nenhum finding Critical,
+Important ou Minor. Conta real, credenciais dos ambientes, operação do
+sincronizador e cotação real permanecem fora desta homologação de CI.
+
+Entrega: <https://github.com/avilaops/lojas.avilaops.com/pull/235>, em rascunho.
+CI: <https://github.com/avilaops/lojas.avilaops.com/actions/runs/43277249722>.
+A evidência final altera apenas este plano e o registro da equipe;
+o código avaliado permanece no commit `85113f7`.

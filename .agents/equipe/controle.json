@@ -18,10 +18,10 @@
       "objective": "Consultar PAC e SEDEX no servidor para produto, carrinho e checkout sem chave pública.",
       "assignee": "codex",
       "priority": "alta",
-      "status": "em_andamento",
+      "status": "em-revisao",
       "acceptanceCriteria": ["CEPCERTO_CONSULTA_KEY exclusiva nas consultas CepCerto.", "Preços e prazos validados sem expor credenciais.", "Melhor Envio e alternativas cadastradas preservados.", "Testes e build verificados no GitHub CI."],
       "environment": "desenvolvimento isolado e GitHub CI",
-      "evidence": "Contrato e plano em docs/superpowers/specs/2026-11-12-cepcerto-consulta-design.md e docs/superpowers/plans/2026-11-12-cepcerto-consulta.md. Conta real anteriormente retornou HTTP 422; liberação permanece dependente do suporte."
+      "evidence": "PR #235 em rascunho. Código 85113f7dd94454a9fe09039e589a8571e106225d aprovado no run GitHub CI 43277249722: 1454 unitários, integrações PostgreSQL, contratos, tipos, lint, build e navegador. RED anterior no run 43276484581 confirmou 7 falhas do adaptador e 1 integração. Revisão independente sem achados. Contrato e plano em docs/superpowers/specs/2026-11-12-cepcerto-consulta-design.md e docs/superpowers/plans/2026-11-12-cepcerto-consulta.md. Produção não alterada; liberação da conta e cotação real permanecem dependentes do suporte."
     },
     {
       "id": "DOMIRIO-CATEGORIAS-VISUAIS-20261109",
