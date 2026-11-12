@@ -15,7 +15,12 @@ A retomada está na branch `feat/avl-236-estoque-multilocal`, com plano em
 foi reproduzida na CI 43277562248: cinco dos sete casos falharam por estoque
 remoto sendo anunciado no checkout que reserva apenas no principal.
 Também foi adicionada regressão de reposição após uma zeragem pelo escritor
-legado. As novas evidências serão vinculadas ao commit e ao PR em rascunho;
+legado. A CI 43278584323 confirmou as duas falhas de reposição antes da correção:
+entrada e transferência recebida tinham saldo, mas a oferta continuava
+indisponível. A correção alinha a disponibilidade do principal ao saldo físico,
+preservando `backorder` e sem alterar disponibilidade ao movimentar apenas
+outros locais. O contrato rápido passou nos sete casos na CI 43278584311.
+As novas evidências serão vinculadas ao commit e ao PR em rascunho;
 não houve validação ou ativação em produção.
 
 ## Autoridade e compatibilidade

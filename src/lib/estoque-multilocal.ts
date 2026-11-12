@@ -41,7 +41,8 @@ export async function movimentarEstoqueMultilocal(tenantId: string, chaveBruta: 
     const variante = await tx.variante.findFirst({ where: { tenantId, id: comando.varianteId }, select: { produtoId: true } });
     if (!variante) throw new ErroApi("nao_encontrado", "Variante não encontrada nesta loja.");
     const produto = await travarProduto(tx, tenantId, variante.produtoId);
-    if (!produto.variantes.some(v => v.id === comando.varianteId && v.ativo)) throw new ErroApi("conflito", "Variante removida ou inativa.");
+    const varianteAtual = produto.variantes.find(v => v.id === comando.varianteId && v.ativo);
+    if (!varianteAtual) throw new ErroApi("conflito", "Variante removida ou inativa.");
 
     const comandoId = randomUUID();
     await tx.$executeRaw`SELECT set_config('lojas.estoque_comando', ${comandoId}, true), set_config('lojas.estoque_origem', ${origem}, true), set_config('lojas.estoque_motivo', ${comando.motivo}, true)`;
@@ -67,6 +68,15 @@ export async function movimentarEstoqueMultilocal(tenantId: string, chaveBruta: 
       resultados.push({ local: saldo.local, fisico, reservado: saldo.reservado, disponivel: fisico - saldo.reservado });
     }
 
+    // Mesmo contrato do ajuste de estoque: reposição reabre a oferta, mas
+    // movimentação remota não promete estoque e sob encomenda é preservado.
+    const principal = resultados.find(s => s.local === "principal");
+    if (principal && varianteAtual.disponibilidade !== "backorder") {
+      const disponibilidade = principal.fisico > 0 ? "in_stock" : "out_of_stock";
+      if (disponibilidade !== varianteAtual.disponibilidade) {
+        await tx.variante.update({ where: { id: comando.varianteId }, data: { disponibilidade } });
+      }
+    }
     await atualizarProjecao(tx, tenantId, produto.id);
     const atualizado = await tx.produto.update({ where: { id: produto.id }, data: { versaoCatalogo: { increment: 1 } } });
     await tx.eventoCatalogo.create({ data: { tenantId, produtoId: produto.id, versao: atualizado.versaoCatalogo, tipo: "catalogo.estoque-alterado" } });

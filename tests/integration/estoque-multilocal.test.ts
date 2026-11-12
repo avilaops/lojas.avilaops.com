@@ -230,3 +230,42 @@ test("API isola consultas, serializa sequência, pagina e devolve conflito em re
   assert.ok(corpo.paginacao.total >= 2);
   assert.equal((await chamar(getRazao, k, undefined, "razao?porPagina=101")).status, 400);
 });
+
+test("API devolve não encontrado se o produto é excluído enquanto aguarda a trava", async () => {
+  const { t, p, v } = await fixture();
+  const k = await apiChave(t.id, ["estoque:escrever"]);
+  let anunciarExclusao!: (pid: number) => void;
+  let concluirExclusao!: () => void;
+  const exclusaoIniciada = new Promise<number>(resolve => { anunciarExclusao = resolve; });
+  const liberacao = new Promise<void>(resolve => { concluirExclusao = resolve; });
+  const exclusao = prisma.$transaction(async tx => {
+    const [{ pid }] = await tx.$queryRaw<Array<{ pid: number }>>`SELECT pg_backend_pid() AS pid`;
+    await tx.produto.delete({ where: { id: p.id } });
+    anunciarExclusao(pid);
+    await liberacao;
+  }, { timeout: 15_000 });
+  // Propaga erro de preparação para não deixar o teste aguardando sem diagnóstico.
+  const pid = await Promise.race([exclusaoIniciada, exclusao.then(() => { throw new Error("Exclusão sem sinal de trava"); })]);
+  const respostaPendente = chamar(POST, k, comando(v.id), "movimentos", randomUUID());
+  try {
+    let aguardandoProduto = false;
+    for (let tentativa = 0; tentativa < 100; tentativa++) {
+      const [{ bloqueado }] = await prisma.$queryRaw<Array<{ bloqueado: boolean }>>`
+        SELECT EXISTS (
+          SELECT 1 FROM pg_stat_activity
+          WHERE ${pid} = ANY(pg_blocking_pids(pid))
+            AND query LIKE '%"Produto"%FOR UPDATE%'
+        ) AS bloqueado`;
+      if (bloqueado) { aguardandoProduto = true; break; }
+      await new Promise(resolve => setTimeout(resolve, 20));
+    }
+    assert.ok(aguardandoProduto, "A requisição deve ter lido a variante antes do commit da exclusão");
+  } finally {
+    concluirExclusao();
+    await exclusao;
+  }
+  const resposta = await respostaPendente;
+  assert.equal(resposta.status, 404);
+  assert.equal((await resposta.json()).erro.codigo, "nao_encontrado");
+  assert.equal(await prisma.comandoEstoque.count({ where: { tenantId: t.id } }), 0);
+});
