@@ -13,6 +13,23 @@
   ],
   "tasks": [
     {
+      "id": "PK-REFERENCIAS-AGEL-20261108",
+      "title": "Relacionar referências Agel verificadas aos produtos PK",
+      "objective": "Permitir busca por código Agel e publicar referência documental visível na ficha PK por MDX, sem prometer intercambiabilidade.",
+      "assignee": "codex",
+      "priority": "normal",
+      "status": "concluida",
+      "acceptanceCriteria": [
+        "Somente 34 correspondências com referência e medidas iguais são associadas.",
+        "Consulta e exibição exigem tenant PK, slug, referência e medidas atuais.",
+        "MDX renderiza HTML visível no endereço canônico existente.",
+        "Preço, estoque, fabricante e MPN permanecem preservados.",
+        "Testes e build são executados exclusivamente no GitHub CI."
+      ],
+      "evidence": "PR #231 integrado em 26a779f; publicação 2b1c7cf aprovada no CI 42489076990, incluindo deploy e fumaça. As 34 fichas públicas exibem o bloco MDX com o código Agel correto. Consultas 5721 e AGEL 5721 encontram GNY.5030; AGEL AG7319 encontra GNY.5138; a relação divergente AGEL 1208 não foi associada. Prova detalhada em outputs/agel-pk/site-publicado-evidencias.json no workspace. Conferência de produção em 08/11/2026.",
+      "environment": "producao"
+    },
+    {
       "id": "BERETA-FOTOS-CATALOGO-20261108",
       "title": "Pesquisar e importar fotos de rodas e pneus sem imagem",
       "objective": "Percorrer inventário, localizar fontes verificáveis e importar exclusivamente mídia com identidade e versão conferidas.",

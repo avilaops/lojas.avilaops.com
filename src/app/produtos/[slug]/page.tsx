@@ -3,6 +3,7 @@ import { ofertaMerchant, imagensMerchant } from "@/lib/merchant-schema";
 import { codigoPublico, rotuloDoCodigo } from "@/lib/codigo-publico";
 import { notFound, permanentRedirect } from "next/navigation";
 import FichaTecnica from "@/components/FichaTecnica";
+import ReferenciasAgelPk from "@/components/ReferenciasAgelPk";
 import { lerDefinicoes, lerValores } from "@/lib/campos-personalizados";
 import { exigirTenant, lojaVende, urlDaLoja, temaDo, retiradaPublicaDisponivel } from "@/lib/tenant";
 import GaleriaPremium from "@/components/templates/automotivo-premium/Galeria";
@@ -317,6 +318,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
           <Medicamento produto={p} precoCentavos={p.precoCentavos} equivalentes={equivalentes} />
 
           <Compatibilidade compatibilidade={p.compatibilidade} codigoOriginal={p.codigoOriginal} codigosEquivalentes={p.codigosEquivalentes} moto={moto} />
+          <ReferenciasAgelPk tenantSlug={t.slug} produto={p} />
 
           <ul className="mt-6 space-y-1 text-sm text-muted-foreground">
             {retiradaPublicaDisponivel(t) && <li>✔ Retirada na loja sem custo</li>}
