@@ -3,6 +3,7 @@ import type { Prisma, SaldoEstoque } from "@prisma/client";
 import { prisma } from "./db";
 import { ErroApi } from "./api-resposta";
 import { atualizarProjecao, travarProduto } from "./catalogo-escrita";
+import { ErroCatalogo } from "./catalogo-oferta";
 import { ChaveMovimento, MovimentoMultilocal, type MovimentoMultilocalInput } from "./estoque-multilocal-schema";
 
 type Tx = Prisma.TransactionClient;
@@ -40,7 +41,13 @@ export async function movimentarEstoqueMultilocal(tenantId: string, chaveBruta: 
 
     const variante = await tx.variante.findFirst({ where: { tenantId, id: comando.varianteId }, select: { produtoId: true } });
     if (!variante) throw new ErroApi("nao_encontrado", "Variante não encontrada nesta loja.");
-    const produto = await travarProduto(tx, tenantId, variante.produtoId);
+    const produto = await travarProduto(tx, tenantId, variante.produtoId).catch((erro: unknown) => {
+      // O cadastro pode desaparecer depois da leitura da variante e antes da trava.
+      if (erro instanceof ErroCatalogo && erro.status === 404) {
+        throw new ErroApi("nao_encontrado", erro.message);
+      }
+      throw erro;
+    });
     const varianteAtual = produto.variantes.find(v => v.id === comando.varianteId && v.ativo);
     if (!varianteAtual) throw new ErroApi("conflito", "Variante removida ou inativa.");
 

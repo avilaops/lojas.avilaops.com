@@ -20,6 +20,10 @@ entrada e transferência recebida tinham saldo, mas a oferta continuava
 indisponível. A correção alinha a disponibilidade do principal ao saldo físico,
 preservando `backorder` e sem alterar disponibilidade ao movimentar apenas
 outros locais. O contrato rápido passou nos sete casos na CI 43278584311.
+Um teste concorrente real confirmou HTTP 500 quando a exclusão de produto
+vence a disputa pela trava (CI 43279591558). Essa condição agora é traduzida
+para `nao_encontrado`/404, com rollback e sem recibo; falhas desconhecidas
+continuam seguindo o tratamento de erro interno existente.
 As novas evidências serão vinculadas ao commit e ao PR em rascunho;
 não houve validação ou ativação em produção.
 

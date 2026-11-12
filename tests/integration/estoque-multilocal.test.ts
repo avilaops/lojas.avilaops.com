@@ -262,7 +262,11 @@ test("API devolve não encontrado se o produto é excluído enquanto aguarda a t
     assert.ok(aguardandoProduto, "A requisição deve ter lido a variante antes do commit da exclusão");
   } finally {
     concluirExclusao();
-    await exclusao;
+    try {
+      await exclusao;
+    } finally {
+      await respostaPendente;
+    }
   }
   const resposta = await respostaPendente;
   assert.equal(resposta.status, 404);
