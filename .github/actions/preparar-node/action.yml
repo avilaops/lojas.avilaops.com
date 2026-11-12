@@ -1,15 +1,13 @@
 name: Dependências verificadas desta execução
-description: Restaura Node e o arquivo de dependências produzido pelo mesmo commit/run/attempt.
+description: Restaura Node e as partes exatas produzidas pelo mesmo commit/run/attempt.
+inputs:
+  ids:
+    description: IDs dos artefatos de dependências fornecidos pelo job produtor.
+    required: true
 runs:
   using: composite
   steps:
-    - uses: ./.github/actions/node-do-runner
-    - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+    - uses: ./.github/actions/preparar-artefatos
       with:
-        name: lojas-dependencias-${{ github.sha }}
-        path: ${{ runner.temp }}/lojas-artefatos/lojas-dependencias-${{ github.sha }}
-    - shell: bash
-      run: |
-        set -euo pipefail
-        node scripts/ci/artefato.mjs restaurar "$RUNNER_TEMP/lojas-artefatos" dependencias
-        tar --zstd -xf "$RUNNER_TEMP/lojas-artefatos/lojas-dependencias-$GITHUB_SHA/payload.tar.zst"
+        ids: ${{ inputs.ids }}
+        tipos: dependencias
