@@ -18,6 +18,12 @@ const VALIDOS: Record<(typeof CAMPOS)[number], string[]> = {
 
 const aceita = (campo: string, valor: unknown) => TenantAtualizacaoSchema.safeParse({ [campo]: valor }).success;
 
+test("o contrato compartilhado com o painel e a criação não concedem recursos", () => {
+  const recursos = ["frete_melhor_envio_sandbox"];
+  assert.equal("recursos" in TenantAtualizacaoSchema.parse({ nome: "Loja QA", recursos }), false);
+  assert.equal("recursos" in TenantEntradaSchema.parse({ slug: "loja-qa", nome: "Loja QA", recursos }), false);
+});
+
 test("id de pixel bem formado entra, e nulo apaga", () => {
   for (const campo of CAMPOS) {
     for (const valor of VALIDOS[campo]) assert.equal(aceita(campo, valor), true, `${campo}=${valor}`);
