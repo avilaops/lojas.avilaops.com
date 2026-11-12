@@ -175,6 +175,12 @@ Mandatory first step: Analyze the user's request and project state. Select a wor
 
 ## Controle da equipe
 
+### Backend de Lojas
+
+- Decisão explícita do proprietário em 12/11/2026: manter o backend web e as
+  APIs do Lojas em TypeScript/Next.js. Continuar as integrações nessa stack;
+  não conduzir a migração do backend deste produto para Rust.
+
 ### Responsabilidade e desenvolvimento MLOps
 
 - O responsável técnico padrão de Lojas é o agente Codex (`codex`).
