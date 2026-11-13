@@ -1,10 +1,8 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import path from "node:path";
 import type { PedidoStatus, Prisma, Tenant } from "@prisma/client";
 import type { ResultadoPagamento, StatusPagamento } from "@avilaops/checkout";
 import { definicaoPixManual, valorComCentavosUnicos, type ContextoProvedor, type EstadoPixManual, type PaymentProvider } from "@avilaops/checkout/server";
 import QRCode from "qrcode";
-import { UPLOADS_DIR } from "./uploads-arquivos";
+import { gravarArquivoLoja, lerArquivoLoja } from "./arquivos-loja";
 import { prisma } from "./db";
 import { GatewayNaoConfigurado } from "./gateway";
 import { atualizarStatusPagamento } from "./pedidos";
@@ -209,9 +207,7 @@ export async function informarPixPago(
       return { ok: false, status: 422, mensagem: "Não consegui guardar o comprovante." };
     }
     const relativo = `${t.slug}/pix/${cobranca.id}${lido.ext}`;
-    const destino = path.join(UPLOADS_DIR, t.slug, "pix", `${cobranca.id}${lido.ext}`);
-    await mkdir(path.dirname(destino), { recursive: true });
-    await writeFile(destino, arquivo.bytes);
+    await gravarArquivoLoja(relativo, arquivo.bytes);
     comprovante = relativo;
   }
 
@@ -309,9 +305,10 @@ export async function lerComprovanteDoPix(t: Tenant, referencia: string): Promis
   const ext = relativo.split(".").pop()?.toLowerCase() ?? "";
   const tipo = ext === "pdf" ? "application/pdf" : ext === "png" ? "image/png" : ext === "webp" ? "image/webp" : "image/jpeg";
   try {
-    const bytes = await readFile(path.join(UPLOADS_DIR, ...relativo.split("/")));
+    const bytes = await lerArquivoLoja(relativo);
     return { bytes, tipo };
-  } catch {
+  } catch (erro) {
+    if ((erro as NodeJS.ErrnoException).code !== "ENOENT") return { erro: "Comprovante temporariamente indisponível.", status: 503 };
     return { erro: "Não encontrei o comprovante.", status: 404 };
   }
 }

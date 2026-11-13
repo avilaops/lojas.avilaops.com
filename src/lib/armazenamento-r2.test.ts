@@ -20,7 +20,7 @@ async function remoto(acao: (operacoes: Array<{ metodo: string; url: string }>) 
       return new Response(null, { status: 204 });
     }
     const bytes = objetos.get(url);
-    return bytes ? new Response(bytes) : new Response(null, { status: 404 });
+    return bytes ? new Response(new Uint8Array(bytes)) : new Response(null, { status: 404 });
   };
   try { await acao(operacoes); } finally {
     globalThis.fetch = anterior.fetch;
