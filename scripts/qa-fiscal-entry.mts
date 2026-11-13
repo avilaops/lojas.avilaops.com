@@ -38,6 +38,8 @@ try {
   assert.equal((await fetch(base + path)).status, 401);
   assert.equal((await fetch(base + `/api/painel/fiscal/documentos/${foreign.id}/entrada-estoque`, { headers: { cookie } })).status, 404);
   const corpo = { confirmacao: true, local: "principal", itens: [{ numero: 1, varianteId: variantes[0].id, quantidade: 2 }, { numero: 2, varianteId: variantes[1].id, quantidade: 1 }] };
+  assert.equal((await fetch(base + path, { method: "POST", headers: { origin: "https://localhost", "content-type": "application/json" }, body: JSON.stringify(corpo) })).status, 401);
+  assert.equal((await fetch(base + `/api/painel/fiscal/documentos/${foreign.id}/entrada-estoque`, { method: "POST", headers: { cookie, origin: "https://localhost", "content-type": "application/json" }, body: JSON.stringify(corpo) })).status, 404);
   const blocked = await fetch(base + path, { method: "POST", headers: { cookie, origin: "https://other.example", "content-type": "application/json" }, body: JSON.stringify(corpo) });
   assert.equal(blocked.status, 403);
   assert.equal(await prisma.comandoEstoque.count({ where: { tenantId: loja.id } }), 0);
@@ -52,7 +54,9 @@ try {
     if (route.request().method() !== "POST") return route.continue();
     // Chromium owns Origin at the network layer. Forward the actual payload
     // through an HTTP ingress fixture instead of trying to override that header.
-    const response = await route.fetch({ headers: { ...await route.request().allHeaders(), cookie, origin: "https://localhost" } });
+    const requestHeaders = await route.request().allHeaders();
+    assert.ok(requestHeaders.cookie?.includes("lojas_sessao="), "O POST do navegador precisa levar a própria sessão");
+    const response = await route.fetch({ headers: { ...requestHeaders, origin: "https://localhost" } });
     await route.fulfill({ response });
   });
   await page.goto(base + "/painel/configuracoes/fiscal");
@@ -68,7 +72,7 @@ try {
   await page.screenshot({ path: output + "/desktop.png", fullPage: true });
   await page.setViewportSize({ width: 393, height: 852 });
   await dialog.getByLabel("Unidades de estoque do item 1").fill("2");
-  await dialog.getByLabel("Local de estoque").fill("principal");
+  await dialog.getByRole("combobox", { name: /^Local de estoque/ }).fill("principal");
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth));
   await page.screenshot({ path: output + "/mobile-form.png", fullPage: true });
   await dialog.getByLabel("Conferi os produtos, quantidades e local de estoque").check();
