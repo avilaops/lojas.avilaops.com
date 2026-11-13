@@ -1,0 +1,13 @@
+{
+  "name": "lojas-fiscal-danfe",
+  "runtime": "python",
+  "plan": "free",
+  "region": "oregon",
+  "branch": "main",
+  "autoDeploy": "no",
+  "buildCommand": "python -m pip install --no-compile --only-binary=:all: --require-hashes -r deploy/fiscal/requirements.lock",
+  "startCommand": "python deploy/fiscal/server.py",
+  "healthCheckPath": "/healthz",
+  "pythonVersion": "3.13.18",
+  "requiredSecret": "FISCAL_SHARED_SERVICE_KEY"
+}
