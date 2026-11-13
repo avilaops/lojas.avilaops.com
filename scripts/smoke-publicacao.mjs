@@ -24,6 +24,8 @@ import { temRegrasCss } from "./lib/css-publicado.mjs";
 const base = (process.argv[2] ?? process.env.SMOKE_URL ?? "http://127.0.0.1:3080").replace(/\/+$/, "");
 const TENTATIVAS = Number(process.env.SMOKE_TENTATIVAS ?? 10);
 const ESPERA_MS = Number(process.env.SMOKE_ESPERA_MS ?? 3000);
+const hostLogico = process.env.LOJAS_SMOKE_HOST;
+const releaseEsperada = process.env.LOJAS_EXPECTED_RELEASE_ID;
 
 const verdes = [];
 function ok(texto) { verdes.push(texto); console.log(`  ok  ${texto}`); }
@@ -37,8 +39,11 @@ const espera = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function buscar(caminho, init) {
   const alvo = caminho.startsWith("http") ? caminho : base + caminho;
+  if (hostLogico && (!/^[a-z0-9][a-z0-9.-]+$/i.test(hostLogico) || new URL(alvo).origin !== new URL(base).origin)) throw new Error("Origem ou host lógico de smoke inválido.");
   const controle = AbortSignal.timeout(Number(process.env.SMOKE_TIMEOUT_MS ?? 15000));
-  return fetch(alvo, { redirect: "follow", cache: "no-store", signal: controle, ...init });
+  const headers = new Headers(init?.headers);
+  if (hostLogico) headers.set("x-forwarded-host", hostLogico);
+  return fetch(alvo, { redirect: hostLogico ? "manual" : "follow", cache: "no-store", signal: controle, ...init, headers });
 }
 
 /** Espera a versão nova assumir a porta: deploy e pipeline chamam junto da troca. */
@@ -59,6 +64,7 @@ async function saude() {
   const r = await esperarDePe();
   if (r.status !== 200) falhar(`/api/health devolveu ${r.status}; o corpo diz ${await r.text()}`);
   if (!(r.headers.get("cache-control") ?? "").includes("no-store")) falhar("/api/health veio cacheável: um 200 guardado esconde a versão quebrada");
+  if (releaseEsperada && r.headers.get("x-lojas-release") !== releaseEsperada) falhar("a origem está servindo outra release");
   const corpo = await r.json().catch(() => null);
   if (!corpo || corpo.ok !== true || corpo.banco !== "ok") falhar(`/api/health fora do contrato: ${JSON.stringify(corpo)}`);
   if (typeof corpo.latenciaBancoMs !== "number") falhar("/api/health sem latenciaBancoMs");

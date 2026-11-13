@@ -112,6 +112,12 @@ async function verificarRender() {
     if (["build_failed", "update_failed", "pre_deploy_failed", "canceled", "deactivated"].includes(d.status)) throw new Error("RENDER_DEPLOYMENT_FAILED");
     if (d.status === "live") {
       if (d.commit?.id !== sha) throw new Error("FOREIGN_RENDER_DEPLOYMENT");
+      const serviceResponse = await fetch(base, { headers: { authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(10_000) });
+      if (!serviceResponse.ok) throw new Error("RENDER_ORIGIN_UNAVAILABLE");
+      const service = await serviceResponse.json();
+      const origin = new URL(service.serviceDetails?.url);
+      if (origin.protocol !== "https:" || !origin.hostname.endsWith(".onrender.com") || origin.username || origin.password || origin.pathname !== "/" || origin.search || origin.hash) throw new Error("INVALID_RENDER_ORIGIN");
+      if (process.env.GITHUB_OUTPUT) await appendFile(process.env.GITHUB_OUTPUT, `origin=${origin.origin}\n`);
       console.log(JSON.stringify({ deployId, sha, status: d.status }));
       return;
     }

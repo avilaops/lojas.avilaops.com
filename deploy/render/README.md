@@ -38,6 +38,10 @@ O workflow serializa execuções de cada branch. Antes de backup, migração e
 alteração de ambiente, a entrega recusa HEAD antigo ou run anterior a outro
 push/disparo manual. `render_verificar` exige status `live`, commit correto
 na API do Render e smoke público; falha ou timeout tornam o CI vermelho.
+O smoke usa a URL `onrender.com` obtida da API, envia o host lógico por
+`x-forwarded-host` e confere `x-lojas-release` na saúde. Não segue redirects
+para outra origem nessa modalidade. Assim valida o backend novo mesmo antes
+de promover DNS; o domínio público deve ser conferido novamente após a troca.
 
 No GitHub, cadastrar segredos `RENDER_DATABASE_URL` (externa, banco Lojas),
 `RENDER_API_KEY` e `LOJAS_STORAGE_PUBLISH_TOKEN`; variáveis `DEPLOY_TARGET=render`,

@@ -762,6 +762,7 @@ jobs:
     environment: production
     outputs:
       deploy_id: ${{ steps.publicar.outputs.deploy_id }}
+      release_id: ${{ steps.publicar.outputs.release_id }}
     concurrency:
       group: deploy-production-lojas.avilaops.com
       cancel-in-progress: false
@@ -799,8 +800,14 @@ jobs:
         with:
           persist-credentials: false
       - uses: ./.github/actions/node-do-runner
-      - run: node deploy/render/release.mjs verify
-      - run: node scripts/smoke-publicacao.mjs "${{ vars.SMOKE_URL || 'https://lojas.avilaops.com' }}"
+      - id: verificar
+        run: node deploy/render/release.mjs verify
+      - run: node scripts/smoke-publicacao.mjs "${{ steps.verificar.outputs.origin }}"
+        env:
+          LOJAS_SMOKE_HOST: ${{ vars.SMOKE_HOST || 'lojas.avilaops.com' }}
+          LOJAS_EXPECTED_RELEASE_ID: ${{ needs.render_publicar.outputs.release_id }}
+          SMOKE_TENTATIVAS: '1'
+          SMOKE_TIMEOUT_MS: '5000'
 
   preparar_entrega:
     name: entrega / baixar imagem no servidor
