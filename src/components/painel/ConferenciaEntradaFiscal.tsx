@@ -8,7 +8,10 @@ import { inputClasse } from "./campos";
 type Variante = { id: string; nome: string; variacao: string; sku: string | null; gtin: string | null };
 type Linha = { numero: number; variante: Variante | null; quantidade: string };
 const quantidadeInicial = (item: ItemNotaEntrada) => /^(UN|UND|UNID|UNIDADE|PC|PÇ|PECA|PEÇA)$/i.test(item.unidade) && Number.isInteger(Number(item.quantidade)) ? String(Number(item.quantidade)) : "";
-const valor = (bruto: string) => Number(bruto).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+const valor = (bruto: string) => {
+  const [inteiro, fracao = ""] = bruto.split(".");
+  return `${inteiro.replace(/\B(?=(\d{3})+(?!\d))/g, ".")},${fracao.padEnd(2, "0")}`;
+};
 
 export default function ConferenciaEntradaFiscal({ documentoId, fechar }: { documentoId: string; fechar: () => void }) {
   const dialog = useRef<HTMLDialogElement>(null), titulo = useId();

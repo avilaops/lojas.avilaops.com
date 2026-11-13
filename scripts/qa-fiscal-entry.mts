@@ -54,11 +54,17 @@ try {
   const dialog = page.getByRole("dialog", { name: "Conferir entrada de estoque" });
   await dialog.waitFor();
   for (const n of [1, 2]) {
+    await page.setViewportSize(n === 1 ? { width: 393, height: 852 } : { width: 1440, height: 1100 });
     await dialog.getByLabel(`Buscar produto do item ${n}`).fill(`Produto fiscal QA ${n}`);
     await dialog.getByRole("button", { name: new RegExp(`Selecionar Produto fiscal QA ${n}`) }).click();
   }
   await mkdir(output, { recursive: true });
   await page.screenshot({ path: output + "/desktop.png", fullPage: true });
+  await page.setViewportSize({ width: 393, height: 852 });
+  await dialog.getByLabel("Unidades de estoque do item 1").fill("2");
+  await dialog.getByLabel("Local de estoque").fill("principal");
+  assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth));
+  await page.screenshot({ path: output + "/mobile-form.png", fullPage: true });
   await dialog.getByLabel("Conferi os produtos, quantidades e local de estoque").check();
   await dialog.getByRole("button", { name: "Confirmar entrada no estoque", exact: true }).click();
   await dialog.getByRole("status").filter({ hasText: "Entrada registrada" }).waitFor();
