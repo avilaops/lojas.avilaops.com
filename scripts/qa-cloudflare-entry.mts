@@ -25,7 +25,7 @@ try {
   assert.ok(response.headers.getSetCookie().some(c => c.includes('HttpOnly') && c.includes('Secure')));
   const wrong = await fetch(origin + '/api/painel/entrar/iniciar-sso', { redirect: 'manual', headers: { host: 'backend-render.example', 'x-forwarded-host': 'demo.lojas.avilaops.com' } });
   assert.equal(wrong.status, 404, 'SSO continua restrito ao domínio da plataforma');
-  const blocked = await fetch(origin + '/', { headers: { host: 'backend-render.example', 'x-forwarded-host': slug + '.lojas.avilaops.com', 'x-plataforma': '1' } });
+  const blocked = await fetch(origin + '/sobre', { headers: { host: 'backend-render.example', 'x-forwarded-host': slug + '.lojas.avilaops.com', 'x-plataforma': '1' } });
   assert.match(await blocked.text(), /Nenhuma loja responde por este endereço\./, 'Marcador forjado não contorna o bloqueio de uma loja encerrada');
   console.log(JSON.stringify({ cloudflareHostSso: 'pass', wrongTenantHost: 'denied' }));
 } finally {

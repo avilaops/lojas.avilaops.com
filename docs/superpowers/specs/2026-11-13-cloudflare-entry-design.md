@@ -35,7 +35,9 @@ afrouxar o gate de backup/migração para publicar a aplicação.
 
 ## Verificação e limites
 
-Builds/testes exclusivamente no GitHub CI; jobs novos permanecem com um minuto.
+Builds/testes exclusivamente no GitHub CI. O proprietário autorizou até cinco
+minutos somente para backup e confirmação do deploy, após medições reais
+excederem um minuto. Demais limites existentes preservados.
 Regressões: headers forjados, POST/cookies/redirect externo, SSO no host lógico,
 falha de upstream, backup íntegro e entrega real no Render. Revisar antes de merge.
 Depois conferir DNS/TLS, plataforma, sete vitrines ativas, login e upload sintético.
