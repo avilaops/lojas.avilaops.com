@@ -77,6 +77,16 @@ O manifesto é escrito após todas as partes. Nenhuma rotina apaga o backup de
 origem ou configura expiração destrutiva. Para restaurar, conferir manifesto,
 hash de cada parte, hash agregado, gzip e contagens antes da publicação.
 
+Backups com `schemaVersion: 2` e formato `pg_dump-directory-tar-gzip` contêm
+`snapshot/` do pg_dump directory, exportado por quatro workers com o snapshot
+sincronizado nativo. Todos os dados são lidos por pg_restore antes do upload.
+Concatenar partes em ordem, conferir hashes e extrair o tar.gz em diretório
+privado. Restaurar em banco novo com `pg_restore --no-owner --no-acl --dbname
+<destino> snapshot/`, usando credenciais pelo ambiente e não pela linha de
+comando. Reaplicar explicitamente os papéis/permissões de integração necessários.
+O dump original e backups de versão 1 são SQL gzip: não usar esse procedimento
+de diretório para eles. Nunca testar restauração sobre o banco em uso.
+
 ## Limites da recuperação de 13/11/2026
 
 O banco foi restaurado da última cópia disponível de `host-lojas-20261113.sql.gz`,
