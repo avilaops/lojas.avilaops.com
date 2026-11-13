@@ -104,7 +104,7 @@ test("política do projeto exige timeout nativo e permite folga nos jobs longos"
     ["render_backup", "5"],
     ["render_verificar", "5"],
   ]);
-  for (const name of ["deploy-production.yml", "merge-automatico.yml", "backup-render.yml"]) {
+  for (const name of ["deploy-production.yml", "merge-automatico.yml", "backup-render.yml", "preparar-fontes.yml"]) {
     const text = await readFile(path.resolve(".github/workflows", name), "utf8");
     const jobs = text.split(/^jobs:\r?\n/m)[1];
     assert.ok(jobs, `${name}: jobs ausentes`);

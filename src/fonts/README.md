@@ -20,9 +20,10 @@ Esse preparo remove a falha de build no carregador Inter observada na
 execução `43476755288`, tentativa 2, com a mesma mensagem da ocorrência
 Playfair abaixo. Nenhuma família do catálogo consulta o Google no build.
 
-Para atualizar, disparar `deploy-production.yml` com `preparar_fontes=true`
-em uma branch. Essa modalidade prepara somente um artefato, sem publicar a
-aplicação. `scripts/ci/preparar-fontes.py` exige CI e fixa o commit upstream
+Para atualizar, disparar o workflow separado `preparar-fontes.yml` em uma
+branch. Ele prepara somente um artefato, sem receber segredos de produção,
+publicar a aplicação ou concorrer com a seleção de entregas de `main`.
+`scripts/ci/preparar-fontes.py` exige CI e fixa o commit upstream
 antes do download; conferir manifesto e licenças antes de incorporar ativos.
 
 ## Playfair Display
