@@ -22,38 +22,42 @@ para a loja que conectou o Melhor Envio (`src/lib/postagem.ts`).
 
 ## CepCerto (conta da plataforma)
 
-A cotação usa a porta do "Frete no seu site" (`widget_frete/api/cotacao`), com
-a chave pública da conta (`src/lib/cepcerto.ts` explica por que não as outras
-duas portas). Consome o plano de consultas da conta.
+Produto, carrinho e checkout usam o mesmo adaptador do servidor. O navegador
+envia CEP e IDs/quantidades para `POST /api/frete`; o servidor resolve a loja,
+os preços, o peso e a caixa pelo catálogo antes de consultar a CepCerto.
 
-1. **Chave:** `CEPCERTO_PUBLIC_KEY` no `.env`, vinda da credencial do n8n
-   "CepCerto Lojas Avila Ops (chave pública do cotador de frete)":
+A cotação usa exclusivamente `CEPCERTO_CONSULTA_KEY`, o **Token de consulta**
+do módulo Integração. A chamada é `GET /ws/json-frete/{origem}/{destino}/`
+`{peso_gramas}/{altura}/{largura}/{comprimento}/{token}` em
+`https://cepcerto.com`. A chave pública e o token de postagem não habilitam
+essa consulta. Nunca enviar o token ao navegador ou registrar a URL completa.
 
-   ```bash
-   /opt/lojas/sincronizar-apps-do-n8n.sh cepcerto
-   ```
+A API de consumo retorna PAC e SEDEX. O adaptador oferece apenas os preços
+`valorpac_desconto_cepcerto` e `valorsedex_desconto_cepcerto`, com prazo válido,
+mantendo os nomes que a emissão de etiqueta reconhece. Preço de balcão e Mini
+Envios não entram na oferta. A API básica não recebe valor declarado:
+esta cotação não confirma seguro adicional sobre o valor dos produtos.
 
-   O roteiro termina com uma cotação de prova de dentro do container.
-2. **IP autorizado:** no painel da CepCerto, Frete no seu site, Personalizar,
-   Domínios e IPs, o IP de saída do servidor `applications` (`178.105.82.48` em
-   13/10/2026). Sem isso a resposta é 401 "Chave pública, domínio ou IP não
-   autorizado" e a loja fica só com tabela, entrega local e retirada.
+Configure o token no ambiente que executa a aplicação e reinicie o processo.
+O `.env` local não configura produção. Para usar
+`deploy/sincronizar-apps-do-n8n.sh cepcerto`, a credencial n8n deve conter
+`json.body.consumption_key` com o token de consulta. O roteiro recusa a chave
+antiga do widget, consulta PAC/SEDEX e só grava o token após obter cotação.
 
-O roteiro só grava a chave depois de uma cotação de prova passar: com a chave
-no `.env` o painel dá a Entrega como pronta para toda loja com CEP de origem.
+É necessário um ciclo/plano de consumo ativo. Em erro HTTP, resposta inválida
+ou ausência de preço/prazo, o fluxo mantém as alternativas cadastradas:
+tabela por UF, entrega local e retirada. Sem token, a API não é chamada.
+Não há tentativa com outra credencial. A loja conectada ao Melhor Envio
+continua usando o contrato dela.
 
-**Estado em 13/10/2026:** IP autorizado e chave aceita (`api/acesso` responde
-com a conta), mas toda cotação devolve 500 "Não foi possível calcular o frete",
-pela chave pública e pelo token de postagem; a chave de consumo responde
-"Cliente sem ciclo transacional ativo para consumo de API". O cotador público
-do site deles calcula normalmente, então a falha é da conta, não do cálculo.
-A chave **não** está em produção. O formato da resposta em `cepcerto.ts` saiu
-do script do widget e ainda não foi conferido com uma cotação real.
+A emissão de etiquetas continua usando `CEPCERTO_POSTAGEM_KEY`, saldo da
+carteira e as regras existentes de pedido pago. Configurar o token de consulta
+não comprova emissão, saldo suficiente ou liberação da conta.
 
-Ficam de fora o preço de balcão dos Correios (é a tabela cheia do mesmo
-serviço) e o Mini Envios (a CepCerto cota e não posta). A emissão de etiqueta
-usa o token de postagem e o saldo da carteira da CepCerto, que estava em
-R$ 0,00 em 13/10/2026: sem saldo a loja despacha por fora e cola o rastreio.
+**Evidência histórica:** a verificação local anterior à mudança retornou HTTP
+422, “Cliente sem ciclo transacional ativo para consumo de API”. A liberação
+solicitada ao suporte e a cotação real precisam de verificação própria.
+Documentação oficial: <https://cepcerto.com/integracao>.
 
 ## Melhor Envio (conta de cada loja)
 
