@@ -1,0 +1,16 @@
+{
+  "account_id": "85b914dcdebf6fa2fce7b819bc542294",
+  "worker": {
+    "name": "lojas-storage",
+    "main": "storage-worker.mjs",
+    "compatibility_date": "2026-11-13",
+    "bindings": [
+      { "type": "r2_bucket", "name": "UPLOADS", "bucket_name": "avilaops-lojas-uploads" },
+      { "type": "r2_bucket", "name": "FISCAL", "bucket_name": "avilaops-fiscal-acervo" },
+      { "type": "r2_bucket", "name": "RELEASES", "bucket_name": "avilaops-lojas-releases" },
+      { "type": "r2_bucket", "name": "BACKUPS", "bucket_name": "avilaops-lojas-backups" }
+    ],
+    "required_secret_bindings": ["APP_TOKEN_SHA256", "PUBLISH_TOKEN_SHA256"],
+    "observability": { "enabled": false }
+  }
+}

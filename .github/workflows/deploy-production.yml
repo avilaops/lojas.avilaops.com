@@ -672,6 +672,91 @@ jobs:
           [[ "$publicada" =~ @sha256:[a-f0-9]{64}$ ]]
           printf 'image=%s\n' "$publicada" >> "$GITHUB_OUTPUT"
 
+  runtime_render:
+    name: Render / empacotar runtime aprovado
+    needs: [contexto_imagem, image]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    outputs:
+      artifact_id: ${{ steps.runtime.outputs.artifact-id }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/preparar-artefatos
+        with:
+          ids: ${{ needs.contexto_imagem.outputs.artifact_id }}
+          tipos: imagem-contexto
+      - name: Preparar runtime sem arquivos de ambiente
+        run: node deploy/render/release.mjs pack "$RUNNER_TEMP/lojas-image/runtime" "$RUNNER_TEMP/render-runtime"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        id: runtime
+        with:
+          name: lojas-render-runtime-${{ github.sha }}
+          path: ${{ runner.temp }}/render-runtime/
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
+
+  render_migracoes:
+    name: Render / backup e migrações
+    needs: [image, dependencias]
+    if: >-
+      github.event_name != 'pull_request' && github.event_name != 'pull_request_target'
+      && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+      && vars.DEPLOY_ENABLED == 'true' && vars.DEPLOY_TARGET == 'render'
+      && vars.RENDER_SERVICE_ID != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    environment: production
+    concurrency:
+      group: lojas-render-migrations
+      cancel-in-progress: false
+    env:
+      DATABASE_URL: ${{ secrets.RENDER_DATABASE_URL }}
+      RENDER_DATABASE_URL: ${{ secrets.RENDER_DATABASE_URL }}
+      LOJAS_STORAGE_URL: ${{ vars.LOJAS_STORAGE_URL }}
+      LOJAS_STORAGE_PUBLISH_TOKEN: ${{ secrets.LOJAS_STORAGE_PUBLISH_TOKEN }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/preparar-node
+        with:
+          ids: ${{ needs.dependencias.outputs.artifact_id }}
+      - run: node deploy/render/backup.mjs before-migration
+      - run: npx prisma migrate deploy
+
+  render_publicar:
+    name: Render / publicar release imutável
+    needs: [runtime_render, render_migracoes]
+    if: >-
+      github.event_name != 'pull_request' && github.event_name != 'pull_request_target'
+      && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+      && vars.DEPLOY_ENABLED == 'true' && vars.DEPLOY_TARGET == 'render'
+      && vars.RENDER_SERVICE_ID != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    environment: production
+    concurrency:
+      group: deploy-production-lojas.avilaops.com
+      cancel-in-progress: false
+    env:
+      RENDER_SERVICE_ID: ${{ vars.RENDER_SERVICE_ID }}
+      RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+      LOJAS_STORAGE_URL: ${{ vars.LOJAS_STORAGE_URL }}
+      LOJAS_STORAGE_PUBLISH_TOKEN: ${{ secrets.LOJAS_STORAGE_PUBLISH_TOKEN }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/node-do-runner
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          artifact-ids: ${{ needs.runtime_render.outputs.artifact_id }}
+          path: ${{ runner.temp }}/render-runtime
+      - run: node deploy/render/release.mjs publish "$RUNNER_TEMP/render-runtime"
+
   preparar_entrega:
     name: entrega / baixar imagem no servidor
     needs: image
@@ -682,6 +767,7 @@ jobs:
       github.event_name != 'pull_request' && github.event_name != 'pull_request_target'
       && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
       && vars.DEPLOY_ENABLED == 'true'
+      && vars.DEPLOY_TARGET != 'render'
     runs-on: ubuntu-24.04
     timeout-minutes: 1
     environment: production
