@@ -3,6 +3,15 @@
 O Lojas preserva Next.js/TypeScript e PostgreSQL. O runtime é Node 22 no Render,
 o DNS continua na Cloudflare e o armazenamento durável fica no R2. Não usa D1.
 
+O bootstrap verifica e extrai a release antes de substituir seu próprio
+processo pelo servidor (`process.execve`, Linux/Node22.15+). Assim a memória do
+download deixa de permanecer em um processo pai durante toda a operação. O
+servidor inicia com heap JS limitado a256MiB e `MALLOC_ARENA_MAX=2` por padrão,
+reservando espaço no limite Free de512MiB para buffers e bibliotecas nativas.
+Esses limites não comprovam ausência de vazamento: conferir métricas após cada
+publicação e usar tráfego representativo. O teste de CI verifica PID preservado
+e heap efetivo no processo substituto, sem executar build no Render.
+
 ## Entrada Cloudflare
 
 A API Render recusou novos domínios sem forma de pagamento após os dois

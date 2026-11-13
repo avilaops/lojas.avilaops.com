@@ -6,6 +6,7 @@ import { ErroApi } from "./api-resposta";
 import { fiscalErpConfigurado } from "./erp-fiscal";
 import { eventoCancelaNota, interpretarNotaEntrada, normalizarDocumentoEntrada, type NotaEntrada } from "./fiscal-entrada-xml";
 import { movimentarEstoqueMultilocalNaTransacao, type ReciboMovimento } from "./estoque-multilocal";
+import { travarProduto } from "./catalogo-escrita";
 
 type Tx = Prisma.TransactionClient;
 export type ReciboEntradaFiscal = { tipo: "ENTRADA_NFE"; id: string; chave: string; numero: string; documentoId: string; confirmadoEm: string; ator: string; local: string; itens: Array<{ numero: number; varianteId: string; quantidade: number; descricaoFiscal: string; unidadeFiscal: string; quantidadeFiscal: string; movimento: ReciboMovimento }> };
@@ -84,7 +85,12 @@ export async function confirmarEntradaFiscal(tenantId: string, id: string, entra
     const variantes = await tx.variante.findMany({ where: { tenantId, id: { in: ids }, ativo: true, produto: { ativo: true } }, select: { id: true, produtoId: true } });
     if (variantes.length !== ids.length) throw new ErroApi("nao_encontrado", "Produto ou variante não encontrado entre os cadastros ativos desta loja.");
     const produtos = new Map(variantes.map(v => [v.id, v.produtoId]));
-    const ordenados = [...comando.itens].sort((a, b) => produtos.get(a.varianteId)!.localeCompare(produtos.get(b.varianteId)!) || a.varianteId.localeCompare(b.varianteId) || a.numero - b.numero);
+    for (const produtoId of [...new Set(variantes.map(v => v.produtoId))].sort()) {
+      const produto = await travarProduto(tx, tenantId, produtoId);
+      if (!produto.ativo) throw new ErroApi("conflito", "Um produto foi desativado durante a conferência. Revise os itens ativos.");
+    }
+    const comparar = (a: string, b: string) => a < b ? -1 : a > b ? 1 : 0;
+    const ordenados = [...comando.itens].sort((a, b) => comparar(produtos.get(a.varianteId)!, produtos.get(b.varianteId)!) || comparar(a.varianteId, b.varianteId) || a.numero - b.numero);
     const itens: ReciboEntradaFiscal["itens"] = [];
     for (const item of ordenados) {
       const chaveItem = `nfe-item:${nota.chave}:${item.numero}`;

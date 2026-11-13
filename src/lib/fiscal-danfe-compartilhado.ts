@@ -7,7 +7,8 @@ export async function gerarDanfeCompartilhado(xml: string, fetcher: typeof fetch
   if (!url || !chave) return null;
   if (!/^https:\/\//.test(url) && env.NODE_ENV === "production" && url !== "http://fiscal-avilaops-com-web:8000") return null;
   const resposta = await fetcher(`${url}/v1/documentos/nfe/danfe.pdf`, {
-    method: "POST", cache: "no-store", signal: AbortSignal.timeout(25_000),
+    // O serviço Free pode precisar acordar antes de renderizar a primeira nota.
+    method: "POST", cache: "no-store", signal: AbortSignal.timeout(60_000),
     headers: { "Content-Type": "application/json", "X-Fiscal-Service-Key": chave },
     body: JSON.stringify({ xml }),
   });
