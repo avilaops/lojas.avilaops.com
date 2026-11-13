@@ -91,6 +91,7 @@ export interface PedidoCheckout {
   cliente: Cliente;
   entrega?: EnderecoEntrega;
   frete: OpcaoFrete;
+  cotacoesFrete?: OpcaoFrete[];
   meioPagamento: MeioPagamento;
   cartao?: DadosCartao;
   /** Desconto já calculado, em centavos. */

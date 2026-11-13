@@ -205,6 +205,7 @@ export async function montarPedidoSeguro(
     },
     ...(payload.entrega ? { entrega: payload.entrega } : {}),
     frete,
+    cotacoesFrete: fretes,
     meioPagamento: payload.meioPagamento,
     ...(payload.cartaoToken
       ? {

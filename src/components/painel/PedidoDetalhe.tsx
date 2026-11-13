@@ -40,7 +40,7 @@ const COR: Record<string, string> = {
  * pode ser mandado por WhatsApp para quem vai embalar.
  */
 export default function PedidoDetalhe({ pedido, loja }: {
-  pedido: PedidoView;
+  pedido: PedidoView & { cotacoesFrete?: unknown };
   loja: { nome: string; razaoSocial: string | null; cnpj: string | null };
 }) {
   const [rastreio, setRastreio] = useState(pedido.rastreio ?? "");
@@ -194,6 +194,19 @@ export default function PedidoDetalhe({ pedido, loja }: {
             <p className="text-sm text-muted-foreground">Retirada na loja ou pedido sem endereço.</p>
           )}
           <p className="text-sm">{pedido.freteNome}{pedido.freteCentavos > 0 ? ` · ${brl(pedido.freteCentavos)}` : " · grátis"}</p>
+          {Array.isArray(pedido.cotacoesFrete) && pedido.cotacoesFrete.length > 0 && (
+            <details className="text-sm">
+              <summary className="cursor-pointer font-medium">Cotações de frete</summary>
+              <ul className="mt-2 space-y-1">
+                {pedido.cotacoesFrete.map((cotacao) => (
+                  <li key={cotacao.id}>
+                    {cotacao.nome} · {brl(cotacao.preco)} · {cotacao.prazoDiasUteis} dia(s) útil(eis)
+                    {cotacao.id === pedido.freteId && " · escolhida"}
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
           {pedido.rastreio && <p className="text-sm">Rastreio <b>{pedido.rastreio}</b></p>}
           {pedido.etiqueta && (
             <p className="text-xs text-muted-foreground">
