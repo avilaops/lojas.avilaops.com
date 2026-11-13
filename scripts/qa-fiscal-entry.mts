@@ -76,7 +76,7 @@ try {
 } finally {
   await browser.close();
   server.kill("SIGTERM");
-  await prisma.comandoEstoque.deleteMany({ where: { tenantId: { in: [loja.id, outra.id] } } });
-  await prisma.tenant.deleteMany({ where: { id: { in: [loja.id, outra.id] } } });
+  // O banco isolado é descartado no fim do job. Recibos são imutáveis,
+  // inclusive no QA: não tentar apagá-los nem mascarar a falha da jornada.
   await prisma.$disconnect();
 }

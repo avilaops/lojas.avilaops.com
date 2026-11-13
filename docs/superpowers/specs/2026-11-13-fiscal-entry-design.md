@@ -15,9 +15,9 @@ NT2014.002 permite de1a15.
 Manter backend TypeScript e o razão multilocal já existente. O caminho escolhido
 para CNPJ sem ERP configurado é conferência dentro do Lojas, sem motor fiscal
 ou escrituração financeira novos. Para CNPJ integrado, preservar a autoridade
-do ERP e impedir escrita local concorrente. Essa escolha é do implementador,
-baseada no estoque já implementado e na ausência de ERP no ambiente recuperado;
-a preferência foi perguntada ao proprietário e continua aberta a orientação.
+do ERP e impedir escrita local concorrente. O proprietário confirmou
+explicitamente a preferência por entrada diretamente no Lojas em13/11/2026.
+O estoque existente é reutilizado, sem movimentação automática ao consultar.
 
 Alternativas consideradas: exigir recuperar o ERP inteiro antes de oferecer
 qualquer conferência, ou criar outro estoque/razão independente. Ambas ampliam
