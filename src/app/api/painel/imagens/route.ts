@@ -1,8 +1,7 @@
 import { exigir } from "@/lib/operadores";
 import { prisma } from "@/lib/db";
-import { unlink } from "node:fs/promises";
-import path from "node:path";
-import { UPLOADS_DIR, salvarImagem, salvarBytes } from "@/lib/uploads";
+import { salvarImagem, salvarBytes } from "@/lib/uploads";
+import { apagarArquivoLoja } from "@/lib/arquivos-loja";
 import { FundoIndisponivel, removedorConfigurado, removerFundo } from "@/lib/fundo";
 import { receberImagem } from "@/lib/envios-do-painel";
 
@@ -52,7 +51,7 @@ export async function DELETE(request: Request) {
   ]);
   if (produto || midia) return Response.json({ erro: "A imagem já está vinculada a um produto e não pode ser removida por este fluxo." }, { status: 409 });
   try {
-    await unlink(path.join(UPLOADS_DIR, s.tenant.slug, nome));
+    await apagarArquivoLoja(`${s.tenant.slug}/${nome}`);
     return Response.json({ ok: true });
   } catch (e) {
     if ((e as NodeJS.ErrnoException).code === "ENOENT") return Response.json({ erro: "O arquivo já não existe." }, { status: 404 });

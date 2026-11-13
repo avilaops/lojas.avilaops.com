@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { armazenamentoRemotoConfigurado, gravarObjetoRemoto, lerObjetoRemoto } from "./armazenamento-remoto";
 
 // Arquivo fiscal privado, sem URLs públicas nem acesso direto pelo navegador.
 // O banco PostgreSQL continua sendo o índice e a origem autorizadora.
@@ -43,13 +44,17 @@ export function arquivoFiscalChave(cnpj: string, chave: string, formato: "xml" |
 }
 
 export function arquivoFiscalR2Configurado(env: Ambiente = process.env): boolean {
-  return !!configuracao(env);
+  return armazenamentoRemotoConfigurado(env) || !!configuracao(env);
 }
 
 export async function guardarArquivoFiscal(
   cnpj: string, chave: string, formato: "xml" | "pdf", bytes: Uint8Array,
   env: Ambiente = process.env,
 ): Promise<boolean> {
+  if (armazenamentoRemotoConfigurado(env)) {
+    await gravarObjetoRemoto("fiscal", arquivoFiscalChave(cnpj, chave, formato), bytes, formato === "xml" ? "application/xml" : "application/pdf", env);
+    return true;
+  }
   const config = configuracao(env);
   if (!config) return false;
   if (!bytes.byteLength || bytes.byteLength > 12 * 1024 * 1024) throw new Error("Arquivo fiscal fora do limite.");
@@ -65,6 +70,7 @@ export async function guardarArquivoFiscal(
 export async function lerArquivoFiscal(
   cnpj: string, chave: string, formato: "xml" | "pdf", env: Ambiente = process.env,
 ): Promise<Uint8Array | null> {
+  if (armazenamentoRemotoConfigurado(env)) return lerObjetoRemoto("fiscal", arquivoFiscalChave(cnpj, chave, formato), env);
   const config = configuracao(env);
   if (!config) return null;
   try {

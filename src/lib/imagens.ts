@@ -1,5 +1,8 @@
 import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { armazenamentoRemotoConfigurado } from "./armazenamento-remoto";
+import { gravarArquivoLoja, lerArquivoLoja } from "./arquivos-loja";
+import { UPLOADS_DIR } from "./uploads-arquivos";
 
 /**
  * Processamento de imagem com o `sharp` (já vem com o Next). Sem ele
@@ -48,6 +51,20 @@ export async function variante(arquivo: string, largura: number): Promise<Buffer
   const ext = path.extname(arquivo).slice(1).toLowerCase();
   if (ext === "svg") return null;
   const destino = `${arquivo}.w${largura}.webp`;
+  if (armazenamentoRemotoConfigurado()) {
+    const chave = path.relative(UPLOADS_DIR, arquivo).split(path.sep).join("/");
+    const varianteChave = `${chave}.w${largura}.webp`;
+    try { return await lerArquivoLoja(varianteChave); } catch (erro) {
+      if ((erro as NodeJS.ErrnoException).code !== "ENOENT") throw erro;
+    }
+    const s = await sharp();
+    if (!s) return null;
+    const original = await lerArquivoLoja(chave);
+    let out: Buffer;
+    try { out = await s(original, { failOn: "none" }).resize({ width: largura, withoutEnlargement: true }).webp({ quality: 80 }).toBuffer(); } catch { return null; }
+    await gravarArquivoLoja(varianteChave, out);
+    return out;
+  }
   try {
     await access(destino);
     return readFile(destino);

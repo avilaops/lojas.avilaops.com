@@ -11,5 +11,5 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   const { corpo, status } = await conferirSaude(() => prisma.$queryRaw`SELECT 1`);
-  return Response.json(corpo, { status, headers: { "cache-control": "no-store" } });
+  return Response.json(corpo, { status, headers: { "cache-control": "no-store", ...(process.env.LOJAS_RELEASE_ID ? { "x-lojas-release": process.env.LOJAS_RELEASE_ID } : {}) } });
 }

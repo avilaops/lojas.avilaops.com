@@ -1,9 +1,7 @@
-import { mkdir, writeFile } from "node:fs/promises";
 import { randomBytes } from "node:crypto";
-import path from "node:path";
 import { otimizarAoEntrar } from "./imagens";
 import { removedorConfigurado, removerFundo } from "./fundo";
-import { UPLOADS_DIR } from "./uploads-arquivos";
+import { gravarArquivoLoja } from "./arquivos-loja";
 import { TETO_IMAGEM_BYTES, TETO_IMAGEM_URL_BYTES, UploadInvalido, lerComTeto } from "./limites-upload";
 
 export { MIME_POR_EXT, UPLOADS_DIR } from "./uploads-arquivos";
@@ -35,9 +33,7 @@ function tipoPelosBytes(b: Buffer): { ext: string; mime: string } | null {
 /** Grava bytes já prontos (ex.: recorte do removedor de fundo). */
 export async function salvarBytes(slug: string, bytes: Buffer, ext: string): Promise<{ url: string; caminho: string }> {
   const nome = `${Date.now().toString(36)}-${randomBytes(4).toString("hex")}.${ext}`;
-  const pasta = path.join(UPLOADS_DIR, slug);
-  await mkdir(pasta, { recursive: true });
-  await writeFile(path.join(pasta, nome), bytes);
+  await gravarArquivoLoja(`${slug}/${nome}`, bytes);
   return { url: `https://${BASE}/uploads/${slug}/${nome}`, caminho: `${slug}/${nome}` };
 }
 
@@ -50,9 +46,7 @@ export async function salvarImagem(slug: string, arquivo: File): Promise<{ url: 
   const { bytes, ext } = await otimizarAoEntrar(original, tipo.ext);
   // SVG pode carregar script; serve-se com Content-Security-Policy (ver rota /uploads).
   const nome = `${Date.now().toString(36)}-${randomBytes(4).toString("hex")}.${ext}`;
-  const pasta = path.join(UPLOADS_DIR, slug);
-  await mkdir(pasta, { recursive: true });
-  await writeFile(path.join(pasta, nome), bytes);
+  await gravarArquivoLoja(`${slug}/${nome}`, bytes);
   return { url: `https://${BASE}/uploads/${slug}/${nome}`, caminho: `${slug}/${nome}` };
 }
 

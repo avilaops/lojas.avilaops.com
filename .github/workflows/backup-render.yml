@@ -1,0 +1,26 @@
+name: Backup diário do Lojas no Render
+on:
+  schedule:
+    - cron: '30 3 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: lojas-daily-backup
+  cancel-in-progress: false
+jobs:
+  backup:
+    if: vars.DEPLOY_TARGET == 'render' && vars.RENDER_SERVICE_ID != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    environment: production
+    env:
+      RENDER_DATABASE_URL: ${{ secrets.RENDER_DATABASE_URL }}
+      LOJAS_STORAGE_URL: ${{ vars.LOJAS_STORAGE_URL }}
+      LOJAS_STORAGE_PUBLISH_TOKEN: ${{ secrets.LOJAS_STORAGE_PUBLISH_TOKEN }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/node-do-runner
+      - run: node deploy/render/backup.mjs daily
