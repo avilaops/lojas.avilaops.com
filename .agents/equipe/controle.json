@@ -12,6 +12,17 @@
     }
   ],
   "tasks": [
+      {
+        "id": "FISCAL-ENTRADA-20261113",
+        "title": "Corrigir downloads e sincronização e conferir entrada por NF-e",
+        "objective": "Distinguir resumos, restaurar DANFE e registrar entradas confirmadas pelo usuário no razão existente, preservando CNPJs integrados ao ERP.",
+        "assignee": "codex",
+        "priority": "alta",
+        "status": "em-andamento",
+        "acceptanceCriteria": ["NSUs válidos de1a15dígitos normalizados sem perder cursor.", "XML completo e PDF baixáveis com isolamento por tenant.", "Conferência desktop/mobile de itens, variantes, unidades e local.", "Entrada transacional idempotente, sem manifestação ou escrita automática ao consultar.", "Testes/build no CI e validação da release publicada."],
+        "environment": "GitHub CI, Render, PostgreSQL e R2",
+        "evidence": "Probe somente leitura na Bereta:151XMLs completos,192resumos,367eventos; XML completo200/idêntico ao banco, PDF503 sem gerador, resumo409. Parser atual exige15dígitos apesar de NT2014.002 aceitar1a15. ERP ausente no ambiente recuperado. Plano docs/superpowers/plans/2026-11-13-fiscal-entry.md. Nenhuma consulta SEFAZ antecipada ou entrada de estoque real realizada."
+      },
     {
       "id": "RECUPERACAO-RENDER-20261113",
       "title": "Recuperar Lojas no padrão de Auth e webmail",
