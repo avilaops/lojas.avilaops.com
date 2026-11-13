@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { mkdir } from "node:fs/promises";
-import { chromium } from "playwright";
+import { mkdir, writeFile } from "node:fs/promises";
+import { chromium, type Page } from "playwright";
 import { prisma } from "../src/lib/db";
 import { salvarProdutoNoCatalogo, salvarGradeNoCatalogo } from "../src/lib/catalogo-escrita";
 import { emitirToken } from "../src/lib/sessao";
@@ -15,20 +15,31 @@ const pasta = "output/playwright/etiquetas";
 await mkdir(pasta, { recursive: true });
 const loja = await prisma.tenant.create({ data: { slug: `qa-etiquetas-${randomUUID()}`, nome: "QA Etiquetas", status: "ATIVA" } });
 const browser = await chromium.launch();
+let paginaQa: Page | undefined;
+const falhasHttp: Array<{ caminho: string; status: number }> = [];
+const erros: string[] = [];
 try {
   const produto = await salvarProdutoNoCatalogo(loja.id, null, { nome: "Camiseta de teste", slug: "camiseta-teste", marca: "BGL", precoCentavos: 4990 });
   await salvarGradeNoCatalogo(loja.id, produto.id, ["Tamanho", "Cor"], [
     { valores: { Tamanho: "P", Cor: "Azul" }, sku: "QA-P-AZUL", precoCentavos: 4990, gtin: "036000291452" },
     { valores: { Tamanho: "G", Cor: "Azul" }, sku: "QA-G-AZUL", precoCentavos: 5990 },
   ]);
+  const probe = await fetch(`${base}/api/painel/etiquetas?produtoId=${produto.id}&tipo=interno&pagina=1`, { headers: { cookie: `lojas_sessao=${emitirToken(loja.slug)}` } });
+  const probeDados = await probe.json();
+  console.log(JSON.stringify({ etapa: "etiquetas-api", status: probe.status, total: probeDados.total, erro: probeDados.erro }));
+  assert.equal(probe.status, 200, "API de etiquetas aceita a sessão QA antes de abrir o navegador");
+  assert.equal(probeDados.total, 2, "API retorna as duas variantes sintéticas");
   const contexto = await browser.newContext({ viewport: { width: 1440, height: 1100 } });
   await contexto.addCookies([{ name: "lojas_sessao", value: emitirToken(loja.slug), url: base }]);
   const page = await contexto.newPage();
+  paginaQa = page;
   page.setDefaultNavigationTimeout(180000);
   page.setDefaultTimeout(60000);
-  const erros: string[] = [];
   page.on("pageerror", e => erros.push(e.message));
-  await page.goto(`${base}/painel/produtos/etiquetas?produtoId=${produto.id}`);
+  page.on("response", r => { if (r.status() >= 400 && r.url().startsWith(base)) falhasHttp.push({ caminho: new URL(r.url()).pathname, status: r.status() }); });
+  const pagina = await page.goto(`${base}/painel/produtos/etiquetas?produtoId=${produto.id}`);
+  assert.equal(pagina?.status(), 200, "Página de etiquetas responde antes de hidratar");
+  assert.equal(new URL(page.url()).pathname, "/painel/produtos/etiquetas", "Sessão permanece no painel");
   await page.getByText("2 itens encontrados.", { exact: false }).waitFor();
   await page.getByRole("checkbox").first().check();
   await page.getByRole("checkbox").nth(1).check();
@@ -129,6 +140,13 @@ try {
   await page.screenshot({ path: `${pasta}/catalogo-marca-mobile.png`, fullPage: true });
   assert.deepEqual(erros, []);
   console.log("QA aprovado: seleção, busca por leitor, quantidades, mobile, A4, térmica, GTIN, 401/403/422 e console.");
+} catch (error) {
+  if (paginaQa) {
+    await paginaQa.screenshot({ path: `${pasta}/falha.png`, fullPage: true }).catch(() => undefined);
+    await writeFile(`${pasta}/falha.html`, await paginaQa.content()).catch(() => undefined);
+    console.error(JSON.stringify({ etapa: "etiquetas-falha", caminho: new URL(paginaQa.url()).pathname, falhasHttp, erros }));
+  }
+  throw error;
 } finally {
   await browser.close();
   await prisma.movimentoEstoque.deleteMany({ where: { tenantId: loja.id } });
