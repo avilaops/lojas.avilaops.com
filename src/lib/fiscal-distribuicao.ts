@@ -57,7 +57,7 @@ export function lerDistribuicao(xml: string) {
   if (!["137", "138", "656"].includes(status)) throw new ErroFiscal(`SEFAZ ${status}: ${mensagem}`);
   const ultimoNsu = nsuRecebido(retorno.ultNSU);
   const maxNsu = nsuRecebido(retorno.maxNSU);
-  if (ultimoNsu === null || maxNsu === null || (status !== "656" && (!ultimoNsu || !maxNsu)) || (ultimoNsu && maxNsu && ultimoNsu > maxNsu)) {
+  if (ultimoNsu === null || maxNsu === null || (status !== "656" && (!ultimoNsu || !maxNsu || ultimoNsu > maxNsu))) {
     throw new ErroFiscal("A SEFAZ devolveu um controle de consulta inválido.");
   }
   const lote = retorno.loteDistDFeInt?.docZip;
