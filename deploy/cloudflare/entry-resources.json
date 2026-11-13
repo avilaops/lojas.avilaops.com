@@ -1,0 +1,11 @@
+{
+  "script": "lojas-entry",
+  "main_module": "entry-worker.mjs",
+  "compatibility_date": "2026-11-13",
+  "observability": { "enabled": false },
+  "bindings": [
+    { "type": "plain_text", "name": "ORIGIN", "text": "https://lojas-avilaops-emergency.onrender.com" },
+    { "type": "plain_text", "name": "PUBLIC_BASE", "text": "lojas.avilaops.com" },
+    { "type": "plain_text", "name": "CUSTOM_HOSTS", "text": "brilhax.com,www.brilhax.com,domiriodistribuidora.com.br,www.domiriodistribuidora.com.br,mrgcaixastermicas.com.br,www.mrgcaixastermicas.com.br,pkvedacoes.com.br,www.pkvedacoes.com.br,vedashow.com.br,www.vedashow.com.br,vinhosimperial.com,www.vinhosimperial.com" }
+  ]
+}

@@ -20,6 +20,10 @@ export function proxy(request: NextRequest) {
     .toLowerCase()
     .replace(/:\d+$/, "");
   const { pathname } = request.nextUrl;
+  // Render receives its technical Host; route handlers must see the public host
+  // supplied by the Cloudflare ingress, as tenant resolution already does.
+  const cabecalhos = new Headers(request.headers);
+  cabecalhos.set("host", host);
 
   // O que foi combinado com alguém de fora fica na raiz de src/app: retorno de
   // autorização (/ml, /melhor-envio, /mercado-pago, /canais) e contratos de API (/api, /v1). Sem a
@@ -29,7 +33,6 @@ export function proxy(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = `/plataforma${pathname === "/" ? "" : pathname}`;
     // Cabeçalho de REQUISIÇÃO: é o que o layout raiz lê com headers().
-    const cabecalhos = new Headers(request.headers);
     cabecalhos.set("x-plataforma", "1");
     return NextResponse.rewrite(url, { request: { headers: cabecalhos } });
   }
@@ -82,7 +85,7 @@ export function proxy(request: NextRequest) {
   // vinha do Caddy nem do código: é regra da borda. Como a borda respeita
   // `no-store` da origem, a defesa fica aqui, que é o que está sob nosso
   // controle e não depende de configuração de painel externo.
-  const resposta = NextResponse.next();
+  const resposta = NextResponse.next({ request: { headers: cabecalhos } });
   if (pathname.startsWith("/api/") || pathname.startsWith("/painel") || pathname.startsWith("/conta") || ehRetornoDeAutorizacao(pathname)) {
     resposta.headers.set("cache-control", "private, no-store, max-age=0, must-revalidate");
     return resposta;

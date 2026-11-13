@@ -3,6 +3,23 @@
 O Lojas preserva Next.js/TypeScript e PostgreSQL. O runtime é Node 22 no Render,
 o DNS continua na Cloudflare e o armazenamento durável fica no R2. Não usa D1.
 
+## Entrada Cloudflare
+
+A API Render recusou novos domínios sem forma de pagamento após os dois
+incluídos da conta. O proprietário escolheu usar `lojas-entry` na Cloudflare,
+com origem HTTPS fixa no Render. `deploy/cloudflare/entry-resources.json`
+declara os bindings REST; não é configuração Wrangler. O Worker sobrescreve
+headers de encaminhamento, mantém streaming e cookies, não segue redirects e
+troca somente Location que volte à origem técnica. O proxy Next passa o host
+lógico aos handlers de SSO; suas verificações de Origin continuam ativas.
+
+Associar Cloudflare Custom Domains por hostname depois de conferir a release.
+Essa modalidade não suporta wildcard: provisionar cada slug existente e cada
+domínio próprio na respectiva zona. Não anunciar criação automática de novos
+hosts até implementar o provisionamento correspondente. Domínios fora das
+zonas acessíveis, como PK nesta recuperação, exigem ajuste no provedor externo.
+Preservar MX/TXT e guardar os registros anteriores antes de trocar a entrada.
+
 ## Build e entrega
 
 Builds, testes, navegador e validação do runtime ONNX rodam exclusivamente no
