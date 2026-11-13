@@ -3,6 +3,7 @@ import { validarCnpj } from "@avilaops/checkout";
 import { TemaSchema } from "./tema";
 import { IdentidadeSchema, LIMITE_SLOGAN } from "./identidade";
 import { categoriaGoogleValida } from "./google-product-taxonomy";
+import { RECURSOS } from "./recursos";
 
 /**
  * Contratos da API administrativa. É o que o formulário de onboarding do
@@ -142,6 +143,14 @@ export const TenantAtualizacaoSchema = TenantEntradaSchema.partial().extend({
   /** Loja da casa (demo, vitrine própria): fora da régua de cobrança. */
   cobrancaIsenta: z.boolean().optional(),
 });
+
+/** Só a API administrativa concede recursos; o painel usa o schema acima. */
+export const TenantAtualizacaoAdminSchema = TenantAtualizacaoSchema.extend({
+  recursos: z.array(z.enum(RECURSOS)).max(RECURSOS.length)
+    .refine((lista) => new Set(lista).size === lista.length, "Não repita recursos.")
+    .optional(),
+});
+export type TenantAtualizacaoAdmin = z.infer<typeof TenantAtualizacaoAdminSchema>;
 
 export const ProdutoEntradaSchema = z.object({
   slug: z.string().max(80).optional(),
