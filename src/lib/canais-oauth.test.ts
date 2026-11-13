@@ -30,7 +30,8 @@ async function com<T>(
   }
   globalThis.fetch = (async (url: unknown, init?: RequestInit) => {
     chamadas.push({ url: new URL(String(url)), init: init ?? {} });
-    return Response.json(respostas[chamadas.length - 1] ?? {});
+    const resposta = respostas[chamadas.length - 1];
+    return resposta instanceof Response ? resposta : Response.json(resposta === undefined ? {} : resposta);
   }) as typeof fetch;
   try {
     return await corpo(chamadas);
@@ -87,12 +88,13 @@ test("Shopee: o ambiente de testes troca a página de autorização e o host da 
   });
 });
 
-test("Shopee: validade que vier como data não vira acesso de cinquenta anos", () => {
+test("Shopee: validade normaliza data futura e recusa validade ausente ou expirada", () => {
   const agora = 1_767_000_000;
   assert.equal(validadeEmSegundos(14_400, agora), 14_400, "segundos, como o guia descreve");
   assert.equal(validadeEmSegundos(agora + 14_400, agora), 14_400, "data, como o exemplo da referência mostra");
-  assert.equal(validadeEmSegundos(agora - 10, agora), 4 * 3600, "data no passado cai no prazo do contrato");
-  assert.equal(validadeEmSegundos(undefined, agora), 4 * 3600);
+  for (const valor of [agora - 10, undefined, null, 0, -1, 0.5, NaN, Infinity, "14400"]) {
+    assert.throws(() => validadeEmSegundos(valor, agora), /validade/i);
+  }
 });
 
 test("Shopee: troca o código mandando parceiro e loja como número, e guarda o código da loja", async () => {
@@ -123,7 +125,7 @@ test("Shopee: erro no corpo da resposta não vira conexão", async () => {
   await com(SHOPEE, [{ error: "error_auth", message: "Invalid code" }], async () => {
     await assert.rejects(
       shopee.trocarCodigo(new URLSearchParams({ code: "abc", shop_id: "778899" }), `${RETORNO}/shopee/callback`),
-      /Invalid code/,
+      /A Shopee recusou/,
     );
   });
 });
@@ -154,6 +156,102 @@ test("Shopee: sem parceiro cadastrado o canal não está disponível", async () 
   await com({ SHOPEE_PARTNER_ID: undefined, SHOPEE_PARTNER_KEY: undefined }, [], () => assert.equal(shopee.configurado(), false));
   await com({ SHOPEE_PARTNER_ID: "abc", SHOPEE_PARTNER_KEY: "x" }, [], () => assert.equal(shopee.configurado(), false, "o id do parceiro é número"));
   await com(SHOPEE, [], () => assert.equal(shopee.configurado(), true));
+});
+
+test("Shopee: credenciais ou endpoints inválidos não oferecem conexão nem enviam tokens", async () => {
+  for (const ambiente of [
+    { ...SHOPEE, SHOPEE_PARTNER_ID: "0" },
+    { ...SHOPEE, SHOPEE_PARTNER_ID: "9007199254740993" },
+    { ...SHOPEE, SHOPEE_PARTNER_ID: "02001887" },
+    { ...SHOPEE, SHOPEE_PARTNER_KEY: "   " },
+    { ...SHOPEE, SHOPEE_URL: "http://partner.shopeemobile.com" },
+    { ...SHOPEE, SHOPEE_URL: "https://example.test" },
+    { ...SHOPEE, SHOPEE_URL: "https://partner.shopeemobile.com.evil.test" },
+    { ...SHOPEE, SHOPEE_URL: "https://x:y@partner.shopeemobile.com" },
+    { ...SHOPEE, SHOPEE_URL: "https://partner.shopeemobile.com:8443" },
+    { ...SHOPEE, SHOPEE_URL: "https://partner.shopeemobile.com/other" },
+    { ...SHOPEE, SHOPEE_URL: "https://partner.shopeemobile.com?secret=qa" },
+    { ...SHOPEE, SHOPEE_URL: "https://partner.shopeemobile.com#qa" },
+    { ...SHOPEE, SHOPEE_AUTH_URL: "https://example.test/auth" },
+    { ...SHOPEE, SHOPEE_AUTH_URL: "https://open.shopee.com.br/auth?extra=1" },
+    { ...SHOPEE, SHOPEE_AUTH_URL: "https://open.shopee.com.br/other" },
+    { ...SHOPEE, SHOPEE_URL: "https://openplatform.sandbox.test-stable.shopee.sg", SHOPEE_AUTH_URL: "https://open.shopee.com.br/auth" },
+  ]) {
+    await com(ambiente, [], async (chamadas) => {
+      assert.equal(shopee.configurado(), false);
+      await assert.rejects(shopee.renovar("refresh-qa", "778899"));
+      assert.equal(chamadas.length, 0);
+    });
+  }
+});
+
+test("Shopee: API sandbox seleciona autorização sandbox quando não há override", async () => {
+  await com({ ...SHOPEE, SHOPEE_URL: "https://openplatform.sandbox.test-stable.shopee.sg/" }, [], () => {
+    assert.equal(shopee.configurado(), true);
+    const url = new URL(shopee.urlDeAutorizacao("state-assinado", `${RETORNO}/shopee/callback`));
+    assert.equal(url.origin, "https://open.sandbox.test-stable.shopee.com.br");
+    assert.equal(url.searchParams.get("state"), "state-assinado");
+  });
+});
+
+test("Shopee: recusa IDs de loja inválidos antes de trocar ou renovar", async () => {
+  await com(SHOPEE, [], async (chamadas) => {
+    for (const shopId of ["0", "01", "9007199254740993", "-7", "1.2", "abc"]) {
+      await assert.rejects(shopee.trocarCodigo(new URLSearchParams({ code: "qa", shop_id: shopId }), `${RETORNO}/shopee/callback`));
+      await assert.rejects(shopee.renovar("refresh-qa", shopId));
+    }
+    assert.equal(chamadas.length, 0);
+  });
+});
+
+test("Shopee: HTTP de erro não vira credencial mesmo com tokens no corpo", async () => {
+  for (const status of [302, 400, 401, 429, 500]) {
+    await com(SHOPEE, [Response.json({ access_token: "qa-a", refresh_token: "qa-r", expire_in: 14400 }, { status })], async () => {
+      await assert.rejects(shopee.renovar("refresh-qa", "778899"), /Shopee/);
+    });
+  }
+});
+
+test("Shopee: corpo, tokens e validade inválidos não viram credencial", async () => {
+  const valido = { access_token: "qa-a", refresh_token: "qa-r", expire_in: 14400 };
+  for (const resposta of [
+    [], null, {}, { ...valido, access_token: 123 }, { ...valido, access_token: " " },
+    { ...valido, refresh_token: {} }, { ...valido, refresh_token: " " },
+    { ...valido, expire_in: undefined }, { ...valido, expire_in: 0 }, { ...valido, expire_in: -5 },
+  ]) {
+    await com(SHOPEE, [resposta], async () => {
+      await assert.rejects(shopee.renovar("refresh-qa", "778899"), /Shopee|validade/i);
+    });
+  }
+});
+
+test("Shopee: requests com tokens não seguem redirects e não usam cache", async () => {
+  await com(SHOPEE, [{ access_token: "qa-a", refresh_token: "qa-r", expire_in: 14400 }, { shop_name: "Loja QA" }], async (chamadas) => {
+    await shopee.trocarCodigo(new URLSearchParams({ code: "qa", shop_id: "778899" }), `${RETORNO}/shopee/callback`);
+    assert.equal(chamadas.length, 2);
+    for (const chamada of chamadas) {
+      assert.equal(chamada.init.redirect, "error");
+      assert.equal(chamada.init.cache, "no-store");
+    }
+  });
+});
+
+test("Shopee: erro externo não expõe código, refresh ou mensagem bruta", async () => {
+  await com(SHOPEE, [{ error: "invalid_grant", message: "qa-secret-refresh qa-secret-code https://example.test/private" }], async () => {
+    await assert.rejects(shopee.renovar("qa-secret-refresh", "778899"), (erro: unknown) => {
+      assert.ok(erro instanceof Error);
+      assert.match(erro.message, /Shopee/);
+      assert.doesNotMatch(erro.message, /qa-secret|example.test|private/);
+      return true;
+    });
+  });
+});
+
+test("Shopee: falha HTTP na identificação não publica nome não verificado", async () => {
+  await com(SHOPEE, [{ access_token: "qa-a", refresh_token: "qa-r", expire_in: 14400 }, Response.json({ shop_name: "Nome em resposta de erro" }, { status: 500 })], async () => {
+    const conta = await shopee.trocarCodigo(new URLSearchParams({ code: "qa", shop_id: "778899" }), `${RETORNO}/shopee/callback`);
+    assert.equal(conta.contaNome, null);
+  });
 });
 
 // ── Amazon ─────────────────────────────────────────────────────────────

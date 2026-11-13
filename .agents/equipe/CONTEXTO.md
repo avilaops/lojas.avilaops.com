@@ -1,5 +1,9 @@
 # Contexto verificavel
 
+- Diretriz do proprietário em 12/11/2026: backend e APIs do Lojas continuam
+  TypeScript/Next.js. A conexão Shopee segue essa stack. Serviços externos
+  preservam seus próprios contratos e implementações.
+
 - Identificador: `avila-lojas-avilaops-com`.
 - Origem: raiz deste checkout; nao depende de um caminho absoluto.
 - Fontes encontradas: `README.md`, `package.json`, `AGENTS.md`.
