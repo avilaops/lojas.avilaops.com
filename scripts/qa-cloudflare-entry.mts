@@ -26,6 +26,7 @@ try {
     const html = await platform.text();
     assert.match(html, /<h1/);
     assert.doesNotMatch(html, /Nenhuma loja responde por este endereço\./);
+    if (path === '/plataforma/ajuda') assert.match(html, /Central de ajuda/);
   }
   const response = await fetch(origin + '/api/painel/entrar/iniciar-sso', { redirect: 'manual', headers: { host: 'backend-render.example', 'x-forwarded-host': 'lojas.avilaops.com', 'x-forwarded-proto': 'https' } });
   assert.equal(response.status, 307, 'SSO deve reconhecer o host público atrás do Worker');
@@ -37,9 +38,17 @@ try {
   assert.match(await blocked.text(), /Nenhuma loja responde por este endereço\./, 'Marcador forjado não contorna o bloqueio de uma loja encerrada');
   const forbidden = await fetch(origin + '/plataforma/ajuda', { headers: { host: 'backend-render.example', 'x-forwarded-host': active.slug + '.lojas.avilaops.com', 'x-plataforma': '1' } });
   const rendered = (await forbidden.text()).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
-  // Next may already have streamed HTTP 200; assert the rendered denial rather
-  // than confusing a CANCELADA layout's HTTP 200 with platform access.
-  assert.match(rendered, /<h1[^>]*>Página não encontrada<\/h1>/, 'Domínio de loja ativa não recebe páginas internas da plataforma');
+  const denial = await fetch(origin + '/nao-encontrado', { headers: { host: 'backend-render.example', 'x-forwarded-host': active.slug + '.lojas.avilaops.com' } });
+  const denialHtml = (await denial.text()).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
+  // notFound() may replace a streamed document before its h1 reaches the HTML.
+  // Require the same denial as its direct route, including its tenant metadata,
+  // and ensure the help content positively checked above was never served.
+  assert.equal(forbidden.status, denial.status);
+  const title = /<title>([^<]+)<\/title>/;
+  assert.equal(rendered.match(title)?.[1], denialHtml.match(title)?.[1]);
+  assert.match(rendered, /<title>Página não encontrada · Loja ativa QA Edge<\/title>/);
+  assert.match(rendered, /<meta name="robots" content="noindex[^"]*"/);
+  assert.doesNotMatch(rendered, /Central de ajuda|ajuda-shell|Guia de uso do Lojas/);
   console.log(JSON.stringify({ cloudflareHostSso: 'pass', wrongTenantHost: 'denied' }));
 } finally {
   server.kill('SIGTERM');
