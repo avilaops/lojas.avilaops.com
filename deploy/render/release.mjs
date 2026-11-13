@@ -71,7 +71,7 @@ async function empacotar(entrada, saida) {
   console.log(JSON.stringify({ sha, bytes: manifesto.bytes, parts: manifesto.parts.length }));
 }
 
-async function publicar(pasta) {
+async function carregarRelease(pasta) {
   await conferirEntregaAtual();
   const bytes = await readFile(path.join(pasta, "manifest.json"));
   const m = validarManifesto(JSON.parse(bytes.toString()), process.env.GITHUB_SHA);
@@ -82,6 +82,11 @@ async function publicar(pasta) {
     await enviarArquivo("releases", `${releaseId}/${p.key}`, dados);
   }
   await enviarArquivo("releases", `${releaseId}/manifest.json`, bytes);
+  return { m, bytes, releaseId };
+}
+
+async function publicar(pasta) {
+  const { m, bytes, releaseId } = await carregarRelease(pasta);
   const atualizacoes = {
     LOJAS_RELEASE_SHA: m.sha, LOJAS_RELEASE_ID: releaseId, LOJAS_RELEASE_MANIFEST_SHA256: hash(bytes),
     LOJAS_BOOTSTRAP_RUN: "1", NODE_VERSION: m.nodeVersion,
@@ -128,6 +133,6 @@ async function verificarRender() {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const [acao, entrada, saida] = process.argv.slice(2);
-  const tarefa = acao === "pack" ? empacotar(entrada, saida) : acao === "publish" ? publicar(entrada) : acao === "current" ? conferirEntregaAtual() : acao === "verify" ? verificarRender() : Promise.reject(new Error("INVALID_RELEASE_COMMAND"));
+  const tarefa = acao === "pack" ? empacotar(entrada, saida) : acao === "publish" ? publicar(entrada) : acao === "upload" ? carregarRelease(entrada).then(({ m, releaseId }) => console.log(JSON.stringify({ sha: m.sha, releaseId, bytes: m.bytes, parts: m.parts.length }))) : acao === "current" ? conferirEntregaAtual() : acao === "verify" ? verificarRender() : Promise.reject(new Error("INVALID_RELEASE_COMMAND"));
   tarefa.catch(error => { console.error(/^[A-Z_0-9]+$/.test(error?.message ?? "") ? error.message : "RELEASE_FAILED"); process.exitCode = 1; });
 }

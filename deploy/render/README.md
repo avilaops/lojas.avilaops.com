@@ -32,6 +32,9 @@ desligado durante a recuperação até conferir a execução de rotinas externas
 
 O job `render_migracoes` faz backup antes de migrar; `render_publicar` envia
 partes, publica o manifesto por último e só então solicita deploy do commit.
+`render_artefato` disponibiliza o pacote aprovado no R2 mesmo no primeiro
+provisionamento, quando ainda não existe serviço Render; não altera runtime,
+DNS ou banco. Isso permite criar o serviço já apontando para release existente.
 O Render faz health check em `/api/health`. O trigger de deploy não comprova
 que a release ficou saudável: conferir o deploy real e o smoke HTTP depois.
 O workflow serializa execuções de cada branch. Antes de backup, migração e

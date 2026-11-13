@@ -701,6 +701,31 @@ jobs:
           compression-level: 0
           retention-days: 7
 
+  render_artefato:
+    name: Render / disponibilizar artefato no R2
+    needs: [runtime_render, image]
+    if: >-
+      github.event_name != 'pull_request' && github.event_name != 'pull_request_target'
+      && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+      && vars.DEPLOY_ENABLED == 'true' && vars.DEPLOY_TARGET == 'render'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    environment: production
+    env:
+      LOJAS_STORAGE_URL: ${{ vars.LOJAS_STORAGE_URL }}
+      LOJAS_STORAGE_PUBLISH_TOKEN: ${{ secrets.LOJAS_STORAGE_PUBLISH_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/node-do-runner
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          artifact-ids: ${{ needs.runtime_render.outputs.artifact_id }}
+          path: ${{ runner.temp }}/render-runtime
+      - run: node deploy/render/release.mjs upload "$RUNNER_TEMP/render-runtime"
+
   render_backup:
     name: Render / backup antes da migração
     needs: image
@@ -751,7 +776,7 @@ jobs:
 
   render_publicar:
     name: Render / publicar release imutável
-    needs: [runtime_render, render_migracoes]
+    needs: [runtime_render, render_migracoes, render_artefato]
     if: >-
       github.event_name != 'pull_request' && github.event_name != 'pull_request_target'
       && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
