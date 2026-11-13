@@ -397,6 +397,7 @@ jobs:
       - run: node --import tsx scripts/qa-cotacoes-b2b.mts
       - run: node --import tsx scripts/qa-conversao-loja.mts
       - run: node --import tsx scripts/qa-mdx-acesso.mts
+      - run: node --import tsx scripts/qa-cloudflare-entry.mts
       - run: node --import tsx scripts/qa-pk-ferramentas.mts
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
