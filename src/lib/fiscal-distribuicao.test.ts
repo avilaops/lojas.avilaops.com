@@ -52,6 +52,13 @@ test("normaliza NSU curto do docZip sem alterar o XML original", () => {
   assert.equal(dados.documentos[0].xml, original);
 });
 
+test("656 preserva controle retornado mesmo quando o máximo é zero indisponível", () => {
+  const dados = lerDistribuicao(resposta("656", "", "25", "0"));
+  assert.equal(dados.status, "656");
+  assert.equal(dados.ultimoNsu, "000000000000025");
+  assert.equal(dados.documentos.length, 0);
+});
+
 test("normalizar não aceita controle ausente, negativo, decimal ou acima de15dígitos", () => {
   for (const nsu of ["", "-1", "1.0", "1e2", "abc", "1".repeat(16)]) {
     assert.throws(() => lerDistribuicao(resposta("137", "", nsu, "25")), /controle de consulta inválido/);
