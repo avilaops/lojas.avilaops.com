@@ -1,0 +1,142 @@
+TAP version 13
+# Subtest: chave gerada tem o prefixo do tipo, 40 hex e se reconhece pelo formato
+ok 1 - chave gerada tem o prefixo do tipo, 40 hex e se reconhece pelo formato
+  ---
+  duration_ms: 3.582789
+  type: 'test'
+  ...
+# Subtest: o banco guarda o hash, e a máscara não contém o miolo da chave
+ok 2 - o banco guarda o hash, e a máscara não contém o miolo da chave
+  ---
+  duration_ms: 0.506784
+  type: 'test'
+  ...
+# Subtest: publicável fica só com a vitrine, peça o que pedir
+ok 3 - publicável fica só com a vitrine, peça o que pedir
+  ---
+  duration_ms: 0.980536
+  type: 'test'
+  ...
+# Subtest: secreta fica com o que pediu, dentro do catálogo, e sempre com a vitrine
+ok 4 - secreta fica com o que pediu, dentro do catálogo, e sempre com a vitrine
+  ---
+  duration_ms: 0.244695
+  type: 'test'
+  ...
+# Subtest: secreta é do Loja Pro; publicável serve a qualquer plano
+ok 5 - secreta é do Loja Pro; publicável serve a qualquer plano
+  ---
+  duration_ms: 0.205641
+  type: 'test'
+  ...
+# Subtest: loja suspensa continua no ar (vitrine sem checkout); provisionando e cancelada não
+ok 6 - loja suspensa continua no ar (vitrine sem checkout); provisionando e cancelada não
+  ---
+  duration_ms: 0.158411
+  type: 'test'
+  ...
+# Subtest: chave vem do Bearer ou do x-api-key; na URL, só a publicável
+ok 7 - chave vem do Bearer ou do x-api-key; na URL, só a publicável
+  ---
+  duration_ms: 31.32716
+  type: 'test'
+  ...
+# Subtest: limitador conta por chave e reabre a janela depois de um minuto
+ok 8 - limitador conta por chave e reabre a janela depois de um minuto
+  ---
+  duration_ms: 0.459013
+  type: 'test'
+  ...
+# Subtest: limitador com janela própria: consultar não gasta, e só o que foi consumido conta
+ok 9 - limitador com janela própria: consultar não gasta, e só o que foi consumido conta
+  ---
+  duration_ms: 0.429137
+  type: 'test'
+  ...
+# Subtest: paginação: padrão, máximo e erro em vez de correção silenciosa
+ok 10 - paginação: padrão, máximo e erro em vez de correção silenciosa
+  ---
+  duration_ms: 1.186138
+  type: 'test'
+  ...
+# Subtest: filtros fechados recusam valor desconhecido
+ok 11 - filtros fechados recusam valor desconhecido
+  ---
+  duration_ms: 0.874334
+  type: 'test'
+  ...
+# Subtest: vitrine não publica a contagem de estoque, só 'últimas unidades'
+ok 12 - vitrine não publica a contagem de estoque, só 'últimas unidades'
+  ---
+  duration_ms: 0.476767
+  type: 'test'
+  ...
+# Subtest: vitrine: sem preço sai nulo, não zero (zero vira 'Grátis' num front alheio)
+ok 13 - vitrine: sem preço sai nulo, não zero (zero vira 'Grátis' num front alheio)
+  ---
+  duration_ms: 0.140307
+  type: 'test'
+  ...
+# Subtest: vitrine: controle especial aparece, mas a ação é 'somente-na-loja' (RDC 44/2009)
+ok 14 - vitrine: controle especial aparece, mas a ação é 'somente-na-loja' (RDC 44/2009)
+  ---
+  duration_ms: 0.130909
+  type: 'test'
+  ...
+# Subtest: publicável só vende quando pedido, e nunca ganha outro escopo junto
+ok 15 - publicável só vende quando pedido, e nunca ganha outro escopo junto
+  ---
+  duration_ms: 0.206172
+  type: 'test'
+  ...
+# Subtest: origens da chave: só site https (ou localhost), sem caminho, sem repetir, no máximo cinco
+ok 16 - origens da chave: só site https (ou localhost), sem caminho, sem repetir, no máximo cinco
+  ---
+  duration_ms: 0.569272
+  type: 'test'
+  ...
+# Subtest: toda rota do índice existe, exporta o método e exige o escopo que o índice diz
+ok 17 - toda rota do índice existe, exporta o método e exige o escopo que o índice diz
+  ---
+  duration_ms: 5.423482
+  type: 'test'
+  ...
+# Subtest: toda rota de /api/v1 que passa por rotaDaApi está no índice
+ok 18 - toda rota de /api/v1 que passa por rotaDaApi está no índice
+  ---
+  duration_ms: 0.783131
+  type: 'test'
+  ...
+# Subtest: o índice explica os erros e não repete rota
+ok 19 - o índice explica os erros e não repete rota
+  ---
+  duration_ms: 0.401654
+  type: 'test'
+  ...
+# Subtest: contrato multilocal aceita entrada, saída e transferência imediata
+ok 20 - contrato multilocal aceita entrada, saída e transferência imediata
+  ---
+  duration_ms: 2.176191
+  type: 'test'
+  ...
+# Subtest: contrato recusa quantidade inválida, local ambíguo, campo desconhecido e mesma origem/destino
+ok 21 - contrato recusa quantidade inválida, local ambíguo, campo desconhecido e mesma origem/destino
+  ---
+  duration_ms: 2.328491
+  type: 'test'
+  ...
+# Subtest: idempotência exige chave limitada e sem espaços ou quebras de linha
+ok 22 - idempotência exige chave limitada e sem espaços ou quebras de linha
+  ---
+  duration_ms: 0.590233
+  type: 'test'
+  ...
+1..22
+# tests 22
+# suites 0
+# pass 22
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 301.876732

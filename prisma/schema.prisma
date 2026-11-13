@@ -1197,6 +1197,40 @@ model MovimentoEstoque {
   @@unique([tenantId, chave])
 }
 
+/// Recibo idempotente da API de estoque; não substitui tentativas de checkout.
+model ComandoEstoque {
+  id         String   @id @default(cuid())
+  tenantId   String
+  chave      String
+  resumoHash String
+  origem     String
+  resultado  Json
+  criadoEm   DateTime @default(now())
+
+  @@unique([tenantId, chave])
+}
+
+/// Gerado no banco a partir de SaldoEstoque. Sem FK destrutiva: sobrevive ao cadastro.
+model RazaoEstoque {
+  id              String   @id @default(cuid())
+  sequencia       BigInt   @unique @default(autoincrement())
+  tenantId        String
+  varianteId      String
+  local           String
+  tipo            String
+  comandoId       String?
+  origem          String
+  motivo          String
+  fisicoAntes     Int?
+  fisicoDepois    Int?
+  reservadoAntes  Int
+  reservadoDepois Int
+  criadoEm        DateTime @default(now())
+
+  @@index([tenantId, varianteId, local, criadoEm, id])
+  @@index([tenantId, comandoId])
+}
+
 /// Acervo por arquivo; varianteId nulo significa mídia compartilhada do produto.
 model MidiaProduto {
   id               String    @id @default(cuid())
