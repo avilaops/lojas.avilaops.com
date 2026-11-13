@@ -12,16 +12,30 @@ async function run(request, fetcher) {
 test('entrada preserva POST e cookie, substitui host forjado e não segue redirects', async () => {
   let received;
   const response = await run(new Request('https://lojas.avilaops.com/api/painel/loja?modo=1', {
-    method: 'POST', body: 'corpo-sintetico', headers: { cookie: 'lojas_sessao=sintetica', 'content-type': 'text/plain', 'x-forwarded-host': 'atacante.example', 'x-forwarded-proto': 'http', forwarded: 'host=atacante.example' },
-  }), async request => { received = request; assert.equal(await request.text(), 'corpo-sintetico'); return new Response('ok'); });
+    method: 'POST', body: 'corpo-sintetico', headers: { cookie: 'lojas_sessao=sintetica', 'content-type': 'text/plain', 'x-forwarded-host': 'atacante.example', 'x-forwarded-proto': 'http', forwarded: 'host=atacante.example', 'x-plataforma': '1' },
+  }), async (request, options) => {
+    received = request;
+    assert.equal(await request.text(), 'corpo-sintetico');
+    assert.equal(options.cache, 'no-store', 'Fetch autenticado deve ignorar o cache antes de chamar a origem');
+    assert.equal(options.cf?.cacheTtl, undefined, 'cacheTtl zero ainda força armazenamento');
+    return new Response('ok');
+  });
   assert.equal(response.status, 200);
   assert.equal(received.url, env.ORIGIN + '/api/painel/loja?modo=1');
   assert.equal(received.redirect, 'manual');
   assert.equal(received.headers.get('x-forwarded-host'), 'lojas.avilaops.com');
   assert.equal(received.headers.get('x-forwarded-proto'), 'https');
   assert.equal(received.headers.get('forwarded'), null);
+  assert.equal(received.headers.get('x-plataforma'), null, 'Marcador interno não pode vir do cliente');
   assert.equal(received.headers.get('cookie'), 'lojas_sessao=sintetica');
   assert.match(response.headers.get('cache-control'), /no-store/);
+});
+
+test('marcador interno forjado é removido antes de chamar uma loja', async () => {
+  await run(new Request('https://demo.lojas.avilaops.com/', { headers: { 'x-plataforma': '1' } }), async request => {
+    assert.equal(request.headers.get('x-plataforma'), null);
+    return new Response('vitrine');
+  });
 });
 
 test('Location técnica volta ao host público, OAuth externo e Set-Cookie são preservados', async () => {
