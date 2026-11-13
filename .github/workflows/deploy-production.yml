@@ -7,6 +7,9 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: lojas-ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
 env:
   NEXT_TELEMETRY_DISABLED: '1'
   ROTINAS_AGENDADOR: '0'
@@ -698,9 +701,9 @@ jobs:
           compression-level: 0
           retention-days: 7
 
-  render_migracoes:
-    name: Render / backup e migrações
-    needs: [image, dependencias]
+  render_backup:
+    name: Render / backup antes da migração
+    needs: image
     if: >-
       github.event_name != 'pull_request' && github.event_name != 'pull_request_target'
       && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
@@ -709,14 +712,33 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 1
     environment: production
-    concurrency:
-      group: lojas-render-migrations
-      cancel-in-progress: false
     env:
-      DATABASE_URL: ${{ secrets.RENDER_DATABASE_URL }}
       RENDER_DATABASE_URL: ${{ secrets.RENDER_DATABASE_URL }}
       LOJAS_STORAGE_URL: ${{ vars.LOJAS_STORAGE_URL }}
       LOJAS_STORAGE_PUBLISH_TOKEN: ${{ secrets.LOJAS_STORAGE_PUBLISH_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/node-do-runner
+      - run: node deploy/render/release.mjs current
+      - run: node deploy/render/backup.mjs before-migration
+
+  render_migracoes:
+    name: Render / migrar banco isolado
+    needs: [image, dependencias, render_backup]
+    if: >-
+      github.event_name != 'pull_request' && github.event_name != 'pull_request_target'
+      && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+      && vars.DEPLOY_ENABLED == 'true' && vars.DEPLOY_TARGET == 'render'
+      && vars.RENDER_SERVICE_ID != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    environment: production
+    env:
+      DATABASE_URL: ${{ secrets.RENDER_DATABASE_URL }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -724,7 +746,7 @@ jobs:
       - uses: ./.github/actions/preparar-node
         with:
           ids: ${{ needs.dependencias.outputs.artifact_id }}
-      - run: node deploy/render/backup.mjs before-migration
+      - run: node deploy/render/release.mjs current
       - run: npx prisma migrate deploy
 
   render_publicar:
@@ -738,6 +760,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 1
     environment: production
+    outputs:
+      deploy_id: ${{ steps.publicar.outputs.deploy_id }}
     concurrency:
       group: deploy-production-lojas.avilaops.com
       cancel-in-progress: false
@@ -746,6 +770,7 @@ jobs:
       RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
       LOJAS_STORAGE_URL: ${{ vars.LOJAS_STORAGE_URL }}
       LOJAS_STORAGE_PUBLISH_TOKEN: ${{ secrets.LOJAS_STORAGE_PUBLISH_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -755,7 +780,27 @@ jobs:
         with:
           artifact-ids: ${{ needs.runtime_render.outputs.artifact_id }}
           path: ${{ runner.temp }}/render-runtime
-      - run: node deploy/render/release.mjs publish "$RUNNER_TEMP/render-runtime"
+      - id: publicar
+        run: node deploy/render/release.mjs publish "$RUNNER_TEMP/render-runtime"
+
+  render_verificar:
+    name: Render / confirmar release e smoke
+    needs: render_publicar
+    if: needs.render_publicar.outputs.deploy_id != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    environment: production
+    env:
+      RENDER_SERVICE_ID: ${{ vars.RENDER_SERVICE_ID }}
+      RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+      RENDER_DEPLOY_ID: ${{ needs.render_publicar.outputs.deploy_id }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/node-do-runner
+      - run: node deploy/render/release.mjs verify
+      - run: node scripts/smoke-publicacao.mjs "${{ vars.SMOKE_URL || 'https://lojas.avilaops.com' }}"
 
   preparar_entrega:
     name: entrega / baixar imagem no servidor

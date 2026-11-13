@@ -25,6 +25,14 @@ async function baixar(url, token, maximo) {
   return r;
 }
 
+export function ambienteDaRelease(env, destino, sha) {
+  return { ...env, NODE_ENV: "production", HOSTNAME: "0.0.0.0", PORT: env.PORT || "10000",
+    ROTINAS_AGENDADOR: env.ROTINAS_AGENDADOR ?? "0", LOJAS_DEPLOY_ID: sha,
+    FUNDO_MODELOS_DIR: path.join(destino, "modelos"),
+    PRISMA_QUERY_ENGINE_LIBRARY: path.join(destino, "node_modules/.prisma/client/libquery_engine-debian-openssl-3.0.x.so.node"),
+  };
+}
+
 async function iniciar() {
   const sha = process.env.LOJAS_RELEASE_SHA;
   const releaseId = process.env.LOJAS_RELEASE_ID;
@@ -67,11 +75,7 @@ async function iniciar() {
   if (info.sha !== sha) throw new Error("FOREIGN_RELEASE_ARCHIVE");
   await writeFile(path.join(pasta, "ready.json"), JSON.stringify({ sha, sha256: manifesto.sha256 }));
   if (spawnSync("openssl", ["version"], { stdio: "ignore" }).status !== 0) throw new Error("OPENSSL_RUNTIME_MISSING");
-  const app = spawn(process.execPath, ["server.js"], { cwd: destino, stdio: "inherit", env: {
-    ...process.env, NODE_ENV: "production", HOSTNAME: "0.0.0.0", PORT: process.env.PORT || "10000",
-    LOJAS_DEPLOY_ID: sha, FUNDO_MODELOS_DIR: path.join(destino, "modelos"),
-    PRISMA_QUERY_ENGINE_LIBRARY: path.join(destino, "node_modules/.prisma/client/libquery_engine-debian-openssl-3.0.x.so.node"),
-  } });
+  const app = spawn(process.execPath, ["server.js"], { cwd: destino, stdio: "inherit", env: ambienteDaRelease(process.env, destino, sha) });
   for (const sinal of ["SIGTERM", "SIGINT"]) process.on(sinal, () => app.kill(sinal));
   app.once("error", () => process.exit(1));
   app.once("close", code => process.exit(code ?? 1));

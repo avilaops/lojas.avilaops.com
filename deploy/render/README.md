@@ -24,6 +24,9 @@ Variáveis do serviço: `DATABASE_URL` interna e exclusiva do Lojas,
 `LOJAS_STORAGE_URL`, `LOJAS_STORAGE_TOKEN`, `LOJAS_RELEASE_SHA`,
 `LOJAS_RELEASE_ID`, `LOJAS_RELEASE_MANIFEST_SHA256`, `LOJAS_BOOTSTRAP_RUN=1`,
 `NODE_VERSION` e as integrações cuja configuração foi recuperada e conferida.
+`ROTINAS_AGENDADOR=0` mantém rotinas desligadas; o bootstrap também aplica esse
+padrão quando a variável não existe. Ativação posterior exige configuração
+explícita, depois de conferir os serviços externos recuperados.
 Não importar o ambiente inteiro de outro produto. O agendador interno fica
 desligado durante a recuperação até conferir a execução de rotinas externas.
 
@@ -31,6 +34,10 @@ O job `render_migracoes` faz backup antes de migrar; `render_publicar` envia
 partes, publica o manifesto por último e só então solicita deploy do commit.
 O Render faz health check em `/api/health`. O trigger de deploy não comprova
 que a release ficou saudável: conferir o deploy real e o smoke HTTP depois.
+O workflow serializa execuções de cada branch. Antes de backup, migração e
+alteração de ambiente, a entrega recusa HEAD antigo ou run anterior a outro
+push/disparo manual. `render_verificar` exige status `live`, commit correto
+na API do Render e smoke público; falha ou timeout tornam o CI vermelho.
 
 No GitHub, cadastrar segredos `RENDER_DATABASE_URL` (externa, banco Lojas),
 `RENDER_API_KEY` e `LOJAS_STORAGE_PUBLISH_TOKEN`; variáveis `DEPLOY_TARGET=render`,

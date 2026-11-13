@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { createReadStream, createWriteStream } from "node:fs";
-import { mkdir, readFile, writeFile, unlink } from "node:fs/promises";
+import { appendFile, mkdir, readFile, writeFile, unlink } from "node:fs/promises";
 import { createGzip } from "node:zlib";
 import { spawn } from "node:child_process";
 import { pipeline } from "node:stream/promises";
@@ -9,6 +9,21 @@ import { pathToFileURL } from "node:url";
 import { validarManifesto } from "./start.mjs";
 
 const hash = bytes => createHash("sha256").update(bytes).digest("hex");
+
+export async function conferirEntregaAtual(env = process.env, buscar = fetch) {
+  const { GITHUB_REPOSITORY: repo, GITHUB_SHA: sha, GITHUB_RUN_ID: id, GITHUB_REF_NAME: branch } = env;
+  if (!/^[a-z0-9_.-]+\/[a-z0-9_.-]+$/i.test(repo ?? "") || !/^[a-f0-9]{40}$/.test(sha ?? "") || !/^\d+$/.test(id ?? "") || !branch || env.GITHUB_REF !== `refs/heads/${branch}` || !env.GITHUB_TOKEN) throw new Error("INVALID_DELIVERY_CONTEXT");
+  const options = { headers: { authorization: `Bearer ${env.GITHUB_TOKEN}`, accept: "application/vnd.github+json" }, signal: AbortSignal.timeout(15_000) };
+  const ref = await buscar(`https://api.github.com/repos/${repo}/git/ref/heads/${encodeURIComponent(branch)}`, options);
+  if (!ref.ok) throw new Error("DELIVERY_CHECK_FAILED");
+  if ((await ref.json()).object?.sha !== sha) throw new Error("SUPERSEDED_DEPLOYMENT");
+  const runs = await buscar(`https://api.github.com/repos/${repo}/actions/workflows/deploy-production.yml/runs?branch=${encodeURIComponent(branch)}&per_page=100`, options);
+  if (!runs.ok) throw new Error("DELIVERY_CHECK_FAILED");
+  const result = await runs.json();
+  if (!Array.isArray(result.workflow_runs)) throw new Error("DELIVERY_CHECK_FAILED");
+  if (result.workflow_runs.some(run => ["push", "workflow_dispatch"].includes(run.event) && run.head_branch === branch && BigInt(run.id) > BigInt(id))) throw new Error("SUPERSEDED_DEPLOYMENT");
+  return true;
+}
 export async function dividirArquivo(arquivo, saida) {
   await mkdir(saida, { recursive: true });
   const digest = createHash("sha256");
@@ -57,6 +72,7 @@ async function empacotar(entrada, saida) {
 }
 
 async function publicar(pasta) {
+  await conferirEntregaAtual();
   const bytes = await readFile(path.join(pasta, "manifest.json"));
   const m = validarManifesto(JSON.parse(bytes.toString()), process.env.GITHUB_SHA);
   const releaseId = `${m.sha}-${m.runId}-${m.runAttempt}`;
@@ -72,6 +88,7 @@ async function publicar(pasta) {
   };
   if (!/^srv-[a-z0-9]+$/.test(process.env.RENDER_SERVICE_ID ?? "") || !process.env.RENDER_API_KEY) throw new Error("INVALID_RENDER_CONFIGURATION");
   const endpoint = `https://api.render.com/v1/services/${process.env.RENDER_SERVICE_ID}`;
+  await conferirEntregaAtual();
   for (const [key, value] of Object.entries(atualizacoes)) {
     const r = await fetch(`${endpoint}/env-vars/${key}`, { method: "PUT", headers: { authorization: `Bearer ${process.env.RENDER_API_KEY}`, "content-type": "application/json" }, body: JSON.stringify({ value }), signal: AbortSignal.timeout(15_000) });
     if (!r.ok) throw new Error(`RENDER_ENV_FAILED_${r.status}`);
@@ -79,11 +96,32 @@ async function publicar(pasta) {
   const r = await fetch(`${endpoint}/deploys`, { method: "POST", headers: { authorization: `Bearer ${process.env.RENDER_API_KEY}`, "content-type": "application/json" }, body: JSON.stringify({ commitId: m.sha }), signal: AbortSignal.timeout(15_000) });
   if (!r.ok) throw new Error(`RENDER_DEPLOY_FAILED_${r.status}`);
   const deploy = await r.json();
+  if (!/^dep-[a-z0-9]+$/.test(deploy.id ?? "")) throw new Error("INVALID_RENDER_DEPLOYMENT");
+  if (process.env.GITHUB_OUTPUT) await appendFile(process.env.GITHUB_OUTPUT, `deploy_id=${deploy.id}\nrelease_id=${releaseId}\n`);
   console.log(JSON.stringify({ sha: m.sha, releaseId, deployId: deploy.id, status: deploy.status }));
+}
+
+async function verificarRender() {
+  const { RENDER_SERVICE_ID: serviceId, RENDER_DEPLOY_ID: deployId, RENDER_API_KEY: token, GITHUB_SHA: sha } = process.env;
+  if (!/^srv-[a-z0-9]+$/.test(serviceId ?? "") || !/^dep-[a-z0-9]+$/.test(deployId ?? "") || !token || !/^[a-f0-9]{40}$/.test(sha ?? "")) throw new Error("INVALID_RENDER_VERIFICATION");
+  const base = `https://api.render.com/v1/services/${serviceId}`;
+  for (let i = 0; i < 14; i++) {
+    const r = await fetch(`${base}/deploys/${deployId}`, { headers: { authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(10_000) });
+    if (!r.ok) throw new Error("RENDER_VERIFICATION_FAILED");
+    const d = await r.json();
+    if (["build_failed", "update_failed", "pre_deploy_failed", "canceled", "deactivated"].includes(d.status)) throw new Error("RENDER_DEPLOYMENT_FAILED");
+    if (d.status === "live") {
+      if (d.commit?.id !== sha) throw new Error("FOREIGN_RENDER_DEPLOYMENT");
+      console.log(JSON.stringify({ deployId, sha, status: d.status }));
+      return;
+    }
+    await new Promise(resolve => setTimeout(resolve, 2500));
+  }
+  throw new Error("RENDER_DEPLOYMENT_NOT_LIVE");
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const [acao, entrada, saida] = process.argv.slice(2);
-  const tarefa = acao === "pack" ? empacotar(entrada, saida) : acao === "publish" ? publicar(entrada) : Promise.reject(new Error("INVALID_RELEASE_COMMAND"));
+  const tarefa = acao === "pack" ? empacotar(entrada, saida) : acao === "publish" ? publicar(entrada) : acao === "current" ? conferirEntregaAtual() : acao === "verify" ? verificarRender() : Promise.reject(new Error("INVALID_RELEASE_COMMAND"));
   tarefa.catch(error => { console.error(/^[A-Z_0-9]+$/.test(error?.message ?? "") ? error.message : "RELEASE_FAILED"); process.exitCode = 1; });
 }
