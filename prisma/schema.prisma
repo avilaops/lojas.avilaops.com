@@ -962,6 +962,7 @@ model Pedido {
   /// Prazo do frete escolhido, em dias úteis. Nulo em pedido anterior a
   /// 06/10/2026 e em pedido de marketplace.
   fretePrazoDiasUteis Int?
+  cotacoesFrete       Json?
   subtotalCentavos    Int
   descontoCentavos    Int     @default(0)
   cupomCodigo         String?
