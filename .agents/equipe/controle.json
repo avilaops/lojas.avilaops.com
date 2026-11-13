@@ -13,22 +13,15 @@
   ],
   "tasks": [
     {
-      "id": "AVL-236-RETOMADA-20261112",
-      "title": "Integrar a entrega preservada de estoque multilocal à versão atual",
-      "objective": "Recuperar o incremento de 03/11 com razão imutável, movimentos idempotentes por local, proteção de reservas e evidências atuais no GitHub CI.",
+      "id": "CEPCERTO-CONSULTA-20261112",
+      "title": "Usar somente o token de consulta nas cotações CepCerto",
+      "objective": "Consultar PAC e SEDEX no servidor para produto, carrinho e checkout sem chave pública.",
       "assignee": "codex",
       "priority": "alta",
       "status": "em-revisao",
-      "acceptanceCriteria": [
-        "Hashes dos artefatos recuperados conferem com o recibo original.",
-        "Oferta considera o principal, sem prometer unidades de locais que o checkout não reserva.",
-        "Entradas e transferências recebidas reabrem oferta esgotada, preservando venda sob encomenda.",
-        "CI cobre replay, concorrência, rollback, tenant, imutabilidade e abertura sobre saldo preexistente.",
-        "PR permanece em rascunho; nenhuma migração, escrita comercial ou publicação em produção."
-      ],
-      "environment": "desenvolvimento local para edição e GitHub CI para toda validação",
-      "evidence": "PR #236 em rascunho. Fonte 7f9d4c0 validada pela CI 43280786250: 21 jobs aprovados, 1.454 unitários e 243 PostgreSQL sem falhas/skips, tipos, lint, build e navegador aprovados; entrega/deploy/fumaça ignorados no PR. Contrato rápido 7/7 na CI 43280786198. Regressões de oferta, reposição e exclusão concorrente reproduzidas antes das correções. Artefatos de 03/11 conferidos contra receipt.json; TAPs antigos preservados como históricos. Revisão independente final sem achados pendentes. Linear AVL-236 em In Progress com PR e evidências vinculados; escopo amplo permanece parcial.",
-      "blocker": "A issue ampla continua parcial: depósitos, condições, trânsito, recebimento parcial, rastreabilidade, inventário, backorder e integração ERP/WMS não pertencem a este incremento."
+      "acceptanceCriteria": ["CEPCERTO_CONSULTA_KEY exclusiva nas consultas CepCerto.", "Preços e prazos validados sem expor credenciais.", "Melhor Envio e alternativas cadastradas preservados.", "Testes e build verificados no GitHub CI."],
+      "environment": "desenvolvimento isolado e GitHub CI",
+      "evidence": "PR #235 em rascunho. Código 85113f7dd94454a9fe09039e589a8571e106225d aprovado no run GitHub CI 43277249722: 1454 unitários, integrações PostgreSQL, contratos, tipos, lint, build e navegador. RED anterior no run 43276484581 confirmou 7 falhas do adaptador e 1 integração. Revisão independente sem achados. Contrato e plano em docs/superpowers/specs/2026-11-12-cepcerto-consulta-design.md e docs/superpowers/plans/2026-11-12-cepcerto-consulta.md. Produção não alterada; liberação da conta e cotação real permanecem dependentes do suporte."
     },
     {
       "id": "DOMIRIO-CATEGORIAS-VISUAIS-20261109",
@@ -673,7 +666,7 @@
       "id": "MELHOR-ENVIO-SANDBOX-20261027",
       "title": "Preparar e publicar conexão e cotação do Melhor Envio somente em sandbox",
       "assignee": null,
-      "status": "em-andamento",
+      "status": "em-revisao",
       "acceptanceCriteria": [
         "Sandbox é padrão e lojas de teste precisam de liberação explícita",
         "Contrato de cotação, preços e prazos são validados sem promessas inventadas",
@@ -681,14 +674,9 @@
         "Testes e CI aprovados antes de publicar pelo GitHub",
         "Demonstração autenticada é registrada somente após configurar aplicativo e conta de sandbox"
       ],
-      "evidence": "Histórico: evidencias/melhor-envio-sandbox-2026-10-27.md e docs/MELHOR-ENVIO-SANDBOX.md. Em 12/11, proprietário autorizou consultas no sandbox e escolheu demo. Configuração do aplicativo presente e base oficial sandbox conferida sem expor valores. Consulta pública de transportadoras HTTP 200, dois resultados; perfil e cotação sem conta HTTP 401. Suítes unitárias completas, incluindo Melhor Envio, aprovadas na CI 43280786250 (1.454 testes, sem falhas/skips); respostas simuladas não comprovam cotação autenticada. Recurso frete_melhor_envio_sandbox habilitado somente na demo por alteração transacional delimitada, mantendo recebimento_v2 e pagamentos_pix_manual; leitura administrativa confirmou o recurso. Nenhum token de conta salvo até esta conferência e nenhuma etiqueta/cobrança criada.",
-      "blocker": "Aguardar conexão OAuth da conta sandbox na Loja Demo para testar perfil e cotação autenticados. A API administrativa atual ignora o campo recursos mesmo com HTTP 200; liberação pontual da demo foi verificada no banco e por leitura da API.",
+      "evidence": "evidencias/melhor-envio-sandbox-2026-10-27.md; 1289 testes locais aprovados; TypeScript e lint sem erros; docs/MELHOR-ENVIO-SANDBOX.md",
+      "blocker": "O proprietário ainda precisa cadastrar ou preencher o aplicativo de sandbox e indicar a loja de testes. Não há cotação autenticada comprovada.",
       "history": [
-        {
-          "at": "2026-11-12",
-          "status": "em-andamento",
-          "note": "Proprietário autorizou testes de consulta e selecionou demo. Somente o recurso de sandbox da loja escolhida foi habilitado; demais campos e lojas preservados. Consulta autenticada depende de autorização da conta pelo proprietário no painel."
-        },
         {
           "at": "2026-10-27",
           "status": "em-andamento",
