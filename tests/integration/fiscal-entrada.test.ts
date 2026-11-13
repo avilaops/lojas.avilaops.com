@@ -3,7 +3,7 @@ import { after, test } from "node:test";
 import { readFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import { prisma } from "../../src/lib/db";
-import { salvarProdutoNoCatalogo } from "../../src/lib/catalogo-escrita";
+import { alterarAtivoEmLote, salvarProdutoNoCatalogo } from "../../src/lib/catalogo-escrita";
 import { prepararEntradaFiscal, confirmarEntradaFiscal } from "../../src/lib/fiscal-entrada";
 
 const db = new URL(process.env.DATABASE_URL ?? "http://invalid");
@@ -98,5 +98,32 @@ test("loja integrada ao ERP conserva autoridade e não recebe entrada local", as
     for (const [i, key] of ["ERP_API_URL", "ERP_API_KEYS_BY_CNPJ"].entries()) {
       if (previous[i] === undefined) delete process.env[key]; else process.env[key] = previous[i];
     }
+  }
+});
+
+test("falha de saldo na segunda linha desfaz a primeira escrita e todos os recibos", async () => {
+  const f = await fixture();
+  // Ordem efetiva de travas da entrada: a segunda linha não controla estoque.
+  const ordem = [...f.variantes].sort((a, b) => a.produtoId < b.produtoId ? -1 : 1);
+  await prisma.saldoEstoque.updateMany({ where: { tenantId: f.tenant.id, varianteId: ordem[1].id }, data: { fisico: null } });
+  const antes = await prisma.razaoEstoque.count({ where: { tenantId: f.tenant.id } });
+  await assert.rejects(() => confirmar(f), /não controla estoque/i);
+  assert.equal(await fisico(f.tenant.id, ordem[0].id), 5);
+  assert.equal(await fisico(f.tenant.id, ordem[1].id), null);
+  assert.equal(await prisma.razaoEstoque.count({ where: { tenantId: f.tenant.id } }), antes);
+  assert.equal(await prisma.comandoEstoque.count({ where: { tenantId: f.tenant.id } }), 0);
+});
+
+test("conferência e desativação em lote invertido conservam atomicidade sem deadlock", async () => {
+  for (let tentativa = 0; tentativa < 8; tentativa++) {
+    const f = await fixture();
+    const inversa = f.variantes.map(v => v.produtoId).sort().reverse();
+    const [entrada, lote] = await Promise.allSettled([confirmar(f), alterarAtivoEmLote(f.tenant.id, inversa, false, "qa:lote")]);
+    assert.equal(lote.status, "fulfilled", lote.status === "rejected" ? String(lote.reason) : "");
+    if (entrada.status === "rejected") assert.match(String(entrada.reason), /ativo|inativ|encontrado/i);
+    const registrada = entrada.status === "fulfilled";
+    assert.equal(await fisico(f.tenant.id, f.variantes[0].id), registrada ? 7 : 5);
+    assert.equal(await fisico(f.tenant.id, f.variantes[1].id), registrada ? 6 : 5);
+    assert.equal(await prisma.comandoEstoque.count({ where: { tenantId: f.tenant.id, chave: `nfe-entrada:${CHAVE}` } }), registrada ? 1 : 0);
   }
 });
