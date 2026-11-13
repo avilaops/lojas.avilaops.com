@@ -19,6 +19,13 @@ try {
     await new Promise(resolve => setTimeout(resolve, 250));
   }
   assert.ok(ready, 'Runtime aprovado inicia');
+  for (const path of ['/', '/plataforma/ajuda']) {
+    const platform = await fetch(origin + path, { headers: { host: 'backend-render.example', 'x-forwarded-host': 'lojas.avilaops.com' } });
+    assert.equal(platform.status, 200, 'Páginas da plataforma funcionam também após uma reescrita interna');
+    const html = await platform.text();
+    assert.match(html, /<h1/);
+    assert.doesNotMatch(html, /Nenhuma loja responde por este endereço\./);
+  }
   const response = await fetch(origin + '/api/painel/entrar/iniciar-sso', { redirect: 'manual', headers: { host: 'backend-render.example', 'x-forwarded-host': 'lojas.avilaops.com', 'x-forwarded-proto': 'https' } });
   assert.equal(response.status, 307, 'SSO deve reconhecer o host público atrás do Worker');
   assert.equal(response.headers.get('location'), 'https://lojas.avilaops.com/api/painel/entrar/sso');
@@ -27,6 +34,8 @@ try {
   assert.equal(wrong.status, 404, 'SSO continua restrito ao domínio da plataforma');
   const blocked = await fetch(origin + '/sobre', { headers: { host: 'backend-render.example', 'x-forwarded-host': slug + '.lojas.avilaops.com', 'x-plataforma': '1' } });
   assert.match(await blocked.text(), /Nenhuma loja responde por este endereço\./, 'Marcador forjado não contorna o bloqueio de uma loja encerrada');
+  const forbidden = await fetch(origin + '/plataforma/ajuda', { headers: { host: 'backend-render.example', 'x-forwarded-host': slug + '.lojas.avilaops.com', 'x-plataforma': '1' } });
+  assert.equal(forbidden.status, 404, 'Domínio de loja não recebe páginas internas da plataforma');
   console.log(JSON.stringify({ cloudflareHostSso: 'pass', wrongTenantHost: 'denied' }));
 } finally {
   server.kill('SIGTERM');

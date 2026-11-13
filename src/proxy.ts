@@ -16,15 +16,19 @@ import { ehRetornoDeAutorizacao, ficaNaRaiz } from "@/lib/rotas-da-raiz";
 const BASE = (process.env.LOJAS_BASE_DOMAIN ?? "lojas.avilaops.com").toLowerCase();
 
 export function proxy(request: NextRequest) {
-  const host = (request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? request.nextUrl.host)
-    .toLowerCase()
-    .replace(/:\d+$/, "");
+  const hostPublico = (request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? request.nextUrl.host).toLowerCase();
+  const host = hostPublico.replace(/:\d+$/, "");
   const { pathname } = request.nextUrl;
   // Render receives its technical Host; route handlers must see the public host
   // supplied by the Cloudflare ingress, as tenant resolution already does.
   const cabecalhos = new Headers(request.headers);
   cabecalhos.delete("x-plataforma");
-  cabecalhos.set("host", host);
+  cabecalhos.set("host", hostPublico);
+  // Next can proxy a rewritten request through /plataforma a second time.
+  // Recreate the marker from this host/path, never from the incoming header.
+  if (host === BASE && (pathname === "/plataforma" || pathname.startsWith("/plataforma/"))) {
+    cabecalhos.set("x-plataforma", "1");
+  }
 
   // O que foi combinado com alguém de fora fica na raiz de src/app: retorno de
   // autorização (/ml, /melhor-envio, /mercado-pago, /canais) e contratos de API (/api, /v1). Sem a
