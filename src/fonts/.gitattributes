@@ -1,0 +1,4 @@
+*.woff2 -text
+OFL-inter.txt text eol=lf
+OFL-poppins.txt text eol=lf
+fontes-inter-poppins.json text eol=lf

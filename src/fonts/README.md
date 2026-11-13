@@ -1,5 +1,30 @@
 # Fontes locais
 
+## Inter e Poppins
+
+Os cinco WOFF2 locais vêm dos TTF originais do repositório Google Fonts,
+commit `29b4ec6df2522a8aee279414b78a07910b065874`, pastas `ofl/inter` e
+`ofl/poppins`. As licenças originais acompanham os arquivos em `OFL-inter.txt`
+e `OFL-poppins.txt`. Origem, pesos, tamanhos e hashes completos de fonte e
+resultado estão em `fontes-inter-poppins.json`.
+
+A conversão WOFF2 ocorreu exclusivamente no GitHub CI, execução
+`43480516679`, com fonttools 4.60.2. O preparador conferiu que mapa Unicode,
+ordem de glifos e métricas horizontais ficaram idênticos. Inter preserva 2.849
+codepoints e 2.933 glifos; cada peso Poppins preserva 471 codepoints e 1.060
+glifos. O catálogo mantém 400, 600, 700 e 800, `display: swap`, sem preload
+global e com pré-carga por loja. O arquivo variável Inter é compartilhado
+pelos quatro pesos. Os cinco ativos somam 555.672 bytes.
+
+Esse preparo remove a falha de build no carregador Inter observada na
+execução `43476755288`, tentativa 2, com a mesma mensagem da ocorrência
+Playfair abaixo. Nenhuma família do catálogo consulta o Google no build.
+
+Para atualizar, disparar `deploy-production.yml` com `preparar_fontes=true`
+em uma branch. Essa modalidade prepara somente um artefato, sem publicar a
+aplicação. `scripts/ci/preparar-fontes.py` exige CI e fixa o commit upstream
+antes do download; conferir manifesto e licenças antes de incorporar ativos.
+
 ## Playfair Display
 
 `playfair-display-variable.ttf` é o arquivo original `PlayfairDisplay[wght].ttf`
