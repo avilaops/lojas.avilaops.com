@@ -23,6 +23,7 @@ export function proxy(request: NextRequest) {
   // Render receives its technical Host; route handlers must see the public host
   // supplied by the Cloudflare ingress, as tenant resolution already does.
   const cabecalhos = new Headers(request.headers);
+  cabecalhos.delete("x-plataforma");
   cabecalhos.set("host", host);
 
   // O que foi combinado com alguém de fora fica na raiz de src/app: retorno de
@@ -39,7 +40,7 @@ export function proxy(request: NextRequest) {
 
   // Loja tentando abrir rotas da plataforma pelo próprio domínio: não existe.
   if (host !== BASE && pathname.startsWith("/plataforma")) {
-    return NextResponse.rewrite(new URL("/nao-encontrado", request.url));
+    return NextResponse.rewrite(new URL("/nao-encontrado", request.url), { request: { headers: cabecalhos } });
   }
 
   // URLs verificadas da antiga VedaShow chegam ao destino atual em um único

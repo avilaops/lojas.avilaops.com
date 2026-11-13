@@ -110,7 +110,8 @@ async function verificarRender() {
   const { RENDER_SERVICE_ID: serviceId, RENDER_DEPLOY_ID: deployId, RENDER_API_KEY: token, GITHUB_SHA: sha } = process.env;
   if (!/^srv-[a-z0-9]+$/.test(serviceId ?? "") || !/^dep-[a-z0-9]+$/.test(deployId ?? "") || !token || !/^[a-f0-9]{40}$/.test(sha ?? "")) throw new Error("INVALID_RENDER_VERIFICATION");
   const base = `https://api.render.com/v1/services/${serviceId}`;
-  for (let i = 0; i < 14; i++) {
+  const limite = Date.now() + 210_000;
+  while (Date.now() < limite) {
     const r = await fetch(`${base}/deploys/${deployId}`, { headers: { authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(10_000) });
     if (!r.ok) throw new Error("RENDER_VERIFICATION_FAILED");
     const d = await r.json();

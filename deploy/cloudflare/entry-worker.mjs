@@ -15,7 +15,7 @@ export default {
     if (host !== base && !/^[a-z0-9][a-z0-9-]{0,62}$/.test(slug) && !custom.has(host)) return new Response(null, { status: 421, headers: privateHeaders });
     if (url.protocol !== 'https:') { url.protocol = 'https:'; return new Response(null, { status: 308, headers: { ...privateHeaders, location: url.href } }); }
     const headers = new Headers(request.headers);
-    for (const name of ['host', 'forwarded', 'x-forwarded-host', 'x-forwarded-proto', 'x-forwarded-port', 'x-original-host', 'x-original-url', 'x-real-ip', 'x-forwarded-for']) headers.delete(name);
+    for (const name of ['host', 'forwarded', 'x-forwarded-host', 'x-forwarded-proto', 'x-forwarded-port', 'x-original-host', 'x-original-url', 'x-real-ip', 'x-forwarded-for', 'x-plataforma']) headers.delete(name);
     headers.set('x-forwarded-host', host);
     headers.set('x-forwarded-proto', 'https');
     const visitor = request.headers.get('cf-connecting-ip');
@@ -26,7 +26,7 @@ export default {
     target.search = url.search;
     try {
       const upstream = new Request(target, { method: request.method, headers, body: ['GET', 'HEAD'].includes(request.method) ? undefined : request.body, duplex: 'half', redirect: 'manual' });
-      const response = await (context?.fetch ?? fetch)(upstream, { cf: { cacheTtl: 0, cacheEverything: false } });
+      const response = await (context?.fetch ?? fetch)(upstream, { cache: 'no-store' });
       const output = new Headers(response.headers);
       const location = output.get('location');
       if (location) {
