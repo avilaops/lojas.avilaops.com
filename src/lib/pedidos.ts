@@ -41,6 +41,7 @@ export async function registrarPedido(
       freteNome: pedido.frete.nome,
       freteCentavos: totais.frete,
       fretePrazoDiasUteis: pedido.frete.prazoDiasUteis,
+      cotacoesFrete: pedido.cotacoesFrete?.map(({ id, nome, preco, prazoDiasUteis }) => ({ id, nome, preco, prazoDiasUteis })),
       subtotalCentavos: totais.subtotal,
       descontoCentavos: totais.desconto,
       totalCentavos: totais.total,
