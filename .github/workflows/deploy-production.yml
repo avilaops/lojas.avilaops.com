@@ -25,7 +25,8 @@ jobs:
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
         with:
           python-version: '3.13'
-      - run: python -m pip install --disable-pip-version-check --only-binary=:all: --require-hashes -r deploy/fiscal/requirements-test.lock
+      - run: |
+          python -m pip install --disable-pip-version-check --only-binary=:all: --require-hashes -r deploy/fiscal/requirements-test.lock
       - run: python -m unittest discover -s deploy/fiscal/tests -v
 
   instalacao_dependencias:
