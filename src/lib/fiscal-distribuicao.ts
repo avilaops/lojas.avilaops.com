@@ -19,6 +19,12 @@ function validarXml(xml: string) {
   }
 }
 
+/** A NT2014.002 aceita NSU numérico de1a15dígitos; o banco usa15. */
+function nsuRecebido(valor: unknown): string | null {
+  if (valor === undefined || valor === "") return "";
+  return typeof valor === "string" && /^\d{1,15}$/.test(valor) ? valor.padStart(15, "0") : null;
+}
+
 export function envelopeDistribuicao(cnpj: string, uf: string, nsu: string): string {
   if (!/^[0-9A-Z]{12}\d{2}$/.test(cnpj) || !UFS_FISCAIS[uf] || !/^\d{15}$/.test(nsu)) {
     throw new ErroFiscal("CNPJ, UF ou controle de consulta inválido.");
@@ -49,23 +55,18 @@ export function lerDistribuicao(xml: string) {
   const status = String(retorno.cStat);
   const mensagem = String(retorno.xMotivo ?? "Resposta da SEFAZ").slice(0, 400);
   if (!["137", "138", "656"].includes(status)) throw new ErroFiscal(`SEFAZ ${status}: ${mensagem}`);
-  const ultimoNsu = String(retorno.ultNSU ?? "");
-  const maxNsu = String(retorno.maxNSU ?? "");
-  const controleObrigatorioInvalido = status !== "656" && (!/^\d{15}$/.test(ultimoNsu) || !/^\d{15}$/.test(maxNsu));
-  const controleOpcionalInvalido = status === "656" && (
-    (!!ultimoNsu && !/^\d{15}$/.test(ultimoNsu))
-    || (!!maxNsu && !/^\d{15}$/.test(maxNsu))
-  );
-  if (controleObrigatorioInvalido || controleOpcionalInvalido || (ultimoNsu && maxNsu && ultimoNsu > maxNsu)) {
+  const ultimoNsu = nsuRecebido(retorno.ultNSU);
+  const maxNsu = nsuRecebido(retorno.maxNSU);
+  if (ultimoNsu === null || maxNsu === null || (status !== "656" && (!ultimoNsu || !maxNsu || ultimoNsu > maxNsu))) {
     throw new ErroFiscal("A SEFAZ devolveu um controle de consulta inválido.");
   }
   const lote = retorno.loteDistDFeInt?.docZip;
   const itens = lote ? (Array.isArray(lote) ? lote : [lote]) : [];
   if (itens.length > 50) throw new ErroFiscal("Lote da SEFAZ acima do limite esperado.");
   const documentos = itens.map((item: Record<string, string>) => {
-    const nsu = String(item["@_NSU"] ?? "");
+    const nsu = nsuRecebido(item["@_NSU"]);
     const schema = String(item["@_schema"] ?? "");
-    if (!/^\d{15}$/.test(nsu) || !/^[\w.-]+\.xsd$/.test(schema)) throw new ErroFiscal("Documento fiscal sem identificação válida.");
+    if (!nsu || !/^[\w.-]+\.xsd$/.test(schema)) throw new ErroFiscal("Documento fiscal sem identificação válida.");
     const conteudo = gunzipSync(Buffer.from(String(item["#text"] ?? ""), "base64"), { maxOutputLength: 2 * 1024 * 1024 }).toString("utf8");
     validarXml(conteudo);
     const chave = /<(?:\w+:)?chNFe>\s*(\d{44})\s*<\//.exec(conteudo)?.[1]

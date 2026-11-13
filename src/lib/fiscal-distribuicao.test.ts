@@ -26,10 +26,44 @@ test("aceita fim de consulta e bloqueio sem documentos", () => {
 test("recusa XML malformado, entidades, NSU inválido e rejeição fiscal", () => {
   assert.throws(() => lerDistribuicao("<erro>"));
   assert.throws(() => lerDistribuicao('<!DOCTYPE a [<!ENTITY b SYSTEM "file:///etc/passwd">]><a>&b;</a>'));
-  assert.throws(() => lerDistribuicao(resposta("137", "", "1")));
-  assert.throws(() => lerDistribuicao(resposta("656", "", "1")));
+  assert.throws(() => lerDistribuicao(resposta("137", "", "1.0")));
+  assert.throws(() => lerDistribuicao(resposta("656", "", "-1")));
   assert.throws(() => lerDistribuicao(resposta("138")));
   assert.throws(() => lerDistribuicao(resposta("280")), /280/);
+});
+
+test("normaliza NSUs numéricos de1a15dígitos previstos na NT2014.002", () => {
+  const fim = lerDistribuicao(resposta("137", "", "9", "10"));
+  assert.equal(fim.ultimoNsu, "000000000000009");
+  assert.equal(fim.maxNsu, "000000000000010");
+  const bloqueio = lerDistribuicao(resposta("656", "", "25", ""));
+  assert.equal(bloqueio.ultimoNsu, "000000000000025");
+  assert.equal(bloqueio.maxNsu, "");
+  const zero = lerDistribuicao(resposta("137", "", "0", "0"));
+  assert.equal(zero.ultimoNsu, "000000000000000");
+});
+
+test("normaliza NSU curto do docZip sem alterar o XML original", () => {
+  const original = '<resNFe><chNFe>' + '1'.repeat(44) + '</chNFe></resNFe>';
+  const zip = gzipSync(original).toString("base64");
+  const lote = `<loteDistDFeInt><docZip NSU="9" schema="resNFe_v1.01.xsd">${zip}</docZip></loteDistDFeInt>`;
+  const dados = lerDistribuicao(resposta("138", lote, "9", "10"));
+  assert.equal(dados.documentos[0].nsu, "000000000000009");
+  assert.equal(dados.documentos[0].xml, original);
+});
+
+test("656 preserva controle retornado mesmo quando o máximo é zero indisponível", () => {
+  const dados = lerDistribuicao(resposta("656", "", "25", "0"));
+  assert.equal(dados.status, "656");
+  assert.equal(dados.ultimoNsu, "000000000000025");
+  assert.equal(dados.documentos.length, 0);
+});
+
+test("normalizar não aceita controle ausente, negativo, decimal ou acima de15dígitos", () => {
+  for (const nsu of ["", "-1", "1.0", "1e2", "abc", "1".repeat(16)]) {
+    assert.throws(() => lerDistribuicao(resposta("137", "", nsu, "25")), /controle de consulta inválido/);
+  }
+  assert.throws(() => lerDistribuicao(resposta("137", "", "10", "9")), /controle de consulta inválido/);
 });
 
 test("consulta somente produção com CNPJ, UF e NSU validados", () => {

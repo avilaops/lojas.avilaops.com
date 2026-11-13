@@ -33,6 +33,18 @@ export function ambienteDaRelease(env, destino, sha) {
   };
 }
 
+/** Descarta a memória do download/extrator antes de servir requisições. */
+export function substituirPeloServidor(destino, sha, env) {
+  if (typeof process.execve !== "function") throw new Error("EXECVE_RUNTIME_REQUIRED");
+  const ambiente = ambienteDaRelease(env, destino, sha);
+  ambiente.MALLOC_ARENA_MAX = env.MALLOC_ARENA_MAX || "2";
+  process.chdir(destino);
+  // Heap JS deixa folga para banco, buffers e código nativo nos512MiB.
+  process.execve(process.execPath, [process.execPath, "--max-old-space-size=256", "server.js"],
+    Object.fromEntries(Object.entries(ambiente).filter(([, valor]) => typeof valor === "string")));
+  throw new Error("RUNTIME_REPLACEMENT_FAILED");
+}
+
 async function iniciar() {
   const sha = process.env.LOJAS_RELEASE_SHA;
   const releaseId = process.env.LOJAS_RELEASE_ID;
@@ -75,10 +87,7 @@ async function iniciar() {
   if (info.sha !== sha) throw new Error("FOREIGN_RELEASE_ARCHIVE");
   await writeFile(path.join(pasta, "ready.json"), JSON.stringify({ sha, sha256: manifesto.sha256 }));
   if (spawnSync("openssl", ["version"], { stdio: "ignore" }).status !== 0) throw new Error("OPENSSL_RUNTIME_MISSING");
-  const app = spawn(process.execPath, ["server.js"], { cwd: destino, stdio: "inherit", env: ambienteDaRelease(process.env, destino, sha) });
-  for (const sinal of ["SIGTERM", "SIGINT"]) process.on(sinal, () => app.kill(sinal));
-  app.once("error", () => process.exit(1));
-  app.once("close", code => process.exit(code ?? 1));
+  substituirPeloServidor(destino, sha, process.env);
 }
 
 if (process.env.LOJAS_BOOTSTRAP_RUN === "1") iniciar().catch(error => { console.error("[runtime]", /^[A-Z_]+$/.test(error?.message ?? "") ? error.message : "RELEASE_START_FAILED"); process.exitCode = 1; });

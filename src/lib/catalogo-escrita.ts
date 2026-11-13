@@ -132,7 +132,8 @@ export async function alterarAtivoEmLote(tenantId: string, ids: string[], ativo:
   return prisma.$transaction(async tx => {
     await permitirProjecao(tx);
     let alterados = 0;
-    for (const id of ids) {
+    // A mesma ordem do checkout e das entradas com vários produtos.
+    for (const id of [...new Set(ids)].sort()) {
       const anterior = await travarProduto(tx, tenantId, id);
       if (anterior.ativo === ativo) continue;
       await tx.produto.update({ where: { id }, data: { ativo } });
