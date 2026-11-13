@@ -32,10 +32,13 @@ test('entrada preserva POST e cookie, substitui host forjado e não segue redire
 });
 
 test('marcador interno forjado é removido antes de chamar uma loja', async () => {
-  await run(new Request('https://demo.lojas.avilaops.com/', { headers: { 'x-plataforma': '1' } }), async request => {
-    assert.equal(request.headers.get('x-plataforma'), null);
+  let marker;
+  const response = await run(new Request('https://demo.lojas.avilaops.com/', { headers: { 'x-plataforma': '1' } }), async request => {
+    marker = request.headers.get('x-plataforma');
     return new Response('vitrine');
   });
+  assert.equal(response.status, 200);
+  assert.equal(marker, null);
 });
 
 test('Location técnica volta ao host público, OAuth externo e Set-Cookie são preservados', async () => {

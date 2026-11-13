@@ -19,6 +19,9 @@ domínio próprio na respectiva zona. Não anunciar criação automática de nov
 hosts até implementar o provisionamento correspondente. Domínios fora das
 zonas acessíveis, como PK nesta recuperação, exigem ajuste no provedor externo.
 Preservar MX/TXT e guardar os registros anteriores antes de trocar a entrada.
+Observabilidade da entrada usa amostragem, redige query strings e desativa
+invocation logs automáticos; não registrar cookies, headers de autorização,
+corpos ou códigos de retorno OAuth em logs da aplicação.
 
 ## Build e entrega
 
@@ -62,6 +65,9 @@ O smoke usa a URL `onrender.com` obtida da API, envia o host lógico por
 `x-forwarded-host` e confere `x-lojas-release` na saúde. Não segue redirects
 para outra origem nessa modalidade. Assim valida o backend novo mesmo antes
 de promover DNS; o domínio público deve ser conferido novamente após a troca.
+O proprietário autorizou até cinco minutos somente nos jobs de backup e
+confirmação da entrega em 13/11/2026, após o backup real exceder um minuto.
+Os limites das demais etapas permanecem os definidos na política do projeto.
 
 No GitHub, cadastrar segredos `RENDER_DATABASE_URL` (externa, banco Lojas),
 `RENDER_API_KEY` e `LOJAS_STORAGE_PUBLISH_TOKEN`; variáveis `DEPLOY_TARGET=render`,

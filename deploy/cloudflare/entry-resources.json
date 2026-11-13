@@ -2,7 +2,12 @@
   "script": "lojas-entry",
   "main_module": "entry-worker.mjs",
   "compatibility_date": "2026-11-13",
-  "observability": { "enabled": false },
+  "observability": {
+    "enabled": true,
+    "redact_query_string": true,
+    "logs": { "enabled": true, "invocation_logs": false, "head_sampling_rate": 0.1 },
+    "traces": { "enabled": true, "head_sampling_rate": 0.01 }
+  },
   "bindings": [
     { "type": "plain_text", "name": "ORIGIN", "text": "https://lojas-avilaops-emergency.onrender.com" },
     { "type": "plain_text", "name": "PUBLIC_BASE", "text": "lojas.avilaops.com" },
