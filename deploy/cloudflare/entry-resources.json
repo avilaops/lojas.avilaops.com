@@ -2,6 +2,10 @@
   "script": "lojas-entry",
   "main_module": "entry-worker.mjs",
   "compatibility_date": "2026-11-13",
+  "routes": [
+    { "zone_id": "f892de4ea80c3ae2cf2dbc0c1ccf54dd", "pattern": "*.lojas.avilaops.com/*" }
+  ],
+  "base_custom_domain": "lojas.avilaops.com",
   "observability": {
     "enabled": true,
     "redact_query_string": true,

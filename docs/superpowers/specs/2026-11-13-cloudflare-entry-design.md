@@ -16,9 +16,12 @@ PostgreSQL recuperados permanecem no Render; uploads, releases e backups no R2.
   registrar cookies, corpos, tokens OAuth ou credenciais.
 - O proxy Next deve encaminhar o host lógico também aos handlers de autenticação,
   preservando as verificações de origem e as regras de acesso existentes.
-- Cloudflare Custom Domains gerencia TLS por hostname. Wildcard não é suportado
-  nessa modalidade: cadastrar hosts das lojas existentes; novos slugs dependem
-  desse provisionamento até automatização posterior. Não afirmar wildcard pronto.
+- Cloudflare Custom Domains registra o domínio-base e domínios próprios exatos.
+  A API do canário emitiu certificado Advanced com SAN do hostname e seu wildcard.
+  Conferir esse SAN e certificado ativo no domínio-base antes de associar DNS
+  wildcard proxied e rota Workers `*.lojas.avilaops.com/*`. Validar um slug novo
+  sem Custom Domain individual antes de afirmar que novos slugs estão cobertos.
+  Se o certificado-base não cobrir wildcard, manter provisionamento por hostname.
 - Salvar DNS anterior, validar Worker e runtime aprovado antes de associar domínios.
   Não alterar MX/TXT ou ativar lojas canceladas/provisionando.
 - PK usa DNS externo; não é possível mudar seus registros por esta conexão.

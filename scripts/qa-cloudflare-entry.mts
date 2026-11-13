@@ -7,6 +7,7 @@ const origin = 'http://127.0.0.1:3107';
 const prisma = new PrismaClient();
 const slug = 'qa-edge-cancelada-' + randomUUID();
 const tenant = await prisma.tenant.create({ data: { slug, nome: 'Loja encerrada QA Edge', status: 'CANCELADA' } });
+const active = await prisma.tenant.create({ data: { slug: 'qa-edge-ativa-' + randomUUID(), nome: 'Loja ativa QA Edge', status: 'ATIVA' } });
 const server = spawn(process.execPath, ['.next/standalone/server.js'], { env: {
   ...process.env, PORT: '3107', HOSTNAME: '0.0.0.0', LOJAS_BASE_DOMAIN: 'lojas.avilaops.com',
   ROTINAS_AGENDADOR: '0', SSO_APP_ID: 'lojas-avilaops-com', SSO_URL: 'https://auth.example',
@@ -34,11 +35,15 @@ try {
   assert.equal(wrong.status, 404, 'SSO continua restrito ao domínio da plataforma');
   const blocked = await fetch(origin + '/sobre', { headers: { host: 'backend-render.example', 'x-forwarded-host': slug + '.lojas.avilaops.com', 'x-plataforma': '1' } });
   assert.match(await blocked.text(), /Nenhuma loja responde por este endereço\./, 'Marcador forjado não contorna o bloqueio de uma loja encerrada');
-  const forbidden = await fetch(origin + '/plataforma/ajuda', { headers: { host: 'backend-render.example', 'x-forwarded-host': slug + '.lojas.avilaops.com', 'x-plataforma': '1' } });
-  assert.equal(forbidden.status, 404, 'Domínio de loja não recebe páginas internas da plataforma');
+  const forbidden = await fetch(origin + '/plataforma/ajuda', { headers: { host: 'backend-render.example', 'x-forwarded-host': active.slug + '.lojas.avilaops.com', 'x-plataforma': '1' } });
+  const rendered = (await forbidden.text()).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
+  // Next may already have streamed HTTP 200; assert the rendered denial rather
+  // than confusing a CANCELADA layout's HTTP 200 with platform access.
+  assert.match(rendered, /<h1[^>]*>Página não encontrada<\/h1>/, 'Domínio de loja ativa não recebe páginas internas da plataforma');
   console.log(JSON.stringify({ cloudflareHostSso: 'pass', wrongTenantHost: 'denied' }));
 } finally {
   server.kill('SIGTERM');
   await prisma.tenant.delete({ where: { id: tenant.id } });
+  await prisma.tenant.delete({ where: { id: active.id } });
   await prisma.$disconnect();
 }

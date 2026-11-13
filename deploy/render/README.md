@@ -13,11 +13,16 @@ headers de encaminhamento, mantém streaming e cookies, não segue redirects e
 troca somente Location que volte à origem técnica. O proxy Next passa o host
 lógico aos handlers de SSO; suas verificações de Origin continuam ativas.
 
-Associar Cloudflare Custom Domains por hostname depois de conferir a release.
-Essa modalidade não suporta wildcard: provisionar cada slug existente e cada
-domínio próprio na respectiva zona. Não anunciar criação automática de novos
-hosts até implementar o provisionamento correspondente. Domínios fora das
-zonas acessíveis, como PK nesta recuperação, exigem ajuste no provedor externo.
+Associar Cloudflare Custom Domain ao domínio-base depois de conferir a release.
+A API do canário forneceu certificado Advanced com SAN do hostname e wildcard.
+Conferir SAN `*.lojas.avilaops.com` e certificado ativo no domínio-base antes
+de aplicar a rota Workers wildcard declarada e DNS wildcard proxied para a
+borda. Validar um hostname novo sem cadastro individual. Custom Domains não
+aceita cadastro `*`; o roteamento dos slugs usa Workers Routes e o certificado
+validado, enquanto domínios próprios têm seus cadastros exatos. Se faltar o
+SAN wildcard, manter cadastro dos slugs por hostname até resolver TLS.
+Domínios fora das zonas acessíveis, como PK nesta recuperação, exigem ajuste
+no provedor externo.
 Preservar MX/TXT e guardar os registros anteriores antes de trocar a entrada.
 Observabilidade da entrada usa amostragem, redige query strings e desativa
 invocation logs automáticos; não registrar cookies, headers de autorização,
