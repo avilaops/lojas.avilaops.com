@@ -48,7 +48,13 @@ try {
   page.on("pageerror", e => erros.push(e.message));
   // The local HTTP fixture simulates the HTTPS ingress without weakening the
   // production Origin policy. API negative checks above use their real headers.
-  await page.route("**/api/painel/fiscal/documentos/*/entrada-estoque", route => route.continue({ headers: route.request().method() === "POST" ? { ...route.request().headers(), origin: "https://localhost" } : route.request().headers() }));
+  await page.route("**/api/painel/fiscal/documentos/*/entrada-estoque", async route => {
+    if (route.request().method() !== "POST") return route.continue();
+    // Chromium owns Origin at the network layer. Forward the actual payload
+    // through an HTTP ingress fixture instead of trying to override that header.
+    const response = await route.fetch({ headers: { ...await route.request().allHeaders(), cookie, origin: "https://localhost" } });
+    await route.fulfill({ response });
+  });
   await page.goto(base + "/painel/configuracoes/fiscal");
   await page.getByRole("button", { name: "Conferir entrada da NF-e 123" }).click();
   const dialog = page.getByRole("dialog", { name: "Conferir entrada de estoque" });
