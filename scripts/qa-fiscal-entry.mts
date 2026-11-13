@@ -66,7 +66,12 @@ try {
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth));
   await page.screenshot({ path: output + "/mobile-form.png", fullPage: true });
   await dialog.getByLabel("Conferi os produtos, quantidades e local de estoque").check();
+  const invalidos = await dialog.locator("form").evaluate(form => Array.from((form as HTMLFormElement).elements).filter(e => e instanceof HTMLInputElement && !e.validity.valid).map(e => ({ name: (e as HTMLInputElement).name, value: (e as HTMLInputElement).value, message: (e as HTMLInputElement).validationMessage })));
+  assert.deepEqual(invalidos, [], "A conferência preenchida precisa passar pela validação do navegador");
+  const respostaConfirmacao = page.waitForResponse(r => new URL(r.url()).pathname === path && r.request().method() === "POST");
   await dialog.getByRole("button", { name: "Confirmar entrada no estoque", exact: true }).click();
+  const confirmada = await respostaConfirmacao;
+  assert.equal(confirmada.status(), 200, await confirmada.text());
   await dialog.getByRole("status").filter({ hasText: "Entrada registrada" }).waitFor();
   const saldos = await prisma.saldoEstoque.findMany({ where: { tenantId: loja.id, local: "principal" }, orderBy: { varianteId: "asc" } });
   assert.equal(saldos.find(s => s.varianteId === variantes[0].id)?.fisico, 7);
