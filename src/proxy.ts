@@ -16,10 +16,19 @@ import { ehRetornoDeAutorizacao, ficaNaRaiz } from "@/lib/rotas-da-raiz";
 const BASE = (process.env.LOJAS_BASE_DOMAIN ?? "lojas.avilaops.com").toLowerCase();
 
 export function proxy(request: NextRequest) {
-  const host = (request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? request.nextUrl.host)
-    .toLowerCase()
-    .replace(/:\d+$/, "");
+  const hostPublico = (request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? request.nextUrl.host).toLowerCase();
+  const host = hostPublico.replace(/:\d+$/, "");
   const { pathname } = request.nextUrl;
+  // Render receives its technical Host; route handlers must see the public host
+  // supplied by the Cloudflare ingress, as tenant resolution already does.
+  const cabecalhos = new Headers(request.headers);
+  cabecalhos.delete("x-plataforma");
+  cabecalhos.set("host", hostPublico);
+  // Next can proxy a rewritten request through /plataforma a second time.
+  // Recreate the marker from this host/path, never from the incoming header.
+  if (host === BASE && (pathname === "/plataforma" || pathname.startsWith("/plataforma/"))) {
+    cabecalhos.set("x-plataforma", "1");
+  }
 
   // O que foi combinado com alguém de fora fica na raiz de src/app: retorno de
   // autorização (/ml, /melhor-envio, /mercado-pago, /canais) e contratos de API (/api, /v1). Sem a
@@ -29,14 +38,13 @@ export function proxy(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = `/plataforma${pathname === "/" ? "" : pathname}`;
     // Cabeçalho de REQUISIÇÃO: é o que o layout raiz lê com headers().
-    const cabecalhos = new Headers(request.headers);
     cabecalhos.set("x-plataforma", "1");
     return NextResponse.rewrite(url, { request: { headers: cabecalhos } });
   }
 
   // Loja tentando abrir rotas da plataforma pelo próprio domínio: não existe.
   if (host !== BASE && pathname.startsWith("/plataforma")) {
-    return NextResponse.rewrite(new URL("/nao-encontrado", request.url));
+    return NextResponse.rewrite(new URL("/nao-encontrado", request.url), { request: { headers: cabecalhos } });
   }
 
   // URLs verificadas da antiga VedaShow chegam ao destino atual em um único
@@ -82,7 +90,7 @@ export function proxy(request: NextRequest) {
   // vinha do Caddy nem do código: é regra da borda. Como a borda respeita
   // `no-store` da origem, a defesa fica aqui, que é o que está sob nosso
   // controle e não depende de configuração de painel externo.
-  const resposta = NextResponse.next();
+  const resposta = NextResponse.next({ request: { headers: cabecalhos } });
   if (pathname.startsWith("/api/") || pathname.startsWith("/painel") || pathname.startsWith("/conta") || ehRetornoDeAutorizacao(pathname)) {
     resposta.headers.set("cache-control", "private, no-store, max-age=0, must-revalidate");
     return resposta;

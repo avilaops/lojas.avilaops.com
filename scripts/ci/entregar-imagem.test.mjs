@@ -101,8 +101,10 @@ test("política do projeto exige timeout nativo e permite folga nos jobs longos"
     ["etiquetas", "10"],
     ["contratos", "10"],
     ["image", "10"],
+    ["render_backup", "5"],
+    ["render_verificar", "5"],
   ]);
-  for (const name of ["deploy-production.yml", "merge-automatico.yml"]) {
+  for (const name of ["deploy-production.yml", "merge-automatico.yml", "backup-render.yml", "preparar-fontes.yml"]) {
     const text = await readFile(path.resolve(".github/workflows", name), "utf8");
     const jobs = text.split(/^jobs:\r?\n/m)[1];
     assert.ok(jobs, `${name}: jobs ausentes`);
@@ -113,7 +115,7 @@ test("política do projeto exige timeout nativo e permite folga nos jobs longos"
       const block = jobs.slice(blocks[i].index, blocks[i + 1]?.index ?? jobs.length);
       const timeouts = [...block.matchAll(/^    timeout-minutes:\s*(.*?)\s*$/gm)];
       assert.equal(timeouts.length, 1, `${name}/${blocks[i][1]}: timeout obrigatório e único`);
-      const esperado = name === "deploy-production.yml"
+      const esperado = name === "backup-render.yml" ? "5" : name === "deploy-production.yml"
         ? (timeoutsPorJob.get(blocks[i][1]) ?? "1")
         : "1";
       assert.equal(timeouts[0][1], esperado, `${name}/${blocks[i][1]}: limite da política Linear`);

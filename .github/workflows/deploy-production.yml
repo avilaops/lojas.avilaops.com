@@ -397,6 +397,7 @@ jobs:
       - run: node --import tsx scripts/qa-cotacoes-b2b.mts
       - run: node --import tsx scripts/qa-conversao-loja.mts
       - run: node --import tsx scripts/qa-mdx-acesso.mts
+      - run: node --import tsx scripts/qa-cloudflare-entry.mts
       - run: node --import tsx scripts/qa-pk-ferramentas.mts
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
@@ -486,7 +487,7 @@ jobs:
             if curl --fail --silent http://127.0.0.1:3089/api/health > /dev/null; then break; fi
             sleep 1
           done
-          node --import tsx scripts/qa-etiquetas.mts
+          node --import tsx scripts/qa-etiquetas.mts || { tail -n 100 "$RUNNER_TEMP/lojas-etiquetas.log"; exit 1; }
       - name: Decodificar PDFs reais a 203 dpi
         run: |
           python -m pip install --disable-pip-version-check pymupdf==1.28.0 pillow==12.2.0 zxing-cpp==3.1.1
@@ -735,7 +736,7 @@ jobs:
       && vars.DEPLOY_ENABLED == 'true' && vars.DEPLOY_TARGET == 'render'
       && vars.RENDER_SERVICE_ID != ''
     runs-on: ubuntu-24.04
-    timeout-minutes: 1
+    timeout-minutes: 5
     environment: production
     env:
       RENDER_DATABASE_URL: ${{ secrets.RENDER_DATABASE_URL }}
@@ -814,7 +815,7 @@ jobs:
     needs: render_publicar
     if: needs.render_publicar.outputs.deploy_id != ''
     runs-on: ubuntu-24.04
-    timeout-minutes: 1
+    timeout-minutes: 5
     environment: production
     env:
       RENDER_SERVICE_ID: ${{ vars.RENDER_SERVICE_ID }}

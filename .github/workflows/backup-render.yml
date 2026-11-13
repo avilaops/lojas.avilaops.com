@@ -12,7 +12,7 @@ jobs:
   backup:
     if: vars.DEPLOY_TARGET == 'render' && vars.RENDER_SERVICE_ID != ''
     runs-on: ubuntu-24.04
-    timeout-minutes: 1
+    timeout-minutes: 5
     environment: production
     env:
       RENDER_DATABASE_URL: ${{ secrets.RENDER_DATABASE_URL }}

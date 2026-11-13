@@ -1,0 +1,62 @@
+import assert from 'node:assert/strict';
+import { spawn } from 'node:child_process';
+import { PrismaClient } from '@prisma/client';
+import { randomUUID } from 'node:crypto';
+assert.equal(process.env.CI, 'true', 'Verificação exclusiva do GitHub CI');
+const origin = 'http://127.0.0.1:3107';
+const helpText = 'Encontre o que precisa para começar, organizar o catálogo e acompanhar cada pedido.';
+const prisma = new PrismaClient();
+const slug = 'qa-edge-cancelada-' + randomUUID();
+const tenant = await prisma.tenant.create({ data: { slug, nome: 'Loja encerrada QA Edge', status: 'CANCELADA' } });
+const active = await prisma.tenant.create({ data: { slug: 'qa-edge-ativa-' + randomUUID(), nome: 'Loja ativa QA Edge', status: 'ATIVA' } });
+const server = spawn(process.execPath, ['.next/standalone/server.js'], { env: {
+  ...process.env, PORT: '3107', HOSTNAME: '0.0.0.0', LOJAS_BASE_DOMAIN: 'lojas.avilaops.com',
+  ROTINAS_AGENDADOR: '0', SSO_APP_ID: 'lojas-avilaops-com', SSO_URL: 'https://auth.example',
+  LOJAS_OIDC_CLIENT_ID: '', LOJAS_OIDC_CLIENT_SECRET: '', LOJAS_OIDC_REDIRECT_URI: '',
+}, stdio: 'inherit' });
+try {
+  let ready = false;
+  for (let i = 0; i < 40; i++) {
+    try { if ((await fetch(origin + '/api/health')).status === 200) { ready = true; break; } } catch { /* aguarda runtime */ }
+    await new Promise(resolve => setTimeout(resolve, 250));
+  }
+  assert.ok(ready, 'Runtime aprovado inicia');
+  for (const path of ['/', '/plataforma/ajuda']) {
+    const platform = await fetch(origin + path, { headers: { host: 'backend-render.example', 'x-forwarded-host': 'lojas.avilaops.com' } });
+    assert.equal(platform.status, 200, 'Páginas da plataforma funcionam também após uma reescrita interna');
+    const html = await platform.text();
+    assert.match(html, /<h1/);
+    assert.doesNotMatch(html, /Nenhuma loja responde por este endereço\./);
+    if (path === '/plataforma/ajuda') assert.ok(html.includes(helpText));
+  }
+  const response = await fetch(origin + '/api/painel/entrar/iniciar-sso', { redirect: 'manual', headers: { host: 'backend-render.example', 'x-forwarded-host': 'lojas.avilaops.com', 'x-forwarded-proto': 'https' } });
+  assert.equal(response.status, 307, 'SSO deve reconhecer o host público atrás do Worker');
+  assert.equal(response.headers.get('location'), 'https://lojas.avilaops.com/api/painel/entrar/sso');
+  assert.ok(response.headers.getSetCookie().some(c => c.includes('HttpOnly') && c.includes('Secure')));
+  const wrong = await fetch(origin + '/api/painel/entrar/iniciar-sso', { redirect: 'manual', headers: { host: 'backend-render.example', 'x-forwarded-host': 'demo.lojas.avilaops.com' } });
+  assert.equal(wrong.status, 404, 'SSO continua restrito ao domínio da plataforma');
+  const blocked = await fetch(origin + '/sobre', { headers: { host: 'backend-render.example', 'x-forwarded-host': slug + '.lojas.avilaops.com', 'x-plataforma': '1' } });
+  assert.match(await blocked.text(), /Nenhuma loja responde por este endereço\./, 'Marcador forjado não contorna o bloqueio de uma loja encerrada');
+  const forbidden = await fetch(origin + '/plataforma/ajuda', { headers: { host: 'backend-render.example', 'x-forwarded-host': active.slug + '.lojas.avilaops.com', 'x-plataforma': '1' } });
+  const forbiddenHtml = await forbidden.text();
+  const rendered = forbiddenHtml.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
+  const denial = await fetch(origin + '/nao-encontrado', { headers: { host: 'backend-render.example', 'x-forwarded-host': active.slug + '.lojas.avilaops.com' } });
+  const denialHtml = (await denial.text()).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
+  // notFound() may replace a streamed document before its h1 reaches the HTML.
+  // Require the same denial as its direct route, including its tenant metadata,
+  // and ensure the help content positively checked above was never served.
+  assert.equal(forbidden.status, denial.status);
+  assert.ok([200, 404].includes(forbidden.status), 'Recusa nunca equivale a um erro do servidor');
+  const title = /<title>([^<]+)<\/title>/;
+  assert.equal(rendered.match(title)?.[1], denialHtml.match(title)?.[1]);
+  assert.match(rendered, /<title>Página não encontrada · Loja ativa QA Edge<\/title>/);
+  assert.match(rendered, /<meta name="robots" content="noindex[^"]*"/);
+  assert.doesNotMatch(rendered, /Central de ajuda|ajuda-shell|Guia de uso do Lojas/);
+  assert.ok(!forbiddenHtml.includes(helpText), 'Ajuda não vaza nem pelo payload RSC');
+  console.log(JSON.stringify({ cloudflareHostSso: 'pass', wrongTenantHost: 'denied' }));
+} finally {
+  server.kill('SIGTERM');
+  await prisma.tenant.delete({ where: { id: tenant.id } });
+  await prisma.tenant.delete({ where: { id: active.id } });
+  await prisma.$disconnect();
+}

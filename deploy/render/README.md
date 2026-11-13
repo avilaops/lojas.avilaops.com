@@ -3,6 +3,31 @@
 O Lojas preserva Next.js/TypeScript e PostgreSQL. O runtime é Node 22 no Render,
 o DNS continua na Cloudflare e o armazenamento durável fica no R2. Não usa D1.
 
+## Entrada Cloudflare
+
+A API Render recusou novos domínios sem forma de pagamento após os dois
+incluídos da conta. O proprietário escolheu usar `lojas-entry` na Cloudflare,
+com origem HTTPS fixa no Render. `deploy/cloudflare/entry-resources.json`
+declara os bindings REST; não é configuração Wrangler. O Worker sobrescreve
+headers de encaminhamento, mantém streaming e cookies, não segue redirects e
+troca somente Location que volte à origem técnica. O proxy Next passa o host
+lógico aos handlers de SSO; suas verificações de Origin continuam ativas.
+
+Associar Cloudflare Custom Domain ao domínio-base depois de conferir a release.
+A API do canário forneceu certificado Advanced com SAN do hostname e wildcard.
+Conferir SAN `*.lojas.avilaops.com` e certificado ativo no domínio-base antes
+de aplicar a rota Workers wildcard declarada e DNS wildcard proxied para a
+borda. Validar um hostname novo sem cadastro individual. Custom Domains não
+aceita cadastro `*`; o roteamento dos slugs usa Workers Routes e o certificado
+validado, enquanto domínios próprios têm seus cadastros exatos. Se faltar o
+SAN wildcard, manter cadastro dos slugs por hostname até resolver TLS.
+Domínios fora das zonas acessíveis, como PK nesta recuperação, exigem ajuste
+no provedor externo.
+Preservar MX/TXT e guardar os registros anteriores antes de trocar a entrada.
+Observabilidade da entrada usa amostragem, redige query strings e desativa
+invocation logs automáticos; não registrar cookies, headers de autorização,
+corpos ou códigos de retorno OAuth em logs da aplicação.
+
 ## Build e entrega
 
 Builds, testes, navegador e validação do runtime ONNX rodam exclusivamente no
@@ -45,6 +70,9 @@ O smoke usa a URL `onrender.com` obtida da API, envia o host lógico por
 `x-forwarded-host` e confere `x-lojas-release` na saúde. Não segue redirects
 para outra origem nessa modalidade. Assim valida o backend novo mesmo antes
 de promover DNS; o domínio público deve ser conferido novamente após a troca.
+O proprietário autorizou até cinco minutos somente nos jobs de backup e
+confirmação da entrega em 13/11/2026, após o backup real exceder um minuto.
+Os limites das demais etapas permanecem os definidos na política do projeto.
 
 No GitHub, cadastrar segredos `RENDER_DATABASE_URL` (externa, banco Lojas),
 `RENDER_API_KEY` e `LOJAS_STORAGE_PUBLISH_TOKEN`; variáveis `DEPLOY_TARGET=render`,
@@ -76,6 +104,16 @@ O backup diário executa às 03:30 UTC e também pode ser disparado manualmente.
 O manifesto é escrito após todas as partes. Nenhuma rotina apaga o backup de
 origem ou configura expiração destrutiva. Para restaurar, conferir manifesto,
 hash de cada parte, hash agregado, gzip e contagens antes da publicação.
+
+Backups com `schemaVersion: 2` e formato `pg_dump-directory-tar-gzip` contêm
+`snapshot/` do pg_dump directory, exportado por quatro workers com o snapshot
+sincronizado nativo. Todos os dados são lidos por pg_restore antes do upload.
+Concatenar partes em ordem, conferir hashes e extrair o tar.gz em diretório
+privado. Restaurar em banco novo com `pg_restore --no-owner --no-acl --dbname
+<destino> snapshot/`, usando credenciais pelo ambiente e não pela linha de
+comando. Reaplicar explicitamente os papéis/permissões de integração necessários.
+O dump original e backups de versão 1 são SQL gzip: não usar esse procedimento
+de diretório para eles. Nunca testar restauração sobre o banco em uso.
 
 ## Limites da recuperação de 13/11/2026
 

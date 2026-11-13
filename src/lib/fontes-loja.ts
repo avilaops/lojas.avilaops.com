@@ -1,7 +1,6 @@
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import localFont from "next/font/local";
-import { Inter, Poppins } from "next/font/google";
 import type { TemaLoja } from "./tema";
 import { extrairPreCargas } from "./fontes-pre-carga";
 
@@ -18,8 +17,30 @@ import { extrairPreCargas } from "./fontes-pre-carga";
  * Sem `preload`: o layout é um só para todas as lojas e pré-carregaria as
  * quatro famílias em cada página. O navegador busca só a que o CSS usa.
  */
-const inter = Inter({ subsets: ["latin"], weight: ["400", "600", "700", "800"], display: "swap", preload: false });
-const poppins = Poppins({ subsets: ["latin"], weight: ["400", "600", "700", "800"], display: "swap", preload: false });
+const inter = localFont({
+  src: [
+    { path: "../fonts/inter-variable.woff2", weight: "400", style: "normal" },
+    { path: "../fonts/inter-variable.woff2", weight: "600", style: "normal" },
+    { path: "../fonts/inter-variable.woff2", weight: "700", style: "normal" },
+    { path: "../fonts/inter-variable.woff2", weight: "800", style: "normal" },
+  ],
+  display: "swap",
+  preload: false,
+  adjustFontFallback: "Arial",
+  fallback: ["Arial", "sans-serif"],
+});
+const poppins = localFont({
+  src: [
+    { path: "../fonts/poppins-400-normal.woff2", weight: "400", style: "normal" },
+    { path: "../fonts/poppins-600-normal.woff2", weight: "600", style: "normal" },
+    { path: "../fonts/poppins-700-normal.woff2", weight: "700", style: "normal" },
+    { path: "../fonts/poppins-800-normal.woff2", weight: "800", style: "normal" },
+  ],
+  display: "swap",
+  preload: false,
+  adjustFontFallback: "Arial",
+  fallback: ["Arial", "sans-serif"],
+});
 // Mesmo arquivo variável nos quatro pesos oferecidos; sem consulta ao Google no build.
 // Proveniência e licença em src/fonts/README.md e OFL-montserrat.txt.
 const montserrat = localFont({

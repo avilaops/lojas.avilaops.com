@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "repository": "https://github.com/google/fonts",
+  "revision": "29b4ec6df2522a8aee279414b78a07910b065874",
+  "fonttools": "4.60.2",
+  "files": [
+    {
+      "family": "Inter",
+      "source": "ofl/inter/Inter[opsz,wght].ttf",
+      "file": "inter-variable.woff2",
+      "weights": [
+        400,
+        600,
+        700,
+        800
+      ],
+      "sourceSha256": "29160a80ff49ddcab2c97711247e08b1fab27a484a329ce8b813d820dc559031",
+      "sha256": "48c044f74375b71e28592d2f23d89a89d9b2863f974fd15129a357b2faf8ab25",
+      "bytes": 350520,
+      "codepoints": 2849,
+      "glyphs": 2933
+    },
+    {
+      "family": "Poppins",
+      "source": "ofl/poppins/Poppins-Regular.ttf",
+      "file": "poppins-400-normal.woff2",
+      "weights": [
+        400
+      ],
+      "sourceSha256": "7e65201e9b79159e2300267cc885e16c8dcef2424cdfa09a29bfb0980a94a7ba",
+      "sha256": "5437738b1571d53bb8f9bd0784a9cc70a97940bba05879266ef6ee66bfe20afe",
+      "bytes": 51560,
+      "codepoints": 471,
+      "glyphs": 1060
+    },
+    {
+      "family": "Poppins",
+      "source": "ofl/poppins/Poppins-SemiBold.ttf",
+      "file": "poppins-600-normal.woff2",
+      "weights": [
+        600
+      ],
+      "sourceSha256": "d3bf1bdaf0550e83da9ac0b1d1d9fe6db086835a83aa28578e609a394b9a0286",
+      "sha256": "5550f06fe9c1496526081352ab63e594e11c2b3a82732722ccc8a469da324bbb",
+      "bytes": 51540,
+      "codepoints": 471,
+      "glyphs": 1060
+    },
+    {
+      "family": "Poppins",
+      "source": "ofl/poppins/Poppins-Bold.ttf",
+      "file": "poppins-700-normal.woff2",
+      "weights": [
+        700
+      ],
+      "sourceSha256": "983676516167748b74de6f4771fb384c664fd913acb8b471122ecacf5da5ea6c",
+      "sha256": "29cf82902df840652f6bb4a92b8bb9730defaada2cb1c25e5b99e39186def51c",
+      "bytes": 51012,
+      "codepoints": 471,
+      "glyphs": 1060
+    },
+    {
+      "family": "Poppins",
+      "source": "ofl/poppins/Poppins-ExtraBold.ttf",
+      "file": "poppins-800-normal.woff2",
+      "weights": [
+        800
+      ],
+      "sourceSha256": "f2ab17c1a63a0ecc12c2461848fc8a469395e3cd2d641803e889c643d9f958e1",
+      "sha256": "a7b718f0965ab1d0bf07c48f270c4bd920a1b0b344d437dbae6c1a1b445a474e",
+      "bytes": 51040,
+      "codepoints": 471,
+      "glyphs": 1060
+    }
+  ],
+  "licenses": [
+    {
+      "family": "inter",
+      "file": "OFL-inter.txt",
+      "sha256": "5b9321a4298cfeb6b34354164a1c3afc3db114569984c502b9b35d988fd58c57"
+    },
+    {
+      "family": "poppins",
+      "file": "OFL-poppins.txt",
+      "sha256": "6be04893d770899a015649c7aa3b582f871b272f8747a92b78b17c3e5c8b2573"
+    }
+  ]
+}
