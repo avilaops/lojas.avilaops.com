@@ -4,8 +4,8 @@ import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 
 test('catálogo tipográfico compila sem consulta ao Google e mantém ativos licenciados íntegros', async () => {
-  const module = await readFile('src/lib/fontes-loja.ts', 'utf8');
-  assert.doesNotMatch(module, /next\/font\/google/, 'Todas as famílias precisam estar disponíveis no checkout');
+  const catalogSource = await readFile('src/lib/fontes-loja.ts', 'utf8');
+  assert.doesNotMatch(catalogSource, /next\/font\/google/, 'Todas as famílias precisam estar disponíveis no checkout');
   const manifest = JSON.parse(await readFile('src/fonts/fontes-inter-poppins.json', 'utf8'));
   assert.match(manifest.revision, /^[a-f0-9]{40}$/);
   assert.deepEqual([...new Set(manifest.files.map(f => f.family))].sort(), ['Inter', 'Poppins']);
