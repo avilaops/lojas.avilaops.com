@@ -62,7 +62,7 @@ try {
     await route.fulfill({ response });
   });
   await page.goto(base + "/painel/configuracoes/fiscal");
-  await page.getByRole("button", { name: "Conferir entrada da NF-e 456" }).click();
+  await page.getByRole("button", { name: "Acompanhar NF-e 456" }).click();
   const resumoDialog = page.getByRole("dialog", { name: "Conferir entrada de estoque" });
   await resumoDialog.getByRole("button", { name: "Registrar ciência da emissão" }).waitFor();
   await resumoDialog.getByRole("button", { name: "Atualizar documentos" }).waitFor();

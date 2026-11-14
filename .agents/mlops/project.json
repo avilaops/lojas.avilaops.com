@@ -218,7 +218,14 @@
         {
           "kind": "test",
           "path": "src/lib/fiscal-manifestacao.test.ts"
-        }
+        },
+        { "kind": "contract", "path": "docs/superpowers/specs/2026-11-14-fiscal-acompanhamento-design.md" },
+        { "kind": "code", "path": "src/lib/fiscal-acompanhamento.ts" },
+        { "kind": "code", "path": "src/lib/fiscal-manifestacao-conciliacao.ts" },
+        { "kind": "code", "path": "src/lib/rotinas-agendador-config.ts" },
+        { "kind": "test", "path": "src/lib/rotinas-agendador-config.test.ts" },
+        { "kind": "test", "path": "tests/integration/fiscal-acompanhamento.test.ts" },
+        { "kind": "test", "path": "scripts/qa-fiscal-entry.mts" }
       ],
       "flows": []
     },

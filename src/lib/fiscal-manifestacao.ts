@@ -1,9 +1,12 @@
-import { createHash, createSign } from "node:crypto";
+import { createSign } from "node:crypto";
 import { request } from "node:https";
 import { prisma } from "./db";
 import { abrirCertificado, credencialAssinatura, credencialTls, ErroFiscal, lerCertificado } from "./fiscal-certificado";
-import { consultarSefazPorChave } from "./fiscal-distribuicao";
-import { cabecalhoDocumentoFiscal } from "./fiscal-documento";
+import { sincronizarNotas } from "./fiscal-loja";
+import { fiscalErpConfigurado } from "./erp-fiscal";
+import { reconciliarManifestacoesFiscais } from "./fiscal-manifestacao-conciliacao";
+import { TIPOS_MANIFESTACAO, type TipoManifestacao } from "./fiscal-manifestacao-tipos";
+export { TIPOS_MANIFESTACAO, type TipoManifestacao } from "./fiscal-manifestacao-tipos";
 
 const NFE_NS = "http://www.portalfiscal.inf.br/nfe";
 const DSIG_NS = "http://www.w3.org/2000/09/xmldsig#";
@@ -11,14 +14,6 @@ const C14N = "http://www.w3.org/TR/2001/REC-xml-c14n-20010315";
 const ENVELOPED = "http://www.w3.org/2000/09/xmldsig#enveloped-signature";
 const WSDL = "http://www.portalfiscal.inf.br/nfe/wsdl/NFeRecepcaoEvento4";
 const ENDPOINT = "https://www.nfe.fazenda.gov.br/NFeRecepcaoEvento4/NFeRecepcaoEvento4.asmx";
-
-export const TIPOS_MANIFESTACAO = {
-  CIENCIA: { codigo: "210210", descricao: "Ciencia da Operacao" },
-  CONFIRMACAO: { codigo: "210200", descricao: "Confirmacao da Operacao" },
-  DESCONHECIMENTO: { codigo: "210220", descricao: "Desconhecimento da Operacao" },
-  NAO_REALIZADA: { codigo: "210240", descricao: "Operacao nao Realizada" },
-} as const;
-export type TipoManifestacao = keyof typeof TIPOS_MANIFESTACAO;
 
 const escape = (texto: string) => texto.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 const pick = (xml: string, nome: string) => new RegExp(`<(?:\\w+:)?${nome}>([^<]*)</(?:\\w+:)?${nome}>`).exec(xml)?.[1] ?? null;
@@ -89,11 +84,15 @@ export async function manifestarDocumento(dados: { tenantId: string; documentoId
   if (!documento || !documento.chave || !/^resNFe/i.test(documento.schema)) throw new ErroFiscal("A manifestação exige um resumo de NF-e recebido por esta loja.");
   if (!fiscal || fiscal.tenant.status !== "ATIVA") throw new ErroFiscal("Configure o certificado A1 da loja antes de manifestar.");
   const cnpj = fiscal.tenant.cnpj?.replace(/[^0-9A-Z]/gi, "").toUpperCase() ?? "";
+  if (fiscalErpConfigurado(cnpj)) throw new ErroFiscal("Este CNPJ é gerenciado pelo ERP. Faça a manifestação no ERP.");
   if (fiscal.cnpj !== cnpj || (documento.destinatarioDocumento && documento.destinatarioDocumento !== cnpj)) throw new ErroFiscal("O destinatário da NF-e não corresponde ao certificado desta loja.");
   const sequencia = 1;
   const idempotencia = `NFE:${documento.chave}:${TIPOS_MANIFESTACAO[dados.tipo].codigo}:${sequencia}:PRODUCAO`;
   const existente = await prisma.manifestacaoFiscalLoja.findUnique({ where: { tenantId_idempotencia: { tenantId: dados.tenantId, idempotencia } } });
-  if (existente) return existente;
+  if (existente) {
+    await prisma.$transaction(tx => reconciliarManifestacoesFiscais(tx, dados.tenantId, [documento.chave!]));
+    return prisma.manifestacaoFiscalLoja.findUniqueOrThrow({ where: { id: existente.id } });
+  }
   const registro = await prisma.manifestacaoFiscalLoja.create({ data: { tenantId: dados.tenantId, documentoId: documento.id, idempotencia, tipo: dados.tipo, justificativa: dados.justificativa, autor: dados.autor, ambiente: "PRODUCAO", sequencia } });
   let pfx: Buffer | undefined;
   try {
@@ -111,8 +110,7 @@ export async function manifestarDocumento(dados: { tenantId: string; documentoId
     await prisma.auditoriaFiscalLoja.create({ data: { tenantId: dados.tenantId, documentoId: documento.id, manifestacaoId: registro.id, acao: retorno.aceita ? "MANIFESTACAO_ACEITA" : "MANIFESTACAO_REJEITADA", ator: dados.autor, dados: { tipo: dados.tipo, codigo: retorno.codigo, protocolo: retorno.protocolo } } });
     if (retorno.aceita) {
       try {
-        const distribuicao = await consultarSefazPorChave(pfx, aberto.senha, cnpj, fiscal.uf, documento.chave);
-        if (distribuicao.documentos.length) await prisma.documentoFiscalLoja.createMany({ data: distribuicao.documentos.map((item) => ({ ...item, ...cabecalhoDocumentoFiscal(item.xml, item.schema, item.chave), tenantId: dados.tenantId, cnpj, hashXml: createHash("sha256").update(item.xml, "utf8").digest("hex"), identificadorExterno: `SEFAZ_NFE:${cnpj}:${item.nsu}` })), skipDuplicates: true });
+        await sincronizarNotas(dados.tenantId);
       } catch (erroDistribuicao) {
         await prisma.auditoriaFiscalLoja.create({ data: { tenantId: dados.tenantId, documentoId: documento.id, manifestacaoId: registro.id, acao: "XML_COMPLETO_AGUARDANDO", ator: dados.autor, dados: { motivo: erroDistribuicao instanceof ErroFiscal ? erroDistribuicao.message : "Consulta por chave pendente." } } });
       }

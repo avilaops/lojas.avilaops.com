@@ -5,6 +5,7 @@ import { enfileirarFluxosFiscais } from "./fiscal-fluxos";
 import { fiscalErpConfigurado } from "./erp-fiscal";
 import { createHash } from "node:crypto";
 import { cabecalhoDocumentoFiscal } from "./fiscal-documento";
+import { reconciliarManifestacoesFiscais } from "./fiscal-manifestacao-conciliacao";
 
 export const RESUMO_FISCAL = {
   cnpj: true, uf: true, titular: true, validoAte: true,
@@ -79,11 +80,12 @@ export async function sincronizarNotas(tenantId: string, consultar: typeof consu
         })), skipDuplicates: true,
       }) : [];
       const enfileirados = await enfileirarFluxosFiscais(tx, tenantId, novos);
+      const conciliadas = await reconciliarManifestacoesFiscais(tx, tenantId, [...new Set(resposta.documentos.flatMap(d => d.chave ? [d.chave] : []))]);
       await tx.fiscalLoja.update({ where: { tenantId }, data: {
         ...(resposta.status !== "656" || cursorRecebido ? { ultimoNsu: cursorRecebido ?? resposta.ultimoNsu } : {}),
         proximaConsultaEm, ultimaMensagem,
       } });
-      return { recebidos: novos.length, enfileirados };
+      return { recebidos: novos.length, enfileirados, conciliadas };
     });
     return { ...resultado, mensagem: resposta.mensagem, proximaConsultaEm, cursorAjustado, haMaisNsu: resposta.status === "138" && resposta.ultimoNsu < resposta.maxNsu };
   } catch (erro) {
