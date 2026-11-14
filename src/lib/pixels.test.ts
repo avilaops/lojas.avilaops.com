@@ -88,6 +88,22 @@ function consentimentoInicial(ler: (chave: string) => string | null) {
     .filter((x) => x[0] === "consent") as [string, string, Record<string, string>][];
 }
 
+for (const [escolha, medicao, publicidade] of [
+  ["essencial", "denied", "denied"],
+  ["medicao", "granted", "denied"],
+  ["publicidade", "denied", "granted"],
+  ["aceito", "granted", "granted"],
+] as const) {
+  test(`bootstrap restaura ${escolha} com medição e publicidade independentes`, () => {
+    const comandos = consentimentoInicial(() => JSON.stringify({ versao: 1, escolha }));
+    assert.equal(comandos[0][1], "default");
+    assert.equal(comandos[0][2].analytics_storage, "denied");
+    const estado = comandos.at(-1)![2];
+    assert.equal(estado.analytics_storage, medicao);
+    for (const categoria of ["ad_storage", "ad_user_data", "ad_personalization"]) assert.equal(estado[categoria], publicidade);
+  });
+}
+
 test("escolha aceita e vigente é restaurada antes dos loaders, preservando default negado como primeiro comando", () => {
   const comandos = consentimentoInicial((chave) => {
     assert.equal(chave, CHAVE);

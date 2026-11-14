@@ -74,6 +74,27 @@ function lidoDoDataLayer(dataLayer: unknown[]) {
 
 const produto = { id: "p1", nome: "Shampoo 1,5 L", precoCentavos: 4990 };
 
+test("SDKs de publicidade presentes deixam de receber eventos após revogação sem bloquear a fila Google", (t) => {
+  t.after(() => void delete (globalThis as { window?: unknown }).window);
+  let escolha = "aceito";
+  const meta: unknown[][] = [];
+  const tiktok: unknown[][] = [];
+  const w = paginaRecemAberta("GTM-ABC123");
+  Object.assign(w, {
+    localStorage: { getItem: () => JSON.stringify({ versao: 1, escolha }) },
+    fbq: (...args: unknown[]) => meta.push(args),
+    ttq: { track: (...args: unknown[]) => tiktok.push(args) },
+  });
+  verProduto(produto);
+  assert.equal(meta.length, 1);
+  assert.equal(tiktok.length, 1);
+  escolha = "medicao";
+  verProduto(produto);
+  assert.equal(meta.length, 1, "SDK Meta continua presente mas não recebe evento");
+  assert.equal(tiktok.length, 1, "SDK TikTok continua presente mas não recebe evento");
+  assert.deepEqual(lidoDoDataLayer(w.dataLayer).eventos, ["view_item", "view_item"]);
+});
+
 test("evento first-party repete uma vez quando a sessão ainda está sendo criada", async () => {
   const chamadas: Array<{ url: string; corpo: unknown }> = [];
   const respostas = [202, 204];
