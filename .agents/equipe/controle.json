@@ -13,12 +13,29 @@
   ],
   "tasks": [
     {
+      "id": "SEO-DESCOBERTA-NATIVO-20261114",
+      "title": "Criar módulo próprio de SEO e descoberta no Lojas",
+      "objective": "Reunir metadados da home, prévia, curadoria do resumo para IA e configuração de descoberta no painel nativo.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-andamento",
+      "acceptanceCriteria": [
+        "Lojas existentes preservam os valores automáticos antes de qualquer escolha.",
+        "Título e descrição da home podem ser salvos e restaurados sem duplicação da marca.",
+        "Resumo respeita presença e limite dos destaques da própria loja.",
+        "Dono/gerente editam; operador consulta; visitante e outra loja não alteram o alvo.",
+        "CI valida contrato, merge concorrente, saída pública e interface desktop/mobile."
+      ],
+      "environment": "worktree isolado, banco de CI e publicação normal; sem builds ou testes locais",
+      "evidence": "Usuário pediu uma solução nossa do nosso jeito. PR257 draft; RED43601184219 observado por módulo novo ausente. Implementação preparada para GREEN. Contrato docs/SEO-DESCOBERTA-LOJAS.md e plano/spec em docs/superpowers/."
+    },
+    {
       "id": "BERETA-REFERENCIAS-REJEITADAS-20261114",
       "title": "Retirar da loja as referências rejeitadas pelo proprietário",
       "objective": "Remover somente os11 links indicados da configuração e dos produtos da Bereta, com backup e preservação do catálogo.",
       "assignee": "codex",
       "priority": "alta",
-      "status": "em-andamento",
+      "status": "concluida",
       "acceptanceCriteria": [
         "Plano read-only por tenant e backup persistido antes da alteração.",
         "Imagens removidas pelo escritor normal com versão, histórico e outbox.",
@@ -26,7 +43,7 @@
         "Contrato no GitHub CI e vitrine pública conferidos após a operação."
       ],
       "environment": "GitHub CI e operação manual production; sem builds ou testes locais",
-      "evidence": "Usuário corrigiu a autoria dos links e respondeu Remover também da loja. Procedimento docs/BERETA-REFERENCIAS-REJEITADAS.md. Nenhuma alteração de produção aplicada nesta preparação."
+      "evidence": "Remoção autorizada aplicada no run43593859002 após plano43593681175. Foram retiradas referências de3 campos,2 categorias e9 produtos;8426 produtos e campos comerciais preservados. Treze páginas públicas200 sem os endereços e favicon200; inspeção de navegador sem erros nem diálogo. PR256 integrado em50bd923, CI e contrato5/5 passaram. Sem exclusão de arquivos R2, produtos, loja ou DNS."
     },
     {
       "id": "LOJAS-COOKIES-PREFERENCIAS-20261114",

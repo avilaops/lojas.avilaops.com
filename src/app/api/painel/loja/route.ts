@@ -39,7 +39,9 @@ export async function PATCH(request: Request) {
       emailContato: t.emailContato, whatsapp: t.whatsapp,
     });
   }
-  return Response.json({ slug: t.slug, atualizadoEm: t.atualizadoEm });
+  return Response.json({ slug: t.slug, atualizadoEm: t.atualizadoEm,
+    ...(r.data.configuracaoSeo ? { configuracaoSeo: t.configuracaoSeo, permiteTreinamentoIa: t.permiteTreinamentoIa } : {}),
+  });
 }
 
 /** POST — reexecuta DNS + e-mail (depois de apontar o domínio, por exemplo). */

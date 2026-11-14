@@ -19,7 +19,8 @@ import { perguntasPendentes } from "@/lib/mercadolivre-perguntas";
 import { pendenciasDoCatalogo } from "@/lib/mercadolivre-preparo";
 import { lerRegrasDoCanal } from "@/lib/canais";
 import { Secao } from "@/components/painel/campos";
-import Descoberta from "@/components/painel/Descoberta";
+import SeoDescoberta from "@/components/painel/SeoDescoberta";
+import { seoInicioDaLoja } from "@/lib/seo-inicio";
 import Automacoes from "@/components/painel/Automacoes";
 import { estadoDescoberta } from "@/lib/descoberta";
 import { headers } from "next/headers";
@@ -45,7 +46,7 @@ const SECAO: Record<string, SecaoPainel> = {
   conta: "Conta",
 };
 
-export const metadata: Metadata = { title: "Configurações | Painel", robots: { index: false } };
+export const metadata: Metadata = { title: "Configurações • Painel", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
 export default async function Pagina({ params, searchParams }: {
@@ -216,13 +217,14 @@ export default async function Pagina({ params, searchParams }: {
     );
   }
 
-  // Descoberta: leitura do que a plataforma já garante (robots, sitemap,
-  // llms.txt, domínio canônico) e a única decisão do lojista, a de treinamento.
+  // Módulo nativo de SEO: a loja vem da sessão e a edição usa a permissão existente.
   if (secao === "descoberta") {
-    const loja = await lojistaAtual();
-    if (!loja) redirect("/entrar");
+    const sessao = await sessaoDoPainel();
+    if (!sessao) redirect("/entrar");
+    const loja = sessao.tenant;
     const h = await headers();
-    return <div className="grid gap-6"><Descoberta estado={estadoDescoberta(loja, h.get("x-forwarded-host") ?? h.get("host"))} /></div>;
+    const seo = await seoInicioDaLoja(loja);
+    return <SeoDescoberta estado={estadoDescoberta(loja, h.get("x-forwarded-host") ?? h.get("host"))} configuracao={seo.configuracao} automaticos={seo.automaticos} podeEditar={permite(sessao.papel, "configuracoes")} />;
   }
 
   // Automações: o outbox da loja, lido pela API paginada (useSearchParams →

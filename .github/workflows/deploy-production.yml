@@ -417,6 +417,15 @@ jobs:
       - run: node --import tsx scripts/qa-fiscal-entry.mts
       - run: node --import tsx scripts/qa-pk-ferramentas.mts
       - run: node --import tsx scripts/qa-consentimento.mts
+      - run: node --import tsx scripts/qa-seo-descoberta.mts
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: lojas-seo-descoberta-browser-${{ github.sha }}
+          path: artifacts/seo-descoberta-browser/
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 7
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:

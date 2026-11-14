@@ -9,6 +9,7 @@ import { salvarProdutoNoCatalogo } from "./catalogo-escrita";
 import { ErroCampo, lerDefinicoes, normalizarValor } from "./campos-personalizados";
 import { categoriaDePlanilhaValida } from "./planilha-produtos";
 import { contratoPadraoAninhado } from "./contratos-comerciais";
+import { mesclarConfiguracaoSeo } from "./seo-config";
 
 function dadosDoTenant(entrada: TenantAtualizacaoAdmin): Prisma.TenantUpdateInput {
   const { mercadoPago, tema, identidade, endereco, tabelaFrete, entregaLocal, ...resto } = entrada;
@@ -64,35 +65,37 @@ export async function criarTenant(entrada: TenantEntrada) {
 export async function atualizarTenant(slug: string, entrada: TenantAtualizacaoAdmin) {
   const { slug: _ignorado, ...resto } = entrada;
   void _ignorado;
-  // Tema é JSON: um PATCH parcial ({ tema: { layout } }) não pode apagar a cor.
-  const dados = dadosDoTenant(resto);
-  if (resto.tema) {
-    const atual = await prisma.tenant.findUniqueOrThrow({ where: { slug }, select: { tema: true } });
-    dados.tema = { ...((atual.tema as Record<string, unknown>) ?? {}), ...resto.tema };
-  }
-  if (resto.identidade) {
-    const atual = await prisma.tenant.findUniqueOrThrow({ where: { slug }, select: { identidade: true } });
-    dados.identidade = { ...((atual.identidade as Record<string, unknown>) ?? {}), ...resto.identidade };
-  }
-  // Definir o domínio principal tem que incluí-lo em `dominios`, que é a lista
-  // que o Caddy lê para emitir certificado (GET /api/admin/dominios). Na
-  // criação isso já acontecia; no PATCH não, então quem cadastrava o domínio
-  // depois — o caso normal, o domínio chega semanas depois da loja — ficava com
-  // o campo preenchido, nenhum erro à vista e o site sem responder pelo domínio.
-  if (resto.dominioPrincipal && resto.dominios === undefined) {
-    const apex = resto.dominioPrincipal.replace(/^www\./, "");
-    const atual = await prisma.tenant.findUniqueOrThrow({ where: { slug }, select: { dominios: true } });
-    dados.dominios = Array.from(new Set([...atual.dominios, apex, `www.${apex}`]));
-  }
-  const t = await prisma.tenant.update({ where: { slug }, data: dados });
-  // O envio de novas credenciais manuais invalida qualquer teste anterior.
-  // Isso também cobre alterações feitas pela rota legada do painel.
-  if (resto.mercadoPago) {
-    await prisma.credencialPagamento.updateMany({
-      where: { tenantId: t.id, provedor: "mercadopago" },
-      data: { status: "pendente", testadoEm: null, mensagem: "Credenciais alteradas; teste novamente." },
-    });
-  }
+  const t = await prisma.$transaction(async tx => {
+    // Serializa o merge dos JSONs: duas abas salvando campos diferentes não se apagam.
+    await tx.$queryRaw`SELECT id FROM "Tenant" WHERE slug=${slug} FOR UPDATE`;
+    const dados = dadosDoTenant(resto);
+    if (resto.tema) {
+      const atual = await tx.tenant.findUniqueOrThrow({ where: { slug }, select: { tema: true } });
+      dados.tema = { ...((atual.tema as Record<string, unknown>) ?? {}), ...resto.tema };
+    }
+    if (resto.identidade) {
+      const atual = await tx.tenant.findUniqueOrThrow({ where: { slug }, select: { identidade: true } });
+      dados.identidade = { ...((atual.identidade as Record<string, unknown>) ?? {}), ...resto.identidade };
+    }
+    if (resto.configuracaoSeo) {
+      const atual = await tx.tenant.findUniqueOrThrow({ where: { slug }, select: { configuracaoSeo: true } });
+      dados.configuracaoSeo = mesclarConfiguracaoSeo(atual.configuracaoSeo, resto.configuracaoSeo);
+    }
+    // O domínio principal também precisa fazer parte dos hosts que resolvem a loja.
+    if (resto.dominioPrincipal && resto.dominios === undefined) {
+      const apex = resto.dominioPrincipal.replace(/^www\./, "");
+      const atual = await tx.tenant.findUniqueOrThrow({ where: { slug }, select: { dominios: true } });
+      dados.dominios = Array.from(new Set([...atual.dominios, apex, `www.${apex}`]));
+    }
+    const atualizado = await tx.tenant.update({ where: { slug }, data: dados });
+    if (resto.mercadoPago) {
+      await tx.credencialPagamento.updateMany({
+        where: { tenantId: atualizado.id, provedor: "mercadopago" },
+        data: { status: "pendente", testadoEm: null, mensagem: "Credenciais alteradas; teste novamente." },
+      });
+    }
+    return atualizado;
+  });
   esquecerTenantEmCache(slug);
   return t;
 }
