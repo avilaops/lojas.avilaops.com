@@ -33,6 +33,13 @@ test("conversor fixado funciona no runtime de testes do aplicativo", async () =>
   assert.match(resultado.conteudo, /# Contrato do conversor/);
 });
 
+test("reescrita Next preserva o caminho original e ignora query de visitante", async () => {
+  const { caminhoTextoDaRequisicao } = await import("./publicacao-texto-rotas");
+  assert.equal(caminhoTextoDaRequisicao("/developers/privacidade/index.md", "/conta/index.md"), "/developers/privacidade/index.md");
+  assert.equal(caminhoTextoDaRequisicao("/api/publicacao-texto", "/produtos/item/index.mdx"), "/produtos/item/index.mdx");
+  assert.equal(caminhoTextoDaRequisicao("/api/publicacao-texto", null), "");
+});
+
 async function publicar(host: string, caminho: string, deps: Dependencias, adicionais: Record<string, string> = {}) {
   const pedido = new NextRequest(`https://${host}${caminho}`, { headers: { host, ...adicionais } });
   const roteada = proxy(pedido);

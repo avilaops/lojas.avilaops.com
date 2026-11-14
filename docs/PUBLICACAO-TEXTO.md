@@ -42,6 +42,10 @@ precisa estar publicável e no endereço oficial; a plataforma usa identidade
 própria. Separadores codificados, caminhos privados e segmentos ambíguos são
 recusados antes da leitura.
 
+Quando o Next mantém a URL original após reescrever, o manipulador deriva dela
+o caminho textual. O parâmetro interno serve de alternativa para a URL da API;
+uma query do visitante não pode substituir o caminho original da representação.
+
 O único destino HTTP de renderização é loopback, com porta validada do próprio
 processo Next.js. O host público validado acompanha a requisição interna como
 identidade de roteamento. Cookies, Authorization, parâmetros de visitante e

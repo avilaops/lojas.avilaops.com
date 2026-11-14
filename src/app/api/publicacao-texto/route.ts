@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { buscarTenantPorHost, noEnderecoOficial, urlDaLoja } from "@/lib/tenant";
 import { visivelNaBusca } from "@/lib/descoberta";
 import { responderTextoPublico, type ContextoPublicacao } from "@/lib/publicacao-texto";
+import { caminhoTextoDaRequisicao } from "@/lib/publicacao-texto-rotas";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -17,12 +18,9 @@ async function resolverHost(host: string): Promise<ContextoPublicacao | null> {
 export async function GET(request: NextRequest) {
   const porta = process.env.PORT ?? "3080";
   const origemInterna = /^\d+$/.test(porta) && Number(porta) > 0 && Number(porta) <= 65535 ? `http://127.0.0.1:${Number(porta)}` : "";
-  const pedido = {
+  return responderTextoPublico({
     host: request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? "",
-    caminhoTexto: request.nextUrl.searchParams.get("caminho") ?? "",
+    caminhoTexto: caminhoTextoDaRequisicao(request.nextUrl.pathname, request.nextUrl.searchParams.get("caminho")),
     ifNoneMatch: request.headers.get("if-none-match"),
-  };
-  const resposta = await responderTextoPublico(pedido, { origemInterna, resolverHost, buscarHtml: fetch });
-  if (process.env.CI === "true") console.info("Publicação CI • API", JSON.stringify({ host: pedido.host, caminho: pedido.caminhoTexto, url: request.nextUrl.href, status: resposta.status }));
-  return resposta;
+  }, { origemInterna, resolverHost, buscarHtml: fetch });
 }

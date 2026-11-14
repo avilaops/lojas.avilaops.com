@@ -34,7 +34,6 @@ export function proxy(request: NextRequest) {
     url.pathname = "/api/publicacao-texto";
     url.search = "";
     url.searchParams.set("caminho", pathname);
-    if (process.env.CI === "true") console.info("Publicação CI • reescrita", JSON.stringify({ host: hostPublico, caminho: pathname, url: request.nextUrl.href, destino: url.href }));
     const resposta = NextResponse.rewrite(url, { request: { headers: cabecalhos } });
     resposta.headers.set("cache-control", "no-store");
     return resposta;

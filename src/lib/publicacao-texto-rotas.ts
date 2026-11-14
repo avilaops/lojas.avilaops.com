@@ -33,6 +33,11 @@ export function lerCaminhoTexto(valor: string, site: SitePublico): { caminhoHtml
   return rotaPublicavel(caminhoHtml, site) ? { caminhoHtml, formato: partes[2].toLowerCase() as FormatoPublico } : null;
 }
 
+/** O Next pode manter a URL original no manipulador após a reescrita. */
+export function caminhoTextoDaRequisicao(pathname: string, parametro: string | null): string {
+  return /\/index\.(?:md|mdx)$/i.test(pathname) ? pathname : parametro ?? "";
+}
+
 export function caminhosPublicosDeTexto(caminho: string) {
   const base = caminho === "/" ? "/index" : `${encodeURI(caminho)}/index`;
   return { md: `${base}.md`, mdx: `${base}.mdx` };

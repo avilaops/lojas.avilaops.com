@@ -53,6 +53,7 @@ export async function verificarPublicacaoTextoHttp(servidor: string, tenantId: s
   const textoA = await obter("localhost", caminho);
   const etagA = textoA.headers.get("etag")!;
   assert.doesNotMatch(await conferir(textoA, "Texto público A", "markdown"), /Texto público B/);
+  await conferir(await obter("localhost", `${caminho}?caminho=%2Fconta%2Findex.md`), "Texto público A", "markdown");
   const textoB = await obter(hostB, caminho);
   assert.doesNotMatch(await conferir(textoB, "Texto público B", "markdown"), /Texto público A/);
   assert.notEqual(etagA, textoB.headers.get("etag"));
