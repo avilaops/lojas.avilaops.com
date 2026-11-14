@@ -26,9 +26,7 @@ const nextConfig: NextConfig = {
   transpilePackages: ["@avilaops/checkout", "@avilaops/gerador-3d"],
   // O Prisma tem binário nativo; carregado por nome em runtime, não empacotado
   // (sem isto o Turbopack gera um alias com hash que não existe no standalone).
-  // O conversor usa a entrada Node dos plugins CommonJS; o entry ESM de um
-  // deles não oferece o default que o pacote fixado consome.
-  serverExternalPackages: ["@prisma/client", "@avilaops/publicacao-texto", "onnxruntime-node", "sharp"],
+  serverExternalPackages: ["@prisma/client", "onnxruntime-node", "sharp"],
   images: {
     // As fotos de produto vivem no nosso storage; qualquer outro host é
     // recusado para uma loja não conseguir apontar imagem para fora.

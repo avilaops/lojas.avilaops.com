@@ -21,7 +21,7 @@
       "status": "em-revisao",
       "acceptanceCriteria": ["Rotas públicas da plataforma e das lojas têm caminhos /index.md e /index.mdx.", "Duas lojas com o mesmo slug não compartilham conteúdo ou ETag.", "Alterações e remoções são relidas; rotas privadas, noindex e autenticação não viram texto público.", "Leitura interna tem origem fixa, sem cookies ou credenciais do visitante e sem seguir redirects.", "Descoberta HTTP Link/llms; testes e build no GitHub CI; PR permanece draft sem deploy."],
       "environment": "worktree isolada e GitHub CI",
-      "evidence": "PR #243 draft, sem autorização de merge ou deploy. RED no CI 43557835826: 24 falhas esperadas de roteamento/descoberta antes da implementação; demais unitários e três partes PostgreSQL aprovados. Implementação do adaptador e descoberta preparada para GREEN no GitHub CI. Contrato docs/PUBLICACAO-TEXTO.md. Backend de produção indisponível nesta etapa; nenhuma validação live, mudança de infraestrutura ou popup de cookies autorizado."
+      "evidence": "PR #243 draft, sem autorização de merge ou deploy. RED no CI 43557835826: 24 falhas esperadas antes da implementação. CI completo 43567552734 aprovado em ae4b8f9: 1508 unitários, incluindo 31 de publicação, tipos, lint, três partes PostgreSQL, build, navegador e contratos. Pin final do conversor a6bcbcdaa1888158ac8664d5e15c8823bf8c6c9a em validação própria, com import direto e sem contorno SSR. Contrato docs/PUBLICACAO-TEXTO.md. Nenhuma validação de backend de produção, mudança de infraestrutura ou popup de cookies realizada."
     },
     {
       "id": "BRILHAX-ALT-CATEGORIA-20261114",

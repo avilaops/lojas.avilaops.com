@@ -4,13 +4,12 @@
 
 As versões textuais usam o HTML público atual do renderizador Next.js e
 `@avilaops/publicacao-texto`, fixado no commit
-`02fe995339970e77ba86505488451f8c67bdddc7` de `avilaops/motor-web`.
+`a6bcbcdaa1888158ac8664d5e15c8823bf8c6c9a` de `avilaops/motor-web`.
 Não existe uma segunda cópia editorial, migração de backend ou recaptura de
 catálogo para gerar cada produto.
 
-O pacote é externo ao bundle do servidor e carregado por import dinâmico no
-Node 22. Isso preserva a entrada Node dos plugins do conversor fixado, sem
-alterar sua implementação compartilhada.
+O pacote é consumido somente no servidor Node 22. O commit fixado usa o export
+nomeado do plugin GFM, compatível com o bundle ESM do Next.js e o runtime Node.
 
 Uma página `/` corresponde a `/index.md` e `/index.mdx`. Uma página
 `/produtos/exemplo` corresponde a `/produtos/exemplo/index.md` e
