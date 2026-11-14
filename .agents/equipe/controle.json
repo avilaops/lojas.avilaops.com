@@ -13,6 +13,23 @@
   ],
   "tasks": [
     {
+      "id": "CONTENT-SIGNALS-20261114",
+      "title": "Declarar Content Signals na plataforma e nas lojas",
+      "objective": "Expressar busca, entrada de IA e treinamento preservando bloqueios e a escolha do lojista.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-andamento",
+      "acceptanceCriteria": [
+        "As três categorias aparecem nos grupos pertinentes do robots.txt.",
+        "Treinamento acompanha a preferência salva; busca e entrada seguem a disponibilidade pública.",
+        "Plataforma permite as três categorias conforme confirmação do proprietário.",
+        "Rotas privadas, grupos de robôs, sitemaps e exclusão de hosts desconhecidos permanecem.",
+        "Contrato, HTTP do servidor compilado e publicação são conferidos no CI."
+      ],
+      "environment": "worktree isolado e GitHub CI; sem teste ou build local",
+      "evidence": "PR260 draft. RED43608552623 observado por ausência de robots-content-signals no job132488673461. Implementação e QA HTTP preparados para GREEN."
+    },
+    {
       "id": "SEO-DESCOBERTA-NATIVO-20261114",
       "title": "Criar módulo próprio de SEO e descoberta no Lojas",
       "objective": "Reunir metadados da home, prévia, curadoria do resumo para IA e configuração de descoberta no painel nativo.",
