@@ -164,6 +164,28 @@ try {
     await contexto.close();
     ultimaPagina = undefined;
   }
+  for (const escolha of ["essencial", "medicao", "publicidade", "aceito"]) {
+    const contexto = await browser.newContext();
+    const demandas: unknown[] = [];
+    await contexto.route("**/*", async (route) => {
+      const url = new URL(route.request().url());
+      if (url.origin !== origem) return route.abort();
+      if (url.pathname === "/api/pk/demandas") { demandas.push(route.request().postDataJSON()); return route.fulfill({ status: 204 }); }
+      if (url.pathname.startsWith("/api/vitrine/")) return route.fulfill({ status: 204 });
+      return route.continue();
+    });
+    await contexto.addInitScript(({ escolha }) => localStorage.setItem("loja_consentimento", JSON.stringify({ escolha, versao: 1 })), { escolha });
+    const pagina = await contexto.newPage();
+    await pagina.goto(`${origem}/produtos?q=PK998877`);
+    await pagina.waitForLoadState("networkidle");
+    const permitido = escolha === "medicao" || escolha === "aceito";
+    assert.deepEqual(demandas, permitido ? [{ consulta: "PK998877", consentido: true }] : [], `${escolha}: demanda PK depende de medição, sem exigir publicidade`);
+    await pagina.reload();
+    await pagina.waitForLoadState("networkidle");
+    assert.equal(demandas.length, permitido ? 1 : 0, "Escolha preserva deduplicação técnica de sessão");
+    resultados.push({ consentimentoDemandaPk: escolha, permitido, deduplicacao: "pass", destino: "fixture local interceptada" });
+    await contexto.close();
+  }
   await writeFile(`${pasta}/resultado.json`, JSON.stringify({ commit: process.env.GITHUB_SHA, ambiente: "github-ci-postgresql-isolado", resultados }, null, 2));
 } catch (erro) {
   await ultimaPagina?.screenshot({ path: `${pasta}/falha.png`, fullPage: true }).catch(() => undefined);

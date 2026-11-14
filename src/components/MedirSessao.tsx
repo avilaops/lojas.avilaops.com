@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useConsentimento } from "@/lib/consentimento";
+import { permissoesDaEscolha } from "@/lib/consentimento-config";
 
 /**
  * A medição da vitrine, do lado do navegador.
@@ -51,7 +52,7 @@ export default function MedirSessao() {
         caminho: pathname,
         busca,
         referrer: inicial ? document.referrer || null : null,
-        consentimento,
+        consentimento: consentimento === null ? null : permissoesDaEscolha(consentimento).medicao ? "aceito" : "essencial",
       }),
     }).catch(() => {});
   }, [pathname, parametros, consentimento]);

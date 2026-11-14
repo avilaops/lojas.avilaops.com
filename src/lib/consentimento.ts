@@ -1,23 +1,23 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { ATRIBUTO_RESPONDIDO, CHAVE, VERSAO } from "./consentimento-config";
+import { CHAVE, VERSAO, escolhaValida, type Escolha } from "./consentimento-config";
 export { ATRIBUTO_RESPONDIDO, CHAVE, VERSAO } from "./consentimento-config";
+export type { Escolha } from "./consentimento-config";
 
 /**
  * Consentimento de cookies (LGPD, art. 7º e 8º).
  *
  * Cookie de carrinho e de sessão são necessários para o serviço pedido pelo
  * comprador e não dependem de consentimento. Pixel de anúncio depende: sem
- * "aceito", Meta e TikTok nem são carregados e o Google roda em Consent Mode
- * com armazenamento negado.
+ * permissão de publicidade, Meta e TikTok não são carregados. A medição e as
+ * permissões de publicidade do Google são independentes e começam negadas.
  *
- * A escolha fica só no navegador de quem visitou — a loja não guarda perfil de
+ * A escolha fica só no navegador de quem visitou • a loja não guarda perfil de
  * visitante em lugar nenhum, o que também é o que mantém o custo por loja baixo.
  */
-export type Escolha = "aceito" | "essencial";
-
 const EVENTO = "loja:consentimento";
+export const EVENTO_PREFERENCIAS = "loja:abrir-preferencias-cookies";
 
 function lerDoNavegador(): Escolha | null {
   try {
@@ -25,7 +25,7 @@ function lerDoNavegador(): Escolha | null {
     if (!bruto) return null;
     const v = JSON.parse(bruto) as { escolha?: string; versao?: number };
     if (v.versao !== VERSAO) return null;
-    return v.escolha === "aceito" || v.escolha === "essencial" ? v.escolha : null;
+    return escolhaValida(v.escolha) ? v.escolha : null;
   } catch {
     // Navegador anônimo ou storage bloqueado: trata como "ainda não respondeu",
     // que é o estado mais restritivo — nenhum pixel de terceiro carrega.
@@ -35,9 +35,14 @@ function lerDoNavegador(): Escolha | null {
 
 /**
  * Fonte da verdade para o React. `undefined` é "ainda não sabemos" — é o que o
- * servidor devolve, e o que evita o banner piscar para quem já respondeu.
+ * servidor devolve antes de conhecer a escolha local.
  */
 let cache: Escolha | null | undefined;
+
+/** Também protege disparos com SDK já carregado e storage indisponível. */
+export function lerConsentimentoAtual(): Escolha | null {
+  return cache === undefined ? lerDoNavegador() : cache;
+}
 
 function snapshot(): Escolha | null {
   if (cache === undefined) cache = lerDoNavegador();
@@ -61,16 +66,9 @@ export function salvarConsentimento(escolha: Escolha) {
   window.dispatchEvent(new CustomEvent(EVENTO, { detail: escolha }));
 }
 
-/** Reabre a decisão (link "Cookies" no rodapé). */
+/** Abrir o painel não modifica a decisão nem o armazenamento. */
 export function reabrirConsentimento() {
-  cache = null;
-  document.documentElement.removeAttribute(ATRIBUTO_RESPONDIDO);
-  try {
-    window.localStorage.removeItem(CHAVE);
-  } catch {
-    /* idem */
-  }
-  window.dispatchEvent(new CustomEvent(EVENTO, { detail: null }));
+  window.dispatchEvent(new Event(EVENTO_PREFERENCIAS));
 }
 
 export function assinarConsentimento(aoMudar: () => void): () => void {

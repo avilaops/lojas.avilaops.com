@@ -13,6 +13,29 @@
   ],
   "tasks": [
     {
+      "id": "LOJAS-COOKIES-PREFERENCIAS-20261114",
+      "title": "Abrir preferências pelo rodapé e separar medição de publicidade",
+      "objective": "Manter a visita inicial sem popup e permitir escolhas independentes, sem apagar a decisão ao abrir o painel.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-revisao",
+      "acceptanceCriteria": ["HTML inicial e navegação fria sem painel automático; rodapé abre e fechar não salva.", "Quatro combinações de medição e publicidade, compatíveis com escolhas aceito e essencial versão 1.", "Google Advanced Mode e fallback do Gateway preservados; Meta e TikTok respeitam publicidade inclusive após revogação.", "Prova do build real em Chromium com SDKs fixture e rede isolada; testes e builds exclusivamente no GitHub CI.", "Draft PR para revisão independente antes de merge e publicação; sem novas bibliotecas, IDs ou alterações comerciais."],
+      "environment": "worktree isolada reconciliada com 8e0953d, schema e operação pública de marca preservados; GitHub CI; produção não alterada",
+      "evidence": "PR #255 draft • RED head 8b01f2a424734fd26d77de19d71564da41c93948, run 43584620738 reproduz quatro falhas: HTML automático, permissões parciais acopladas e disparos Meta/TikTok após revogação. Implementação inclui prova do build Chromium com matriz de quatro combinações, legados, abrir e fechar sem alterar, revogação, reativação e evento de carrinho fictício. Medição técnica PK acompanha audiência; contraprova do navegador preserva gramática, isolamento e dedupe. Run 43585372987 passou tipos, lint, 1559 unitários e build, mas a fixture falhou na leitura SSR por Host isolado; corrigida para o padrão dos helpers existentes, com status 200 e nome do tenant obrigatórios no SSR e navegador. CI GREEN e revisão independente devem ser conferidos no head final; nenhuma execução local de build ou teste.",
+      "review": "Revisão coordenadora pendente; não mesclar nem publicar automaticamente. Event Timing e longtasks da fixture não representam INP de campo."
+    },
+    {
+      "id": "LOJAS-MARCA-PUBLICA-20261114",
+      "title": "Recuperar favicons públicos originais da Vedashow",
+      "objective": "Restaurar somente os sete arquivos originais ausentes e diagnosticar o estado de publicação da Vinhos Imperial sem alterar cadastro ou cobrança.",
+      "assignee": "codex",
+      "priority": "normal",
+      "status": "em-revisao",
+      "acceptanceCriteria": ["Pacote original com bytes e SHA256 verificados.", "Workflow manual fixado ao serviço existente e limitado aos sete arquivos públicos, preservando objetos existentes.", "Credenciais somente em memória e sem logs de dados sensíveis.", "Testes somente no GitHub CI e revisão independente antes da operação.", "Conferência dos URLs públicos após restauração."],
+      "environment": "worktree isolada, GitHub CI e armazenamento existente de Lojas",
+      "evidence": "Auditoria pública confirmou cinco favicons ausentes na Vedashow. Pacote original de 08/09/2026 recuperado. docs/RECUPERACAO-MARCA-PUBLICA.md descreve origem, limites e operação manual. Brilhax permanece dependente de recuperação do logo original. Não houve restauração nesta etapa."
+    },
+    {
       "id": "SCHEMA-IMAGENS-PUBLICAS-20261114",
       "title": "Anunciar imagem OG própria e omitir logos de upload ausente",
       "objective": "Corrigir o JSON-LD diante das mídias históricas ausentes, preservando a identidade e o namespace de cada loja.",
@@ -83,10 +106,10 @@
       "objective": "Publicar versões textuais sob demanda com isolamento por loja, usando o renderizador existente e o conversor fixado do motor-web.",
       "assignee": "codex",
       "priority": "alta",
-      "status": "em-revisao",
+      "status": "concluida",
       "acceptanceCriteria": ["Rotas públicas da plataforma e das lojas têm caminhos /index.md e /index.mdx.", "Duas lojas com o mesmo slug não compartilham conteúdo ou ETag.", "Alterações e remoções são relidas; rotas privadas, noindex e autenticação não viram texto público.", "Leitura interna tem origem fixa, sem cookies ou credenciais do visitante e sem seguir redirects.", "Descoberta HTTP Link/llms; testes e build no GitHub CI; PR permanece draft sem deploy."],
-      "environment": "worktree isolada e GitHub CI",
-      "evidence": "PR #243 draft, sem autorização de merge ou deploy. RED inicial 43557835826 • 24 falhas esperadas. CI preliminar 43567552734 • 1508 unitários, tipos, lint, PostgreSQL, build, navegador e contratos aprovados. Pin final do conversor 5d8cf306ceded156ab2a46ce1cfd29608e67496f • import direto e configuração Next preservada. Revisão independente incorporada • canonical de outra origem recusado e teto de 4 MiB antes do parser; RED 43570731446 confirmou 3 falhas específicas antes da proteção. Diagnóstico HTTP 43571549616 • Next preservava URL original e descartava query interna, então o manipulador passou a priorizar o caminho original. Há 36 testes unitários de publicação e jornada HTTP do build real com lojas fictícias, mesmo slug, atualização, remoção e query de visitante ignorada. Checks finais e evidências acompanhados no PR, separados de publicação. Contrato docs/PUBLICACAO-TEXTO.md. Nenhuma validação de backend de produção, mudança de infraestrutura ou popup de cookies realizada."
+      "environment": "GitHub CI e leitura pública em produção",
+      "evidence": "PR #243 mesclado em 2228d3c913676dd43a9de170dcca67b3b81ecc2f após revisão independente; CI final 43571994787 aprovada, incluindo 1513 unitários e HTTP do build real. Main CI 43573490783 tentativa 2 concluída com sucesso. QA público verificou 16 textos em quatro hosts e amostra posterior de 24 em seis origens, sem alterações de catálogo. Pin 5d8cf306ceded156ab2a46ce1cfd29608e67496f preservado. RED inicial 43557835826; proteções canonical e limite de 4 MiB comprovadas no RED 43570731446. Diagnóstico de URL original 43571549616 e fix de extração aceitos pelo HTTP real. Contrato docs/PUBLICACAO-TEXTO.md. Evidência privada lojas-mdx-live-verification.json distingue releases e publicação."
     },
     {
       "id": "AGENT-READY-PUBLICO-20261114",

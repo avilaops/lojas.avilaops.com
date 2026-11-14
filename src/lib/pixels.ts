@@ -1,5 +1,5 @@
 import type { Tenant } from "@prisma/client";
-import { CHAVE, VERSAO } from "./consentimento-config";
+import { CHAVE, VERSAO, consentimentoGoogle } from "./consentimento-config";
 
 /**
  * Os pixels que a loja carrega. Fica fora do componente porque o layout (que é
@@ -89,7 +89,7 @@ export function scriptInicialDoGoogle(p: Pick<PixelsDaLoja, "gtmId">): string {
     "gtag('set','ads_data_redaction',true);" +
     // O Gateway pode carregar antes da hidratação. Só o aceite vigente já
     // registrado libera a coleta; storage indisponível mantém o default.
-    `(function(){try{var c=JSON.parse(localStorage.getItem(${JSON.stringify(CHAVE)})||"null");if(c&&c.versao===${VERSAO}&&c.escolha==="aceito")gtag('consent','update',{ad_storage:'granted',ad_user_data:'granted',ad_personalization:'granted',analytics_storage:'granted'});}catch(e){}})();` +
+    `(function(){try{var c=JSON.parse(localStorage.getItem(${JSON.stringify(CHAVE)})||"null"),p=${JSON.stringify(Object.fromEntries((["aceito", "essencial", "medicao", "publicidade"] as const).map((escolha) => [escolha, consentimentoGoogle(escolha)])))};if(c&&c.versao===${VERSAO}&&typeof c.escolha==='string'&&Object.prototype.hasOwnProperty.call(p,c.escolha))gtag('consent','update',p[c.escolha]);}catch(e){}})();` +
     `window.__lojaPixels={gtm:${p.gtmId ? "true" : "false"}};`
   );
 }

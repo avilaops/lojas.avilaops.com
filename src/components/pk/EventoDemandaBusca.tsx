@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useConsentimento } from "@/lib/consentimento";
+import { permissoesDaEscolha } from "@/lib/consentimento-config";
 import { normalizarDemandaPk } from "@/lib/pk-demanda-busca";
 
 const enviados = new Set<string>();
@@ -10,7 +11,7 @@ const enviados = new Set<string>();
 export function EventoDemandaBusca({ tenantSlug, consulta }: { tenantSlug: string; consulta: string }) {
   const consentimento = useConsentimento();
   useEffect(() => {
-    if (tenantSlug !== "pkvedacoes" || consentimento !== "aceito") return;
+    if (tenantSlug !== "pkvedacoes" || !permissoesDaEscolha(consentimento).medicao) return;
     const demanda = normalizarDemandaPk(consulta);
     if (!demanda) return;
     const chave = `pk:demanda:v1:${demanda.tipo}:${demanda.consulta}`;

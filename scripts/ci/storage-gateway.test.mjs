@@ -13,6 +13,7 @@ function ambiente() {
     async head(key) { acessos++; return dados.get(key) ?? null; },
     async put(key, body, options) {
       acessos++;
+      if (options.onlyIf?.etagDoesNotMatch === "*" && dados.has(key)) return null;
       const bytes = new Uint8Array(await new Response(body).arrayBuffer());
       const value = { body: bytes, size: bytes.length, httpEtag: '"etag"', httpMetadata: options.httpMetadata, customMetadata: options.customMetadata };
       dados.set(key, value); return value;
@@ -66,4 +67,30 @@ test("gateway recusa caminhos ambíguos e preserva releases já publicados", asy
   assert.equal((await worker.fetch(request(key, "PUT", publishToken, "original"), a.env)).status, 204);
   assert.equal((await worker.fetch(request(key, "PUT", publishToken, "outro"), a.env)).status, 409);
   assert.equal(await (await worker.fetch(request(key), a.env)).text(), "original");
+});
+
+test("upload condicional preserva bytes de outro escritor entre HEAD e PUT", async () => {
+  const a = ambiente();
+  const chave = "uploads/vedashow/favicon.svg";
+  assert.equal((await worker.fetch(request(chave, "HEAD"), a.env)).status, 404);
+  assert.equal((await worker.fetch(request(chave, "PUT", appToken, "criado-por-outro-escritor"), a.env)).status, 204);
+  const envio = request(chave, "PUT", appToken, "restauracao");
+  envio.headers.set("if-none-match", "*");
+  assert.equal((await worker.fetch(envio, a.env)).status, 409);
+  assert.equal(await (await worker.fetch(request(chave), a.env)).text(), "criado-por-outro-escritor");
+});
+
+test("upload condicional cria ausente, preservando autorização e PUT normal", async () => {
+  const a = ambiente();
+  const chave = "uploads/vedashow/favicon.svg";
+  const envio = request(chave, "PUT", appToken, "original");
+  envio.headers.set("if-none-match", "*");
+  assert.equal((await worker.fetch(envio, a.env)).status, 204);
+  const head = await worker.fetch(request(chave, "HEAD"), a.env);
+  assert.equal(head.headers.get("x-lojas-create-only"), "1");
+  const negado = request(chave, "PUT", publishToken, "outro");
+  negado.headers.set("if-none-match", "*");
+  assert.equal((await worker.fetch(negado, a.env)).status, 403);
+  assert.equal((await worker.fetch(request(chave, "PUT", appToken, "edicao-normal"), a.env)).status, 204);
+  assert.equal(await (await worker.fetch(request(chave), a.env)).text(), "edicao-normal");
 });
