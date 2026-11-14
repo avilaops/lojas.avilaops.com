@@ -13,6 +13,22 @@
   ],
   "tasks": [
     {
+      "id": "LOJAS-ANALYTICS-20261114",
+      "title": "Completar GTM, GA4 e Google Tag Gateway por loja",
+      "objective": "Atender autorização do proprietário após auditoria, com medição isolada por loja e plataforma e sem pageviews duplicados.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-andamento",
+      "acceptanceCriteria": [
+        "Reutilizar recursos existentes e criar somente os ausentes.",
+        "Confirmar GTM, GA4, Gateway e consentimento nos domínios acessíveis.",
+        "Preservar status, cobrança e dados comerciais; preparar Vinhos sem ativação.",
+        "Separar configuração publicada de domínio ou coleta ainda não verificáveis."
+      ],
+      "environment": "Lojas produção, GA4, GTM, Cloudflare e Render",
+      "evidence": "Auditoria em outputs/lojas-analytics-20261114; plano docs/superpowers/plans/2026-11-14-lojas-analytics.md. Quatro lojas ativas sem IDs próprios, Brilhax com page_view duplicado e PK com domínio inacessível. Proprietário autorizou configurar em 14/11/2026."
+    },
+    {
       "id": "BRILHAX-ALT-CATEGORIA-20261114",
       "title": "Descrever as capas de categoria para leitores e mecanismos de busca",
       "objective": "Corrigir o texto alternativo vazio da capa compartilhada, identificado na categoria Produtos para Moto da Brilhax pelo Bing Webmaster Tools.",

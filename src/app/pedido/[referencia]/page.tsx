@@ -13,6 +13,7 @@ import PixNaConta from "@/components/checkout/PixNaConta";
 import { TEXTO_SEM_PEDIDO, telaSemPedido } from "@/lib/pedido-a-confirmar";
 import { pixManualLigado, qrPngBase64 } from "@/lib/pix-manual";
 import { numeroDeContato } from "@/lib/canais-publicos";
+import { compraConfirmadaParaAnalytics } from "@/lib/pedido-compra-analytics";
 
 export const metadata: Metadata = { title: "Pedido", robots: { index: false } };
 
@@ -67,7 +68,7 @@ export default async function PedidoPage({ params }: { params: Promise<{ referen
 
   return (
     <div className="container-loja max-w-2xl py-10">
-      {pedido.status !== "AGUARDANDO_PAGAMENTO" && pedido.status !== "CANCELADO" && (
+      {compraConfirmadaParaAnalytics(pedido.status) && (
         <EventoCompra
           itens={pedido.itens.map((i) => ({ id: i.produtoId ?? i.nome, nome: i.nome, precoCentavos: i.precoUnitarioCentavos, quantidade: i.quantidade }))}
           totalCentavos={pedido.totalCentavos}
