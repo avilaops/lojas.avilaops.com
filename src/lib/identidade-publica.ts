@@ -91,15 +91,17 @@ export function identidadePublica(tenant: TenantIdentidade): IdentidadePublica {
 
 export function schemaDaIdentidadePublica(
   identidade: IdentidadePublica,
-  opcoes: { url: string; logo?: string | null; descricao?: string | null },
+  opcoes: { url: string; logo?: string | null; imagem?: string | null; descricao?: string | null },
 ) {
-  let imagem: string | undefined;
-  if (opcoes.logo?.trim()) {
+  function imagemPublica(valor?: string | null): string | undefined {
+    if (!valor?.trim()) return;
     try {
-      const url = new URL(opcoes.logo, opcoes.url);
-      if (["https:", "http:"].includes(url.protocol) && !url.username && !url.password) imagem = url.href;
+      const url = new URL(valor, opcoes.url);
+      if (["https:", "http:"].includes(url.protocol) && !url.username && !url.password) return url.href;
     } catch { /* Marca inválida não vira imagem fictícia. */ }
   }
+  const logo = imagemPublica(opcoes.logo);
+  const imagem = imagemPublica(opcoes.imagem);
   return {
     "@context": "https://schema.org",
     "@type": "Store",
@@ -108,7 +110,8 @@ export function schemaDaIdentidadePublica(
     ...(identidade.razaoSocial ? { legalName: identidade.razaoSocial } : {}),
     ...(identidade.cnpj ? { taxID: identidade.cnpj } : {}),
     url: opcoes.url,
-    ...(imagem ? { logo: imagem, image: imagem } : {}),
+    ...(logo ? { logo } : {}),
+    ...(imagem ? { image: imagem } : {}),
     ...(opcoes.descricao ? { description: opcoes.descricao } : {}),
     ...(identidade.telefone ? { telephone: identidade.telefone.uri } : {}),
     ...(identidade.email ? { email: identidade.email } : {}),

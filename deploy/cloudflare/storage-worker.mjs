@@ -1,5 +1,5 @@
 // Private, authenticated object access. No browser CORS, public listing, or origin fallback.
-const resposta = (status) => new Response(null, { status, headers: { "cache-control": "no-store" } });
+const resposta = (status, headers = {}) => new Response(null, { status, headers: { "cache-control": "no-store", ...headers } });
 function igual(a, b) {
   if (!/^[a-f0-9]{64}$/.test(b ?? "") || a.length !== b.length) return false;
   let diferenca = 0;
@@ -37,6 +37,7 @@ export default {
         const sha256 = request.headers.get("x-content-sha256");
         if (!/^[a-f0-9]{64}$/.test(sha256 ?? "")) return resposta(400);
         const imutavel = area === "releases" || area === "backups";
+        const criarAusente = area === "uploads" && request.headers.get("if-none-match") === "*";
         if (imutavel) {
           const anterior = await bucket.head(chave);
           if (anterior) return resposta(anterior.customMetadata?.sha256 === sha256 && anterior.size === tamanho ? 204 : 409);
@@ -44,16 +45,18 @@ export default {
         const gravado = await bucket.put(chave, request.body, {
           httpMetadata: { contentType: request.headers.get("content-type") ?? "application/octet-stream" },
           customMetadata: { sha256 },
-          ...(imutavel ? { onlyIf: { etagDoesNotMatch: "*" } } : {}),
+          ...(imutavel || criarAusente ? { onlyIf: { etagDoesNotMatch: "*" } } : {}),
         });
         return resposta(gravado ? 204 : 409);
       }
       const objeto = request.method === "GET" ? await bucket.get(chave) : await bucket.head(chave);
-      if (!objeto) return resposta(404);
+      const capacidade = area === "uploads" ? { "x-lojas-create-only": "1" } : {};
+      if (!objeto) return resposta(404, capacidade);
       if (request.method === "DELETE") { await bucket.delete(chave); return resposta(204); }
       return new Response(request.method === "HEAD" ? null : objeto.body, { headers: {
         "content-type": objeto.httpMetadata?.contentType ?? "application/octet-stream",
         "content-length": String(objeto.size), "cache-control": "no-store", "x-content-type-options": "nosniff",
+        ...capacidade,
         ...(objeto.httpEtag ? { etag: objeto.httpEtag } : {}),
         ...(objeto.customMetadata?.sha256 ? { "x-content-sha256": objeto.customMetadata.sha256 } : {}),
       } });

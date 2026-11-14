@@ -20,9 +20,37 @@
       "priority": "alta",
       "status": "em-revisao",
       "acceptanceCriteria": ["HTML inicial e navegação fria sem painel automático; rodapé abre e fechar não salva.", "Quatro combinações de medição e publicidade, compatíveis com escolhas aceito e essencial versão 1.", "Google Advanced Mode e fallback do Gateway preservados; Meta e TikTok respeitam publicidade inclusive após revogação.", "Prova do build real em Chromium com SDKs fixture e rede isolada; testes e builds exclusivamente no GitHub CI.", "Draft PR para revisão independente antes de merge e publicação; sem novas bibliotecas, IDs ou alterações comerciais."],
-      "environment": "worktree isolada baseada em efa5ff0 e GitHub CI; produção não alterada",
-      "evidence": "PR #255 draft • RED head 8b01f2a424734fd26d77de19d71564da41c93948, run 43584620738 reproduz HTML automático, permissões acopladas e disparos Meta/TikTok com SDK presente após revogação. Implementação inclui prova de navegador compilado com quatro combinações, legados, abrir e fechar sem alterar, revogação e eventos de carrinho de fixture. CI GREEN e revisão independente devem ser conferidos no head final do PR.",
+      "environment": "worktree isolada reconciliada com 8e0953d, schema e operação pública de marca preservados; GitHub CI; produção não alterada",
+      "evidence": "PR #255 draft • RED head 8b01f2a424734fd26d77de19d71564da41c93948, run 43584620738 reproduz quatro falhas: HTML automático, permissões parciais acopladas e disparos Meta/TikTok após revogação. Implementação inclui prova do build Chromium com matriz de quatro combinações, legados, abrir e fechar sem alterar, revogação, reativação e evento de carrinho fictício. Medição técnica PK acompanha audiência; contraprova do navegador preserva gramática, isolamento e dedupe. Run 43585372987 passou tipos, lint, 1559 unitários e build, mas a fixture falhou na leitura SSR por Host isolado; corrigida para o padrão dos helpers existentes, com status 200 e nome do tenant obrigatórios no SSR e navegador. CI GREEN e revisão independente devem ser conferidos no head final; nenhuma execução local de build ou teste.",
       "review": "Revisão coordenadora pendente; não mesclar nem publicar automaticamente. Event Timing e longtasks da fixture não representam INP de campo."
+    },
+    {
+      "id": "LOJAS-MARCA-PUBLICA-20261114",
+      "title": "Recuperar favicons públicos originais da Vedashow",
+      "objective": "Restaurar somente os sete arquivos originais ausentes e diagnosticar o estado de publicação da Vinhos Imperial sem alterar cadastro ou cobrança.",
+      "assignee": "codex",
+      "priority": "normal",
+      "status": "em-revisao",
+      "acceptanceCriteria": ["Pacote original com bytes e SHA256 verificados.", "Workflow manual fixado ao serviço existente e limitado aos sete arquivos públicos, preservando objetos existentes.", "Credenciais somente em memória e sem logs de dados sensíveis.", "Testes somente no GitHub CI e revisão independente antes da operação.", "Conferência dos URLs públicos após restauração."],
+      "environment": "worktree isolada, GitHub CI e armazenamento existente de Lojas",
+      "evidence": "Auditoria pública confirmou cinco favicons ausentes na Vedashow. Pacote original de 08/09/2026 recuperado. docs/RECUPERACAO-MARCA-PUBLICA.md descreve origem, limites e operação manual. Brilhax permanece dependente de recuperação do logo original. Não houve restauração nesta etapa."
+    },
+    {
+      "id": "SCHEMA-IMAGENS-PUBLICAS-20261114",
+      "title": "Anunciar imagem OG própria e omitir logos de upload ausente",
+      "objective": "Corrigir o JSON-LD diante das mídias históricas ausentes, preservando a identidade e o namespace de cada loja.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "Store.image aponta para a prévia OG existente da própria loja.",
+        "Logo gerenciado inexistente não é anunciado; arquivo existente do mesmo tenant é preservado.",
+        "Nenhuma consulta arbitrária, leitura privada ou imagem de outro tenant.",
+        "Objetos existentes e ausentes verificados somente no GitHub CI; produção conferida separadamente.",
+        "Mídias históricas ausentes e indexação desabilitada da Vinhos Imperial registradas sem alterar cadastros."
+      ],
+      "environment": "worktree isolada sobre main 335eeb0; GitHub CI; inspeção de produção somente leitura",
+      "evidence": "Release 3d28fa3 em 14/11/2026: logos Brilhax e Domi-Rio retornam 404 no host compartilhado e próprio, inclusive sem variante e sem cache; R2 não contém os respectivos namespaces. OG próprio de ambas responde 200 PNG 1200x630, sem X-Robots-Tag; inspeção visual confere identidade. Vinhos .com é canonical, .com.br redireciona; estado atual mantém noindex e robots Disallow:/. Contrato docs/IMAGENS-PUBLICAS-SCHEMA.md. Testes escritos antes da implementação; execução de CI ainda pendente. Sem builds/testes locais, escrita em DB, DNS, storage ou configuração global."
     },
     {
       "id": "LOJAS-SELO-PRODUTO-20261114",
