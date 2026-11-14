@@ -34,6 +34,8 @@ import { lerRegrasDevolucao, politicaDevolucaoSchema } from "@/lib/politicas";
 import { lojaTemPromocoes } from "@/lib/promocoes";
 import { contarPublicadas } from "@/lib/publicacoes-consulta";
 import { artigosDomiRio } from "@/lib/artigos-domirio";
+import DescobertaPublica from "@/components/DescobertaPublica";
+import { requisicaoTemSessaoPrivada } from "@/lib/descoberta-contexto";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -144,6 +146,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     // antes da hidratação. Vale só para os atributos deste elemento.
     return (
       <html lang="pt-BR" suppressHydrationWarning>
+        <head><link rel="ard" type="application/json" href="/.well-known/ard.json" /></head>
         <body>{children}</body>
       </html>
     );
@@ -189,11 +192,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const publico = tenantPublico(t);
   const pixels = pixelsDo(t, h.get("x-forwarded-host") ?? h.get("host") ?? undefined);
   const identidadeComercial = identidadePublica(t);
+  const descobertaPublica = visivelNaBusca(t)
+    && noEnderecoOficial(t, h.get("x-forwarded-host") ?? h.get("host"))
+    && !requisicaoTemSessaoPrivada(h.get("cookie"));
   const jsonLd = {
     ...schemaDaIdentidadePublica(identidadeComercial, {
       url: urlDaLoja(t),
       logo: t.logoUrl,
-      descricao: identidade.diferencial,
+      descricao: descricaoDaLoja(t, identidade.diferencial),
     }),
     hasMerchantReturnPolicy: politicaDevolucaoSchema(lerRegrasDevolucao(t.regrasDevolucao), `${urlDaLoja(t)}/politicas/devolucao`),
   };
@@ -220,14 +226,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {preCargasDaFonte(tema.fonte).map((href) => <link key={href} rel="preload" as="font" type={href.endsWith(".ttf") ? "font/ttf" : "font/woff2"} href={href} crossOrigin="anonymous" />)}
         <style dangerouslySetInnerHTML={{ __html: `${cssDoTema(tema, familiaHospedada(tema.fonte))}:root{--brand-support:${identidade.corApoio};--fonte-serif:${familiaSerifAtelie().replace(/</g, "")}}` }} />
         {contrato.atributoHtml && <script dangerouslySetInnerHTML={{ __html: `try{var m=localStorage.getItem(${JSON.stringify(`loja:${t.slug}:modo`).replace(/</g,"\\u003c")});if(m==='claro'||m==='escuro'){document.documentElement.dataset.modo=m;document.documentElement.dataset.ckTheme=m==='escuro'?'dark':'light'}}catch(e){}` }}/ >}
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSite) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSite).replace(/</g, "\\u003c") }} />
         {/* Descoberta do llms.txt pela especificação v2 (llmstxt.org, ago/2026):
             rel="describedby" aponta para o arquivo que descreve o site. É
             complemento; quem indexa continua sendo sitemap + páginas. */}
         <link rel="describedby" href="/llms.txt" />
+        {descobertaPublica && <link rel="ard" type="application/json" href="/.well-known/ard.json" />}
       </head>
       <body className="flex min-h-screen flex-col" data-layout={publicado.layout}>
+        <Suspense fallback={null}><DescobertaPublica habilitada={descobertaPublica} /></Suspense>
         <Pixels p={pixels} />
         {/* Medição da própria vitrine, no próprio domínio. `useSearchParams`
             obriga o Suspense: sem ele a página inteira cairia em renderização

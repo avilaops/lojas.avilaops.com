@@ -93,6 +93,13 @@ export function schemaDaIdentidadePublica(
   identidade: IdentidadePublica,
   opcoes: { url: string; logo?: string | null; descricao?: string | null },
 ) {
+  let imagem: string | undefined;
+  if (opcoes.logo?.trim()) {
+    try {
+      const url = new URL(opcoes.logo, opcoes.url);
+      if (["https:", "http:"].includes(url.protocol) && !url.username && !url.password) imagem = url.href;
+    } catch { /* Marca inválida não vira imagem fictícia. */ }
+  }
   return {
     "@context": "https://schema.org",
     "@type": "Store",
@@ -101,7 +108,7 @@ export function schemaDaIdentidadePublica(
     ...(identidade.razaoSocial ? { legalName: identidade.razaoSocial } : {}),
     ...(identidade.cnpj ? { taxID: identidade.cnpj } : {}),
     url: opcoes.url,
-    ...(opcoes.logo ? { logo: opcoes.logo } : {}),
+    ...(imagem ? { logo: imagem, image: imagem } : {}),
     ...(opcoes.descricao ? { description: opcoes.descricao } : {}),
     ...(identidade.telefone ? { telephone: identidade.telefone.uri } : {}),
     ...(identidade.email ? { email: identidade.email } : {}),

@@ -36,11 +36,11 @@ Pequenas empresas e operações comerciais que precisam vender online sem montar
 ## Planos
 
 ${PLANOS.map((p) => `- ${p.nome}, ${mensalidade(p.preco)}${p.destaque ? " (o mais escolhido)" : ""}: ${p.itens.join(", ").toLowerCase()}.`).join("\n")}
-- Setup único: R$ 497. 7 dias de teste, sem cartão. Mensalidade começa quando o lojista ativa a cobrança. Sem comissão sobre venda.
+- [Planos e condições atuais](https://${baseDomain}/#planos): consulte os valores e condições publicados pela plataforma.
 
 ## Pagamentos
 
-Pagamento pelo Mercado Pago (Pix, cartão e boleto) na conta da própria empresa: o dinheiro não passa pela Avila Ops e não há comissão sobre venda.
+Pagamento pelo Mercado Pago (Pix, cartão e boleto) na conta da própria empresa: o dinheiro não passa pela Avila Ops. Consulte as condições comerciais em [Planos e condições](https://${baseDomain}/#planos).
 
 ## Tecnologia e operação
 

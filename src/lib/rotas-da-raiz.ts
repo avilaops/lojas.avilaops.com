@@ -24,7 +24,7 @@ export const PREFIXOS_DA_RAIZ = ["/api/", "/v1/", "/ml/", "/melhor-envio/", "/me
 
 /** `true` quando o caminho, no domínio-base, não deve ser reescrito para a plataforma. */
 export function ficaNaRaiz(pathname: string): boolean {
-  return pathname.startsWith("/plataforma") || PREFIXOS_DA_RAIZ.some((p) => pathname.startsWith(p));
+  return pathname === "/ai-catalog.json" || pathname.startsWith("/plataforma") || PREFIXOS_DA_RAIZ.some((p) => pathname.startsWith(p));
 }
 
 /**
