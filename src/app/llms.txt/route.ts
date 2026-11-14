@@ -7,6 +7,7 @@ import { descricaoDaLoja } from "@/lib/textos-loja";
 import { avaliarPedidoMinimo } from "@avilaops/checkout";
 import { identidadePublica } from "@/lib/identidade-publica";
 import { visivelNaBusca } from "@/lib/descoberta";
+import { adicionarDescobertaTexto } from "@/lib/publicacao-texto-rotas";
 
 /**
  * llms.txt da LOJA — o mapa que assistentes de IA (ChatGPT, Perplexity, Gemini)
@@ -28,7 +29,7 @@ export async function GET() {
     // parece conter links" — o que vale para o leitor humano não vale para o
     // agente, que procura `[texto](url)`.
     return new Response(
-      `# Lojas Avila Ops
+      adicionarDescobertaTexto(`# Lojas Avila Ops
 
 > Plataforma brasileira para criar loja virtual com vitrine, carrinho, Pix, frete por CEP e domínio próprio. O lojista cria e administra sozinho, pelo navegador.
 
@@ -53,7 +54,7 @@ export async function GET() {
 
 Cada loja criada tem o próprio \`llms.txt\`, com o catálogo, os preços e as
 políticas dela. Este arquivo descreve a plataforma, não uma loja.
-`,
+`, `https://${baseDomain}`, "plataforma"),
       { headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "public, max-age=900" } },
     );
   }
@@ -140,7 +141,7 @@ políticas dela. Este arquivo descreve a plataforma, não uma loja.
     vende ? `- [Feed do Google Merchant](${base}/feed/merchant.xml)` : "",
   ];
 
-  return new Response(linhas.filter((l) => l !== "").join("\n") + "\n", {
+  return new Response(adicionarDescobertaTexto(linhas.filter((l) => l !== "").join("\n") + "\n", base, "loja"), {
     headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "public, max-age=900" },
   });
 }

@@ -8,6 +8,7 @@ import { prisma } from "../src/lib/db.ts";
 import { emitirToken, gerarHashSenha } from "../src/lib/sessao.ts";
 import { salvarProdutoNoCatalogo } from "../src/lib/catalogo-escrita.ts";
 import { registrarCheckCotacao } from "../tests/helpers/mlops-evidence.ts";
+import { verificarPublicacaoTextoHttp } from "../tests/helpers/publicacao-texto-http.ts";
 
 const database = new URL(process.env.DATABASE_URL ?? "http://invalid");
 assert.equal(process.env.CI, "true", "Jornada executada exclusivamente na CI.");
@@ -24,14 +25,14 @@ let serverOutput = "";
 const diagnostics: Array<{ type: string; detail: string }> = [];
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-async function iniciar() {
+async function iniciar(dominioBase = "127.0.0.1") {
   const probe = createServer();
   await new Promise<void>((resolve, reject) => { probe.once("error", reject); probe.listen(3097, "127.0.0.1", resolve); });
   await new Promise<void>((resolve, reject) => probe.close(error => error ? reject(error) : resolve()));
   server = spawn(process.execPath, [".next/standalone/server.js"], {
     detached: true, stdio: ["ignore", "pipe", "pipe"],
     env: { PATH: process.env.PATH, HOME: process.env.HOME, CI: "true", NODE_ENV: "production", DATABASE_URL: process.env.DATABASE_URL,
-      LOJAS_SECRET: process.env.LOJAS_SECRET, LOJAS_BASE_DOMAIN: "127.0.0.1", NEXT_TELEMETRY_DISABLED: "1",
+      LOJAS_SECRET: process.env.LOJAS_SECRET, LOJAS_BASE_DOMAIN: dominioBase, NEXT_TELEMETRY_DISABLED: "1",
       HOSTNAME: "0.0.0.0", PORT: "3097", ROTINAS_AGENDADOR: "0" },
   });
   const collect = (chunk: Buffer) => { serverOutput = `${serverOutput}${chunk.toString("utf8")}`.slice(-24_000); };
@@ -95,7 +96,11 @@ try {
   const produto = await salvarProdutoNoCatalogo(tenant.id, null, { nome: "Peça QA", slug: `peca-${randomUUID()}`, sku: `P-${randomUUID()}`, precoCentavos: 1500, estoque: 20, imagens: [] });
   const variante = await prisma.variante.findFirstOrThrow({ where: { tenantId: tenant.id, produtoId: produto.id } });
   stage = "iniciar";
-  await iniciar();
+  await iniciar("lojas.avilaops.com");
+  stage = "publicacao-texto-http";
+  await verificarPublicacaoTextoHttp(painel, tenant.id, directory);
+  // A publicação usa o host canônico do HTML; a jornada existente usa loopback.
+  await parar(); await iniciar();
   const merchant = await browser.newContext();
   const buyer = await browser.newContext();
   for (const context of [merchant, buyer]) {

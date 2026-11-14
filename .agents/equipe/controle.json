@@ -13,6 +13,17 @@
   ],
   "tasks": [
     {
+      "id": "PUBLICACAO-TEXTO-20261114",
+      "title": "Derivar Markdown e MDX das páginas públicas atuais",
+      "objective": "Publicar versões textuais sob demanda com isolamento por loja, usando o renderizador existente e o conversor fixado do motor-web.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-revisao",
+      "acceptanceCriteria": ["Rotas públicas da plataforma e das lojas têm caminhos /index.md e /index.mdx.", "Duas lojas com o mesmo slug não compartilham conteúdo ou ETag.", "Alterações e remoções são relidas; rotas privadas, noindex e autenticação não viram texto público.", "Leitura interna tem origem fixa, sem cookies ou credenciais do visitante e sem seguir redirects.", "Descoberta HTTP Link/llms; testes e build no GitHub CI; PR permanece draft sem deploy."],
+      "environment": "worktree isolada e GitHub CI",
+      "evidence": "PR #243 draft, sem autorização de merge ou deploy. RED inicial 43557835826 • 24 falhas esperadas. CI preliminar 43567552734 • 1508 unitários, tipos, lint, PostgreSQL, build, navegador e contratos aprovados. Pin final do conversor 5d8cf306ceded156ab2a46ce1cfd29608e67496f • import direto e configuração Next preservada. Revisão independente incorporada • canonical de outra origem recusado e teto de 4 MiB antes do parser; RED 43570731446 confirmou 3 falhas específicas antes da proteção. Diagnóstico HTTP 43571549616 • Next preservava URL original e descartava query interna, então o manipulador passou a priorizar o caminho original. Há 36 testes unitários de publicação e jornada HTTP do build real com lojas fictícias, mesmo slug, atualização, remoção e query de visitante ignorada. Checks finais e evidências acompanhados no PR, separados de publicação. Contrato docs/PUBLICACAO-TEXTO.md. Nenhuma validação de backend de produção, mudança de infraestrutura ou popup de cookies realizada."
+    },
+    {
       "id": "BRILHAX-ALT-CATEGORIA-20261114",
       "title": "Descrever as capas de categoria para leitores e mecanismos de busca",
       "objective": "Corrigir o texto alternativo vazio da capa compartilhada, identificado na categoria Produtos para Moto da Brilhax pelo Bing Webmaster Tools.",

@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { destinoLegado } from "@/lib/redirects-legados";
 import { ehRetornoDeAutorizacao, ficaNaRaiz } from "@/lib/rotas-da-raiz";
+import { lerCaminhoTexto, linksDeTexto, type SitePublico } from "@/lib/publicacao-texto-rotas";
 
 /**
  * Um servidor, dois "sites":
@@ -24,6 +25,19 @@ export function proxy(request: NextRequest) {
   const cabecalhos = new Headers(request.headers);
   cabecalhos.delete("x-plataforma");
   cabecalhos.set("host", hostPublico);
+  const site: SitePublico = host === BASE ? "plataforma" : "loja";
+  if (/\/index\.(?:md|mdx)$/i.test(pathname)) {
+    if (!lerCaminhoTexto(pathname, site)) {
+      return new NextResponse("Conteúdo público não disponível.\n", { status: 404, headers: { "cache-control": "no-store", "x-robots-tag": "noindex" } });
+    }
+    const url = request.nextUrl.clone();
+    url.pathname = "/api/publicacao-texto";
+    url.search = "";
+    url.searchParams.set("caminho", pathname);
+    const resposta = NextResponse.rewrite(url, { request: { headers: cabecalhos } });
+    resposta.headers.set("cache-control", "no-store");
+    return resposta;
+  }
   // Next can proxy a rewritten request through /plataforma a second time.
   // Recreate the marker from this host/path, never from the incoming header.
   if (host === BASE && (pathname === "/plataforma" || pathname.startsWith("/plataforma/"))) {
@@ -39,7 +53,7 @@ export function proxy(request: NextRequest) {
     url.pathname = `/plataforma${pathname === "/" ? "" : pathname}`;
     // Cabeçalho de REQUISIÇÃO: é o que o layout raiz lê com headers().
     cabecalhos.set("x-plataforma", "1");
-    return NextResponse.rewrite(url, { request: { headers: cabecalhos } });
+    return comDescobertaTexto(NextResponse.rewrite(url, { request: { headers: cabecalhos } }), request, site);
   }
 
   // Loja tentando abrir rotas da plataforma pelo próprio domínio: não existe.
@@ -113,6 +127,12 @@ export function proxy(request: NextRequest) {
   if (host !== BASE && request.method === "GET" && paginaDeVitrine(pathname) && !temCookieNosso(request)) {
     resposta.headers.set("cache-control", "public, s-maxage=60, stale-while-revalidate=600");
   }
+  return comDescobertaTexto(resposta, request, site);
+}
+
+function comDescobertaTexto(resposta: NextResponse, request: NextRequest, site: SitePublico) {
+  const link = request.method === "GET" ? linksDeTexto(request.nextUrl.pathname, site) : null;
+  if (link) resposta.headers.append("link", link);
   return resposta;
 }
 
