@@ -12,12 +12,12 @@ import BandeirasPagamento from "@/components/BandeirasPagamento";
 import { meiosAceitos } from "@/lib/recursos";
 
 /**
- * Rodapé. O "Loja por Avila Ops" não é opcional nem negociável por desconto
+ * Rodapé. O crédito "Avila Ops" não é opcional nem negociável por desconto
  * (a C2TI dá R$ 20 de desconto para manter o logo; aqui é parte do produto):
  * cada loja no ar é um anúncio da plataforma.
  */
 export default function Footer({ tenant, categorias, temBlog = false }: { tenant: Tenant; categorias: Array<{ slug: string; nome: string }>; temBlog?: boolean }) {
-  const avila = process.env.AVILAOPS_URL ?? "https://avilaops.com";
+  const avila = new URL("/lojas/", process.env.AVILAOPS_URL ?? "https://avilaops.com").href;
   // Loja só online não expõe onde fica o estoque no bloco de visita: endereço
   // é opt-in ali. Na linha de identificação abaixo ele aparece sempre, porque
   // o Decreto 7.962/2013 exige endereço físico de quem vende pela internet.
@@ -129,7 +129,7 @@ export default function Footer({ tenant, categorias, temBlog = false }: { tenant
           <a href={avila} target="_blank" rel="noopener" className="inline-flex items-center gap-1.5 font-semibold hover:text-foreground">
             {/* Selo da plataforma: sempre monocromático, na tinta do rodapé da loja. */}
             <SimboloLojas mono className="h-4 w-4" />
-            Loja por Avila Ops
+            E-Commerce • loja virtual por Avila Ops
           </a>
         </div>
       </div>
