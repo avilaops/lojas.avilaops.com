@@ -18,10 +18,10 @@
       "objective": "Publicar versões textuais sob demanda com isolamento por loja, usando o renderizador existente e o conversor fixado do motor-web.",
       "assignee": "codex",
       "priority": "alta",
-      "status": "em-andamento",
+      "status": "em-revisao",
       "acceptanceCriteria": ["Rotas públicas da plataforma e das lojas têm caminhos /index.md e /index.mdx.", "Duas lojas com o mesmo slug não compartilham conteúdo ou ETag.", "Alterações e remoções são relidas; rotas privadas, noindex e autenticação não viram texto público.", "Leitura interna tem origem fixa, sem cookies ou credenciais do visitante e sem seguir redirects.", "Descoberta HTTP Link/llms; testes e build no GitHub CI; PR permanece draft sem deploy."],
       "environment": "worktree isolada e GitHub CI",
-      "evidence": "Plano aprovado de geração automática, tarefa 4 restrita a Lojas. Contrato docs/PUBLICACAO-TEXTO.md; testes de comportamento preparados antes da implementação. Backend de produção indisponível nesta etapa; nenhuma validação live, mudança de infraestrutura ou popup de cookies autorizada."
+      "evidence": "PR #243 draft, sem autorização de merge ou deploy. RED no CI 43557835826: 24 falhas esperadas de roteamento/descoberta antes da implementação; demais unitários e três partes PostgreSQL aprovados. Implementação do adaptador e descoberta preparada para GREEN no GitHub CI. Contrato docs/PUBLICACAO-TEXTO.md. Backend de produção indisponível nesta etapa; nenhuma validação live, mudança de infraestrutura ou popup de cookies autorizado."
     },
       {
         "id": "FISCAL-ENTRADA-20261113",

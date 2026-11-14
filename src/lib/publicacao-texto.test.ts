@@ -162,3 +162,56 @@ test("HTML público anuncia MD, MDX e llms sem expor caminhos operacionais", () 
   const privada = proxy(new NextRequest("https://a.lojas.avilaops.com/conta", { headers: { host: "a.lojas.avilaops.com" } }));
   assert.equal(privada.headers.get("link"), null);
 });
+
+test("resolvedor de outra loja ou loja não publicável não chega ao renderizador", async () => {
+  for (const contexto of [lojas["b.lojas.avilaops.com"], { ...lojas["a.lojas.avilaops.com"], publicavel: false }]) {
+    let chamadas = 0;
+    const deps = dependencias(async () => { chamadas++; return new Response(pagina("Não publicar")); });
+    deps.resolverHost = async () => contexto;
+    const resposta = await publicar("a.lojas.avilaops.com", "/index.md", deps);
+    assert.equal(resposta.status, 404);
+    assert.equal(chamadas, 0);
+  }
+});
+
+test("origem externa configurada por engano é recusada antes do fetch", async () => {
+  let chamadas = 0;
+  const deps = dependencias(async () => { chamadas++; return new Response(pagina("Não publicar")); });
+  deps.origemInterna = "http://169.254.169.254/latest/meta-data";
+  const resposta = await publicar("a.lojas.avilaops.com", "/index.md", deps);
+  assert.equal(resposta.status, 503);
+  assert.equal(chamadas, 0);
+});
+
+test("resposta não HTML não vira uma exportação aparentemente válida", async () => {
+  const resposta = await publicar("a.lojas.avilaops.com", "/index.md", dependencias(async () => new Response('{"privado":true}', { headers: { "content-type": "application/json" } })));
+  assert.equal(resposta.status, 404);
+  assert.doesNotMatch(await resposta.text(), /privado/);
+});
+
+test("as famílias públicas de lojas e plataforma chegam à versão textual", async () => {
+  const loja = ["/", "/produtos", "/produtos/item", "/categoria/pecas", "/sobre", "/contato", "/politicas/privacidade", "/promocoes", "/blog", "/blog/artigo", "/guias", "/guias/medidas", "/aplicacoes", "/aplicacoes/hidraulica", "/como-escolher", "/cotacao", "/cotacao-lote", "/configurador"];
+  const plataforma = ["/", "/ajuda", "/marca", "/termos-comerciais", "/developers", "/developers/privacidade", "/blog", "/blog/artigo"];
+  const deps = dependencias(async () => new Response(pagina("Página pública"), { headers: { "content-type": "text/html" } }));
+  for (const [host, caminhos] of [["a.lojas.avilaops.com", loja], ["lojas.avilaops.com", plataforma]] as const) {
+    for (const caminho of caminhos) {
+      const texto = caminho === "/" ? "/index.md" : `${caminho}/index.md`;
+      const resposta = await publicar(host, texto, deps);
+      assert.equal(resposta.status, 200, `${host}${texto}`);
+      assert.match(await resposta.text(), /# Página pública/);
+    }
+  }
+});
+
+test("llms acrescenta versões das páginas existentes e exclui links externos ou privados", async () => {
+  const { adicionarDescobertaTexto } = await import("./publicacao-texto-rotas");
+  const indice = "# Loja\n- [Produto](https://a.lojas.avilaops.com/produtos/item)\n- [Repetido](https://a.lojas.avilaops.com/produtos/item)\n- [Conta](https://a.lojas.avilaops.com/conta)\n- [Outra loja](https://b.lojas.avilaops.com/produtos/item)\n";
+  const resultado = adicionarDescobertaTexto(indice, "https://a.lojas.avilaops.com", "loja");
+  const descoberta = resultado.split("## Versões em Markdown e MDX")[1];
+  assert.ok(descoberta);
+  assert.match(descoberta, /https:\/\/a\.lojas\.avilaops\.com\/produtos\/item\/index\.md\)/);
+  assert.match(descoberta, /https:\/\/a\.lojas\.avilaops\.com\/produtos\/item\/index\.mdx\)/);
+  assert.equal(descoberta.split("/index.md)").length - 1, 1);
+  assert.doesNotMatch(descoberta, /\/conta|b\.lojas/);
+  assert.match(descoberta, /• Markdown/);
+});
