@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { caminhoDoGatewayGoogle, pixelsDaPlataforma, temRastreio } from "./pixels";
+import { runInNewContext } from "node:vm";
+import { caminhoDoGatewayGoogle, pixelsDaPlataforma, scriptDoGtm, temRastreio } from "./pixels";
 
 test("site da plataforma só carrega tag com um id de GTM bem formado", () => {
   assert.equal(pixelsDaPlataforma({}).gtmId, null);
@@ -24,9 +25,29 @@ test("Gateway da plataforma é opt-in e só atende aos hostnames da sua zona de 
   for (const host of ["lojas.avilaops.com", "demo.lojas.avilaops.com", "bereta-rodas.lojas.avilaops.com"]) {
     assert.equal(caminhoDoGatewayGoogle(host, env), "/avmetrics/", host);
   }
+  assert.equal(caminhoDoGatewayGoogle("DEMO.LOJAS.AVILAOPS.COM:443", env), "/avmetrics/");
   for (const host of ["avilaops.com", "brilhax.com", "lojas.avilaops.com.example.org", "fake-lojas.avilaops.com", ""]) {
     assert.equal(caminhoDoGatewayGoogle(host, env), null, host);
   }
+});
+
+test("loader do GTM usa o contêiner próprio tanto no Gateway quanto no carregamento direto", () => {
+  for (const gateway of [undefined, "/avmetrics/"]) {
+    const scripts: { src?: string; async?: boolean }[] = [];
+    const window = { dataLayer: [] as { event: string }[] };
+    const document = {
+      getElementsByTagName: () => [{ parentNode: { insertBefore: (script: { src: string }) => scripts.push(script) } }],
+      createElement: () => ({}),
+    };
+    runInNewContext(scriptDoGtm({ gtmId: "GTM-N7LPC7T9", googleTagGatewayPath: gateway }), { window, document });
+    assert.equal(scripts.length, 1);
+    assert.equal(scripts[0].async, true);
+    assert.equal(scripts[0].src, `${gateway ?? "https://www.googletagmanager.com/gtm.js"}?id=GTM-N7LPC7T9`);
+    assert.equal(window.dataLayer[0].event, "gtm.js");
+  }
+  const plataforma = pixelsDaPlataforma({ PLATAFORMA_GTM_ID: "GTM-PFBBR3GG", GOOGLE_TAG_GATEWAY_LOJAS_PATH: "/avmetrics" });
+  assert.equal(plataforma.googleTagGatewayPath, "/avmetrics/");
+  assert.match(scriptDoGtm(plataforma), /GTM-PFBBR3GG/);
 });
 
 test("Gateway não aceita origem externa, query ou caminho sobreposto ao aplicativo", () => {

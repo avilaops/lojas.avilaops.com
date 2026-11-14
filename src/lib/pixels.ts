@@ -23,8 +23,12 @@ export function pixelsDo(t: Tenant, hostname?: string): PixelsDaLoja {
 }
 
 /** Configuração operacional da zona da plataforma; domínios de clientes são independentes. */
-export function caminhoDoGatewayGoogle(_hostname: string, _env: Record<string, string | undefined> = process.env): string | null {
-  return null;
+export function caminhoDoGatewayGoogle(hostname: string, env: Record<string, string | undefined> = process.env): string | null {
+  const caminho = (env.GOOGLE_TAG_GATEWAY_LOJAS_PATH ?? "").trim().replace(/\/+$/, "");
+  if (!/^\/[a-zA-Z0-9]{1,98}$/.test(caminho)) return null;
+  const host = hostname.trim().toLowerCase().replace(/:\d+$/, "");
+  const loja = host === "lojas.avilaops.com" || /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.lojas\.avilaops\.com$/.test(host);
+  return loja ? `${caminho}/` : null;
 }
 
 /**
@@ -38,6 +42,7 @@ export function caminhoDoGatewayGoogle(_hostname: string, _env: Record<string, s
  */
 export function pixelsDaPlataforma(env: Record<string, string | undefined> = process.env): PixelsDaLoja {
   const gtm = (env.PLATAFORMA_GTM_ID ?? "").trim();
+  const gateway = caminhoDoGatewayGoogle("lojas.avilaops.com", env);
   return {
     gtmId: /^GTM-[A-Z0-9]+$/.test(gtm) ? gtm : null,
     metaPixelId: null,
@@ -45,7 +50,16 @@ export function pixelsDaPlataforma(env: Record<string, string | undefined> = pro
     googleAdsId: null,
     tiktokPixelId: null,
     googleMerchantId: null,
+    ...(gateway ? { googleTagGatewayPath: gateway } : {}),
   };
+}
+
+/** O ID explícito evita carregar o contêiner geral configurado na zona. */
+export function scriptDoGtm(p: Pick<PixelsDaLoja, "gtmId" | "googleTagGatewayPath">): string {
+  if (!p.gtmId) return "";
+  const origem = p.googleTagGatewayPath ?? "https://www.googletagmanager.com/gtm.js";
+  const src = `${origem}?id=${encodeURIComponent(p.gtmId)}`;
+  return `(function(w,d,s,l,u){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=u+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer',${JSON.stringify(src)});`;
 }
 
 /** Sem nenhum id não há cookie de terceiro: a loja não precisa pedir consentimento. */
