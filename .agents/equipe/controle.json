@@ -51,6 +51,30 @@
       "evidence": "PR #243 draft, sem autorização de merge ou deploy. RED inicial 43557835826 • 24 falhas esperadas. CI preliminar 43567552734 • 1508 unitários, tipos, lint, PostgreSQL, build, navegador e contratos aprovados. Pin final do conversor 5d8cf306ceded156ab2a46ce1cfd29608e67496f • import direto e configuração Next preservada. Revisão independente incorporada • canonical de outra origem recusado e teto de 4 MiB antes do parser; RED 43570731446 confirmou 3 falhas específicas antes da proteção. Diagnóstico HTTP 43571549616 • Next preservava URL original e descartava query interna, então o manipulador passou a priorizar o caminho original. Há 36 testes unitários de publicação e jornada HTTP do build real com lojas fictícias, mesmo slug, atualização, remoção e query de visitante ignorada. Checks finais e evidências acompanhados no PR, separados de publicação. Contrato docs/PUBLICACAO-TEXTO.md. Nenhuma validação de backend de produção, mudança de infraestrutura ou popup de cookies realizada."
     },
     {
+      "id": "AGENT-READY-PUBLICO-20261114",
+      "title": "Publicar descoberta de leitura por Host no E-Commerce",
+      "objective": "Oferecer ARD, catálogo compatível e WebMCP público com identidade canônica e isolamento de tenant, preservando áreas privadas e a stack TypeScript/Next.js.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "Manifestos dinâmicos distinguem plataforma e loja usando tenantAtual, visivelNaBusca, urlDaLoja e a descrição pública existente.",
+        "Hosts desconhecidos, lojas não publicadas, aliases noindex e combinação de Host/tenant divergente não expõem catálogo.",
+        "Cache não compartilha dados entre tenants; todos os recursos anunciados existem e têm MIME correto.",
+        "Ferramentas de navegador são somente leitura em contexto público explícito, sem autenticação, painel, API, checkout, carrinho, query privada ou sessão.",
+        "Store.image usa a marca real, sem preços, avaliações ou endereços inventados; JSON-LD não permite fechar script.",
+        "Testes, tipos, lint, build e verificação com duas lojas/plataforma/navegador executados somente no GitHub CI."
+      ],
+      "environment": "GitHub CI com PostgreSQL isolado e Chromium; worktree reconciliada com origin/main 66a2a14; produção não alterada",
+      "evidence": "PR #250 draft. CI 43577431530 aprovada sobre e00fb9c3437baf0813eefe09142e3be88ff12b49, merge de teste 1e9cb114babb1116d76f9d88c226d0d6d2662373: unitários, tipos, lint, PostgreSQL, build, navegador e gate Experiments/MLOps. qa-descoberta-publica.mts passou no job132395216532, step10. Artefato14107132019 lojas-descoberta-publica-browser-1e9cb114babb1116d76f9d88c226d0d6d2662373, digest ZIP API sha256:bf6e31545cec1e585a110565aeb5d0834f6b33ddbfd60d9a3525dce2b338ec43. Núcleo d5067bbbe3522f459367af3b58b4298324801f82, motor-web PR #5, com 65 testes Node e schemas oficiais aprovados; integração conferiu os 32 testes de descoberta. Lock gerado somente com --package-lock-only --ignore-scripts, sem node_modules local. Contrato docs/DESCOBERTA-PUBLICA.md.",
+      "review": "Execução coordenadora revisou os 21 arquivos sem novos achados importantes. CI do HEAD documental final e revisão de integração ainda obrigatórias. PR permanece draft; nenhum merge ou deploy efetuado por este agente.",
+      "history": [
+        { "at": "2026-11-14", "status": "em-andamento", "note": "Demanda de todos os sites atribuída ao responsável técnico codex; checkout original com ícones/layout alterados preservado." },
+        { "at": "2026-11-14", "status": "em-revisao", "note": "Contrato, fontes e testes preparados em worktree isolada. Execução exclusivamente no GitHub CI permanece pendente." },
+        { "at": "2026-11-14", "status": "em-revisao", "note": "CI43577431530 aprovada sobre e00fb9c, incluindo navegador e MLOps. Evidência real registrada; aguarda CI do fechamento documental e revisão da execução coordenadora. Draft #250 preservado sem publicação." }
+      ]
+    },
+    {
       "id": "BRILHAX-ALT-CATEGORIA-20261114",
       "title": "Descrever as capas de categoria para leitores e mecanismos de busca",
       "objective": "Corrigir o texto alternativo vazio da capa compartilhada, identificado na categoria Produtos para Moto da Brilhax pelo Bing Webmaster Tools.",

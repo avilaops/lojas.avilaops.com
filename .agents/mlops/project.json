@@ -240,6 +240,31 @@
       "flows": []
     },
     {
+      "id": "descoberta-publica",
+      "name": "Descoberta pública e leitura por agentes",
+      "state": "existing",
+      "dependsOn": ["fundacao"],
+      "sources": [
+        { "kind": "code", "path": "src/lib/descoberta-publica.ts" },
+        { "kind": "code", "path": "src/lib/descoberta-publica-http.ts" },
+        { "kind": "code", "path": "src/lib/descoberta-contexto.ts" },
+        { "kind": "code", "path": "src/components/DescobertaPublica.tsx" },
+        { "kind": "code", "path": "src/app/layout.tsx" },
+        { "kind": "code", "path": "src/app/plataforma/(site)/layout.tsx" },
+        { "kind": "code", "path": "src/lib/rotas-da-raiz.ts" },
+        { "kind": "code", "path": "src/app/llms-full.txt/route.ts" },
+        { "kind": "code", "path": "src/app/.well-known/ard.json/route.ts" },
+        { "kind": "code", "path": "src/app/ai-catalog.json/route.ts" },
+        { "kind": "code", "path": "src/lib/identidade-publica.ts" },
+        { "kind": "test", "path": "src/lib/descoberta-publica.test.ts" },
+        { "kind": "test", "path": "src/lib/descoberta-contexto.test.ts" },
+        { "kind": "test", "path": "src/lib/identidade-publica.test.ts" },
+        { "kind": "test", "path": "scripts/qa-descoberta-publica.mts" },
+        { "kind": "contract", "path": "docs/DESCOBERTA-PUBLICA.md" }
+      ],
+      "flows": []
+    },
+    {
       "id": "cms",
       "name": "Conteúdo e publicação — módulo CMS",
       "state": "planned",

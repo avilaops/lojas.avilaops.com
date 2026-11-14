@@ -191,6 +191,7 @@ test("schema Store usa a mesma identidade validada sem campos vazios", () => {
       taxID: "58392666000112",
       url: "https://vedashow.com.br",
       logo: "https://cdn.example/vedashow.svg",
+      image: "https://cdn.example/vedashow.svg",
       description: "Peças para manutenção industrial.",
       telephone: "+551634413180",
       email: "vendas@vedashow.com.br",
@@ -202,6 +203,18 @@ test("schema Store usa a mesma identidade validada sem campos vazios", () => {
       },
     },
   );
+});
+
+test("schema usa a marca real em URL absoluta e não inventa imagem quando ela falta", () => {
+  const identidade = identidadePublica(tenant({ nome: "Marca QA" }));
+  const comMarca = schemaDaIdentidadePublica(identidade, { url: "https://marca.example", logo: "/uploads/marca.webp" });
+  assert.equal(comMarca.logo, "https://marca.example/uploads/marca.webp");
+  assert.equal(comMarca.image, "https://marca.example/uploads/marca.webp");
+  for (const logo of [null, "", "javascript:alert(1)", "data:image/png;base64,AA==", "https://usuario:senha@cdn.example/logo.svg"]) {
+    const schema = schemaDaIdentidadePublica(identidade, { url: "https://marca.example", logo });
+    assert.equal(Object.hasOwn(schema, "image"), false);
+    assert.equal(Object.hasOwn(schema, "logo"), false);
+  }
 });
 
 test("schema Store inclui endereço legal completo mesmo sem convite de visita e horário confirmado", () => {

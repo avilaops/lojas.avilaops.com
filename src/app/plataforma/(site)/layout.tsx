@@ -5,6 +5,8 @@ import Pixels from "@/components/Pixels";
 import { pixelsDaPlataforma, temRastreio } from "@/lib/pixels";
 import { sessaoDoPainel } from "@/lib/sessao";
 import MarcaLojas from "@/components/marca/MarcaLojas";
+import { Suspense } from "react";
+import DescobertaPublica from "@/components/DescobertaPublica";
 import "../marca-lojas.css";
 import "../plataforma.css";
 
@@ -16,6 +18,7 @@ export default async function PlataformaLayout({ children }: { children: React.R
   const pixels = pixelsDaPlataforma();
   return (
     <div className="plataforma-shell">
+      <Suspense fallback={null}><DescobertaPublica habilitada={!sessao} plataforma /></Suspense>
       <Pixels p={pixels} />
       <a href="#conteudo-principal" className="pl-pular-conteudo">Pular para o conteúdo</a>
       <header className="pl-header">
