@@ -8,9 +8,9 @@ import { comprar, type ItemEvento } from "@/lib/eventos-loja";
  * controle está em eventos-loja.ts, via sessionStorage). Só entra na árvore
  * quando o pedido já foi pago — pedido aguardando PIX não é venda.
  */
-export default function EventoCompra({ itens, totalCentavos, freteCentavos, referencia, googleAdsId, rotuloCompra }: { itens: ItemEvento[]; totalCentavos: number; freteCentavos: number; referencia: string; googleAdsId: string | null; rotuloCompra: string | null }) {
+export default function EventoCompra({ itens, totalCentavos, freteCentavos, referencia, descontoCentavos, cupomCodigo, googleAdsId, rotuloCompra }: { itens: ItemEvento[]; totalCentavos: number; freteCentavos: number; referencia: string; descontoCentavos?: number; cupomCodigo?: string | null; googleAdsId: string | null; rotuloCompra: string | null }) {
   useEffect(() => {
-    comprar(itens, { totalCentavos, freteCentavos, referencia, googleAdsId, rotuloCompra });
-  }, [itens, totalCentavos, freteCentavos, referencia, googleAdsId, rotuloCompra]);
+    comprar(itens, { totalCentavos, freteCentavos, referencia, descontoCentavos, cupomCodigo, googleAdsId, rotuloCompra });
+  }, [itens, totalCentavos, freteCentavos, referencia, descontoCentavos, cupomCodigo, googleAdsId, rotuloCompra]);
   return null;
 }

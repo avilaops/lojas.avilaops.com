@@ -132,3 +132,75 @@ test("loja sem GTM mede só pelo gtag: um evento por fato e nenhum objeto de e-c
   assert.equal(conversao[2].send_to, "AW-123/abc");
   assert.equal(conversao[2].value, 49.9);
 });
+
+test("purchase rateia o cupom nos preços líquidos e envia desconto monetário por unidade", (t) => {
+  t.after(() => void delete (globalThis as { window?: unknown }).window);
+  const w = paginaRecemAberta("GTM-ABC123");
+  const produtos = [
+    { id: "azul", nome: "Widget azul", precoCentavos: 1000, quantidade: 3 },
+    { id: "vermelho", nome: "Widget vermelho", precoCentavos: 2200, quantidade: 1 },
+  ];
+  const dados = { totalCentavos: 4759, freteCentavos: 599, referencia: "QA-DESCONTO", descontoCentavos: 1040, cupomCodigo: "SAVE20" };
+  comprar(produtos, dados);
+  const compra = lidoDoDataLayer(w.dataLayer).objetos.find((o) => o.event === "purchase") as { ecommerce: { value: number; coupon: string; items: Array<Record<string, unknown>> } };
+  assert.equal(compra.ecommerce.value, 41.6);
+  assert.equal(compra.ecommerce.coupon, "SAVE20");
+  assert.deepEqual(compra.ecommerce.items.map(({ item_id, price, discount, quantity, coupon }) => ({ item_id, price, discount, quantity, coupon })), [
+    { item_id: "azul", price: 8, discount: 2, quantity: 3, coupon: "SAVE20" },
+    { item_id: "vermelho", price: 17.6, discount: 4.4, quantity: 1, coupon: "SAVE20" },
+  ]);
+  assert.equal(produtos[0].precoCentavos, 1000, "o rastreamento não altera o preço comercial");
+});
+
+test("rateio de um centavo preserva receita e quantidades com preços monetários exatos", (t) => {
+  t.after(() => void delete (globalThis as { window?: unknown }).window);
+  const w = paginaRecemAberta("GTM-ABC123");
+  const dados = { totalCentavos: 299, freteCentavos: 0, referencia: "QA-CENTAVO", descontoCentavos: 1 };
+  comprar([{ id: "p1", nome: "Produto", precoCentavos: 100, quantidade: 3 }], dados);
+  const compra = lidoDoDataLayer(w.dataLayer).objetos.find((o) => o.event === "purchase") as { ecommerce: { value: number; items: Array<{ price: number; discount?: number; quantity: number }> } };
+  const somaCentavos = compra.ecommerce.items.reduce((s, i) => s + Math.round(i.price * 100) * i.quantity, 0);
+  const descontoCentavos = compra.ecommerce.items.reduce((s, i) => s + Math.round((i.discount ?? 0) * 100) * i.quantity, 0);
+  assert.equal(somaCentavos, 299);
+  assert.equal(descontoCentavos, 1);
+  assert.equal(compra.ecommerce.items.reduce((s, i) => s + i.quantity, 0), 3);
+  assert.equal(compra.ecommerce.value, 2.99);
+});
+
+test("compra com desconto integral não envia receita de itens positiva", (t) => {
+  t.after(() => void delete (globalThis as { window?: unknown }).window);
+  const w = paginaRecemAberta("GTM-ABC123");
+  const dados = { totalCentavos: 500, freteCentavos: 500, referencia: "QA-GRATUITO", descontoCentavos: 1000, cupomCodigo: "BRINDE" };
+  comprar([{ id: "p1", nome: "Brinde", precoCentavos: 500, quantidade: 2 }], dados);
+  const compra = lidoDoDataLayer(w.dataLayer).objetos.find((o) => o.event === "purchase") as { ecommerce: { value: number; items: Array<{ price: number; discount: number; quantity: number }> } };
+  assert.equal(compra.ecommerce.value, 0);
+  assert.equal(compra.ecommerce.items[0].price, 0);
+  assert.equal(compra.ecommerce.items[0].discount, 5);
+});
+
+test("parâmetros por item preservam marca, variante e estoque conhecido sem inventar desconhecido", () => {
+  const produtos = [
+    { id: "p1", nome: "Produto", precoCentavos: 1000, marca: "Marca", variante: "Azul", emEstoque: false },
+    { id: "p2", nome: "Sem estoque informado", precoCentavos: 2000 },
+  ];
+  const convertidos = paraGa4(produtos) as Array<Record<string, unknown>>;
+  assert.equal(convertidos[0].item_brand, "Marca");
+  assert.equal(convertidos[0].item_variant, "Azul");
+  assert.equal(convertidos[0].in_stock, false);
+  assert.equal("in_stock" in convertidos[1], false);
+});
+
+for (const linhas of [101, 200]) {
+  test(`rateio em pedido de ${linhas} produtos respeita o limite do GA4 e reconcilia a receita`, (t) => {
+    t.after(() => void delete (globalThis as { window?: unknown }).window);
+    const w = paginaRecemAberta("GTM-ABC123");
+    const produtos = Array.from({ length: linhas }, (_, indice) => ({ id: `p${indice}`, nome: `Produto ${indice}`, precoCentavos: 100, quantidade: 3 }));
+    const dados = { totalCentavos: linhas * 299, freteCentavos: 0, descontoCentavos: linhas, referencia: `QA-GRANDE-${linhas}` };
+    comprar(produtos, dados);
+    const compra = lidoDoDataLayer(w.dataLayer).objetos.find((o) => o.event === "purchase") as { ecommerce: { value: number; items: Array<{ item_id: string; price: number; discount?: number; quantity: number }> } };
+    assert.ok(compra.ecommerce.items.length <= 200, "o rateio não pode ultrapassar o limite de itens por evento");
+    assert.equal(new Set(compra.ecommerce.items.map((i) => i.item_id)).size, linhas);
+    assert.equal(Math.round(compra.ecommerce.items.reduce((s, i) => s + i.price * i.quantity, 0) * 100), dados.totalCentavos);
+    assert.equal(Math.round(compra.ecommerce.items.reduce((s, i) => s + (i.discount ?? 0) * i.quantity, 0) * 100), linhas);
+    assert.equal(compra.ecommerce.items.reduce((s, i) => s + i.quantity, 0), linhas * 3);
+  });
+}

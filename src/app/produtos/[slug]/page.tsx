@@ -219,7 +219,7 @@ export default async function ProdutoPage({ params,searchParams }: Props) {
           ...(medicamento.tipo === "generico" ? { isProprietary: false } : medicamento.tipo === "referencia" ? { isProprietary: true } : {}),
         }).replace(/</g,"\\u003c") }} />
       )}
-      <EventoVerProduto item={{ id: p.id, nome: p.nome, precoCentavos: p.precoCentavos, categoria: p.categoria?.nome ?? null }} />
+      <EventoVerProduto item={{ id: p.id, nome: p.nome, precoCentavos: p.precoCentavos, categoria: p.categoria?.nome ?? null, marca: p.marca, variante: escolhida?.nome, emEstoque: p.estoque == null ? undefined : p.estoque > 0 }} />
       <nav aria-label="Caminho do produto" className="mb-4 text-xs text-muted-foreground">
         <Link href="/">Início</Link> / <Link href="/produtos">Produtos</Link>
         {p.categoria && (

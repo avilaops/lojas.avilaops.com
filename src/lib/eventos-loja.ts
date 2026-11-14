@@ -18,6 +18,11 @@ export interface ItemEvento {
   precoCentavos: number;
   quantidade?: number;
   categoria?: string | null;
+  marca?: string | null;
+  variante?: string | null;
+  emEstoque?: boolean;
+  descontoUnitarioCentavos?: number;
+  cupomCodigo?: string | null;
 }
 
 type Janela = Window & {
@@ -30,6 +35,7 @@ type Janela = Window & {
 };
 
 const reais = (centavos: number) => Number((centavos / 100).toFixed(2));
+const reaisPorUnidade = (centavos: number) => Number((centavos / 100).toFixed(Number.isInteger(centavos) ? 2 : 12));
 
 function janela(): Janela | null {
   return typeof window === "undefined" ? null : (window as Janela);
@@ -63,7 +69,63 @@ export function registrarEventoFunil(evento: EventoFunil) {
 }
 
 export function paraGa4(itens: ItemEvento[]) {
-  return itens.map((i) => ({ item_id: i.id, item_name: i.nome, price: reais(i.precoCentavos), quantity: i.quantidade ?? 1, item_category: i.categoria ?? undefined }));
+  return itens.map((i) => ({
+    item_id: i.id,
+    item_name: i.nome,
+    price: reaisPorUnidade(i.precoCentavos - (i.descontoUnitarioCentavos ?? 0)),
+    quantity: i.quantidade ?? 1,
+    item_category: i.categoria ?? undefined,
+    ...(i.marca ? { item_brand: i.marca } : {}),
+    ...(i.variante ? { item_variant: i.variante } : {}),
+    ...(typeof i.emEstoque === "boolean" ? { in_stock: i.emEstoque } : {}),
+    ...(i.descontoUnitarioCentavos ? { discount: reaisPorUnidade(i.descontoUnitarioCentavos) } : {}),
+    ...(i.cupomCodigo ? { coupon: i.cupomCodigo } : {}),
+  }));
+}
+
+/** Rateia o desconto da compra sem alterar os preços comerciais recebidos. */
+function itensDaCompra(itens: ItemEvento[], descontoCentavos: number, cupom?: string | null): ItemEvento[] {
+  const linhas = itens.map((item, indice) => {
+    const quantidade = item.quantidade ?? 1;
+    return { item, indice, quantidade, total: item.precoCentavos * quantidade, porUnidade: 0, unidadesComCentavoExtra: 0, resto: 0n };
+  });
+  const subtotal = linhas.reduce((soma, linha) => soma + linha.total, 0);
+  if (!Number.isSafeInteger(subtotal) || subtotal <= 0 || !Number.isFinite(descontoCentavos)
+    || linhas.some((linha) => !Number.isSafeInteger(linha.item.precoCentavos) || !Number.isSafeInteger(linha.total) || linha.total < 0 || !Number.isSafeInteger(linha.quantidade) || linha.quantidade < 1)) return itens;
+  const desconto = Math.min(subtotal, Math.max(0, Math.trunc(descontoCentavos)));
+  if (!desconto) return itens;
+
+  const base = BigInt(subtotal);
+  for (const linha of linhas) {
+    const numerador = BigInt(desconto) * BigInt(linha.item.precoCentavos);
+    linha.porUnidade = Number(numerador / base);
+    linha.resto = numerador % base;
+  }
+  let sobram = desconto - linhas.reduce((soma, linha) => soma + linha.porUnidade * linha.quantidade, 0);
+  const prioridade = [...linhas].sort((a, b) => a.resto === b.resto ? a.indice - b.indice : a.resto > b.resto ? -1 : 1);
+  for (const linha of prioridade) {
+    linha.unidadesComCentavoExtra = Math.min(sobram, linha.quantidade);
+    sobram -= linha.unidadesComCentavoExtra;
+    if (!sobram) break;
+  }
+
+  return linhas.flatMap(({ item, quantidade, porUnidade, unidadesComCentavoExtra }) => {
+    const grupo = (unidades: number, descontoUnitario: number): ItemEvento => ({
+      ...item, quantidade: unidades, descontoUnitarioCentavos: descontoUnitario,
+      ...(cupom && descontoUnitario > 0 ? { cupomCodigo: cupom } : {}),
+    });
+    // O rateio por unidade produz no máximo um grupo parcial. Até 199 linhas,
+    // ele vira dois grupos do mesmo SKU, com preços exatos em centavos.
+    // No limite do GA4, preservamos a linha usando precisão unitária adicional.
+    // Pedidos que já excediam 200 linhas continuam sujeitos ao limite do Google.
+    if (itens.length >= 200 && unidadesComCentavoExtra > 0 && unidadesComCentavoExtra < quantidade) {
+      return [grupo(quantidade, porUnidade + unidadesComCentavoExtra / quantidade)];
+    }
+    return [
+      ...(quantidade > unidadesComCentavoExtra ? [grupo(quantidade - unidadesComCentavoExtra, porUnidade)] : []),
+      ...(unidadesComCentavoExtra ? [grupo(unidadesComCentavoExtra, porUnidade + 1)] : []),
+    ];
+  });
 }
 
 /**
@@ -78,7 +140,7 @@ export function paraGa4(itens: ItemEvento[]) {
  * `ecommerce: null` antes de cada evento é a recomendação do Google: sem ele,
  * o GTM mescla os itens do evento anterior nos do próximo.
  */
-export function entradasDoDataLayer(evento: string, itens: ItemEvento[], valorCentavos: number, extra: { transacao?: string; frete?: number } = {}): unknown[] {
+export function entradasDoDataLayer(evento: string, itens: ItemEvento[], valorCentavos: number, extra: { transacao?: string; frete?: number; cupom?: string | null } = {}): unknown[] {
   return [
     { ecommerce: null },
     {
@@ -88,13 +150,14 @@ export function entradasDoDataLayer(evento: string, itens: ItemEvento[], valorCe
         value: reais(valorCentavos),
         ...(extra.transacao ? { transaction_id: extra.transacao } : {}),
         ...(extra.frete != null ? { shipping: reais(extra.frete) } : {}),
+        ...(extra.cupom ? { coupon: extra.cupom } : {}),
         items: paraGa4(itens),
       },
     },
   ];
 }
 
-function disparar(nomes: { ga4: string; meta: string; tiktok: string }, itens: ItemEvento[], extra: { valor?: number; transacao?: string; frete?: number } = {}) {
+function disparar(nomes: { ga4: string; meta: string; tiktok: string }, itens: ItemEvento[], extra: { valor?: number; transacao?: string; frete?: number; cupom?: string | null } = {}) {
   const w = janela();
   if (!w) return;
   const valor = extra.valor ?? itens.reduce((s, i) => s + i.precoCentavos * (i.quantidade ?? 1), 0);
@@ -107,7 +170,7 @@ function disparar(nomes: { ga4: string; meta: string; tiktok: string }, itens: I
     if (w.__lojaPixels?.gtm) {
       // O dataLayer existe desde o HTML (Pixels.tsx); isto é só rede de proteção.
       (w.dataLayer ??= []);
-      for (const entrada of entradasDoDataLayer(nomes.ga4, itens, valor, { transacao: extra.transacao, frete: extra.frete })) w.dataLayer.push(entrada);
+      for (const entrada of entradasDoDataLayer(nomes.ga4, itens, valor, { transacao: extra.transacao, frete: extra.frete, cupom: extra.cupom })) w.dataLayer.push(entrada);
     } else {
       w.gtag?.("event", nomes.ga4, {
         currency: "BRL",
@@ -115,6 +178,7 @@ function disparar(nomes: { ga4: string; meta: string; tiktok: string }, itens: I
         items: paraGa4(itens),
         ...(extra.transacao ? { transaction_id: extra.transacao } : {}),
         ...(extra.frete != null ? { shipping: reais(extra.frete) } : {}),
+        ...(extra.cupom ? { coupon: extra.cupom } : {}),
       });
     }
     w.fbq?.("track", nomes.meta, {
@@ -122,12 +186,12 @@ function disparar(nomes: { ga4: string; meta: string; tiktok: string }, itens: I
       value: reais(valor),
       content_type: "product",
       content_ids: itens.map((i) => i.id),
-      contents: itens.map((i) => ({ id: i.id, quantity: i.quantidade ?? 1, item_price: reais(i.precoCentavos) })),
+      contents: itens.map((i) => ({ id: i.id, quantity: i.quantidade ?? 1, item_price: reaisPorUnidade(i.precoCentavos - (i.descontoUnitarioCentavos ?? 0)) })),
     });
     w.ttq?.track(nomes.tiktok, {
       currency: "BRL",
       value: reais(valor),
-      contents: itens.map((i) => ({ content_id: i.id, content_name: i.nome, quantity: i.quantidade ?? 1, price: reais(i.precoCentavos) })),
+      contents: itens.map((i) => ({ content_id: i.id, content_name: i.nome, quantity: i.quantidade ?? 1, price: reaisPorUnidade(i.precoCentavos - (i.descontoUnitarioCentavos ?? 0)) })),
     });
   } catch {
     /* pixel com problema nunca pode atrapalhar a compra */
@@ -148,7 +212,7 @@ export function receitaDosItens(totalCentavos: number, freteCentavos: number): n
 }
 
 /** Compra concluída — o evento que o anúncio otimiza. Roda uma vez por pedido. */
-export function comprar(itens: ItemEvento[], dados: { totalCentavos: number; freteCentavos: number; referencia: string; googleAdsId?: string | null; rotuloCompra?: string | null }) {
+export function comprar(itens: ItemEvento[], dados: { totalCentavos: number; freteCentavos: number; referencia: string; descontoCentavos?: number; cupomCodigo?: string | null; googleAdsId?: string | null; rotuloCompra?: string | null }) {
   const marca = `compra:${dados.referencia}`;
   try {
     if (window.sessionStorage.getItem(marca)) return; // recarregar a página não conta duas vendas
@@ -157,10 +221,13 @@ export function comprar(itens: ItemEvento[], dados: { totalCentavos: number; fre
     /* storage bloqueado: segue e aceita o risco de contar de novo */
   }
   const receita = receitaDosItens(dados.totalCentavos, dados.freteCentavos);
-  disparar({ ga4: "purchase", meta: "Purchase", tiktok: "CompletePayment" }, itens, {
+  const subtotal = itens.reduce((soma, item) => soma + item.precoCentavos * (item.quantidade ?? 1), 0);
+  const desconto = dados.descontoCentavos ?? Math.max(0, subtotal - receita);
+  disparar({ ga4: "purchase", meta: "Purchase", tiktok: "CompletePayment" }, itensDaCompra(itens, desconto, dados.cupomCodigo), {
     valor: receita,
     transacao: dados.referencia,
     frete: dados.freteCentavos,
+    cupom: dados.cupomCodigo,
   });
   // Conversão do Google Ads: exige o rótulo, não basta o id da conta. Com GTM
   // ela é tag do contêiner, lida do `purchase` no dataLayer; chamar `gtag`
