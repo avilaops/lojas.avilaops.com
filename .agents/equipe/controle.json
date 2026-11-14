@@ -18,7 +18,7 @@
       "objective": "Reunir metadados da home, prévia, curadoria do resumo para IA e configuração de descoberta no painel nativo.",
       "assignee": "codex",
       "priority": "alta",
-      "status": "em-andamento",
+      "status": "concluida",
       "acceptanceCriteria": [
         "Lojas existentes preservam os valores automáticos antes de qualquer escolha.",
         "Título e descrição da home podem ser salvos e restaurados sem duplicação da marca.",
@@ -27,7 +27,7 @@
         "CI valida contrato, merge concorrente, saída pública e interface desktop/mobile."
       ],
       "environment": "worktree isolado, banco de CI e publicação normal; sem builds ou testes locais",
-        "evidence": "PR257 integrado como bc22a2f. CI43604578336 aprovado com contrato, PostgreSQL, navegador1440/393px e revisão independente. Publicação43605451777 bloqueada antes da migração por timeout na preparação da captura; gravação, saída pública e isolamento passaram. Probe ajustado para abas novas sem histórico de rolagem/foco; revalidar no CI e confirmar produção antes de concluir. Contrato docs/SEO-DESCOBERTA-LOJAS.md e plano/spec em docs/superpowers/."
+      "evidence": "PR257 e correção de captura PR259 integrados. CI43606248888 e publicação43606984158 aprovados com backup, migração e smoke. Versão beab5bd3c4523ee407face9627b461877dfb0625 confirmada nas cinco lojas públicas; título, descrição, canonical e robots iguais ao baseline, llms200. Navegador1440/393px, permissões, isolamento e revisão independente aprovados. Contrato docs/SEO-DESCOBERTA-LOJAS.md; resultado público em artifacts/lojas-aioseo-2026-11-14 no workspace."
     },
     {
       "id": "BERETA-REFERENCIAS-REJEITADAS-20261114",
