@@ -188,3 +188,19 @@ test("parâmetros por item preservam marca, variante e estoque conhecido sem inv
   assert.equal(convertidos[0].in_stock, false);
   assert.equal("in_stock" in convertidos[1], false);
 });
+
+for (const linhas of [101, 200]) {
+  test(`rateio em pedido de ${linhas} produtos respeita o limite do GA4 e reconcilia a receita`, (t) => {
+    t.after(() => void delete (globalThis as { window?: unknown }).window);
+    const w = paginaRecemAberta("GTM-ABC123");
+    const produtos = Array.from({ length: linhas }, (_, indice) => ({ id: `p${indice}`, nome: `Produto ${indice}`, precoCentavos: 100, quantidade: 3 }));
+    const dados = { totalCentavos: linhas * 299, freteCentavos: 0, descontoCentavos: linhas, referencia: `QA-GRANDE-${linhas}` };
+    comprar(produtos, dados);
+    const compra = lidoDoDataLayer(w.dataLayer).objetos.find((o) => o.event === "purchase") as { ecommerce: { value: number; items: Array<{ item_id: string; price: number; discount?: number; quantity: number }> } };
+    assert.ok(compra.ecommerce.items.length <= 200, "o rateio não pode ultrapassar o limite de itens por evento");
+    assert.equal(new Set(compra.ecommerce.items.map((i) => i.item_id)).size, linhas);
+    assert.equal(Math.round(compra.ecommerce.items.reduce((s, i) => s + i.price * i.quantity, 0) * 100), dados.totalCentavos);
+    assert.equal(Math.round(compra.ecommerce.items.reduce((s, i) => s + (i.discount ?? 0) * i.quantity, 0) * 100), linhas);
+    assert.equal(compra.ecommerce.items.reduce((s, i) => s + i.quantity, 0), linhas * 3);
+  });
+}
