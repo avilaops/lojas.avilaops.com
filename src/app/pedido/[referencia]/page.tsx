@@ -70,9 +70,11 @@ export default async function PedidoPage({ params }: { params: Promise<{ referen
     <div className="container-loja max-w-2xl py-10">
       {compraConfirmadaParaAnalytics(pedido.status) && (
         <EventoCompra
-          itens={pedido.itens.map((i) => ({ id: i.produtoId ?? i.nome, nome: i.nome, precoCentavos: i.precoUnitarioCentavos, quantidade: i.quantidade }))}
+          itens={pedido.itens.map((i) => ({ id: i.produtoId ?? i.nome, nome: i.nome, precoCentavos: i.precoUnitarioCentavos, quantidade: i.quantidade, variante: i.varianteNome }))}
           totalCentavos={pedido.totalCentavos}
           freteCentavos={pedido.freteCentavos}
+          descontoCentavos={pedido.descontoCentavos}
+          cupomCodigo={pedido.cupomCodigo}
           referencia={pedido.referencia}
           googleAdsId={t.googleAdsId}
           rotuloCompra={t.googleAdsRotuloCompra}
