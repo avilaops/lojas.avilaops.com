@@ -34,7 +34,7 @@ export default function CapaCategoria({
     <header className="capa-categoria">
       <div className="capa-categoria-imagem">
         {foto ? (
-          <Image src={foto} alt="" fill sizes="(min-width: 1024px) 420px, 100vw" className="object-cover" priority />
+          <Image src={foto} alt={nome} fill sizes="(min-width: 1024px) 420px, 100vw" className="object-cover" priority />
         ) : (
           <span className="capa-categoria-inicial" aria-hidden="true">{nome.trim().charAt(0).toUpperCase()}</span>
         )}
