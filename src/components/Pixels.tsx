@@ -22,15 +22,19 @@ import { scriptDoGtm, scriptInicialDoGoogle, type PixelsDaLoja } from "@/lib/pix
  * que o Gerenciador de Anúncios precisa para otimizar campanha por conversão.
  */
 export default function Pixels({ p }: { p: PixelsDaLoja }) {
-  const aceito = useConsentimento() === "aceito";
+  const escolha = useConsentimento();
+  const aceito = escolha === "aceito";
 
   // Atualiza também a revogação pelo rodapé. Só retornar quando não aceito
   // deixava a tag com o último granted até o próximo carregamento completo.
   useEffect(() => {
+    // O snapshot do servidor ainda não conhece a escolha salva. Atualizar
+    // denied aqui encerraria o wait_for_update antes do aceite ser hidratado.
+    if (escolha === undefined) return;
     const w = window as Window & { gtag?: (...args: unknown[]) => void };
     const estado = aceito ? "granted" : "denied";
     w.gtag?.("consent", "update", { ad_storage: estado, ad_user_data: estado, ad_personalization: estado, analytics_storage: estado });
-  }, [aceito]);
+  }, [aceito, escolha]);
 
   const gtag = p.ga4Id || p.googleAdsId;
   const inicioDoDataLayer = scriptInicialDoGoogle(p);
