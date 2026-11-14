@@ -3,6 +3,7 @@ import { prisma } from "./db";
 import { fiscalErpConfigurado } from "./erp-fiscal";
 import { eventoCancelaNota, normalizarDocumentoEntrada } from "./fiscal-entrada-xml";
 import type { EstadoRecebimentoFiscal } from "./fiscal-acompanhamento-estado";
+import { resumirDocumentoFiscal } from "./fiscal-documento";
 
 type Db = Pick<Prisma.TransactionClient, "tenant" | "documentoFiscalLoja" | "manifestacaoFiscalLoja" | "comandoEstoque">;
 export type AcompanhamentoFiscal = {
@@ -27,10 +28,10 @@ export async function consultarAcompanhamentoFiscal(tenantId: string, chaves: st
   const unicas = [...new Set(chaves.filter(chave => /^\d{44}$/.test(chave)))];
   const mapa = new Map<string, AcompanhamentoFiscal>();
   if (!unicas.length) return mapa;
-  const [tenant, documentos, eventos, manifestacoes, comandos] = await Promise.all([
+  const [tenant, documentos, conteudos, manifestacoes, comandos] = await Promise.all([
     db.tenant.findUniqueOrThrow({ where: { id: tenantId }, select: { cnpj: true } }),
     db.documentoFiscalLoja.findMany({ where: { tenantId, chave: { in: unicas } }, select: { id: true, chave: true, schema: true, cancelada: true }, orderBy: [{ recebidoEm: "desc" }, { id: "desc" }] }),
-    db.documentoFiscalLoja.findMany({ where: { tenantId, chave: { in: unicas }, schema: { contains: "Evento", mode: "insensitive" } }, select: { chave: true, xml: true } }),
+    db.documentoFiscalLoja.findMany({ where: { tenantId, chave: { in: unicas }, OR: [{ schema: { contains: "Evento", mode: "insensitive" } }, { schema: { startsWith: "resNFe" } }] }, select: { id: true, chave: true, schema: true, xml: true } }),
     db.manifestacaoFiscalLoja.findMany({ where: { tenantId, documento: { tenantId, chave: { in: unicas } } }, select: { status: true, tipo: true, codigoRetorno: true, motivoRetorno: true, protocolo: true, documento: { select: { chave: true } } }, orderBy: [{ intencaoEm: "desc" }, { id: "desc" }] }),
     db.comandoEstoque.findMany({ where: { tenantId, origem: "fiscal:entrada-nfe", chave: { in: unicas.map(chave => `nfe-entrada:${chave}`) } }, select: { chave: true, resultado: true } }),
   ]);
@@ -40,8 +41,11 @@ export async function consultarAcompanhamentoFiscal(tenantId: string, chaves: st
     if (!notas.length) continue;
     const completoId = notas.find(d => /^procNFe/i.test(d.schema))?.id ?? null;
     const resumoId = notas.find(d => /^resNFe/i.test(d.schema))?.id ?? null;
-    const cancelada = documentos.some(d => d.chave === chave && d.cancelada) || eventos.some(e => {
-      if (e.chave !== chave) return false;
+    const resumo = conteudos.find(d => d.id === resumoId);
+    const resumoFiscal = resumo ? resumirDocumentoFiscal(resumo.xml, resumo.schema, chave) : null;
+    const codigoResumo = resumoFiscal?.manifestacaoCodigo ?? "";
+    const cancelada = documentos.some(d => d.chave === chave && d.cancelada) || resumoFiscal?.situacaoNfe === "NF-e cancelada" || conteudos.some(e => {
+      if (e.chave !== chave || !/evento/i.test(e.schema)) return false;
       try { return eventoCancelaNota(e.xml, chave); } catch { return false; }
     });
     const enviada = manifestacoes.find(m => m.documento.chave === chave);
@@ -53,7 +57,8 @@ export async function consultarAcompanhamentoFiscal(tenantId: string, chaves: st
     else if (recibo) estado = "ENTRADA_REGISTRADA";
     else if (erp) estado = "GERENCIADA_ERP";
     else if (completoId) estado = "PRONTA";
-    else if (manifestacao?.status === "ACEITA") estado = ["DESCONHECIMENTO", "NAO_REALIZADA"].includes(manifestacao.tipo) ? "REVISAO_NECESSARIA" : "AGUARDANDO_XML";
+    else if (["2", "3"].includes(codigoResumo) || (manifestacao?.status === "ACEITA" && ["DESCONHECIMENTO", "NAO_REALIZADA"].includes(manifestacao.tipo))) estado = "REVISAO_NECESSARIA";
+    else if (manifestacao?.status === "ACEITA" || ["1", "4"].includes(codigoResumo)) estado = "AGUARDANDO_XML";
     else if (manifestacao && manifestacao.status !== "REJEITADA") estado = "AGUARDANDO_RESULTADO";
     else estado = "AGUARDANDO_MANIFESTACAO";
     mapa.set(chave, { estado, completoId, resumoId, cancelada, manifestacao, recibo });

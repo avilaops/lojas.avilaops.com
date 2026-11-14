@@ -2,6 +2,10 @@
 
 ## Acompanhamento operacional • incremento de 14/11/2026
 
+O código de manifestação informado pelo próprio resumo também é respeitado:
+ciência/confirmação prévia acompanha XML; desconhecimento e operação não
+realizada exigem revisão. Isso não cria intenção nem protocolo de manifestação.
+
 O P004 projeta a situação operacional pelo par tenant/chave. Resumo e XML em
 NSUs diferentes compartilham manifestação, recibo e cancelamento. A lista
 distingue o estado fiscal de entrada registrada ou revisão necessária; ao

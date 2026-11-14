@@ -13,6 +13,7 @@ export type ResumoDocumentoFiscal = {
   operacao: string | null;
   situacaoNfe: string | null;
   manifestacao: string | null;
+  manifestacaoCodigo: string | null;
   quantidadeItens: number | null;
   eventoCodigo: string | null;
   eventoDescricao: string | null;
@@ -90,6 +91,7 @@ function vazio(chave: string | null): ResumoDocumentoFiscal {
     operacao: null,
     situacaoNfe: null,
     manifestacao: null,
+    manifestacaoCodigo: null,
     quantidadeItens: null,
     eventoCodigo: null,
     eventoDescricao: null,
@@ -123,6 +125,7 @@ export function resumirDocumentoFiscal(xml: string, schema: string, chave: strin
         operacao: tipoOperacao(nota.tpNF),
         situacaoNfe: situacaoNfe(nota.cSitNFe),
         manifestacao: situacaoManifestacao(nota.cSitConf),
+        manifestacaoCodigo: /^[0-4]$/.test(texto(nota.cSitConf)) ? texto(nota.cSitConf) : null,
         situacao: "RESUMO",
       };
     }

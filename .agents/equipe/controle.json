@@ -35,7 +35,7 @@
       "objective": "Fechar as três prioridades autorizadas: recuperação acompanhada do XML, sincronização fiscal restrita e estado operacional por nota.",
       "assignee": "codex",
       "priority": "alta",
-      "status": "em-andamento",
+      "status": "em-revisao",
       "acceptanceCriteria": [
         "Resumo oferece próxima ação explícita e acompanha manifestação sem retransmissão automática.",
         "Conciliação exige evento completo da mesma intenção e preserva isolamento por tenant.",
@@ -43,7 +43,8 @@
         "Lista identifica entrada registrada e cancelamento posterior pelo tenant e chave da NF-e.",
         "CI verifica cenários sintéticos e entrega permanece em PR em rascunho."
       ],
-      "evidence": "Plano docs/superpowers/plans/2026-11-14-fiscal-acompanhamento.md. Base origin/main beab5bd com CI 43606984158 aprovado; regressões preparadas para RED remoto.",
+      "evidence": "PR #262 em rascunho: https://github.com/avilaops/P004/pull/262. RED 43610426856 e 43611935738 observados; recuperação transacional, projeção por chave e modo fiscal implementados. Código 6612a60 passou unitários, três shards PostgreSQL, tipos, lint, build, contratos e navegador; execução geral parou no guard de publicação fora da main. Capturas sintéticas desktop/mobile inspecionadas. Ver evidencias/fiscal-acompanhamento-2026-11-14.md e checks do PR para a versão corrente.",
+      "review": "Revisão do diff nesta sessão; manter PR em rascunho, obter check completo de pull_request e separar publicação de ativação do relógio fiscal. Nenhuma manifestação ou entrada real foi executada.",
       "environment": "worktree-local e GitHub Actions",
       "blocker": "Ativação do relógio fiscal em produção permanece separada da implementação.",
       "history": [{ "at": "2026-11-14", "status": "em-andamento", "note": "Usuário autorizou iniciar a implementação após análise das lacunas. Primeira entrega cobre as três prioridades imediatas." }]
