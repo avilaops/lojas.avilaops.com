@@ -223,6 +223,23 @@
       "flows": []
     },
     {
+      "id": "publicacao-texto",
+      "name": "Representações públicas em Markdown e MDX",
+      "state": "existing",
+      "dependsOn": ["fundacao"],
+      "sources": [
+        { "kind": "code", "path": "src/proxy.ts" },
+        { "kind": "code", "path": "src/lib/publicacao-texto-rotas.ts" },
+        { "kind": "code", "path": "src/lib/publicacao-texto.ts" },
+        { "kind": "code", "path": "src/app/api/publicacao-texto/route.ts" },
+        { "kind": "code", "path": "src/app/llms.txt/route.ts" },
+        { "kind": "test", "path": "src/lib/publicacao-texto.test.ts" },
+        { "kind": "test", "path": "tests/helpers/publicacao-texto-http.ts" },
+        { "kind": "contract", "path": "docs/PUBLICACAO-TEXTO.md" }
+      ],
+      "flows": []
+    },
+    {
       "id": "cms",
       "name": "Conteúdo e publicação — módulo CMS",
       "state": "planned",
