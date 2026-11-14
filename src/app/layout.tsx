@@ -12,6 +12,7 @@ import "@avilaops/checkout/tokens.css";
 import "@avilaops/checkout/checkout.css";
 import { noEnderecoOficial, tenantAtual, tenantPublico, temaDo, urlDaLoja, identidadeDa, marcaQuadradaDa } from "@/lib/tenant";
 import { identidadePublica, schemaDaIdentidadePublica } from "@/lib/identidade-publica";
+import { logoPublicoParaSchema } from "@/lib/marca-schema";
 import { descricaoDaLoja } from "@/lib/textos-loja";
 import { listarCategorias, formatarBRL } from "@/lib/catalogo";
 import { cssDoTema } from "@/lib/tema";
@@ -198,7 +199,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const jsonLd = {
     ...schemaDaIdentidadePublica(identidadeComercial, {
       url: urlDaLoja(t),
-      logo: t.logoUrl,
+      logo: await logoPublicoParaSchema({ slug: t.slug, origem: urlDaLoja(t), logo: t.logoUrl }),
+      imagem: `${urlDaLoja(t)}/opengraph-image`,
       descricao: descricaoDaLoja(t, identidade.diferencial),
     }),
     hasMerchantReturnPolicy: politicaDevolucaoSchema(lerRegrasDevolucao(t.regrasDevolucao), `${urlDaLoja(t)}/politicas/devolucao`),

@@ -256,11 +256,14 @@
         { "kind": "code", "path": "src/app/.well-known/ard.json/route.ts" },
         { "kind": "code", "path": "src/app/ai-catalog.json/route.ts" },
         { "kind": "code", "path": "src/lib/identidade-publica.ts" },
+        { "kind": "code", "path": "src/lib/marca-schema.ts" },
+        { "kind": "test", "path": "src/lib/marca-schema.test.ts" },
         { "kind": "test", "path": "src/lib/descoberta-publica.test.ts" },
         { "kind": "test", "path": "src/lib/descoberta-contexto.test.ts" },
         { "kind": "test", "path": "src/lib/identidade-publica.test.ts" },
         { "kind": "test", "path": "scripts/qa-descoberta-publica.mts" },
-        { "kind": "contract", "path": "docs/DESCOBERTA-PUBLICA.md" }
+        { "kind": "contract", "path": "docs/DESCOBERTA-PUBLICA.md" },
+        { "kind": "contract", "path": "docs/IMAGENS-PUBLICAS-SCHEMA.md" }
       ],
       "flows": []
     },
