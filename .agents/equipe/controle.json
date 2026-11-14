@@ -12,6 +12,17 @@
     }
   ],
   "tasks": [
+    {
+      "id": "PUBLICACAO-TEXTO-20261114",
+      "title": "Derivar Markdown e MDX das páginas públicas atuais",
+      "objective": "Publicar versões textuais sob demanda com isolamento por loja, usando o renderizador existente e o conversor fixado do motor-web.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-andamento",
+      "acceptanceCriteria": ["Rotas públicas da plataforma e das lojas têm caminhos /index.md e /index.mdx.", "Duas lojas com o mesmo slug não compartilham conteúdo ou ETag.", "Alterações e remoções são relidas; rotas privadas, noindex e autenticação não viram texto público.", "Leitura interna tem origem fixa, sem cookies ou credenciais do visitante e sem seguir redirects.", "Descoberta HTTP Link/llms; testes e build no GitHub CI; PR permanece draft sem deploy."],
+      "environment": "worktree isolada e GitHub CI",
+      "evidence": "Plano aprovado de geração automática, tarefa 4 restrita a Lojas. Contrato docs/PUBLICACAO-TEXTO.md; testes de comportamento preparados antes da implementação. Backend de produção indisponível nesta etapa; nenhuma validação live, mudança de infraestrutura ou popup de cookies autorizada."
+    },
       {
         "id": "FISCAL-ENTRADA-20261113",
         "title": "Corrigir downloads e sincronização e conferir entrada por NF-e",
