@@ -13,6 +13,17 @@
   ],
   "tasks": [
     {
+      "id": "LOJAS-MARCA-PUBLICA-20261114",
+      "title": "Recuperar favicons públicos originais da Vedashow",
+      "objective": "Restaurar somente os sete arquivos originais ausentes e diagnosticar o estado de publicação da Vinhos Imperial sem alterar cadastro ou cobrança.",
+      "assignee": "codex",
+      "priority": "normal",
+      "status": "em-revisao",
+      "acceptanceCriteria": ["Pacote original com bytes e SHA256 verificados.", "Workflow manual fixado ao serviço existente e limitado aos sete arquivos públicos, preservando objetos existentes.", "Credenciais somente em memória e sem logs de dados sensíveis.", "Testes somente no GitHub CI e revisão independente antes da operação.", "Conferência dos URLs públicos após restauração."],
+      "environment": "worktree isolada, GitHub CI e armazenamento existente de Lojas",
+      "evidence": "Auditoria pública confirmou cinco favicons ausentes na Vedashow. Pacote original de 08/09/2026 recuperado. docs/RECUPERACAO-MARCA-PUBLICA.md descreve origem, limites e operação manual. Brilhax permanece dependente de recuperação do logo original. Não houve restauração nesta etapa."
+    },
+    {
       "id": "LOJAS-SELO-PRODUTO-20261114",
       "title": "Apontar o selo das lojas para a página do E-Commerce",
       "objective": "Explicar o produto no crédito compartilhado e direcionar visitantes das lojas para /lojas/ na origem Avila Ops configurada.",

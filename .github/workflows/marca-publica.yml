@@ -1,0 +1,42 @@
+name: Lojas • recuperar arquivos públicos de marca
+on:
+  pull_request:
+    paths: ['deploy/render/marca-publica*', 'deploy/render/marca-publica/**', '.github/workflows/marca-publica.yml']
+  workflow_dispatch:
+    inputs:
+      operacao:
+        type: choice
+        options: [auditar, restaurar-vedashow]
+        default: auditar
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: lojas-public-brand-restore
+  cancel-in-progress: false
+jobs:
+  contrato:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/node-do-runner
+      - run: node --test deploy/render/marca-publica.test.mjs
+  operacao:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    needs: contrato
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    environment: production
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/node-do-runner
+      - run: node deploy/render/marca-publica.mjs "$OPERACAO"
+        env:
+          OPERACAO: ${{ inputs.operacao }}
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_DATABASE_URL: ${{ secrets.RENDER_DATABASE_URL }}

@@ -1,0 +1,9 @@
+[
+  { "nome": "favicon-96x96.png", "bytes": 5051, "sha256": "3aff04a62cc91822e2e713c9a2a94ba86473e1fb1dbaf76b824beb28600a2f18", "mime": "image/png" },
+  { "nome": "favicon.svg", "bytes": 45614, "sha256": "abb99346cccc3f3baee963f0c4b93254871c7537c58dafd2fce5b21e8da5c559", "mime": "image/svg+xml" },
+  { "nome": "favicon.ico", "bytes": 4035, "sha256": "b1598bbc866f26dbb7804eeec081d4640605b402b3b45599fe2bc9b6e38f1e29", "mime": "image/x-icon" },
+  { "nome": "apple-touch-icon.png", "bytes": 10653, "sha256": "8dd0ffba21155007389ea0dff76d224557ba6f88bb319eb21357b94e60192a79", "mime": "image/png" },
+  { "nome": "site.webmanifest", "bytes": 553, "sha256": "2ba25a389fb50a4150a7b9216875ec0301fbd7c80064e0f8255edcd1a95e0617", "mime": "application/manifest+json" },
+  { "nome": "web-app-manifest-192x192.png", "bytes": 8474, "sha256": "f05d255ad22692118c2787e580057612436acae2823e218e8e6d4dea1ba5f5ad", "mime": "image/png" },
+  { "nome": "web-app-manifest-512x512.png", "bytes": 34029, "sha256": "0bf6d7738f4b8c9f1706d389af977b33c019c666d9f50f07473858542fd41369", "mime": "image/png" }
+]
