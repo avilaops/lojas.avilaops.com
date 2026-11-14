@@ -16,7 +16,12 @@ restrito ao fiscal; projeções por tenant/chave sobre documentos e recibos exis
 • Testes e builds exclusivamente no GitHub CI; sem documentos reais nos artefatos.
 • Sem eventos fiscais automáticos, escrita de estoque de teste real ou ativação global.
 • Preservar isolamento, autoridade P003 e intervalo de consulta por CNPJ.
-• Textos novos usam • como separador. Não alterar dependências nem infraestrutura CI.
+• Textos novos usam • como separador. Preservar dependências, limites e guards de produção da CI.
+
+Ruling de verificação: o disparo manual em branch marcou `PUBLISH=true` e
+falhou no guard, após todos os checks funcionais. A expressão de publicação
+passa a exigir a branch principal, como os jobs de implantação já exigem;
+o guard permanece e o disparo manual valida a branch sem publicar.
 
 ## Foco da revisão
 

@@ -27,6 +27,12 @@ resumo pode indicar manifestação prévia sem criar uma intenção ou protocolo
 • Resultado final da versão corrente deve ser lido nos checks do PR; os runs
   acima são evidências intermediárias e não declaram o HEAD aprovado.
 
+Conciliação com `origin/main` em `dc0da16` preservou a correção de nome do
+pacote GHCR após a renomeação do repositório. O conflito aditivo no registro
+de equipe foi resolvido conservando as duas demandas. A condição `PUBLISH`
+agora exige a branch principal, mantendo o guard existente; branches de
+revisão podem completar o disparo manual sem publicar ou implantar.
+
 ## Cobertura
 
 • XML em outro NSU, recibo compartilhado por chave e isolamento entre lojas.
