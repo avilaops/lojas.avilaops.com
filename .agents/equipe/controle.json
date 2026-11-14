@@ -18,7 +18,7 @@
       "objective": "Expressar busca, entrada de IA e treinamento preservando bloqueios e a escolha do lojista.",
       "assignee": "codex",
       "priority": "alta",
-      "status": "em-andamento",
+      "status": "concluida",
       "acceptanceCriteria": [
         "As três categorias aparecem nos grupos pertinentes do robots.txt.",
         "Treinamento acompanha a preferência salva; busca e entrada seguem a disponibilidade pública.",
@@ -27,7 +27,7 @@
         "Contrato, HTTP do servidor compilado e publicação são conferidos no CI."
       ],
       "environment": "worktree isolado e GitHub CI; sem teste ou build local",
-      "evidence": "PR260 draft. RED43608552623 observado por ausência de robots-content-signals no job132488673461. Implementação e QA HTTP preparados para GREEN."
+      "evidence": "PR260 integrado em9500a53, incluído na release atual dc0da1612ad42e8f0a0e4cfc04392c3f5e3cbd22. RED43608552623, GREEN43609144438 e publicação43611089127 aprovados. Health público confirmou release dc0da16-43611089127-1 e banco ok. Verificação HTTP19/19 preservou regras privadas e escolhas de treinamento; scanner Avila/Brasa/plataforma Content Signals pass. Evidências no workspace artifacts/content-signals-2026-11-14. DNSSEC da descoberta Avila adiado por orientação do proprietário, sem mudança de hospedagem."
     },
     {
       "id": "SEO-DESCOBERTA-NATIVO-20261114",

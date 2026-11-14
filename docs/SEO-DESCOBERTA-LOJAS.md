@@ -29,3 +29,5 @@ Builds e testes exclusivamente no GitHub CI. O contrato cobre defaults, dados an
 As capturas e evidências ficam no artefato `lojas-seo-descoberta-browser-<sha>`. Casos fictícios não representam lojas reais. A conferência de produção deve ler configurações existentes sem alterar preferências de clientes para demonstrar a funcionalidade.
 
 Referências: https://llmstxt.org/ • https://developers.google.com/search/docs/appearance/title-link • https://developers.google.com/search/docs/appearance/snippet. As orientações de comprimento são sugestões de redação, não limites de classificação dos buscadores.
+
+Publicação conferida em14/11/2026: PR260, CI43609144438 e entrega43611089127 aprovados; release pública dc0da1612ad42e8f0a0e4cfc04392c3f5e3cbd22-43611089127-1 com banco ok. HTTP de plataforma e cinco lojas manteve as regras privadas e os valores de treinamento existentes. O scanner indicado pelo proprietário aprovou Content Signals na plataforma. Nenhuma preferência de cliente foi gravada para demonstrar a funcionalidade.
