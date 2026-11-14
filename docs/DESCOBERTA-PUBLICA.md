@@ -60,9 +60,11 @@ continua e o módulo de ferramentas não é importado.
 
 ## Dados estruturados e conteúdo
 
-O schema Store reutiliza somente o `logoUrl` real da loja. Quando é uma URL
-HTTP(S) válida, sem credenciais, `logo` e `image` recebem a URL absoluta. Marca
-ausente ou inválida não gera imagem genérica. Preços, avaliações, endereços,
+O schema Store separa o logo cadastrado da imagem de compartilhamento. `image`
+usa a rota OG canônica existente da própria loja. Upload gerenciado só entra
+em `logo` quando o objeto público do mesmo tenant tem leitura confirmada;
+ausência de mídia histórica não vira logo fictício. O contrato e a evidência
+estão em `docs/IMAGENS-PUBLICAS-SCHEMA.md`. Preços, avaliações, endereços,
 checkout e vínculos canônicos continuam sob as autoridades existentes. Os dois
 scripts JSON-LD do layout escapam `<`, impedindo que texto cadastrado encerre
 o elemento script. A descrição segue a mesma regra pública do `llms.txt`.

@@ -24,6 +24,23 @@
       "evidence": "Auditoria pública confirmou cinco favicons ausentes na Vedashow. Pacote original de 08/09/2026 recuperado. docs/RECUPERACAO-MARCA-PUBLICA.md descreve origem, limites e operação manual. Brilhax permanece dependente de recuperação do logo original. Não houve restauração nesta etapa."
     },
     {
+      "id": "SCHEMA-IMAGENS-PUBLICAS-20261114",
+      "title": "Anunciar imagem OG própria e omitir logos de upload ausente",
+      "objective": "Corrigir o JSON-LD diante das mídias históricas ausentes, preservando a identidade e o namespace de cada loja.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "Store.image aponta para a prévia OG existente da própria loja.",
+        "Logo gerenciado inexistente não é anunciado; arquivo existente do mesmo tenant é preservado.",
+        "Nenhuma consulta arbitrária, leitura privada ou imagem de outro tenant.",
+        "Objetos existentes e ausentes verificados somente no GitHub CI; produção conferida separadamente.",
+        "Mídias históricas ausentes e indexação desabilitada da Vinhos Imperial registradas sem alterar cadastros."
+      ],
+      "environment": "worktree isolada sobre main 335eeb0; GitHub CI; inspeção de produção somente leitura",
+      "evidence": "Release 3d28fa3 em 14/11/2026: logos Brilhax e Domi-Rio retornam 404 no host compartilhado e próprio, inclusive sem variante e sem cache; R2 não contém os respectivos namespaces. OG próprio de ambas responde 200 PNG 1200x630, sem X-Robots-Tag; inspeção visual confere identidade. Vinhos .com é canonical, .com.br redireciona; estado atual mantém noindex e robots Disallow:/. Contrato docs/IMAGENS-PUBLICAS-SCHEMA.md. Testes escritos antes da implementação; execução de CI ainda pendente. Sem builds/testes locais, escrita em DB, DNS, storage ou configuração global."
+    },
+    {
       "id": "LOJAS-SELO-PRODUTO-20261114",
       "title": "Apontar o selo das lojas para a página do E-Commerce",
       "objective": "Explicar o produto no crédito compartilhado e direcionar visitantes das lojas para /lojas/ na origem Avila Ops configurada.",
