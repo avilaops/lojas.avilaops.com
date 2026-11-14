@@ -1,6 +1,8 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { ATRIBUTO_RESPONDIDO, CHAVE, VERSAO } from "./consentimento-config";
+export { ATRIBUTO_RESPONDIDO, CHAVE, VERSAO } from "./consentimento-config";
 
 /**
  * Consentimento de cookies (LGPD, art. 7º e 8º).
@@ -15,11 +17,6 @@ import { useSyncExternalStore } from "react";
  */
 export type Escolha = "aceito" | "essencial";
 
-/** Muda quando o texto ou o alcance do consentimento mudar: quem já respondeu é perguntado de novo. */
-export const VERSAO = 1;
-export const CHAVE = "loja_consentimento";
-/** Marca no `<html>` de quem já respondeu; o CSS esconde o aviso por ela antes da hidratação. */
-export const ATRIBUTO_RESPONDIDO = "data-cookies-respondido";
 const EVENTO = "loja:consentimento";
 
 function lerDoNavegador(): Escolha | null {

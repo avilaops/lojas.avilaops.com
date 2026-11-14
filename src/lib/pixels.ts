@@ -1,4 +1,5 @@
 import type { Tenant } from "@prisma/client";
+import { CHAVE, VERSAO } from "./consentimento-config";
 
 /**
  * Os pixels que a loja carrega. Fica fora do componente porque o layout (que é
@@ -82,6 +83,9 @@ export function scriptInicialDoGoogle(p: Pick<PixelsDaLoja, "gtmId">): string {
     "window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}" +
     "gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'denied',wait_for_update:500});" +
     "gtag('set','ads_data_redaction',true);" +
+    // O Gateway pode carregar antes da hidratação. Só o aceite vigente já
+    // registrado libera a coleta; storage indisponível mantém o default.
+    `(function(){try{var c=JSON.parse(localStorage.getItem(${JSON.stringify(CHAVE)})||"null");if(c&&c.versao===${VERSAO}&&c.escolha==="aceito")gtag('consent','update',{ad_storage:'granted',ad_user_data:'granted',ad_personalization:'granted',analytics_storage:'granted'});}catch(e){}})();` +
     `window.__lojaPixels={gtm:${p.gtmId ? "true" : "false"}};`
   );
 }

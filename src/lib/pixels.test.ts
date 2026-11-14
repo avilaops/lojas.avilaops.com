@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { runInNewContext } from "node:vm";
 import { caminhoDoGatewayGoogle, pixelsDaPlataforma, scriptDoGtm, scriptInicialDoGoogle, temRastreio } from "./pixels";
-import { CHAVE, VERSAO } from "./consentimento";
+import { CHAVE, VERSAO } from "./consentimento-config";
 
 test("site da plataforma só carrega tag com um id de GTM bem formado", () => {
   assert.equal(pixelsDaPlataforma({}).gtmId, null);
@@ -51,7 +51,7 @@ test("loader do GTM usa o contêiner próprio tanto no Gateway quanto no carrega
   assert.match(scriptDoGtm(plataforma), /GTM-PFBBR3GG/);
 });
 
-test("Gateway não aceita origem externa, query ou caminho sobreposto ao aplicativo", () => {
+test("Gateway não aceita origem externa, query ou caminho com vários segmentos", () => {
   for (const path of ["", "/", "https://evil.test", "//evil.test", "/avmetrics?foo=1", "/foo/bar"]) {
     assert.equal(caminhoDoGatewayGoogle("demo.lojas.avilaops.com", { GOOGLE_TAG_GATEWAY_LOJAS_PATH: path }), null, path);
   }
