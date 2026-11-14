@@ -280,7 +280,10 @@
         { "kind": "code", "path": "src/components/painel/SeoDescoberta.tsx" },
         { "kind": "code", "path": "src/app/page.tsx" },
         { "kind": "code", "path": "src/app/llms.txt/route.ts" },
+        { "kind": "code", "path": "src/app/robots.txt/route.ts" },
+        { "kind": "code", "path": "src/lib/robots-content-signals.ts" },
         { "kind": "test", "path": "src/lib/seo-config.test.ts" },
+        { "kind": "test", "path": "src/lib/robots-content-signals.test.ts" },
         { "kind": "test", "path": "scripts/qa-seo-descoberta.mts" },
         { "kind": "contract", "path": "docs/SEO-DESCOBERTA-LOJAS.md" }
       ],

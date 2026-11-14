@@ -51,8 +51,10 @@ Files: `src/components/painel/SeoDescoberta.tsx` substitui o componente Descober
 - [x] Criar formulário, prévia, orientações e atalhos com a identidade do painel.
 - [x] Integrar sessão e permissão; salvar pelo endpoint existente.
 - [x] Conferir navegação, persistência, erro/negação de acesso, desktop/mobile e ausência de vazamento entre lojas no CI.
-- [ ] Revisar diff, checks e artefatos; integrar e acompanhar publicação normal.
-- [ ] Conferir defaults em produção sem alterar configurações de clientes e registrar evidências.
+- [x] Revisar diff, checks e artefatos; integrar e acompanhar publicação normal.
+- [x] Conferir defaults em produção sem alterar configurações de clientes e registrar evidências.
+
+Conclusão: PR259 integrado como beab5bd; CI43606248888 e publicação43606984158 aprovados, incluindo backup, migração, release e smoke. As cinco lojas foram conferidas por HTTP na nova versão: llms200 e título, descrição, canonical e robots iguais ao baseline, sem gravação em preferências de clientes. Essa confirmação supera os estados intermediários descritos abaixo.
 
 ## Evidência atual
 

@@ -40,7 +40,7 @@ Gerado do tenant, sem configuração nossa, no subdomínio e no domínio própri
 
 | Recurso | Onde | Regra |
 |---|---|---|
-| `/robots.txt` | `src/app/robots.ts` → `lib/descoberta.ts` | por host; busca liberada; `/carrinho /checkout /pedido/ /conta /api/` fechados; treinamento fechado salvo opt-in; `Sitemap:` no host oficial |
+| `/robots.txt` | `src/app/robots.txt/route.ts` → `lib/descoberta.ts` e `lib/robots-content-signals.ts` | por host; busca e entrada de IA liberadas em lojas públicas; treinamento conforme opt-in; conta e APIs fechadas; `Content-Signal` nas três categorias; `Sitemap:` no host oficial |
 | `/sitemap.xml` | `src/app/sitemap.ts` | só host oficial; só `produtoPublicavel`; categorias com produto; institucionais; sem parâmetro, sem privada |
 | `/llms.txt` | `src/app/llms.txt/route.ts` | identidade, sobre/contato, como comprar (só o que é verdade: sem "aceita PIX" em loja sem gateway), até 30 categorias, até 12 destaques, políticas, `Optional` com sitemap e llms-full; **sem lista de produtos e sem preço zero** |
 | `/llms-full.txt` | `src/app/llms-full.txt/route.ts` | o catálogo publicável em texto; sob consulta e esgotado ditos como tal |

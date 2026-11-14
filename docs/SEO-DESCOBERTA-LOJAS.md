@@ -10,6 +10,8 @@ O módulo fica em Configurações • SEO e descoberta, no caminho já existente
 
 • Treinamento de modelos de IA continua separado das permissões de busca e da publicação dos resumos. O padrão continua desligado.
 
+O robots.txt declara `Content-Signal` para busca, entrada em respostas de IA e treinamento. Nas lojas públicas, busca e entrada ficam permitidas e treinamento segue a escolha salva; lojas canceladas/em provisionamento e hosts desconhecidos declaram as três categorias negadas. Na plataforma, as três categorias são permitidas por decisão explícita do proprietário. As regras privadas e os grupos de robôs permanecem. A diretiva é publicada por uma rota textual, preservando a URL `/robots.txt`.
+
 • O painel mostra o endereço oficial, a configuração de rastreamento e atalhos para os documentos públicos. Não afirma que a loja está indexada, não atribui nota e não promete posição ou citação por assistentes.
 
 ## Fonte e dados
