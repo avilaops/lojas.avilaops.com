@@ -88,3 +88,14 @@ test("evento de outra loja e resumo sem protocolo não confirmam manifestação"
   await reconciliarManifestacoesFiscais(prisma, f.tenant.id);
   assert.equal((await prisma.manifestacaoFiscalLoja.findUniqueOrThrow({ where: { id: registro.id } })).status, "PENDENTE_CONFERENCIA");
 });
+
+test("manifestação informada pelo resumo acompanha XML sem inventar intenção ou protocolo", async () => {
+  for (const [codigo, esperado] of [["1", "AGUARDANDO_XML"], ["4", "AGUARDANDO_XML"], ["2", "REVISAO_NECESSARIA"], ["3", "REVISAO_NECESSARIA"]]) {
+    const f = await fixture();
+    await prisma.documentoFiscalLoja.create({ data: { tenantId: f.tenant.id, cnpj: CNPJ, chave: CHAVE, nsu: "000000000000002", schema: "resNFe_v1.01.xsd", xml: `<resNFe><chNFe>${CHAVE}</chNFe><cSitConf>${codigo}</cSitConf><cSitNFe>1</cSitNFe></resNFe>` } });
+    const acompanhamento = (await consultarAcompanhamentoFiscal(f.tenant.id, [CHAVE])).get(CHAVE)!;
+    assert.equal(acompanhamento.estado, esperado);
+    assert.equal(acompanhamento.manifestacao, null);
+    assert.equal(await prisma.manifestacaoFiscalLoja.count({ where: { tenantId: f.tenant.id } }), 0);
+  }
+});
