@@ -1,4 +1,5 @@
 import type { Tenant } from "@prisma/client";
+import { CHAVE, VERSAO } from "./consentimento-config";
 
 /**
  * Os pixels que a loja carrega. Fica fora do componente porque o layout (que é
@@ -6,6 +7,8 @@ import type { Tenant } from "@prisma/client";
  * cookies — e função exportada de módulo "use client" não roda no servidor.
  */
 export interface PixelsDaLoja {
+  /** Caminho reservado no próprio domínio, somente após configurar o Gateway. */
+  googleTagGatewayPath?: string;
   gtmId: string | null;
   metaPixelId: string | null;
   ga4Id: string | null;
@@ -15,8 +18,18 @@ export interface PixelsDaLoja {
   googleMerchantId: string | null;
 }
 
-export function pixelsDo(t: Tenant): PixelsDaLoja {
-  return { gtmId: t.gtmId, metaPixelId: t.metaPixelId, ga4Id: t.ga4Id, googleAdsId: t.googleAdsId, tiktokPixelId: t.tiktokPixelId, googleMerchantId: t.googleMerchantId };
+export function pixelsDo(t: Tenant, hostname?: string): PixelsDaLoja {
+  const gateway = caminhoDoGatewayGoogle(hostname ?? "");
+  return { gtmId: t.gtmId, metaPixelId: t.metaPixelId, ga4Id: t.ga4Id, googleAdsId: t.googleAdsId, tiktokPixelId: t.tiktokPixelId, googleMerchantId: t.googleMerchantId, ...(gateway ? { googleTagGatewayPath: gateway } : {}) };
+}
+
+/** Configuração operacional da zona da plataforma; domínios de clientes são independentes. */
+export function caminhoDoGatewayGoogle(hostname: string, env: Record<string, string | undefined> = process.env): string | null {
+  const caminho = (env.GOOGLE_TAG_GATEWAY_LOJAS_PATH ?? "").trim().replace(/\/+$/, "");
+  if (!/^\/[a-zA-Z0-9]{1,98}$/.test(caminho)) return null;
+  const host = hostname.trim().toLowerCase().replace(/:\d+$/, "");
+  const loja = host === "lojas.avilaops.com" || /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.lojas\.avilaops\.com$/.test(host);
+  return loja ? `${caminho}/` : null;
 }
 
 /**
@@ -30,6 +43,7 @@ export function pixelsDo(t: Tenant): PixelsDaLoja {
  */
 export function pixelsDaPlataforma(env: Record<string, string | undefined> = process.env): PixelsDaLoja {
   const gtm = (env.PLATAFORMA_GTM_ID ?? "").trim();
+  const gateway = caminhoDoGatewayGoogle("lojas.avilaops.com", env);
   return {
     gtmId: /^GTM-[A-Z0-9]+$/.test(gtm) ? gtm : null,
     metaPixelId: null,
@@ -37,7 +51,16 @@ export function pixelsDaPlataforma(env: Record<string, string | undefined> = pro
     googleAdsId: null,
     tiktokPixelId: null,
     googleMerchantId: null,
+    ...(gateway ? { googleTagGatewayPath: gateway } : {}),
   };
+}
+
+/** O ID explícito evita carregar o contêiner geral configurado na zona. */
+export function scriptDoGtm(p: Pick<PixelsDaLoja, "gtmId" | "googleTagGatewayPath">): string {
+  if (!p.gtmId) return "";
+  const origem = p.googleTagGatewayPath ?? "https://www.googletagmanager.com/gtm.js";
+  const src = `${origem}?id=${encodeURIComponent(p.gtmId)}`;
+  return `(function(w,d,s,l,u){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=u+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer',${JSON.stringify(src)});`;
 }
 
 /** Sem nenhum id não há cookie de terceiro: a loja não precisa pedir consentimento. */
@@ -60,6 +83,9 @@ export function scriptInicialDoGoogle(p: Pick<PixelsDaLoja, "gtmId">): string {
     "window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}" +
     "gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'denied',wait_for_update:500});" +
     "gtag('set','ads_data_redaction',true);" +
+    // O Gateway pode carregar antes da hidratação. Só o aceite vigente já
+    // registrado libera a coleta; storage indisponível mantém o default.
+    `(function(){try{var c=JSON.parse(localStorage.getItem(${JSON.stringify(CHAVE)})||"null");if(c&&c.versao===${VERSAO}&&c.escolha==="aceito")gtag('consent','update',{ad_storage:'granted',ad_user_data:'granted',ad_personalization:'granted',analytics_storage:'granted'});}catch(e){}})();` +
     `window.__lojaPixels={gtm:${p.gtmId ? "true" : "false"}};`
   );
 }

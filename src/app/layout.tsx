@@ -187,7 +187,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   });
   const exemploBusca = exemplo?.nome.split(" - ")[0].trim().slice(0, 32) ?? null;
   const publico = tenantPublico(t);
-  const pixels = pixelsDo(t);
+  const pixels = pixelsDo(t, h.get("x-forwarded-host") ?? h.get("host") ?? undefined);
   const identidadeComercial = identidadePublica(t);
   const jsonLd = {
     ...schemaDaIdentidadePublica(identidadeComercial, {

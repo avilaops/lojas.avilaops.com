@@ -3,7 +3,7 @@
 import Script from "next/script";
 import { useEffect } from "react";
 import { useConsentimento } from "@/lib/consentimento";
-import { scriptInicialDoGoogle, type PixelsDaLoja } from "@/lib/pixels";
+import { scriptDoGtm, scriptInicialDoGoogle, type PixelsDaLoja } from "@/lib/pixels";
 
 /**
  * Pixels de anúncio da loja. Cada um é opcional e só é carregado se o lojista
@@ -22,15 +22,19 @@ import { scriptInicialDoGoogle, type PixelsDaLoja } from "@/lib/pixels";
  * que o Gerenciador de Anúncios precisa para otimizar campanha por conversão.
  */
 export default function Pixels({ p }: { p: PixelsDaLoja }) {
-  const aceito = useConsentimento() === "aceito";
+  const escolha = useConsentimento();
+  const aceito = escolha === "aceito";
 
   // Atualiza também a revogação pelo rodapé. Só retornar quando não aceito
   // deixava a tag com o último granted até o próximo carregamento completo.
   useEffect(() => {
+    // O snapshot do servidor ainda não conhece a escolha salva. Atualizar
+    // denied aqui encerraria o wait_for_update antes do aceite ser hidratado.
+    if (escolha === undefined) return;
     const w = window as Window & { gtag?: (...args: unknown[]) => void };
     const estado = aceito ? "granted" : "denied";
     w.gtag?.("consent", "update", { ad_storage: estado, ad_user_data: estado, ad_personalization: estado, analytics_storage: estado });
-  }, [aceito]);
+  }, [aceito, escolha]);
 
   const gtag = p.ga4Id || p.googleAdsId;
   const inicioDoDataLayer = scriptInicialDoGoogle(p);
@@ -46,7 +50,7 @@ export default function Pixels({ p }: { p: PixelsDaLoja }) {
       {(p.gtmId || gtag) && <script dangerouslySetInnerHTML={{ __html: inicioDoDataLayer }} />}
       {p.gtmId && (
         <Script id="gtm" strategy="afterInteractive">
-          {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','${p.gtmId}');`}
+          {scriptDoGtm(p)}
         </Script>
       )}
 
