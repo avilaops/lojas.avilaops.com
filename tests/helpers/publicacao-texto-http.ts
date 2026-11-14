@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { writeFile } from "node:fs/promises";
+import { converterHtml } from "@avilaops/publicacao-texto";
 import { prisma } from "../../src/lib/db.ts";
 import { salvarProdutoNoCatalogo } from "../../src/lib/catalogo-escrita.ts";
 
@@ -38,7 +39,14 @@ export async function verificarPublicacaoTextoHttp(servidor: string, tenantId: s
   const html = await obter("127.0.0.1", "/developers/privacidade");
   assert.equal(html.status, 200);
   assert.match(html.headers.get("link") ?? "", /\/developers\/privacidade\/index\.md/);
+  const htmlPlataforma = await html.text();
+  const convertido = converterHtml(htmlPlataforma, { url: "https://127.0.0.1/developers/privacidade", formato: "md" });
+  assert.equal(convertido.indexavel, true, `HTML real da plataforma recusado pelo conversor: ${convertido.motivo}.`);
   const plataforma = await obter("127.0.0.1", "/developers/privacidade/index.md");
+  if (plataforma.status !== 200) {
+    const direta = await obter("127.0.0.1", "/api/publicacao-texto?caminho=%2Fdevelopers%2Fprivacidade%2Findex.md");
+    assert.fail(`Publicação HTTP da plataforma recusada • via proxy ${plataforma.status} • via API ${direta.status} • HTML indexável ${convertido.indexavel}.`);
+  }
   await conferir(plataforma, "conector", "markdown");
   const caminho = `/produtos/${slug}/index.md`;
   const textoA = await obter("localhost", caminho);
