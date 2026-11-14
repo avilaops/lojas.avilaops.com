@@ -1,4 +1,4 @@
-/** Regra extraída da página do pedido para reproduzir a regressão na CI. */
+/** Somente estados com pagamento confirmado permitem registrar uma compra. */
 export function compraConfirmadaParaAnalytics(status: string): boolean {
-  return status !== "AGUARDANDO_PAGAMENTO" && status !== "CANCELADO";
+  return ["PAGO", "EM_SEPARACAO", "ENVIADO", "ENTREGUE"].includes(status);
 }
