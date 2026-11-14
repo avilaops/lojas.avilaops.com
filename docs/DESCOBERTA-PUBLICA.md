@@ -87,10 +87,19 @@ registrada como aprovada antes de existir execução vinculada ao commit.
 
 ## Verificação somente no GitHub CI
 
-Estado atual: `not_run`. Nenhum build, teste, instalação de dependências ou
-infraestrutura foi executado localmente. A restrição do projeto prevalece sobre
-a execução local RED/GREEN; os testes foram escritos antes da implementação,
-mas a execução inicial e a final precisam de evidência de CI.
+Evidência executada: [CI 43577431530](https://github.com/avilaops/lojas.avilaops.com/actions/runs/43577431530)
+aprovada sobre o HEAD `e00fb9c3437baf0813eefe09142e3be88ff12b49` do
+[PR #250](https://github.com/avilaops/lojas.avilaops.com/pull/250), com merge de
+teste `1e9cb114babb1116d76f9d88c226d0d6d2662373`. Passaram unitários, tipos,
+lint, as três partes PostgreSQL, build standalone, os dois jobs de navegador
+e o gate de contratos/API v1/Experiments/MLOps. O step 10 do job `132395216532`
+executou `qa-descoberta-publica.mts` com sucesso. Esta é evidência de CI isolada,
+não de produção; o fechamento documental subsequente precisa da CI do HEAD final.
+
+Nenhum build, teste, instalação de dependências ou infraestrutura do E-Commerce
+foi executado localmente. A restrição do projeto prevaleceu sobre a execução
+local RED/GREEN; os testes foram escritos antes da implementação e executados
+exclusivamente no GitHub CI.
 O lockfile foi gerado somente com
 `npm install --package-lock-only --ignore-scripts --no-audit --no-fund`, sem criar
 `node_modules` ou executar scripts.
@@ -106,7 +115,13 @@ O lockfile foi gerado somente com
   e cookies; JSON-LD com marca relativa e tentativa de fechar script.
 
 O job preserva `lojas-descoberta-publica-browser-<sha>/resultado.json`, contendo
-commit, runId, tentativa e ambiente `github-ci-isolado`. Esse artefato é evidência
-da execução isolada da CI, não de produção ou autenticação de origem. Após CI e
-revisão, registrar o run/commit reais e verificar os hosts publicados antes de
-marcar a tarefa concluída.
+commit, runId, tentativa e ambiente `github-ci-isolado`. O artefato desta execução
+tem ID `14107132019`, nome
+`lojas-descoberta-publica-browser-1e9cb114babb1116d76f9d88c226d0d6d2662373` e
+digest do ZIP informado pela API GitHub
+`sha256:bf6e31545cec1e585a110565aeb5d0834f6b33ddbfd60d9a3525dce2b338ec43`.
+O nome identifica o merge de teste; o HEAD de origem continua explicitado acima.
+Esse artefato é evidência da execução isolada da CI, não de produção ou
+autenticação de origem. O PR permanece em rascunho. A tarefa continua em revisão
+até a execução coordenadora conferir o HEAD final e autorizar a integração;
+nenhum merge ou deploy foi realizado por esta entrega.
