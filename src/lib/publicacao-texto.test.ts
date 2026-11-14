@@ -26,6 +26,13 @@ function dependencias(buscarHtml: typeof fetch): Dependencias {
   return { origemInterna: "http://127.0.0.1:3080", resolverHost: async host => lojas[host] ?? null, buscarHtml };
 }
 
+test("conversor fixado funciona no runtime de testes do aplicativo", async () => {
+  const { converterHtml } = await import("@avilaops/publicacao-texto");
+  const resultado = converterHtml(pagina("Contrato do conversor"), { url: "https://a.lojas.avilaops.com/produtos/mesmo", formato: "mdx" });
+  assert.equal(resultado.indexavel, true);
+  assert.match(resultado.conteudo, /# Contrato do conversor/);
+});
+
 async function publicar(host: string, caminho: string, deps: Dependencias, adicionais: Record<string, string> = {}) {
   const pedido = new NextRequest(`https://${host}${caminho}`, { headers: { host, ...adicionais } });
   const roteada = proxy(pedido);
