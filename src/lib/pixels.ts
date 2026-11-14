@@ -6,6 +6,8 @@ import type { Tenant } from "@prisma/client";
  * cookies — e função exportada de módulo "use client" não roda no servidor.
  */
 export interface PixelsDaLoja {
+  /** Caminho reservado no próprio domínio, somente após configurar o Gateway. */
+  googleTagGatewayPath?: string;
   gtmId: string | null;
   metaPixelId: string | null;
   ga4Id: string | null;
@@ -15,8 +17,14 @@ export interface PixelsDaLoja {
   googleMerchantId: string | null;
 }
 
-export function pixelsDo(t: Tenant): PixelsDaLoja {
-  return { gtmId: t.gtmId, metaPixelId: t.metaPixelId, ga4Id: t.ga4Id, googleAdsId: t.googleAdsId, tiktokPixelId: t.tiktokPixelId, googleMerchantId: t.googleMerchantId };
+export function pixelsDo(t: Tenant, hostname?: string): PixelsDaLoja {
+  const gateway = caminhoDoGatewayGoogle(hostname ?? "");
+  return { gtmId: t.gtmId, metaPixelId: t.metaPixelId, ga4Id: t.ga4Id, googleAdsId: t.googleAdsId, tiktokPixelId: t.tiktokPixelId, googleMerchantId: t.googleMerchantId, ...(gateway ? { googleTagGatewayPath: gateway } : {}) };
+}
+
+/** Configuração operacional da zona da plataforma; domínios de clientes são independentes. */
+export function caminhoDoGatewayGoogle(_hostname: string, _env: Record<string, string | undefined> = process.env): string | null {
+  return null;
 }
 
 /**
