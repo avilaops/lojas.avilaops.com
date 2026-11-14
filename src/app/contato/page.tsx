@@ -10,7 +10,7 @@ import { descricaoDaPagina } from "@/lib/textos-loja";
 // Descrição própria: sem ela a página herdava a da loja, igual à da home.
 export async function generateMetadata(): Promise<Metadata> {
   const t = await exigirTenant();
-  return { title: "Contato", description: descricaoDaPagina(t, "contato"), alternates: { canonical: "/contato" } };
+  return { title: "Contato • Fale com nossa equipe de atendimento", description: descricaoDaPagina(t, "contato"), alternates: { canonical: "/contato" } };
 }
 
 export default async function Contato() {

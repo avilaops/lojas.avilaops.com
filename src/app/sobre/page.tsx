@@ -8,7 +8,7 @@ import { descricaoDaPagina } from "@/lib/textos-loja";
 // Descrição própria: sem ela a página herdava a da loja, igual à da home.
 export async function generateMetadata(): Promise<Metadata> {
   const t = await exigirTenant();
-  return { title: "Sobre", description: descricaoDaPagina(t, "sobre"), alternates: { canonical: "/sobre" } };
+  return { title: "Sobre • Nossa história, produtos e atendimento", description: descricaoDaPagina(t, "sobre"), alternates: { canonical: "/sobre" } };
 }
 
 export default async function Sobre() {

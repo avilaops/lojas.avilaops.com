@@ -30,7 +30,7 @@ type SP = Record<string, string | undefined>;
  */
 export async function generateMetadata({ searchParams }: { searchParams: Promise<SP> }): Promise<Metadata> {
   const sp = await searchParams;
-  return metadataDeListagem({ base: "/produtos", sp, pagina: paginaDaUrl(sp), title: sp.q ? `Busca: ${sp.q}` : "Produtos" });
+  return metadataDeListagem({ base: "/produtos", sp, pagina: paginaDaUrl(sp), title: sp.q ? `Busca: ${sp.q}` : "Produtos • Confira o catálogo completo da loja" });
 }
 
 export default async function Produtos({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {

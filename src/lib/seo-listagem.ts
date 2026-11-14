@@ -34,7 +34,7 @@ export function metadataDeListagem(opcoes: {
   const canonical = opcoes.pagina > 1 ? `${opcoes.base}?pagina=${opcoes.pagina}` : opcoes.base;
 
   return {
-    title: opcoes.pagina > 1 ? `${opcoes.title} · página ${opcoes.pagina}` : opcoes.title,
+    title: opcoes.pagina > 1 ? `${opcoes.title} • página ${opcoes.pagina}` : opcoes.title,
     // Só quando existe: `description: undefined` apagava a descrição padrão da
     // loja, que viria do layout, e /produtos saía sem meta description.
     ...(opcoes.description ? { description: opcoes.description } : {}),

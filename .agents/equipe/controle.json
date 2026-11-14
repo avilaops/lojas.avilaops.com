@@ -13,6 +13,17 @@
   ],
   "tasks": [
     {
+      "id": "BRILHAX-TITULOS-20261114",
+      "title": "Descrever as páginas institucionais e o catálogo nos títulos",
+      "objective": "Corrigir títulos curtos confirmados no HTML de /sobre, /contato e /produtos e usar o separador solicitado pelo proprietário.",
+      "assignee": "codex",
+      "priority": "normal",
+      "status": "em-andamento",
+      "acceptanceCriteria": ["Títulos descritivos no HTML e OpenGraph das três páginas, com nome da loja.", "Canonicals, paginação e noindex de filtros preservados.", "CI e HTML público da versão publicada verificados."],
+      "environment": "worktree isolada, GitHub CI e produção",
+      "evidence": "Prints do Bing em 14/11/2026; leitura UTF-8 do HTML público confirmou títulos de 15, 17 e 18 caracteres. Ajuste compartilhado nas páginas e no template, sem mudar conteúdo comercial."
+    },
+    {
       "id": "LOJAS-ANALYTICS-20261114",
       "title": "Completar GTM, GA4 e Google Tag Gateway por loja",
       "objective": "Atender autorização do proprietário após auditoria, com medição isolada por loja e plataforma e sem pageviews duplicados.",
