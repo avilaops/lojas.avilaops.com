@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { runInNewContext } from "node:vm";
-import { caminhoDoGatewayGoogle, pixelsDaPlataforma, scriptDoGtm, temRastreio } from "./pixels";
+import { caminhoDoGatewayGoogle, pixelsDaPlataforma, scriptDoGtm, scriptInicialDoGoogle, temRastreio } from "./pixels";
+import { CHAVE, VERSAO } from "./consentimento";
 
 test("site da plataforma só carrega tag com um id de GTM bem formado", () => {
   assert.equal(pixelsDaPlataforma({}).gtmId, null);
@@ -54,4 +55,31 @@ test("Gateway não aceita origem externa, query ou caminho sobreposto ao aplicat
   for (const path of ["", "/", "https://evil.test", "//evil.test", "/avmetrics?foo=1", "/foo/bar"]) {
     assert.equal(caminhoDoGatewayGoogle("demo.lojas.avilaops.com", { GOOGLE_TAG_GATEWAY_LOJAS_PATH: path }), null, path);
   }
+});
+
+function consentimentoInicial(ler: (chave: string) => string | null) {
+  const contexto = { dataLayer: [] as unknown[], localStorage: { getItem: ler } };
+  runInNewContext(scriptInicialDoGoogle({ gtmId: "GTM-ABC123" }), { ...contexto, window: contexto });
+  return contexto.dataLayer.map((x) => Array.from(x as ArrayLike<unknown>))
+    .filter((x) => x[0] === "consent") as [string, string, Record<string, string>][];
+}
+
+test("escolha aceita e vigente é restaurada antes dos loaders, preservando default negado como primeiro comando", () => {
+  const comandos = consentimentoInicial((chave) => {
+    assert.equal(chave, CHAVE);
+    return JSON.stringify({ versao: VERSAO, escolha: "aceito" });
+  });
+  assert.equal(comandos[0][1], "default");
+  assert.equal(comandos[0][2].analytics_storage, "denied");
+  for (const categoria of ["analytics_storage", "ad_storage", "ad_user_data", "ad_personalization"]) {
+    assert.equal(comandos.at(-1)?.[2][categoria], "granted", categoria);
+  }
+});
+
+test("escolha essencial, inválida ou vencida e storage bloqueado mantêm o estado negado", () => {
+  for (const valor of [null, "{", JSON.stringify({ versao: VERSAO, escolha: "essencial" }), JSON.stringify({ versao: 0, escolha: "aceito" }), JSON.stringify({ versao: VERSAO, escolha: "qualquer" })]) {
+    const comandos = consentimentoInicial(() => valor);
+    assert.ok(comandos.every((x) => x[2].analytics_storage === "denied"));
+  }
+  assert.equal(consentimentoInicial(() => { throw new Error("Storage bloqueado"); })[0][2].analytics_storage, "denied");
 });
