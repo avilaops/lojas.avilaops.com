@@ -12,6 +12,21 @@
     }
   ],
   "tasks": [
+    {
+      "id": "BRILHAX-ALT-CATEGORIA-20261114",
+      "title": "Descrever as capas de categoria para leitores e mecanismos de busca",
+      "objective": "Corrigir o texto alternativo vazio da capa compartilhada, identificado na categoria Produtos para Moto da Brilhax pelo Bing Webmaster Tools.",
+      "assignee": "codex",
+      "priority": "normal",
+      "status": "em-andamento",
+      "acceptanceCriteria": [
+        "A imagem de capa recebe o nome da categoria no atributo alt.",
+        "A escolha entre imagem cadastrada, foto de produto e inicial da categoria continua funcionando.",
+        "A verificação ocorre exclusivamente no GitHub CI; publicação e novo rastreamento são registrados separadamente."
+      ],
+      "environment": "Brilhax pública, componente compartilhado de Lojas e GitHub CI",
+      "evidence": "HTML público de https://brilhax.com/categoria/produtos-para-moto consultado em 14/11/2026: categoria-moto-v2.webp possui alt vazio; imagens do produto possuem descrições. Causa confirmada em src/components/CapaCategoria.tsx."
+    },
       {
         "id": "FISCAL-ENTRADA-20261113",
         "title": "Corrigir downloads e sincronização e conferir entrada por NF-e",
