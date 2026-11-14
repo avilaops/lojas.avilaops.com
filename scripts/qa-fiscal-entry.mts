@@ -29,6 +29,8 @@ try {
   const produtos = await Promise.all([1, 2].map(n => salvarProdutoNoCatalogo(loja.id, null, { nome: `Produto fiscal QA ${n}`, slug: `produto-fiscal-qa-${n}`, estoque: 5, precoCentavos: 100 })));
   const variantes = await Promise.all(produtos.map(p => prisma.variante.findFirstOrThrow({ where: { tenantId: loja.id, produtoId: p.id } })));
   const doc = await prisma.documentoFiscalLoja.create({ data: { tenantId: loja.id, cnpj: loja.cnpj!, chave, nsu: "000000000000001", schema: "procNFe_v4.00.xsd", xml } });
+  const chaveResumo = chave.slice(0, 25) + "000000456" + chave.slice(34);
+  const resumo = await prisma.documentoFiscalLoja.create({ data: { tenantId: loja.id, cnpj: loja.cnpj!, chave: chaveResumo, nsu: "000000000000009", schema: "resNFe_v1.01.xsd", xml: `<resNFe><chNFe>${chaveResumo}</chNFe><xNome>Fornecedor resumo QA</xNome><cSitConf>0</cSitConf></resNFe>` } });
   const foreign = await prisma.documentoFiscalLoja.create({ data: { tenantId: outra.id, cnpj: "99999999000191", chave, nsu: "000000000000001", schema: "procNFe_v4.00.xsd", xml } });
   const path = `/api/painel/fiscal/documentos/${doc.id}/entrada-estoque`;
   const prepared = await fetch(base + path, { headers: { cookie } });
@@ -60,6 +62,16 @@ try {
     await route.fulfill({ response });
   });
   await page.goto(base + "/painel/configuracoes/fiscal");
+  await page.getByRole("button", { name: "Conferir entrada da NF-e 456" }).click();
+  const resumoDialog = page.getByRole("dialog", { name: "Conferir entrada de estoque" });
+  await resumoDialog.getByRole("button", { name: "Registrar ciência da emissão" }).waitFor();
+  await resumoDialog.getByRole("button", { name: "Atualizar documentos" }).waitFor();
+  assert.match(await resumoDialog.innerText(), /aguardando manifestação/i);
+  await page.screenshot({ path: output + "/resumo.png", fullPage: true });
+  assert.equal(await prisma.manifestacaoFiscalLoja.count({ where: { tenantId: loja.id } }), 0, "Abrir resumo nunca envia manifestação");
+  assert.equal(await prisma.comandoEstoque.count({ where: { tenantId: loja.id } }), 0);
+  assert.equal((await fetch(base + `/api/painel/fiscal/documentos/${resumo.id}/entrada-estoque`, { headers: { cookie } })).status, 200);
+  await resumoDialog.getByRole("button", { name: "Fechar", exact: true }).click();
   await page.getByRole("button", { name: "Conferir entrada da NF-e 123" }).click();
   const dialog = page.getByRole("dialog", { name: "Conferir entrada de estoque" });
   await dialog.waitFor();
@@ -92,6 +104,10 @@ try {
   await page.setViewportSize({ width: 393, height: 852 });
   await page.screenshot({ path: output + "/mobile.png", fullPage: true });
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth));
+  await dialog.getByRole("button", { name: "Fechar", exact: true }).click();
+  await page.getByText("Entrada registrada", { exact: true }).first().waitFor();
+  const lista = await fetch(base + "/api/painel/fiscal?tipo=nfe-recebidas", { headers: { cookie } }).then(r => r.json());
+  assert.equal(lista.documentos.find((d: { id: string }) => d.id === doc.id)?.acompanhamento.estado, "ENTRADA_REGISTRADA");
   assert.equal(erros.length, 0, erros.join("; "));
   console.log(JSON.stringify({ fiscalEntryBrowser: "pass", duplicateEntry: "prevented", tenantIsolation: "pass" }));
 } finally {
