@@ -1,6 +1,6 @@
 import Link from "next/link";
 import NavegacaoPublica from "@/components/plataforma/NavegacaoPublica";
-import Consentimento from "@/components/Consentimento";
+import Consentimento, { PreferenciasCookies } from "@/components/Consentimento";
 import Pixels from "@/components/Pixels";
 import { pixelsDaPlataforma, temRastreio } from "@/lib/pixels";
 import { sessaoDoPainel } from "@/lib/sessao";
@@ -33,7 +33,7 @@ export default async function PlataformaLayout({ children }: { children: React.R
           <div><strong>Recursos</strong><Link href="/ajuda">Ajuda</Link><Link href="/blog">Blog</Link><Link href="/developers">Desenvolvedores</Link><Link href="/marca">Marca</Link></div>
           <div><strong>Acesso</strong><Link href="/entrar">Painel do lojista</Link><Link href="/termos-comerciais">Termos comerciais</Link><a href="https://avilaops.com">Avila Ops</a></div>
         </div>
-        <div className="pl-container pl-footer-base"><span>© {new Date().getFullYear()} Avila Ops.</span><span>Feito no Brasil para negócios que querem crescer.</span></div>
+        <div className="pl-container pl-footer-base"><span>© {new Date().getFullYear()} Avila Ops.</span>{temRastreio(pixels) && <PreferenciasCookies />}<span>Feito no Brasil para negócios que querem crescer.</span></div>
       </footer>
     </div>
   );
