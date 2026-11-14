@@ -111,7 +111,9 @@ try {
   await page.locator('[data-seo-lojas="1"]').waitFor();
   for (const width of [1440, 393]) {
     await page.setViewportSize({ width, height: 1000 });
-    await page.screenshot({ path: `${pasta}/painel-${width}.png`, fullPage: true });
+    await page.evaluate(() => { if (document.activeElement instanceof HTMLElement) document.activeElement.blur(); window.scrollTo(0, 0); });
+    await page.waitForFunction(() => window.scrollY === 0);
+    await page.screenshot({ path: `${pasta}/painel-${width}.png`, fullPage: true, animations: "disabled" });
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), "Painel sem rolagem horizontal");
   }
   await page.getByRole("button", { name: "Usar título e descrição automáticos", exact: true }).click();
