@@ -431,7 +431,7 @@ body:has(.home-automotivo) .rodape-loja { margin-top: 1rem; }
   margin-top: 0.75rem;
 }
 
-/* Aviso de cookies — some assim que o comprador responde, não volta a atrapalhar. */
+/* Preferências manuais de cookies • o painel só existe quando aberto. */
 .aviso-cookies {
   position: fixed;
   inset-inline: 0.75rem;
@@ -439,6 +439,8 @@ body:has(.home-automotivo) .rodape-loja { margin-top: 1rem; }
   z-index: 60;
   margin-inline: auto;
   max-width: 46rem;
+  max-height: calc(100dvh - 6rem);
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -451,15 +453,13 @@ body:has(.home-automotivo) .rodape-loja { margin-top: 1rem; }
   line-height: 1.5;
   color: var(--muted-foreground);
 }
-html[data-cookies-respondido] .aviso-cookies { display: none; }
-/* Fonte do sistema no aviso: ele sai no HTML e, com a fonte da loja, era
-   redesenhado quando ela chegava; nas páginas com pouco texto virava o LCP. */
+/* A fonte do sistema mantém o painel independente da fonte da loja. */
 .aviso-cookies { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
 .aviso-cookies a { text-decoration: underline; }
-.aviso-cookies-acoes { display: flex; gap: 0.5rem; }
-.aviso-cookies-acoes button { flex: 1; height: 2.5rem; font-size: 0.8125rem; }
+.aviso-cookies-acoes { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.aviso-cookies-acoes button { flex: 1 1 auto; min-height: 2.5rem; font-size: 0.8125rem; }
 @media (min-width: 640px) {
-  .aviso-cookies { flex-direction: row; align-items: center; justify-content: space-between; gap: 1.5rem; }
+  .aviso-cookies { gap: 1rem; }
   .aviso-cookies-acoes { flex: 0 0 auto; }
   .aviso-cookies-acoes button { flex: 0 0 auto; padding-inline: 1.25rem; }
 }

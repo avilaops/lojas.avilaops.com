@@ -1,6 +1,8 @@
 "use client";
 
 import type { EventoFunil } from "./funil-analytics";
+import { lerConsentimentoAtual } from "./consentimento";
+import { permissoesDaEscolha } from "./consentimento-config";
 
 /**
  * Eventos de e-commerce disparados no navegador do comprador.
@@ -181,6 +183,7 @@ function disparar(nomes: { ga4: string; meta: string; tiktok: string }, itens: I
         ...(extra.cupom ? { coupon: extra.cupom } : {}),
       });
     }
+    if (!permissoesDaEscolha(lerConsentimentoAtual()).publicidade) return;
     w.fbq?.("track", nomes.meta, {
       currency: "BRL",
       value: reais(valor),

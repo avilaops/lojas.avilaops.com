@@ -3,19 +3,20 @@
 import Script from "next/script";
 import { useEffect } from "react";
 import { useConsentimento } from "@/lib/consentimento";
+import { consentimentoGoogle, permissoesDaEscolha } from "@/lib/consentimento-config";
 import { scriptDoGtm, scriptInicialDoGoogle, type PixelsDaLoja } from "@/lib/pixels";
 
 /**
  * Pixels de anúncio da loja. Cada um é opcional e só é carregado se o lojista
  * tiver colado o id — loja sem anúncio não paga o custo de nenhum script.
  *
- * Nada de terceiro roda antes do comprador responder o aviso de cookies:
+ * As permissões são independentes e começam negadas:
  *
  * - Google (GTM/gtag) carrega com o Consent Mode v2 em `denied`, que é o
  *   formato que o próprio Google pede: sem cookie, só ping sem identificação,
  *   e a medição volta inteira no `update` se a pessoa aceitar.
- * - Meta e TikTok não têm equivalente confiável, então o script só é inserido
- *   depois do aceite.
+ * - Meta e TikTok só carregam após permissão de publicidade; revogação também
+ *   atualiza o SDK que já estiver carregado.
  *
  * Os eventos de compra (ver `src/lib/eventos-loja.ts`) são disparados pelo
  * navegador nas telas de produto, carrinho, checkout e pedido pago. É o mínimo
@@ -23,7 +24,7 @@ import { scriptDoGtm, scriptInicialDoGoogle, type PixelsDaLoja } from "@/lib/pix
  */
 export default function Pixels({ p }: { p: PixelsDaLoja }) {
   const escolha = useConsentimento();
-  const aceito = escolha === "aceito";
+  const publicidade = permissoesDaEscolha(escolha).publicidade;
 
   // Atualiza também a revogação pelo rodapé. Só retornar quando não aceito
   // deixava a tag com o último granted até o próximo carregamento completo.
@@ -31,10 +32,16 @@ export default function Pixels({ p }: { p: PixelsDaLoja }) {
     // O snapshot do servidor ainda não conhece a escolha salva. Atualizar
     // denied aqui encerraria o wait_for_update antes do aceite ser hidratado.
     if (escolha === undefined) return;
-    const w = window as Window & { gtag?: (...args: unknown[]) => void };
-    const estado = aceito ? "granted" : "denied";
-    w.gtag?.("consent", "update", { ad_storage: estado, ad_user_data: estado, ad_personalization: estado, analytics_storage: estado });
-  }, [aceito, escolha]);
+    const w = window as Window & {
+      gtag?: (...args: unknown[]) => void;
+      fbq?: (...args: unknown[]) => void;
+      ttq?: { grantConsent?: () => void; revokeConsent?: () => void; enableCookie?: () => void; disableCookie?: () => void };
+    };
+    w.gtag?.("consent", "update", consentimentoGoogle(escolha));
+    w.fbq?.("consent", publicidade ? "grant" : "revoke");
+    if (publicidade) { w.ttq?.grantConsent?.(); w.ttq?.enableCookie?.(); }
+    else { w.ttq?.revokeConsent?.(); w.ttq?.disableCookie?.(); }
+  }, [publicidade, escolha]);
 
   const gtag = p.ga4Id || p.googleAdsId;
   const inicioDoDataLayer = scriptInicialDoGoogle(p);
@@ -63,15 +70,15 @@ export default function Pixels({ p }: { p: PixelsDaLoja }) {
         </>
       )}
 
-      {aceito && p.metaPixelId && (
+      {publicidade && p.metaPixelId && (
         <Script id="meta-pixel" strategy="afterInteractive">
-          {`!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${p.metaPixelId}');fbq('track','PageView');`}
+          {`!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('consent','grant');fbq('init','${p.metaPixelId}');fbq('track','PageView');`}
         </Script>
       )}
 
-      {aceito && p.tiktokPixelId && (
+      {publicidade && p.tiktokPixelId && (
         <Script id="tiktok-pixel" strategy="afterInteractive">
-          {`!function(w,d,t){w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"];ttq.setAndDefer=function(e,n){e[n]=function(){e.push([n].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(e){for(var n=ttq._i[e]||[],i=0;i<ttq.methods.length;i++)ttq.setAndDefer(n,ttq.methods[i]);return n};ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{};ttq._i[e]=[];ttq._i[e]._u=i;ttq._t=ttq._t||{};ttq._t[e]=+new Date;ttq._o=ttq._o||{};ttq._o[e]=n||{};var o=d.createElement("script");o.type="text/javascript";o.async=!0;o.src=i+"?sdkid="+e+"&lib="+t;var a=d.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)};ttq.load('${p.tiktokPixelId}');ttq.page();}(window,document,'ttq');`}
+          {`!function(w,d,t){w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"];ttq.setAndDefer=function(e,n){e[n]=function(){e.push([n].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(e){for(var n=ttq._i[e]||[],i=0;i<ttq.methods.length;i++)ttq.setAndDefer(n,ttq.methods[i]);return n};ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{};ttq._i[e]=[];ttq._i[e]._u=i;ttq._t=ttq._t||{};ttq._t[e]=+new Date;ttq._o=ttq._o||{};ttq._o[e]=n||{};var o=d.createElement("script");o.type="text/javascript";o.async=!0;o.src=i+"?sdkid="+e+"&lib="+t;var a=d.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)};ttq.load('${p.tiktokPixelId}');ttq.grantConsent();ttq.page();}(window,document,'ttq');`}
         </Script>
       )}
     </>

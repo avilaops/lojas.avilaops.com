@@ -13,6 +13,18 @@
   ],
   "tasks": [
     {
+      "id": "LOJAS-COOKIES-PREFERENCIAS-20261114",
+      "title": "Abrir preferências pelo rodapé e separar medição de publicidade",
+      "objective": "Manter a visita inicial sem popup e permitir escolhas independentes, sem apagar a decisão ao abrir o painel.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-revisao",
+      "acceptanceCriteria": ["HTML inicial e navegação fria sem painel automático; rodapé abre e fechar não salva.", "Quatro combinações de medição e publicidade, compatíveis com escolhas aceito e essencial versão 1.", "Google Advanced Mode e fallback do Gateway preservados; Meta e TikTok respeitam publicidade inclusive após revogação.", "Prova do build real em Chromium com SDKs fixture e rede isolada; testes e builds exclusivamente no GitHub CI.", "Draft PR para revisão independente antes de merge e publicação; sem novas bibliotecas, IDs ou alterações comerciais."],
+      "environment": "worktree isolada baseada em efa5ff0 e GitHub CI; produção não alterada",
+      "evidence": "PR #255 draft • RED head 8b01f2a424734fd26d77de19d71564da41c93948, run 43584620738 reproduz HTML automático, permissões acopladas e disparos Meta/TikTok com SDK presente após revogação. Implementação inclui prova de navegador compilado com quatro combinações, legados, abrir e fechar sem alterar, revogação e eventos de carrinho de fixture. CI GREEN e revisão independente devem ser conferidos no head final do PR.",
+      "review": "Revisão coordenadora pendente; não mesclar nem publicar automaticamente. Event Timing e longtasks da fixture não representam INP de campo."
+    },
+    {
       "id": "LOJAS-SELO-PRODUTO-20261114",
       "title": "Apontar o selo das lojas para a página do E-Commerce",
       "objective": "Explicar o produto no crédito compartilhado e direcionar visitantes das lojas para /lojas/ na origem Avila Ops configurada.",
@@ -66,10 +78,10 @@
       "objective": "Publicar versões textuais sob demanda com isolamento por loja, usando o renderizador existente e o conversor fixado do motor-web.",
       "assignee": "codex",
       "priority": "alta",
-      "status": "em-revisao",
+      "status": "concluida",
       "acceptanceCriteria": ["Rotas públicas da plataforma e das lojas têm caminhos /index.md e /index.mdx.", "Duas lojas com o mesmo slug não compartilham conteúdo ou ETag.", "Alterações e remoções são relidas; rotas privadas, noindex e autenticação não viram texto público.", "Leitura interna tem origem fixa, sem cookies ou credenciais do visitante e sem seguir redirects.", "Descoberta HTTP Link/llms; testes e build no GitHub CI; PR permanece draft sem deploy."],
-      "environment": "worktree isolada e GitHub CI",
-      "evidence": "PR #243 draft, sem autorização de merge ou deploy. RED inicial 43557835826 • 24 falhas esperadas. CI preliminar 43567552734 • 1508 unitários, tipos, lint, PostgreSQL, build, navegador e contratos aprovados. Pin final do conversor 5d8cf306ceded156ab2a46ce1cfd29608e67496f • import direto e configuração Next preservada. Revisão independente incorporada • canonical de outra origem recusado e teto de 4 MiB antes do parser; RED 43570731446 confirmou 3 falhas específicas antes da proteção. Diagnóstico HTTP 43571549616 • Next preservava URL original e descartava query interna, então o manipulador passou a priorizar o caminho original. Há 36 testes unitários de publicação e jornada HTTP do build real com lojas fictícias, mesmo slug, atualização, remoção e query de visitante ignorada. Checks finais e evidências acompanhados no PR, separados de publicação. Contrato docs/PUBLICACAO-TEXTO.md. Nenhuma validação de backend de produção, mudança de infraestrutura ou popup de cookies realizada."
+      "environment": "GitHub CI e leitura pública em produção",
+      "evidence": "PR #243 mesclado em 2228d3c913676dd43a9de170dcca67b3b81ecc2f após revisão independente; CI final 43571994787 aprovada, incluindo 1513 unitários e HTTP do build real. Main CI 43573490783 tentativa 2 concluída com sucesso. QA público verificou 16 textos em quatro hosts e amostra posterior de 24 em seis origens, sem alterações de catálogo. Pin 5d8cf306ceded156ab2a46ce1cfd29608e67496f preservado. RED inicial 43557835826; proteções canonical e limite de 4 MiB comprovadas no RED 43570731446. Diagnóstico de URL original 43571549616 e fix de extração aceitos pelo HTTP real. Contrato docs/PUBLICACAO-TEXTO.md. Evidência privada lojas-mdx-live-verification.json distingue releases e publicação."
     },
     {
       "id": "AGENT-READY-PUBLICO-20261114",
