@@ -23,6 +23,22 @@
       "environment": "worktree isolada e GitHub CI",
       "evidence": "PR #243 draft, sem autorização de merge ou deploy. RED no CI 43557835826: 24 falhas esperadas de roteamento/descoberta antes da implementação; demais unitários e três partes PostgreSQL aprovados. Implementação do adaptador e descoberta preparada para GREEN no GitHub CI. Contrato docs/PUBLICACAO-TEXTO.md. Backend de produção indisponível nesta etapa; nenhuma validação live, mudança de infraestrutura ou popup de cookies autorizado."
     },
+    {
+      "id": "BRILHAX-ALT-CATEGORIA-20261114",
+      "title": "Descrever as capas de categoria para leitores e mecanismos de busca",
+      "objective": "Corrigir o texto alternativo vazio da capa compartilhada, identificado na categoria Produtos para Moto da Brilhax pelo Bing Webmaster Tools.",
+      "assignee": "codex",
+      "priority": "normal",
+      "status": "concluida",
+      "acceptanceCriteria": [
+        "A imagem de capa recebe o nome da categoria no atributo alt.",
+        "A escolha entre imagem cadastrada, foto de produto e inicial da categoria continua funcionando.",
+        "A verificação ocorre exclusivamente no GitHub CI; publicação e novo rastreamento são registrados separadamente."
+      ],
+      "environment": "Brilhax pública, componente compartilhado de Lojas e GitHub CI",
+      "evidence": "PR #244 integrada em cfbfce0. CI do PR 43563202976 aprovada e revisão independente sem achados. CI de produção 43563706198 aprovada após repetir somente a verificação de uploads que retornara 503 transitório. Release cfbfce0adc835724b94cfb50ed8dc47227aa5e9d-43563706198-1 conferida no health público; capas de Produtos para Moto e Lavagem retornam seus nomes em alt no HTML 200. IndexNow e Bing aceitaram as duas URLs com HTTP 200. Novo rastreamento do Bing não foi confirmado; mídias históricas ausentes continuam separadas. Evidências em evidencias/brilhax-alt-categorias-2026-11-14.md.",
+      "review": "Revisão independente sem achados: a categoria fornece nome obrigatório; a alteração limita-se ao alt e preserva a seleção de imagem e o fallback por inicial."
+    },
       {
         "id": "FISCAL-ENTRADA-20261113",
         "title": "Corrigir downloads e sincronização e conferir entrada por NF-e",
