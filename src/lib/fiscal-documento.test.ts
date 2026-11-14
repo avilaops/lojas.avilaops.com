@@ -17,6 +17,7 @@ test("resume documento resNFe para a lista fiscal", () => {
   assert.equal(resumo.operacao, "Saída");
   assert.equal(resumo.situacaoNfe, "Uso autorizado");
   assert.equal(resumo.manifestacao, "Ciência da operação");
+  assert.equal(resumo.manifestacaoCodigo, "4");
   assert.equal(resumo.situacao, "RESUMO");
 });
 

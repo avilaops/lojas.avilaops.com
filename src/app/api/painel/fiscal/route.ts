@@ -9,6 +9,8 @@ import { totalizarDocumentosFiscais } from "@/lib/fiscal-monitor";
 import { filtrosFiscais } from "@/lib/fiscal-filtros";
 import { buscarFiscalErp } from "@/lib/erp-fiscal";
 import { buscarFiscalTms } from "@/lib/tms-fiscal";
+import { consultarAcompanhamentoFiscal } from "@/lib/fiscal-acompanhamento";
+import { configuracaoAgendador } from "@/lib/rotinas-agendador-config";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,32 +25,27 @@ async function estado(tenantId: string, endereco: unknown, parametros?: URLSearc
   const { where, pagina, limite } = filtrosFiscais(tenantId, parametros);
   const tenant = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { cnpj: true } });
   const cnpj = tenant?.cnpj?.replace(/[^0-9A-Z]/gi, "").toUpperCase() ?? "";
-  const [configuracao, documentos, total, erp, tms, contagens] = await Promise.all([
+  const [configuracao, documentos, total, erp, tms, contagens, rotina] = await Promise.all([
     prisma.fiscalLoja.findUnique({ where: { tenantId }, select: RESUMO_FISCAL }),
     prisma.documentoFiscalLoja.findMany({ where, select: { id: true, cnpj: true, nsu: true, schema: true, chave: true, xml: true, recebidoEm: true, manifestacoes: { orderBy: { intencaoEm: "desc" }, take: 1, select: { status: true, codigoRetorno: true, motivoRetorno: true, protocolo: true } } }, orderBy: [{ recebidoEm: "desc" }, { nsu: "desc" }, { id: "desc" }], skip: (pagina - 1) * limite, take: limite }),
     prisma.documentoFiscalLoja.count({ where }),
     cnpj ? buscarFiscalErp(cnpj).catch((erro) => ({ erro: erro instanceof Error ? erro.message : "ERP fiscal indisponível." })) : null,
     cnpj ? buscarFiscalTms(cnpj).catch((erro) => ({ erro: erro instanceof Error ? erro.message : "TMS fiscal indisponível." })) : null,
     prisma.documentoFiscalLoja.groupBy({ where: { tenantId }, by: ["schema"], _count: { _all: true } }),
+    prisma.rotina.findUnique({ where: { nome: "fiscal.receber" }, select: { ultimaEm: true, ultimoErro: true, proximaEm: true } }),
   ]);
-  // Alguns XMLs completos chegaram em outro NSU: vincular pelo par tenant/chave.
-  const chaves = [...new Set(documentos.filter(d => /^resNFe/.test(d.schema) && d.chave).map(d => d.chave!))];
-  const completos = chaves.length ? await prisma.documentoFiscalLoja.findMany({
-    where: { tenantId, chave: { in: chaves }, schema: { startsWith: "procNFe" } },
-    select: { id: true, chave: true }, orderBy: { recebidoEm: "desc" }, take: 250,
-  }) : [];
-  const completosPorChave = new Map<string, string>();
-  for (const completo of completos) {
-    if (completo.chave && !completosPorChave.has(completo.chave)) completosPorChave.set(completo.chave, completo.id);
-  }
+  const chaves = documentos.filter(d => /^(resNFe|procNFe)/i.test(d.schema)).flatMap(d => d.chave ? [d.chave] : []);
+  const acompanhamentos = await consultarAcompanhamentoFiscal(tenantId, chaves);
   return {
     configuracao,
+    sincronizacao: { modo: configuracaoAgendador().modo, ultimaExecucao: rotina?.ultimaEm ?? null, falha: Boolean(rotina?.ultimoErro), proximaExecucao: rotina?.proximaEm ?? null },
     documentos: documentos.map(({ xml, manifestacoes, ...documento }) => {
       const resumo = resumirDocumentoFiscal(xml, documento.schema, documento.chave);
-      const completoId = documento.chave && /^resNFe/.test(documento.schema) ? completosPorChave.get(documento.chave) ?? null : null;
+      const acompanhamento = documento.chave && resumo.tipo === "NFE" ? acompanhamentos.get(documento.chave) ?? null : null;
+      const completoId = acompanhamento?.completoId ?? null;
       const enviada = manifestacoes[0] ?? null;
-      const manifestacaoEnvio = enviada ? { status: enviada.status, codigo: enviada.codigoRetorno, motivo: enviada.motivoRetorno, protocolo: enviada.protocolo } : null;
-      return { ...documento, ...resumo, manifestacaoEnvio, completoId, situacao: completoId ? "COMPLETA" as const : resumo.situacao };
+      const manifestacaoEnvio = acompanhamento?.manifestacao ?? (enviada ? { status: enviada.status, codigo: enviada.codigoRetorno, motivo: enviada.motivoRetorno, protocolo: enviada.protocolo } : null);
+      return { ...documento, ...resumo, acompanhamento, manifestacaoEnvio, completoId, situacao: completoId ? "COMPLETA" as const : resumo.situacao };
     }),
     totais: { ...totalizarDocumentosFiscais(contagens.map(({ schema, _count }) => ({ schema, quantidade: _count._all }))), completas: contagens.filter(({ schema }) => /^procNFe/i.test(schema)).reduce((total, { _count }) => total + _count._all, 0) },
     ufEmpresa: ufDaEmpresa(endereco),

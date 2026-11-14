@@ -15,6 +15,8 @@ if (!["127.0.0.1", "localhost"].includes(url.hostname) || !["5548", "5588"].incl
 process.env.LOJAS_CERT_SECRET = "cd".repeat(32);
 const lojas: string[] = [];
 after(async () => {
+  await prisma.auditoriaFiscalLoja.deleteMany({ where: { tenantId: { in: lojas } } });
+  await prisma.manifestacaoFiscalLoja.deleteMany({ where: { tenantId: { in: lojas } } });
   await prisma.webhookApi.deleteMany({ where: { tenantId: { in: lojas } } });
   await prisma.documentoFiscalLoja.deleteMany({ where: { tenantId: { in: lojas } } });
   await prisma.fiscalLoja.deleteMany({ where: { tenantId: { in: lojas } } });
@@ -122,6 +124,32 @@ test("falha ao gravar o lote reverte documentos e NSU juntos", async () => {
   }
   assert.equal((await prisma.fiscalLoja.findUniqueOrThrow({ where: { tenantId: loja.id } })).ultimoNsu, "000000000000000");
   assert.equal(await prisma.documentoFiscalLoja.count({ where: { tenantId: loja.id } }), 0);
+});
+
+test("coleta por NSU recupera resultado incerto na mesma transação dos documentos", async () => {
+  const loja = await preparar("72345678000990");
+  const chave = "6".repeat(44);
+  const resumo = await prisma.documentoFiscalLoja.create({ data: { tenantId: loja.id, cnpj: loja.cnpj!, nsu: "000000000000001", chave, schema: "resNFe_v1.01.xsd", xml: `<resNFe><chNFe>${chave}</chNFe></resNFe>` } });
+  const intencao = await prisma.manifestacaoFiscalLoja.create({ data: { tenantId: loja.id, documentoId: resumo.id, idempotencia: `NFE:${chave}:210210:1:PRODUCAO`, tipo: "CIENCIA", ambiente: "PRODUCAO", autor: "qa:dono", sequencia: 1, status: "PENDENTE_CONFERENCIA", enviadoEm: new Date() } });
+  const evento = `<procEventoNFe><evento><infEvento><tpAmb>1</tpAmb><CNPJ>${loja.cnpj}</CNPJ><chNFe>${chave}</chNFe><tpEvento>210210</tpEvento><nSeqEvento>1</nSeqEvento></infEvento></evento><retEvento><infEvento><tpAmb>1</tpAmb><chNFe>${chave}</chNFe><tpEvento>210210</tpEvento><nSeqEvento>1</nSeqEvento><cStat>135</cStat><nProt>135260000099999</nProt></infEvento></retEvento></procEventoNFe>`;
+  const consultar = async () => ({ status: "138", mensagem: "Evento recebido", ultimoNsu: "000000000000002", maxNsu: "000000000000002", documentos: [{ nsu: "000000000000002", chave, schema: "procEventoNFe_v1.00.xsd", xml: evento }] });
+  await prisma.$executeRawUnsafe(`CREATE FUNCTION qa_fiscal_conciliar_recusar() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW."cnpj" = '72345678000990' AND NEW."ultimoNsu" <> OLD."ultimoNsu" THEN RAISE EXCEPTION 'Falha de cursor após conciliação'; END IF; RETURN NEW; END; $$`);
+  await prisma.$executeRawUnsafe(`CREATE TRIGGER qa_fiscal_conciliar_cursor BEFORE UPDATE ON "FiscalLoja" FOR EACH ROW EXECUTE FUNCTION qa_fiscal_conciliar_recusar()`);
+  try { await assert.rejects(() => sincronizarNotas(loja.id, consultar)); }
+  finally {
+    await prisma.$executeRawUnsafe(`DROP TRIGGER qa_fiscal_conciliar_cursor ON "FiscalLoja"`);
+    await prisma.$executeRawUnsafe(`DROP FUNCTION qa_fiscal_conciliar_recusar()`);
+  }
+  assert.equal((await prisma.manifestacaoFiscalLoja.findUniqueOrThrow({ where: { id: intencao.id } })).status, "PENDENTE_CONFERENCIA");
+  assert.equal(await prisma.auditoriaFiscalLoja.count({ where: { tenantId: loja.id } }), 0);
+  assert.equal(await prisma.documentoFiscalLoja.count({ where: { tenantId: loja.id, schema: { startsWith: "procEvento" } } }), 0);
+  await prisma.fiscalLoja.update({ where: { tenantId: loja.id }, data: { proximaConsultaEm: new Date(0) } });
+  await sincronizarNotas(loja.id, consultar);
+  const conciliada = await prisma.manifestacaoFiscalLoja.findUniqueOrThrow({ where: { id: intencao.id } });
+  assert.equal(conciliada.status, "ACEITA");
+  assert.equal(conciliada.protocolo, "135260000099999");
+  assert.equal(conciliada.tentativas, 0);
+  assert.equal((await prisma.fiscalLoja.findUniqueOrThrow({ where: { tenantId: loja.id } })).ultimoNsu, "000000000000002");
 });
 
 test("mudança de CNPJ bloqueia consulta sem chamar a SEFAZ", async () => {

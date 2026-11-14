@@ -8,12 +8,16 @@ import { Secao, inputClasse } from "./campos";
 import DownloadFiscal from "./DownloadFiscal";
 import FluxosFiscais from "./FluxosFiscais";
 import ConferenciaEntradaFiscal from "./ConferenciaEntradaFiscal";
+import type { AcompanhamentoFiscal } from "@/lib/fiscal-acompanhamento";
+import { ROTULOS_RECEBIMENTO } from "@/lib/fiscal-acompanhamento-estado";
 
 type Estado = {
   configuracao: { cnpj: string; uf: string; titular: string; validoAte: string; proximaConsultaEm: string; ultimaMensagem: string | null } | null;
+  sincronizacao: { modo: "DESLIGADO" | "FISCAL" | "COMPLETO"; ultimaExecucao: string | null; falha: boolean; proximaExecucao: string | null };
   documentos: Array<{
     id: string;
     completoId?: string | null;
+    acompanhamento: AcompanhamentoFiscal | null;
     nsu: string;
     schema: string;
     chave: string | null;
@@ -81,6 +85,7 @@ function nomeEvento(doc: Estado["documentos"][number]) {
 }
 
 function textoSituacao(doc: Estado["documentos"][number], manifestacao?: string | null) {
+  if (doc.acompanhamento?.cancelada) return "NF-e cancelada";
   if (doc.situacao === "COMPLETA") return doc.situacaoNfe ?? "XML completo";
   if (doc.manifestacaoEnvio?.status === "ACEITA") return `Manifestação aceita${doc.manifestacaoEnvio.protocolo ? ` · protocolo ${doc.manifestacaoEnvio.protocolo}` : ""}`;
   if (doc.manifestacaoEnvio?.status === "REJEITADA") return `Manifestação rejeitada${doc.manifestacaoEnvio.codigo ? ` (${doc.manifestacaoEnvio.codigo})` : ""}: ${doc.manifestacaoEnvio.motivo ?? "consulte a auditoria"}`;
@@ -96,7 +101,8 @@ export default function Fiscal() {
   const [mensagem, setMensagem] = useState("");
   const [ocupado, setOcupado] = useState<string | null>(null);
   const [arquivoNome, setArquivoNome] = useState("");
-  const [agora] = useState(() => Date.now());
+  const [agora, setAgora] = useState(() => Date.now());
+  const [revisao, setRevisao] = useState(0);
   const [busca, setBusca] = useState("");
   const [tipo, setTipo] = useState("nfe-recebidas");
   const [somenteDisponiveis, setSomenteDisponiveis] = useState(false);
@@ -116,7 +122,14 @@ export default function Fiscal() {
       setEstado(dados);
     }).catch((e) => { if (e.name !== "AbortError") setErro(e.message); }); }, 250);
     return () => { clearTimeout(timer); controller.abort(); };
-  }, [busca, tipo, somenteDisponiveis, pagina, inicio, fim]);
+  }, [busca, tipo, somenteDisponiveis, pagina, inicio, fim, revisao]);
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setAgora(Date.now());
+      if (document.visibilityState === "visible") setRevisao(n => n + 1);
+    }, 60_000);
+    return () => clearInterval(timer);
+  }, []);
 
   async function enviar(form?: HTMLFormElement) {
     setOcupado(form ? "certificado" : "consulta");
@@ -161,10 +174,8 @@ export default function Fiscal() {
       const resposta = await fetch(`/api/painel/fiscal/documentos/${doc.id}/manifestacao`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tipo, justificativa, confirmacao: true }) });
       const resultado = await resposta.json();
       if (!resposta.ok) throw new Error(resultado.erro ?? "A SEFAZ não confirmou a manifestação.");
-      setMensagem(resultado.aceita ? `Manifestação aceita pela SEFAZ. Protocolo ${resultado.protocolo}. A busca do XML completo foi executada.` : `Manifestação não aceita: ${resultado.codigo} — ${resultado.motivo}`);
-      setPagina(1);
-      const atualizada = await fetch(`/api/painel/fiscal?tipo=${tipo === "CIENCIA" ? "nfe-recebidas" : tipo}`).then((r) => r.json());
-      setEstado(atualizada);
+      setMensagem(resultado.aceita ? `Manifestação aceita pela SEFAZ • protocolo ${resultado.protocolo}. Acompanhe o XML nas próximas consultas permitidas.` : `Manifestação ${resultado.status?.toLowerCase().replaceAll("_", " ") ?? "não aceita"} • ${resultado.motivo ?? "consulte os documentos recebidos"}`);
+      setRevisao(n => n + 1);
     } catch (e) { setErro(e instanceof Error ? e.message : "Falha ao manifestar."); }
     finally { setOcupado(null); }
   }
@@ -283,6 +294,10 @@ export default function Fiscal() {
           <label className="grid gap-1 text-xs">Recebido até<input className={inputClasse} type="date" value={fim} onChange={(e) => { setFim(e.target.value); setPagina(1); }} /></label>
         </div>
         <p className="-mt-1 text-xs leading-relaxed text-muted-foreground">{estado?.erp ? "As NF-e deste CNPJ são consultadas pelo ERP." : "Consulte as NF-e disponíveis na SEFAZ e confira a entrada dos produtos no Lojas."} CT-e autorizado é lido do TMS. Abrir ou baixar uma nota não altera o estoque.</p>
+        {estado?.sincronizacao && !estado.erp && <div role="status" className="rounded-xl border border-border p-3 text-xs leading-relaxed">
+          <p className="font-medium">{estado.sincronizacao.modo === "DESLIGADO" ? "Atualização automática desativada • consulte os documentos manualmente no horário permitido." : "Agendamento automático configurado para receber documentos fiscais."}</p>
+          <p className="mt-1 text-muted-foreground">{estado.sincronizacao.ultimaExecucao ? `Última execução do agendamento • ${data(estado.sincronizacao.ultimaExecucao)}` : "A primeira execução automática ainda não foi registrada."}{estado.sincronizacao.falha ? " • A última execução teve falha e precisa de revisão." : ""}</p>
+        </div>}
         <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Disponibilidade dos documentos">
           <button type="button" className={`btn-secundario ${!somenteDisponiveis ? "border-primary text-primary" : ""}`} aria-pressed={!somenteDisponiveis} onClick={() => { setSomenteDisponiveis(false); setPagina(1); }}>Todas as NF-e</button>
           <button type="button" className={`btn-secundario ${somenteDisponiveis ? "border-primary text-primary" : ""}`} aria-pressed={somenteDisponiveis} onClick={() => { setSomenteDisponiveis(true); setPagina(1); }}>XML completo ({estado?.totais.completas ?? 0})</button>
@@ -397,7 +412,7 @@ export default function Fiscal() {
         </details>
       </Secao>
       <FluxosFiscais documento={documentoSelecionado} />
-      {documentoEntrada && <ConferenciaEntradaFiscal key={documentoEntrada} documentoId={documentoEntrada} fechar={() => setDocumentoEntrada(null)} />}
+      {documentoEntrada && <ConferenciaEntradaFiscal key={documentoEntrada} documentoId={documentoEntrada} fechar={() => { setDocumentoEntrada(null); setRevisao(n => n + 1); }} />}
     </div>
   );
 }
@@ -405,8 +420,23 @@ export default function Fiscal() {
 type Manifestar = (doc: Estado["documentos"][number], tipo: "CIENCIA" | "CONFIRMACAO" | "DESCONHECIMENTO" | "NAO_REALIZADA") => Promise<void>;
 
 function AcoesManifestacao({ doc, manifestar, ocupado = false, compacto = false }: { doc: Estado["documentos"][number]; manifestar?: Manifestar; ocupado?: boolean; compacto?: boolean }) {
-  if (!manifestar || doc.situacao !== "RESUMO" || doc.tipo !== "NFE") return null;
+  if (!manifestar || doc.situacao !== "RESUMO" || doc.tipo !== "NFE" || doc.acompanhamento?.estado === "GERENCIADA_ERP" || doc.acompanhamento?.cancelada) return null;
   return <details className="relative"><summary className={compacto ? "inline-flex h-8 cursor-pointer list-none items-center rounded-md border border-border px-2 font-medium" : "btn-secundario min-h-11 cursor-pointer list-none"}>{ocupado ? "Enviando…" : "Manifestar"}</summary><div className="z-10 mt-2 grid min-w-64 gap-2 rounded-xl border border-border bg-background p-3 shadow-lg sm:absolute sm:left-0"><button disabled={ocupado} className="btn-secundario justify-start" onClick={() => void manifestar(doc, "CIENCIA")}>Ciência da Emissão</button><button disabled={ocupado} className="btn-secundario justify-start" onClick={() => void manifestar(doc, "CONFIRMACAO")}>Confirmação da Operação</button><button disabled={ocupado} className="btn-secundario justify-start" onClick={() => void manifestar(doc, "DESCONHECIMENTO")}>Desconhecimento</button><button disabled={ocupado} className="btn-secundario justify-start" onClick={() => void manifestar(doc, "NAO_REALIZADA")}>Operação não Realizada</button></div></details>;
+}
+
+function acaoConferencia(doc: Estado["documentos"][number]) {
+  if (doc.acompanhamento?.recibo) return { texto: "Ver entrada", nome: `Ver entrada da NF-e ${doc.numero ?? "sem número"}` };
+  if (doc.situacao === "RESUMO") return { texto: "Acompanhar", nome: `Acompanhar NF-e ${doc.numero ?? "sem número"}` };
+  return { texto: "Conferir", nome: `Conferir entrada da NF-e ${doc.numero ?? "sem número"}` };
+}
+
+function EstadoEntrada({ acompanhamento }: { acompanhamento: AcompanhamentoFiscal | null }) {
+  if (!acompanhamento) return null;
+  const destaque = acompanhamento.estado === "ENTRADA_REGISTRADA" ? "bg-emerald-50 text-emerald-900" : ["CANCELADA", "REVISAO_NECESSARIA"].includes(acompanhamento.estado) ? "bg-red-50 text-red-900" : "bg-amber-50 text-amber-950";
+  return <div className="mt-1 grid gap-1 whitespace-normal break-words text-xs">
+    <span className={`rounded-lg px-2 py-1 font-medium ${destaque}`}>{ROTULOS_RECEBIMENTO[acompanhamento.estado]}</span>
+    {acompanhamento.recibo && <span className="text-muted-foreground">{data(acompanhamento.recibo.confirmadoEm)} • {acompanhamento.recibo.local}</span>}
+  </div>;
 }
 
 function DocumentoFiscal({ doc, manifestacao, selecionar, erpId, manifestar, ocupado, conferir }: { doc: Estado["documentos"][number]; manifestacao?: string | null; erpId?: number; selecionar: (doc: Estado["documentos"][number]) => void; manifestar?: Manifestar; ocupado?: boolean; conferir?: () => void }) {
@@ -418,8 +448,9 @@ function DocumentoFiscal({ doc, manifestacao, selecionar, erpId, manifestar, ocu
         <div className="flex items-start justify-between gap-3"><p className="min-w-0 text-sm font-semibold">{doc.fornecedor ?? tipoDocumento(doc.schema)}</p><strong className="shrink-0 text-sm">{dinheiro(doc.valorCentavos)}</strong></div>
         <p className="mt-1 text-xs text-muted-foreground">{doc.numero ? `Nota ${doc.numero} · ` : ""}Recebida em {data(doc.recebidoEm)}</p>
         <p className={`mt-2 text-xs ${doc.situacao === "RESUMO" ? "text-amber-900" : "text-muted-foreground"}`}>{textoSituacao(doc, manifestacao)}</p>
+        <EstadoEntrada acompanhamento={doc.acompanhamento} />
       </div>
-      <div className="flex flex-wrap gap-2">{conferir && <button type="button" className="btn-secundario" aria-label={`Conferir entrada da NF-e ${doc.numero ?? "sem número"}`} onClick={conferir}>Conferir entrada</button>}<AcoesManifestacao doc={doc} manifestar={manifestar} ocupado={ocupado} />{!cte && <a className="btn-secundario" href="#fluxos-fiscais" onClick={() => selecionar(doc)}>Usar no fluxo</a>}{(erpId || doc.situacao === "COMPLETA") && <DownloadFiscal className="btn-secundario w-full sm:w-auto" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/xml` : `/api/painel/fiscal/documentos/${doc.completoId ?? doc.id}`} fallback={`NFe-${erpId ?? doc.completoId ?? doc.id}.xml`}>
+      <div className="flex flex-wrap gap-2">{conferir && <button type="button" className="btn-secundario" aria-label={acaoConferencia(doc).nome} onClick={conferir}>{acaoConferencia(doc).texto}</button>}<AcoesManifestacao doc={doc} manifestar={manifestar} ocupado={ocupado} />{!cte && <a className="btn-secundario" href="#fluxos-fiscais" onClick={() => selecionar(doc)}>Usar no fluxo</a>}{(erpId || doc.situacao === "COMPLETA") && <DownloadFiscal className="btn-secundario w-full sm:w-auto" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/xml` : `/api/painel/fiscal/documentos/${doc.completoId ?? doc.id}`} fallback={`NFe-${erpId ?? doc.completoId ?? doc.id}.xml`}>
         <Download size={16} aria-hidden="true" /> {rotuloXml}
       </DownloadFiscal>}{!cte && (erpId || doc.situacao === "COMPLETA") ? <DownloadFiscal className="btn-secundario" href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/danfe` : `/api/painel/fiscal/documentos/${doc.completoId ?? doc.id}/danfe`} fallback={`DANFE-${erpId ?? doc.completoId ?? doc.id}.pdf`}><FileText size={16} aria-hidden="true" /> DANFE PDF</DownloadFiscal> : <span className="self-center text-xs text-muted-foreground">{cte && doc.situacao === "COMPLETA" ? "DACTE indisponível: renderizador não configurado" : "XML e PDF pendentes"}</span>}</div>
     </li>
@@ -433,7 +464,7 @@ function LinhaDocumentoFiscal({ doc, manifestacao, erpId, manifestar, ocupado, c
   return (
     <tr className="whitespace-nowrap even:bg-muted/20 hover:bg-muted/40">
       <td className="px-2 py-1.5"><div className="grid gap-1">
-        <button type="button" className={`${classeDownload} justify-center`} aria-label={`Conferir entrada da NF-e ${doc.numero ?? "sem número"}`} onClick={conferir}>Conferir</button>
+        <button type="button" className={`${classeDownload} justify-center`} aria-label={acaoConferencia(doc).nome} onClick={conferir}>{acaoConferencia(doc).texto}</button>
         <div className="flex items-center gap-1">{arquivosDisponiveis ? <><DownloadFiscal className={classeDownload} href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/xml` : `/api/painel/fiscal/documentos/${idDocumento}`} fallback={`NFe-${erpId ?? idDocumento}.xml`} title="Baixar XML completo"><Download size={13} aria-hidden="true" /> XML</DownloadFiscal><DownloadFiscal className={classeDownload} href={erpId ? `/api/painel/fiscal/erp/documentos/${erpId}/danfe` : `/api/painel/fiscal/documentos/${idDocumento}/danfe`} fallback={`DANFE-${erpId ?? idDocumento}.pdf`} title="Baixar DANFE em PDF"><FileText size={13} aria-hidden="true" /> PDF</DownloadFiscal></> : <span className="whitespace-normal text-[10px] text-amber-900">Resumo · XML pendente</span>}</div>
       </div></td>
       <td className="whitespace-nowrap px-2 py-2">{doc.emitidaEm ? dia(doc.emitidaEm) : dia(doc.recebidoEm)}</td>
@@ -447,7 +478,7 @@ function LinhaDocumentoFiscal({ doc, manifestacao, erpId, manifestar, ocupado, c
         </span>
       </td>
       <td className="whitespace-nowrap px-2 py-2 text-right font-medium tabular-nums">{dinheiro(doc.valorCentavos)}</td>
-      <td className="max-w-44 px-2 py-2"><span className={`block whitespace-normal break-words rounded-lg px-2 py-1 text-center font-medium ${doc.situacao === "COMPLETA" ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-amber-900"}`} title={textoSituacao(doc, manifestacao)}>{textoSituacao(doc, manifestacao)}</span></td>
+      <td className="max-w-44 px-2 py-2"><span className="block whitespace-normal break-words text-[10px] text-muted-foreground" title={textoSituacao(doc, manifestacao)}>Fiscal • {textoSituacao(doc, manifestacao)}</span><EstadoEntrada acompanhamento={doc.acompanhamento} /></td>
       <td className="px-2 py-1.5 text-right"><div className="flex justify-end"><AcoesManifestacao doc={doc} manifestar={manifestar} ocupado={ocupado} compacto /></div></td>
     </tr>
   );

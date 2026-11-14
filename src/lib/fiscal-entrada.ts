@@ -7,10 +7,11 @@ import { fiscalErpConfigurado } from "./erp-fiscal";
 import { eventoCancelaNota, interpretarNotaEntrada, normalizarDocumentoEntrada, type NotaEntrada } from "./fiscal-entrada-xml";
 import { movimentarEstoqueMultilocalNaTransacao, type ReciboMovimento } from "./estoque-multilocal";
 import { travarProduto } from "./catalogo-escrita";
+import { consultarAcompanhamentoFiscal, type AcompanhamentoFiscal } from "./fiscal-acompanhamento";
 
 type Tx = Prisma.TransactionClient;
 export type ReciboEntradaFiscal = { tipo: "ENTRADA_NFE"; id: string; chave: string; numero: string; documentoId: string; confirmadoEm: string; ator: string; local: string; itens: Array<{ numero: number; varianteId: string; quantidade: number; descricaoFiscal: string; unidadeFiscal: string; quantidadeFiscal: string; movimento: ReciboMovimento }> };
-export type ConferenciaEntradaFiscal = { documentoId: string; modo: "LOCAL" | "ERP"; erpUrl: string | null; nota: NotaEntrada | null; recibo: ReciboEntradaFiscal | null; impedimento: string | null };
+export type ConferenciaEntradaFiscal = { documentoId: string; modo: "LOCAL" | "ERP"; erpUrl: string | null; nota: NotaEntrada | null; recibo: ReciboEntradaFiscal | null; impedimento: string | null; acompanhamento: AcompanhamentoFiscal | null; proximaConsultaEm: string | null };
 const ORIGEM = "fiscal:entrada-nfe";
 const comandoSchema = z.object({
   confirmacao: z.literal(true), local: z.string().trim().min(1).max(80).regex(/^[a-z0-9][a-z0-9_-]*$/),
@@ -43,7 +44,14 @@ async function contexto(tx: Tx, tenantId: string, id: string): Promise<Conferenc
   const painel = (process.env.ERP_APP_URL || process.env.ERP_API_URL || "").replace(/\/$/, "");
   const erpUrl = modo === "ERP" && /^https:\/\//.test(painel) ? `${painel}/fiscal?ver=recebidas` : null;
   const recibo = documento.chave ? reciboSalvo(await tx.comandoEstoque.findUnique({ where: { tenantId_chave: { tenantId, chave: chaveDoComando(documento.chave) } } })) : null;
-  if (!/^procNFe/.test(documento.schema)) return { documentoId: documento.id, modo, erpUrl, nota: null, recibo, impedimento: "Esta nota contém apenas resumo. Aguarde o XML completo para conferir seus produtos." };
+  const [porChave, fiscal] = await Promise.all([
+    consultarAcompanhamentoFiscal(tenantId, documento.chave ? [documento.chave] : [], tx),
+    tx.fiscalLoja.findUnique({ where: { tenantId }, select: { proximaConsultaEm: true } }),
+  ]);
+  const acompanhamento = documento.chave ? porChave.get(documento.chave) ?? null : null;
+  const proximaConsultaEm = fiscal?.proximaConsultaEm.toISOString() ?? null;
+  const base = { documentoId: documento.id, modo, erpUrl, recibo, acompanhamento, proximaConsultaEm };
+  if (!/^procNFe/.test(documento.schema)) return { ...base, nota: null, impedimento: "Esta nota contém apenas resumo. O XML completo é necessário para conferir seus produtos." };
   const nota = interpretarNotaEntrada(documento.xml);
   if (documento.chave !== nota.chave) throw new ErroApi("conflito", "A chave do XML diverge da identificação armazenada.");
   const eventos = await tx.documentoFiscalLoja.findMany({ where: { tenantId, chave: nota.chave, OR: [{ cancelada: true }, { schema: { contains: "Evento", mode: "insensitive" } }] }, select: { xml: true, cancelada: true } });
@@ -53,7 +61,7 @@ async function contexto(tx: Tx, tenantId: string, id: string): Promise<Conferenc
   else if (!cnpj || nota.destinatario.documento !== cnpj) impedimento = "O destinatário desta NF-e não corresponde ao CNPJ da loja.";
   else if (nota.ambiente !== "1") impedimento = "NF-e de homologação não pode movimentar o estoque real.";
   else if (documento.cancelada || eventos.some(e => e.cancelada || eventoCancelaNota(e.xml, nota.chave))) impedimento = "Esta NF-e foi cancelada. Revise o recebimento e o estoque antes de continuar.";
-  return { documentoId: documento.id, modo, erpUrl, nota, recibo, impedimento };
+  return { ...base, nota, impedimento };
 }
 
 /** Somente leitura: abrir documento nunca cria produto, reserva ou entrada. */

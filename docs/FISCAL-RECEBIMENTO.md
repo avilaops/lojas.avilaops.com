@@ -1,5 +1,34 @@
 # Recebimento de NF-e
 
+## Acompanhamento operacional • incremento de 14/11/2026
+
+O código de manifestação informado pelo próprio resumo também é respeitado:
+ciência/confirmação prévia acompanha XML; desconhecimento e operação não
+realizada exigem revisão. Isso não cria intenção nem protocolo de manifestação.
+
+O P004 projeta a situação operacional pelo par tenant/chave. Resumo e XML em
+NSUs diferentes compartilham manifestação, recibo e cancelamento. A lista
+distingue o estado fiscal de entrada registrada ou revisão necessária; ao
+fechar a conferência os filtros são preservados e a lista é relida.
+
+O resumo oferece ciência com confirmação explícita, atualização dos documentos
+e próximo horário permitido. A aceitação de um evento não é apresentada como
+prova de recebimento do XML. A obtenção posterior usa a distribuição NSU
+existente, com reserva persistente, transação, cursor e fila de fluxos.
+
+Manifestação com resultado incerto não é retransmitida pela recuperação.
+Somente um `procEventoNFe` recebido, com retorno 135 e protocolo, pode conciliá-la;
+chave, autor, ambiente, tipo e sequência precisam corresponder à intenção.
+Conciliação, documento, auditoria e cursor participam da mesma transação da
+coleta. Sem evidência suficiente, o resultado continua pendente.
+
+CNPJ delegado ao P003 mantém sua autoridade, incluindo o bloqueio de
+manifestação local. Consultar a lista ou abrir uma conferência permanece sem
+efeito de transmissão fiscal ou estoque.
+
+As seções seguintes conservam os registros das entregas anteriores. Os estados
+históricos não comprovam a configuração atual do ambiente.
+
 Em Configurações → Notas fiscais, o dono envia o certificado A1 (.pfx/.p12),
 senha e UF. O CNPJ é lido do certificado e deve coincidir com Dados da empresa.
 Certificados A3 não são suportados. A senha e o arquivo são cifrados juntos

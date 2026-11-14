@@ -1,5 +1,6 @@
 import { executarRotinasDevidas } from "./rotinas-executor";
 import { passadaUnica, type EstadoDaPassada } from "./passada-unica";
+import { configuracaoAgendador } from "./rotinas-agendador-config";
 
 /**
  * O relógio da plataforma.
@@ -44,10 +45,7 @@ const globalParaAgendador = globalThis as unknown as {
  * servir requisições, sem relógio.
  */
 export function agendadorLigado(): boolean {
-  const escolha = (process.env.ROTINAS_AGENDADOR ?? "").trim().toLowerCase();
-  if (escolha === "1" || escolha === "true" || escolha === "sim") return true;
-  if (escolha === "0" || escolha === "false" || escolha === "nao" || escolha === "não") return false;
-  return process.env.NODE_ENV === "production";
+  return configuracaoAgendador().modo !== "DESLIGADO";
 }
 
 async function tique(): Promise<void> {
@@ -57,7 +55,7 @@ async function tique(): Promise<void> {
   const estado = (globalParaAgendador.passada ??= {});
   const { perdida } = await passadaUnica(estado, PRAZO_DA_PASSADA_MS, async () => {
     try {
-      const feitas = await executarRotinasDevidas();
+      const feitas = await executarRotinasDevidas(new Date(), configuracaoAgendador().nomes);
       for (const feita of feitas) {
         // Uma linha por execução, com o resumo. É o rastro que substitui a lista
         // de execuções do n8n enquanto a tela de operação não existe.
@@ -88,5 +86,5 @@ export function iniciarAgendador(): void {
   globalParaAgendador.agendadorDeRotinas = relogio;
   const primeira = setTimeout(() => void tique(), ESPERA_INICIAL_MS);
   primeira.unref?.();
-  console.log(`[rotina] agendador ligado, passada a cada ${INTERVALO_MS / 1000}s`);
+  console.log(`[rotina] agendador ${configuracaoAgendador().modo} • passada a cada ${INTERVALO_MS / 1000}s`);
 }

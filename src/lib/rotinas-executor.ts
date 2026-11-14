@@ -86,11 +86,11 @@ export interface ResultadoDaRotina {
  * próxima ocorrência — subir o container numa terça não pode disparar o
  * relatório semanal de segunda.
  */
-async function garantirLinhas(agora: Date): Promise<void> {
+async function garantirLinhas(agora: Date, nomes: NomeDeRotina[] = NOMES_DE_ROTINA): Promise<void> {
   const existentes = new Set(
     (await prisma.rotina.findMany({ select: { nome: true } })).map((r) => r.nome),
   );
-  const faltando = NOMES_DE_ROTINA.filter((nome) => !existentes.has(nome));
+  const faltando = nomes.filter((nome) => !existentes.has(nome));
   if (!faltando.length) return;
   await prisma.rotina.createMany({
     data: faltando.map((nome) => {
@@ -193,10 +193,11 @@ async function executar(nome: NomeDeRotina): Promise<ResultadoDaRotina> {
  * vitrine, e disparar oito de uma vez às 3h da manhã competiria com o
  * comprador. Nada aqui demora mais que um lote.
  */
-export async function executarRotinasDevidas(agora = new Date()): Promise<ResultadoDaRotina[]> {
-  await garantirLinhas(agora);
+export async function executarRotinasDevidas(agora = new Date(), nomes: NomeDeRotina[] = NOMES_DE_ROTINA): Promise<ResultadoDaRotina[]> {
+  if (!nomes.length) return [];
+  await garantirLinhas(agora, nomes);
   const devidas = await prisma.rotina.findMany({
-    where: { nome: { in: NOMES_DE_ROTINA }, proximaEm: { lte: agora } },
+    where: { nome: { in: nomes }, proximaEm: { lte: agora } },
     orderBy: { proximaEm: "asc" },
     select: { nome: true },
   });
