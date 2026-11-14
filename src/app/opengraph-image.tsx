@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
-import { marcaQuadradaDa, tenantAtual, temaDo } from "@/lib/tenant";
+import { marcaQuadradaDa, tenantAtual, temaDo, urlDaLoja } from "@/lib/tenant";
 import { corTextoLegivel } from "@/lib/tema";
+import { carregarMarcaDaPrevia } from "@/lib/previa-loja";
 
 /**
  * Imagem de compartilhamento da LOJA (WhatsApp, Instagram, Google): nome,
@@ -21,7 +22,7 @@ export default async function Image() {
   const texto = corTextoLegivel(fundo, tema?.corPrimariaTexto ?? "#ffffff");
   const nome = t?.nome ?? "Lojas by Avila Ops";
   const slogan = t?.slogan ?? "";
-  const marca = t ? marcaQuadradaDa(t) : null;
+  const marca = t ? await carregarMarcaDaPrevia({ slug: t.slug, caminho: marcaQuadradaDa(t), origem: urlDaLoja(t) }) : null;
   return new ImageResponse(
     (
       <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", padding: 72, background: fundo, color: texto, fontFamily: "sans-serif" }}>
