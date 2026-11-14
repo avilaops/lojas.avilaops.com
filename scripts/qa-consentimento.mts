@@ -32,7 +32,7 @@ type JanelaQA = typeof window & {
 };
 const navegador = await chromium.launch({ headless: true });
 const servidor = spawn(process.execPath, [".next/standalone/server.js"], {
-  env: { ...process.env, PORT: porta, HOSTNAME: "0.0.0.0", LOJAS_BASE_DOMAIN: "localhost", ROTINAS_AGENDADOR: "0", PLATAFORMA_GTM_ID: "GTM-COOKIEQA", SSO_APP_ID: "", LOJAS_OIDC_CLIENT_ID: "", LOJAS_OIDC_CLIENT_SECRET: "" },
+  env: { ...process.env, PORT: porta, HOSTNAME: "0.0.0.0", LOJAS_BASE_DOMAIN: "localhost", ROTINAS_AGENDADOR: "0", PLATAFORMA_GTM_ID: "GTM-COOKIEQA", GOOGLE_TAG_GATEWAY_LOJAS_PATH: "", SSO_APP_ID: "", LOJAS_OIDC_CLIENT_ID: "", LOJAS_OIDC_CLIENT_SECRET: "" },
   stdio: "inherit",
 });
 
@@ -73,6 +73,11 @@ async function abrir(p: Page) {
   await p.getByRole("button", { name: "Preferências de cookies", exact: true }).click();
   await p.getByRole("dialog", { name: "Preferências de cookies", exact: true }).waitFor();
 }
+async function visitarLoja(p: Page, caminho = "/") {
+  assert.equal((await p.goto(base + caminho))?.status(), 200, "Navegação pelo hostname .localhost resolve a fixture");
+  await p.getByText("Cookies QA", { exact: true }).first().waitFor();
+  await p.waitForLoadState("networkidle");
+}
 async function estado(p: Page, medicao: boolean, publicidade: boolean) {
   await p.waitForFunction(({ medicao, publicidade }) => {
     const fila = (window as JanelaQA).dataLayer ?? [];
@@ -96,7 +101,7 @@ async function preservados(p: Page) {
 
 try {
   await mkdir(pasta, { recursive: true });
-  const loja = await prisma.tenant.create({ data: { slug, nome: "Cookies QA", status: "ATIVA", plano: "LOJA", tema: { layout: "automotivo", categoriaSemImagem: "icone" }, recursos: ["pagamentos_pix_manual", "recebimento_v2"], gtmId: "GTM-COOKIEQA", metaPixelId: "123456789012345", tiktokPixelId: "COOKIEQATEST123456789", ga4Id: "G-COOKIEQA", contratosComerciais: { create: contratoPadraoAninhado("LOJA", { aceiteEm: null, aceiteReferencia: null, origem: "QA isolado de cookies" }) } } });
+  const loja = await prisma.tenant.create({ data: { slug, nome: "Cookies QA", status: "ATIVA", plano: "LOJA", dominioPrincipal: `${slug}.localhost`, dominios: [`${slug}.localhost`], tema: { layout: "automotivo", categoriaSemImagem: "icone" }, recursos: ["pagamentos_pix_manual", "recebimento_v2"], gtmId: "GTM-COOKIEQA", metaPixelId: "123456789012345", tiktokPixelId: "COOKIEQATEST123456789", ga4Id: "G-COOKIEQA", contratosComerciais: { create: contratoPadraoAninhado("LOJA", { aceiteEm: null, aceiteReferencia: null, origem: "QA isolado de cookies" }) } } });
   tenantId = loja.id;
   // Mesmo provedor local da jornada já existente, sem endpoint de pagamento.
   const provedor = provedoresDePagamento.obter("pix_manual");
@@ -115,6 +120,7 @@ try {
   const respostaHtml = await fetch(`http://127.0.0.1:${porta}/`, { headers: { host: "backend-render.example", "x-forwarded-host": `${slug}.localhost` } });
   assert.equal(respostaHtml.status, 200, "SSR resolve o host lógico da fixture no mesmo socket local");
   const html = await respostaHtml.text();
+  assert.match(html, /Cookies QA/, "SSR contém o nome do tenant esperado");
   assert.doesNotMatch(html, /<div[^>]*role="dialog"/);
   assert.match(html, /Preferências de cookies/);
 
@@ -123,8 +129,7 @@ try {
     const p = await c.newPage();
     const erros: string[] = [];
     p.on("pageerror", (erro) => erros.push(erro.message));
-    await p.goto(base);
-    await p.waitForLoadState("networkidle");
+    await visitarLoja(p);
     assert.equal(await p.getByRole("dialog").count(), 0, "Visita fria sem popup");
     await estado(p, false, false);
     assert.equal(await p.evaluate(() => localStorage.getItem("loja_consentimento")), null);
@@ -170,8 +175,7 @@ try {
   for (const escolha of ["aceito", "essencial"] as const) {
     const c = await contexto(escolha);
     const p = await c.newPage();
-    await p.goto(base);
-    await p.waitForLoadState("networkidle");
+    await visitarLoja(p);
     await estado(p, escolha === "aceito", escolha === "aceito");
     assert.equal(await p.getByRole("dialog").count(), 0);
     const antes = await p.evaluate(() => localStorage.getItem("loja_consentimento"));
@@ -184,8 +188,7 @@ try {
 
   const c = await contexto(null);
   const p = await c.newPage();
-  await p.goto(base + "/produtos/produto-qa");
-  await p.waitForLoadState("networkidle");
+  await visitarLoja(p, "/produtos/produto-qa");
   await abrir(p);
   await p.getByRole("button", { name: "Aceitar todos", exact: true }).click();
   await estado(p, true, true);
@@ -218,7 +221,7 @@ try {
 
   const plataforma = await contexto(null);
   const publica = await plataforma.newPage();
-  await publica.goto(`http://localhost:${porta}/ajuda`);
+  assert.equal((await publica.goto(`http://localhost:${porta}/ajuda`))?.status(), 200);
   await publica.waitForLoadState("networkidle");
   assert.equal(await publica.getByRole("dialog").count(), 0);
   await abrir(publica);
