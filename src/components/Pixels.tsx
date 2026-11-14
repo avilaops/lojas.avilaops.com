@@ -24,12 +24,12 @@ import { scriptInicialDoGoogle, type PixelsDaLoja } from "@/lib/pixels";
 export default function Pixels({ p }: { p: PixelsDaLoja }) {
   const aceito = useConsentimento() === "aceito";
 
-  // Avisa o Google quando o comprador libera. Roda de novo se ele mudar de
-  // ideia no rodapé, sem recarregar a página.
+  // Atualiza também a revogação pelo rodapé. Só retornar quando não aceito
+  // deixava a tag com o último granted até o próximo carregamento completo.
   useEffect(() => {
-    if (!aceito) return;
     const w = window as Window & { gtag?: (...args: unknown[]) => void };
-    w.gtag?.("consent", "update", { ad_storage: "granted", ad_user_data: "granted", ad_personalization: "granted", analytics_storage: "granted" });
+    const estado = aceito ? "granted" : "denied";
+    w.gtag?.("consent", "update", { ad_storage: estado, ad_user_data: estado, ad_personalization: estado, analytics_storage: estado });
   }, [aceito]);
 
   const gtag = p.ga4Id || p.googleAdsId;
