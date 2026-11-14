@@ -110,11 +110,18 @@ try {
   await page.reload({ waitUntil: "domcontentloaded" });
   await page.locator('[data-seo-lojas="1"]').waitFor();
   for (const width of [1440, 393]) {
-    await page.setViewportSize({ width, height: 1000 });
-    await page.evaluate(() => { if (document.activeElement instanceof HTMLElement) document.activeElement.blur(); window.scrollTo(0, 0); });
-    await page.waitForFunction(() => window.scrollY === 0);
-    await page.screenshot({ path: `${pasta}/painel-${width}.png`, fullPage: true, animations: "disabled" });
-    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), "Painel sem rolagem horizontal");
+    // Cada captura começa sem o histórico de rolagem e foco do formulário.
+    const captura = await dono.newPage();
+    captura.on("pageerror", e => erros.push(e.message));
+    await captura.setViewportSize({ width, height: 1000 });
+    await captura.goto(origem + "/painel/configuracoes/descoberta", { waitUntil: "networkidle" });
+    await captura.locator('[data-seo-lojas="1"]').waitFor();
+    const posicao = await captura.evaluate(() => ({ topo: window.scrollY, largura: window.innerWidth, conteudo: document.documentElement.scrollWidth }));
+    console.log(JSON.stringify({ capturaSeo: width, ...posicao }));
+    assert.equal(posicao.topo, 0, "Captura começa no topo");
+    assert.ok(posicao.conteudo <= posicao.largura + 1, "Painel sem rolagem horizontal");
+    await captura.screenshot({ path: `${pasta}/painel-${width}.png`, fullPage: true, animations: "disabled" });
+    await captura.close();
   }
   await page.getByRole("button", { name: "Usar título e descrição automáticos", exact: true }).click();
   await page.getByRole("button", { name: "Salvar alterações", exact: true }).click();
