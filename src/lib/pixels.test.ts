@@ -51,6 +51,30 @@ test("loader do GTM usa o contêiner próprio tanto no Gateway quanto no carrega
   assert.match(scriptDoGtm(plataforma), /GTM-PFBBR3GG/);
 });
 
+test("falha do Gateway carrega o GTM direto uma vez e preserva consentimento e eventos já enfileirados", () => {
+  type Script = { src?: string; async?: boolean; onerror?: (() => void) | null };
+  const scripts: Script[] = [];
+  const compra = { event: "purchase", ecommerce: { transaction_id: "QA_PRESERVADA" } };
+  const window = { dataLayer: [["consent", "default", { analytics_storage: "denied" }], compra] as unknown[] };
+  const document = {
+    getElementsByTagName: () => [{ parentNode: { insertBefore: (script: Script) => scripts.push(script) } }],
+    createElement: () => ({}),
+  };
+  runInNewContext(scriptDoGtm({ gtmId: "GTM-N7LPC7T9", googleTagGatewayPath: "/avmetrics/" }), { window, document });
+  assert.equal(scripts.length, 1, "Gateway ativo continua com apenas um loader");
+  assert.equal(typeof scripts[0].onerror, "function", "erro de rede deve acionar a recuperação");
+  scripts[0].onerror!();
+  assert.equal(scripts.length, 2);
+  assert.equal(scripts[0].onerror, null);
+  assert.equal(scripts[1].src, "https://www.googletagmanager.com/gtm.js?id=GTM-N7LPC7T9");
+  assert.equal(scripts[1].async, true);
+  assert.equal(scripts[1].onerror, undefined, "a recuperação não entra em ciclo");
+  assert.equal(window.dataLayer.length, 3);
+  assert.equal(window.dataLayer[1], compra);
+  assert.equal((window.dataLayer[0] as unknown[])[0], "consent");
+  assert.equal(window.dataLayer.filter((x) => (x as { event?: string }).event === "gtm.js").length, 1);
+});
+
 test("Gateway não aceita origem externa, query ou caminho com vários segmentos", () => {
   for (const path of ["", "/", "https://evil.test", "//evil.test", "/avmetrics?foo=1", "/foo/bar"]) {
     assert.equal(caminhoDoGatewayGoogle("demo.lojas.avilaops.com", { GOOGLE_TAG_GATEWAY_LOJAS_PATH: path }), null, path);
