@@ -1,0 +1,67 @@
+name: Lojas • retirar referências rejeitadas da Bereta
+on:
+  pull_request:
+    paths: ['deploy/render/remover-referencias-bereta*', '.github/workflows/bereta-referencias.yml']
+  workflow_dispatch:
+    inputs:
+      aplicar:
+        type: boolean
+        default: false
+        required: true
+      plano_sha256:
+        description: 'SHA-256 do levantamento conferido; obrigatório para aplicar'
+        type: string
+        default: ''
+permissions:
+  contents: read
+concurrency:
+  group: lojas-bereta-referencias-rejeitadas
+  cancel-in-progress: false
+jobs:
+  contrato:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/node-do-runner
+      - run: node --test deploy/render/remover-referencias-bereta.test.mjs
+  operacao:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    needs: contrato
+    environment: production
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      DATABASE_URL: ${{ secrets.RENDER_DATABASE_URL }}
+      NODE_ENV: production
+      ONNXRUNTIME_NODE_INSTALL: skip
+      PLANO_SHA256: ${{ inputs.plano_sha256 }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/node-do-runner
+      - run: npm ci --include=dev --no-audit --no-fund
+      - run: npx prisma generate
+      - name: Levantamento somente leitura
+        run: node --import tsx deploy/render/remover-referencias-bereta.mjs planejar "$RUNNER_TEMP/bereta"
+      - name: Persistir valores anteriores antes de qualquer alteração
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: bereta-referencias-before-${{ github.run_id }}
+          path: ${{ runner.temp }}/bereta/plan.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Aplicar somente o plano conferido
+        if: inputs.aplicar
+        run: node --import tsx deploy/render/remover-referencias-bereta.mjs aplicar "$RUNNER_TEMP/bereta" "$PLANO_SHA256"
+      - name: Preservar resultado e eventual progresso parcial
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: bereta-referencias-result-${{ github.run_id }}
+          path: ${{ runner.temp }}/bereta/*.json
+          if-no-files-found: ignore
+          retention-days: 30

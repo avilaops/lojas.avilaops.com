@@ -13,6 +13,22 @@
   ],
   "tasks": [
     {
+      "id": "BERETA-REFERENCIAS-REJEITADAS-20261114",
+      "title": "Retirar da loja as referências rejeitadas pelo proprietário",
+      "objective": "Remover somente os11 links indicados da configuração e dos produtos da Bereta, com backup e preservação do catálogo.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-andamento",
+      "acceptanceCriteria": [
+        "Plano read-only por tenant e backup persistido antes da alteração.",
+        "Imagens removidas pelo escritor normal com versão, histórico e outbox.",
+        "Produtos, dados comerciais, outras imagens e outras lojas preservados.",
+        "Contrato no GitHub CI e vitrine pública conferidos após a operação."
+      ],
+      "environment": "GitHub CI e operação manual production; sem builds ou testes locais",
+      "evidence": "Usuário corrigiu a autoria dos links e respondeu Remover também da loja. Procedimento docs/BERETA-REFERENCIAS-REJEITADAS.md. Nenhuma alteração de produção aplicada nesta preparação."
+    },
+    {
       "id": "LOJAS-COOKIES-PREFERENCIAS-20261114",
       "title": "Abrir preferências pelo rodapé e separar medição de publicidade",
       "objective": "Manter a visita inicial sem popup e permitir escolhas independentes, sem apagar a decisão ao abrir o painel.",
