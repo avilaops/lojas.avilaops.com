@@ -59,7 +59,7 @@ export async function generateMetadata({ params }: Props) {
   if (!p) return { title: "Produto" };
   // Catálogo importado quase nunca traz descrição curta: sem o fallback para a
   // longa, a página ficava sem meta description. Ver lib/seo-texto.
-  const description = descricaoDoProduto(p);
+  const description = descricaoDoProduto(p, t.nome);
   return {
     title: p.nome,
     ...(description ? { description } : {}),

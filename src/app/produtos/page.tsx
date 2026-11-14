@@ -20,6 +20,8 @@ import { EventoDemandaBusca } from "@/components/pk/EventoDemandaBusca";
 import { retornoDaListagem } from "@/lib/retorno-catalogo";
 import { configuracaoBuscaTecnica } from "@/lib/busca-tecnica-familia";
 import FerramentasPk from "@/components/pk/FerramentasPk";
+import { descricaoDaLoja } from "@/lib/textos-loja";
+import { descricaoDoCatalogo } from "@/lib/seo-texto";
 
 type SP = Record<string, string | undefined>;
 
@@ -29,8 +31,9 @@ type SP = Record<string, string | undefined>;
  * follow para os produtos dentro continuarem sendo descobertos.
  */
 export async function generateMetadata({ searchParams }: { searchParams: Promise<SP> }): Promise<Metadata> {
+  const t = await exigirTenant();
   const sp = await searchParams;
-  return metadataDeListagem({ base: "/produtos", sp, pagina: paginaDaUrl(sp), title: sp.q ? `Busca: ${sp.q}` : "Produtos" });
+  return metadataDeListagem({ base: "/produtos", sp, pagina: paginaDaUrl(sp), title: sp.q ? `Busca: ${sp.q}` : "Produtos • Confira o catálogo completo da loja", description: descricaoDoCatalogo(t.nome, descricaoDaLoja(t), "catalogo") });
 }
 
 export default async function Produtos({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {

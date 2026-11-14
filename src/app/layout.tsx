@@ -89,7 +89,7 @@ export async function generateMetadata(): Promise<Metadata> {
   if (h.get("x-plataforma") === "1") {
     return {
       metadataBase: new URL("https://lojas.avilaops.com"),
-      title: { default: "Lojas Avila Ops", template: "%s · Lojas Avila Ops" },
+      title: { default: "Lojas Avila Ops", template: "%s • Lojas Avila Ops" },
       description: "Comércio digital com identidade, operação e futuro.",
       applicationName: "Lojas Avila Ops",
       // A marca Lojas, só no domínio-base: loja de cliente nunca herda
@@ -104,7 +104,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     metadataBase: new URL(urlDaLoja(t)),
     ...iconesDa(t.faviconUrl, t.nome),
-    title: { default: t.slogan ? `${t.nome} | ${t.slogan}` : t.nome, template: `%s · ${t.nome}` },
+    title: { default: t.slogan ? `${t.nome} • ${t.slogan}` : t.nome, template: `%s • ${t.nome}` },
     // Slogan, diferencial ou o primeiro parágrafo do "Sobre": ver textos-loja.
     description: descricaoDaLoja(t, identidadeDa(t).diferencial),
     /**

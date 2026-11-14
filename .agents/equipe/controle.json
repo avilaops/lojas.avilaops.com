@@ -13,6 +13,17 @@
   ],
   "tasks": [
     {
+      "id": "BRILHAX-TITULOS-20261114",
+      "title": "Corrigir títulos, descrições curtas e revogação do consentimento",
+      "objective": "Corrigir títulos curtos do Brilhax, descrições das 47 URLs da Vedashow e a atualização Google ao retirar consentimento.",
+      "assignee": "codex",
+      "priority": "normal",
+      "status": "em-andamento",
+      "acceptanceCriteria": ["Títulos descritivos no HTML e OpenGraph das três páginas, com nome da loja.", "Descrições do CSV da Vedashow verificadas, preservando os dados cadastrados e sem inventar oferta.", "Canonicals, paginação e noindex de filtros preservados.", "Retirar aceite atualiza as quatro categorias Google para denied.", "CI e HTML público da versão publicada verificados."],
+      "environment": "worktree isolada, GitHub CI e produção",
+      "evidence": "Prints do Bing em 14/11/2026; títulos de 15, 17 e 18 caracteres. CSV da Vedashow contém 47 URLs: todas responderam 200, 46 tinham descrição abaixo de 120 caracteres. Reprodução isolada confirmou granted persistindo após escolher Só o necessário. Evidências operacionais em outputs/lojas-analytics-20261114. Backlinks dependem de publicação externa e não são resolvidos pelo código."
+    },
+    {
       "id": "LOJAS-ANALYTICS-20261114",
       "title": "Completar GTM, GA4 e Google Tag Gateway por loja",
       "objective": "Atender autorização do proprietário após auditoria, com medição isolada por loja e plataforma e sem pageviews duplicados.",

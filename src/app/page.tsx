@@ -15,6 +15,8 @@ import GuiasDomiRio from "@/components/home/GuiasDomiRio";
 import { selecionarVitrineDomiRio } from "@/lib/domirio-comercial";
 import DescobertaPk from "@/components/pk/DescobertaPk";
 import FotosPk from "@/components/pk/FotosPk";
+import { descricaoDaLoja } from "@/lib/textos-loja";
+import { descricaoDoCatalogo } from "@/lib/seo-texto";
 
 /**
  * Página inicial: um dos layouts fixos (Tenant.tema.layout), todos
@@ -36,7 +38,7 @@ import FotosPk from "@/components/pk/FotosPk";
 export async function generateMetadata() {
   const t = await exigirTenant();
   if (t.slug === "domi-rio") return { alternates: { canonical: "/" }, description: "Domi-Rio Distribuidora: compare produtos para controle de pragas, odores e roedores. Confira apresentações, compre pelo site ou peça uma cotação para sua empresa." };
-  if (temaNaVitrine(temaDo(t)).layout !== "industrial") return { alternates: { canonical: "/" } };
+  if (temaNaVitrine(temaDo(t)).layout !== "industrial") return { alternates: { canonical: "/" }, description: descricaoDoCatalogo(t.nome, descricaoDaLoja(t, identidadeDa(t).diferencial), "inicio") };
   const categorias = await listarCategorias(t.id);
   const familias = categorias.slice(0, 3).map((categoria) => categoria.nome).join(", ");
   const description = `${t.nome}: ${familias ? `catálogo de ${familias}. ` : "Catálogo de peças industriais. "}Busque por código ou medidas e confira a ficha técnica de cada produto.`;

@@ -4,11 +4,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { contratoDo } from "@/lib/templates";
 import { descricaoDaPagina } from "@/lib/textos-loja";
+import { complementarDescricaoMeta } from "@/lib/seo-texto";
 
 // Descrição própria: sem ela a página herdava a da loja, igual à da home.
 export async function generateMetadata(): Promise<Metadata> {
   const t = await exigirTenant();
-  return { title: "Sobre", description: descricaoDaPagina(t, "sobre"), alternates: { canonical: "/sobre" } };
+  return { title: "Sobre • Nossa história, produtos e atendimento", description: complementarDescricaoMeta(descricaoDaPagina(t, "sobre"), "Saiba mais sobre a loja e encontre os canais de contato para esclarecer dúvidas antes de escolher seus produtos."), alternates: { canonical: "/sobre" } };
 }
 
 export default async function Sobre() {
