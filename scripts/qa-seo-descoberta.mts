@@ -62,7 +62,7 @@ try {
   const inicial = await (await pedir(alfa.slug, "/")).text();
   const tituloAutomatico = `${alfa.nome} • ${alfa.slogan}`;
   assert.ok(inicial.includes(`<title>${tituloAutomatico}</title>`));
-  assert.equal(((await (await pedir(alfa.slug, "/llms.txt")).text()).match(/\/produtos\/referencia-alfa-/g) ?? []).length, 2);
+  assert.equal(((await (await pedir(alfa.slug, "/llms.txt")).text()).match(/\/produtos\/referencia-alfa-[12]\)/g) ?? []).length, 2);
   const dono = await contexto(token);
   const page = await dono.newPage();
   page.on("pageerror", e => erros.push(e.message));
@@ -89,7 +89,7 @@ try {
   resultados.push({ caso: "formulario_previa_home_resumo", passou: true });
 
   assert.equal((await patch(token, { configuracaoSeo: { incluirDestaques: true, limiteDestaques: 1 } })).status, 200);
-  assert.equal(((await (await pedir(alfa.slug, "/llms.txt")).text()).match(/\/produtos\/referencia-alfa-/g) ?? []).length, 1);
+  assert.equal(((await (await pedir(alfa.slug, "/llms.txt")).text()).match(/\/produtos\/referencia-alfa-[12]\)/g) ?? []).length, 1);
   const tituloAtualizado = "Loja Alfa • Catálogo profissional";
   const descricaoAtualizada = "Conheça o catálogo profissional da Loja Alfa. Encontre referências para sua empresa e conte com orientação para escolher os equipamentos da sua operação.";
   const concorrentes = await Promise.all([

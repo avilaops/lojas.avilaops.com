@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowUpRight, Bot, CheckCircle2, Compass, Search, TriangleAlert } from "lucide-react";
 import { Campo, inputClasse, Secao } from "./campos";
@@ -11,6 +11,7 @@ type Props = { estado: EstadoDescoberta; configuracao: ConfiguracaoSeo; automati
 
 export default function SeoDescoberta({ estado, configuracao, automaticos, podeEditar }: Props) {
   const router = useRouter();
+  const id = useId();
   const [config, setConfig] = useState(configuracao);
   const [treino, setTreino] = useState(estado.treinamentoIa);
   const [salvo, setSalvo] = useState({ configuracao, treino: estado.treinamentoIa });
@@ -102,12 +103,12 @@ export default function SeoDescoberta({ estado, configuracao, automaticos, podeE
 
         <Secao titulo="Resumo para assistentes de IA" descricao="O Lojas organiza as informações públicas da sua loja e mantém os resumos atualizados automaticamente.">
           <div className="flex gap-3 rounded-xl bg-muted/50 p-4 text-sm"><Bot size={22} className="shrink-0 text-primary" aria-hidden="true" /><p className="leading-relaxed text-muted-foreground">Escolha como os destaques aparecem no resumo. Categorias, contato, políticas e links do catálogo continuam vindo dos dados publicados da loja.</p></div>
-          <label className="flex cursor-pointer items-start gap-3 text-sm"><input type="checkbox" className="mt-0.5 size-5 shrink-0 accent-primary" checked={config.incluirDestaques} onChange={e => setConfig({ ...config, incluirDestaques: e.target.checked })} /><span><span className="font-medium">Incluir produtos de destaque no resumo</span><span className="mt-1 block text-xs text-muted-foreground">Usa os produtos que você já marcou como destaque no catálogo.</span></span></label>
+          <label className="flex cursor-pointer items-start gap-3 text-sm"><input type="checkbox" aria-labelledby={`${id}-destaques`} aria-describedby={`${id}-destaques-ajuda`} className="mt-0.5 size-5 shrink-0 accent-primary" checked={config.incluirDestaques} onChange={e => setConfig({ ...config, incluirDestaques: e.target.checked })} /><span><span id={`${id}-destaques`} className="font-medium">Incluir produtos de destaque no resumo</span><span id={`${id}-destaques-ajuda`} className="mt-1 block text-xs text-muted-foreground">Usa os produtos que você já marcou como destaque no catálogo.</span></span></label>
           <div className="max-w-xs"><Campo label="Quantidade máxima de destaques" ajuda="De 1 a 20 produtos no resumo. O catálogo completo permanece disponível."><input className={inputClasse} type="number" min={1} max={20} step={1} disabled={!config.incluirDestaques || !podeEditar || salvando} value={config.limiteDestaques} onChange={e => setConfig({ ...config, limiteDestaques: Number(e.target.value) })} /></Campo></div>
         </Secao>
 
         <Secao titulo="Treinamento de modelos de IA" descricao="Uma escolha independente da busca e da publicação dos resumos.">
-          <label className="flex cursor-pointer items-start gap-3 text-sm"><input type="checkbox" className="mt-0.5 size-5 shrink-0 accent-primary" checked={treino} onChange={e => setTreino(e.target.checked)} /><span><span className="font-medium">Permitir o uso do conteúdo público para treinamento de IA</span><span className="mt-1 block text-xs leading-relaxed text-muted-foreground">Libera os robôs de treinamento, como GPTBot e Google-Extended. Não altera as permissões de busca do Google, Bing ou ChatGPT. Desligado por padrão.</span></span></label>
+          <label className="flex cursor-pointer items-start gap-3 text-sm"><input type="checkbox" aria-labelledby={`${id}-treinamento`} aria-describedby={`${id}-treinamento-ajuda`} className="mt-0.5 size-5 shrink-0 accent-primary" checked={treino} onChange={e => setTreino(e.target.checked)} /><span><span id={`${id}-treinamento`} className="font-medium">Permitir o uso do conteúdo público para treinamento de IA</span><span id={`${id}-treinamento-ajuda`} className="mt-1 block text-xs leading-relaxed text-muted-foreground">Libera os robôs de treinamento, como GPTBot e Google-Extended. Não altera as permissões de busca do Google, Bing ou ChatGPT. Desligado por padrão.</span></span></label>
         </Secao>
       </fieldset>
 
