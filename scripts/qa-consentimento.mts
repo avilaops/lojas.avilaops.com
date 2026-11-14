@@ -112,7 +112,9 @@ try {
     await new Promise((resolve) => setTimeout(resolve, 500));
   }
   assert.ok(pronto, "Build iniciou no loopback");
-  const html = await (await fetch(`http://127.0.0.1:${porta}/`, { headers: { host: `${slug}.localhost:${porta}` } })).text();
+  const respostaHtml = await fetch(`http://127.0.0.1:${porta}/`, { headers: { host: "backend-render.example", "x-forwarded-host": `${slug}.localhost` } });
+  assert.equal(respostaHtml.status, 200, "SSR resolve o host lógico da fixture no mesmo socket local");
+  const html = await respostaHtml.text();
   assert.doesNotMatch(html, /<div[^>]*role="dialog"/);
   assert.match(html, /Preferências de cookies/);
 
