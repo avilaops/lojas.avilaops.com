@@ -60,7 +60,11 @@ export function scriptDoGtm(p: Pick<PixelsDaLoja, "gtmId" | "googleTagGatewayPat
   if (!p.gtmId) return "";
   const origem = p.googleTagGatewayPath ?? "https://www.googletagmanager.com/gtm.js";
   const src = `${origem}?id=${encodeURIComponent(p.gtmId)}`;
-  return `(function(w,d,s,l,u){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=u+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer',${JSON.stringify(src)});`;
+  const direto = `https://www.googletagmanager.com/gtm.js?id=${encodeURIComponent(p.gtmId)}`;
+  // Um script que já iniciou precisa de outro elemento após falhar. A fila
+  // permanece intacta, com um só gtm.js, e a tentativa direta não tem ciclo.
+  const recuperar = p.googleTagGatewayPath ? `j.onerror=function(){j.onerror=null;var b=d.createElement(s);b.async=true;b.src=${JSON.stringify(direto)}+dl;f.parentNode.insertBefore(b,f);};` : "";
+  return `(function(w,d,s,l,u){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;${recuperar}j.src=u+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer',${JSON.stringify(src)});`;
 }
 
 /** Sem nenhum id não há cookie de terceiro: a loja não precisa pedir consentimento. */
