@@ -15,6 +15,8 @@ if (!["127.0.0.1", "localhost"].includes(url.hostname) || !["5548", "5588"].incl
 process.env.LOJAS_CERT_SECRET = "cd".repeat(32);
 const lojas: string[] = [];
 after(async () => {
+  await prisma.auditoriaFiscalLoja.deleteMany({ where: { tenantId: { in: lojas } } });
+  await prisma.manifestacaoFiscalLoja.deleteMany({ where: { tenantId: { in: lojas } } });
   await prisma.webhookApi.deleteMany({ where: { tenantId: { in: lojas } } });
   await prisma.documentoFiscalLoja.deleteMany({ where: { tenantId: { in: lojas } } });
   await prisma.fiscalLoja.deleteMany({ where: { tenantId: { in: lojas } } });
@@ -122,6 +124,20 @@ test("falha ao gravar o lote reverte documentos e NSU juntos", async () => {
   }
   assert.equal((await prisma.fiscalLoja.findUniqueOrThrow({ where: { tenantId: loja.id } })).ultimoNsu, "000000000000000");
   assert.equal(await prisma.documentoFiscalLoja.count({ where: { tenantId: loja.id } }), 0);
+});
+
+test("coleta por NSU recupera resultado incerto na mesma transação dos documentos", async () => {
+  const loja = await preparar("62345678000190");
+  const chave = "6".repeat(44);
+  const resumo = await prisma.documentoFiscalLoja.create({ data: { tenantId: loja.id, cnpj: loja.cnpj!, nsu: "000000000000001", chave, schema: "resNFe_v1.01.xsd", xml: `<resNFe><chNFe>${chave}</chNFe></resNFe>` } });
+  const intencao = await prisma.manifestacaoFiscalLoja.create({ data: { tenantId: loja.id, documentoId: resumo.id, idempotencia: `NFE:${chave}:210210:1:PRODUCAO`, tipo: "CIENCIA", ambiente: "PRODUCAO", autor: "qa:dono", sequencia: 1, status: "PENDENTE_CONFERENCIA", enviadoEm: new Date() } });
+  const evento = `<procEventoNFe><evento><infEvento><tpAmb>1</tpAmb><CNPJ>${loja.cnpj}</CNPJ><chNFe>${chave}</chNFe><tpEvento>210210</tpEvento><nSeqEvento>1</nSeqEvento></infEvento></evento><retEvento><infEvento><tpAmb>1</tpAmb><chNFe>${chave}</chNFe><tpEvento>210210</tpEvento><nSeqEvento>1</nSeqEvento><cStat>135</cStat><nProt>135260000099999</nProt></infEvento></retEvento></procEventoNFe>`;
+  await sincronizarNotas(loja.id, async () => ({ status: "138", mensagem: "Evento recebido", ultimoNsu: "000000000000002", maxNsu: "000000000000002", documentos: [{ nsu: "000000000000002", chave, schema: "procEventoNFe_v1.00.xsd", xml: evento }] }));
+  const conciliada = await prisma.manifestacaoFiscalLoja.findUniqueOrThrow({ where: { id: intencao.id } });
+  assert.equal(conciliada.status, "ACEITA");
+  assert.equal(conciliada.protocolo, "135260000099999");
+  assert.equal(conciliada.tentativas, 0);
+  assert.equal((await prisma.fiscalLoja.findUniqueOrThrow({ where: { tenantId: loja.id } })).ultimoNsu, "000000000000002");
 });
 
 test("mudança de CNPJ bloqueia consulta sem chamar a SEFAZ", async () => {

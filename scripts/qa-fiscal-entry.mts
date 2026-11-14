@@ -67,6 +67,7 @@ try {
   await resumoDialog.getByRole("button", { name: "Registrar ciência da emissão" }).waitFor();
   await resumoDialog.getByRole("button", { name: "Atualizar documentos" }).waitFor();
   assert.match(await resumoDialog.innerText(), /aguardando manifestação/i);
+  await mkdir(output, { recursive: true });
   await page.screenshot({ path: output + "/resumo.png", fullPage: true });
   assert.equal(await prisma.manifestacaoFiscalLoja.count({ where: { tenantId: loja.id } }), 0, "Abrir resumo nunca envia manifestação");
   assert.equal(await prisma.comandoEstoque.count({ where: { tenantId: loja.id } }), 0);
