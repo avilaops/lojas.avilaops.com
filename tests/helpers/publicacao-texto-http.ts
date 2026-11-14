@@ -46,7 +46,7 @@ export async function verificarPublicacaoTextoHttp(servidor: string, tenantId: s
   const plataforma = await obter(hostPlataforma, "/developers/privacidade/index.md");
   if (plataforma.status !== 200) {
     const direta = await obter(hostPlataforma, "/api/publicacao-texto?caminho=%2Fdevelopers%2Fprivacidade%2Findex.md");
-    assert.fail(`Publicação HTTP da plataforma recusada • via proxy ${plataforma.status} • via API ${direta.status} • HTML indexável ${convertido.indexavel}.`);
+    assert.fail(`Publicação HTTP da plataforma recusada • via proxy ${plataforma.status} (${plataforma.headers.get("content-type")}) • via API ${direta.status} • HTML indexável ${convertido.indexavel} • recusa do adaptador ${(await plataforma.text()).includes("Conteúdo público não disponível")}.`);
   }
   await conferir(plataforma, "conector", "markdown");
   const caminho = `/produtos/${slug}/index.md`;

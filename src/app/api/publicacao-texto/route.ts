@@ -17,9 +17,12 @@ async function resolverHost(host: string): Promise<ContextoPublicacao | null> {
 export async function GET(request: NextRequest) {
   const porta = process.env.PORT ?? "3080";
   const origemInterna = /^\d+$/.test(porta) && Number(porta) > 0 && Number(porta) <= 65535 ? `http://127.0.0.1:${Number(porta)}` : "";
-  return responderTextoPublico({
+  const pedido = {
     host: request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? "",
     caminhoTexto: request.nextUrl.searchParams.get("caminho") ?? "",
     ifNoneMatch: request.headers.get("if-none-match"),
-  }, { origemInterna, resolverHost, buscarHtml: fetch });
+  };
+  const resposta = await responderTextoPublico(pedido, { origemInterna, resolverHost, buscarHtml: fetch });
+  if (process.env.CI === "true") console.info("Publicação CI • API", JSON.stringify({ host: pedido.host, caminho: pedido.caminhoTexto, url: request.nextUrl.href, status: resposta.status }));
+  return resposta;
 }
