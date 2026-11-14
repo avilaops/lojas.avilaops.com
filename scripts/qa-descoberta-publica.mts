@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, rm, writeFile } from "node:fs/promises";
+import { resolve } from "node:path";
 import { chromium } from "playwright";
+import sharp from "sharp";
 import { PrismaClient, type Tenant } from "@prisma/client";
 import type { FerramentaPublica } from "@avilaops/publicacao-texto/descoberta/navegador";
 
@@ -14,10 +16,11 @@ const sufixo = randomUUID().slice(0, 8);
 const porta = "3111";
 const origem = `http://127.0.0.1:${porta}`;
 const pasta = "artifacts/descoberta-publica-browser";
+const uploads = resolve(pasta, `uploads-${sufixo}`);
 const criadas: string[] = [];
 const resultados: Array<Record<string, unknown>> = [];
 const servidor = spawn(process.execPath, [".next/standalone/server.js"], {
-  env: { ...process.env, PORT: porta, HOSTNAME: "0.0.0.0", LOJAS_BASE_DOMAIN: "localhost", ROTINAS_AGENDADOR: "0", SSO_APP_ID: "", LOJAS_OIDC_CLIENT_ID: "", LOJAS_OIDC_CLIENT_SECRET: "" },
+  env: { ...process.env, PORT: porta, HOSTNAME: "0.0.0.0", UPLOADS_DIR: uploads, LOJAS_STORAGE_URL: "", LOJAS_STORAGE_TOKEN: "", LOJAS_BASE_DOMAIN: "localhost", ROTINAS_AGENDADOR: "0", SSO_APP_ID: "", LOJAS_OIDC_CLIENT_ID: "", LOJAS_OIDC_CLIENT_SECRET: "" },
   stdio: "inherit",
 });
 const navegador = await chromium.launch({ headless: true });
@@ -30,16 +33,19 @@ try {
   await mkdir(pasta, { recursive: true });
   const lojas: Tenant[] = [];
   for (const [cor, status] of [["azul", "ATIVA"], ["verde", "ATIVA"], ["privada", "PROVISIONANDO"], ["encerrada", "CANCELADA"]] as const) {
+    const slug = `qa-descoberta-${cor}-${sufixo}`;
     const loja = await prisma.tenant.create({ data: {
-      slug: `qa-descoberta-${cor}-${sufixo}`,
+      slug,
       nome: `Loja ${cor} QA`,
       status,
-      logoUrl: "/lojas-mark.svg",
+      logoUrl: `/uploads/${slug}/marca.png`,
       slogan: cor === "azul" ? "Marca </script><script>globalThis.__schemaExecutou=true</script>" : `Conteúdo público ${cor}.`,
     } });
     criadas.push(loja.id);
     lojas.push(loja);
   }
+  await mkdir(`${uploads}/${lojas[0].slug}`, { recursive: true });
+  await writeFile(`${uploads}/${lojas[0].slug}/marca.png`, await sharp({ create: { width: 16, height: 16, channels: 4, background: "#123456" } }).png().toBuffer());
   let pronto = false;
   for (let tentativa = 0; tentativa < 60; tentativa++) {
     try { if ((await fetch(origem + "/api/health")).ok) { pronto = true; break; } } catch { /* aguarda o runtime da CI */ }
@@ -49,6 +55,23 @@ try {
 
   for (const loja of lojas.slice(0, 2)) {
     const host = `${loja.slug}.localhost`;
+    const html = await (await pedir(host, "/")).text();
+    const scripts = [...html.matchAll(/<script\b[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g)].map((match) => JSON.parse(match[1]));
+    const organizacao = scripts.find((item) => item?.["@id"] === `https://${host}/#organization`);
+    assert.equal(organizacao.image, `https://${host}/opengraph-image`);
+    if (loja.id === lojas[0].id) {
+      assert.equal(organizacao.logo, `https://${host}${loja.logoUrl}`);
+      const logo = await pedir(host, loja.logoUrl!);
+      assert.equal(logo.status, 200);
+      assert.match(logo.headers.get("content-type") ?? "", /^image\/png/);
+    } else assert.equal(Object.hasOwn(organizacao, "logo"), false, "Objeto inexistente não é anunciado como logo");
+    const previa = await pedir(host, "/opengraph-image");
+    assert.equal(previa.status, 200);
+    assert.match(previa.headers.get("content-type") ?? "", /^image\/png/);
+    assert.doesNotMatch(previa.headers.get("x-robots-tag") ?? "", /noindex/i);
+    const bytes = Buffer.from(await previa.arrayBuffer());
+    assert.equal(bytes.readUInt32BE(16), 1200);
+    assert.equal(bytes.readUInt32BE(20), 630);
     for (const caminho of ["/.well-known/ard.json", "/ai-catalog.json"]) {
       const resposta = await pedir(host, caminho);
       assert.equal(resposta.status, 200, `${host}${caminho}`);
@@ -66,7 +89,7 @@ try {
         assert.ok((recurso.headers.get("content-type") ?? "").startsWith(entrada.type), `MIME anunciado: ${entrada.url}`);
       }
     }
-    resultados.push({ host, ard: "pass", catalogoCompativel: "pass", recursosPublicos: "pass" });
+    resultados.push({ host, ard: "pass", catalogoCompativel: "pass", recursosPublicos: "pass", imagemOg: "200-png-1200x630", logo: loja.id === lojas[0].id ? "existente" : "ausente-omitido" });
   }
   for (const caminho of ["/.well-known/ard.json", "/ai-catalog.json"]) {
     const resposta = await pedir("localhost", caminho);
@@ -118,8 +141,8 @@ try {
     assert.equal(await pagina.evaluate(() => "__schemaExecutou" in globalThis), false, "Texto cadastrado não fecha o script JSON-LD");
     const schema = await pagina.locator('script[type="application/ld+json"]').evaluateAll((scripts) => scripts.map((script) => JSON.parse(script.textContent ?? "null")));
     const organizacao = schema.find((item) => item?.["@id"]?.endsWith("/#organization"));
-    assert.equal(organizacao.image, `https://${lojas[0].slug}.localhost/lojas-mark.svg`);
-    assert.equal(organizacao.logo, organizacao.image);
+    assert.equal(organizacao.image, `https://${lojas[0].slug}.localhost/opengraph-image`);
+    assert.equal(organizacao.logo, `https://${lojas[0].slug}.localhost${lojas[0].logoUrl}`);
     const nomes = () => pagina.evaluate(() => Object.keys((window as unknown as { __ferramentasPublicas: Record<string, FerramentaPublica> }).__ferramentasPublicas).sort());
     if (modo === "ausente") {
       assert.deepEqual(await nomes(), []);
@@ -172,4 +195,5 @@ try {
   servidor.kill("SIGTERM");
   await prisma.tenant.deleteMany({ where: { id: { in: criadas } } });
   await prisma.$disconnect();
+  await rm(uploads, { recursive: true, force: true });
 }

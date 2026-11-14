@@ -191,7 +191,6 @@ test("schema Store usa a mesma identidade validada sem campos vazios", () => {
       taxID: "58392666000112",
       url: "https://vedashow.com.br",
       logo: "https://cdn.example/vedashow.svg",
-      image: "https://cdn.example/vedashow.svg",
       description: "Peças para manutenção industrial.",
       telephone: "+551634413180",
       email: "vendas@vedashow.com.br",
@@ -205,11 +204,14 @@ test("schema Store usa a mesma identidade validada sem campos vazios", () => {
   );
 });
 
-test("schema usa a marca real em URL absoluta e não inventa imagem quando ela falta", () => {
+test("schema separa logo real e imagem de compartilhamento da própria loja", () => {
   const identidade = identidadePublica(tenant({ nome: "Marca QA" }));
-  const comMarca = schemaDaIdentidadePublica(identidade, { url: "https://marca.example", logo: "/uploads/marca.webp" });
+  const comMarca = schemaDaIdentidadePublica(identidade, { url: "https://marca.example", logo: "/uploads/marca.webp", imagem: "/opengraph-image" });
   assert.equal(comMarca.logo, "https://marca.example/uploads/marca.webp");
-  assert.equal(comMarca.image, "https://marca.example/uploads/marca.webp");
+  assert.equal(comMarca.image, "https://marca.example/opengraph-image");
+  const semMarca = schemaDaIdentidadePublica(identidade, { url: "https://marca.example", imagem: "/opengraph-image" });
+  assert.equal(Object.hasOwn(semMarca, "logo"), false);
+  assert.equal(semMarca.image, "https://marca.example/opengraph-image");
   for (const logo of [null, "", "javascript:alert(1)", "data:image/png;base64,AA==", "https://usuario:senha@cdn.example/logo.svg"]) {
     const schema = schemaDaIdentidadePublica(identidade, { url: "https://marca.example", logo });
     assert.equal(Object.hasOwn(schema, "image"), false);
