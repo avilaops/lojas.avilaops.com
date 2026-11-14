@@ -48,11 +48,15 @@ export async function restaurar(arquivos, token, aplicar, fetcher = fetch) {
     }
     if (antes.status !== 404) throw new Error(`STORAGE_HEAD_${antes.status}`);
     if (!aplicar) { resultado.push({ nome: item.nome, estado: "ausente" }); continue; }
-    const envio = await requisitar(fetcher, item.url, { method: "PUT", headers: { ...headers, "content-type": item.mime, "content-length": String(item.bytes.length), "x-content-sha256": item.sha256 }, body: item.bytes });
+    if (antes.headers.get("x-lojas-create-only") !== "1") throw new Error("STORAGE_CREATE_ONLY_UNAVAILABLE");
+    const envio = await requisitar(fetcher, item.url, { method: "PUT", headers: { ...headers, "if-none-match": "*", "content-type": item.mime, "content-length": String(item.bytes.length), "x-content-sha256": item.sha256 }, body: item.bytes });
+    if (envio.status === 409) { resultado.push({ nome: item.nome, estado: "criado_por_outro_escritor_preservado" }); continue; }
     if (envio.status !== 204) throw new Error(`STORAGE_PUT_${envio.status}`);
     const depois = await requisitar(fetcher, item.url, { method: "GET", headers });
     if (depois.status !== 200 || hash(Buffer.from(await depois.arrayBuffer())) !== item.sha256) throw new Error("RESTORE_VERIFICATION_FAILED");
-    resultado.push({ nome: item.nome, estado: "restaurado_verificado", sha256: item.sha256 });
+    const evidencia = { nome: item.nome, estado: "restaurado_verificado", sha256: item.sha256 };
+    console.log(JSON.stringify(evidencia));
+    resultado.push(evidencia);
   }
   return resultado;
 }

@@ -10,9 +10,12 @@ e verifica os sete objetos da Vedashow. Não altera cadastro, cobrança ou catá
 
 `restaurar-vedashow` envia somente objetos que responderem 404 e verifica os bytes
 depois da escrita. Qualquer objeto existente é preservado, mesmo com hash diferente.
-As operações são serializadas no GitHub. A verificação de ausência precede o PUT;
-o serviço de armazenamento existente não oferece criação condicional para uploads.
-Não executar durante alterações simultâneas desses mesmos arquivos no painel.
+As operações são serializadas no GitHub. O cliente exige o suporte anunciado
+`x-lojas-create-only: 1` e envia `If-None-Match: *`. O Worker aplica a condição
+atomicamente no R2; se outro escritor criar o arquivo depois do HEAD, preserva-o
+e responde 409. Uploads normais continuam permitindo edição autenticada.
+O conteúdo atualizado do Worker deve ser publicado antes da restauração, pelo
+endpoint de troca de conteúdo, preservando bindings, segredos e configuração.
 
 A credencial operacional existente é obtida em memória, somente para a variável
 `LOJAS_STORAGE_TOKEN` do serviço Render fixo. Não há enumeração de ambiente,

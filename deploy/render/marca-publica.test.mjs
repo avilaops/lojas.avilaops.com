@@ -36,11 +36,22 @@ test("restaura só ausentes e verifica os bytes devolvidos", async () => {
   const metodos = [];
   const resultado = await restaurar([arquivo], "fake-token", true, async (_, opts) => {
     metodos.push(opts.method);
-    if (opts.method === "HEAD") return new Response(null, { status: 404 });
-    if (opts.method === "PUT") { assert.deepEqual(opts.body, arquivo.bytes); return new Response(null, { status: 204 }); }
+    if (opts.method === "HEAD") return new Response(null, { status: 404, headers: { "x-lojas-create-only": "1" } });
+    if (opts.method === "PUT") { assert.deepEqual(opts.body, arquivo.bytes); assert.equal(opts.headers["if-none-match"], "*"); return new Response(null, { status: 204 }); }
     return new Response(arquivo.bytes);
   });
   assert.deepEqual(metodos, ["HEAD", "PUT", "GET"]);
   assert.equal(resultado[0].estado, "restaurado_verificado");
   await assert.rejects(restaurar([{ ...arquivo, url: arquivo.url.replace("vedashow", "outro") }], "fake-token", true), { message: "INVALID_RESTORE_TARGET" });
+});
+test("não escreve em Worker antigo e preserva conflito de outro escritor", async () => {
+  const arquivos = (await plano()).slice(0, 1);
+  await assert.rejects(restaurar(arquivos, "fake-token", true, async (_, opts) => {
+    assert.equal(opts.method, "HEAD"); return new Response(null, { status: 404 });
+  }), { message: "STORAGE_CREATE_ONLY_UNAVAILABLE" });
+  const resultado = await restaurar(arquivos, "fake-token", true, async (_, opts) => {
+    if (opts.method === "HEAD") return new Response(null, { status: 404, headers: { "x-lojas-create-only": "1" } });
+    assert.equal(opts.method, "PUT"); assert.equal(opts.headers["if-none-match"], "*"); return new Response(null, { status: 409 });
+  });
+  assert.equal(resultado[0].estado, "criado_por_outro_escritor_preservado");
 });
