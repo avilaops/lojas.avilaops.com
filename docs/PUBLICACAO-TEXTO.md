@@ -12,6 +12,10 @@ O pacote é consumido somente no servidor Node 22. O commit fixado usa o export
 nomeado do plugin GFM e uma instância de DOM local ao conversor; não instala
 `document` ou `window` globais.
 
+A leitura do HTML limita cabeçalhos declarados e bytes efetivamente recebidos a
+4 MiB antes de parse5, DOM e Turndown. Um canonical que aponte para outra origem
+é recusado; o canonical válido do HTML é preservado no texto e no cabeçalho Link.
+
 Uma página `/` corresponde a `/index.md` e `/index.mdx`. Uma página
 `/produtos/exemplo` corresponde a `/produtos/exemplo/index.md` e
 `/produtos/exemplo/index.mdx`. A rota pública, independentemente do canonical

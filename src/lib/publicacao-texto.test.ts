@@ -210,6 +210,7 @@ test("canonical compartilhado dentro da mesma origem continua publicável", asyn
   const resposta = await publicar("a.lojas.avilaops.com", "/produtos/variante/index.md", deps);
   assert.equal(resposta.status, 200);
   assert.match(await resposta.text(), /https:\/\/a\.lojas\.avilaops\.com\/produtos\/principal/);
+  assert.match(resposta.headers.get("link") ?? "", /<https:\/\/a\.lojas\.avilaops\.com\/produtos\/principal>; rel="canonical"/);
 });
 
 test("HTML acima do teto declarado é recusado antes da conversão", async () => {

@@ -9,6 +9,38 @@ export type DependenciasPublicacao = {
   buscarHtml: typeof fetch;
 };
 
+const LIMITE_HTML_BYTES = 4 * 1024 * 1024;
+
+async function lerHtmlLimitado(resposta: Response): Promise<string | null> {
+  const tamanho = resposta.headers.get("content-length");
+  if (tamanho && /^\d+$/.test(tamanho) && Number(tamanho) > LIMITE_HTML_BYTES) {
+    await resposta.body?.cancel();
+    return null;
+  }
+  if (!resposta.body) return "";
+  const leitor = resposta.body.getReader();
+  const blocos: Uint8Array[] = [];
+  let total = 0;
+  try {
+    while (true) {
+      const { done, value } = await leitor.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > LIMITE_HTML_BYTES) {
+        await leitor.cancel();
+        return null;
+      }
+      blocos.push(value);
+    }
+  } finally {
+    leitor.releaseLock();
+  }
+  const bytes = new Uint8Array(total);
+  let posicao = 0;
+  for (const bloco of blocos) { bytes.set(bloco, posicao); posicao += bloco.byteLength; }
+  return new TextDecoder().decode(bytes);
+}
+
 function indisponivel(status = 404) {
   return new Response("Conteúdo público não disponível.\n", { status, headers: { "cache-control": "no-store", "content-type": "text/plain; charset=utf-8", "x-robots-tag": "noindex", "x-content-type-options": "nosniff" } });
 }
@@ -42,14 +74,18 @@ export async function responderTextoPublico(pedido: { host: string; caminhoTexto
     // Não seguir Location nem publicar corpo de login ou erro.
     if (renderizada.status !== 200 || renderizada.redirected || renderizada.headers.has("www-authenticate")) return indisponivel(renderizada.status >= 500 ? 503 : 404);
     if (!/^text\/html(?:;|$)/i.test(renderizada.headers.get("content-type") ?? "") || /\b(?:noindex|none)\b/i.test(renderizada.headers.get("x-robots-tag") ?? "")) return indisponivel();
-    const texto = converterHtml(await renderizada.text(), { url: urlHtml.href, formato: rota.formato });
+    const html = await lerHtmlLimitado(renderizada);
+    if (html === null) return indisponivel(503);
+    const texto = converterHtml(html, { url: urlHtml.href, formato: rota.formato });
     if (!texto.indexavel) return indisponivel();
+    const canonical = new URL(texto.metadados.canonical);
+    if (canonical.origin !== base.origin) return indisponivel();
     const etag = `"${createHash("sha256").update([contexto.id, host, rota.caminhoHtml, rota.formato, texto.conteudo].join("\0")).digest("hex")}"`;
     const headers = {
       "content-type": `${rota.formato === "md" ? "text/markdown" : "text/mdx"}; charset=utf-8`,
       "cache-control": "no-store", etag, vary: "Host, X-Forwarded-Host",
       "x-content-type-options": "nosniff", "x-robots-tag": "noindex, follow",
-      link: `<${urlHtml.href}>; rel="canonical", </llms.txt>; rel="describedby"`,
+      link: `<${canonical.href}>; rel="canonical", </llms.txt>; rel="describedby"`,
     };
     const coincide = pedido.ifNoneMatch?.split(",").some(valor => valor.trim() === "*" || valor.trim().replace(/^W\//, "") === etag);
     return coincide ? new Response(null, { status: 304, headers }) : new Response(texto.conteudo, { headers });

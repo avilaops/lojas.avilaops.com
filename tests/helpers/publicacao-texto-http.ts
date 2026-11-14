@@ -36,15 +36,16 @@ export async function verificarPublicacaoTextoHttp(servidor: string, tenantId: s
     assert.ok(resposta.headers.get("etag"));
     return corpo;
   };
-  const html = await obter("127.0.0.1", "/developers/privacidade");
+  const hostPlataforma = "lojas.avilaops.com";
+  const html = await obter(hostPlataforma, "/developers/privacidade");
   assert.equal(html.status, 200);
   assert.match(html.headers.get("link") ?? "", /\/developers\/privacidade\/index\.md/);
   const htmlPlataforma = await html.text();
-  const convertido = converterHtml(htmlPlataforma, { url: "https://127.0.0.1/developers/privacidade", formato: "md" });
+  const convertido = converterHtml(htmlPlataforma, { url: `https://${hostPlataforma}/developers/privacidade`, formato: "md" });
   assert.equal(convertido.indexavel, true, `HTML real da plataforma recusado pelo conversor: ${convertido.motivo}.`);
-  const plataforma = await obter("127.0.0.1", "/developers/privacidade/index.md");
+  const plataforma = await obter(hostPlataforma, "/developers/privacidade/index.md");
   if (plataforma.status !== 200) {
-    const direta = await obter("127.0.0.1", "/api/publicacao-texto?caminho=%2Fdevelopers%2Fprivacidade%2Findex.md");
+    const direta = await obter(hostPlataforma, "/api/publicacao-texto?caminho=%2Fdevelopers%2Fprivacidade%2Findex.md");
     assert.fail(`Publicação HTTP da plataforma recusada • via proxy ${plataforma.status} • via API ${direta.status} • HTML indexável ${convertido.indexavel}.`);
   }
   await conferir(plataforma, "conector", "markdown");
@@ -71,7 +72,7 @@ export async function verificarPublicacaoTextoHttp(servidor: string, tenantId: s
   for (const privado of ["/checkout/index.md", "/conta/index.md", "/%63onta/index.md", "/%2570ainel/index.mdx"]) {
     assert.equal((await obter("localhost", privado)).status, 404, privado);
   }
-  const indice = await obter("127.0.0.1", "/llms.txt");
+  const indice = await obter(hostPlataforma, "/llms.txt");
   assert.equal(indice.status, 200);
   assert.match(await indice.text(), /\/index\.md\)/);
   await writeFile(`${pasta}/publicacao-texto-summary.json`, JSON.stringify({
