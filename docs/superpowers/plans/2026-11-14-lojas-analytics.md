@@ -45,6 +45,13 @@ auditoria em outputs/lojas-analytics-20261114 no workspace compartilhado.
 - [ ] Revisar versões candidatas e conflitos antes da publicação no GTM.
 - [ ] Reproduzir na CI a classificação incorreta de cotação/estorno como compra,
   corrigir a regra da página do pedido e confirmar a regressão na CI.
+- [ ] Aplicar os critérios adicionais enviados pelo proprietário: ratear o
+  desconto em centavos nos itens, enviar price líquido e discount por unidade,
+  propagar coupon e confirmar value como soma da receita dos itens. Preservar
+  quantidades e preços comerciais. Checkout aceita no máximo 50 itens; o
+  rateio pode dividir quantidades em dois grupos por SKU, até 100 entradas GA4.
+- [ ] Enviar marca, variante e in_stock somente quando os dados existirem;
+  registrar in_stock como dimensão ITEM sem ultrapassar o limite da propriedade.
 - [ ] Atualizar apenas IDs de pixels nos tenants e o GTM da plataforma no Render.
 - [ ] Configurar Gateways ausentes nos domínios Cloudflare acessíveis,
   preservando os caminhos existentes e hideOriginalIp.
