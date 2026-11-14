@@ -8,6 +8,7 @@ import { avaliarPedidoMinimo } from "@avilaops/checkout";
 import { identidadePublica } from "@/lib/identidade-publica";
 import { visivelNaBusca } from "@/lib/descoberta";
 import { adicionarDescobertaTexto } from "@/lib/publicacao-texto-rotas";
+import { opcoesResumoIa } from "@/lib/seo-config";
 
 /**
  * llms.txt da LOJA — o mapa que assistentes de IA (ChatGPT, Perplexity, Gemini)
@@ -62,13 +63,14 @@ políticas dela. Este arquivo descreve a plataforma, não uma loja.
   if (!t || !visivelNaBusca(t)) return new Response("Loja nao encontrada.", { status: 404, headers: { "content-type": "text/plain; charset=utf-8" } });
   const base = urlDaLoja(t);
   const identidade = identidadeDa(t);
+  const { limiteDestaques } = opcoesResumoIa(t.configuracaoSeo);
   // Categorias em ordem de tamanho (é como `listarCategorias` devolve) e só as
   // principais: 73 links de categoria já é lista, não orientação.
   // Destaques são o que o lojista marcou, com teto. Produto não entra em
   // massa: isto descreve a loja; o catálogo é do sitemap e das categorias.
   const [categorias, destaques] = await Promise.all([
     listarCategorias(t.id),
-    listarProdutos(t.id, { destaque: true, limite: 12 }),
+    limiteDestaques ? listarProdutos(t.id, { destaque: true, limite: limiteDestaques }) : Promise.resolve([]),
   ]);
   const identidadeComercial = identidadePublica(t);
   const vende = lojaVende(t);
@@ -128,7 +130,7 @@ políticas dela. Este arquivo descreve a plataforma, não uma loja.
       ? ["", "## Destaques", ...destaques.map((p) => `- [${p.nome}](${base}/produtos/${p.slug})${p.precoCentavos > 0 ? `: ${formatarBRL(p.precoCentavos)}` : ": preço sob consulta"}`)]
       : []),
     "",
-    ...(artigosDomiRio(t.slug).length ? ["## Guias Domi-Rio — Defensivos na prática", `- [Índice dos 50 artigos](${base}/blog)`, ...artigosDomiRio(t.slug).map(p => `- [${p.title}](${base}/blog/${p.slug})`)] : []),
+    ...(artigosDomiRio(t.slug).length ? ["## Guias Domi-Rio • Defensivos na prática", `- [Índice dos 50 artigos](${base}/blog)`, ...artigosDomiRio(t.slug).map(p => `- [${p.title}](${base}/blog/${p.slug})`)] : []),
     "## Políticas",
     `- [Envio e retirada](${base}/politicas/envio)`,
     `- [Trocas e devoluções](${base}/politicas/devolucao)`,

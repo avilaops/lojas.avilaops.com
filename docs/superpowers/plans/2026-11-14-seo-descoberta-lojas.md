@@ -30,26 +30,26 @@
 
 Files: `src/lib/seo-config.ts`, `src/lib/seo-config.test.ts`, `prisma/schema.prisma`, nova migração, `src/lib/admin-schemas.ts`, `src/lib/admin-tenants.ts`.
 
-- [ ] Escrever casos de padrão, merge, limites, títulos/descrições e seleção de destaques.
-- [ ] Registrar RED no CI antes da implementação.
-- [ ] Implementar contrato, migração aditiva e merge por loja na escrita existente.
+- [x] Escrever casos de padrão, merge, limites, títulos/descrições e seleção de destaques.
+- [x] Registrar RED no CI antes da implementação.
+- [x] Implementar contrato, migração aditiva e merge por loja na escrita existente.
 - [ ] Verificar contrato e persistência/isolamento no CI.
 
 ### Task 2: Saída pública
 
 Files: `src/lib/seo-inicio.ts`, `src/app/page.tsx`, `src/app/llms.txt/route.ts`.
 
-- [ ] Compartilhar resolução automática entre prévia e home, preservando as regras existentes.
-- [ ] Aplicar título absoluto e descrição somente à home; manter canonical e políticas.
-- [ ] Usar configuração de destaques no resumo, preservando os demais documentos e limites.
+- [x] Compartilhar resolução automática entre prévia e home, preservando as regras existentes.
+- [x] Aplicar título absoluto e descrição somente à home; manter canonical e políticas.
+- [x] Usar configuração de destaques no resumo, preservando os demais documentos e limites.
 - [ ] Verificar metadados e resumo de duas lojas no servidor compilado.
 
 ### Task 3: Painel e entrega
 
-Files: `src/components/painel/Descoberta.tsx`, navegação/cabeçalhos de configurações, `scripts/qa-seo-descoberta.mts`, workflow de CI existente, registros de equipe/MLOps e documentação.
+Files: `src/components/painel/SeoDescoberta.tsx` substitui o componente Descoberta privado, navegação/cabeçalhos de configurações, `scripts/qa-seo-descoberta.mts`, workflow de CI existente, registros de equipe/MLOps e documentação.
 
-- [ ] Criar formulário, prévia, orientações e atalhos com a identidade do painel.
-- [ ] Integrar sessão e permissão; salvar pelo endpoint existente.
+- [x] Criar formulário, prévia, orientações e atalhos com a identidade do painel.
+- [x] Integrar sessão e permissão; salvar pelo endpoint existente.
 - [ ] Conferir navegação, persistência, erro/negação de acesso, desktop/mobile e ausência de vazamento entre lojas no CI.
 - [ ] Revisar diff, checks e artefatos; integrar e acompanhar publicação normal.
 - [ ] Conferir defaults em produção sem alterar configurações de clientes e registrar evidências.

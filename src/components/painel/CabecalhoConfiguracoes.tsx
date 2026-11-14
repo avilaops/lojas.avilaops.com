@@ -13,7 +13,7 @@ const NOME: Record<string, { titulo: string; descricao: string }> = {
   entrega: { titulo: "Entrega", descricao: "Frete por CEP, prazo de envio e retirada." },
   recebimento: { titulo: "Pagamentos", descricao: "Pix, cartão e boleto." },
   canais: { titulo: "Marketplaces", descricao: "Vender também no Mercado Livre e em outros marketplaces." },
-  descoberta: { titulo: "SEO e buscadores", descricao: "Como a loja aparece no Google, no Bing e nos assistentes de IA." },
+  descoberta: { titulo: "SEO e descoberta", descricao: "Apresentação nas buscas, resumos para IA e informações públicas da loja." },
   automacoes: { titulo: "Automações", descricao: "Os avisos que a loja dispara, e se cada um saiu." },
   equipe: { titulo: "Equipe", descricao: "Quem entra no painel e o que cada pessoa pode fazer." },
   assinatura: { titulo: "Assinatura", descricao: "Plano e cobrança mensal." },

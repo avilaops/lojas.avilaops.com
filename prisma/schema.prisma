@@ -116,6 +116,8 @@ model Tenant {
   faviconUrl              String?
   tema                    Json    @default("{}") // TemaLoja em src/lib/tema.ts
   identidade              Json    @default("{}") // diagnóstico, voz e direção fotográfica
+  /// Metadados da home e curadoria do resumo público para assistentes.
+  configuracaoSeo          Json    @default("{}")
   slogan                  String?
   /**
    * Segmento da loja. Liga blocos de vitrine específicos do ramo sem código

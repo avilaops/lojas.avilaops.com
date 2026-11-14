@@ -25,7 +25,7 @@ const SUB = [
   { slug: "politicas", rotulo: "Políticas" },
   { slug: "campos", rotulo: "Campos do produto" },
   { slug: "canais", rotulo: "Marketplaces" },
-  { slug: "descoberta", rotulo: "SEO e buscadores" },
+  { slug: "descoberta", rotulo: "SEO e descoberta" },
   { slug: "automacoes", rotulo: "Automações" },
   { slug: "equipe", rotulo: "Equipe" },
   { slug: "assinatura", rotulo: "Assinatura" },

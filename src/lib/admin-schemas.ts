@@ -4,6 +4,7 @@ import { TemaSchema } from "./tema";
 import { IdentidadeSchema, LIMITE_SLOGAN } from "./identidade";
 import { categoriaGoogleValida } from "./google-product-taxonomy";
 import { RECURSOS } from "./recursos";
+import { SeoConfiguracaoEntradaSchema } from "./seo-config";
 
 /**
  * Contratos da API administrativa. É o que o formulário de onboarding do
@@ -62,6 +63,7 @@ export const TenantEntradaSchema = z.object({
   bannerUrl: z.string().url().nullable().optional(),
   tema: TemaSchema.partial().optional(),
   identidade: IdentidadeSchema.partial().optional(),
+  configuracaoSeo: SeoConfiguracaoEntradaSchema.optional(),
   slogan: z.string().max(LIMITE_SLOGAN).optional(),
   /**
    * O ramo, que liga blocos de vitrine específicos sem código por loja:

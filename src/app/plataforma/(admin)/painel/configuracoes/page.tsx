@@ -41,7 +41,7 @@ export default function Pagina() {
           titulo: "Integrações e divulgação",
           itens: [
             { href: "/painel/configuracoes/canais", titulo: "Marketplaces", descricao: "Mercado Livre e outros marketplaces" },
-            { href: "/painel/configuracoes/descoberta", titulo: "SEO e buscadores", descricao: "Google, Bing e assistentes de IA" },
+            { href: "/painel/configuracoes/descoberta", titulo: "SEO e descoberta", descricao: "Aparência nas buscas e resumos para IA" },
             { href: "/painel/configuracoes/automacoes", titulo: "Automações", descricao: "Avisos por WhatsApp e e-mail" },
           ],
         },

@@ -268,6 +268,25 @@
       "flows": []
     },
     {
+      "id": "seo-descoberta",
+      "name": "SEO e descoberta • módulo próprio do Lojas",
+      "state": "existing",
+      "dependsOn": ["fundacao", "descoberta-publica"],
+      "sources": [
+        { "kind": "code", "path": "src/lib/seo-config.ts" },
+        { "kind": "code", "path": "src/lib/seo-inicio.ts" },
+        { "kind": "code", "path": "src/lib/admin-tenants.ts" },
+        { "kind": "code", "path": "src/app/api/painel/loja/route.ts" },
+        { "kind": "code", "path": "src/components/painel/SeoDescoberta.tsx" },
+        { "kind": "code", "path": "src/app/page.tsx" },
+        { "kind": "code", "path": "src/app/llms.txt/route.ts" },
+        { "kind": "test", "path": "src/lib/seo-config.test.ts" },
+        { "kind": "test", "path": "scripts/qa-seo-descoberta.mts" },
+        { "kind": "contract", "path": "docs/SEO-DESCOBERTA-LOJAS.md" }
+      ],
+      "flows": []
+    },
+    {
       "id": "cms",
       "name": "Conteúdo e publicação — módulo CMS",
       "state": "planned",
