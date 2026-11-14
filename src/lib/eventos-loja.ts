@@ -35,6 +35,7 @@ type Janela = Window & {
 };
 
 const reais = (centavos: number) => Number((centavos / 100).toFixed(2));
+const reaisPorUnidade = (centavos: number) => Number((centavos / 100).toFixed(Number.isInteger(centavos) ? 2 : 12));
 
 function janela(): Janela | null {
   return typeof window === "undefined" ? null : (window as Janela);
@@ -71,13 +72,13 @@ export function paraGa4(itens: ItemEvento[]) {
   return itens.map((i) => ({
     item_id: i.id,
     item_name: i.nome,
-    price: reais(i.precoCentavos - (i.descontoUnitarioCentavos ?? 0)),
+    price: reaisPorUnidade(i.precoCentavos - (i.descontoUnitarioCentavos ?? 0)),
     quantity: i.quantidade ?? 1,
     item_category: i.categoria ?? undefined,
     ...(i.marca ? { item_brand: i.marca } : {}),
     ...(i.variante ? { item_variant: i.variante } : {}),
     ...(typeof i.emEstoque === "boolean" ? { in_stock: i.emEstoque } : {}),
-    ...(i.descontoUnitarioCentavos ? { discount: reais(i.descontoUnitarioCentavos) } : {}),
+    ...(i.descontoUnitarioCentavos ? { discount: reaisPorUnidade(i.descontoUnitarioCentavos) } : {}),
     ...(i.cupomCodigo ? { coupon: i.cupomCodigo } : {}),
   }));
 }
@@ -86,33 +87,40 @@ export function paraGa4(itens: ItemEvento[]) {
 function itensDaCompra(itens: ItemEvento[], descontoCentavos: number, cupom?: string | null): ItemEvento[] {
   const linhas = itens.map((item, indice) => {
     const quantidade = item.quantidade ?? 1;
-    return { item, indice, quantidade, total: item.precoCentavos * quantidade, desconto: 0, resto: 0n };
+    return { item, indice, quantidade, total: item.precoCentavos * quantidade, porUnidade: 0, unidadesComCentavoExtra: 0, resto: 0n };
   });
   const subtotal = linhas.reduce((soma, linha) => soma + linha.total, 0);
   if (!Number.isSafeInteger(subtotal) || subtotal <= 0 || !Number.isFinite(descontoCentavos)
-    || linhas.some((linha) => !Number.isSafeInteger(linha.total) || linha.total < 0 || !Number.isSafeInteger(linha.quantidade) || linha.quantidade < 1)) return itens;
+    || linhas.some((linha) => !Number.isSafeInteger(linha.item.precoCentavos) || !Number.isSafeInteger(linha.total) || linha.total < 0 || !Number.isSafeInteger(linha.quantidade) || linha.quantidade < 1)) return itens;
   const desconto = Math.min(subtotal, Math.max(0, Math.trunc(descontoCentavos)));
   if (!desconto) return itens;
 
   const base = BigInt(subtotal);
   for (const linha of linhas) {
-    const numerador = BigInt(desconto) * BigInt(linha.total);
-    linha.desconto = Number(numerador / base);
+    const numerador = BigInt(desconto) * BigInt(linha.item.precoCentavos);
+    linha.porUnidade = Number(numerador / base);
     linha.resto = numerador % base;
   }
-  const sobram = desconto - linhas.reduce((soma, linha) => soma + linha.desconto, 0);
+  let sobram = desconto - linhas.reduce((soma, linha) => soma + linha.porUnidade * linha.quantidade, 0);
   const prioridade = [...linhas].sort((a, b) => a.resto === b.resto ? a.indice - b.indice : a.resto > b.resto ? -1 : 1);
-  for (let indice = 0; indice < sobram; indice++) prioridade[indice].desconto++;
+  for (const linha of prioridade) {
+    linha.unidadesComCentavoExtra = Math.min(sobram, linha.quantidade);
+    sobram -= linha.unidadesComCentavoExtra;
+    if (!sobram) break;
+  }
 
-  return linhas.flatMap(({ item, quantidade, desconto: total }) => {
-    const porUnidade = Math.floor(total / quantidade);
-    const unidadesComCentavoExtra = total % quantidade;
+  return linhas.flatMap(({ item, quantidade, porUnidade, unidadesComCentavoExtra }) => {
     const grupo = (unidades: number, descontoUnitario: number): ItemEvento => ({
       ...item, quantidade: unidades, descontoUnitarioCentavos: descontoUnitario,
       ...(cupom && descontoUnitario > 0 ? { cupomCodigo: cupom } : {}),
     });
-    // Um centavo indivisível vira dois grupos do mesmo SKU, preservando a
-    // quantidade total e preços com duas casas. O checkout limita a 50 itens.
+    // O rateio por unidade produz no máximo um grupo parcial. Até 199 linhas,
+    // ele vira dois grupos do mesmo SKU, com preços exatos em centavos.
+    // No limite do GA4, preservamos a linha usando precisão unitária adicional.
+    // Pedidos que já excediam 200 linhas continuam sujeitos ao limite do Google.
+    if (itens.length >= 200 && unidadesComCentavoExtra > 0 && unidadesComCentavoExtra < quantidade) {
+      return [grupo(quantidade, porUnidade + unidadesComCentavoExtra / quantidade)];
+    }
     return [
       ...(quantidade > unidadesComCentavoExtra ? [grupo(quantidade - unidadesComCentavoExtra, porUnidade)] : []),
       ...(unidadesComCentavoExtra ? [grupo(unidadesComCentavoExtra, porUnidade + 1)] : []),
@@ -178,12 +186,12 @@ function disparar(nomes: { ga4: string; meta: string; tiktok: string }, itens: I
       value: reais(valor),
       content_type: "product",
       content_ids: itens.map((i) => i.id),
-      contents: itens.map((i) => ({ id: i.id, quantity: i.quantidade ?? 1, item_price: reais(i.precoCentavos - (i.descontoUnitarioCentavos ?? 0)) })),
+      contents: itens.map((i) => ({ id: i.id, quantity: i.quantidade ?? 1, item_price: reaisPorUnidade(i.precoCentavos - (i.descontoUnitarioCentavos ?? 0)) })),
     });
     w.ttq?.track(nomes.tiktok, {
       currency: "BRL",
       value: reais(valor),
-      contents: itens.map((i) => ({ content_id: i.id, content_name: i.nome, quantity: i.quantidade ?? 1, price: reais(i.precoCentavos - (i.descontoUnitarioCentavos ?? 0)) })),
+      contents: itens.map((i) => ({ content_id: i.id, content_name: i.nome, quantity: i.quantidade ?? 1, price: reaisPorUnidade(i.precoCentavos - (i.descontoUnitarioCentavos ?? 0)) })),
     });
   } catch {
     /* pixel com problema nunca pode atrapalhar a compra */
