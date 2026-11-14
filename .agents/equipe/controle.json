@@ -13,6 +13,27 @@
   ],
   "tasks": [
     {
+      "id": "LOJAS-SELO-PRODUTO-20261114",
+      "title": "Apontar o selo das lojas para a página do E-Commerce",
+      "objective": "Explicar o produto no crédito compartilhado e direcionar visitantes das lojas para /lojas/ na origem Avila Ops configurada.",
+      "assignee": "codex",
+      "priority": "normal",
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "O selo mostra E-Commerce • loja virtual por Avila Ops e preserva o crédito obrigatório.",
+        "O destino usa /lojas/ na origem AVILAOPS_URL, com padrão https://avilaops.com/lojas/.",
+        "Símbolo, rel noopener, abertura em nova aba e demais links do rodapé são preservados.",
+        "GitHub CI valida a branch antes da revisão independente e da publicação."
+      ],
+      "environment": "worktree isolada e GitHub CI; produção pendente",
+      "evidence": "Footer.tsx revisado sobre origin/main 3d28fa3d4b7f4fb932e2d4e24459057b4d24dc93 na branch codex/lojas-product-backlink-20261114. Fontes: src/components/Footer.tsx, .env.example e workflows deploy-production.yml/merge-automatico.yml. Diff restrito ao selo e a este registro; builds e testes serão executados exclusivamente no GitHub CI. Evidência do SHA e dos checks será vinculada no PR da branch: https://github.com/avilaops/lojas.avilaops.com/tree/codex/lojas-product-backlink-20261114.",
+      "review": "Revisão independente da execução coordenadora pendente. PR deve permanecer draft para impedir o merge automático antes dessa revisão; publicação exige evidência própria.",
+      "history": [
+        { "at": "2026-11-14", "status": "em-andamento", "note": "Correção comercial autorizada pelo proprietário; checkout principal com alterações preexistentes preservado por worktree isolada." },
+        { "at": "2026-11-14", "status": "em-revisao", "note": "Alteração estática preparada; símbolo e atributos do selo preservados. Próxima etapa: diff e GitHub CI no PR draft, sem teste ou build local." }
+      ]
+    },
+    {
       "id": "BRILHAX-TITULOS-20261114",
       "title": "Corrigir títulos, descrições curtas e revogação do consentimento",
       "objective": "Corrigir títulos curtos do Brilhax, descrições das 47 URLs da Vedashow e a atualização Google ao retirar consentimento.",
