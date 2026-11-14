@@ -8,6 +8,10 @@ As versões textuais usam o HTML público atual do renderizador Next.js e
 Não existe uma segunda cópia editorial, migração de backend ou recaptura de
 catálogo para gerar cada produto.
 
+O pacote é externo ao bundle do servidor e carregado por import dinâmico no
+Node 22. Isso preserva a entrada Node dos plugins do conversor fixado, sem
+alterar sua implementação compartilhada.
+
 Uma página `/` corresponde a `/index.md` e `/index.mdx`. Uma página
 `/produtos/exemplo` corresponde a `/produtos/exemplo/index.md` e
 `/produtos/exemplo/index.mdx`. A rota pública, independentemente do canonical

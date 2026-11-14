@@ -1,5 +1,4 @@
 import { createHash } from "node:crypto";
-import { converterHtml } from "@avilaops/publicacao-texto";
 import { lerCaminhoTexto } from "./publicacao-texto-rotas";
 
 export type ContextoPublicacao = { id: string; urlBase: string; publicavel: boolean };
@@ -42,6 +41,7 @@ export async function responderTextoPublico(pedido: { host: string; caminhoTexto
     // Não seguir Location nem publicar corpo de login ou erro.
     if (renderizada.status !== 200 || renderizada.redirected || renderizada.headers.has("www-authenticate")) return indisponivel(renderizada.status >= 500 ? 503 : 404);
     if (!/^text\/html(?:;|$)/i.test(renderizada.headers.get("content-type") ?? "") || /\b(?:noindex|none)\b/i.test(renderizada.headers.get("x-robots-tag") ?? "")) return indisponivel();
+    const { converterHtml } = await import("@avilaops/publicacao-texto");
     const texto = converterHtml(await renderizada.text(), { url: urlHtml.href, formato: rota.formato });
     if (!texto.indexavel) return indisponivel();
     const etag = `"${createHash("sha256").update([contexto.id, host, rota.caminhoHtml, rota.formato, texto.conteudo].join("\0")).digest("hex")}"`;
