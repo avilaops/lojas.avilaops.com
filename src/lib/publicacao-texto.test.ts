@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { readdirSync } from "node:fs";
+import { join } from "node:path";
 import test from "node:test";
 import { NextRequest } from "next/server";
 import { proxy } from "../proxy";
@@ -214,4 +216,34 @@ test("llms acrescenta versões das páginas existentes e exclui links externos o
   assert.equal(descoberta.split("/index.md)").length - 1, 1);
   assert.doesNotMatch(descoberta, /\/conta|b\.lojas/);
   assert.match(descoberta, /• Markdown/);
+});
+
+test("inventário de páginas exige cobertura pública ou exclusão operacional explícita", async () => {
+  const { rotaPublicavel, lerCaminhoTexto } = await import("./publicacao-texto-rotas");
+  const paginas: string[][] = [];
+  function visitar(pasta: string, segmentos: string[]) {
+    for (const item of readdirSync(pasta, { withFileTypes: true })) {
+      if (item.isDirectory()) visitar(join(pasta, item.name), [...segmentos, item.name]);
+      else if (/^page\.(?:tsx?|jsx?|mdx)$/.test(item.name)) paginas.push(segmentos);
+    }
+  }
+  visitar("src/app", []);
+  const cobertas = new Set<string>();
+  for (const segmentos of paginas) {
+    const publicos = segmentos.filter(segmento => !segmento.startsWith("("));
+    const site = publicos[0] === "plataforma" ? "plataforma" : "loja";
+    const partes = site === "plataforma" ? publicos.slice(1) : publicos;
+    const caminho = "/" + partes.map(parte => parte.replace(/\[[^\]]+\]/g, "exemplo")).join("/");
+    const excluida = site === "plataforma"
+      ? /^\/(?:painel|entrar|criar|confirmar|autorizar|redefinir|recuperar)(?:\/|$)/.test(caminho)
+      : /^\/(?:conta|pedido|carrinho|checkout|comparar|nao-encontrado)(?:\/|$)/.test(caminho);
+    assert.equal(rotaPublicavel(caminho, site), !excluida, `${site}:${caminho} precisa de classificação de publicação`);
+    if (!excluida) {
+      const texto = caminho === "/" ? "/index.md" : `${caminho}/index.md`;
+      assert.ok(lerCaminhoTexto(texto, site), `${site}:${texto}`);
+      cobertas.add(`${site}:${caminho}`);
+    }
+  }
+  assert.ok(cobertas.has("loja:/"));
+  assert.ok(cobertas.has("plataforma:/"));
 });

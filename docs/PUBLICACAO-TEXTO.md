@@ -61,6 +61,11 @@ na fronteira para demonstrar isolamento, atualização, remoção, validação d
 host, redirects, noindex e respostas de autenticação. Essas provas de CI não
 são validação de um backend de produção.
 
+O inventário de arquivos de página é comparado à classificação de rotas no CI.
+Uma nova página precisa ter representação pública ou exclusão operacional
+explícita. Categorias e produtos seguem as rotas dinâmicas; obter um arquivo
+não executa uma nova enumeração do catálogo.
+
 Esta entrega prepara um PR draft. Merge, deploy, infraestrutura, GA4/GTM,
 políticas de cookies e qualquer popup/banner automático ficam fora do escopo.
 Após uma liberação futura, conferir URLs reais de pelo menos duas lojas,
