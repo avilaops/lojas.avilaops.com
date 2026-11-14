@@ -22,6 +22,7 @@ import { chaveCanonicaDaCategoria } from "@/lib/categorias-canonicas";
 import { EventoFunil } from "@/components/EventoFunil";
 import { retornoDaListagem } from "@/lib/retorno-catalogo";
 import { configuracaoBuscaTecnica } from "@/lib/busca-tecnica-familia";
+import { complementarDescricaoMeta } from "@/lib/seo-texto";
 
 async function resolverCategoria(t: Awaited<ReturnType<typeof exigirTenant>>, slug: string) {
   const ativas = await listarCategorias(t.id);
@@ -67,9 +68,9 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     base: `/categoria/${categoria.slug}`,
     sp,
     pagina: paginaDaUrl(sp),
-    // O layout raiz acrescenta "· nome da loja" pelo template de título.
+    // O layout raiz acrescenta "• nome da loja" pelo template de título.
     title: categoria.seoTitle ?? categoria.nome,
-    description: categoria.seoDescription ?? categoria.descricao ?? `Confira os produtos da categoria ${categoria.nome} na ${t.nome}.`,
+    description: complementarDescricaoMeta(categoria.seoDescription ?? categoria.descricao ?? `Confira os produtos da categoria ${categoria.nome} na ${t.nome}.`, `Compare os produtos desta categoria na ${t.nome}, confira especificações e disponibilidade e consulte condições de compra e atendimento.`),
     keywords: categoria.seoKeywords ?? undefined,
   });
 }

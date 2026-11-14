@@ -6,11 +6,12 @@ import { linkWhatsApp } from "@/components/WhatsAppFlutuante";
 import { ArrowUpRight, Building2, Clock3, MapPin, MessageCircle, Phone, Mail } from "lucide-react";
 import { contratoDo } from "@/lib/templates";
 import { descricaoDaPagina } from "@/lib/textos-loja";
+import { complementarDescricaoMeta } from "@/lib/seo-texto";
 
 // Descrição própria: sem ela a página herdava a da loja, igual à da home.
 export async function generateMetadata(): Promise<Metadata> {
   const t = await exigirTenant();
-  return { title: "Contato • Fale com nossa equipe de atendimento", description: descricaoDaPagina(t, "contato"), alternates: { canonical: "/contato" } };
+  return { title: "Contato • Fale com nossa equipe de atendimento", description: complementarDescricaoMeta(descricaoDaPagina(t, "contato"), "Consulte os canais publicados nesta página para falar com a equipe e esclarecer suas dúvidas sobre a loja e seus produtos."), alternates: { canonical: "/contato" } };
 }
 
 export default async function Contato() {

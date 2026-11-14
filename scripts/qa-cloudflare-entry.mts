@@ -49,7 +49,7 @@ try {
   assert.ok([200, 404].includes(forbidden.status), 'Recusa nunca equivale a um erro do servidor');
   const title = /<title>([^<]+)<\/title>/;
   assert.equal(rendered.match(title)?.[1], denialHtml.match(title)?.[1]);
-  assert.match(rendered, /<title>Página não encontrada · Loja ativa QA Edge<\/title>/);
+  assert.match(rendered, /<title>Página não encontrada • Loja ativa QA Edge<\/title>/);
   assert.match(rendered, /<meta name="robots" content="noindex[^"]*"/);
   assert.doesNotMatch(rendered, /Central de ajuda|ajuda-shell|Guia de uso do Lojas/);
   assert.ok(!forbiddenHtml.includes(helpText), 'Ajuda não vaza nem pelo payload RSC');

@@ -6,14 +6,18 @@ import { prisma } from "@/lib/db";
 import { exigirTenant, lojaVende, temaDo } from "@/lib/tenant";
 import { campanhasDaLoja } from "@/lib/campanhas";
 import { whereEmPromocao } from "@/lib/promocoes";
+import { resumoParaMeta } from "@/lib/seo-texto";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Promoções e campanhas",
-  description: "Campanhas e ofertas ativas da loja.",
-  alternates: { canonical: "/promocoes" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await exigirTenant();
+  return {
+    title: "Promoções e campanhas",
+    description: resumoParaMeta(`Veja a página de promoções e campanhas da ${t.nome}. Consulte os descontos publicados, a disponibilidade dos produtos e as condições de cada oferta antes de comprar.`),
+    alternates: { canonical: "/promocoes" },
+  };
+}
 
 export default async function Promocoes() {
   const t = await exigirTenant();

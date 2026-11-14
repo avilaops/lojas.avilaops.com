@@ -3,6 +3,7 @@ import { exigirTenant } from "@/lib/tenant";
 import { identidadePublica } from "@/lib/identidade-publica";
 import { mascararDocumento } from "@avilaops/checkout";
 import { descricaoDaPagina } from "@/lib/textos-loja";
+import { complementarDescricaoMeta } from "@/lib/seo-texto";
 import { ROTULO_POLITICA, TIPOS_POLITICA, politicaPublicada, type TipoPolitica } from "@/lib/politicas";
 
 /**
@@ -26,7 +27,7 @@ export async function generateMetadata({ params }: { params: Promise<{ tipo: str
   return {
     title: ROTULO_POLITICA[tipo as TipoPolitica] ?? "Políticas",
     // Cada política com a sua: sem isto as quatro herdavam a descrição da loja.
-    ...(conhecido ? { description: descricaoDaPagina(await exigirTenant(), tipo as TipoPolitica) } : {}),
+    ...(conhecido ? { description: complementarDescricaoMeta(descricaoDaPagina(await exigirTenant(), tipo as TipoPolitica), "Leia as orientações completas e consulte os canais de atendimento da loja para esclarecer dúvidas.") } : {}),
     // Sem canonical, o Google trata a mesma política em domínio próprio e em
     // <loja>.lojas.avilaops.com como duas páginas, e divide o sinal entre elas.
     alternates: { canonical: `/politicas/${tipo}` },

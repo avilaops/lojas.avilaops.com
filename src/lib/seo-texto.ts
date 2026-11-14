@@ -51,7 +51,8 @@ export function resumoParaMeta(entrada: string | null | undefined, limite = 155)
 }
 
 /** Complementa textos curtos com orientação, sem inventar atributos ou ofertas. */
-function complementarMeta(base: string, complemento: string): string {
+export function complementarDescricaoMeta(entrada: string, complemento: string): string {
+  const base = textoPuro(entrada);
   if (base.length >= 150) return resumoParaMeta(base)!;
   const frase = base && !/[.!?…]$/.test(base) ? `${base}.` : base;
   return resumoParaMeta(`${frase} ${complemento}`)!;
@@ -63,12 +64,12 @@ export function descricaoDoProduto(p: { nome?: string; descricaoCurta?: string |
   if (!loja) return descricao;
   const base = descricao ?? textoPuro(p.nome);
   if (!base) return undefined;
-  return complementarMeta(base, `Consulte as características e a disponibilidade na ${textoPuro(loja)}. Confirme os detalhes do produto e as condições de compra antes de escolher.`);
+  return complementarDescricaoMeta(base, `Consulte as características e a disponibilidade na ${textoPuro(loja)}. Confirme os detalhes do produto e as condições de compra antes de escolher.`);
 }
 
 /** A home apresenta a loja; a listagem identifica o catálogo que o visitante abriu. */
 export function descricaoDoCatalogo(nome: string, apresentacao: string, pagina: "inicio" | "catalogo"): string {
   const loja = textoPuro(nome);
   const base = pagina === "inicio" ? textoPuro(apresentacao) : `Catálogo de produtos da ${loja}. ${textoPuro(apresentacao)}`;
-  return complementarMeta(base, `Explore os produtos da ${loja}, confira suas características e disponibilidade e consulte as condições de compra e os canais de atendimento da loja.`);
+  return complementarDescricaoMeta(base, `Explore os produtos da ${loja}, confira suas características e disponibilidade e consulte as condições de compra e os canais de atendimento da loja.`);
 }
