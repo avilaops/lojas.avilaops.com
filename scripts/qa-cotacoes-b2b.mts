@@ -8,6 +8,7 @@ import { prisma } from "../src/lib/db.ts";
 import { emitirToken, gerarHashSenha } from "../src/lib/sessao.ts";
 import { salvarProdutoNoCatalogo } from "../src/lib/catalogo-escrita.ts";
 import { registrarCheckCotacao } from "../tests/helpers/mlops-evidence.ts";
+import { verificarPublicacaoTextoHttp } from "../tests/helpers/publicacao-texto-http.ts";
 
 const database = new URL(process.env.DATABASE_URL ?? "http://invalid");
 assert.equal(process.env.CI, "true", "Jornada executada exclusivamente na CI.");
@@ -96,6 +97,8 @@ try {
   const variante = await prisma.variante.findFirstOrThrow({ where: { tenantId: tenant.id, produtoId: produto.id } });
   stage = "iniciar";
   await iniciar();
+  stage = "publicacao-texto-http";
+  await verificarPublicacaoTextoHttp(painel, tenant.id, directory);
   const merchant = await browser.newContext();
   const buyer = await browser.newContext();
   for (const context of [merchant, buyer]) {

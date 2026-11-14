@@ -234,6 +234,7 @@
         { "kind": "code", "path": "src/app/api/publicacao-texto/route.ts" },
         { "kind": "code", "path": "src/app/llms.txt/route.ts" },
         { "kind": "test", "path": "src/lib/publicacao-texto.test.ts" },
+        { "kind": "test", "path": "tests/helpers/publicacao-texto-http.ts" },
         { "kind": "contract", "path": "docs/PUBLICACAO-TEXTO.md" }
       ],
       "flows": []

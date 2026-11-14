@@ -64,6 +64,11 @@ na fronteira para demonstrar isolamento, atualização, remoção, validação d
 host, redirects, noindex e respostas de autenticação. Essas provas de CI não
 são validação de um backend de produção.
 
+A jornada existente da CI também verifica HTTP no build standalone real,
+com duas lojas fictícias e o mesmo slug, atualização, desativação, MIME,
+no-store, ETag e descoberta. Ela reutiliza o servidor e o PostgreSQL isolado já
+iniciados pelo job; não provisiona serviços nem usa dados de produção.
+
 O inventário de arquivos de página é comparado à classificação de rotas no CI.
 Uma nova página precisa ter representação pública ou exclusão operacional
 explícita. Categorias e produtos seguem as rotas dinâmicas; obter um arquivo
