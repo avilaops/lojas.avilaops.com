@@ -1,5 +1,22 @@
 # As rotinas da plataforma
 
+## Modo fiscal restrito • 14/11/2026
+
+Com `ROTINAS_AGENDADOR=0`, definir `FISCAL_AGENDADOR=1` habilita exclusivamente
+`fiscal.receber` no mesmo relógio e com as mesmas travas persistentes. O executor
+cria e reivindica apenas os nomes selecionados. O modo não ativa arquivamento,
+cobranças, mensagens, pagamentos ou outras rotinas comerciais.
+
+O modo geral conserva a precedência e o comportamento anteriores. Nenhuma
+variável configurada no painel habilita o agendador; a ativação é operacional,
+após a publicação. A lista fiscal mostra modo configurado e última execução
+do agendamento, separadamente do próximo horário de consulta de cada CNPJ.
+
+Essa entrega não altera variáveis de produção. Para ativar, manter o relógio
+geral em 0, configurar somente `FISCAL_AGENDADOR=1` e verificar a execução de
+`fiscal.receber` e a atualização do CNPJ. Reverter a flag para 0 desliga o modo
+restrito sem apagar cursor, documentos, manifestações ou recibos.
+
 **A plataforma se agenda sozinha.** O relógio mora no mesmo container que
 serve a loja (`src/instrumentation.ts` → `src/lib/rotinas-agendador.ts`), acorda
 de minuto em minuto e roda o que venceu. Até 19/09/2026 quem chamava os

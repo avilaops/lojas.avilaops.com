@@ -63,7 +63,7 @@ test("recibo e cancelamento posterior acompanham a chave e respeitam tenant", as
 test("resultado incerto só é conciliado com evento completo da mesma intenção", async () => {
   const f = await fixture();
   const registro = await intencao(f);
-  for (const [i, xml] of [evento("99999999000191"), evento(CNPJ, "2"), evento(CNPJ, "1", "2"), evento().replace("<tpEvento>210210</tpEvento>", "<tpEvento>210200</tpEvento>"), evento().replace("<nProt>135260000099999</nProt>", ""), `<!DOCTYPE x>${evento()}`].entries()) {
+  for (const [i, xml] of [evento("99999999000191"), evento(CNPJ, "2"), evento(CNPJ, "1", "2"), evento(CNPJ, "1", "1", "9".repeat(44)), evento().replace("<tpEvento>210210</tpEvento>", "<tpEvento>210200</tpEvento>"), evento().replace("<nProt>135260000099999</nProt>", ""), `<!DOCTYPE x>${evento()}`].entries()) {
     await prisma.documentoFiscalLoja.create({ data: { tenantId: f.tenant.id, cnpj: CNPJ, chave: CHAVE, nsu: String(10 + i).padStart(15, "0"), schema: "procEventoNFe_v1.00.xsd", xml } });
   }
   await reconciliarManifestacoesFiscais(prisma, f.tenant.id);

@@ -296,7 +296,7 @@ export default function Fiscal() {
         <p className="-mt-1 text-xs leading-relaxed text-muted-foreground">{estado?.erp ? "As NF-e deste CNPJ são consultadas pelo ERP." : "Consulte as NF-e disponíveis na SEFAZ e confira a entrada dos produtos no Lojas."} CT-e autorizado é lido do TMS. Abrir ou baixar uma nota não altera o estoque.</p>
         {estado?.sincronizacao && !estado.erp && <div role="status" className="rounded-xl border border-border p-3 text-xs leading-relaxed">
           <p className="font-medium">{estado.sincronizacao.modo === "DESLIGADO" ? "Atualização automática desativada • consulte os documentos manualmente no horário permitido." : "Agendamento automático configurado para receber documentos fiscais."}</p>
-          <p className="mt-1 text-muted-foreground">{estado.sincronizacao.ultimaExecucao ? `Última execução • ${data(estado.sincronizacao.ultimaExecucao)}` : "A primeira execução automática ainda não foi registrada."}{estado.sincronizacao.falha ? " • A última execução teve falha e precisa de revisão." : ""}</p>
+          <p className="mt-1 text-muted-foreground">{estado.sincronizacao.ultimaExecucao ? `Última execução do agendamento • ${data(estado.sincronizacao.ultimaExecucao)}` : "A primeira execução automática ainda não foi registrada."}{estado.sincronizacao.falha ? " • A última execução teve falha e precisa de revisão." : ""}</p>
         </div>}
         <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Disponibilidade dos documentos">
           <button type="button" className={`btn-secundario ${!somenteDisponiveis ? "border-primary text-primary" : ""}`} aria-pressed={!somenteDisponiveis} onClick={() => { setSomenteDisponiveis(false); setPagina(1); }}>Todas as NF-e</button>

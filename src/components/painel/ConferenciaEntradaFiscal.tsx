@@ -26,14 +26,16 @@ export default function ConferenciaEntradaFiscal({ documentoId, fechar }: { docu
   const [mensagem, setMensagem] = useState("");
   const [agora, setAgora] = useState(() => Date.now());
   const locaisId = useId();
+  const aplicarConferencia = useCallback((conferencia: ConferenciaEntradaFiscal) => {
+    setEstado(conferencia); setRecibo(conferencia.recibo);
+    setItens(conferencia.nota?.itens.map(item => ({ numero: item.numero, variante: null, quantidade: quantidadeInicial(item) })) ?? []);
+    setConferido(false);
+  }, []);
   const carregar = useCallback(async (signal?: AbortSignal) => {
     const r = await fetch(`/api/painel/fiscal/documentos/${documentoId}/entrada-estoque`, { signal, cache: "no-store" });
     const dados = await r.json();
     if (!r.ok) throw new Error(dados.erro ?? "Não foi possível abrir a nota.");
-    const conferencia = dados as ConferenciaEntradaFiscal;
-    setEstado(conferencia); setRecibo(conferencia.recibo);
-    setItens(conferencia.nota?.itens.map(item => ({ numero: item.numero, variante: null, quantidade: quantidadeInicial(item) })) ?? []);
-    setConferido(false);
+    return dados as ConferenciaEntradaFiscal;
   }, [documentoId]);
   useEffect(() => {
     const elemento = dialog.current!;
@@ -42,10 +44,10 @@ export default function ConferenciaEntradaFiscal({ documentoId, fechar }: { docu
   }, []);
   useEffect(() => {
     const controller = new AbortController();
-    void carregar(controller.signal).catch(e => { if (e.name !== "AbortError") setErro(e.message); });
+    void carregar(controller.signal).then(aplicarConferencia).catch(e => { if (e.name !== "AbortError") setErro(e.message); });
     void fetch("/api/painel/fiscal/entrada-estoque/variantes", { signal: controller.signal }).then(r => r.ok ? r.json() : null).then(dados => { if (dados?.locais) setLocais(dados.locais); }).catch(() => {});
     return () => controller.abort();
-  }, [carregar]);
+  }, [carregar, aplicarConferencia]);
   useEffect(() => {
     const timer = setInterval(() => setAgora(Date.now()), 15_000);
     return () => clearInterval(timer);
@@ -60,10 +62,10 @@ export default function ConferenciaEntradaFiscal({ documentoId, fechar }: { docu
       const dados = await r.json();
       if (!r.ok) throw new Error(dados.erro ?? "Não foi possível atualizar os documentos.");
       setMensagem(ciencia ? (dados.aceita ? `Ciência aceita • protocolo ${dados.protocolo}. O XML será acompanhado nas próximas consultas.` : "O resultado da manifestação ainda exige conferência. Nenhum reenvio automático será feito.") : "Documentos atualizados. Confira o estado desta nota.");
-      await carregar();
+      aplicarConferencia(await carregar());
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não foi possível atualizar os documentos.");
-      await carregar().catch(() => {});
+      await carregar().then(aplicarConferencia).catch(() => {});
     } finally { setAgora(Date.now()); setAcao(null); }
   }
   function mudar(numero: number, mudanca: Partial<Linha>) {

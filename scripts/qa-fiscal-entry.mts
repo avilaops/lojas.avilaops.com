@@ -65,11 +65,13 @@ try {
   await page.getByRole("button", { name: "Acompanhar NF-e 456" }).click();
   const resumoDialog = page.getByRole("dialog", { name: "Conferir entrada de estoque" });
   await resumoDialog.getByRole("button", { name: "Registrar ciência da emissão" }).waitFor();
+  page.once("dialog", dialogo => dialogo.dismiss());
+  await resumoDialog.getByRole("button", { name: "Registrar ciência da emissão" }).click();
   await resumoDialog.getByRole("button", { name: "Atualizar documentos" }).waitFor();
   assert.match(await resumoDialog.innerText(), /aguardando manifestação/i);
   await mkdir(output, { recursive: true });
   await page.screenshot({ path: output + "/resumo.png", fullPage: true });
-  assert.equal(await prisma.manifestacaoFiscalLoja.count({ where: { tenantId: loja.id } }), 0, "Abrir resumo nunca envia manifestação");
+  assert.equal(await prisma.manifestacaoFiscalLoja.count({ where: { tenantId: loja.id } }), 0, "Abrir resumo ou recusar confirmação nunca envia manifestação");
   assert.equal(await prisma.comandoEstoque.count({ where: { tenantId: loja.id } }), 0);
   assert.equal((await fetch(base + `/api/painel/fiscal/documentos/${resumo.id}/entrada-estoque`, { headers: { cookie } })).status, 200);
   await resumoDialog.getByRole("button", { name: "Fechar", exact: true }).click();
