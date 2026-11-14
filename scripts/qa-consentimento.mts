@@ -6,6 +6,8 @@ import { chromium, type BrowserContext, type Page } from "playwright";
 import { PrismaClient } from "@prisma/client";
 import { salvarProdutoNoCatalogo } from "../src/lib/catalogo-escrita.ts";
 import { contratoPadraoAninhado } from "../src/lib/contratos-comerciais.ts";
+import { definirPadrao, salvarCredencial } from "../src/lib/credenciais.ts";
+import { provedoresDePagamento } from "../src/lib/provedores-pagamento.ts";
 
 assert.equal(process.env.CI, "true", "Prova exclusiva do GitHub CI");
 const banco = new URL(process.env.DATABASE_URL ?? "http://invalid");
@@ -20,14 +22,14 @@ let tenantId: string | undefined;
 let bloqueadas = 0;
 let fixtures = 0;
 type Registro = { nome: string; inicio: number; duracao: number };
-interface JanelaQA extends Window {
+type JanelaQA = typeof window & {
   dataLayer?: ArrayLike<unknown>[];
   __qaMeta: unknown[][];
   __qaTiktok: unknown[][];
   __qaTempos: Registro[];
   fbq?: unknown;
   ttq?: unknown;
-}
+};
 const navegador = await chromium.launch({ headless: true });
 const servidor = spawn(process.execPath, [".next/standalone/server.js"], {
   env: { ...process.env, PORT: porta, HOSTNAME: "0.0.0.0", LOJAS_BASE_DOMAIN: "localhost", ROTINAS_AGENDADOR: "0", PLATAFORMA_GTM_ID: "GTM-COOKIEQA", SSO_APP_ID: "", LOJAS_OIDC_CLIENT_ID: "", LOJAS_OIDC_CLIENT_SECRET: "" },
@@ -94,8 +96,15 @@ async function preservados(p: Page) {
 
 try {
   await mkdir(pasta, { recursive: true });
-  const loja = await prisma.tenant.create({ data: { slug, nome: "Cookies QA", status: "ATIVA", plano: "LOJA", gtmId: "GTM-COOKIEQA", metaPixelId: "123456789012345", tiktokPixelId: "COOKIEQATEST123456789", ga4Id: "G-COOKIEQA", contratosComerciais: { create: contratoPadraoAninhado("LOJA", { aceiteEm: null, aceiteReferencia: null, origem: "QA isolado de cookies" }) } } });
+  const loja = await prisma.tenant.create({ data: { slug, nome: "Cookies QA", status: "ATIVA", plano: "LOJA", tema: { layout: "automotivo", categoriaSemImagem: "icone" }, recursos: ["pagamentos_pix_manual", "recebimento_v2"], gtmId: "GTM-COOKIEQA", metaPixelId: "123456789012345", tiktokPixelId: "COOKIEQATEST123456789", ga4Id: "G-COOKIEQA", contratosComerciais: { create: contratoPadraoAninhado("LOJA", { aceiteEm: null, aceiteReferencia: null, origem: "QA isolado de cookies" }) } } });
   tenantId = loja.id;
+  // Mesmo provedor local da jornada já existente, sem endpoint de pagamento.
+  const provedor = provedoresDePagamento.obter("pix_manual");
+  const publicos = { chavePix: randomUUID(), nomeRecebedor: "Cookies QA sem pagamento" };
+  const teste = await provedor.testarConexao({ segredos: {}, publicos });
+  assert.equal(teste.ok, true);
+  const credencial = await salvarCredencial(loja, "pix_manual", { segredos: {}, publicos }, teste);
+  await definirPadrao(loja, credencial.id);
   await salvarProdutoNoCatalogo(loja.id, null, { nome: "Produto cookies QA", slug: "produto-qa", sku: "COOKIE-QA", precoCentavos: 1500, estoque: 10 });
   let pronto = false;
   for (let n = 0; n < 90; n++) {
