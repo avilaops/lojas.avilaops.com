@@ -698,7 +698,8 @@ jobs:
             [[ "$GITHUB_EVENT_NAME" != pull_request* ]]
             [[ "$GITHUB_REF" == "refs/heads/$DEFAULT_BRANCH" ]]
           fi
-          printf 'IMAGE_NAME=ghcr.io/%s\n' "${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+          # O pacote publicado permanece estavel quando o repositorio muda de nome.
+          printf 'IMAGE_NAME=ghcr.io/avilaops/lojas.avilaops.com\n' >> "$GITHUB_ENV"
       - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9
         if: env.PUBLISH == 'true'
         with:
