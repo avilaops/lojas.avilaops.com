@@ -198,6 +198,41 @@ test("resposta não HTML não vira uma exportação aparentemente válida", asyn
   assert.doesNotMatch(await resposta.text(), /privado/);
 });
 
+test("HTML com canonical de outra loja não cruza a fronteira do tenant", async () => {
+  const deps = dependencias(async () => new Response(pagina("Produto B", "De outra loja", '<link rel="canonical" href="https://b.lojas.avilaops.com/produtos/mesmo">'), { headers: { "content-type": "text/html" } }));
+  const resposta = await publicar("a.lojas.avilaops.com", "/produtos/mesmo/index.md", deps);
+  assert.equal(resposta.status, 404);
+  assert.doesNotMatch(await resposta.text(), /Produto B|De outra loja/);
+});
+
+test("canonical compartilhado dentro da mesma origem continua publicável", async () => {
+  const deps = dependencias(async () => new Response(pagina("Produto A", "Descrição", '<link rel="canonical" href="https://a.lojas.avilaops.com/produtos/principal">'), { headers: { "content-type": "text/html" } }));
+  const resposta = await publicar("a.lojas.avilaops.com", "/produtos/variante/index.md", deps);
+  assert.equal(resposta.status, 200);
+  assert.match(await resposta.text(), /https:\/\/a\.lojas\.avilaops\.com\/produtos\/principal/);
+});
+
+test("HTML acima do teto declarado é recusado antes da conversão", async () => {
+  const deps = dependencias(async () => new Response(pagina("Conteúdo além do teto"), { headers: { "content-type": "text/html", "content-length": String(4 * 1024 * 1024 + 1) } }));
+  const resposta = await publicar("a.lojas.avilaops.com", "/index.md", deps);
+  assert.equal(resposta.status, 503);
+  assert.doesNotMatch(await resposta.text(), /Conteúdo além do teto/);
+});
+
+test("HTML sem Content-Length interrompe a leitura ao exceder o teto em bytes", async () => {
+  let cancelado = false;
+  const bloco = new Uint8Array(2 * 1024 * 1024 + 1);
+  const corpo = new ReadableStream<Uint8Array>({
+    start(controller) { controller.enqueue(bloco); controller.enqueue(bloco); controller.enqueue(new Uint8Array([1])); controller.close(); },
+    cancel() { cancelado = true; },
+  });
+  const deps = dependencias(async () => new Response(corpo, { headers: { "content-type": "text/html" } }));
+  const resposta = await publicar("a.lojas.avilaops.com", "/index.md", deps);
+  assert.equal(resposta.status, 503);
+  assert.equal(cancelado, true);
+  assert.doesNotMatch(await resposta.text(), /\u0000/);
+});
+
 test("as famílias públicas de lojas e plataforma chegam à versão textual", async () => {
   const loja = ["/", "/produtos", "/produtos/item", "/categoria/pecas", "/sobre", "/contato", "/politicas/privacidade", "/promocoes", "/blog", "/blog/artigo", "/guias", "/guias/medidas", "/aplicacoes", "/aplicacoes/hidraulica", "/como-escolher", "/cotacao", "/cotacao-lote", "/configurador"];
   const plataforma = ["/", "/ajuda", "/marca", "/termos-comerciais", "/developers", "/developers/privacidade", "/blog", "/blog/artigo"];
