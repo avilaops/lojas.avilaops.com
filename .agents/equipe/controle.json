@@ -27,7 +27,7 @@
         "CI valida contrato, merge concorrente, saída pública e interface desktop/mobile."
       ],
       "environment": "worktree isolado, banco de CI e publicação normal; sem builds ou testes locais",
-      "evidence": "Usuário pediu uma solução nossa do nosso jeito. PR257 draft; RED43601184219 observado por módulo novo ausente. Implementação preparada para GREEN. Contrato docs/SEO-DESCOBERTA-LOJAS.md e plano/spec em docs/superpowers/."
+        "evidence": "PR257 integrado como bc22a2f. CI43604578336 aprovado com contrato, PostgreSQL, navegador1440/393px e revisão independente. Publicação43605451777 bloqueada antes da migração por timeout na preparação da captura; gravação, saída pública e isolamento passaram. Probe ajustado para abas novas sem histórico de rolagem/foco; revalidar no CI e confirmar produção antes de concluir. Contrato docs/SEO-DESCOBERTA-LOJAS.md e plano/spec em docs/superpowers/."
     },
     {
       "id": "BERETA-REFERENCIAS-REJEITADAS-20261114",

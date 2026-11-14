@@ -33,7 +33,7 @@ Files: `src/lib/seo-config.ts`, `src/lib/seo-config.test.ts`, `prisma/schema.pri
 - [x] Escrever casos de padrão, merge, limites, títulos/descrições e seleção de destaques.
 - [x] Registrar RED no CI antes da implementação.
 - [x] Implementar contrato, migração aditiva e merge por loja na escrita existente.
-- [ ] Verificar contrato e persistência/isolamento no CI.
+- [x] Verificar contrato e persistência/isolamento no CI.
 
 ### Task 2: Saída pública
 
@@ -42,7 +42,7 @@ Files: `src/lib/seo-inicio.ts`, `src/app/page.tsx`, `src/app/llms.txt/route.ts`.
 - [x] Compartilhar resolução automática entre prévia e home, preservando as regras existentes.
 - [x] Aplicar título absoluto e descrição somente à home; manter canonical e políticas.
 - [x] Usar configuração de destaques no resumo, preservando os demais documentos e limites.
-- [ ] Verificar metadados e resumo de duas lojas no servidor compilado.
+- [x] Verificar metadados e resumo de duas lojas no servidor compilado.
 
 ### Task 3: Painel e entrega
 
@@ -50,6 +50,10 @@ Files: `src/components/painel/SeoDescoberta.tsx` substitui o componente Descober
 
 - [x] Criar formulário, prévia, orientações e atalhos com a identidade do painel.
 - [x] Integrar sessão e permissão; salvar pelo endpoint existente.
-- [ ] Conferir navegação, persistência, erro/negação de acesso, desktop/mobile e ausência de vazamento entre lojas no CI.
+- [x] Conferir navegação, persistência, erro/negação de acesso, desktop/mobile e ausência de vazamento entre lojas no CI.
 - [ ] Revisar diff, checks e artefatos; integrar e acompanhar publicação normal.
 - [ ] Conferir defaults em produção sem alterar configurações de clientes e registrar evidências.
+
+## Evidência atual
+
+PR257 integrado como bc22a2f; CI de PR43604578336 aprovado, com capturas1440/393px e revisão independente. Publicação43605451777 bloqueada antes da migração: o probe de captura aguardou30s uma posição zero após reload/resize. Gravação, saída pública e isolamento já haviam passado nessa execução. A preparação das capturas passa a usar abas novas, cada uma aberta na largura final, sem histórico de rolagem/foco. Todas as asserções funcionais e de layout permanecem. Revalidar no CI e acompanhar publicação antes de concluir os dois itens restantes.
